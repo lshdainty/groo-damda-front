@@ -28,7 +28,11 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 
-const assetState = vi.hoisted(() => ({ loaded: true }));
+const assetState = vi.hoisted(() => ({
+  loaded: true,
+  removed: [] as number[],
+}));
+const saveState = vi.hoisted(() => ({ fail: false }));
 const catState = vi.hoisted(() => ({ fail: false, args: [] as unknown[] }));
 const sent = vi.hoisted(() => ({
   update: null as Record<string, unknown> | null,
@@ -64,14 +68,22 @@ vi.mock("@/features/expense", () => ({
   },
   useExpenseTemplates: () => ({ data: [], isLoading: false }),
   useCreateExpenseTemplate: () => ({
-    mutate: (data: Record<string, unknown>) => {
+    mutate: (
+      data: Record<string, unknown>,
+      opts?: { onError?: () => void },
+    ) => {
       sent.create = data;
+      if (saveState.fail) opts?.onError?.();
     },
     isPending: false,
   }),
   useUpdateExpenseTemplate: () => ({
-    mutate: ({ data }: { id: number; data: Record<string, unknown> }) => {
+    mutate: (
+      { data }: { id: number; data: Record<string, unknown> },
+      opts?: { onError?: () => void },
+    ) => {
       sent.update = data;
+      if (saveState.fail) opts?.onError?.();
     },
     isPending: false,
   }),
@@ -79,7 +91,11 @@ vi.mock("@/features/expense", () => ({
 vi.mock("@/features/asset", () => ({
   useAssets: () => ({
     data: assetState.loaded
-      ? { assets: [asset, savings, card, loan] }
+      ? {
+          assets: [asset, savings, card, loan].filter(
+            (a) => !assetState.removed.includes(a.rowId),
+          ),
+        }
       : undefined,
     isLoading: !assetState.loaded,
   }),
@@ -719,5 +735,169 @@ describe("자산을 받기 전에 저장해도 이자는 읽어 온 그대로 �
 
     expect(sent.update!.interestAmount).toBe(20000);
     assetState.loaded = true;
+  });
+});
+
+describe("저장이 실패하면 (T6)", () => {
+  it("폼은 열린 채 고정 글 Callout 이 뜨고 값은 그대로 — 서버 글은 없다", async () => {
+    saveState.fail = true;
+    render(basePreset);
+    await clickSave();
+
+    expect(sent.update).not.toBeNull();
+    expect(document.body.textContent).toContain("preset.saveFailed");
+    // 폼은 닫히지 않았다 — 이름 칸이 그대로 있다
+    expect(textInput().value).toBe("점심");
+    saveState.fail = false;
+  });
+});
+
+describe("규칙 밖 값은 화면이 먼저 비운다 (D3 · D4)", () => {
+  it("보내는 계좌를 받는 계좌와 같게 고르면 받는 계좌가 비고, 저장하면 그 칸 아래 안내", async () => {
+    render(null);
+    await click(chip("addTx.transfer"));
+    setValue(textInput(), "같은 계좌");
+    await pick("preset.fromAccount", "주거래");
+    await pick("preset.toAccount", "청약");
+    await pick("preset.fromAccount", "청약");
+    expect(valueOf("preset.toAccount")).toBe("addTx.selectPlaceholder");
+    await clickSave("add");
+
+    expect(sent.create).toBeNull();
+    expect(document.body.textContent).toContain("preset.toRequired");
+  });
+
+  it("보내는 계좌 후보에서 받는 계좌를 빼지 않는다", async () => {
+    render(null);
+    await click(chip("addTx.transfer"));
+    await pick("preset.toAccount", "청약");
+    await click(rowButton("preset.fromAccount"));
+    await tick();
+    expect(pickItemTitles()).toContain("청약");
+  });
+
+  it("지운 계좌를 가리키는 프리셋은 받은 뒤 계좌를 비워 보낸다(옛 id 가 안 나간다)", async () => {
+    assetState.removed = [3];
+    render(basePreset);
+    await tick();
+    await clickSave();
+
+    expect(sent.update!.assetRowId).toBeNull();
+    assetState.removed = [];
+  });
+
+  it("카드 계좌인 지출 프리셋을 이체로 바꾸면 보내는 계좌를 비운다", async () => {
+    render({ ...basePreset, assetRowId: 5, assetName: "체크" });
+    await click(chip("addTx.transfer"));
+    await tick();
+    expect(valueOf("preset.fromAccount")).toBe("addTx.selectPlaceholder");
+  });
+
+  it("하위가 생겨 상위가 된 카테고리를 가리키는 프리셋은 카테고리를 비운다", async () => {
+    render({ ...basePreset, categoryRowId: 13, categoryName: "교통" });
+    await tick();
+    await clickSave();
+
+    expect(sent.update).toBeNull();
+    expect(document.body.textContent).toContain("preset.categoryRequired");
+  });
+
+  it("이자가 금액보다 크면 칸 아래 글로 막는다 · 요청 0", async () => {
+    render({
+      ...basePreset,
+      expenseType: "TRANSFER",
+      categoryRowId: null,
+      categoryName: null,
+      assetRowId: 3,
+      toAssetRowId: 6,
+      toAssetName: "대출",
+      interestAmount: 20000,
+      amount: 10000,
+      lockAmount: "Y",
+    });
+    await tick();
+    await clickSave();
+
+    expect(sent.update).toBeNull();
+    expect(document.body.textContent).toContain("preset.interestTooBig");
+  });
+
+  it("100억 넘는 옛 금액은 글로 알린다 · 요청 0", async () => {
+    render({ ...basePreset, lockAmount: "Y", amount: 20_000_000_000 });
+    await tick();
+    await clickSave();
+
+    expect(sent.update).toBeNull();
+    expect(document.body.textContent).toContain("amountTooLarge");
+  });
+
+  it("수수료 0 은 비운 것과 같다 — null", async () => {
+    render({
+      ...basePreset,
+      expenseType: "TRANSFER",
+      categoryRowId: null,
+      categoryName: null,
+      assetRowId: 3,
+      toAssetRowId: 4,
+    });
+    await typeInStep("preset.feeLabel", "0");
+    await clickSave();
+
+    expect(sent.update!.fee).toBeNull();
+    expect(valueOf("preset.feeLabel")).toBe("preset.noneValue");
+  });
+
+  it("지운 카테고리를 가리키는 프리셋은 열기만 해서는 바뀐 값이 아니다 — 닫을 때 묻지 않는다", async () => {
+    const onClose = vi.fn();
+    act(() =>
+      root.render(
+        <PresetEditDialog
+          preset={{ ...basePreset, categoryRowId: 99, categoryName: "지운" }}
+          onClose={onClose}
+        />,
+      ),
+    );
+    await tick();
+    act(() => {
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+      );
+    });
+    await tick();
+    expect(document.querySelector("[role=alertdialog]")).toBeNull();
+  });
+});
+
+describe("고정 표식 · 종류 바꾸기 본문 (T7)", () => {
+  it("지출 프리셋의 고정 표식은 본문에 실리고, 이체로 바꾸면 키가 빠진다", async () => {
+    render({ ...basePreset, isFixed: true });
+    await clickSave();
+    expect(sent.update!.isFixed).toBe(true);
+    sent.update = null;
+    act(() => root.unmount());
+    root = createRoot(container);
+    render({
+      ...basePreset,
+      isFixed: true,
+      categoryRowId: null,
+      categoryName: null,
+      expenseType: "TRANSFER",
+      assetRowId: 3,
+      toAssetRowId: 4,
+    });
+    await clickSave();
+    expect(wire(sent.update)).not.toHaveProperty("isFixed");
+  });
+
+  it("지출 프리셋을 이체로 바꿔 저장하면 카테고리가 명시 null 로 나간다", async () => {
+    render(basePreset);
+    await click(chip("addTx.transfer"));
+    await pick("preset.fromAccount", "주거래");
+    await pick("preset.toAccount", "청약");
+    await clickSave();
+
+    expect(wire(sent.update)).toHaveProperty("categoryRowId");
+    expect(sent.update!.categoryRowId).toBeNull();
+    expect(sent.update!.expenseType).toBe("TRANSFER");
   });
 });

@@ -27,6 +27,7 @@ import { LogoTile } from "@/shared/ds/logo-tile";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { Textarea } from "@/shared/ds/textarea";
+import { useScrollToError } from "@/features/expense/model/useScrollToError";
 import { MAX_AMOUNT, parseAmount } from "@/shared/lib/groo/amount";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { nameIssue } from "@/shared/lib/groo/name-policy";
@@ -84,32 +85,46 @@ function StepRow({
   title,
   value,
   onClick,
+  errorMessage,
 }: {
   icon: ReactNode;
   title: string;
   value: string;
   onClick: () => void;
+  /** 줄 아래 한 줄 오류(좌우 24) */
+  errorMessage?: string | null;
 }) {
   return (
-    <List>
-      <ListButtonItem
-        prefix={
-          <span aria-hidden className={ROW_ICON}>
-            {icon}
-          </span>
-        }
-        title={title}
-        suffixText
-        suffix={
-          <>
-            <span className="line-clamp-2 whitespace-pre-wrap">{value}</span>
-            <ChevronRight aria-hidden className="size-[18px]" />
-          </>
-        }
-        aria-label={`${title}, ${value}`}
-        onClick={onClick}
-      />
-    </List>
+    <>
+      <List>
+        <ListButtonItem
+          prefix={
+            <span aria-hidden className={ROW_ICON}>
+              {icon}
+            </span>
+          }
+          title={title}
+          suffixText
+          suffix={
+            <>
+              <span className="line-clamp-2 whitespace-pre-wrap">{value}</span>
+              <ChevronRight aria-hidden className="size-[18px]" />
+            </>
+          }
+          aria-label={`${title}, ${value}`}
+          aria-invalid={errorMessage ? true : undefined}
+          onClick={onClick}
+        />
+      </List>
+      {errorMessage && (
+        <p
+          role="alert"
+          className="m-0 px-global-gutter pb-x2 font-sans text-t4 text-fg-critical"
+        >
+          {errorMessage}
+        </p>
+      )}
+    </>
   );
 }
 
@@ -133,8 +148,8 @@ export function PresetEditDialog({
   const wide = useWideSurface();
   const isNew = !preset;
   const categoriesQ = useExpenseCategories({ silent: true });
-  const assetsQ = useAssets();
-  const templatesQ = useExpenseTemplates();
+  const assetsQ = useAssets({ silent: true });
+  const templatesQ = useExpenseTemplates({ silent: true });
   // 저장 실패는 전역 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글)이 알린다
   const createMut = useCreateExpenseTemplate({ silent: true });
   const updateMut = useUpdateExpenseTemplate({ silent: true });
@@ -142,7 +157,7 @@ export function PresetEditDialog({
   const categories = categoriesQ.data ?? [];
   const assets = assetsQ.data?.assets ?? [];
 
-  const [initial] = useState(() => ({
+  const [initial, setInitial] = useState(() => ({
     type: (preset?.expenseType ?? "EXPENSE") as TxKind,
     name: preset?.templateName ?? "",
     categoryRowId: preset?.categoryRowId ?? null,
@@ -187,6 +202,11 @@ export function PresetEditDialog({
   const [draft, setDraft] = useState("");
   const [stepOrigin, setStepOrigin] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
+  // 저장 실패 Callout 은 맨 위라 아래까지 내린 채 저장하면 화면 밖이다 — 실패하면 올려 보인다
+  const errorRef = useScrollToError<HTMLDivElement>(
+    saveError,
+    createMut.error ?? updateMut.error,
+  );
   const contentRef = useRef<HTMLDivElement>(null);
 
   const isTransfer = type === "TRANSFER";
@@ -195,16 +215,44 @@ export function PresetEditDialog({
   // 이자는 **금액이 있을 때만** 받는다(금액이 매달 다르면 이자도 매달 다르다 — 2026-09-15). 금액을 비우면 이자도 비운다.
   const showInterest = isTransfer && lock && isLoanTarget(assets, toAssetRowId);
 
-  // 타입이 바뀌면 해당 타입의 카테고리가 아닌 경우 초기화. 이체에는 카테고리가 없다 — 남겨 두면 서버가 거절한다.
-  // (한 번 비우면 조건이 닫히므로 렌더 중에 맞춰도 반복되지 않는다)
+  // ── 규칙 밖 값은 화면이 먼저 비운다 — 서버가 거절해도 다시 해서는 안 되는 값이다 ──────────────
+  // 받기 전에는 읽어 온 값을 유지하고, 받았는데 목록에 없으면(지운 것) 비운다. 읽어 온 값을 비운 것은 사용자가 바꾼 것이 아니므로
+  // 처음 값(baseline)도 같이 비워 "바뀐 값" 으로 묻지 않는다. 비우면 조건이 닫히므로 렌더 중에 맞춰도 반복되지 않는다.
+  const forgetInitial = (patch: Partial<typeof initial>) =>
+    setInitial((i) => ({ ...i, ...patch }));
+  // 이체에는 카테고리가 없다 · 종류가 다르면 맞지 않는다 · 지운 카테고리 · 하위가 생겨 상위가 된 카테고리(말단만 받는다)
   if (categoryRowId != null) {
     const cat = categories.find((c) => c.rowId === categoryRowId);
-    // 받기 전에는 읽어 온 값을 유지하고, 받았는데 목록에 없으면(지운 카테고리) 비운다 — 안 비우면 지운 id 가 저장된다
-    if (
-      isTransfer ||
-      (categoriesQ.data !== undefined && (!cat || cat.expenseType !== type))
-    )
+    if (isTransfer || (cat && cat.expenseType !== type)) {
       setCategoryRowId(null);
+    } else if (
+      categoriesQ.data !== undefined &&
+      (!cat || cat.hasChildren === true)
+    ) {
+      setCategoryRowId(null);
+      if (categoryRowId === initial.categoryRowId)
+        forgetInitial({ categoryRowId: null });
+    }
+  }
+  // 지운 계좌 — 자산을 받았는데 목록에 없으면 비운다(옛 id 가 나가면 ASSET_NOT_FOUND 로 거절된다)
+  if (assetsQ.data !== undefined) {
+    if (assetRowId != null && !assets.some((a) => a.rowId === assetRowId)) {
+      setAssetRowId(null);
+      if (assetRowId === initial.assetRowId)
+        forgetInitial({ assetRowId: null });
+    } else if (
+      isTransfer &&
+      assetRowId != null &&
+      !transferEligible(assets).some((a) => a.rowId === assetRowId)
+    ) {
+      // 카드 계좌인 프리셋을 이체로 바꿨다 — 카드는 이체 상대가 아니다
+      setAssetRowId(null);
+    }
+    if (toAssetRowId != null && !assets.some((a) => a.rowId === toAssetRowId)) {
+      setToAssetRowId(null);
+      if (toAssetRowId === initial.toAssetRowId)
+        forgetInitial({ toAssetRowId: null });
+    }
   }
   // 이체가 아니게 되면 남아 있던 이체 칸을 지운다 — 실려 나가면 서버가 거절한다.
   if (!isTransfer && (toAssetRowId != null || fee || interest)) {
@@ -238,11 +286,20 @@ export function PresetEditDialog({
     attempted && isTransfer && assetRowId == null
       ? t("preset.fromRequired")
       : null;
+  // 같은 계좌: 보내는 계좌를 고를 때 받는 계좌를 비우므로 여기서는 비었을 때만 아니라 같을 때도 같은 글
   const toErr =
-    attempted && isTransfer && toAssetRowId == null
+    attempted &&
+    isTransfer &&
+    (toAssetRowId == null || toAssetRowId === assetRowId)
       ? t("preset.toRequired")
       : null;
   const amountTooLarge = amountNumber > MAX_AMOUNT;
+  const amountErr = attempted && amountTooLarge ? tc("amountTooLarge") : null;
+  // 이자 > 금액 — 서버가 거절한다(ASSET_TRANSFER_INVALID_INTEREST). 칸 아래에서 먼저 막는다
+  const interestTooBig =
+    isTransfer && lock && Number(interest || 0) > amountNumber;
+  const interestErr =
+    attempted && interestTooBig ? t("preset.interestTooBig") : null;
 
   const dirty =
     type !== initial.type ||
@@ -269,7 +326,8 @@ export function PresetEditDialog({
       (isTransfer
         ? !transferPartiesReady(assetRowId, toAssetRowId)
         : categoryRowId == null) ||
-      amountTooLarge;
+      amountTooLarge ||
+      interestTooBig;
     if (bad) {
       if (issue != null) nameRef.current?.focus();
       return;
@@ -282,7 +340,7 @@ export function PresetEditDialog({
       categoryRowId,
       // 이체 칸도 이 화면의 칸이다 — 지출·수입으로 바꿔 저장하면 `null` 로 지워진다.
       toAssetRowId: isTransfer ? toAssetRowId : null,
-      fee: isTransfer && fee ? Number(fee) : null,
+      fee: isTransfer && Number(fee) > 0 ? Number(fee) : null,
       // 자산을 받기 전이면 대출인지 모르니 읽어 온 값을 그대로 보낸다(받은 뒤에는 지금 규칙) — 안 그러면 조용히 null 로 저장된다
       interestAmount:
         (assetsQ.data === undefined ? isTransfer && lock : showInterest) &&
@@ -327,8 +385,8 @@ export function PresetEditDialog({
     if (step === "merchant") setMerchant(draft);
     else if (step === "memo") setDescription(draft);
     else if (step === "amount") setAmount(draft);
-    else if (step === "fee") setFee(draft);
-    else if (step === "interest") setInterest(draft);
+    else if (step === "fee") setFee(Number(draft) > 0 ? draft : "");
+    else if (step === "interest") setInterest(Number(draft) > 0 ? draft : "");
     setStep(null);
   };
   // ← · 기기 뒤로 가기 · Esc — 친 글이 들어올 때와 다르면 "작성한 내용이 사라져요" 를 묻고, 같으면 묻지 않는다. "완료" 는 묻지 않는다
@@ -509,15 +567,17 @@ export function PresetEditDialog({
         >
           {leave.node}
           {step != null && !wide && <SheetStepDone onClick={confirmStep} />}
-          <ResponsiveDialogBody scrollFog>
+          <ResponsiveDialogBody scrollFog={step == null}>
             {step != null ? (
               stepBody
             ) : (
               <>
                 {saveError && (
-                  <Callout tone="critical" role="alert" className="mb-x4">
-                    {t("preset.saveFailed")}
-                  </Callout>
+                  <div ref={errorRef}>
+                    <Callout tone="critical" role="alert" className="mb-x4">
+                      {t("preset.saveFailed")}
+                    </Callout>
+                  </div>
                 )}
                 <div className="pb-x2">
                   <ChipRadioGroup
@@ -577,7 +637,12 @@ export function PresetEditDialog({
                             t("preset.fromAccount"),
                             eligible,
                             assetRowId,
-                            setAssetRowId,
+                            (id) => {
+                              setAssetRowId(id);
+                              // 받는 계좌와 같으면 받는 계좌를 비운다 — 저장을 누르면 그 칸 아래 "받는 계좌를 골라주세요."
+                              if (id != null && id === toAssetRowId)
+                                setToAssetRowId(null);
+                            },
                             close,
                             false,
                           )
@@ -598,7 +663,7 @@ export function PresetEditDialog({
                         {({ close }) =>
                           assetPick(
                             t("preset.toAccount"),
-                            eligible.filter((a) => a.rowId !== assetRowId),
+                            eligible,
                             toAssetRowId,
                             setToAssetRowId,
                             close,
@@ -610,6 +675,7 @@ export function PresetEditDialog({
                         icon={<Coins />}
                         title={t("preset.amountLabel")}
                         value={amountValue}
+                        errorMessage={amountErr}
                         onClick={() => enterStep("amount")}
                       />
                       <StepRow
@@ -623,6 +689,7 @@ export function PresetEditDialog({
                           icon={<Percent />}
                           title={t("addTx.interest")}
                           value={interestValue}
+                          errorMessage={interestErr}
                           onClick={() => enterStep("interest")}
                         />
                       )}
@@ -644,8 +711,7 @@ export function PresetEditDialog({
                       >
                         {({ close }) =>
                           categoriesQ.data === undefined ? (
-                            categoriesQ.isError ||
-                            categoriesQ.errorUpdateCount > 0 ? (
+                            categoriesQ.isError ? (
                               <BandFailure
                                 title={t("preset.categoryLoadFailed")}
                                 onRetry={() => void categoriesQ.refetch()}
@@ -733,6 +799,7 @@ export function PresetEditDialog({
                         icon={<Coins />}
                         title={t("preset.amountLabel")}
                         value={amountValue}
+                        errorMessage={amountErr}
                         onClick={() => enterStep("amount")}
                       />
                     </>
