@@ -131,6 +131,13 @@ type Props = {
    * 들 상태가 없다.
    */
   rewrite?: RewriteSeed | null;
+  /**
+   * 수정 저장이 끝났다 — 다시 받기가 끝난 뒤 응답 거래로 부른다(`onClose` 보다 먼저). 거래 상세가 [수정] 뒤 상세로 돌아와 새 값을
+   * 그릴 때 쓴다(I-21 7a). 새로 만들기 · 고쳐 쓰기에는 부르지 않는다(고쳐 쓰기는 옛 거래가 지워져 돌아갈 상세가 없다).
+   */
+  onSaved?: (saved: Expense) => void;
+  /** 이체 수정 저장이 끝났다 — `onSaved` 의 이체 짝 */
+  onTransferSaved?: (saved: AssetTransfer) => void;
 };
 
 /** 고쳐 쓸 거래와 그 거래의 분할 — 분할은 교체 본문에 함께 실린다. */
@@ -165,6 +172,8 @@ export function AddTxSheet({
   defaultDate,
   editTransfer,
   rewrite,
+  onSaved,
+  onTransferSaved,
 }: Props) {
   const { t, i18n } = useTranslation("expense");
   const { t: tc } = useTranslation("common");
@@ -641,6 +650,7 @@ export function AddTxSheet({
         onSuccess: (updated) => {
           notifyResult(updated);
           setSaveConfirm(null);
+          onSaved?.(updated);
           onClose();
         },
         onSettled: unlock,
@@ -761,7 +771,13 @@ export function AddTxSheet({
       if (editTransfer) {
         updateTransferMut.mutate(
           { id: editTransfer.rowId, data: payload },
-          { onSuccess: onClose, onSettled: unlock },
+          {
+            onSuccess: (updated) => {
+              onTransferSaved?.(updated);
+              onClose();
+            },
+            onSettled: unlock,
+          },
         );
         return;
       }
