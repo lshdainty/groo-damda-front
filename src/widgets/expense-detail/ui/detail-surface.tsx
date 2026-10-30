@@ -37,7 +37,7 @@ function resolveFooterNode(
 }
 
 interface DetailSurfaceProps {
-  title: string;
+  title: ReactNode;
   /** 시트 · 대화상자를 모두 닫는다 */
   onClose: () => void;
   /**

@@ -23,6 +23,14 @@ const api = vi.hoisted(() => ({
   recurringSeed: null as unknown,
   /** 끼운 수정 폼이 값 하나를 치는 단계에 있다 */
   embedInSub: false,
+  begun: null as unknown,
+  parts: null as
+    | null
+    | (Record<string, unknown> & {
+        onBack: () => void;
+        inSub: boolean;
+        onDone: () => void;
+      }),
   addTx: null as null | {
     editTransfer?: AssetTransfer;
     onTransferSaved?: (t: AssetTransfer) => void;
@@ -65,24 +73,33 @@ vi.mock("@/shared/ui/groo/dialogs", () => ({
   },
 }));
 vi.mock("@/widgets/add-tx", () => ({
-  AddTxSheet: (p: NonNullable<typeof api.addTx>) => {
+  // 수정 폼은 상세가 한 번 들고(useTxForm) 같은 시트 안 한 단계로 끼운다(7a) — 호스트가 넘기는 인자와 조각만 본다
+  useTxForm: (p: NonNullable<typeof api.addTx>) => {
     api.addTx = p;
-    // 수정 폼은 자기 표면을 그리지 않고 상세 시트에 한 단계로 끼운다(7a) — 호스트 표면 안에 본문이 들어온다
-    return p.embed ? (
-      p.embed({
-        title: "addTx.editTitle",
-        body: <div data-testid="add-tx-sheet" />,
-        footer: () => null,
-        dirty: false,
-        onBack: () => p.onBack?.(),
-        inSub: api.embedInSub,
-        onDone: () => {},
-        overlays: null,
-        bodyRef: { current: null },
-      })
-    ) : (
-      <div data-testid="add-tx-sheet" />
-    );
+    return {
+      main: "2",
+      sub: null,
+      beginEdit: (seed: unknown) => {
+        api.begun = seed;
+      },
+    };
+  },
+  useTxSheetParts: (
+    _f: unknown,
+    o: { onBack?: () => void; onClose: () => void },
+  ) => {
+    api.parts = {
+      title: "addTx.editTitle",
+      body: <div data-testid="add-tx-sheet" />,
+      footer: () => null,
+      dirty: false,
+      onBack: () => o.onBack?.(),
+      inSub: api.embedInSub,
+      onDone: () => {},
+      overlays: null,
+      bodyRef: { current: null },
+    };
+    return { embedParts: api.parts, overlays: null };
   },
 }));
 vi.mock("@/features/recurring-transaction/ui/RecurringAddDialog", () => ({
@@ -146,6 +163,8 @@ beforeEach(async () => {
   api.recurringSeed = null;
   api.addTx = null;
   api.embedInSub = false;
+  api.begun = null;
+  api.parts = null;
   onClose.mockClear();
   container = document.createElement("div");
   document.body.appendChild(container);

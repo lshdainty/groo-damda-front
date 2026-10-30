@@ -56,6 +56,14 @@ const api = vi.hoisted(() => ({
   confirms: [] as { title: string; danger?: boolean; singleAction?: boolean }[],
   /** 끼운 수정 폼이 값 하나를 치는 단계에 있다 */
   embedInSub: false,
+  begun: null as unknown,
+  parts: null as
+    | null
+    | (Record<string, unknown> & {
+        onBack: () => void;
+        inSub: boolean;
+        onDone: () => void;
+      }),
   addTx: null as null | {
     expense?: Expense;
     onSaved?: (e: Expense) => void;
@@ -112,24 +120,33 @@ vi.mock("@/shared/ui/groo/dialogs", () => ({
   },
 }));
 vi.mock("@/widgets/add-tx", () => ({
-  AddTxSheet: (p: NonNullable<typeof api.addTx>) => {
+  // 수정 폼은 상세가 한 번 들고(useTxForm) 같은 시트 안 한 단계로 끼운다(7a) — 호스트가 넘기는 인자와 조각만 본다
+  useTxForm: (p: NonNullable<typeof api.addTx>) => {
     api.addTx = p;
-    // 수정 폼은 자기 표면을 그리지 않고 상세 시트에 한 단계로 끼운다(7a) — 호스트 표면 안에 본문이 들어온다
-    return p.embed ? (
-      p.embed({
-        title: "addTx.editTitle",
-        body: <div data-testid="add-tx-sheet" />,
-        footer: () => null,
-        dirty: false,
-        onBack: () => p.onBack?.(),
-        inSub: api.embedInSub,
-        onDone: () => {},
-        overlays: null,
-        bodyRef: { current: null },
-      })
-    ) : (
-      <div data-testid="add-tx-sheet" />
-    );
+    return {
+      main: "2",
+      sub: null,
+      beginEdit: (seed: unknown) => {
+        api.begun = seed;
+      },
+    };
+  },
+  useTxSheetParts: (
+    _f: unknown,
+    o: { onBack?: () => void; onClose: () => void },
+  ) => {
+    api.parts = {
+      title: "addTx.editTitle",
+      body: <div data-testid="add-tx-sheet" />,
+      footer: () => null,
+      dirty: false,
+      onBack: () => o.onBack?.(),
+      inSub: api.embedInSub,
+      onDone: () => {},
+      overlays: null,
+      bodyRef: { current: null },
+    };
+    return { embedParts: api.parts, overlays: null };
   },
 }));
 vi.mock("@/features/expense", () => ({
@@ -283,6 +300,8 @@ beforeEach(async () => {
   api.confirms = [];
   api.addTx = null;
   api.embedInSub = false;
+  api.begun = null;
+  api.parts = null;
   onClose.mockClear();
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -918,10 +937,28 @@ describe("7a — [수정] 은 상세 위에서 수정 폼을 열고 저장하면
     ).not.toBeNull();
   });
 
+  it("[수정] 은 들고 있던 폼을 그 거래로 갈아 끼우고, [고쳐 쓰기] 는 시드를 받아 다시 갈아 끼운다", () => {
+    render();
+    click(lastButton("edit"));
+    expect(api.begun).toEqual({
+      expense: expect.objectContaining({ rowId: 77 }),
+    });
+    act(() =>
+      (
+        api.addTx as unknown as {
+          onRewrite: (seed: { of: Expense; splits: never[] }) => void;
+        }
+      ).onRewrite({ of: baseExpense, splits: [] }),
+    );
+    expect(api.begun).toEqual({
+      rewrite: { of: baseExpense, splits: [] },
+    });
+  });
+
   it("수정 단계에서 ← 는 상세로 돌아온다 — 시트는 그대로", () => {
     render();
     click(lastButton("edit"));
-    act(() => api.addTx!.onBack!());
+    act(() => api.parts!.onBack());
     expect(document.querySelector("[data-testid=add-tx-sheet]")).toBeNull();
     expect(
       document.querySelector("[data-slot=tx-detail-head]")!.textContent,

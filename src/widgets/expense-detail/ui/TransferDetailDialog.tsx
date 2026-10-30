@@ -14,7 +14,7 @@ import {
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import { useAssets, useDeleteTransfer } from "@/features/asset";
 import { RecurringAddDialog } from "@/features/recurring-transaction/ui/RecurringAddDialog";
-import { AddTxSheet } from "@/widgets/add-tx";
+import { useTxForm, useTxSheetParts } from "@/widgets/add-tx";
 import { SheetStepDone } from "@/widgets/calendar/ui/event-form/step-header";
 import type { Asset, AssetTransfer } from "@/entities/asset";
 
@@ -83,6 +83,24 @@ export function TransferDetailDialog({
   // 수정 저장의 응답으로 갈아 그린다(부모는 목록에서 집은 스냅샷을 준다)
   const [saved, setSaved] = useState<AssetTransfer | null>(null);
   const transfer = saved?.rowId === transferProp.rowId ? saved : transferProp;
+  // 수정 폼 — 상세가 한 번 들고 같은 시트 안 한 단계로 보인다(7a). [수정] 때 이 이체로 갈아 끼운다
+  const [editing, setEditing] = useState<AssetTransfer | null>(null);
+  const form = useTxForm({
+    editTransfer: editing ?? undefined,
+    onTransferSaved: (updated) => setSaved(updated),
+    onClose: () => setStep("detail"),
+  });
+  const formParts = useTxSheetParts(form, {
+    mobile,
+    embedded: true,
+    onClose: () => setStep("detail"),
+    onBack: () => setStep("detail"),
+  });
+  const startEdit = () => {
+    setEditing(transfer);
+    form.beginEdit({ editTransfer: transfer });
+    setStep("edit");
+  };
 
   // 이체 상세는 거래 상세와 같은 카드로 묶는다. 금액만 가리고 수수료를 남기면 `이체금액 = 출금총액 − 수수료` 로 좁혀지므로 한 덩어리로 본다.
   const hidden = useHideAmounts("ledger.txDetail", "transfer");
@@ -120,53 +138,39 @@ export function TransferDetailDialog({
     );
   };
 
-  if (step === "edit") {
-    return (
-      <AddTxSheet
-        editTransfer={transfer}
-        mobile={mobile}
-        onTransferSaved={(updated) => setSaved(updated)}
-        onBack={() => setStep("detail")}
-        onClose={() => setStep("detail")}
-        embed={(p) => (
-          <DetailSurface
-            title={p.title as string}
-            onClose={onClose}
-            subStep
-            dirty={p.dirty}
-            onStepBack={p.onBack}
-            footerNode={p.footer}
-            bodyRef={p.bodyRef}
-            // 값 하나를 치는 단계는 닫기 원 자리에 "완료" — 표면 경계는 1280(시트는 768 ~ 1279 포함)이라 mobile 로 가르지 않는다
-            stepDone={
-              p.inSub ? <SheetStepDone onClick={p.onDone} /> : undefined
-            }
-            bodyKey="edit"
-          >
-            {p.body}
-          </DetailSurface>
-        )}
-      />
-    );
-  }
+  const isEditing = step === "edit";
+  const ep = formParts.embedParts;
 
   return (
     <>
       <DetailSurface
-        title={t("transferDetailTitle")}
+        title={isEditing ? ep.title : t("transferDetailTitle")}
         onClose={onClose}
-        bodyKey="detail"
+        subStep={isEditing}
+        dirty={isEditing ? ep.dirty : false}
+        onStepBack={isEditing ? ep.onBack : undefined}
+        footerNode={isEditing ? ep.footer : undefined}
+        bodyRef={isEditing ? ep.bodyRef : undefined}
+        // 값 하나를 치는 단계는 닫기 원 자리에 "완료" — 표면 경계는 1280(시트는 768 ~ 1279 포함)이라 mobile 로 가르지 않는다
+        stepDone={
+          isEditing && ep.inSub ? (
+            <SheetStepDone onClick={ep.onDone} />
+          ) : undefined
+        }
+        bodyKey={isEditing ? `edit:${form.main}:${form.sub ?? ""}` : "detail"}
         footer={
-          locked
+          isEditing || locked
             ? undefined
             : {
                 onDelete: () => setConfirmDelete(true),
                 deleting: deleteMut.isPending,
-                primary: { label: tc("edit"), onClick: () => setStep("edit") },
+                primary: { label: tc("edit"), onClick: startEdit },
               }
         }
       >
-        {assetsQ.isLoading ? (
+        {isEditing ? (
+          ep.body
+        ) : assetsQ.isLoading ? (
           <TxDetailSkeleton />
         ) : (
           <>
@@ -250,6 +254,7 @@ export function TransferDetailDialog({
           </>
         )}
       </DetailSurface>
+      {isEditing && formParts.overlays}
 
       {openRecurring && (
         <RecurringAddDialog

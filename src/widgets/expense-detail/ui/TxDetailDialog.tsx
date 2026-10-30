@@ -35,7 +35,7 @@ import { useAssets } from "@/features/asset";
 import { SplitTxDialog } from "@/features/expense-split/ui/SplitTxDialog";
 import { RecurringFromTxDialog } from "@/features/recurring-transaction/ui/RecurringFromTxDialog";
 import { DutchPayFromTxDialog } from "@/features/dutch-pay/ui/DutchPayFromTxDialog";
-import { AddTxSheet } from "@/widgets/add-tx";
+import { useTxForm, useTxSheetParts, type RewriteSeed } from "@/widgets/add-tx";
 import { SheetStepDone } from "@/widgets/calendar/ui/event-form/step-header";
 import type { Expense, ExpenseCategory } from "@/entities/expense";
 import type { Asset } from "@/entities/asset";
@@ -101,6 +101,34 @@ export function TxDetailDialog({
   // 이 자리를 갈아 열려 있는 상세가 새 값으로 다시 그려지게 한다(응답은 다시 받기가 끝난 뒤에 온다 — `invalidateFor` wait).
   const [marked, setMarked] = useState<Expense | null>(null);
   const expense = marked?.rowId === expenseProp.rowId ? marked : expenseProp;
+  // 수정 폼 — 상세가 한 번 들고 같은 시트 안 한 단계로 보인다(7a · 일정 상세 `EventDetailSurface` 와 같은 구조). [수정] · [고쳐 쓰기] 때 그 거래로 갈아 끼운다
+  const [editSeed, setEditSeed] = useState<{
+    expense?: Expense;
+    rewrite?: RewriteSeed;
+  } | null>(null);
+  const form = useTxForm({
+    expense: editSeed?.expense,
+    rewrite: editSeed?.rewrite,
+    // 저장하면 다시 받은 뒤 응답 값으로 상세를 다시 그린다. 고쳐 쓰기는 옛 거래가 지워져 돌아갈 상세가 없어 시트를 모두 닫는다
+    onSaved: (updated) => setMarked(updated),
+    onReplaced: onClose,
+    onClose: () => setStep("detail"),
+    onRewrite: (seed) => {
+      setEditSeed({ rewrite: seed });
+      form.beginEdit({ rewrite: seed });
+    },
+  });
+  const formParts = useTxSheetParts(form, {
+    mobile,
+    embedded: true,
+    onClose: () => setStep("detail"),
+    onBack: () => setStep("detail"),
+  });
+  const startEdit = () => {
+    setEditSeed({ expense });
+    form.beginEdit({ expense });
+    setStep("edit");
+  };
   // 옛 겹침 대화상자 — 나누기 · 반복 · 더치페이는 I-21 21-3 이 단계로 옮긴다
   const [openSub, setOpenSub] = useState<
     "split" | "recurring" | "dutch" | null
@@ -349,38 +377,8 @@ export function TxDetailDialog({
     ? t("txDetail.incomeTitle")
     : t("txDetail.expenseTitle");
 
-  // ── [수정] — 같은 시트 안 한 단계(7a). 머리 · 본문 · 바닥만 바뀌고 시트는 그대로다. ← · Esc · 기기 뒤로 가기는 상세로(바뀐 값이 있으면 먼저 묻는다),
-  // 저장하면 다시 받은 뒤 응답 값으로 상세를 다시 그린다. 고쳐 쓰기는 옛 거래가 지워져 돌아갈 상세가 없어 시트를 모두 닫는다
-  if (step === "edit") {
-    return (
-      <AddTxSheet
-        expense={expense}
-        mobile={mobile}
-        onSaved={(updated) => setMarked(updated)}
-        onReplaced={onClose}
-        onBack={() => setStep("detail")}
-        onClose={() => setStep("detail")}
-        embed={(p) => (
-          <DetailSurface
-            title={p.title as string}
-            onClose={onClose}
-            subStep
-            dirty={p.dirty}
-            onStepBack={p.onBack}
-            footerNode={p.footer}
-            bodyRef={p.bodyRef}
-            // 값 하나를 치는 단계는 닫기 원 자리에 "완료" — 표면 경계는 1280(시트는 768 ~ 1279 포함)이라 mobile 로 가르지 않는다
-            stepDone={
-              p.inSub ? <SheetStepDone onClick={p.onDone} /> : undefined
-            }
-            bodyKey="edit"
-          >
-            {p.body}
-          </DetailSurface>
-        )}
-      />
-    );
-  }
+  const editing = step === "edit";
+  const ep = formParts.embedParts;
 
   const inRefund = step === "refund";
   const refundDirty = inRefund && refundDate !== today;
@@ -401,24 +399,44 @@ export function TxDetailDialog({
           // 환불된 거래는 고칠 수 없다 — 돈이 이미 자산으로 돌아가 있어 되돌릴 기준이 사라진다(서버도 EXP_043).
           primary: isRefunded
             ? undefined
-            : { label: tc("edit"), onClick: () => setStep("edit") },
+            : { label: tc("edit"), onClick: startEdit },
         };
 
   return (
     <>
       <DetailSurface
-        title={inRefund ? t("txDetail.refundConfirmTitle") : title}
+        title={
+          editing
+            ? ep.title
+            : inRefund
+              ? t("txDetail.refundConfirmTitle")
+              : title
+        }
         onClose={onClose}
-        subStep={inRefund}
-        dirty={refundDirty}
-        onStepBack={() => {
-          setStep("detail");
-          refundMut.reset();
-        }}
-        footer={footer}
-        bodyKey={step}
+        subStep={inRefund || editing}
+        dirty={editing ? ep.dirty : refundDirty}
+        onStepBack={
+          editing
+            ? ep.onBack
+            : () => {
+                setStep("detail");
+                refundMut.reset();
+              }
+        }
+        footer={editing ? undefined : footer}
+        footerNode={editing ? ep.footer : undefined}
+        bodyRef={editing ? ep.bodyRef : undefined}
+        // 값 하나를 치는 단계는 닫기 원 자리에 "완료" — 표면 경계는 1280(시트는 768 ~ 1279 포함)이라 mobile 로 가르지 않는다
+        stepDone={
+          editing && ep.inSub ? (
+            <SheetStepDone onClick={ep.onDone} />
+          ) : undefined
+        }
+        bodyKey={editing ? `edit:${form.main}:${form.sub ?? ""}` : step}
       >
-        {inRefund ? (
+        {editing ? (
+          ep.body
+        ) : inRefund ? (
           <>
             {refundFailed && (
               <div className="px-global-gutter pb-x2 pt-x1">
@@ -607,6 +625,8 @@ export function TxDetailDialog({
           onConfirm={runCancelRefund}
         />
       )}
+
+      {editing && formParts.overlays}
 
       {openSub === "split" && (
         <SplitTxDialog
