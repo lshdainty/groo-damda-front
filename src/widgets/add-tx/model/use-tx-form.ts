@@ -258,6 +258,13 @@ export function useTxForm({
     () => assetsQ.data?.assets ?? [],
     [assetsQ.data],
   );
+  /**
+   * 자산 · 카테고리 목록을 받았다 — 받기 전(또는 실패)에는 "목록에 없다" 를 판정하지 못한다. 렌더 중 지우기는 받은 뒤에만 한다
+   * (받기 전에 지우면 읽어 온 할부 · 이자 · 카테고리가 돌아오지 않고, 그대로 저장되면 기록을 잃는다 — N1).
+   */
+  const assetsLoaded = assetsQ.data != null;
+  const categoriesLoaded = categoriesQ.data != null;
+  const listsReady = assetsLoaded && categoriesLoaded;
 
   const [type, setType] = useState<TxType>(
     editTransfer ? "TRANSFER" : (seed?.expenseType ?? "EXPENSE"),
@@ -351,6 +358,9 @@ export function useTxForm({
   const [smsLow, setSmsLow] = useState(false);
   /** 문자를 읽는 중 — [문자 읽기] 버튼 진행 표시 */
   const [smsLoading, setSmsLoading] = useState(false);
+  /** 저장 때 자산 · 카테고리 목록을 받아 오지 못했다 — 값을 추측해 보내지 않고 요청 없이 맨 위 알림으로 알린다 */
+  const [listsFailed, setListsFailed] = useState(false);
+  const [saveRetry, setSaveRetry] = useState(0);
 
   // 분할 합 일치화: 금액을 바꿔 기존 분할 합과 어긋날 때 맞추기 플로우
   const [openReconcile, setOpenReconcile] = useState(false);
@@ -501,6 +511,10 @@ export function useTxForm({
   };
 
   const applyPreset = (p: ExpenseTemplate) => {
+    // 문자 초안 뒤 프리셋을 누르면 문자 경로(취소 문자 차단 · 카드 기억)를 떠난다 — 프리셋으로 채운 새 거래로 저장된다
+    setSmsDraft(null);
+    setRememberCard(false);
+    setSmsLow(false);
     setType(p.expenseType as TxType);
     // 프리셋 금액은 원화다 — 통화 칩이 ₩ KRW 로 돌아온다(20a). 금액은 채운 값일 뿐 잠그지 않는다(33a)
     setOrigCurrency(DEFAULT_CURRENCY);
@@ -554,7 +568,7 @@ export function useTxForm({
   const showInterest = isTransfer && isLoanTarget(assets, toAssetRowId);
 
   // 대출이 아니게 되면 남아 있던 이자를 지운다(저장 시 흘러들지 않도록).
-  if (!showInterest && interest) setInterest("");
+  if (assetsLoaded && !showInterest && interest) setInterest("");
 
   // 할부는 신용카드 지출에만 존재한다 — 체크카드는 긁는 즉시 계좌에서 빠지고, 현금·이체는 나눌 수 없다.
   const showInstallment = useMemo(() => {
@@ -565,7 +579,8 @@ export function useTxForm({
   }, [type, assetRowId, assets]);
 
   // 신용카드가 아니게 되면 남아 있던 할부 개월을 지운다(저장 시 흘러들지 않도록).
-  if (!showInstallment && installmentMonths) setInstallmentMonths("");
+  if (assetsLoaded && !showInstallment && installmentMonths)
+    setInstallmentMonths("");
 
   // 외화는 지출·수입에만 — 이체는 두 자산 사이의 이동이라 통화가 자산에 달려 있다.
   const isForeignTx = type !== "TRANSFER" && origCurrency !== DEFAULT_CURRENCY;
@@ -600,15 +615,38 @@ export function useTxForm({
   }
 
   // 결제 수단·거래 타입 변경 시 현재 선택한 자산이 허용 목록에 없으면 리셋
-  if (assetRowId != null) {
+  // 목록에 없는 값은 프리셋 · 문자로 새로 채운 것만 비운다 — 거래에서 읽어 온 값은 기록이라 그대로 두고 줄에 "지운 계좌" 로 보인다(N4)
+  if (assetRowId != null && assetsLoaded) {
     const picked = assets.find((a) => a.rowId === assetRowId);
-    if (picked && !allowAsset(picked)) setAssetRowId(null);
+    if (
+      picked ? !allowAsset(picked) : assetRowId !== (seed?.assetRowId ?? null)
+    )
+      setAssetRowId(null);
+  }
+  if (fromAssetRowId != null && assetsLoaded) {
+    if (
+      !assets.some((a) => a.rowId === fromAssetRowId) &&
+      fromAssetRowId !== (editTransfer?.fromAssetRowId ?? null)
+    )
+      setFromAssetRowId(null);
+  }
+  if (toAssetRowId != null && assetsLoaded) {
+    if (
+      !assets.some((a) => a.rowId === toAssetRowId) &&
+      toAssetRowId !== (editTransfer?.toAssetRowId ?? null)
+    )
+      setToAssetRowId(null);
   }
 
   // 타입 전환 시 해당 타입에 속하지 않는 카테고리는 리셋
-  if (categoryRowId != null) {
+  if (categoryRowId != null && categoriesLoaded) {
     const cat = categories.find((c) => c.rowId === categoryRowId);
-    if (!cat || cat.expenseType !== type) setCategoryRowId(null);
+    if (
+      cat
+        ? cat.expenseType !== type
+        : categoryRowId !== (seed?.categoryRowId ?? null)
+    )
+      setCategoryRowId(null);
   }
 
   const amountNumber = parseAmount(amount);
@@ -849,7 +887,8 @@ export function useTxForm({
     replaceMut.isError ||
     createTransferMut.isError ||
     updateTransferMut.isError ||
-    commitSmsMut.isError;
+    commitSmsMut.isError ||
+    listsFailed;
 
   /**
    * 문자 해석 결과를 폼에 채운다.
@@ -860,6 +899,7 @@ export function useTxForm({
   const applySms = (text: string, parsed: SmsParseResult) => {
     setSmsDraft({ text, parsed });
     setSmsLow(parsed.confidence === "LOW");
+    setActivePresetId(null);
     setRememberCard(false);
     setType("EXPENSE");
     if (parsed.amount != null) setAmount(String(parsed.amount));
@@ -885,9 +925,25 @@ export function useTxForm({
     }
   };
 
+  const loadListsThenSave = () => {
+    savingRef.current = true;
+    setListsFailed(false);
+    void Promise.all([assetsQ.refetch?.(), categoriesQ.refetch?.()]).then(
+      ([a, c]) => {
+        savingRef.current = false;
+        if (a?.data && c?.data) setSaveRetry((n) => n + 1);
+        else setListsFailed(true);
+      },
+    );
+  };
   const save = () => {
     // 저장이 나가 있는 동안 또 누르면 같은 거래가 두 번 생긴다(QA 2026-09-02) — 첫 요청이 끝날 때까지 막는다.
     if (submitting || savingRef.current) return;
+    // 목록이 없으면 그때 받아 온 뒤 판정하고 보낸다(닫힌 회차 확인창도 그 뒤). 못 받으면 요청 없이 알림 — 값을 추측해 보내지 않는다
+    if (!listsReady) {
+      loadListsThenSave();
+      return;
+    }
     setShowErrors(true);
     const bad = firstError();
     if (bad) {
@@ -1041,6 +1097,15 @@ export function useTxForm({
     }
   };
 
+  // 저장이 받아 온 목록으로 이어진다 — 최신 렌더의 save 를 부른다
+  const saveRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    saveRef.current = save;
+  });
+  useEffect(() => {
+    if (saveRetry > 0) saveRef.current();
+  }, [saveRetry]);
+
   /**
    * 프리셋 칩 — 누르면 채운다. 금액이 있으면 2단계로, 비었으면 1단계에 남아 금액 칸에 초점(Q4 B).
    * 적용한 칩을 다시 누르면 표시만 해제한다(값은 그대로 · 사용 기록 touch 를 보내지 않는다).
@@ -1088,7 +1153,8 @@ export function useTxForm({
       setAmount("");
       setFxRate("");
     } else if (isForeignTx && !toForeign) {
-      const n = Math.floor(parseFloat(origAmount) || 0);
+      // 서버 환산과 같은 반올림(원 단위 HALF_UP — AssetServiceImpl 의 원화 환산)
+      const n = Math.round(parseFloat(origAmount) || 0);
       setAmount(n > 0 ? String(n) : "");
     }
     setOrigCurrency(code);
@@ -1176,6 +1242,12 @@ export function useTxForm({
     reconciledSplits,
   });
   const [initialSnapshot, setInitialSnapshot] = useState(snapshot);
+  // 문자로 채운 값이 처음 값이다(지시서 24 "문자 초안: 채운 값") — 읽은 직후 닫아도 묻지 않는다
+  const [rebaseSnapshot, setRebaseSnapshot] = useState(false);
+  if (rebaseSnapshot) {
+    setRebaseSnapshot(false);
+    setInitialSnapshot(snapshot);
+  }
   const dirty = snapshot !== initialSnapshot;
 
   /**
@@ -1225,6 +1297,14 @@ export function useTxForm({
     setPresetAmount("");
     setPresetShow(false);
     setRewriting(false);
+    // 지난 저장 실패 알림이 다음 [수정] · [고쳐 쓰기] 에 남아 뜨지 않게
+    createMut.reset();
+    updateMut.reset();
+    replaceMut.reset();
+    createTransferMut.reset();
+    updateTransferMut.reset();
+    commitSmsMut.reset();
+    setListsFailed(false);
     setInitialSnapshot(
       snapshotOf({
         ...v,
@@ -1297,6 +1377,7 @@ export function useTxForm({
 
   /** 문자 단계가 성공했다 — 채운 값으로 2단계 */
   const finishSms = () => {
+    setRebaseSnapshot(true);
     setSub(null);
     setFocusMerchant(false);
     setEmptyPresetName(null);
@@ -1448,6 +1529,8 @@ export function useTxForm({
     smsLow,
     smsLoading,
     setSmsLoading,
+    assetsLoaded,
+    categoriesLoaded,
     setSmsLow,
     togglePreset,
     changeType,

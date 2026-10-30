@@ -67,8 +67,13 @@ export function TxStep2({ f }: { f: TxForm }) {
       minute: Number(hhmm.slice(3, 5)),
     });
   const none = t("addTx.none");
-  const asset = (id: number | null) =>
-    f.assets.find((a) => a.rowId === id)?.assetName ?? null;
+  // 목록에 없는 id(지운 계좌 · 카테고리)는 "없음" 이 아니라 "지운 …" 으로 보인다 — 읽어 온 기록이라 본문은 그 id 그대로(N4)
+  const asset = (id: number | null) => {
+    if (id == null) return null;
+    const found = f.assets.find((a) => a.rowId === id);
+    if (found) return found.assetName;
+    return f.assetsLoaded ? t("addTx.deletedAsset") : "…";
+  };
 
   const cat = f.selectedCategory;
   const catParent =
@@ -79,7 +84,11 @@ export function TxStep2({ f }: { f: TxForm }) {
     ? catParent
       ? `${catParent.categoryName} · ${cat.categoryName}`
       : cat.categoryName
-    : null;
+    : f.categoryRowId != null
+      ? f.categoriesLoaded
+        ? t("addTx.deletedCategory")
+        : "…"
+      : null;
 
   const methodItems = [
     { value: "", label: t("addTx.noMethodOption") },

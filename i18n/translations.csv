@@ -248,7 +248,7 @@ calendar,form.endBeforeStart,종료가 시작보다 빠를 수 없어요,End can
 calendar,deleteConfirm.title,일정 삭제,Delete event
 calendar,deleteConfirm.message,"""{{name}}"" 일정을 삭제할까요? 삭제한 일정은 되돌릴 수 없어요.","Delete the ""{{name}}"" event? This action cannot be undone."
 calendar,deleteConfirm.messageRecurring,"""{{name}}"" 일정은 반복 일정이라 모든 회차가 함께 삭제돼요. 삭제한 일정은 되돌릴 수 없어요.","""{{name}}"" is a repeating event, so every occurrence will be deleted. This action cannot be undone."
-calendar,deleteConfirm.failed,일정을 삭제하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Could not delete the event. Please try again in a moment.
+calendar,deleteConfirm.failed,일정을 삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete the event. Please try again in a moment.
 calendar,deleteConfirm.cancel,취소,Cancel
 calendar,deleteConfirm.confirm,삭제,Delete
 calendar,label,라벨,Label
@@ -1649,6 +1649,8 @@ expense,addTx.none,없음,None
 expense,addTx.noAccountOption,계좌·카드 없음,No account or card
 expense,addTx.noMethodOption,결제 수단 없음,No payment method
 expense,addTx.noCategoryValue,카테고리 없음,No category
+expense,addTx.deletedAsset,지운 계좌,Deleted account
+expense,addTx.deletedCategory,지운 카테고리,Deleted category
 expense,addTx.noDepositAccount,입금 계좌 없음,No deposit account
 expense,addTx.noIncomeMethod,수입 방식 없음,No income method
 expense,addTx.fromAccountPick,보내는 계좌 선택,Select the sending account
@@ -2634,7 +2636,7 @@ expense,txm.today,오늘,Today
 expense,txm.yesterday,어제,Yesterday
 expense,txm.monthCalendar,월 달력,Month calendar
 expense,txm.loadFailed,거래를 불러오지 못했어요,Couldn't load transactions
-expense,txm.loadFailedDesc,잠시 뒤에 다시 시도해주세요.,Please try again in a moment.
+expense,txm.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
 expense,txm.emptyFiltered,조건에 맞는 거래가 없어요,No transactions match
 expense,txm.emptyFilteredDesc,조건을 바꾸거나 지워보세요.,Change or clear the filters.
 expense,filter.appliedGroup,적용한 필터,Applied filters
@@ -3253,4 +3255,4 @@ calendar,form.endTime,종료 시각,End time
 calendar,form.rows,일정 정보,Event details
 calendar,form.rowsMore,반복 · 알림 · 장소 · 설명,"Repeat, reminder, location and description"
 calendar,quickAdd.detail,자세히,Details
-calendar,form.saveFailed,일정을 저장하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Could not save the event. Please try again in a moment.
+calendar,form.saveFailed,일정을 저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save the event. Please try again in a moment.

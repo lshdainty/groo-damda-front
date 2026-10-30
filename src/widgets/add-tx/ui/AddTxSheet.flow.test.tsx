@@ -36,6 +36,7 @@ const sent = vi.hoisted(() => ({
   /** 문자 전용 저장 경로(`/import/sms/commit`)로 나간 본문(QA #123) */
   sms: null as Record<string, unknown> | null,
   transfer: null as Record<string, unknown> | null,
+  transferUpdate: null as Record<string, unknown> | null,
   /** 훅이 어떤 옵션으로 불렸나 — `silent` 를 켜야 전역 토스트가 겹치지 않는다 */
   opts: {} as Record<string, unknown>,
   snack: [] as string[],
@@ -44,6 +45,10 @@ const state = vi.hoisted(() => ({
   presets: [] as Array<Record<string, unknown>>,
   categories: [] as Array<Record<string, unknown>>,
   assets: [] as Array<Record<string, unknown>>,
+  /** 자산 · 카테고리 목록이 아직 안 왔다 — refetch 가 오면 풀린다 */
+  listsLate: false,
+  /** 받아 오기가 실패한다 */
+  refetchFails: false,
   /** 문자 해석 결과 — 없으면 못 알아본 문자 */
   parsed: null as Record<string, unknown> | null,
 }));
@@ -71,10 +76,13 @@ vi.mock("@/features/expense", () => ({
     return { mutate: () => {}, isPending: false, isError: false };
   },
   useExpenseCategories: () => ({
-    data: state.categories,
-    isPending: false,
+    data: state.listsLate ? undefined : state.categories,
+    isPending: state.listsLate,
     isError: false,
-    refetch: () => {},
+    refetch: async () => {
+      if (!state.refetchFails) state.listsLate = false;
+      return { data: state.refetchFails ? undefined : state.categories };
+    },
   }),
   useExpenseTemplates: () => ({
     data: state.presets,
@@ -126,10 +134,15 @@ vi.mock("@/features/expense", () => ({
 }));
 vi.mock("@/features/asset", () => ({
   useAssets: () => ({
-    data: { assets: state.assets },
-    isPending: false,
+    data: state.listsLate ? undefined : { assets: state.assets },
+    isPending: state.listsLate,
     isError: false,
-    refetch: () => {},
+    refetch: async () => {
+      if (!state.refetchFails) state.listsLate = false;
+      return {
+        data: state.refetchFails ? undefined : { assets: state.assets },
+      };
+    },
   }),
   useCreateTransfer: () => ({
     mutate: (
@@ -143,7 +156,15 @@ vi.mock("@/features/asset", () => ({
     isPending: false,
     isError: false,
   }),
-  useUpdateTransfer: () => ({ mutate: () => {}, isPending: false }),
+  useUpdateTransfer: () => ({
+    mutate: ({ data }: { data: Record<string, unknown> }) => {
+      sent.transferUpdate = data;
+      sent.calls += 1;
+    },
+    isPending: false,
+    isError: false,
+    reset: () => {},
+  }),
 }));
 vi.mock("@/features/sms", () => ({
   parseSms: async () => state.parsed ?? { matched: false },
@@ -256,7 +277,15 @@ beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   setupFormDom(false);
   __resetPointerBlockForTest();
-  sent.create = sent.update = sent.preset = sent.sms = sent.transfer = null;
+  sent.create =
+    sent.update =
+    sent.preset =
+    sent.sms =
+    sent.transfer =
+    sent.transferUpdate =
+      null;
+  state.listsLate = false;
+  state.refetchFails = false;
   state.parsed = null;
   state.assets = [];
   sent.touched = [];
@@ -1154,8 +1183,8 @@ describe("환율 칸 — 보이는 값에만 천 단위 쉼표, 보내는 값은
   });
 });
 
-describe("이체 수정은 이체 칩 하나만 둔다 (D 25)", () => {
-  it("종류 칩이 이체 하나이고 고른 채 막혀 있다", async () => {
+describe("이체 수정의 종류 칩은 셋이고 이체만 고른 채 나머지는 막힌다 (D 25)", () => {
+  it("지출 · 수입은 막혀 있고 이체가 고른 칩이다", async () => {
     state.assets = [
       asset(1, "주거래", "BANK_ACCOUNT"),
       asset(2, "비상금", "BANK_ACCOUNT"),
@@ -1173,8 +1202,119 @@ describe("이체 수정은 이체 칩 하나만 둔다 (D 25)", () => {
       } as never,
     });
     const radios = [
-      ...document.body.querySelectorAll<HTMLElement>('[role="radio"]'),
+      ...document.body.querySelectorAll<HTMLButtonElement>('[role="radio"]'),
     ];
-    expect(radios.map((r) => r.textContent)).toEqual(["addTx.transfer"]);
+    expect(radios.map((r) => r.textContent)).toEqual([
+      "expense",
+      "income",
+      "addTx.transfer",
+    ]);
+    expect(radios.map((r) => r.disabled)).toEqual([true, true, false]);
+    expect(radios[2]!.getAttribute("aria-checked")).toBe("true");
+  });
+});
+
+describe("자산 · 카테고리 목록을 받기 전 · 실패한 채 수정해도 읽어 온 값을 잃지 않는다 (N1)", () => {
+  const card = asset(9, "현대카드", "CREDIT_CARD");
+  const installment = {
+    ...expense,
+    assetRowId: 9,
+    paymentMethod: "CARD",
+    installmentMonths: 12,
+  } as Expense;
+  const settle = async () => {
+    await tick();
+    await tick();
+  };
+
+  it("목록이 오기 전에 메모만 고쳐 저장하면 본문에 installmentMonths 12 · 카테고리 · 계좌가 그대로 실린다", async () => {
+    state.assets = [card];
+    state.listsLate = true;
+    await open({ expense: installment });
+    await press("save");
+    await settle();
+    expect(sent.update).toMatchObject({
+      installmentMonths: 12,
+      assetRowId: 9,
+      categoryRowId: 11,
+    });
+  });
+
+  it("대출 이체의 이자도 목록이 오기 전 저장에서 지워지지 않는다", async () => {
+    state.assets = [
+      asset(1, "주거래", "BANK_ACCOUNT"),
+      asset(3, "전세대출", "LOAN"),
+    ];
+    state.listsLate = true;
+    await open({
+      editTransfer: {
+        rowId: 7,
+        fromAssetRowId: 1,
+        toAssetRowId: 3,
+        amount: 1000000,
+        fee: 0,
+        interestAmount: 50000,
+        description: null,
+        transferDate: "2026-10-28T12:00:00",
+      } as never,
+    });
+    await press("save");
+    await settle();
+    expect(sent.transferUpdate).toMatchObject({
+      toAssetRowId: 3,
+      interestAmount: 50000,
+    });
+  });
+
+  it("목록을 끝내 못 받으면 요청을 보내지 않고 맨 위 알림을 띄운다 — 값을 추측해 보내지 않는다", async () => {
+    state.assets = [card];
+    state.listsLate = true;
+    state.refetchFails = true;
+    await open({ expense: installment });
+    await press("save");
+    await settle();
+    expect(sent.calls).toBe(0);
+    expect(dialogText()).toContain("addTx.saveFailed");
+  });
+});
+
+describe("목록에 없는 값 — 새로 채운 값은 비우고, 읽어 온 값은 기록이라 지운 이름으로 보인다 (N4)", () => {
+  it('거래에서 읽어 온 지운 계좌는 "지운 계좌" 로 보이고 본문은 그 id 그대로다', async () => {
+    state.assets = [];
+    await open({ expense: { ...expense, assetRowId: 99 } as Expense });
+    expect(dialogText()).toContain("addTx.deletedAsset");
+    await press("save");
+    expect(sent.update).toMatchObject({ assetRowId: 99 });
+  });
+
+  it("프리셋이 가리키던 지운 계좌는 비우고 칸 오류가 아니라 계좌 없음으로 둔다", async () => {
+    state.assets = [];
+    state.presets = [
+      {
+        rowId: 1,
+        templateName: "점심",
+        expenseType: "EXPENSE",
+        categoryRowId: 11,
+        assetRowId: 99,
+        lockAmount: "Y",
+        amount: 9000,
+        useCount: 1,
+        merchant: null,
+        paymentMethod: null,
+        description: null,
+        isFixed: false,
+        toAssetRowId: null,
+      },
+    ];
+    await open();
+    await pressStartingWith("점심");
+    await tick();
+    expect(dialogText()).not.toContain("addTx.deletedAsset");
+    click(row("addTx.category"));
+    await tick();
+    click(lastButton("식비"));
+    await tick();
+    await press("addTx.add");
+    expect(sent.create).toMatchObject({ assetRowId: null });
   });
 });
