@@ -154,11 +154,7 @@ export function TransferDetailDialog({
               tile={
                 <span
                   aria-hidden
-                  className="inline-grid size-x12 shrink-0 place-items-center rounded-r4"
-                  style={{
-                    background: "var(--color-chart-gray-weak)",
-                    color: "var(--color-chart-gray)",
-                  }}
+                  className="inline-grid size-x12 shrink-0 place-items-center rounded-r4 bg-chart-gray-weak text-chart-gray"
                 >
                   <ArrowRightLeft size={24} />
                 </span>
