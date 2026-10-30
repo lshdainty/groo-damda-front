@@ -1090,3 +1090,66 @@ describe("이체 프리셋 사용 기록 (#174)", () => {
     expect(sent.touched).toEqual([7]);
   });
 });
+
+describe("환율 칸 — 보이는 값에만 천 단위 쉼표, 보내는 값은 쉼표 없는 숫자 (I-21 D 22)", () => {
+  const rateInput = () =>
+    document.body.querySelector<HTMLInputElement>(
+      'input[inputmode="decimal"]',
+    )!;
+
+  it("1388.75 를 치면 칸에는 1,388.75 로 보이고, 요청 본문 exchangeRate 는 쉼표 없는 숫자 1388.75 다", async () => {
+    prefs.defaultCurrency = "USD";
+    await open();
+    setValue(amountInput(), "98765.43");
+    await press("addTx.next");
+    setValue(rateInput(), "1388.75");
+    await tick();
+    expect(rateInput().value).toBe("1,388.75");
+    // 환율 안내 · 원화 금액도 같은 값
+    expect(dialogText()).toContain("× 1,388.75");
+    expect(dialogText()).toContain("137,160,491원");
+    click(row("addTx.category"));
+    await tick();
+    click(lastButton("식비"));
+    await tick();
+    await press("addTx.add");
+    expect(sent.create).toMatchObject({
+      exchangeRate: 1388.75,
+      originalAmount: 98765.43,
+    });
+    expect(typeof sent.create!.exchangeRate).toBe("number");
+  });
+
+  it("쉼표를 붙여 넣어도 지우고 숫자로 보낸다", async () => {
+    prefs.defaultCurrency = "USD";
+    await open();
+    setValue(amountInput(), "10");
+    await press("addTx.next");
+    setValue(rateInput(), "1,388.75");
+    await tick();
+    expect(rateInput().value).toBe("1,388.75");
+    click(row("addTx.category"));
+    await tick();
+    click(lastButton("식비"));
+    await tick();
+    await press("addTx.add");
+    expect(sent.create).toMatchObject({ exchangeRate: 1388.75 });
+  });
+
+  it("수정 폼으로 다시 열어도 환율이 쉼표로 보이고 그대로 다시 저장된다", async () => {
+    const foreign = {
+      ...expense,
+      amount: 137160491,
+      originalAmount: 98765.43,
+      originalCurrency: "USD",
+      exchangeRate: 1388.75,
+    } as Expense;
+    await open({ expense: foreign });
+    expect(rateInput().value).toBe("1,388.75");
+    await press("save");
+    expect(sent.update).toMatchObject({
+      exchangeRate: 1388.75,
+      originalAmount: 98765.43,
+    });
+  });
+});

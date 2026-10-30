@@ -11,13 +11,13 @@ export const formatDecimal = (raw: string): string => {
 };
 
 /** 현지 금액 칸 입력 정리 — 숫자와 점 하나, 소수 둘째 자리까지, 정수 12자리까지 */
-export const sanitizeDecimal = (value: string): string => {
+export const sanitizeDecimal = (value: string, maxDecimals = 2): string => {
   const cleaned = value.replace(/[^0-9.]/g, "");
   const dot = cleaned.indexOf(".");
   let head = dot === -1 ? cleaned : cleaned.slice(0, dot);
   let tail = dot === -1 ? undefined : cleaned.slice(dot + 1).replace(/\./g, "");
   head = head.replace(/^0+(?=\d)/, "").slice(0, 12);
-  if (tail !== undefined) tail = tail.slice(0, 2);
+  if (tail !== undefined) tail = tail.slice(0, maxDecimals);
   return tail === undefined ? head : `${head}.${tail}`;
 };
 

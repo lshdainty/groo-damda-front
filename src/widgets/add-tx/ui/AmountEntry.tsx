@@ -4,12 +4,11 @@ import { Check, ChevronDown } from "lucide-react";
 import { MAX_AMOUNT } from "@/shared/lib/groo/amount";
 import { AmountInput } from "@/shared/ui/groo/amount-input";
 import { Chip } from "@/shared/ds/chip";
-import { Input } from "@/shared/ds/input";
 import { List, ListButtonItem } from "@/shared/ds/list";
 import { CURRENCIES, currencySymbol } from "@/shared/lib/groo/currency";
 import type { TxForm } from "../model/use-tx-form";
 import { PickSurface } from "./tx-parts";
-import { formatDecimal, sanitizeDecimal } from "../lib/amount-format";
+import { DecimalInput } from "./DecimalInput";
 
 /** 통화 칩 — 칸 끝 "{기호} {코드}" + ▾ . 누르면 통화 고르기(시트 · Popover) */
 export function CurrencyChip({ f }: { f: TxForm }) {
@@ -84,18 +83,15 @@ export function AmountEntry({
   };
   if (f.isForeignTx) {
     return (
-      <Input
+      <DecimalInput
         ref={inputRef}
         variant="underline"
         aria-label={label}
-        inputMode="decimal"
-        autoComplete="off"
-        placeholder="0"
         autoFocus={autoFocus}
         aria-invalid={invalid || undefined}
-        value={formatDecimal(f.origAmount)}
-        onChange={(e) => {
-          f.setOrigAmount(sanitizeDecimal(e.target.value));
+        value={f.origAmount}
+        onValueChange={(v) => {
+          f.setOrigAmount(v);
           f.clearPresetMark();
         }}
         onKeyDown={enter}
