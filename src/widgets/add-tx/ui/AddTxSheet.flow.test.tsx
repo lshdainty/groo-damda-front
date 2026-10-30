@@ -9,6 +9,7 @@
 //   · 수정의 금액 단계는 "완료" 에 넣고 ← 는 버린다
 //   · 프리셋 저장 단계의 금액은 줄 하나 — 0 이어도 저장되고 `lockAmount` 는 금액 유무로 정한다
 // 시험은 작성만 한다(UI 이관이 끝날 때까지 돌리지 않는다 — 10-30 사용자).
+import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -242,6 +243,8 @@ const expense: Expense = {
 } as unknown as Expense;
 
 const { AddTxSheet } = await import("./AddTxSheet");
+const { useTxForm } = await import("../model/use-tx-form");
+const { useTxSheetParts } = await import("./use-tx-sheet-parts");
 
 let container: HTMLDivElement;
 let root: Root;
@@ -598,39 +601,6 @@ describe("저장 본문 — 가진 칸만 싣고 비운 칸은 null (QA #107 · 
     await enter();
     await enter();
     expect(sent.calls).toBe(1);
-  });
-});
-
-describe("호스트 시트 안에 한 단계로 끼우기 (I-21 7a)", () => {
-  it("embed 로 조각을 받아 호스트가 그리고, ← 는 onBack(상세로), 저장은 onSaved 를 부른다", async () => {
-    const calls: string[] = [];
-    await act(async () => {
-      root.render(
-        <AddTxSheet
-          mobile
-          expense={expense}
-          onClose={() => calls.push("close")}
-          onBack={() => calls.push("back")}
-          onSaved={() => calls.push("saved")}
-          embed={(p) => (
-            <div data-testid="host">
-              <h2>{p.title}</h2>
-              {p.body}
-              <button type="button" onClick={p.onBack}>
-                host-back
-              </button>
-              {p.footer(p.onBack)}
-            </div>
-          )}
-        />,
-      );
-    });
-    await tick();
-    // 자기 표면(dialog)을 그리지 않는다
-    expect(document.body.querySelector("[role=dialog]")).toBeNull();
-    expect(document.body.textContent).toContain("addTx.editTitle");
-    await press("host-back");
-    expect(calls).toEqual(["back"]);
   });
 });
 
@@ -1318,3 +1288,86 @@ describe("목록에 없는 값 — 새로 채운 값은 비우고, 읽어 온 �
     expect(sent.create).toMatchObject({ assetRowId: null });
   });
 });
+
+describe("호스트가 폼을 든 채 한 단계로 보인다 — 실제 폼 (I-21 7a)", () => {
+  /** 상세 같은 호스트 — 폼을 한 번 들고 [수정] 때 그 거래로 갈아 끼운다 */
+  function Host({
+    onBack,
+    onSaved,
+  }: {
+    onBack: () => void;
+    onSaved: (e: Expense) => void;
+  }) {
+    const [seed, setSeed] = React.useState<Expense | null>(null);
+    const f = useTxForm({
+      expense: seed ?? undefined,
+      onClose: onBack,
+      onSaved,
+    });
+    const parts = useTxSheetParts(f, {
+      mobile: true,
+      embedded: true,
+      onClose: onBack,
+      onBack,
+    });
+    return (
+      <div>
+        <button
+          type="button"
+          onClick={() => {
+            setSeed(expense);
+            f.beginEdit({ expense });
+          }}
+        >
+          open-edit
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            const other = { ...expense, rowId: 6, amount: 777 } as Expense;
+            setSeed(other);
+            f.beginEdit({ expense: other });
+          }}
+        >
+          open-other
+        </button>
+        {seed && (
+          <section data-testid="host-form">
+            <h2>{parts.embedParts.title}</h2>
+            {parts.embedParts.body}
+            {parts.embedParts.footer(parts.embedParts.onBack)}
+          </section>
+        )}
+        {parts.overlays}
+      </div>
+    );
+  }
+
+  it("[수정] 으로 폼을 그 거래로 갈아 끼우고, 다른 거래를 열면 그 거래의 값으로 다시 채워진다", async () => {
+    await act(async () => {
+      root.render(<Host onBack={() => {}} onSaved={() => {}} />);
+    });
+    click(lastButton("open-edit"));
+    await tick();
+    expect(dialogTextOf("host-form")).toContain("12,000원");
+    click(lastButton("open-other"));
+    await tick();
+    expect(dialogTextOf("host-form")).toContain("777원");
+    await press("save");
+    expect(sent.update).toMatchObject({ amount: 777 });
+  });
+
+  it("저장 실패 뒤 다시 [수정] 하면 지난 실패 알림이 남아 있지 않다 (N6)", async () => {
+    await act(async () => {
+      root.render(<Host onBack={() => {}} onSaved={() => {}} />);
+    });
+    click(lastButton("open-edit"));
+    await tick();
+    click(lastButton("open-other"));
+    await tick();
+    expect(dialogTextOf("host-form")).not.toContain("addTx.saveFailed");
+  });
+});
+
+const dialogTextOf = (id: string) =>
+  document.body.querySelector(`[data-testid="${id}"]`)?.textContent ?? "";

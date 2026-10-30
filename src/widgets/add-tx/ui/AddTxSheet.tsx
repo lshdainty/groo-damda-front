@@ -1,5 +1,5 @@
 import { useTxForm, type TxFormProps } from "../model/use-tx-form";
-import { useTxSheetParts, type TxEmbedParts } from "./use-tx-sheet-parts";
+import { useTxSheetParts } from "./use-tx-sheet-parts";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -11,14 +11,7 @@ import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
 import { SheetStepDone } from "@/widgets/calendar/ui/event-form/step-header";
 
-export function AddTxSheet(
-  props: TxFormProps & {
-    /** 있으면 자기 표면을 그리지 않고 호스트 표면에 끼운다 */
-    embed?: (parts: TxEmbedParts) => React.ReactNode;
-    /** 끼운 수정 폼에서 ← — 상세로 돌아간다 */
-    onBack?: () => void;
-  },
-) {
+export function AddTxSheet(props: TxFormProps) {
   // 열린 거래가 바뀌면 칸 값 · 단계를 새로 쌓는다 — 제목이 같은 다른 거래의 값이 남지 않게(09b-1 의 isSyncedWith 교훈)
   const key =
     props.expense?.rowId ??
@@ -28,18 +21,12 @@ export function AddTxSheet(
   return <AddTxSheetBody key={key} {...props} />;
 }
 
-function AddTxSheetBody(
-  props: TxFormProps & {
-    embed?: (parts: TxEmbedParts) => React.ReactNode;
-    onBack?: () => void;
-  },
-) {
+function AddTxSheetBody(props: TxFormProps) {
   const f = useTxForm(props);
   const p = useTxSheetParts(f, {
     mobile: props.mobile,
-    embedded: props.embed != null,
+    embedded: false,
     onClose: props.onClose,
-    onBack: props.onBack,
   });
   const { t, tc } = f;
   const { sub, wide, isNew, twoOfTwo, showSubDone, subDone, leave } = p;
@@ -52,18 +39,7 @@ function AddTxSheetBody(
         onClose={props.onClose}
         rewrite={{ of: props.expense, splits: f.serverSplitForms }}
         onReplaced={props.onReplaced}
-        embed={props.embed}
-        onBack={props.onBack}
       />
-    );
-  }
-
-  if (props.embed) {
-    return (
-      <>
-        {props.embed(p.embedParts)}
-        {p.overlays}
-      </>
     );
   }
 
