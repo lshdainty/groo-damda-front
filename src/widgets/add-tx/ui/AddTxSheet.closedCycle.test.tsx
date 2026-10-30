@@ -16,6 +16,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
+import { setupFormDom } from "@/widgets/calendar/ui/event-form/test-utils";
 import type { Expense, ExpenseCategory } from "@/entities/expense";
 
 declare global {
@@ -42,14 +43,31 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
+}));
+vi.mock("@/shared/lib/groo/hide-amounts", () => ({
+  MaskAmount: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 vi.mock("@/features/expense", () => ({
-  useExpenseCategories: () => ({ data: [category], isLoading: false }),
-  useExpenseTemplates: () => ({ data: [], isLoading: false }),
+  useExpenseCategories: () => ({
+    data: [category],
+    isPending: false,
+    isError: false,
+    refetch: () => {},
+  }),
+  useExpenseTemplates: () => ({
+    data: [],
+    isPending: false,
+    isError: false,
+    refetch: () => {},
+  }),
   useCreateExpense: () => ({
     mutate: (data: Record<string, unknown>) => {
       st.create = data;
     },
     isPending: false,
+    isError: false,
   }),
   useUpdateExpense: () => ({
     mutate: (
@@ -79,49 +97,40 @@ vi.mock("@/features/asset", () => ({
         bank,
       ],
     },
-    isLoading: false,
+    isPending: false,
+    isError: false,
+    refetch: () => {},
   }),
   useCreateTransfer: () => ({ mutate: () => {}, isPending: false }),
   useUpdateTransfer: () => ({ mutate: () => {}, isPending: false }),
 }));
 vi.mock("@/features/sms", () => ({
-  SmsPasteField: ({
-    onParsed,
-  }: {
-    onParsed: (text: string, parsed: Record<string, unknown>) => void;
-  }) => (
-    <button
-      type="button"
-      onClick={() =>
-        onParsed("[Web발신] 현대카드 5,500원 스타벅스", {
-          matched: true,
-          confidence: "HIGH",
-          cancel: false,
-          amount: 5500,
-          merchant: "스타벅스",
-          expenseDate: st.smsDate,
-          installmentMonths: st.smsInstallment,
-          cardHint: null,
-          issuerName: null,
-          cardLast4: null,
-          assetRowId: 9,
-          assetRemembered: true,
-          assetCandidates: [],
-          categoryRowId: 11,
-          categoryName: "식비",
-          originalAmount: null,
-          originalCurrency: null,
-        })
-      }
-    >
-      sms-parse
-    </button>
-  ),
+  looksLikePaymentSms: () => true,
+  parseSms: async () => ({
+    matched: true,
+    confidence: "HIGH",
+    cancel: false,
+    amount: 5500,
+    merchant: "스타벅스",
+    expenseDate: st.smsDate,
+    installmentMonths: st.smsInstallment,
+    cardHint: null,
+    issuerName: null,
+    cardLast4: null,
+    assetRowId: 9,
+    assetRemembered: true,
+    assetCandidates: [],
+    categoryRowId: 11,
+    categoryName: "식비",
+    originalAmount: null,
+    originalCurrency: null,
+  }),
   useCommitSms: () => ({
     mutate: (data: Record<string, unknown>) => {
       st.sms = data;
     },
     isPending: false,
+    isError: false,
   }),
 }));
 vi.mock("@/features/expense-split", () => ({
@@ -213,6 +222,7 @@ let root: Root;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  setupFormDom(false);
   __resetPointerBlockForTest();
   st.create = null;
   st.update = null;
@@ -251,9 +261,7 @@ afterEach(() => {
 
 function render(expense: Expense | null = null) {
   act(() =>
-    root.render(
-      <AddTxSheet onClose={() => {}} mobile={false} expense={expense} />,
-    ),
+    root.render(<AddTxSheet onClose={() => {}} mobile expense={expense} />),
   );
 }
 
@@ -278,14 +286,30 @@ const dialogSave = () => {
 const bodyText = () => document.body.textContent ?? "";
 
 /** 리액트가 관리하는 입력에 값을 넣는다(setter 를 우회하면 상태가 안 바뀐다). */
-function setValue(el: HTMLInputElement, value: string) {
-  const setter = Object.getOwnPropertyDescriptor(
-    window.HTMLInputElement.prototype,
-    "value",
-  )?.set;
+function setValue(el: HTMLInputElement | HTMLTextAreaElement, value: string) {
+  const proto =
+    el instanceof HTMLTextAreaElement
+      ? window.HTMLTextAreaElement.prototype
+      : window.HTMLInputElement.prototype;
+  const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
   act(() => {
     setter?.call(el, value);
     el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+/** 결제 문자 단계로 들어가 읽는다 — 성공하면 2단계로 간다(1-2A) */
+async function smsFill() {
+  const open = [...document.body.querySelectorAll("button")].find((b) =>
+    b.textContent?.startsWith("sms.pasteOpen"),
+  )!;
+  await click(open);
+  setValue(
+    document.body.querySelector("[role=dialog] textarea")!,
+    "[Web발신] 현대카드 5,500원 스타벅스",
+  );
+  await click(buttons("sms.pasteAction")[0]!);
+  await act(async () => {
+    await new Promise((r) => setTimeout(r, 0));
   });
 }
 const byValue = (v: string) =>
@@ -296,7 +320,7 @@ const byValue = (v: string) =>
 describe("새 카드 지출", () => {
   it("결제가 끝난 회차면 한 줄을 묻고, 확인해야 저장한다", async () => {
     render();
-    await click(buttons("sms-parse")[0]!);
+    await smsFill();
     await click(sheetSave());
 
     expect(bodyText()).toContain("addTx.saveConfirmTitle");
@@ -312,7 +336,7 @@ describe("새 카드 지출", () => {
   it("결제일 당일 회차도 닫힌 회차다 — 경계 날짜(말일)도 묻는다(D2)", async () => {
     st.smsDate = "2026-08-31T23:00:00";
     render();
-    await click(buttons("sms-parse")[0]!);
+    await smsFill();
     await click(sheetSave());
 
     expect(bodyText()).toContain("closedCycle.note");
@@ -323,7 +347,7 @@ describe("새 카드 지출", () => {
     // 8/20 시작 3개월 = 8·9·10월 회차. 8월까지 닫혔다.
     st.smsInstallment = 3;
     render();
-    await click(buttons("sms-parse")[0]!);
+    await smsFill();
     await click(sheetSave());
 
     expect(bodyText()).toContain("closedCycle.partialNote");
@@ -333,7 +357,7 @@ describe("새 카드 지출", () => {
   it("열린 회차는 묻지 않고 바로 저장한다", async () => {
     st.smsDate = "2026-09-10T10:00:00";
     render();
-    await click(buttons("sms-parse")[0]!);
+    await smsFill();
     await click(sheetSave());
 
     expect(bodyText()).not.toContain("closedCycle.");
@@ -343,34 +367,20 @@ describe("새 카드 지출", () => {
   it("닫힌 회차가 없는 카드(결제일 없음·새 카드)는 묻지 않는다", async () => {
     st.closedThrough = null;
     render();
-    await click(buttons("sms-parse")[0]!);
+    await smsFill();
     await click(sheetSave());
 
     expect(st.sms).not.toBeNull();
   });
 });
 
-/** 계좌·카드 select 를 키보드로 열어 고른다(포인터는 jsdom 에서 안 뜬다). */
-function pickAsset(from: string, to: string) {
-  const trigger = [
-    ...document.body.querySelectorAll<HTMLButtonElement>("[role='combobox']"),
-  ].find((b) => b.textContent?.trim() === from);
-  if (!trigger) throw new Error(`자산 select 를 찾지 못했다: ${from}`);
-  act(() => {
-    trigger.focus();
-    trigger.dispatchEvent(
-      new KeyboardEvent("keydown", { key: " ", bubbles: true }),
-    );
-  });
-  const option = [...document.body.querySelectorAll("[role='option']")].find(
-    (el) => el.textContent?.trim() === to,
-  );
-  if (!option) throw new Error(`자산 항목을 찾지 못했다: ${to}`);
-  act(() =>
-    option.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
-    ),
-  );
+/** 계좌·카드 줄을 눌러 고르기 시트에서 고른다 */
+async function pickAsset(_from: string, to: string) {
+  const rowBtn = [...document.body.querySelectorAll("button")].find((b) =>
+    b.textContent?.startsWith("addTx.account"),
+  )!;
+  await click(rowBtn);
+  await click(buttons(to)[0]!);
 }
 
 describe("카드 거래 수정", () => {
@@ -388,7 +398,7 @@ describe("카드 거래 수정", () => {
   it("열린 회차의 거래는 다른 카드로 옮겨 그 카드의 닫힌 회차에 들면 묻는다 — 새 카드 기준", async () => {
     // 현대카드로는 9/5 가 열린 회차지만, 삼성카드는 9월 회차까지 결제가 끝났다.
     render(cardExpense);
-    pickAsset("현대카드", "삼성카드");
+    await pickAsset("현대카드", "삼성카드");
     await click(sheetSave());
 
     expect(bodyText()).toContain("closedCycle.note");
@@ -400,18 +410,17 @@ describe("카드 거래 수정", () => {
     expect(st.update!.assetRowId).toBe(10);
   });
 
-  it("열린 회차 거래를 열린 회차 안에서 고치면 묻지 않고 저장한다", async () => {
+  it("열린 회차의 거래는 고쳐도 묻지 않고 저장한다", async () => {
     render(cardExpense);
-    setValue(byValue("2026-09-05")!, "2026-09-10");
     await click(sheetSave());
 
     expect(bodyText()).not.toContain("closedCycle.");
     expect(st.updates).toBe(1);
   });
 
-  it("열린 회차 거래를 닫힌 회차 날짜로 옮기면 묻는다 — 저장하면 기록만 남는다", async () => {
+  it("카드가 그 회차까지 결제를 끝냈으면(날짜가 닫힌 회차에 든다) 저장 전에 묻는다 — 기록만 남는다", async () => {
+    st.closedThrough = "2026-09-30";
     render(cardExpense);
-    setValue(byValue("2026-09-05")!, "2026-08-20");
     await click(sheetSave());
 
     expect(bodyText()).toContain("closedCycle.note");

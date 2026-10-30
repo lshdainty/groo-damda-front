@@ -1582,48 +1582,36 @@ expense,item,항목,Item
 expense,selectNone,선택 안 함,None
 expense,addTx.newTitle,거래 추가,Add transaction
 expense,addTx.editTitle,거래 수정,Edit transaction
-expense,addTx.autoSource.TRADE_REALIZED,주식을 팔아 생긴 실현손익이에요. 금액은 매매 내역에서 계산됩니다.,Realized P/L from a sale. The amount is calculated from the trade.
-expense,addTx.autoSource.TRANSFER_INTEREST,이체에 붙은 이자예요. 금액은 이체 내역에서 계산됩니다.,Interest on a transfer. The amount is calculated from the transfer.
+expense,addTx.autoSource.TRADE_REALIZED,주식을 팔아 생긴 실현손익이에요. 금액은 매매 내역에서 계산돼요.,Realized P/L from a sale. The amount is calculated from the trade history.
+expense,addTx.autoSource.TRANSFER_INTEREST,이체에 붙은 이자예요. 금액은 이체 내역에서 계산돼요.,Interest on a transfer. The amount is calculated from the transfer.
 expense,addTx.autoSource.CARD_CARRYOVER,카드를 등록할 때 적은 이전 미결제 사용액이에요. 금액은 카드 수정에서 바꿔요.,The unpaid balance entered when the card was added. Change the amount by editing the card.
 expense,addTx.autoSource.CARD_CARRYOVER_DUE,카드를 등록할 때 적은 이전 미결제 사용액이에요. 금액은 카드 수정에서 바꿔요.,The unpaid balance entered when the card was added. Change the amount by editing the card.
-expense,addTx.autoSource.default,자동으로 만들어진 거래예요. 원래 거래를 지우면 함께 사라집니다.,Created automatically. It disappears when the original is deleted.
+expense,addTx.autoSource.default,자동으로 만들어진 거래예요. 원래 거래를 지우면 함께 사라져요.,Created automatically. It disappears when the original is deleted.
 expense,addTx.transfer,이체,Transfer
 expense,addTx.add,추가,Add
-expense,addTx.saveSplitAndSave,분할 맞추고 저장,Adjust splits & save
-expense,addTx.presetLoad,프리셋 불러오기,Load preset
-expense,addTx.presetApplied,적용됨,Applied
+expense,addTx.saveSplitAndSave,나눈 내역 맞추고 저장,Adjust split items & save
+expense,addTx.presetLoad,프리셋,Presets
+expense,addTx.presetApplied,{{name}} 적용됨,{{name}} applied
 expense,addTx.saveCurrentInput,현재 입력값 저장,Save current input
-expense,addTx.presetManageHint,설정 → 프리셋 관리,Settings → Manage presets
-expense,addTx.noPresets,저장된 프리셋이 없어요. 자주 쓰는 내역을 입력 후 “현재 입력값 저장”을 눌러보세요.,No saved presets. Enter a frequently used entry and tap “Save current input”.
-expense,addTx.presetFilledHint,프리셋 값이 채워졌어요. 금액·내역만 수정해서 저장하세요.,Preset values filled in. Edit only the amount and details then save.
-expense,addTx.clear,해제,Clear
-expense,addTx.splitMismatchTitle,분할 내역과 금액이 달라요,Split total does not match the amount
-expense,addTx.newTotal,새 총액,New total
-expense,addTx.splitSum,분할 합계,Split total
-expense,addTx.difference,차이,difference
-expense,addTx.matchSplits,분할 내역 맞추기,Adjust splits
+expense,addTx.noPresets,저장된 프리셋이 없어요. 값을 넣고 “현재 입력값 저장” 을 누르면 만들어져요.,No saved presets yet. Enter values and tap “Save current input” to create one.
+expense,addTx.splitMismatchTitle,나눈 내역과 금액이 달라요,The split items don't match the amount
+expense,addTx.matchSplits,나눈 내역 맞추기,Adjust split items
 expense,addTx.subCategoryPlaceholder,세부 카테고리,Subcategory
-expense,addTx.parent,상위,Parent
 expense,addTx.detail,세부,Details
 expense,addTx.incomeSource,수입처,Income source
-expense,addTx.merchantPlaceholder,예: 스타벅스 강남점,e.g. Starbucks Gangnam
-expense,addTx.incomeSourcePlaceholder,예: (주)그루,e.g. Acme Inc.
+expense,addTx.merchantPlaceholder,예: 회사 앞 도시락,e.g. Lunch near the office
+expense,addTx.incomeSourcePlaceholder,예: 월급,e.g. Salary
 expense,addTx.incomeMethod,수입 방식,Income method
 expense,addTx.depositAccount,입금 계좌,Deposit account
-expense,addTx.basisOf,{{method}} 기준,by {{method}}
-expense,addTx.noAssetForMethod,해당 결제 수단에 연결된 자산이 없어요.,No assets linked to this payment method.
 expense,addTx.installment,할부,Installment
 expense,addTx.lumpSum,일시불,Lump sum
 expense,addTx.installmentMonths,{{months}}개월,{{months}} months
 expense,addTx.installmentHint,매달 약 {{perMonth}}원씩 {{months}}회 청구돼요,About {{perMonth}} per month for {{months}} months
-expense,addTx.currency,통화,Currency
-expense,addTx.originalAmountPlaceholder,현지 금액,Local amount
-expense,addTx.exchangeRatePlaceholder,환율,Rate
 expense,addTx.fxHint,{{original}} × {{rate}} = {{krw}}원,{{original}} × {{rate}} = {{krw}}
 expense,txDetail.foreignPayment,해외 결제,Foreign payment
-expense,addTx.fromAccount,출금 계좌,From account
+expense,addTx.fromAccount,보내는 계좌,From account
 expense,addTx.selectPlaceholder,선택,Select
-expense,addTx.fee,수수료 (선택),Fee (optional)
+expense,addTx.fee,수수료,Fee
 expense,addTx.interest,이자,Interest
 expense,transferPrincipal,원금,Principal
 expense,addTx.interestHint,상환액 중 이자 몫 — 부채는 이자를 뺀 만큼만 줄어들어요,The interest portion — debt decreases only by the rest
@@ -1640,16 +1628,62 @@ expense,transferEmpty,이체 내역이 없어요,No transfers yet
 expense,transferWithdrawn,출금 합계,Total withdrawn
 expense,transferDeleted,이체를 삭제했어요,Transfer deleted
 expense,addTx.optional,선택 사항,Optional
-expense,addTx.amountTooLarge,금액은 100억원까지 입력할 수 있어요,Amount can be up to 10 billion won
+expense,addTx.stepMeta,{{current}} / {{total}}단계,Step {{current}} of {{total}}
+expense,addTx.next,다음,Next
+expense,addTx.typeGroup,거래 종류,Transaction type
+expense,addTx.entryRequired,금액을 입력해주세요.,Enter an amount.
+expense,addTx.currencyChip,"통화, {{code}}","Currency, {{code}}"
+expense,addTx.currencyTitle,통화,Currency
+expense,addTx.presetLoadFailed,프리셋을 불러오지 못했어요.,Couldn't load presets.
+expense,addTx.emptyPresetHint,“{{name}}” 프리셋은 금액이 비어 있어요. 금액을 넣고 [다음]을 눌러주세요.,The “{{name}}” preset has no amount. Enter one and press Next.
+expense,addTx.presetAllTitle,프리셋 고르기,Choose a preset
+expense,addTx.showAll,모두 보기,See all
+expense,addTx.category,카테고리,Category
+expense,addTx.account,계좌·카드,Account or card
+expense,addTx.paymentMethodRow,결제 수단,Payment method
+expense,addTx.incomeMethodRow,수입 방식,Income method
+expense,addTx.dateRow,날짜,Date
+expense,addTx.timeRow,시각,Time
+expense,addTx.memo,메모,Memo
+expense,addTx.none,없음,None
+expense,addTx.noAccountOption,계좌·카드 없음,No account or card
+expense,addTx.noMethodOption,결제 수단 없음,No payment method
+expense,addTx.toAccount,받는 계좌,To account
+expense,addTx.fromAccountRow,보내는 계좌,From account
+expense,addTx.errCategory,카테고리를 골라주세요.,Choose a category.
+expense,addTx.errFrom,보내는 계좌를 골라주세요.,Choose the account to send from.
+expense,addTx.errTo,받는 계좌를 골라주세요.,Choose the account to send to.
+expense,addTx.errFx,환율을 입력하거나 원화 금액을 넣어주세요.,Enter the exchange rate or the amount in won.
+expense,addTx.splitsLoading,나눈 내역을 불러오는 중이에요. 잠시 뒤 다시 눌러주세요.,Loading the split items. Try again in a moment.
+expense,addTx.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't save. Please try again in a moment.
+expense,addTx.categoryLoadFailed,카테고리를 불러오지 못했어요,Couldn't load categories
+expense,addTx.assetLoadFailed,계좌·카드를 불러오지 못했어요,Couldn't load accounts and cards
+expense,addTx.noCategoryOfType,이 종류의 카테고리가 없어요.,There are no categories of this kind.
+expense,addTx.noPickableAsset,이 결제 수단에 맞는 계좌·카드가 없어요.,No account or card fits this payment method.
+expense,addTx.fxRateLabel,환율,Exchange rate
+expense,addTx.krwAmount,원화 금액,Amount in won
+expense,addTx.amountStepTitle,금액,Amount
+expense,addTx.memoStepTitle,메모,Memo
+expense,addTx.feeStepTitle,수수료,Fee
+expense,addTx.interestStepTitle,이자,Interest
+expense,addTx.splitDiffOver,{{diff}}원 넘쳐요.,{{diff}} over.
+expense,addTx.splitDiffShort,{{diff}}원 모자라요.,{{diff}} short.
+expense,addTx.splitMismatchBody,새 총액 {{total}}원 · 나눈 합계 {{sum}}원 — {{diffText}},New total {{total}} · split total {{sum}} — {{diffText}}
+expense,sms.label,결제 문자,Payment text
+expense,sms.help,카드사에서 온 결제 문자를 그대로 붙여넣어주세요. 읽은 금액 · 가맹점 · 시각이 칸에 채워져요.,"Paste the payment text from your card company as it is. The amount, merchant and time it finds are filled in."
+expense,savePreset.amountRow,금액,Amount
+expense,savePreset.amountEmpty,비워 둠,Left empty
+expense,savePreset.amountHint,비워 두면 불러올 때 금액을 직접 넣어요.,"If left empty, you enter the amount each time you use it."
+expense,savePreset.nameRequired,프리셋 이름을 입력해주세요.,Enter a preset name.
+expense,savePreset.needParties,보내는 계좌와 받는 계좌를 먼저 골라주세요.,Choose the sending and receiving accounts first.
+expense,savePreset.saved,{{name}} 프리셋을 저장했어요,Saved the {{name}} preset
+expense,addTx.amountTooLarge,금액은 100억원까지 입력할 수 있어요.,Amount can be up to 10 billion won.
 expense,savePreset.title,프리셋으로 저장,Save as preset
 expense,savePreset.noMerchant,내역 없음,No details
 expense,savePreset.noCategory,카테고리 미선택,No category
 expense,savePreset.name,프리셋 이름,Preset name
 expense,savePreset.namePlaceholder,예: 점심 도시락,e.g. Lunch box
-expense,savePreset.lockAmount,금액도 함께 저장,Save amount too
-expense,savePreset.lockOn,{{amount}}원이 항상 채워집니다.,{{amount}}원 will always be filled in.
-expense,savePreset.lockOff,체크 해제 시 금액은 비워두고 매번 직접 입력합니다.,"When unchecked, the amount stays empty and you enter it each time."
-expense,savePreset.needCategory,저장하려면 먼저 카테고리를 선택해주세요.,Please select a category first to save.
+expense,savePreset.needCategory,카테고리를 먼저 골라주세요.,Choose a category first.
 expense,txDetail.incomeTitle,수입 상세,Income details
 expense,txDetail.expenseTitle,지출 상세,Expense details
 expense,txDetail.uncategorized,미분류,Uncategorized
@@ -2836,7 +2870,7 @@ expense,sms.parsing,읽는 중…,Reading…
 expense,sms.notRecognized,결제 문자로 보이지 않아요. 문자 전체를 붙여넣었는지 확인해주세요.,This doesn't look like a payment text. Please check that the whole message was pasted.
 expense,sms.cancelNotice,취소 문자예요. 자동 기록은 지원하지 않아요 — 원래 지출을 찾아 환불로 기록해주세요.,This is a cancellation text. Automatic recording is not supported — find the original expense and record it as a refund.
 expense,sms.lowConfidence,일부 항목을 읽지 못했어요. 확인하고 채워주세요.,Some fields could not be read. Please review and fill them in.
-expense,sms.parseFailed,문자를 읽지 못했어요. 잠시 후 다시 시도해주세요.,Could not read the text. Please try again in a moment.
+expense,sms.parseFailed,문자를 읽지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not read the text. Please try again in a moment.
 expense,sms.rememberCard,이 카드를 기억해서 다음부터 자동으로 연결하기,Remember this card and link it automatically next time
 expense,txDetail.recordOnlyNote,결제가 끝난 회차에 적은 거래라 기록만 남았어요. 계좌에서는 빠지지 않았어요,"This was added to a cycle that was already paid, so it is kept as a record only. It was not taken from your account"
 expense,txDetail.recordOnlyPartNote,이 중 <amt>{{amount}}</amt>은 결제가 끝난 회차분이라 기록만 남았어요. 남은 회차는 정상 청구돼요,"<amt>{{amount}}</amt> of this belongs to cycles that were already paid, so it is kept as a record only. The remaining installments are billed as usual"
@@ -2903,8 +2937,8 @@ stocks,market.state.HALTED,일시 마감,Temporarily closed
 stocks,market.state.BEFORE_OPEN,개장 전,Before open
 expense,fixed.switch.expense,고정 지출,Fixed expense
 expense,fixed.switch.income,고정 수입,Fixed income
-expense,fixed.hint.expense,월세·통신비처럼 매달 나가는 돈이에요. 통계에서 따로 나눠 볼 수 있어요,Money that goes out every month like rent or phone bills. You can view it separately in statistics
-expense,fixed.hint.income,월급처럼 매달 들어오는 돈이에요. 통계에서 따로 나눠 볼 수 있어요,Money that comes in every month like a salary. You can view it separately in statistics
+expense,fixed.hint.expense,월세·통신비처럼 매달 나가는 돈이에요. 통계에서 따로 나눠 볼 수 있어요.,Money that goes out every month like rent or phone bills. You can see it separately in statistics.
+expense,fixed.hint.income,월급처럼 매달 들어오는 돈이에요. 통계에서 따로 나눠 볼 수 있어요.,Money that comes in every month like a salary. You can see it separately in statistics.
 expense,fixed.badge,고정,Fixed
 recurring,fixed.expense,고정 지출,Fixed expense
 recurring,fixed.income,고정 수입,Fixed income
