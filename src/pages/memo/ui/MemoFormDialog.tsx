@@ -178,6 +178,7 @@ export function MemoFormDialog({
               prefix={<Tag />}
               value={tagText}
               surfaceTitle={t("tagLabel")}
+              scrollFog
               popoverClassName="w-[320px]"
             >
               {({ close }) => (

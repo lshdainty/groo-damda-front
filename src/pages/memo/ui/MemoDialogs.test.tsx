@@ -156,6 +156,15 @@ describe("메모 폼 (I-15 13)", () => {
     ).toBeNull();
   });
 
+  it("태그 고르기 시트 본문에는 Scroll Fog 가 켜진다(태그 수는 사용자 데이터)", () => {
+    form(null);
+    click(byName("태그, 태그 없음"));
+    const sheets = Array.from(
+      document.body.querySelectorAll("[data-slot=bottom-sheet-body]"),
+    );
+    expect(sheets.at(-1)?.getAttribute("data-scroll-fog")).toBe("overlayBody");
+  });
+
   it("제목 · 내용 칸의 라벨은 읽는 이름으로 남고 머리 줄은 흐름에 없다(칸 사이 gap 한 칸 더 없음)", () => {
     form(null);
     const headers = document.body.querySelectorAll("[data-slot=field-header]");
