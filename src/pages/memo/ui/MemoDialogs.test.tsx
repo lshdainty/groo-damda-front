@@ -149,11 +149,11 @@ describe("메모 폼 (I-15 13)", () => {
     expect(q("[data-slot=list-chevron]")).toBeNull();
   });
 
-  it("본문에 Scroll Fog 가 켜져 있다(넘칠 수 있는 긴 폼 — bottom-sheet.md)", () => {
+  it("폼 본문에는 Scroll Fog 를 걸지 않는다(내용 칸이 화면 높이 32% 에서 멈춰 시트 90% 에 닿지 않는다)", () => {
     form(null);
     expect(
       q("[data-slot=bottom-sheet-body]")?.getAttribute("data-scroll-fog"),
-    ).toBe("overlayBody");
+    ).toBeNull();
   });
 
   it("제목 · 내용 칸의 라벨은 읽는 이름으로 남고 머리 줄은 흐름에 없다(칸 사이 gap 한 칸 더 없음)", () => {

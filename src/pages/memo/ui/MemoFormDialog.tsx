@@ -133,7 +133,7 @@ export function MemoFormDialog({
           titleRef.current?.focus({ preventScroll: true });
         }}
       >
-        <ResponsiveDialogBody scrollFog>
+        <ResponsiveDialogBody>
           {saveError && (
             <Callout tone="critical" role="alert" className="mb-x4">
               {t("saveFailed")}
