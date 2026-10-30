@@ -506,8 +506,8 @@ describe("이체 프리셋", () => {
     render(null);
     await click(chip("addTx.transfer"));
     setValue(textInput(), "적금 이체");
-    await pick("addTx.fromAccount", "주거래");
-    await pick("addTx.depositAccount", "청약");
+    await pick("preset.fromAccount", "주거래");
+    await pick("preset.toAccount", "청약");
     await typeInStep("preset.feeLabel", "500");
     await clickSave("add");
 
@@ -523,7 +523,7 @@ describe("이체 프리셋", () => {
   it("카드는 이체 상대 목록에 없다 — 서버도 400 으로 막는다", async () => {
     render(null);
     await click(chip("addTx.transfer"));
-    await click(rowButton("addTx.fromAccount"));
+    await click(rowButton("preset.fromAccount"));
     await tick();
 
     const titles = pickItemTitles();

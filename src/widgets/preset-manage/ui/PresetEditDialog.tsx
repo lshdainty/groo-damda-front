@@ -543,7 +543,7 @@ export function PresetEditDialog({
                   {isTransfer ? (
                     <>
                       <PickerRow
-                        title={t("addTx.fromAccount")}
+                        title={t("preset.fromAccount")}
                         prefix={<Wallet />}
                         value={
                           assetById(assetRowId)
@@ -551,12 +551,12 @@ export function PresetEditDialog({
                             : null
                         }
                         placeholder={t("addTx.selectPlaceholder")}
-                        surfaceTitle={t("addTx.fromAccount")}
+                        surfaceTitle={t("preset.fromAccount")}
                         errorMessage={fromErr}
                       >
                         {({ close }) =>
                           assetPick(
-                            t("addTx.fromAccount"),
+                            t("preset.fromAccount"),
                             eligible,
                             assetRowId,
                             setAssetRowId,
@@ -566,7 +566,7 @@ export function PresetEditDialog({
                         }
                       </PickerRow>
                       <PickerRow
-                        title={t("addTx.depositAccount")}
+                        title={t("preset.toAccount")}
                         prefix={<Wallet />}
                         value={
                           assetById(toAssetRowId)
@@ -574,12 +574,12 @@ export function PresetEditDialog({
                             : null
                         }
                         placeholder={t("addTx.selectPlaceholder")}
-                        surfaceTitle={t("addTx.depositAccount")}
+                        surfaceTitle={t("preset.toAccount")}
                         errorMessage={toErr}
                       >
                         {({ close }) =>
                           assetPick(
-                            t("addTx.depositAccount"),
+                            t("preset.toAccount"),
                             eligible.filter((a) => a.rowId !== assetRowId),
                             toAssetRowId,
                             setToAssetRowId,

@@ -11,9 +11,10 @@ export interface QuietOpts {
 }
 
 export const expenseTemplateApi = {
-  getTemplates: async (): Promise<ExpenseTemplate[]> => {
+  getTemplates: async (opts?: QuietOpts): Promise<ExpenseTemplate[]> => {
+    const config: QuietRequestConfig = { silent: opts?.silent };
     const resp: ApiResponse<{ templates: ExpenseTemplate[] }> =
-      await apiClient.get("/v1/expense-templates");
+      await apiClient.get("/v1/expense-templates", config);
     return resp.data.templates;
   },
 

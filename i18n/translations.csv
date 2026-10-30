@@ -3236,3 +3236,5 @@ expense,addTx.presetShowAll,모두 보기,Show all
 expense,addTx.presetPickTitle,프리셋 고르기,Choose a preset
 expense,addTx.presetSearch,프리셋 검색,Search presets
 expense,addTx.presetNoResult,찾는 프리셋이 없어요.,No presets found.
+expense,preset.fromAccount,보내는 계좌,Sending account
+expense,preset.toAccount,받는 계좌,Receiving account

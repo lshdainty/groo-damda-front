@@ -82,8 +82,8 @@ export function PresetDetailDialog({
     isTransfer ? t("addTx.transfer") : isIncome ? t("income") : t("expense"),
   );
   if (isTransfer) {
-    add("from", t("addTx.fromAccount"), preset.assetName);
-    add("to", t("addTx.depositAccount"), preset.toAssetName);
+    add("from", t("preset.fromAccount"), preset.assetName);
+    add("to", t("preset.toAccount"), preset.toAssetName);
     add(
       "fee",
       t("addTx.fee"),

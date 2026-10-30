@@ -4,10 +4,11 @@ import { expenseTemplateApi } from "../api/expenseTemplateApi";
 import type { QuietOpts } from "../api/expenseTemplateApi";
 import type { ExpenseTemplateFormValues } from "@/entities/expense-template";
 
-export const useExpenseTemplates = () => {
+/** `silent` — 불러오기 실패를 호출처가 직접 알릴 때(목록 화면의 실패 Result Section) 전역 서버 원문 토스트를 끈다 */
+export const useExpenseTemplates = (opts?: QuietOpts) => {
   return useQuery({
     queryKey: expenseKeys.templates(),
-    queryFn: () => expenseTemplateApi.getTemplates(),
+    queryFn: () => expenseTemplateApi.getTemplates(opts),
   });
 };
 

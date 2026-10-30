@@ -52,7 +52,8 @@ export function PresetManager({
   const { t: tc } = useTranslation("common");
   const titleId = useId();
   const snackbar = useSnackbar();
-  const templatesQ = useExpenseTemplates();
+  // 불러오기 실패는 아래 실패 Result Section 이 알린다 — 전역 서버 원문 토스트와 겹치지 않게 끈다
+  const templatesQ = useExpenseTemplates({ silent: true });
   const categoriesQ = useExpenseCategories();
   // 삭제 실패는 전역 서버 원문 토스트 대신 아래 스낵바(고정 글 + 다시 시도)가 알린다
   const deleteMut = useDeleteExpenseTemplate({ silent: true });
