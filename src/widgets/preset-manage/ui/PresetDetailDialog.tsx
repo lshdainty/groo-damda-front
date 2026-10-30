@@ -86,7 +86,7 @@ export function PresetDetailDialog({
     add("to", t("preset.toAccount"), preset.toAssetName);
     add(
       "fee",
-      t("addTx.fee"),
+      t("preset.feeLabel"),
       preset.fee != null && preset.fee > 0 ? dsMoney(preset.fee) : null,
     );
     add(
