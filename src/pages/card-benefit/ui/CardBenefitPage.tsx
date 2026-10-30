@@ -152,7 +152,7 @@ export const CardBenefitPage = () => {
   const search = (
     <Input
       variant="underline"
-      size={wide ? "medium" : "large"}
+      size="responsive"
       value={query}
       onChange={(e) => {
         setQuery(e.target.value);
@@ -164,7 +164,7 @@ export const CardBenefitPage = () => {
       clearable
       autoComplete="off"
       enterKeyHint="search"
-      rootClassName={wide ? "min-w-0 max-w-[420px] flex-1" : undefined}
+      rootClassName={mobile ? undefined : "min-w-0 max-w-[420px] flex-1"}
     />
   );
   const filters = (
