@@ -160,6 +160,8 @@ export function TxStep2({ f }: { f: TxForm }) {
           <Callout tone="warning">{t("sms.lowConfidence")}</Callout>
         </div>
       )}
+      {/* 결제 문자 초안도 지출 · 수입 칩이 있다 — 환불 · 입금 문자를 수입으로 남길 길이 막히지 않게(이체 칩은 막힌다) */}
+      {f.smsDraft && !editLike && <TypeChips f={f} />}
       {editLike && (
         <>
           <TypeChips f={f} />
