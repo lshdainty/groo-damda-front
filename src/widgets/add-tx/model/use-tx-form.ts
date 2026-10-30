@@ -107,6 +107,11 @@ export type TxFormProps = {
   onTransferSaved?: (saved: AssetTransfer) => void;
   /** 고쳐 쓰기 저장이 끝났다(404 로 이미 교체돼 있던 갈래 포함) — 상세가 돌아갈 거래가 없어 상세까지 닫는다. `onClose` 보다 먼저 */
   onReplaced?: () => void;
+  /**
+   * [고쳐 쓰기] 를 눌렀다 — 호스트가 이 폼을 계속 들고 있으면(상세 시트 안 한 단계, I-21 7a) 호스트가 시드를 받아 `beginEdit` 로 갈아 끼운다.
+   * 없으면 폼이 스스로 새 거래 모드로 바뀐다(`rewriting`)
+   */
+  onRewrite?: (seed: RewriteSeed) => void;
 };
 
 /** 고쳐 쓸 거래와 그 거래의 분할 — 분할은 교체 본문에 함께 실린다. */
@@ -134,6 +139,56 @@ const extractTime = (s?: string | null) => {
   return m ? m[1] : null;
 };
 
+/** 폼 칸의 처음 값 — 열 때 한 번, 호스트가 폼을 든 채 다른 거래로 갈아 끼울 때(`beginEdit`) 다시 쓴다 */
+function initFrom(p: {
+  expense?: Expense | null;
+  editTransfer?: AssetTransfer | null;
+  rewrite?: RewriteSeed | null;
+  defaultDate?: string;
+}) {
+  const { editTransfer } = p;
+  const isEdit = !!p.expense || !!editTransfer;
+  const rewriteOf = !isEdit ? (p.rewrite?.of ?? null) : null;
+  const seed = p.expense ?? rewriteOf;
+  return {
+    type: (editTransfer
+      ? "TRANSFER"
+      : (seed?.expenseType ?? "EXPENSE")) as TxType,
+    amount: editTransfer
+      ? String(editTransfer.amount)
+      : seed?.amount
+        ? String(seed.amount)
+        : "",
+    description: editTransfer?.description ?? seed?.description ?? "",
+    expenseDate: editTransfer
+      ? editTransfer.transferDate.slice(0, 10)
+      : seed?.expenseDate
+        ? seed.expenseDate.slice(0, 10)
+        : (p.defaultDate ?? todayLocal()),
+    // 이체 편집이면 그 이체의 시각 — 안 읽으면 금액만 고쳐도 시각이 지금으로 밀린다.
+    expenseTime:
+      extractTime(editTransfer?.transferDate ?? seed?.expenseDate) ??
+      nowTimeLocal(),
+    merchant: seed?.merchant ?? "",
+    isFixed: seed?.isFixed ?? false,
+    paymentMethod: seed?.paymentMethod ?? "",
+    installmentMonths: seed?.installmentMonths
+      ? String(seed.installmentMonths)
+      : "",
+    origAmount: seed?.originalAmount != null ? String(seed.originalAmount) : "",
+    fxRate: seed?.exchangeRate != null ? String(seed.exchangeRate) : "",
+    categoryRowId: seed?.categoryRowId ?? (null as number | null),
+    assetRowId: seed?.assetRowId ?? (null as number | null),
+    fromAssetRowId: editTransfer?.fromAssetRowId ?? (null as number | null),
+    toAssetRowId: editTransfer?.toAssetRowId ?? (null as number | null),
+    fee: editTransfer?.fee ? String(editTransfer.fee) : "",
+    interest: editTransfer?.interestAmount
+      ? String(editTransfer.interestAmount)
+      : "",
+    main: (p.expense || editTransfer || p.rewrite ? "2" : "1") as "1" | "2",
+  };
+}
+
 export function useTxForm({
   onClose,
   expense,
@@ -143,6 +198,7 @@ export function useTxForm({
   onSaved,
   onTransferSaved,
   onReplaced,
+  onRewrite,
 }: Omit<TxFormProps, "mobile">) {
   const { t } = useTranslation("expense");
   const { t: tc } = useTranslation("common");
@@ -1051,7 +1107,51 @@ export function useTxForm({
   };
 
   // 바뀐 값 — 처음 값과 달라진 것이 하나라도 있으면 닫기 전에 묻는다. 단계를 오가는 것은 바뀐 값이 아니다
-  const snapshot = JSON.stringify([
+  const snapshotOf = (v: {
+    type: string;
+    amount: string;
+    description: string;
+    expenseDate: string;
+    expenseTime: string;
+    merchant: string;
+    isFixed: boolean;
+    paymentMethod: string;
+    installmentMonths: string;
+    origCurrencyPick: string | null;
+    origAmount: string;
+    fxRate: string;
+    categoryRowId: number | null;
+    assetRowId: number | null;
+    fromAssetRowId: number | null;
+    toAssetRowId: number | null;
+    fee: string;
+    interest: string;
+    smsText: string | null;
+    reconciledSplits: ExpenseSplitFormValue[] | null;
+  }) =>
+    JSON.stringify([
+      v.type,
+      v.amount,
+      v.description,
+      v.expenseDate,
+      v.expenseTime,
+      v.merchant,
+      v.isFixed,
+      v.paymentMethod,
+      v.installmentMonths,
+      v.origCurrencyPick,
+      v.origAmount,
+      v.fxRate,
+      v.categoryRowId,
+      v.assetRowId,
+      v.fromAssetRowId,
+      v.toAssetRowId,
+      v.fee,
+      v.interest,
+      v.smsText,
+      v.reconciledSplits,
+    ]);
+  const snapshot = snapshotOf({
     type,
     amount,
     description,
@@ -1070,11 +1170,75 @@ export function useTxForm({
     toAssetRowId,
     fee,
     interest,
-    smsDraft?.text ?? null,
+    smsText: smsDraft?.text ?? null,
     reconciledSplits,
-  ]);
-  const [initialSnapshot] = useState(snapshot);
+  });
+  const [initialSnapshot, setInitialSnapshot] = useState(snapshot);
   const dirty = snapshot !== initialSnapshot;
+
+  /**
+   * 호스트가 이 폼을 든 채 다른 거래를 열 때(상세 → [수정] · [고쳐 쓰기]) 칸 · 단계 · 처음 값(바뀐 값 비교)을 그 거래로 갈아 끼운다.
+   * 이벤트 핸들러에서 부르므로 호스트가 같은 렌더에 새 `expense` 인자를 준다 — 이펙트로 맞추지 않아 옛 값이 한 번 비치지 않는다(09b-1 isSyncedWith 교훈).
+   */
+  const beginEdit = (next: {
+    expense?: Expense | null;
+    editTransfer?: AssetTransfer | null;
+    rewrite?: RewriteSeed | null;
+  }) => {
+    const v = initFrom({ ...next, defaultDate });
+    setType(v.type);
+    setAmount(v.amount);
+    setDescription(v.description);
+    setExpenseDate(v.expenseDate);
+    setExpenseTime(v.expenseTime);
+    setMerchant(v.merchant);
+    setIsFixed(v.isFixed);
+    setPaymentMethod(v.paymentMethod);
+    setInstallmentMonths(v.installmentMonths);
+    setOrigCurrency(null);
+    setOrigAmount(v.origAmount);
+    setFxRate(v.fxRate);
+    setFxSeed({ origAmount: v.origAmount, fxRate: v.fxRate });
+    setCategoryRowId(v.categoryRowId);
+    setAssetRowId(v.assetRowId);
+    setFromAssetRowId(v.fromAssetRowId);
+    setToAssetRowId(v.toAssetRowId);
+    setFee(v.fee);
+    setInterest(v.interest);
+    setSmsDraft(null);
+    setRememberCard(false);
+    setSmsLow(false);
+    setSmsLoading(false);
+    setOpenReconcile(false);
+    setSaveConfirm(null);
+    setReconciledSplits(null);
+    setActivePresetId(null);
+    setMain(v.main);
+    setSubRaw(null);
+    setSubSnap(null);
+    setShowErrors(false);
+    setEmptyPresetName(null);
+    setFocusMerchant(false);
+    setPresetName("");
+    setPresetAmount("");
+    setPresetShow(false);
+    setRewriting(false);
+    setInitialSnapshot(
+      snapshotOf({
+        ...v,
+        origCurrencyPick: null,
+        smsText: null,
+        reconciledSplits: null,
+      }),
+    );
+  };
+
+  /** [고쳐 쓰기] — 호스트가 갈아 끼우거나(`onRewrite`) 폼이 스스로 새 거래 모드로 바뀐다 */
+  const requestRewrite = () => {
+    if (!expense) return;
+    if (onRewrite) onRewrite({ of: expense, splits: serverSplitForms });
+    else setRewriting(true);
+  };
 
   // ── 프리셋으로 저장 (E 32) — 같은 시트 안 한 단계 ──
   const openPresetSave = () => {
@@ -1288,6 +1452,8 @@ export function useTxForm({
     changeCurrency,
     goNext,
     dirty,
+    beginEdit,
+    requestRewrite,
     applySms,
     save,
   };

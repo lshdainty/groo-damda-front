@@ -204,7 +204,7 @@ export function TxStep2({ f }: { f: TxForm }) {
                   size="small"
                   className="mt-x2"
                   disabled={!f.canRewrite}
-                  onClick={() => f.setRewriting(true)}
+                  onClick={() => f.requestRewrite()}
                 >
                   {t("addTx.rewrite")}
                 </Button>
