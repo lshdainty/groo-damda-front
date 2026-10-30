@@ -210,6 +210,7 @@ describe("메모 상세 (I-15 14)", () => {
         <MemoDetailDialog
           memo={memo}
           remove={remove}
+          pin={() => Promise.resolve(true)}
           onClose={() => closed++}
           onEdit={() => {}}
         />,
@@ -236,11 +237,23 @@ describe("메모 상세 (I-15 14)", () => {
     expect(document.body.textContent).not.toContain("고정");
   });
 
-  it("바닥은 [삭제] ghost critical + [수정] 이고, [삭제] 는 확인창을 먼저 연다", () => {
+  it("바닥은 [수정] 하나뿐이고 [삭제] 는 머리 ⋮ 메뉴에 있다", () => {
     detail(base);
-    const del = byName("삭제")!;
-    expect(del.className).toContain("text-fg-critical");
-    click(del);
+    const footer = q("[data-slot=bottom-sheet-footer]")!;
+    expect(
+      Array.from(footer.querySelectorAll("button")).map((b) => b.textContent),
+    ).toEqual(["수정"]);
+    expect(byName("여행 계획 더보기")).toBeTruthy();
+  });
+
+  it("⋮ 메뉴에서 [삭제] 를 고르면 확인창을 먼저 연다", async () => {
+    detail(base);
+    click(byName("여행 계획 더보기"));
+    const del = Array.from(
+      document.body.querySelectorAll<HTMLElement>("[role=menuitem]"),
+    ).find((e) => e.textContent?.includes("삭제"));
+    expect(del, "메뉴 줄 삭제").toBeTruthy();
+    await act(async () => del!.click());
     expect(q("[role=alertdialog]")?.textContent).toContain(
       '"여행 계획" 메모를 삭제할까요?',
     );
@@ -249,9 +262,23 @@ describe("메모 상세 (I-15 14)", () => {
     );
   });
 
+  it("⋮ 메뉴 첫 줄은 고정이면 '고정 해제', 아니면 '고정' 이다", () => {
+    detail(base);
+    click(byName("여행 계획 더보기"));
+    const items = Array.from(
+      document.body.querySelectorAll<HTMLElement>("[role=menuitem]"),
+    ).map((e) => e.textContent?.trim());
+    expect(items[0]).toBe("고정 해제");
+  });
+
   it("확인 뒤 지우면 상세를 닫는다 · 지우지 못하면 닫지 않는다", async () => {
     detail(base, () => Promise.resolve(true));
-    click(byName("삭제"));
+    click(byName("여행 계획 더보기"));
+    await act(async () =>
+      Array.from(document.body.querySelectorAll<HTMLElement>("[role=menuitem]"))
+        .find((e) => e.textContent?.includes("삭제"))!
+        .click(),
+    );
     const confirm = Array.from(
       document.body.querySelectorAll<HTMLElement>("[role=alertdialog] button"),
     ).find((b) => b.textContent === "삭제")!;

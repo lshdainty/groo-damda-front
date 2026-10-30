@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { EllipsisVertical, Pin, PinOff, Trash2 } from "lucide-react";
 import { Button } from "@/shared/ds/button";
 import {
   ResponsiveDialog,
@@ -7,6 +8,13 @@ import {
   ResponsiveDialogContent,
   ResponsiveDialogFooter,
 } from "@/shared/ds/dialog";
+import {
+  ResponsiveMenu,
+  ResponsiveMenuContent,
+  ResponsiveMenuGroup,
+  ResponsiveMenuItem,
+  ResponsiveMenuTrigger,
+} from "@/shared/ds/menu";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
 import type { Memo } from "@/entities/memo";
@@ -17,16 +25,19 @@ import { MemoDeleteConfirm } from "./MemoDeleteConfirm";
  * 메모 상세(I-15 14) — 읽기 시트 · 1280 이상 Dialog 480(조회). 바깥 누름 · 끌어내림으로 닫힌다.
  * 머리 제목 = 메모 제목(줄바꿈, 비면 "제목 없음"). 본문 맨 위 메타 = 색 점 8 + "{태그 또는 태그 없음} · {수정 시각} 수정 · 고정"
  * (고정일 때만 마지막 조각), 그 아래 본문 t5 줄바꿈 그대로(비면 "내용 없음"). 색 히어로 카드 · 테두리 본문 상자 · 핀 배지는 없다.
- * 바닥은 [삭제] ghost critical(왼쪽) + [수정] neutralSolid — [삭제] 는 확인창(ds Alert Dialog)을 먼저 연다.
+ * 머리 ⋮ = [고정 / 고정 해제, 삭제](삭제는 공용 ConfirmDialog 를 먼저 연다), 바닥은 [수정] 하나.
  */
 export function MemoDetailDialog({
   memo,
   remove,
+  pin,
   onClose,
   onEdit,
 }: {
   memo: Memo;
   remove: (memo: Memo) => Promise<boolean>;
+  /** 고정 / 고정 해제 — 끝났으면 true(실패 안내는 부르는 쪽이 한다) */
+  pin: (memo: Memo) => Promise<boolean>;
   onClose: () => void;
   onEdit: (memo: Memo) => void;
 }) {
@@ -36,26 +47,49 @@ export function MemoDetailDialog({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const stamp = formatMemoStamp(memo.modifyAt);
 
-  const del = (
-    <Button
-      variant="ghost"
-      ghostColor="critical"
-      size={wide ? undefined : "large"}
-      className={wide ? "mr-auto" : "shrink-0"}
-      onClick={() => setConfirmDelete(true)}
-    >
-      {tc("delete")}
-    </Button>
-  );
   const edit = (
     <Button
       variant="neutralSolid"
       size={wide ? undefined : "large"}
-      className={wide ? undefined : "flex-1"}
+      className={wide ? undefined : "w-full"}
       onClick={() => onEdit(memo)}
     >
       {tc("edit")}
     </Button>
+  );
+
+  // 머리 ⋮ — [고정 / 고정 해제, 삭제](1280 미만 Menu Sheet · 이상 Menu). 닫히면 초점은 ⋮ 로 돌아온다(Radix 기본)
+  const more = (
+    <ResponsiveMenu>
+      <ResponsiveMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          ghostColor="neutralSubtle"
+          layout="iconOnly"
+          size="small"
+          aria-label={t("moreOf", { name: memo.title || t("untitled") })}
+        >
+          <EllipsisVertical aria-hidden />
+        </Button>
+      </ResponsiveMenuTrigger>
+      <ResponsiveMenuContent title={memo.title || t("untitled")} align="end">
+        <ResponsiveMenuGroup>
+          <ResponsiveMenuItem
+            label={memo.isPinned ? t("unpin") : t("pin")}
+            icon={memo.isPinned ? <PinOff aria-hidden /> : <Pin aria-hidden />}
+            onSelect={() => void pin(memo)}
+          />
+        </ResponsiveMenuGroup>
+        <ResponsiveMenuGroup>
+          <ResponsiveMenuItem
+            label={tc("delete")}
+            icon={<Trash2 aria-hidden />}
+            tone="critical"
+            onSelect={() => setConfirmDelete(true)}
+          />
+        </ResponsiveMenuGroup>
+      </ResponsiveMenuContent>
+    </ResponsiveMenu>
   );
 
   return (
@@ -68,6 +102,7 @@ export function MemoDetailDialog({
       >
         <ResponsiveDialogContent
           title={memo.title || t("untitled")}
+          headerAction={more}
           aria-describedby={undefined}
         >
           <ResponsiveDialogBody>
@@ -98,19 +133,7 @@ export function MemoDetailDialog({
               </p>
             )}
           </ResponsiveDialogBody>
-          <ResponsiveDialogFooter>
-            {wide ? (
-              <>
-                {del}
-                {edit}
-              </>
-            ) : (
-              <div className="flex w-full items-center gap-x2">
-                {del}
-                {edit}
-              </div>
-            )}
-          </ResponsiveDialogFooter>
+          <ResponsiveDialogFooter>{edit}</ResponsiveDialogFooter>
         </ResponsiveDialogContent>
       </ResponsiveDialog>
 

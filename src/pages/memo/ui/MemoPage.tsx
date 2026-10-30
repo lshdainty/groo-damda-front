@@ -14,7 +14,12 @@ type OutletCtx = { onAddTx: () => void; mobile: boolean };
 export const MemoPage = () => {
   const { mobile } = useOutletContext<OutletCtx>();
   const screen = useMemoScreen();
-  const { editing, viewing } = screen;
+  const { editing } = screen;
+  // 상세는 목록의 최신 값으로 그린다 — 머리 ⋮ 로 고정을 바꾸면 메타 · 메뉴 글이 바로 따라간다
+  const viewing =
+    screen.viewing &&
+    (screen.memos.find((m) => m.rowId === screen.viewing!.rowId) ??
+      screen.viewing);
 
   return (
     <>
@@ -27,6 +32,7 @@ export const MemoPage = () => {
         <MemoDetailDialog
           memo={viewing}
           remove={screen.remove}
+          pin={screen.pinOf}
           onClose={() => screen.setViewing(null)}
           onEdit={(m) => {
             screen.setViewing(null);
