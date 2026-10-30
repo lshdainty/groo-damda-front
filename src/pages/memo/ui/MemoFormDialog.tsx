@@ -144,7 +144,7 @@ export function MemoFormDialog({
             invalid={showError && titleEmpty}
             errorMessage={t("titleRequired")}
             labelHidden
-            className="pb-x2 pt-x1"
+            className="pb-x2 pt-x3"
           >
             <Input
               ref={titleRef}

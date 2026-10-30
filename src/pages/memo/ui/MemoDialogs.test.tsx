@@ -178,6 +178,13 @@ describe("메모 폼 (I-15 13)", () => {
     );
   });
 
+  it("제목 칸은 머리 아래 12 · 아래 8 — 본문 Scroll Fog 가 없어 위 여백을 칸이 갖는다(bottom-sheet.md)", () => {
+    form(null);
+    const field = q("[data-slot=field]")!;
+    expect(field.className).toContain("pt-x3");
+    expect(field.className).toContain("pb-x2");
+  });
+
   it("바닥은 [저장] 하나뿐이다 — 시트에는 [취소] 가 없다", () => {
     form(null);
     const footer = q("[data-slot=bottom-sheet-footer]")!;
