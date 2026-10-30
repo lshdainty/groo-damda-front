@@ -4,11 +4,11 @@ import { useTranslation } from "react-i18next";
 
 import { Button } from "@/shared/ds/button";
 import { DatePicker, dayKey, parseDayKey } from "@/shared/ds/date-picker";
-import { List, ListButtonItem, ListTile } from "@/shared/ds/list";
+import { List, ListButtonItem } from "@/shared/ds/list";
 import { PickList } from "@/shared/ui/groo/pick-list";
+import { CategoryPickList } from "@/features/expense/ui/CategoryPickList";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { PickerRow } from "@/shared/ui/groo/picker-row";
-import { Icon } from "@/shared/ui/groo/primitives";
-import { isIconName } from "@/shared/lib";
 import { formatDateLong } from "@/shared/lib/date";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import type { Asset } from "@/entities/asset";
@@ -138,7 +138,7 @@ export function DateRow({
   );
 }
 
-/** 카테고리 고르기 — 지금 종류의 말단만 고른다(하위가 있는 상위는 반복 거래를 받지 않는다) */
+/** 카테고리 고르기 — 지금 종류의 말단만 고른다(하위가 있는 상위는 반복 거래를 받지 않는다). 본문은 20-2 의 공용 `CategoryPickList` */
 export function CategoryPickRow({
   prefix,
   title,
@@ -150,11 +150,16 @@ export function CategoryPickRow({
   onChange,
   errorMessage,
   emptyText,
+  failed,
+  onRetry,
 }: {
   prefix?: ReactNode;
   title: string;
   placeholder: string;
   surfaceTitle: string;
+  /** 카테고리 목록을 못 받았다 — 고르기 안에 실패 한 벌(Result Section + 다시 시도) */
+  failed?: boolean;
+  onRetry?: () => void;
   categories: ExpenseCategory[];
   type: "EXPENSE" | "INCOME";
   value: number | null;
@@ -162,18 +167,9 @@ export function CategoryPickRow({
   errorMessage?: string | null;
   emptyText: string;
 }) {
-  const sameType = categories
-    .filter((c) => c.expenseType === type)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
-  const parents = new Set(
-    sameType.filter((c) => c.parentRowId != null).map((c) => c.parentRowId),
-  );
-  const leaves = sameType.filter((c) => !parents.has(c.rowId));
-  const nameOf = (c: ExpenseCategory) =>
-    c.parentRowId != null
-      ? sameType.find((p) => p.rowId === c.parentRowId)?.categoryName
-      : undefined;
+  const { t: tCat } = useTranslation("category");
   const picked = categories.find((c) => c.rowId === value);
+  const any = categories.some((c) => c.expenseType === type);
   return (
     <PickerRow
       title={title}
@@ -185,34 +181,23 @@ export function CategoryPickRow({
       errorMessage={errorMessage}
     >
       {({ close }) =>
-        leaves.length === 0 ? (
+        failed ? (
+          <BandFailure
+            title={tCat("loadFailed")}
+            onRetry={() => onRetry?.()}
+            className="-mx-x6"
+          />
+        ) : !any ? (
           <p className="m-0 py-x3 font-sans text-t4 text-fg-neutral-subtle">
             {emptyText}
           </p>
         ) : (
-          <PickList
-            label={surfaceTitle}
-            selected={value != null ? String(value) : null}
-            items={leaves.map((c) => {
-              const palette = getPaletteByColor(c.color);
-              return {
-                value: String(c.rowId),
-                title: c.categoryName,
-                detail: nameOf(c),
-                prefix: (
-                  <ListTile
-                    style={{ background: palette.bg, color: palette.color }}
-                  >
-                    <Icon
-                      name={isIconName(c.icon) ? c.icon : "tag"}
-                      size={20}
-                    />
-                  </ListTile>
-                ),
-              };
-            })}
-            onPick={(v) => {
-              onChange(Number(v));
+          <CategoryPickList
+            categories={categories}
+            kind={type}
+            selectedRowId={value}
+            onPick={(id) => {
+              onChange(id);
               close();
             }}
           />
