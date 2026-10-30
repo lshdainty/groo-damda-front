@@ -169,6 +169,15 @@ describe.each([
     expect(screenText()).toContain(`${noun} 0건은 태그 없음으로 남아요`);
   });
 
+  it("태그 폼 본문에는 Scroll Fog 를 걸지 않는다(칸 두셋 — 늘 들어맞는 본문)", () => {
+    render(ns, true, [tagOf(1, "운동", 3)]);
+    openRow("운동");
+    const body = document.body.querySelector(
+      "[data-slot=bottom-sheet-body], [data-slot=dialog-body]",
+    )!;
+    expect(body.getAttribute("data-scroll-fog")).toBeNull();
+  });
+
   it("새 태그 폼에는 [삭제] 가 없다", () => {
     render(ns, true, []);
     act(() => buttonByText("태그 추가")!.click());
