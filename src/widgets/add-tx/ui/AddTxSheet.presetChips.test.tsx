@@ -91,7 +91,7 @@ const preset = (
   modifyAt: "2026-01-01T00:00:00",
 });
 
-const templates: ExpenseTemplate[] = [
+let templates: ExpenseTemplate[] = [
   preset(1, "점심", "EXPENSE"),
   preset(2, "월급", "INCOME"),
   preset(3, "적금 이체", "TRANSFER"),
@@ -122,9 +122,12 @@ beforeEach(() => {
   );
 });
 
+const baseTemplates = templates;
+
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  templates = baseTemplates;
 });
 
 const chipNames = () =>
@@ -158,5 +161,54 @@ describe("프리셋 칩은 지금 탭의 종류만 보여 준다", () => {
   it("이체 탭 — 이체 프리셋만. 칩 줄 자체는 뜬다(전엔 통째로 숨겼다)", () => {
     switchTab("addTx.transfer");
     expect(chipNames()).toEqual(["적금 이체"]);
+  });
+});
+
+describe('"모두 보기" — 지금 종류의 프리셋이 칩 수(8)보다 많을 때만 (I-20 C 20)', () => {
+  const rerender = () =>
+    act(() =>
+      root.render(
+        <AddTxSheet onClose={() => {}} mobile={false} expense={null} />,
+      ),
+    );
+  const showAll = () =>
+    [...document.body.querySelectorAll<HTMLButtonElement>("button")].find((b) =>
+      b.textContent?.includes("addTx.presetShowAll"),
+    );
+
+  it("지출 프리셋 9개 — 지출 탭에서 보인다", () => {
+    templates = Array.from({ length: 9 }, (_, i) =>
+      preset(i + 1, `지출${i + 1}`, "EXPENSE"),
+    );
+    rerender();
+    expect(showAll()).toBeTruthy();
+  });
+
+  it("지출 3 + 수입 6 — 전체는 9개여도 지출 탭에서는 보이지 않는다", () => {
+    templates = [
+      ...Array.from({ length: 3 }, (_, i) =>
+        preset(i + 1, `지출${i + 1}`, "EXPENSE"),
+      ),
+      ...Array.from({ length: 6 }, (_, i) =>
+        preset(i + 10, `수입${i + 1}`, "INCOME"),
+      ),
+    ];
+    rerender();
+    expect(showAll()).toBeUndefined();
+  });
+
+  it("누르면 같은 시트가 '프리셋 고르기' 로 들어가 지금 종류의 프리셋 모두를 보인다", () => {
+    templates = Array.from({ length: 9 }, (_, i) =>
+      preset(i + 1, `지출${i + 1}`, "EXPENSE"),
+    );
+    rerender();
+    act(() => showAll()!.click());
+    const text = document.body.textContent ?? "";
+    expect(text).toContain("addTx.presetPickTitle");
+    // 칩 8개 밖의 아홉째도 고를 수 있다
+    expect(text).toContain("지출9");
+    expect(
+      document.body.querySelector("[data-slot=text-input-value]"),
+    ).toBeTruthy();
   });
 });
