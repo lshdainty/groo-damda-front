@@ -30,7 +30,7 @@ export function CardBenefitDetailDialog({
         title={t("benefit.detailTitle")}
         aria-describedby={undefined}
       >
-        <ResponsiveDialogBody>
+        <ResponsiveDialogBody scrollFog>
           <CardDetailContent rowId={rowId} />
         </ResponsiveDialogBody>
       </ResponsiveDialogContent>

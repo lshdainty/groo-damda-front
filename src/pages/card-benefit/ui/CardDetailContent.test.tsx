@@ -104,7 +104,9 @@ describe("CardDetailContent", () => {
     expect(coffee!.getAttribute("aria-expanded")).toBe("false");
     const controls = coffee!.getAttribute("aria-controls")!;
     expect(controls).toBeTruthy();
-    expect(container.querySelector(`[id="${controls}"]`)).toBeNull();
+    expect(
+      (container.querySelector(`[id="${controls}"]`) as HTMLElement).hidden,
+    ).toBe(true);
 
     act(() => coffee!.click());
     expect(coffee!.getAttribute("aria-expanded")).toBe("true");
@@ -114,7 +116,9 @@ describe("CardDetailContent", () => {
 
     act(() => coffee!.click());
     expect(coffee!.getAttribute("aria-expanded")).toBe("false");
-    expect(container.querySelector(`[id="${controls}"]`)).toBeNull();
+    expect(
+      (container.querySelector(`[id="${controls}"]`) as HTMLElement).hidden,
+    ).toBe(true);
   });
 
   it("연회비 라벨의 네 자리 숫자에 쉼표를 붙이고, 브랜드 · 유의사항을 그린다", () => {

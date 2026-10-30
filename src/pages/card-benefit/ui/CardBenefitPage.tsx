@@ -32,7 +32,7 @@ import {
   type TypeFilterKey,
 } from "../model/card-format";
 import { CardBenefitDetailDialog } from "./CardBenefitDetailDialog";
-import { CardDetailContent } from "./CardDetailContent";
+import { CardDetailContent, DetailSkeleton } from "./CardDetailContent";
 import { CardFilterBar } from "./CardFilterBar";
 import { CardRow } from "./CardRow";
 
@@ -91,7 +91,8 @@ export const CardBenefitPage = () => {
 
   // 쪽은 주소에 — ?page=N(1부터). 검색 · 조건을 바꾸면 1쪽(주소에서 page 를 지운다)
   const rawPage = Number(params.get("page"));
-  const page = Number.isInteger(rawPage) && rawPage >= 1 ? rawPage : 1;
+  const page =
+    Number.isInteger(rawPage) && rawPage >= 1 ? Math.min(rawPage, 100000) : 1;
   const resetPage = () => {
     if (!params.has("page")) return;
     const next = new URLSearchParams(params);
@@ -135,6 +136,21 @@ export const CardBenefitPage = () => {
     : pageQ.isError && !pageQ.data;
   const totalPages = pageQ.data?.meta.totalPages ?? 1;
   const refetch = () => void (mobile ? infQ.refetch() : pageQ.refetch());
+
+  // 주소의 쪽이 전체 쪽 수를 넘으면(저장한 주소 · 조건이 줄어든 뒤 뒤로 가기) 마지막 쪽으로 옮긴다 — 주소를 바꿔 쓴다(replace)
+  const outOfRange =
+    !mobile &&
+    !!pageQ.data &&
+    !pageQ.isPlaceholderData &&
+    totalPages > 0 &&
+    page > totalPages;
+  useEffect(() => {
+    if (!outOfRange) return;
+    const next = new URLSearchParams(params);
+    if (totalPages <= 1) next.delete("page");
+    else next.set("page", String(totalPages));
+    setParams(next, { replace: true });
+  }, [outOfRange, totalPages, params, setParams]);
 
   // 1280 으로 넓어지면 열린 시트는 닫히고 그 카드가 패널에 고른 채 보인다(상태는 여기)
   if (wide && sheetId != null) {
@@ -192,7 +208,9 @@ export const CardBenefitPage = () => {
         className="m-0 font-sans text-t4 font-medium text-fg-neutral-subtle tabular-nums"
         aria-live="polite"
       >
-        {isLoading ? "" : t("benefit.resultCount", { count: formatKRW(total) })}
+        {isLoading || failed
+          ? ""
+          : t("benefit.resultCount", { count: formatKRW(total) })}
       </h2>
       <Checkbox
         size="large"
@@ -217,7 +235,7 @@ export const CardBenefitPage = () => {
         primaryAction={{ label: dsT("common.retry"), onClick: refetch }}
       />
     );
-  } else if (isLoading) {
+  } else if (isLoading || outOfRange) {
     body = <RowsSkeleton count={6} />;
   } else if (cards.length === 0) {
     body = (
@@ -327,20 +345,34 @@ export const CardBenefitPage = () => {
           </div>
           {countRow}
           {wide ? (
-            <div className="grid grid-cols-[minmax(0,1fr)_400px] items-start gap-x6">
+            <div
+              className={
+                panelId != null || isLoading
+                  ? "grid grid-cols-[minmax(0,1fr)_400px] items-start gap-x6"
+                  : undefined
+              }
+            >
               {listCard}
-              <aside
-                aria-label={t("benefit.detailTitle")}
-                className="sticky top-x5"
-              >
-                <Card className="py-x5">
-                  <ScrollFog className="max-h-[calc(100dvh-var(--spacing-x14)-var(--spacing-x10))]">
-                    {panelId != null ? (
-                      <CardDetailContent rowId={panelId} />
-                    ) : null}
-                  </ScrollFog>
-                </Card>
-              </aside>
+              {(panelId != null || isLoading) && (
+                <aside
+                  aria-label={t("benefit.detailTitle")}
+                  className="sticky top-x5"
+                >
+                  <Card className="p-0">
+                    {/* 스크롤바는 숨긴다 — 혜택을 펼쳐 내용이 길어질 때 스크롤바(약 14)가 생겨 본문이 왼쪽으로 밀리지 않게(흐림이 넘침을 알린다) */}
+                    <ScrollFog
+                      key={panelId}
+                      className="px-x6 max-h-[calc(100dvh-var(--spacing-x14)-var(--spacing-x10))] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                      {panelId != null ? (
+                        <CardDetailContent rowId={panelId} />
+                      ) : (
+                        <DetailSkeleton />
+                      )}
+                    </ScrollFog>
+                  </Card>
+                </aside>
+              )}
             </div>
           ) : (
             listCard

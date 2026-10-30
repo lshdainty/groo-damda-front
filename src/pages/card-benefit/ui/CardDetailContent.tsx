@@ -184,7 +184,7 @@ function DetailBody({ detail }: { detail: CardCatalogDetail }) {
 }
 
 /** 불러오는 동안 — 그림 312 · 이름 · 설명 · 키-값 셋 · 혜택 머리 + 항목 셋 (실제 차례와 같다) */
-function DetailSkeleton() {
+export function DetailSkeleton() {
   return (
     <div aria-busy="true">
       <div className="flex justify-center pb-x3">
@@ -211,7 +211,8 @@ export function CardDetailContent({ rowId }: { rowId: number }) {
   const dsT = useDsText();
   const q = useCardCatalogDetail(rowId, { silent: true });
   if (q.isLoading) return <DetailSkeleton />;
-  if (q.isError || !q.data) {
+  // 보이던 상세가 있으면 재요청 실패로 지우지 않는다 — 값이 없을 때만 실패 화면
+  if (!q.data) {
     return (
       <ResultSection
         size="medium"

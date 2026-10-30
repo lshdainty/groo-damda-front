@@ -37,7 +37,13 @@ export function CardRow({
       onClick={onClick}
       aria-current={picked ? "true" : undefined}
       rootProps={
-        picked ? { className: "bg-bg-neutral-weak-pressed" } : undefined
+        picked
+          ? {
+              // 고른 줄 바탕은 한 겹 — 줄 전체 띠. 올림 · 누름의 둥근 안쪽 바탕(list-background)은 이 줄에서 끈다
+              className:
+                "bg-bg-neutral-weak-pressed [&>[data-slot=list-background]]:bg-transparent!",
+            }
+          : undefined
       }
       prefix={
         <CardArt
@@ -57,10 +63,15 @@ export function CardRow({
               ))}
             </TagGroup>
           </span>
-          <span className="flex min-w-0">
-            <TagGroup size="t3" truncate>
-              <TagGroupItem>{annualFeeRowText(card, t)}</TagGroupItem>
-              <TagGroupItem>{performanceRowText(card, t)}</TagGroupItem>
+          {/* 금액 항목(연회비 · 실적)은 줄이지 않고 통째로 다음 줄로 넘긴다 — 말줄임으로 금액이 사라지지 않게 */}
+          <span className="block min-w-0">
+            <TagGroup size="t3">
+              <TagGroupItem className="whitespace-nowrap">
+                {annualFeeRowText(card, t)}
+              </TagGroupItem>
+              <TagGroupItem className="whitespace-nowrap">
+                {performanceRowText(card, t)}
+              </TagGroupItem>
             </TagGroup>
           </span>
         </>
