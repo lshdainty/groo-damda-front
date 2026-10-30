@@ -218,7 +218,6 @@ export const TEMP_BODY_PADDING: SectionId[] = [
   "presets",
   "calendar-share",
   "calendar-labels",
-  "memo-tags",
   "appearance",
   "notifications",
   // data 는 걷지 않는다 — I-05 05-2 의 데이터 본문이 바깥 24 를 전제로 목록 · 바닥 바를 음수 여백으로 되돌려 쓴다.
