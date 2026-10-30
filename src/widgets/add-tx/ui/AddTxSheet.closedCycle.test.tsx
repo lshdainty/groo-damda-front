@@ -451,3 +451,61 @@ describe("시트 제목", () => {
     expect(bodyText()).toContain("addTx.editTitle");
   });
 });
+
+/**
+ * 날짜를 정해 넣는 새 거래 — 날짜 줄을 거쳐 고르든 `defaultDate` 로 열든 저장 때 날짜가 가르는 것은 같다(결제가 끝난 회차면 기록만 남는다).
+ * 돈과 얽힌 규칙이라 문자 · 수정 길뿐 아니라 새로 넣는 길도 잠근다.
+ */
+describe("날짜가 닫힌 회차에 드는 새 카드 거래", () => {
+  const rowButton = (title: string) =>
+    [...document.body.querySelectorAll("button")].find((b) =>
+      b.textContent?.startsWith(title),
+    )!;
+  async function fillNew(date: string) {
+    act(() =>
+      root.render(<AddTxSheet onClose={() => {}} mobile defaultDate={date} />),
+    );
+    setValue(
+      document.body.querySelector<HTMLInputElement>(
+        'input[aria-label="form.amount"]',
+      )!,
+      "5000",
+    );
+    await click(buttons("addTx.next")[0]!);
+    await click(rowButton("addTx.category"));
+    await click(buttons("식비")[0]!);
+    await click(rowButton("addTx.account"));
+    await click(buttons("현대카드")[0]!);
+  }
+
+  it("8월 거래(8월 회차까지 결제 끝남)는 저장 전에 기록만 바뀐다고 묻고, 확인해야 저장한다", async () => {
+    await fillNew("2026-08-20");
+    await click(sheetSave());
+
+    expect(bodyText()).toContain("addTx.saveConfirmTitle");
+    expect(bodyText()).toContain("closedCycle.note");
+    expect(st.create).toBeNull();
+
+    await click(dialogSave());
+
+    expect(st.create).not.toBeNull();
+    expect(st.create!.assetRowId).toBe(9);
+    expect(st.create!.expenseDate).toContain("2026-08-20");
+  });
+
+  it("9월 거래(열린 회차)는 묻지 않고 바로 저장한다", async () => {
+    await fillNew("2026-09-10");
+    await click(sheetSave());
+
+    expect(bodyText()).not.toContain("closedCycle.");
+    expect(st.create).not.toBeNull();
+  });
+
+  it("결제일 당일 회차의 마지막 날(8/31)도 닫힌 회차다 — 경계 날짜", async () => {
+    await fillNew("2026-08-31");
+    await click(sheetSave());
+
+    expect(bodyText()).toContain("closedCycle.note");
+    expect(st.create).toBeNull();
+  });
+});

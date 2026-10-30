@@ -33,6 +33,7 @@ import { transferEligible } from "@/features/asset-transfer";
 import { amountText } from "../lib/amount-format";
 import { INSTALLMENT_MONTHS, type TxForm } from "../model/use-tx-form";
 import { TypeChips } from "./TxStep1";
+import { Piece, PieceGroup } from "@/widgets/calendar/ui/event-form/sheet-body";
 import { AssetPickBody, CategoryPickBody, SimplePickBody } from "./pick-bodies";
 import {
   LockedRow,
@@ -97,19 +98,19 @@ export function TxStep2({ f }: { f: TxForm }) {
         prefix={<Calendar aria-hidden className={ROW_ICON} />}
         suffixText
         suffix={
-          <span className="flex flex-wrap items-center justify-end gap-x1 text-end">
+          <PieceGroup>
             <DayPickSurface
               title={t("addTx.dateRow")}
               value={f.expenseDate}
               onConfirm={f.setExpenseDate}
               trigger={({ open, onClick }) => (
-                <DatePiece
+                <Piece
                   label={`${t("addTx.dateRow")}, ${dayText(f.expenseDate)}`}
                   expanded={open}
                   onClick={onClick}
                 >
                   {dayText(f.expenseDate)}
-                </DatePiece>
+                </Piece>
               )}
             />
             <TimePickSurface
@@ -117,16 +118,16 @@ export function TxStep2({ f }: { f: TxForm }) {
               value={f.expenseTime}
               onConfirm={f.setExpenseTime}
               trigger={({ open, onClick }) => (
-                <DatePiece
+                <Piece
                   label={`${t("addTx.timeRow")}, ${timeText(f.expenseTime)}`}
                   expanded={open}
                   onClick={onClick}
                 >
                   {timeText(f.expenseTime)}
-                </DatePiece>
+                </Piece>
               )}
             />
-          </span>
+          </PieceGroup>
         }
       />
     </List>
@@ -506,31 +507,5 @@ export function TxStep2({ f }: { f: TxForm }) {
         <RowError>{t("addTx.splitsLoading")}</RowError>
       )}
     </>
-  );
-}
-
-/** 날짜 · 시각 조각 — 누르는 자리 44 이상(일정 폼과 같은 모양) */
-function DatePiece({
-  label,
-  onClick,
-  expanded,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  expanded: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-haspopup="dialog"
-      aria-expanded={expanded}
-      onClick={onClick}
-      className="min-h-[44px] cursor-pointer rounded-r2 border-0 bg-transparent pl-x1 pr-0 text-t5 text-fg-neutral-subtle hover:bg-bg-neutral-weak-pressed focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-stroke-focus-ring"
-    >
-      {children}
-    </button>
   );
 }

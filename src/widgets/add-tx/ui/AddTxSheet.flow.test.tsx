@@ -33,6 +33,8 @@ const sent = vi.hoisted(() => ({
   preset: null as Record<string, unknown> | null,
   touched: [] as number[],
   calls: 0,
+  /** 문자 전용 저장 경로(`/import/sms/commit`)로 나간 본문(QA #123) */
+  sms: null as Record<string, unknown> | null,
   /** 훅이 어떤 옵션으로 불렸나 — `silent` 를 켜야 전역 토스트가 겹치지 않는다 */
   opts: {} as Record<string, unknown>,
   snack: [] as string[],
@@ -40,6 +42,9 @@ const sent = vi.hoisted(() => ({
 const state = vi.hoisted(() => ({
   presets: [] as Array<Record<string, unknown>>,
   categories: [] as Array<Record<string, unknown>>,
+  assets: [] as Array<Record<string, unknown>>,
+  /** 문자 해석 결과 — 없으면 못 알아본 문자 */
+  parsed: null as Record<string, unknown> | null,
 }));
 
 vi.mock("react-i18next", () => ({
@@ -120,7 +125,7 @@ vi.mock("@/features/expense", () => ({
 }));
 vi.mock("@/features/asset", () => ({
   useAssets: () => ({
-    data: { assets: [] },
+    data: { assets: state.assets },
     isPending: false,
     isError: false,
     refetch: () => {},
@@ -129,9 +134,16 @@ vi.mock("@/features/asset", () => ({
   useUpdateTransfer: () => ({ mutate: () => {}, isPending: false }),
 }));
 vi.mock("@/features/sms", () => ({
-  parseSms: async () => ({ matched: false }),
+  parseSms: async () => state.parsed ?? { matched: false },
   looksLikePaymentSms: () => true,
-  useCommitSms: () => ({ mutate: () => {}, isPending: false, isError: false }),
+  useCommitSms: () => ({
+    mutate: (data: Record<string, unknown>) => {
+      sent.sms = data;
+      sent.calls += 1;
+    },
+    isPending: false,
+    isError: false,
+  }),
 }));
 vi.mock("@/features/expense-split", () => ({
   useExpenseSplits: () => ({ data: [], isPending: false, isError: false }),
@@ -156,7 +168,25 @@ const category: ExpenseCategory = {
   createAt: "2026-01-01T00:00:00",
   modifyAt: "2026-01-01T00:00:00",
 };
-state.categories = [category as unknown as Record<string, unknown>];
+const incomeCategory = {
+  ...category,
+  rowId: 21,
+  categoryName: "환불",
+  expenseType: "INCOME",
+};
+state.categories = [
+  category as unknown as Record<string, unknown>,
+  incomeCategory,
+];
+const asset = (rowId: number, assetName: string, assetType: string) => ({
+  rowId,
+  assetName,
+  assetType,
+  institution: null,
+  balance: 0,
+  isIncludedInTotal: "Y",
+  sortOrder: rowId,
+});
 
 const expense: Expense = {
   rowId: 5,
@@ -214,7 +244,9 @@ beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   setupFormDom(false);
   __resetPointerBlockForTest();
-  sent.create = sent.update = sent.preset = null;
+  sent.create = sent.update = sent.preset = sent.sms = null;
+  state.parsed = null;
+  state.assets = [];
   sent.touched = [];
   sent.calls = 0;
   sent.opts = {};
@@ -558,5 +590,169 @@ describe("호스트 시트 안에 한 단계로 끼우기 (I-21 7a)", () => {
     expect(document.body.textContent).toContain("addTx.editTitle");
     await press("host-back");
     expect(calls).toEqual(["back"]);
+  });
+});
+
+describe("이체 프리셋 저장 — 이자는 대출 상환에만, 금액을 비우면 이자도 비운다 (2026-09-15 결정)", () => {
+  /** 이체 칩 → 금액 → [다음] → 보내는 · 받는 계좌 고르기 */
+  const fillTransfer = async (toName: string) => {
+    state.assets = [
+      asset(1, "주거래", "BANK_ACCOUNT"),
+      asset(2, "비상금", "BANK_ACCOUNT"),
+      asset(3, "전세대출", "LOAN"),
+    ];
+    await open();
+    click(lastButton("addTx.transfer"));
+    await tick();
+    setValue(amountInput(), "500000");
+    await press("addTx.next");
+    click(row("addTx.fromAccountRow"));
+    await tick();
+    click(lastButton("주거래"));
+    await tick();
+    click(row("addTx.toAccount"));
+    await tick();
+    click(lastButton(toName));
+    await tick();
+  };
+  const toPresetStep = async () => {
+    click(
+      document.body.querySelector<HTMLElement>(
+        "[data-slot=bottom-sheet-back]",
+      )!,
+    );
+    await tick();
+    await press("addTx.saveCurrentInput");
+    setValue(
+      document.body.querySelector<HTMLInputElement>(
+        "[role=dialog] input:not([type=hidden])",
+      )!,
+      "대출 상환",
+    );
+  };
+
+  it("받는 계좌가 대출이면 이자 줄이 생기고, 금액을 함께 저장하면 이자도 실린다", async () => {
+    await fillTransfer("전세대출");
+    click(row("addTx.interest"));
+    await tick();
+    setValue(
+      document.body.querySelector<HTMLInputElement>(
+        'input[aria-label="addTx.interest"]',
+      )!,
+      "20000",
+    );
+    await press("done");
+    await toPresetStep();
+    await press("save");
+    expect(sent.preset).toMatchObject({
+      expenseType: "TRANSFER",
+      amount: 500000,
+      lockAmount: "Y",
+      interestAmount: 20000,
+      assetRowId: 1,
+      toAssetRowId: 3,
+    });
+  });
+
+  it("금액을 비워 저장하면 이자도 보내지 않는다 — 매달 달라지는 값이라 박아 두면 틀리다", async () => {
+    await fillTransfer("전세대출");
+    click(row("addTx.interest"));
+    await tick();
+    setValue(
+      document.body.querySelector<HTMLInputElement>(
+        'input[aria-label="addTx.interest"]',
+      )!,
+      "20000",
+    );
+    await press("done");
+    await toPresetStep();
+    click(row("savePreset.amountRow"));
+    await tick();
+    setValue(
+      document.body.querySelector<HTMLInputElement>(
+        'input[aria-label="savePreset.amountRow"]',
+      )!,
+      "",
+    );
+    await press("done");
+    await press("save");
+    expect(sent.preset).toMatchObject({ lockAmount: "N" });
+    expect(sent.preset!.interestAmount).toBeUndefined();
+    expect(sent.preset!.amount).toBeUndefined();
+  });
+
+  it("받는 계좌가 대출이 아니면 이자 줄이 없고 이자도 실리지 않는다", async () => {
+    await fillTransfer("비상금");
+    expect(document.body.textContent).not.toContain("addTx.interest");
+    await toPresetStep();
+    await press("save");
+    expect(sent.preset!.interestAmount).toBeUndefined();
+  });
+});
+
+describe("결제 문자에서 온 내역의 거래 종류 (QA #123)", () => {
+  const parsed = {
+    matched: true,
+    confidence: "HIGH",
+    cancel: false,
+    amount: 5500,
+    merchant: "스타벅스",
+    expenseDate: "2026-10-22T10:00:00",
+    installmentMonths: null,
+    cardHint: null,
+    assetRowId: null,
+    assetRemembered: false,
+    categoryRowId: 11,
+    originalAmount: null,
+    originalCurrency: null,
+  };
+  const readSms = async () => {
+    state.parsed = parsed;
+    await open();
+    await pressStartingWith("sms.pasteOpen");
+    setValue(
+      document.body.querySelector<HTMLTextAreaElement>(
+        "[role=dialog] textarea",
+      )!,
+      "[Web발신] KB국민 5,500원 스타벅스",
+    );
+    await press("sms.pasteAction");
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+  };
+
+  it("그대로 두면 지출로 나간다 — 종류를 한쪽으로 박아 둔 게 아니다", async () => {
+    await readSms();
+    await press("addTx.add");
+    expect(sent.sms).toMatchObject({ expenseType: "EXPENSE", amount: 5500 });
+    expect(String(sent.sms!.text)).toContain("스타벅스");
+  });
+
+  it("1단계로 돌아가 수입으로 고쳐 저장하면 수입으로 나간다", async () => {
+    await readSms();
+    click(
+      document.body.querySelector<HTMLElement>(
+        "[data-slot=bottom-sheet-back]",
+      )!,
+    );
+    await tick();
+    click(lastButton("income"));
+    await tick();
+    await press("addTx.next");
+    // 종류를 바꾸면 그 종류에 없는 카테고리는 풀린다 — 수입 카테고리를 다시 고른다
+    click(row("addTx.category"));
+    await tick();
+    click(lastButton("환불"));
+    await tick();
+    await press("addTx.add");
+    expect(sent.sms).toMatchObject({ expenseType: "INCOME", amount: 5500 });
+  });
+
+  it("문자 초안에는 고정 스위치가 없다 — 저장 경로가 표식을 못 받는다", async () => {
+    await open();
+    expect(document.body.querySelector('[role="switch"]')).toBeNull();
+    await readSms();
+    expect(document.body.querySelector('[role="switch"]')).toBeNull();
   });
 });

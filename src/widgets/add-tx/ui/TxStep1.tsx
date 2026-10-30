@@ -133,7 +133,7 @@ function PresetBlock({ f }: { f: TxForm }) {
             return (
               <Chip
                 key={p.rowId}
-                variant={on ? "outlineWeak" : "solid"}
+                variant="outlineWeak"
                 selected={on}
                 size="medium"
                 prefixIcon={<PresetTile p={p} f={f} />}
@@ -150,7 +150,7 @@ function PresetBlock({ f }: { f: TxForm }) {
           })}
           {total > f.topPresets.length && (
             <Chip
-              variant="solid"
+              variant="outlineWeak"
               size="medium"
               suffixIcon={<ChevronRight aria-hidden />}
               onClick={() => f.setSub("presetAll")}
