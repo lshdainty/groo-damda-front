@@ -246,7 +246,7 @@ export function MoreSection({ rows }: { rows: MoreRow[] }) {
             key={r.key}
             data-testid={`more-${r.key}`}
             prefix={
-              <span className="inline-flex size-x6 items-center justify-center text-fg-neutral [&>svg]:size-[22px]">
+              <span className="inline-flex size-[22px] items-center justify-center text-fg-neutral [&>svg]:size-[22px]">
                 {r.icon}
               </span>
             }
@@ -519,7 +519,7 @@ export function TxDetailSkeleton() {
           key={i}
           className="flex items-center gap-x3 px-global-gutter py-x3"
         >
-          <Skeleton radius="8" className="size-x6 shrink-0" />
+          <Skeleton radius="8" className="size-[22px] shrink-0" />
           <Skeleton text="t5" className="w-24" />
         </div>
       ))}
