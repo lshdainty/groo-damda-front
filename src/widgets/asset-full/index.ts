@@ -15,3 +15,6 @@ export {
   useAssetMask,
 } from "./lib/asset-groups";
 export { useLiveAssets } from "./lib/use-live-assets";
+export { AssetDetailView } from "./ui/AssetDetailView";
+export { AssetLogo48 } from "./ui/detail/AssetHead";
+export { useAssetDescription } from "./ui/detail/use-asset-detail";

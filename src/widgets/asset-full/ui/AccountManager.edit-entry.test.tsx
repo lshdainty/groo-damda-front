@@ -51,19 +51,6 @@ vi.mock("./AssetEditDialog", () => ({
     return null;
   },
 }));
-vi.mock("./AssetDetailDialog", () => ({
-  AssetDetailDialog: (p: {
-    asset: { rowId: number };
-    onEdit: (a: { rowId: number }) => void;
-  }) => (
-    <button
-      type="button"
-      data-detail={p.asset.rowId}
-      onClick={() => p.onEdit(p.asset)}
-    />
-  ),
-}));
-
 const { AccountManager } = await import("./AccountManager");
 
 const assetOf = (rowId: number, assetType: string, assetName: string) =>
@@ -172,12 +159,9 @@ describe("자산 수정 폼 바로 가기(D9)", () => {
     expect(document.body.textContent ?? "").toContain("주거래");
   });
 
-  it("주소가 없으면 목록으로 들어오고, 줄 → 상세 → [수정] 이 그 자산의 폼을 연다", () => {
+  it("줄을 누르면 상세 페이지 주소로 간다 — 시트 · 대화상자를 띄우지 않는다(I-17 36)", () => {
     render("/desk/settings?section=accounts");
     expect(state.opened).toBeNull();
-    expect(
-      document.body.querySelector('button[title="editAction"]'),
-    ).toBeNull();
     const rowBtn = [
       ...document.body.querySelectorAll<HTMLButtonElement>(
         "[data-list-action]",
@@ -187,12 +171,8 @@ describe("자산 수정 폼 바로 가기(D9)", () => {
     act(() =>
       rowBtn!.dispatchEvent(new MouseEvent("click", { bubbles: true })),
     );
-    const detail =
-      document.body.querySelector<HTMLButtonElement>('[data-detail="7"]');
-    expect(detail).not.toBeNull();
-    act(() =>
-      detail!.dispatchEvent(new MouseEvent("click", { bubbles: true })),
-    );
-    expect(state.opened).toEqual({ rowId: 7 });
+    expect(seen).toBe("/desk/asset/7");
+    expect(state.opened).toBeNull();
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
   });
 });

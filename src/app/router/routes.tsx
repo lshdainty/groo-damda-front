@@ -32,6 +32,11 @@ const ExpensePage = lazy(() =>
 const AssetPage = lazy(() =>
   import("@/pages/asset/ui/AssetPage").then((m) => ({ default: m.AssetPage })),
 );
+const AssetDetailPage = lazy(() =>
+  import("@/pages/asset-detail/ui/AssetDetailPage").then((m) => ({
+    default: m.AssetDetailPage,
+  })),
+);
 const StocksPage = lazy(() =>
   import("@/pages/stocks/ui/StocksPage").then((m) => ({
     default: m.StocksPage,
@@ -147,6 +152,11 @@ export const AppRouter = () => {
             <Route element={<AppLayout />}>
               <Route path="/desk" element={<DashboardPage />} />
               <Route path="/desk/asset" element={<AssetPage />} />
+              {/* 자산 상세 — 주소가 있는 화면(I-17 34). 풀스크린 · 흰 바탕은 shell.ts 가 가른다 */}
+              <Route
+                path="/desk/asset/:assetId"
+                element={<AssetDetailPage />}
+              />
               {/* 증권사는 경로가 고른다 — 사이드바 하위 메뉴가 가리키는 자리.
                   부모 `/desk/stocks` 는 남긴다(기존 북마크 · 모바일 전체 메뉴 ·
                   AppLayout FULLSCREEN_PATHS 접두사) — 들어오면 StocksPage 가 기본 증권사로 넘긴다. */}

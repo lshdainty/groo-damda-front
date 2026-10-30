@@ -67,6 +67,7 @@ layout,changePassword,비밀번호 변경,Change Password
 layout,home,홈,Home
 layout,stocks,증권,Stocks
 layout,stockDetail,종목 상세,Stock details
+layout,assetDetail,자산 상세,Asset details
 layout,stockPortfolio,포트폴리오 구성,Portfolio breakdown
 layout,budget,예산,Budget
 layout,stats,통계,Stats
@@ -741,16 +742,16 @@ asset,assetDetail.usageHistory,이용 내역,Usage history
 asset,assetDetail.sortRecent,최근순,Recent
 asset,assetDetail.sortAmount,고액순,Amount
 asset,assetDetail.sortCategory,카테고리별,Category
-asset,assetDetail.periodPick,기간 선택,Select period
+asset,assetDetail.periodPick,결제 회차,Billing cycle
 asset,assetDetail.noUsage,이용 내역이 없어요.,No usage history yet.
 asset,assetDetail.billingHistory,청구 이력,Billing history
 asset,assetDetail.paymentDateLabel,결제일,Payment date
 asset,assetDetail.paymentDayMissing,결제일을 넣어주세요,Please set a payment day
-asset,assetDetail.payConfirm,결제 예정액 <strong>{{amount}}</strong>을 지금 결제 처리할까요?,Pay <strong>{{amount}}</strong> now?
-asset,assetDetail.paymentDateNote,결제일은 {{date}} 입니다.,The payment date is {{date}}.
+asset,assetDetail.payConfirm,결제 예정액 {{amount}}을 지금 결제할까요?,Pay the {{amount}} due now?
+asset,assetDetail.paymentDateNote,{{date}} 결제 예정분이에요.,This is the amount due {{date}}.
 asset,assetDetail.payAction,결제하기,Pay
 asset,assetDetail.payAmount,결제 금액,Payment amount
-asset,assetDetail.payRemainder,남은 {{amount}}은 결제일에 빠져요,{{amount}} remaining will be paid on the payment date
+asset,assetDetail.payRemainder,남은 {{amount}}은 결제일에 빠져요.,The remaining {{amount}} will be paid on the payment date.
 asset,editDialog.balanceEditHelp,잔액을 바꾸면 지금 이전의 내역은 이 잔액에 이미 들어 있는 것으로 보고 이후 내역만 더해져요.,Changing the balance treats everything before now as already included. Only later transactions are added.
 asset,assetDetail.payMoveNote,계좌에서는 사용액으로 잡힌 {{amount}}만 빠져요. 나머지는 청구 기록으로만 남아요.,Only {{amount}} counted as card usage will leave the account. The rest is recorded as billed only.
 asset,assetDetail.payNoAccountNote,연결된 결제 계좌가 없어 이체 없이 사용액만 정리돼요.,No payment account is linked so the usage is settled without a transfer.
@@ -795,6 +796,34 @@ asset,assetDetail.noData,표시할 데이터가 없어요,No data to display
 asset,assetDetail.recentTx,최근 거래,Recent transactions
 asset,assetDetail.viewAll,전체 보기,View all
 asset,assetDetail.noLinkedTx,연결된 거래 내역이 없어요.,No linked transactions.
+asset,assetDetail.notFoundTitle,자산을 찾을 수 없어요,Asset not found
+asset,assetDetail.notFoundDesc,지웠거나 없는 자산이에요.,It was deleted or doesn't exist.
+asset,assetDetail.toAssets,자산으로,Go to assets
+asset,assetDetail.assetLoadFailed,자산을 불러오지 못했어요,Couldn't load the asset
+asset,assetDetail.trendLoadFailed,추이를 불러오지 못했어요,Couldn't load the trend
+asset,assetDetail.txLoadFailed,내역을 불러오지 못했어요,Couldn't load the transactions
+asset,assetDetail.moreOf,{{name}} 더보기,More actions for {{name}}
+asset,assetDetail.daySumOut,지출,Spent
+asset,assetDetail.daySumIn,수입,Income
+asset,assetDetail.tableWeek,주,Week
+asset,assetDetail.periodAria,추이 기간,Trend period
+asset,assetDetail.sortAria,이용 내역 정렬,Sort usage history
+asset,assetDetail.dueOn,{{date}} 결제,Paid {{date}}
+asset,assetDetail.paymentDayValue,매월 {{day}}일,Day {{day}} each month
+asset,assetDetail.usagePeriodLabel,카드 이용 기간,Card usage period
+asset,assetDetail.billingInfo,결제 정보,Billing info
+asset,assetDetail.cycleMix,이번 회차 구성,This cycle
+asset,assetDetail.perfTitle,{{month}}월 실적,Month {{month}} target
+asset,assetDetail.perfAchieved,실적 달성,Target met
+asset,assetDetail.yearLabel,{{year}}년,{{year}}
+asset,assetDetail.payAmountEmpty,결제 금액을 넣어주세요.,Enter the payment amount.
+asset,assetDetail.payAmountOver,결제 금액은 {{amount}}까지예요.,The payment can be up to {{amount}}.
+asset,assetDetail.payFailed,결제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't process the payment. Please try again in a moment.
+asset,trade.recordTitle,거래 기록,Trade log
+asset,trade.cancelRow,{{date}} {{name}} 거래 취소,Cancel {{name}} trade on {{date}}
+asset,trade.deleteConfirmTarget,{{date}} {{name}} {{qty}} {{kind}} 거래를 취소할까요? 예수금과 보유 수량이 거래 전으로 돌아가요.,Cancel the {{kind}} of {{qty}} {{name}} on {{date}}? Cash and quantity return to their pre-trade state.
+asset,deleteConfirm.titleAsk,삭제할까요?,Delete this?
+asset,deleteConfirm.messageAfter,"삭제한 ""{{name}}""은 목록에서 사라지고 되돌릴 수 없어요. 연결된 거래 내역은 그대로 남아요.","Once deleted, ""{{name}}"" disappears from the list and can't be restored. Linked transactions are kept."
 dashboard,title,대시보드,Dashboard
 dashboard,uncategorized,미분류,Uncategorized
 dashboard,welcome,환영합니다,Welcome

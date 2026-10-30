@@ -1,9 +1,20 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { type Asset } from "@/entities/asset";
 import { isScheduledTx } from "@/entities/expense";
-import { useInvestValuation, useAssetTransfers } from "@/features/asset";
+import {
+  holdingsOf,
+  useInvestValuation,
+  useAssetTransfers,
+} from "@/features/asset";
 import { useSearchExpenses } from "@/features/expense";
-import { currentYearMonth, AssetLedgerItem } from "./detail-shared";
+import {
+  currentYearMonth,
+  describeAsset,
+  groupOf,
+  AssetLedgerItem,
+} from "./detail-shared";
 
 /**
  * 투자 자산의 라이브 평가 — 시세×수량. 투자가 아니면 `null`.
@@ -29,12 +40,15 @@ export function useAssetLiveValuation(asset: Asset, isInv: boolean) {
  * 못한다. 걷어 내면 다이얼로그를 열 때마다 전체 거래를 다시 훑는다.
  */
 export function useAssetLedger(asset: Asset, isCheckLinked: boolean) {
-  const { data: relatedAll, isLoading: relatedLoading } = useSearchExpenses({
-    assetId: asset.rowId,
-  });
+  const relatedQ = useSearchExpenses(
+    { assetId: asset.rowId },
+    { silent: true },
+  );
+  const { data: relatedAll, isLoading: relatedLoading } = relatedQ;
   // 이체는 expense 가 아니라 asset_transfer 라 따로 받아 합친다. 한 건이 자산 두 개에 걸치므로
   // 이 자산이 보내는 쪽인지 받는 쪽인지로 걸러낸다(서버 필터는 기간만 지원).
-  const { data: transfersAll } = useAssetTransfers();
+  const transfersQ = useAssetTransfers(undefined, { silent: true });
+  const { data: transfersAll } = transfersQ;
   // "최근" 은 지나간 것이다. 반복거래가 미리 만들어 둔 미래분을 그대로 두면 날짜
   // 내림차순에서 맨 위를 차지해, 정작 최근 거래가 12건 밖으로 밀려난다.
   // 예정분은 전체 보기(가계부)에서 "예정" 표시와 함께 본다(사용자 결정).
@@ -87,5 +101,72 @@ export function useAssetLedger(asset: Asset, isCheckLinked: boolean) {
     }
     return [...m.entries()];
   }, [relatedItems]);
-  return { relatedLoading, relatedItems, relatedGroups };
+  // 내역 실패 — 빈 글로 보이지 않게 구역 안에서 말한다(둘 중 하나라도 못 받았고 보여 줄 값이 없을 때)
+  const relatedFailed =
+    (relatedQ.isError && !relatedAll) || (transfersQ.isError && !transfersAll);
+  const retryRelated = () => {
+    void relatedQ.refetch();
+    void transfersQ.refetch();
+  };
+  return {
+    relatedLoading,
+    relatedItems,
+    relatedGroups,
+    relatedFailed,
+    retryRelated,
+  };
+}
+
+/**
+ * 상세 한 자산의 갈래 · 금액 · 내역 — 헤더 · 금액 · 추이 · 최근 거래가 한 값을 같이 읽는다(I-17 45).
+ * 카드만 금액이 절대값이다 — 카드 잔액은 미결제 사용액이 음수라는 규약이라 "얼마 썼나" 로 뒤집어 보인다. 그 밖의 자산은 음수가
+ * 정상 상태(마이너스 통장 · 잔액을 실제와 맞추지 않은 계좌 · 대출)라 부호를 살린다.
+ */
+export function useAssetDetailModel(asset: Asset) {
+  const group = groupOf(asset);
+  const isCard = group === "card";
+  const isInv = group === "invest";
+  const isCredit = asset.assetType === "CREDIT_CARD";
+  // 연결계좌형 체크카드 — 결제가 계좌에서 즉시 빠져 잔액이 늘 0 이다. 금액은 "이번 달 사용액", 내역은 당월 전체, 추이는 없다.
+  const isCheckLinked =
+    asset.assetType === "CHECK_CARD" && asset.paymentAssetRowId != null;
+  const investVal = useAssetLiveValuation(asset, isInv);
+  // 라이브 평가는 '보유분'만 — 예수금을 더해야 계좌 총액이다. 투자도 예수금이 마이너스일 수 있다(부호를 살린다).
+  const investCash = isInv ? (asset.cashBalance ?? 0) : 0;
+  const investHolding =
+    investVal != null ? investVal.value : (asset.holdingBalance ?? 0);
+  const heroBalance = isCard ? Math.abs(asset.balance) : asset.balance;
+  const heroAmount =
+    investVal != null
+      ? investCash + investVal.value
+      : isCheckLinked
+        ? (asset.monthlyUsedAmount ?? 0)
+        : heroBalance;
+  const ledger = useAssetLedger(asset, isCheckLinked);
+  return {
+    group,
+    isCard,
+    isInv,
+    isCredit,
+    isCheckLinked,
+    investVal,
+    investCash,
+    investHolding,
+    heroAmount,
+    ...ledger,
+  };
+}
+
+export type AssetDetailModel = ReturnType<typeof useAssetDetailModel>;
+
+/** 머리 설명 글 — 지금 글 그대로(I-17 45). 메모는 지우지 않는다 */
+export function useAssetDescription(asset: Asset) {
+  const { t } = useTranslation("asset");
+  return describeAsset(asset, t, holdingsOf(asset).length);
+}
+
+/** "전체 보기" — 가계부 `?assetId=` 로 간다. push 라 브라우저 뒤로 = 이 상세(I-17 37) */
+export function useViewAll(asset: Asset) {
+  const navigate = useNavigate();
+  return () => navigate(`/desk/expense?assetId=${asset.rowId}`);
 }

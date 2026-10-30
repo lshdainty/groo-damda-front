@@ -1,41 +1,43 @@
 import { useMemo, useState } from "react";
-import { AssetTradeDialog } from "../AssetTradeDialog";
-import { useAssetTrades, useDeleteTrade } from "@/features/asset";
-import type { TradeType } from "@/entities/asset";
 import { useTranslation } from "react-i18next";
-import { Trash2 } from "lucide-react";
+import { Delta } from "@/shared/ds/card";
+import { Button } from "@/shared/ds/button";
+import { List, ListButtonItem, ListItem } from "@/shared/ds/list";
+import { Skeleton } from "@/shared/ds/skeleton";
+import { withCommaBreaks } from "@/shared/ds/i18n";
+import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
+import { ListTitle } from "@/shared/ui/groo/band-parts";
+import { MINUS, KRW, formatChangeRate } from "@/shared/lib/groo/format";
+import { won } from "@/shared/lib/groo/money-text";
 import {
   HOLDING_UNIT_KEY,
   formatQty,
   qtyNumber,
   type Asset,
   type AssetHolding,
+  type TradeType,
 } from "@/entities/asset";
-import { holdingsOf } from "@/features/asset";
+import { holdingsOf, useAssetTrades, useDeleteTrade } from "@/features/asset";
 import { useLivePrices } from "@/features/stock/model/useLivePrices";
 import { useMyFeatures } from "@/features/subscription/model/useSubscription";
 import { useStockSymbolName } from "@/features/stock/model/useStockMaster";
-import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
-import { Button } from "@/shared/ui/button";
-import { KRW, formatChangeRate } from "@/shared/lib/groo/format";
-import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
-import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
+import { useAssetMask } from "../../lib/asset-groups";
+import { AssetTradeDialog } from "../AssetTradeDialog";
 
-// ---------------------------------------------------------------------------
-// 투자 상세 — 보유 종목 리스트 (design dialogs.jsx split24 AssetDetailDialog invest 분기 미러)
-//   연동(linked) 항목: 종목명 · "N주 · 현재가 X 연동" · 평가액 · 등락%
-//   수동(manual) 항목: 이름 · "직접 입력" · 평가액
-//   행 클릭 → 편집 다이얼로그(종목 추가/수정은 편집에서).
-// ---------------------------------------------------------------------------
+/**
+ * 보유 종목 한 줄(I-17 50) — List 줄 위 맞춤: 제목 종목 이름 · 설명 "{수량}{단위} · 현재가 {가격} 연동" / "직접 입력" · 뒤 기둥(오른쪽 맞춤)
+ * 평가액 R13 → 등락 Delta → [매수] [매도] ghost small. 줄 자체는 누르지 않는다(웹 사용자 결정 — 수정은 머리 하나, 4-3A).
+ */
 export function HoldingRow({
+  asset,
   holding,
   price,
   unitKrw,
   prevUnitKrw,
   live,
-  first,
   onTrade,
 }: {
+  asset: Asset;
   holding: AssetHolding;
   /** 원표기 견적 — 라벨 표시용. 환산값은 아래 두 prop 으로 받는다. */
   price: { price: number; currency: string } | null;
@@ -44,10 +46,10 @@ export function HoldingRow({
   /** 전일 종가의 원화 환산가. 없으면 등락을 감춘다 */
   prevUnitKrw: number | null;
   live: boolean;
-  first: boolean;
   onTrade?: (type: TradeType) => void;
 }) {
   const { t } = useTranslation("asset");
+  const m = useAssetMask("asset.detail", asset.isAmountHidden === "Y");
   const { data: masterName } = useStockSymbolName(
     holding.linked ? (holding.tossSymbol ?? "") : "",
   );
@@ -94,203 +96,127 @@ export function HoldingRow({
       ? `${manualQty} · ${t("holdings.manualSub")}`
       : t("holdings.manualSub");
 
-  // 행 자체는 누르는 자리가 아니다. 종목을 고치는 건 하단 [수정] 로만 들어간다 —
-  // 매수·매도 버튼 옆에서 행을 누르면 편집이 열려, 어디를 눌렀는지에 따라 다른 일이
-  // 벌어졌다. 앱도 버튼 둘만 두고 편집은 하단에서 받는다(사용자 결정).
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "12px 0",
-        borderTop: first ? "none" : "1px solid var(--border-subtle)",
-      }}
-    >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            fontSize: "var(--text-label-sm)",
-            fontWeight: 600,
-            letterSpacing: "-0.01em",
-          }}
-        >
-          {name}
-        </div>
-        <div
-          className="num"
-          style={{
-            fontSize: "var(--text-badge)",
-            color: "var(--fg-tertiary)",
-            marginTop: 2,
-          }}
-        >
-          {sub}
-        </div>
-      </div>
-      <div style={{ textAlign: "right" }}>
-        <div
-          className="num"
-          style={{ fontSize: "var(--text-label-sm)", fontWeight: 700 }}
-        >
-          {value != null ? (
-            <>
-              <MaskAmount card="asset.detail">
-                {wonPre()}
-                {KRW(value)}
-              </MaskAmount>
-              <WonUnit card="asset.detail" />
-            </>
-          ) : (
-            "—"
+    <ListItem
+      align="top"
+      title={name}
+      detail={sub}
+      suffix={
+        <span className="flex min-w-0 flex-col items-end gap-x0_5">
+          <span className="text-end text-t5 font-bold tabular-nums text-fg-neutral">
+            {value != null ? withCommaBreaks(m(won(value))) : null}
+            {value == null && <Skeleton text="t5" className="w-x10" />}
+          </span>
+          {changePct != null && (
+            <Delta
+              direction={changePct >= 0 ? "up" : "down"}
+              value={m(formatChangeRate(changePct, { sign: "none" }))}
+              className="text-t3"
+            />
           )}
-        </div>
-        {changePct != null && (
-          <div
-            className="num"
-            style={{
-              fontSize: "var(--text-badge)",
-              fontWeight: 600,
-              marginTop: 2,
-              color:
-                changePct >= 0 ? "var(--status-danger-fg)" : "var(--fg-brand)",
-            }}
-          >
-            {formatChangeRate(changePct, { sign: "always" })}
-          </div>
-        )}
-      </div>
-      {/* 매수·매도 — 이 종목에 대한 사건. 종목이 정해진 자리라 다시 고를 필요가 없다.
-          brand 색을 빼고 본문 톤으로 둔다 — 행마다 파란 글씨 둘이 서면 금액보다 먼저
-          눈에 들어와, 정작 봐야 할 평가액이 뒤로 밀린다(앱 정합). */}
-      {onTrade && (
-        <div style={{ display: "flex", gap: 2, flexShrink: 0 }}>
-          <Button variant="ghost" size="xs" onClick={() => onTrade("BUY")}>
-            {t("trade.entryBuy")}
-          </Button>
-          <Button variant="ghost" size="xs" onClick={() => onTrade("SELL")}>
-            {t("trade.entrySell")}
-          </Button>
-        </div>
-      )}
-    </div>
+          {onTrade && (
+            <span className="-mr-x2 -mb-x1 flex">
+              <Button
+                type="button"
+                variant="ghost"
+                size="small"
+                onClick={() => onTrade("BUY")}
+              >
+                {t("trade.entryBuy")}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="small"
+                onClick={() => onTrade("SELL")}
+              >
+                {t("trade.entrySell")}
+              </Button>
+            </span>
+          )}
+        </span>
+      }
+    />
   );
 }
 
 /**
- * 거래 내역 — 매수·매도가 언제 얼마에 있었는지. 실현손익도 함께 보여 준다.
- * 취소하면 예수금·보유 수량·원가가 거래 전으로 되돌아간다.
+ * 거래 기록(I-17 50) — 있을 때만. 목록 제목 "거래 기록 · {n}" + List 줄: 제목 "{매수 | 매도} · {종목} {수량}" · 설명 날짜(+ 매도 실현손익) · 뒤 금액.
+ * 줄 끝 ⋮ 는 두지 않는다(10-25 줄 끝 ⋮ 원칙) — 줄을 누르면 거래 취소 확인이 열린다(동작이 하나뿐). 취소하면 예수금 · 보유 수량 · 원가가 거래 전으로 돌아간다.
  */
-export function TradeHistory({ assetRowId }: { assetRowId: number }) {
+export function TradeHistory({ asset }: { asset: Asset }) {
   const { t } = useTranslation("asset");
-  const { data: trades } = useAssetTrades(assetRowId);
+  const m = useAssetMask("asset.detail", asset.isAmountHidden === "Y");
+  const { data: trades } = useAssetTrades(asset.rowId);
   const deleteMut = useDeleteTrade();
-  // 브라우저 confirm 은 앱 테마를 안 따르고 문구도 못 꾸민다 — 프로젝트 다이얼로그를 쓴다.
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
-  if (!trades || trades.length === 0) {
-    return null;
-  }
+  if (!trades || trades.length === 0) return null;
+  const target = trades.find((tr) => tr.rowId === confirmDelete) ?? null;
+  const titleId = `asset-trades-${asset.rowId}`;
   return (
-    <div style={{ marginTop: 14 }}>
-      <h3
-        style={{
-          fontSize: "var(--text-label-sm)",
-          fontWeight: 700,
-          margin: "0 0 6px",
-        }}
-      >
-        {t("trade.history")}
-      </h3>
-      {trades.map((tr) => (
-        <div
-          key={tr.rowId}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "8px 0",
-            borderBottom: "1px solid var(--border-subtle)",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "var(--text-badge)",
-              fontWeight: 700,
-              color:
-                tr.tradeType === "SELL"
-                  ? "var(--fg-brand)"
-                  : "var(--status-danger-fg)",
-            }}
-          >
-            {tr.tradeType === "SELL" ? t("trade.sell") : t("trade.buy")}
-          </span>
-          <span
-            className="truncate"
-            style={{ fontSize: "var(--text-body-sm)", minWidth: 0, flex: 1 }}
-          >
-            {tr.holdingKey}
-          </span>
-          <span
-            className="num"
-            style={{
-              fontSize: "var(--text-badge)",
-              color: "var(--fg-tertiary)",
-            }}
-          >
-            {tr.quantity} · {tr.tradeDate.slice(0, 10)}
-          </span>
-          <span
-            className="num"
-            style={{ fontSize: "var(--text-body-sm)", fontWeight: 700 }}
-          >
-            {KRW(tr.amount)}원
-          </span>
-          {tr.realizedPl != null && tr.realizedPl !== 0 && (
-            <span
-              className="num"
-              style={{
-                fontSize: "var(--text-badge)",
-                fontWeight: 700,
-                color:
-                  tr.realizedPl > 0 ? "var(--fg-income)" : "var(--fg-expense)",
-              }}
-            >
-              {tr.realizedPl > 0 ? "+" : "−"}
-              {KRW(Math.abs(tr.realizedPl))}
-            </span>
-          )}
-          <Button
-            variant="ghost"
-            size="xs"
-            aria-label={t("trade.deleted")}
+    <section data-slot="asset-detail-trades" aria-labelledby={titleId}>
+      <ListTitle id={titleId}>
+        {t("trade.recordTitle")} · {trades.length}
+      </ListTitle>
+      <List aria-labelledby={titleId}>
+        {trades.map((tr) => (
+          <ListButtonItem
+            key={tr.rowId}
+            title={`${tr.tradeType === "SELL" ? t("trade.sell") : t("trade.buy")} · ${tr.holdingKey} ${tr.quantity}`}
+            detail={
+              <>
+                {tr.tradeDate.slice(0, 10)}
+                {tr.realizedPl != null && tr.realizedPl !== 0 && (
+                  <>
+                    {" · "}
+                    {t("trade.realizedPreview")}{" "}
+                    {m(
+                      `${tr.realizedPl > 0 ? "+" : MINUS}${KRW(Math.abs(tr.realizedPl))}`,
+                    )}
+                  </>
+                )}
+              </>
+            }
+            suffix={
+              <span className="text-end text-t5 font-bold tabular-nums text-fg-neutral">
+                {withCommaBreaks(m(`${KRW(tr.amount)}원`))}
+              </span>
+            }
+            aria-label={t("trade.cancelRow", {
+              name: tr.holdingKey,
+              date: tr.tradeDate.slice(0, 10),
+            })}
             onClick={() => setConfirmDelete(tr.rowId)}
-          >
-            <Trash2 size={13} />
-          </Button>
-        </div>
-      ))}
-
-      {confirmDelete != null && (
+          />
+        ))}
+      </List>
+      {target && (
         <ConfirmDialog
           title={t("trade.deleteTitle")}
-          message={t("trade.deleteConfirm")}
+          message={t("trade.deleteConfirmTarget", {
+            date: target.tradeDate.slice(0, 10),
+            name: target.holdingKey,
+            qty: target.quantity,
+            kind:
+              target.tradeType === "SELL" ? t("trade.sell") : t("trade.buy"),
+          })}
           confirmLabel={t("trade.deleteAction")}
           danger
           loading={deleteMut.isPending}
           onCancel={() => setConfirmDelete(null)}
           onConfirm={() =>
-            deleteMut.mutate(confirmDelete, {
-              onSuccess: () => {
-                setConfirmDelete(null);
-              },
+            deleteMut.mutate(target.rowId, {
+              onSuccess: () => setConfirmDelete(null),
+              onError: () => setConfirmDelete(null),
             })
           }
         />
       )}
-    </div>
+    </section>
   );
 }
 
+/** 보유 종목(I-17 50) — 목록 제목 "보유 종목 · {n}" + 보유 줄. 비면 R9 한 줄. 매수 · 매도는 거래 기록 시트(종목이 정해진 채) */
 export function HoldingsSection({
   asset,
   mobile,
@@ -328,64 +254,42 @@ export function HoldingsSection({
   // 종목별 금액이 한 화면에서 어긋나지 않는다.
   const prices = useLivePrices(activeSymbols, active);
 
+  const titleId = `asset-holdings-${asset.rowId}`;
   return (
-    <div
-      style={{
-        borderTop: "1px solid var(--border-subtle)",
-        padding: "14px 0 6px",
-        marginBottom: 12,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <h2
-          style={{
-            fontSize: "var(--text-label-md)",
-            fontWeight: 700,
-            margin: 0,
-          }}
-        >
-          {t("holdings.sectionTitle")}{" "}
-          <span className="num" style={{ color: "var(--fg-brand)" }}>
-            {hs.length}
-          </span>
-        </h2>
-      </div>
-      {hs.map((h, i) => (
-        <HoldingRow
-          key={h.rowId ?? `${h.tossSymbol ?? h.holdingName ?? ""}-${i}`}
-          holding={h}
-          price={
-            h.linked && h.tossSymbol
-              ? (prices.quoteOf(h.tossSymbol) ?? null)
-              : null
-          }
-          unitKrw={
-            h.linked && h.tossSymbol ? prices.unitKrw(h.tossSymbol) : null
-          }
-          prevUnitKrw={
-            h.linked && h.tossSymbol ? prices.prevUnitKrw(h.tossSymbol) : null
-          }
-          live={live}
-          first={i === 0}
-          onTrade={(type) => setTrade({ type, holding: h })}
-        />
-      ))}
-      {hs.length === 0 && (
-        <div
-          style={{
-            padding: "20px 0",
-            fontSize: "var(--text-label-sm)",
-            color: "var(--fg-tertiary)",
-            textAlign: "center",
-          }}
-        >
-          {t("holdings.emptyDetail")}
-        </div>
+    <section data-slot="asset-detail-holdings" aria-labelledby={titleId}>
+      <ListTitle id={titleId}>
+        {t("holdings.sectionTitle")} · {hs.length}
+      </ListTitle>
+      {hs.length > 0 ? (
+        <List aria-labelledby={titleId}>
+          {hs.map((h, i) => (
+            <HoldingRow
+              key={h.rowId ?? `${h.tossSymbol ?? h.holdingName ?? ""}-${i}`}
+              asset={asset}
+              holding={h}
+              price={
+                h.linked && h.tossSymbol
+                  ? (prices.quoteOf(h.tossSymbol) ?? null)
+                  : null
+              }
+              unitKrw={
+                h.linked && h.tossSymbol ? prices.unitKrw(h.tossSymbol) : null
+              }
+              prevUnitKrw={
+                h.linked && h.tossSymbol
+                  ? prices.prevUnitKrw(h.tossSymbol)
+                  : null
+              }
+              live={live}
+              onTrade={(type) => setTrade({ type, holding: h })}
+            />
+          ))}
+        </List>
+      ) : (
+        <p className="m-0 px-global-gutter py-x6 text-center text-t4 text-fg-neutral-subtle">
+          {t("trade.noHolding")}
+        </p>
       )}
-
-      {/* 거래 내역 — 언제 사고 팔았는지, 얼마가 남았는지. 취소도 여기서. */}
-      <TradeHistory assetRowId={asset.rowId} />
-
       {trade && (
         <AssetTradeDialog
           asset={asset}
@@ -395,6 +299,6 @@ export function HoldingsSection({
           onClose={() => setTrade(null)}
         />
       )}
-    </div>
+    </section>
   );
 }

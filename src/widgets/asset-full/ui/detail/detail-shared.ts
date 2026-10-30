@@ -1,4 +1,4 @@
-import { type Asset } from "@/entities/asset";
+import { assetTypeLabel, type Asset } from "@/entities/asset";
 import type { Expense } from "@/entities/expense";
 import type { AssetTransfer } from "@/entities/asset";
 
@@ -30,3 +30,17 @@ export function currentYearMonth(): string {
 export type AssetLedgerItem =
   | { kind: "expense"; at: string; expense: Expense }
   | { kind: "transfer"; at: string; transfer: AssetTransfer };
+
+/** 머리 설명 글 — 투자 "{종류} · 보유 {n}종목 · {메모}", 그 밖 "{기관} · {종류} · {메모}"(지금 글 그대로, I-17 45) */
+export function describeAsset(
+  asset: Asset,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+  heldCount: number,
+): string {
+  const kind = assetTypeLabel(asset.assetType, asset.balance);
+  const parts =
+    groupOf(asset) === "invest"
+      ? [kind, t("holdings.countLabel", { n: heldCount }), asset.memo]
+      : [asset.institution, kind, asset.memo];
+  return parts.filter(Boolean).join(" · ");
+}

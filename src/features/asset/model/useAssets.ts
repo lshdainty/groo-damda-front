@@ -40,10 +40,14 @@ export const useNetWorthTrend = (months = 12) => {
   });
 };
 
-export const useAssetBalanceTrend = (assetId: number, weeks: number) => {
+export const useAssetBalanceTrend = (
+  assetId: number,
+  weeks: number,
+  opts?: { silent?: boolean },
+) => {
   return useQuery({
     queryKey: assetKeys.balanceTrend(assetId, weeks),
-    queryFn: () => assetApi.getAssetBalanceTrend(assetId, weeks),
+    queryFn: () => assetApi.getAssetBalanceTrend(assetId, weeks, opts),
     enabled: assetId > 0 && weeks > 0,
     // 자산 잔액 추이는 자주 바뀌지 않으므로 5분간 fresh.
     // 탭(3개월/6개월/1년) 전환 시 이미 조회한 기간은 즉시 재사용.
@@ -91,10 +95,10 @@ export const useDeleteAsset = () => {
   });
 };
 
-export const useCardBilling = (id: number) => {
+export const useCardBilling = (id: number, opts?: { silent?: boolean }) => {
   return useQuery({
     queryKey: assetKeys.billing(id),
-    queryFn: () => assetApi.getCardBilling(id),
+    queryFn: () => assetApi.getCardBilling(id, opts),
     enabled: id > 0,
   });
 };
@@ -150,10 +154,13 @@ export const useReorderAssets = () => {
   });
 };
 
-export const useAssetTransfers = (params?: TransferListParams) => {
+export const useAssetTransfers = (
+  params?: TransferListParams,
+  opts?: { silent?: boolean },
+) => {
   return useQuery({
     queryKey: assetKeys.transfers(params),
-    queryFn: () => assetApi.getTransfers(params),
+    queryFn: () => assetApi.getTransfers(params, opts),
   });
 };
 

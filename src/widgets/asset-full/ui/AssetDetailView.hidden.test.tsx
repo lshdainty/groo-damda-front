@@ -30,20 +30,29 @@ vi.mock("@/shared/lib/groo/hide-amounts-core", async (orig) => ({
 
 // 차트·거래창·확인창은 이 주장과 무관하다 — 껍데기로 바꿔 recharts 까지 들어오지 않게 한다.
 vi.mock("recharts", () => ({
-  Area: () => null,
-  AreaChart: () => null,
   CartesianGrid: () => null,
+  Line: () => null,
+  LineChart: () => null,
   XAxis: () => null,
   YAxis: () => null,
 }));
-vi.mock("@/shared/ui/chart", () => ({
-  ChartContainer: () => null,
+vi.mock("@/shared/ds/chart", () => ({
+  Chart: () => null,
+  ChartDataTable: () => null,
   ChartTooltip: () => null,
+  ChartTooltipContent: () => null,
+  chartAxisProps: () => ({}),
+  chartGridProps: {},
+  formatAxisWon: (v: number) => String(v),
+}));
+vi.mock("@/widgets/add-tx", () => ({ AddTxSheet: () => null }));
+vi.mock("@/widgets/expense-detail/ui/TxDetailDialog", () => ({
+  TxDetailDialog: () => null,
+}));
+vi.mock("@/widgets/expense-detail/ui/TransferDetailDialog", () => ({
+  TransferDetailDialog: () => null,
 }));
 vi.mock("./AssetTradeDialog", () => ({ AssetTradeDialog: () => null }));
-vi.mock("@/widgets/account-settings/ui/HideAmountsUnlockDialog", () => ({
-  HideAmountsUnlockDialog: () => null,
-}));
 
 const empty = { data: undefined, isLoading: false, isFetching: false };
 vi.mock("@/features/asset", () => ({
@@ -84,7 +93,7 @@ vi.mock("@/entities/expense", () => ({
   isScheduledTx: () => false,
 }));
 
-const { AssetDetailDialog } = await import("./AssetDetailDialog");
+const { AssetDetailView } = await import("./AssetDetailView");
 
 const account: Asset = {
   userRowId: 1,
@@ -116,7 +125,12 @@ function render(asset: Asset) {
   root = createRoot(container);
   act(() =>
     root.render(
-      <AssetDetailDialog asset={asset} onClose={() => {}} mobile={false} />,
+      <AssetDetailView
+        asset={asset}
+        desk={false}
+        mobile={false}
+        onEdit={() => {}}
+      />,
     ),
   );
   return document.body.textContent ?? "";
@@ -131,7 +145,7 @@ afterEach(() => {
   container.remove();
 });
 
-describe("자산 상세 — 자산 하나에 붙은 숨김", () => {
+describe("자산 상세(페이지 본문) — 자산 하나에 붙은 숨김", () => {
   it("안 가려 둔 자산은 히어로 잔액이 보인다", () => {
     const text = render(account);
     expect(text).toContain("1,200,000");

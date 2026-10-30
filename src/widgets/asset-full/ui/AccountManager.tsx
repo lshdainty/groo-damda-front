@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Landmark, Pencil, Plus, Trash2 } from "lucide-react";
 import type {
   Asset,
@@ -29,7 +29,6 @@ import { BandEmpty, BandFailure } from "@/shared/ui/groo/band-parts";
 import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 import { groupAssets, useAssetMask } from "../lib/asset-groups";
 import { useLiveAssets } from "../lib/use-live-assets";
-import { AssetDetailDialog } from "./AssetDetailDialog";
 import { AssetEditDialog } from "./AssetEditDialog";
 import { AssetRow, GroupRowsSkeleton } from "./AssetRow";
 
@@ -71,9 +70,12 @@ export function AccountManager({
 
   const assets: Asset[] = assetsData?.assets ?? EMPTY_ASSETS;
 
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  // 줄을 누르면 상세 페이지로 간다(I-17 36) — 어디서 왔는지는 state 로 넘긴다("‹ 계좌·카드 관리")
+  const openDetail = (a: Asset) =>
+    navigate(`/desk/asset/${a.rowId}`, { state: { from: "accounts" } });
   const [editing, setEditing] = useState<EditingState>(null);
-  const [detail, setDetail] = useState<Asset | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Asset | null>(null);
 
   // 바깥(설정 폰 머리 "추가")이 올린 횟수가 바뀐 순간에만 폼 1단계를 연다. 렌더 중 조정이라 커밋을 한 번 더 태우지 않는다.
@@ -115,7 +117,6 @@ export function AccountManager({
     setPendingEdit(null);
     const target = assets.find((a) => String(a.rowId) === pendingEdit);
     if (target) {
-      setDetail(null);
       setEditing({ mode: "edit", asset: target });
     }
   }
@@ -183,7 +184,7 @@ export function AccountManager({
         end="none"
         describe="kind"
         usageBar={false}
-        onOpenDetail={() => setDetail(asset)}
+        onOpenDetail={() => openDetail(asset)}
         wrap={
           mobile
             ? (row: ReactNode) => (
@@ -342,23 +343,6 @@ export function AccountManager({
           onCreate={handleCreate}
           onUpdate={handleUpdate}
           isSubmitting={isSubmitting}
-        />
-      )}
-
-      {detail && (
-        <AssetDetailDialog
-          asset={detail}
-          onClose={() => setDetail(null)}
-          onEdit={(asset) => {
-            setEditing({ mode: "edit", asset });
-            setDetail(null);
-          }}
-          onDelete={(asset) => {
-            // 상세와 확인창 모두 ds 뒤로 가기 훅이라 같은 커밋 전환이 안전하다(use-back-close 가 칸을 개수로 센다)
-            setConfirmDelete(asset);
-            setDetail(null);
-          }}
-          mobile={mobile}
         />
       )}
 

@@ -209,10 +209,18 @@ export const expenseApi = {
     return resp.data;
   },
 
-  searchExpenses: async (params: ExpenseSearchParams): Promise<Expense[]> => {
+  searchExpenses: async (
+    params: ExpenseSearchParams,
+    opts?: { silent?: boolean },
+  ): Promise<Expense[]> => {
     const resp: ApiResponse<{ expenses: Expense[] }> = await apiClient.get(
       "/v1/expenses/search",
-      { params },
+      {
+        params,
+        ...(opts?.silent
+          ? ({ silent: true } as import("axios").AxiosRequestConfig)
+          : {}),
+      },
     );
     return resp.data.expenses;
   },
