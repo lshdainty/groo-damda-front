@@ -36,6 +36,7 @@ import { SplitTxDialog } from "@/features/expense-split/ui/SplitTxDialog";
 import { RecurringFromTxDialog } from "@/features/recurring-transaction/ui/RecurringFromTxDialog";
 import { DutchPayFromTxDialog } from "@/features/dutch-pay/ui/DutchPayFromTxDialog";
 import { AddTxSheet } from "@/widgets/add-tx";
+import { SheetStepDone } from "@/widgets/calendar/ui/event-form/step-header";
 import type { Expense, ExpenseCategory } from "@/entities/expense";
 import type { Asset } from "@/entities/asset";
 
@@ -348,16 +349,35 @@ export function TxDetailDialog({
     ? t("txDetail.incomeTitle")
     : t("txDetail.expenseTitle");
 
-  // ── [수정] — 상세 위에서 수정 폼을 연다(7a). 저장하면 응답 값으로 상세를 다시 그린다. 환불된 · 자동 거래는 없다
+  // ── [수정] — 같은 시트 안 한 단계(7a). 머리 · 본문 · 바닥만 바뀌고 시트는 그대로다. ← · Esc · 기기 뒤로 가기는 상세로(바뀐 값이 있으면 먼저 묻는다),
+  // 저장하면 다시 받은 뒤 응답 값으로 상세를 다시 그린다. 고쳐 쓰기는 옛 거래가 지워져 돌아갈 상세가 없어 시트를 모두 닫는다
   if (step === "edit") {
     return (
       <AddTxSheet
         expense={expense}
         mobile={mobile}
         onSaved={(updated) => setMarked(updated)}
-        // 고쳐 쓰기는 옛 거래를 지우고 새 거래를 만든다 — 돌아갈 상세가 없어 시트를 모두 닫는다
         onReplaced={onClose}
+        onBack={() => setStep("detail")}
         onClose={() => setStep("detail")}
+        embed={(p) => (
+          <DetailSurface
+            title={p.title as string}
+            onClose={onClose}
+            subStep
+            dirty={p.dirty}
+            onStepBack={p.onBack}
+            footerNode={p.footer}
+            bodyRef={p.bodyRef}
+            // 값 하나를 치는 단계는 닫기 원 자리에 "완료" — 표면 경계는 1280(시트는 768 ~ 1279 포함)이라 mobile 로 가르지 않는다
+            stepDone={
+              p.inSub ? <SheetStepDone onClick={p.onDone} /> : undefined
+            }
+            bodyKey="edit"
+          >
+            {p.body}
+          </DetailSurface>
+        )}
       />
     );
   }

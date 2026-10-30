@@ -28,6 +28,14 @@ export interface DetailFooter {
   cancelLabel?: string;
 }
 
+/** 바닥 노드 — 함수면 ← 와 같은 `requestBack`(바뀐 값이 있으면 먼저 묻는다)을 넘겨 그린다 */
+function resolveFooterNode(
+  node: ReactNode | ((requestBack: () => void) => ReactNode),
+  requestBack: () => void,
+): ReactNode {
+  return typeof node === "function" ? node(requestBack) : node;
+}
+
 interface DetailSurfaceProps {
   title: string;
   /** 시트 · 대화상자를 모두 닫는다 */
@@ -42,6 +50,15 @@ interface DetailSurfaceProps {
   /** 한 단계 뒤(상세로) */
   onStepBack?: () => void;
   footer?: DetailFooter;
+  /**
+   * 바닥을 노드로 직접 준다 — 수정 폼처럼 자기 바닥을 가진 단계(I-21 7a). 시트는 폭을 나눈 large, 대화상자는 small 로 그려진 버튼들을 그대로 받는다.
+   * 주면 `footer` 는 쓰지 않는다
+   */
+  footerNode?: ReactNode | ((requestBack: () => void) => ReactNode);
+  /** 본문 스크롤 상자 ref — 저장 실패 알림을 맨 위로 올릴 때 쓴다(끼운 수정 폼) */
+  bodyRef?: React.Ref<HTMLDivElement>;
+  /** 값 하나를 치는 단계의 머리 오른쪽 "완료"(시트) — 있으면 닫기 원 자리를 대신한다(I-09 29) */
+  stepDone?: ReactNode;
   /** 본문 요소를 단계마다 새로 그리게 하는 키 */
   bodyKey: string;
   children: ReactNode;
@@ -61,6 +78,9 @@ export function DetailSurface({
   dirty = false,
   onStepBack,
   footer,
+  footerNode,
+  bodyRef,
+  stepDone,
   bodyKey,
   children,
 }: DetailSurfaceProps) {
@@ -115,10 +135,14 @@ export function DetailSurface({
           }}
         >
           <DialogContent title={title} {...stepProps}>
-            <DialogBody key={bodyKey} scrollFog>
+            <DialogBody ref={bodyRef} key={bodyKey} scrollFog>
               <div className="-mx-x6">{children}</div>
             </DialogBody>
-            {footer && (del || footer.primary) && (
+            {footerNode ? (
+              <DialogFooter>
+                {resolveFooterNode(footerNode, () => void stepLeave.request())}
+              </DialogFooter>
+            ) : footer && (del || footer.primary) ? (
               <DialogFooter>
                 {del}
                 {footer.cancelLabel && (
@@ -139,7 +163,7 @@ export function DetailSurface({
                   </Button>
                 )}
               </DialogFooter>
-            )}
+            ) : null}
           </DialogContent>
         </Dialog>
         {stepLeave.node}
@@ -157,11 +181,22 @@ export function DetailSurface({
           if (!next) onClose();
         }}
       >
-        <BottomSheetContent title={title} {...stepProps}>
-          <BottomSheetBody key={bodyKey} scrollFog>
+        <BottomSheetContent
+          title={title}
+          {...stepProps}
+          className={
+            stepDone ? "[&_[data-slot=bottom-sheet-close]]:hidden" : undefined
+          }
+        >
+          {stepDone}
+          <BottomSheetBody ref={bodyRef} key={bodyKey} scrollFog>
             <div className="-mx-x6">{children}</div>
           </BottomSheetBody>
-          {footer && (del || footer.primary) && (
+          {footerNode ? (
+            <BottomSheetFooter>
+              {resolveFooterNode(footerNode, () => void stepLeave.request())}
+            </BottomSheetFooter>
+          ) : footer && (del || footer.primary) ? (
             <BottomSheetFooter>
               <div className="flex w-full items-center gap-x2">
                 {del}
@@ -178,7 +213,7 @@ export function DetailSurface({
                 )}
               </div>
             </BottomSheetFooter>
-          )}
+          ) : null}
         </BottomSheetContent>
       </BottomSheet>
       {stepLeave.node}

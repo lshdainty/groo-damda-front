@@ -156,10 +156,14 @@ export const assetApi = {
 
   createTransfer: async (
     data: AssetTransferFormValues,
+    opts?: { silent?: boolean },
   ): Promise<AssetTransfer> => {
     const resp: ApiResponse<AssetTransfer> = await apiClient.post(
       "/v1/asset-transfer",
       data,
+      { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
+        silent?: boolean;
+      },
     );
     return resp.data;
   },
@@ -168,10 +172,14 @@ export const assetApi = {
   updateTransfer: async (
     id: number,
     data: AssetTransferFormValues,
+    opts?: { silent?: boolean },
   ): Promise<AssetTransfer> => {
     const resp: ApiResponse<AssetTransfer> = await apiClient.put(
       `/v1/asset-transfer/${id}`,
       data,
+      { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
+        silent?: boolean;
+      },
     );
     return resp.data;
   },

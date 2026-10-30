@@ -15,6 +15,7 @@ import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import { useAssets, useDeleteTransfer } from "@/features/asset";
 import { RecurringAddDialog } from "@/features/recurring-transaction/ui/RecurringAddDialog";
 import { AddTxSheet } from "@/widgets/add-tx";
+import { SheetStepDone } from "@/widgets/calendar/ui/event-form/step-header";
 import type { Asset, AssetTransfer } from "@/entities/asset";
 
 import { dateTimeLabel } from "@/widgets/expense-detail/lib/detail-format";
@@ -125,7 +126,26 @@ export function TransferDetailDialog({
         editTransfer={transfer}
         mobile={mobile}
         onTransferSaved={(updated) => setSaved(updated)}
+        onBack={() => setStep("detail")}
         onClose={() => setStep("detail")}
+        embed={(p) => (
+          <DetailSurface
+            title={p.title as string}
+            onClose={onClose}
+            subStep
+            dirty={p.dirty}
+            onStepBack={p.onBack}
+            footerNode={p.footer}
+            bodyRef={p.bodyRef}
+            // 값 하나를 치는 단계는 닫기 원 자리에 "완료" — 표면 경계는 1280(시트는 768 ~ 1279 포함)이라 mobile 로 가르지 않는다
+            stepDone={
+              p.inSub ? <SheetStepDone onClick={p.onDone} /> : undefined
+            }
+            bodyKey="edit"
+          >
+            {p.body}
+          </DetailSurface>
+        )}
       />
     );
   }

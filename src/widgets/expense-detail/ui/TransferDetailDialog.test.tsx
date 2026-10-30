@@ -21,9 +21,13 @@ const api = vi.hoisted(() => ({
   }[],
   confirms: [] as { title: string; message: unknown; danger?: boolean }[],
   recurringSeed: null as unknown,
+  /** 끼운 수정 폼이 값 하나를 치는 단계에 있다 */
+  embedInSub: false,
   addTx: null as null | {
     editTransfer?: AssetTransfer;
     onTransferSaved?: (t: AssetTransfer) => void;
+    onBack?: () => void;
+    embed?: (parts: Record<string, unknown>) => React.ReactNode;
     onClose: () => void;
   },
 }));
@@ -63,7 +67,22 @@ vi.mock("@/shared/ui/groo/dialogs", () => ({
 vi.mock("@/widgets/add-tx", () => ({
   AddTxSheet: (p: NonNullable<typeof api.addTx>) => {
     api.addTx = p;
-    return <div data-testid="add-tx-sheet" />;
+    // 수정 폼은 자기 표면을 그리지 않고 상세 시트에 한 단계로 끼운다(7a) — 호스트 표면 안에 본문이 들어온다
+    return p.embed ? (
+      p.embed({
+        title: "addTx.editTitle",
+        body: <div data-testid="add-tx-sheet" />,
+        footer: () => null,
+        dirty: false,
+        onBack: () => p.onBack?.(),
+        inSub: api.embedInSub,
+        onDone: () => {},
+        overlays: null,
+        bodyRef: { current: null },
+      })
+    ) : (
+      <div data-testid="add-tx-sheet" />
+    );
   },
 }));
 vi.mock("@/features/recurring-transaction/ui/RecurringAddDialog", () => ({
@@ -126,6 +145,7 @@ beforeEach(async () => {
   api.confirms = [];
   api.recurringSeed = null;
   api.addTx = null;
+  api.embedInSub = false;
   onClose.mockClear();
   container = document.createElement("div");
   document.body.appendChild(container);

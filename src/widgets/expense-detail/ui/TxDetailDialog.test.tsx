@@ -54,9 +54,13 @@ const api = vi.hoisted(() => ({
     action?: { label: string; onClick: () => void };
   }[],
   confirms: [] as { title: string; danger?: boolean; singleAction?: boolean }[],
+  /** 끼운 수정 폼이 값 하나를 치는 단계에 있다 */
+  embedInSub: false,
   addTx: null as null | {
     expense?: Expense;
     onSaved?: (e: Expense) => void;
+    onBack?: () => void;
+    embed?: (parts: Record<string, unknown>) => React.ReactNode;
     onReplaced?: () => void;
     onClose: () => void;
   },
@@ -110,7 +114,22 @@ vi.mock("@/shared/ui/groo/dialogs", () => ({
 vi.mock("@/widgets/add-tx", () => ({
   AddTxSheet: (p: NonNullable<typeof api.addTx>) => {
     api.addTx = p;
-    return <div data-testid="add-tx-sheet" />;
+    // 수정 폼은 자기 표면을 그리지 않고 상세 시트에 한 단계로 끼운다(7a) — 호스트 표면 안에 본문이 들어온다
+    return p.embed ? (
+      p.embed({
+        title: "addTx.editTitle",
+        body: <div data-testid="add-tx-sheet" />,
+        footer: () => null,
+        dirty: false,
+        onBack: () => p.onBack?.(),
+        inSub: api.embedInSub,
+        onDone: () => {},
+        overlays: null,
+        bodyRef: { current: null },
+      })
+    ) : (
+      <div data-testid="add-tx-sheet" />
+    );
   },
 }));
 vi.mock("@/features/expense", () => ({
@@ -263,6 +282,7 @@ beforeEach(async () => {
   api.snacks = [];
   api.confirms = [];
   api.addTx = null;
+  api.embedInSub = false;
   onClose.mockClear();
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -878,14 +898,35 @@ describe("J 49 — 환불 취소 확인창", () => {
 });
 
 describe("7a — [수정] 은 상세 위에서 수정 폼을 열고 저장하면 상세로 돌아와 응답 값을 보인다", () => {
-  it("[수정] 을 누르면 수정 폼이 열리고 상세는 내려간다", () => {
+  it("[수정] 을 누르면 같은 시트 안 한 단계로 수정 폼이 들어온다 — 새 시트 · 대화상자가 겹치지 않는다", () => {
     render();
     click(lastButton("edit"));
     expect(document.querySelector("[data-testid=add-tx-sheet]")).not.toBeNull();
     expect(api.addTx!.expense!.rowId).toBe(77);
     expect(
-      document.querySelector("[data-slot=bottom-sheet-content]"),
-    ).toBeNull();
+      document.querySelectorAll("[data-slot=bottom-sheet-content]").length,
+    ).toBe(1);
+    expect(document.body.textContent).toContain("addTx.editTitle");
+  });
+
+  it("값 하나를 치는 단계에는 mobile 이 아니어도(768 ~ 1279 시트) 머리에 완료가 있다 (H2)", () => {
+    api.embedInSub = true;
+    render();
+    click(lastButton("edit"));
+    expect(
+      document.querySelector("[data-slot=sheet-step-done]"),
+    ).not.toBeNull();
+  });
+
+  it("수정 단계에서 ← 는 상세로 돌아온다 — 시트는 그대로", () => {
+    render();
+    click(lastButton("edit"));
+    act(() => api.addTx!.onBack!());
+    expect(document.querySelector("[data-testid=add-tx-sheet]")).toBeNull();
+    expect(
+      document.querySelector("[data-slot=tx-detail-head]")!.textContent,
+    ).toContain("김밥천국");
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("저장하면 응답 거래로 상세가 다시 그려진다 — 옛 값이 먼저 보이지 않는다", () => {
