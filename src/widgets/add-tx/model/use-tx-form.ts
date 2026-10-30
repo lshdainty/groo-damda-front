@@ -1069,6 +1069,8 @@ export function useTxForm({
   /** 종류 칩 — 안 맞는 카테고리를 놓고 프리셋 표시를 지운다. 수정 · 고쳐 쓰기는 종류를 바꾸지 않는다 */
   const changeType = (v: TxType) => {
     if (isEdit || (isRewrite && v === "TRANSFER")) return;
+    // 결제 문자 초안은 이체로 못 바꾼다 — 문자 전용 저장 경로(취소 문자 차단 · 카드 기억)가 이체 경로로 새지 않게(앱 #326 과 같은 규칙)
+    if (smsDraft && v === "TRANSFER") return;
     if (v === type) return;
     // 외화 입력은 이체에 없다 — 이체로 가면 원화로 돌아온다
     if (v === "TRANSFER") setOrigCurrency(DEFAULT_CURRENCY);

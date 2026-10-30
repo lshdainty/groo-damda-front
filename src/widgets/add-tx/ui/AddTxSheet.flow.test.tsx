@@ -761,6 +761,27 @@ describe("결제 문자에서 온 내역의 거래 종류 (QA #123)", () => {
     expect(sent.sms).toMatchObject({ expenseType: "INCOME", amount: 5500 });
   });
 
+  it("2단계에서 바로 수입으로 바꿀 수 있다 — 지출 · 수입 칩이 있고 이체 칩은 막힌다", async () => {
+    await readSms();
+    const radios = [
+      ...document.body.querySelectorAll<HTMLElement>('[role="radio"]'),
+    ];
+    expect(radios.map((r) => r.textContent)).toEqual([
+      "expense",
+      "income",
+      "addTx.transfer",
+    ]);
+    expect((radios[2] as HTMLButtonElement).disabled).toBe(true);
+    click(lastButton("income"));
+    await tick();
+    click(row("addTx.category"));
+    await tick();
+    click(lastButton("환불"));
+    await tick();
+    await press("addTx.add");
+    expect(sent.sms).toMatchObject({ expenseType: "INCOME" });
+  });
+
   it("문자 초안에는 고정 스위치가 없다 — 저장 경로가 표식을 못 받는다", async () => {
     await open();
     expect(document.body.querySelector('[role="switch"]')).toBeNull();

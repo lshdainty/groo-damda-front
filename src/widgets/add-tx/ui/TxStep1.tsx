@@ -39,7 +39,8 @@ export function TypeChips({ f }: { f: TxForm }) {
           size="medium"
           disabled={
             (lockedTo != null && o.v !== lockedTo) ||
-            (f.isRewrite && o.v === "TRANSFER")
+            (f.isRewrite && o.v === "TRANSFER") ||
+            (f.smsDraft != null && o.v === "TRANSFER")
           }
         >
           {o.l}
