@@ -187,7 +187,9 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
                               <Input
                                 readOnly
                                 value={val != null ? KRW(val) : "—"}
-                                suffix={tCommon("searchWon")}
+                                suffix={
+                                  val != null ? tCommon("searchWon") : undefined
+                                }
                               />
                             ) : (
                               <AmountInput
