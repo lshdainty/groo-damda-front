@@ -81,7 +81,6 @@ export function FeeSub({ f, kind }: { f: TxForm; kind: "fee" | "interest" }) {
     >
       <AmountInput
         variant="underline"
-        size="large"
         aria-label={label}
         autoFocus
         value={value}
@@ -282,7 +281,6 @@ export function PresetSaveSub({ f }: { f: TxForm }) {
         className="px-global-gutter pb-x2 pt-x3"
       >
         <Input
-          size="large"
           autoFocus
           value={f.presetName}
           placeholder={t("savePreset.namePlaceholder")}
@@ -315,7 +313,6 @@ export function PresetAmountSub({ f }: { f: TxForm }) {
     >
       <AmountInput
         variant="underline"
-        size="large"
         aria-label={t("savePreset.amountRow")}
         autoFocus
         value={f.presetAmount}

@@ -23,7 +23,7 @@ export function CurrencyChip({ f }: { f: TxForm }) {
           variant="solid"
           size="small"
           // 밑줄 칸 높이(큰 40 · 1280 이상 34)를 칩 32 가 밀어내지 않게 위아래 여백을 칸 padding 에서 되돌려 받는다
-          className="-my-x1 lg:-my-x1_5"
+          className="-my-x1_5"
           suffixIcon={<ChevronDown aria-hidden />}
           aria-label={t("addTx.currencyChip", { code })}
           aria-haspopup="dialog"
@@ -87,7 +87,6 @@ export function AmountEntry({
       <Input
         ref={inputRef}
         variant="underline"
-        size="large"
         aria-label={label}
         inputMode="decimal"
         autoComplete="off"
@@ -105,7 +104,6 @@ export function AmountEntry({
     <AmountInput
       ref={inputRef}
       variant="underline"
-      size="large"
       aria-label={label}
       autoFocus={autoFocus}
       aria-invalid={invalid || undefined}

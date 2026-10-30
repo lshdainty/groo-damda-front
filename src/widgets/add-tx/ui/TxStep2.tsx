@@ -236,7 +236,6 @@ export function TxStep2({ f }: { f: TxForm }) {
           className="px-global-gutter pb-x4 pt-x1"
         >
           <Input
-            size="large"
             value={f.merchant}
             maxLength={100}
             autoFocus={f.focusMerchant}
@@ -275,7 +274,6 @@ export function TxStep2({ f }: { f: TxForm }) {
           >
             <Input
               ref={f.refFor("fx")}
-              size="large"
               inputMode="decimal"
               autoComplete="off"
               value={f.fxRate}
