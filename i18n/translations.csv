@@ -702,24 +702,20 @@ asset,loadFailed.goals,저축 목표를 불러오지 못했어요,Couldn't load 
 asset,accountDepositTitle,계좌 · 예금,Accounts & Deposits
 asset,assetDetail.statusCompleted,완료,Completed
 asset,assetDetail.statusPending,대기,Pending
-asset,assetDetail.statusFailed,실패,Failed
 asset,assetDetail.statusSkipped,건너뜀,Skipped
 asset,assetDetail.perfMonth,{{ym}} 실적,{{ym}} spending
 asset,assetDetail.achieved,달성,Achieved
 asset,assetDetail.remainingLabel,남은,Remaining
 asset,assetDetail.toastPaid,결제가 기록되었어요,Payment recorded
-asset,assetDetail.toastPayFail,결제 처리에 실패했어요,Failed to process payment
 asset,assetDetail.billingLoadError,청구 정보를 불러오지 못했어요,Couldn't load billing info
 asset,assetDetail.paymentDue,결제 예정,Payment due
 asset,assetDetail.payNow,지금 결제,Pay now
 asset,assetDetail.cancelPayment,결제 취소,Cancel payment
 asset,assetDetail.cancelPaymentConfirm,{{date}}에 낸 {{amount}}원을 되돌려요. 통장 잔액과 카드 청구가 결제 전으로 돌아가요.,Reverts the {{amount}} KRW paid on {{date}}. The account balance and card billing return to the state before payment.
 asset,assetDetail.toastPaymentCancelled,결제를 취소했어요,Payment cancelled
-asset,assetDetail.billedMonthly,매월 {{day}}일 결제,Billed on day {{day}} each month
 asset,assetDetail.billingPeriod,{{start}}~{{end}} 사용분,Usage {{start}}–{{end}}
 asset,assetDetail.scheduledTag,예정,Upcoming
 asset,assetDetail.paidDone,결제 완료,Paid
-asset,assetDetail.usagePeriod,카드 이용 기간 {{period}},Card usage period {{period}}
 asset,assetDetail.installmentFallback,할부,Installment
 asset,assetDetail.installmentSeq,{{seq}}/{{total}}회차,Payment {{seq}} of {{total}}
 asset,assetDetail.installmentPrincipal,원금 {{amount}},Principal {{amount}}
@@ -730,13 +726,10 @@ asset,assetDetail.installmentPayoffConfirm,남은 할부 {{amount}}을 이번 �
 asset,assetDetail.installmentPayoffUndo,되돌리기,Undo
 asset,assetDetail.installmentPayoffUndoConfirm,남은 원금 정리를 취소하고 원래 회차대로 나눠 낼까요?,Cancel the payoff and return to the original installment schedule?
 asset,assetDetail.installmentPaidOffBadge,남은 원금 정리됨,Paid off
-asset,assetDetail.limitSettings,한도 · 결제 설정,Limit · payment
 asset,assetDetail.limitUsage,한도 사용,Limit usage
 asset,assetDetail.limitPctUsed,{{pct}}% 사용,{{pct}}% used
 asset,assetDetail.limitOf,{{used}} / 한도 {{limit}},{{used}} / Limit {{limit}}
 asset,assetDetail.limitRemain,잔여 {{amount}},Remaining {{amount}}
-asset,assetDetail.limitEdit,한도 · 결제일 변경,Edit limit · payment day
-asset,assetDetail.perfDone,이번 달 실적 달성,Monthly target met
 asset,assetDetail.perfRemain,실적까지 {{amount}},{{amount}} to target
 asset,assetDetail.usageHistory,이용 내역,Usage history
 asset,assetDetail.sortRecent,최근순,Recent
@@ -783,7 +776,6 @@ asset,assetDetail.titleAccount,계좌 상세,Account details
 asset,assetDetail.valueCard,이번 달 결제 예정,Due this month
 asset,assetDetail.valueCheckCard,이번 달 사용액,Spent this month
 asset,assetDetail.monthTx,이번 달 내역,This month
-asset,assetDetail.showAmounts,금액 표시,Show amounts
 asset,assetDetail.hideAmounts,금액 가리기,Hide amounts
 asset,assetDetail.trendUsage,사용 추이,Usage trend
 asset,assetDetail.trendValuation,평가액 추이,Valuation trend
@@ -820,6 +812,10 @@ asset,assetDetail.payAmountEmpty,결제 금액을 넣어주세요.,Enter the pay
 asset,assetDetail.payAmountOver,결제 금액은 {{amount}}까지예요.,The payment can be up to {{amount}}.
 asset,assetDetail.payFailed,결제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't process the payment. Please try again in a moment.
 asset,trade.recordTitle,거래 기록,Trade log
+asset,trade.qtyRequired,수량을 넣어주세요.,Enter the quantity.
+asset,trade.amountRequired,거래대금을 넣어주세요.,Enter the trade amount.
+asset,trade.time,거래 시각,Trade time
+asset,trade.preview,거래 후 미리보기,Preview after the trade
 asset,trade.cancelRow,{{date}} {{name}} 거래 취소,Cancel {{name}} trade on {{date}}
 asset,trade.deleteConfirmTarget,{{date}} {{name}} {{qty}} {{kind}} 거래를 취소할까요? 예수금과 보유 수량이 거래 전으로 돌아가요.,Cancel the {{kind}} of {{qty}} {{name}} on {{date}}? Cash and quantity return to their pre-trade state.
 asset,deleteConfirm.titleAsk,삭제할까요?,Delete this?
@@ -2797,8 +2793,6 @@ asset,trade.entryBuy,매수,Buy
 asset,trade.entrySell,매도,Sell
 asset,trade.history,거래 내역,Trade history
 asset,trade.empty,아직 매수·매도 기록이 없어요,No trades recorded yet
-asset,trade.deleted,거래를 취소했어요,Trade cancelled
-asset,trade.deleteConfirm,이 거래를 취소하시겠어요? 예수금과 보유 수량이 거래 전으로 돌아가요.,Cancel this trade? Cash and quantity return to their pre-trade state.
 asset,trade.deleteTitle,거래 취소,Cancel trade
 asset,trade.deleteAction,거래 취소,Cancel trade
 asset,holdings.avgPrice,평단가,Avg price
@@ -2810,7 +2804,6 @@ asset,holdings.firstAndMore,{{name}} 외 {{n}}종목,{{name}} and {{n}} more
 asset,holdings.linkedSub,{{n}}주 · 현재가 {{price}} 연동,{{n}} shares · live at {{price}}
 asset,holdings.linkedPending,{{n}}주 · 시세 연동 대기,{{n}} shares · awaiting live price
 asset,holdings.manualSub,직접 입력,Manual entry
-asset,holdings.emptyDetail,보유 종목이 없어요. 편집에서 종목을 추가해보세요.,No holdings yet. Add them from Edit.
 asset,holdings.todayChange,오늘 {{sign}}{{amount}}원,Today {{sign}}₩{{amount}}
 asset,holdings.editSummary,{{n}}종목 · {{total}}원,{{n}} holdings · ₩{{total}}
 asset,holdings.searchPlaceholder,종목 이름 검색,Search stock name

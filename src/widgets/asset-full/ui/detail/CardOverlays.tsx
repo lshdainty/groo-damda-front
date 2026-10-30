@@ -142,7 +142,9 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
                 ns="asset"
                 values={{ amount: m(money(c.upcoming)) }}
               />
-              {date ? ` ${t("assetDetail.paymentDateNote", { date })}` : ""}
+              {date
+                ? ` ${t("assetDetail.paymentDateNote", { date: formatDay(date).md })}`
+                : ""}
             </p>
             {c.payMoveNote && <Callout tone="warning">{c.payMoveNote}</Callout>}
             <Field

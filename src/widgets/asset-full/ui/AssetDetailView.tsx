@@ -53,7 +53,6 @@ export function AssetDetailView({
       asset={asset}
       model={model}
       desk={desk}
-      mobile={mobile}
       onExpense={tx.openExpense}
       onTransfer={tx.openTransfer}
     />
@@ -154,21 +153,17 @@ function OtherBody({
   asset,
   model,
   desk,
-  mobile,
   onExpense,
   onTransfer,
 }: {
   asset: Asset;
   model: ReturnType<typeof useAssetDetailModel>;
   desk: boolean;
-  mobile: boolean;
   onExpense: (e: import("@/entities/expense").Expense) => void;
   onTransfer: (t: import("@/entities/asset").AssetTransfer) => void;
 }) {
   const amount = <AssetAmount asset={asset} model={model} />;
-  const holdings = model.isInv ? (
-    <HoldingsSection asset={asset} mobile={mobile} />
-  ) : null;
+  const holdings = model.isInv ? <HoldingsSection asset={asset} /> : null;
   const trades = model.isInv ? <TradeHistory asset={asset} /> : null;
   const perf =
     model.isCard && !model.isCredit ? (

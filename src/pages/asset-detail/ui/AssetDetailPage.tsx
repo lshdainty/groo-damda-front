@@ -78,6 +78,7 @@ function useLeave(fallback: string) {
  */
 export function AssetDetailPage() {
   const { mobile } = useOutletContext<{ mobile: boolean }>();
+  const navigate = useNavigate();
   const { assetId } = useParams();
   const { t } = useTranslation("asset");
   const parent = useParent();
@@ -139,7 +140,7 @@ export function AssetDetailPage() {
           description={t("assetDetail.notFoundDesc")}
           primaryAction={{
             label: t("assetDetail.toAssets"),
-            onClick: () => leave(),
+            onClick: () => navigate(ASSET_LIST, { replace: true }),
           }}
         />
       </Frame>

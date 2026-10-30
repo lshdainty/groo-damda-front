@@ -217,13 +217,7 @@ export function TradeHistory({ asset }: { asset: Asset }) {
 }
 
 /** 보유 종목(I-17 50) — 목록 제목 "보유 종목 · {n}" + 보유 줄. 비면 R9 한 줄. 매수 · 매도는 거래 기록 시트(종목이 정해진 채) */
-export function HoldingsSection({
-  asset,
-  mobile,
-}: {
-  asset: Asset;
-  mobile: boolean;
-}) {
+export function HoldingsSection({ asset }: { asset: Asset }) {
   const { t } = useTranslation("asset");
   // 매수·매도는 종목마다 연다 — 어떤 종목인지 정해진 채로 들어가야 다시 고를 일이 없다.
   const [trade, setTrade] = useState<{
@@ -295,7 +289,6 @@ export function HoldingsSection({
           asset={asset}
           holding={trade.holding}
           defaultType={trade.type}
-          mobile={mobile}
           onClose={() => setTrade(null)}
         />
       )}

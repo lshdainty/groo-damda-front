@@ -478,3 +478,43 @@ describe("결제일 없는 신용카드(D8 · QA 26차 6)", () => {
     expect(missing()).toBeNull();
   });
 });
+
+describe("회차 없음 · 한도 · 동작 줄(I-17 46 · 47)", () => {
+  it("회차가 하나도 없으면 회차 단추 없이 '이번 달 결제 예정 · 0원' 이고 '—' 는 어디에도 없다", () => {
+    billing.data = {
+      ...(billing.data as Record<string, unknown>),
+      upcomingAmount: 0,
+      nextPaymentDate: null,
+      upcomingPeriodStart: null,
+      upcomingPeriodEnd: null,
+      nextCycle: null,
+      closedCycles: [],
+      history: [],
+    };
+    render();
+    expect(bodyText()).toContain("assetDetail.valueCard");
+    expect(bodyText()).toContain("0원");
+    expect(bodyText()).not.toContain("—");
+    expect(buttonWith("assetDetail.dueOn")).toBeUndefined();
+  });
+
+  it("한도 사용 — 80% 를 넘어도 경고 색이 없고, 넘치면 '초과' 글이 fg-critical 이다", () => {
+    render({ ...card, balance: -4_500_000 } as Asset);
+    const warn = [...document.body.querySelectorAll("*")].filter((e) =>
+      /chart-red|--color-chart-red/.test(e.getAttribute("style") ?? ""),
+    );
+    expect(warn).toHaveLength(0);
+    expect(bodyText()).toContain("assetDetail.limitPctUsed");
+
+    render({ ...card, balance: -6_000_000 } as Asset);
+    expect(document.body.querySelector("[role='meter']")).not.toBeNull();
+    expect(document.body.querySelector(".text-fg-critical")).not.toBeNull();
+  });
+
+  it("동작은 ds 버튼 둘이다 — 타일 · 알약 · '한도 · 결제 설정' 이 없다", () => {
+    render();
+    expect(buttonWith("assetDetail.payNow")).toBeDefined();
+    expect(buttonWith("assetDetail.limitSettings")).toBeUndefined();
+    expect(buttonWith("assetDetail.limitEdit")).toBeUndefined();
+  });
+});

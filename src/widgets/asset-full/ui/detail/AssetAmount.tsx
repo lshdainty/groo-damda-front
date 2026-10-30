@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Delta } from "@/shared/ds/card";
-import { List, ListItem } from "@/shared/ds/list";
+import { List } from "@/shared/ds/list";
+import { KvRow } from "./KvRow";
 import { KRW, MINUS, formatChangeRate } from "@/shared/lib/groo/format";
 import { won } from "@/shared/lib/groo/money-text";
 import { BigAmount } from "@/shared/ui/groo/band-parts";
@@ -46,21 +47,13 @@ export function AssetAmount({
         <div className="-mx-global-gutter mt-x1">
           {model.investCash !== 0 && (
             <List aria-label={label}>
-              <ListItem
-                title={t("holdings.cashBalance")}
-                suffix={
-                  <span className="text-end tabular-nums text-fg-neutral-muted">
-                    {withCommaBreaks(m(won(model.investCash)))}
-                  </span>
-                }
+              <KvRow
+                label={t("holdings.cashBalance")}
+                value={withCommaBreaks(m(won(model.investCash)))}
               />
-              <ListItem
-                title={t("holdings.holdingBalance")}
-                suffix={
-                  <span className="text-end tabular-nums text-fg-neutral-muted">
-                    {withCommaBreaks(m(won(model.investHolding)))}
-                  </span>
-                }
+              <KvRow
+                label={t("holdings.holdingBalance")}
+                value={withCommaBreaks(m(won(model.investHolding)))}
               />
             </List>
           )}

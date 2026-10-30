@@ -3,6 +3,7 @@ import { Check, ChevronDown, Undo2, Zap } from "lucide-react";
 import { Badge } from "@/shared/ds/badge";
 import { Button, ResponsivePair } from "@/shared/ds/button";
 import { List, ListItem } from "@/shared/ds/list";
+import { KvRow } from "./KvRow";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { MINUS, money } from "@/shared/lib/groo/format";
 import { MaskAmount } from "@/shared/lib/groo/hide-amounts";
@@ -172,8 +173,12 @@ export function CardBilling({
               {t("assetDetail.recordCycle")}
             </Badge>
           ) : (
-            <Badge variant="weak" tone="positive" size="medium">
-              <Check aria-hidden />
+            <Badge
+              variant="weak"
+              tone="positive"
+              size="medium"
+              prefixIcon={<Check />}
+            >
               {t("assetDetail.paidDone")}
             </Badge>
           )}
@@ -214,13 +219,9 @@ export function CardBilling({
       {/* 키-값 — 결제일 · 카드 이용 기간. 결제일이 없는 옛 카드는 값 자리에서 넣으라고 말한다(D8) */}
       <List className="mt-x1" aria-label={t("assetDetail.billingInfo")}>
         {c.paymentDay != null ? (
-          <ListItem
-            title={t("assetDetail.paymentDateLabel")}
-            suffix={
-              <span className={VALUE}>
-                {t("assetDetail.paymentDayValue", { day: c.paymentDay })}
-              </span>
-            }
+          <KvRow
+            label={t("assetDetail.paymentDateLabel")}
+            value={t("assetDetail.paymentDayValue", { day: c.paymentDay })}
           />
         ) : (
           <ListItem
@@ -241,10 +242,7 @@ export function CardBilling({
           />
         )}
         {period && (
-          <ListItem
-            title={t("assetDetail.usagePeriodLabel")}
-            suffix={<span className={VALUE}>{period}</span>}
-          />
+          <KvRow label={t("assetDetail.usagePeriodLabel")} value={period} />
         )}
       </List>
 
