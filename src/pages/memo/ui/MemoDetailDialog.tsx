@@ -123,12 +123,12 @@ export function MemoDetailDialog({
                 {memo.isPinned ? <TagGroupItem>{t("pin")}</TagGroupItem> : null}
               </TagGroup>
             </div>
-            {memo.content ? (
-              <p className="m-0 whitespace-pre-wrap pb-x2 font-sans text-t5 font-normal text-fg-neutral [overflow-wrap:anywhere]">
+            {memo.content?.trim() ? (
+              <p className="m-0 whitespace-pre-wrap pb-x2 font-sans text-t5 font-normal leading-6 text-fg-neutral [overflow-wrap:anywhere]">
                 {memo.content}
               </p>
             ) : (
-              <p className="m-0 pb-x2 font-sans text-t5 font-normal text-fg-neutral-subtle">
+              <p className="m-0 pb-x2 font-sans text-t5 font-normal leading-6 text-fg-neutral-subtle">
                 {t("detail.noContent")}
               </p>
             )}

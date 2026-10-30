@@ -40,7 +40,7 @@ export function MemoRow({
       }
       detail={
         <>
-          {memo.content ? (
+          {memo.content?.trim() ? (
             <span
               data-slot="memo-body"
               className="block truncate text-t4 text-fg-neutral-muted"

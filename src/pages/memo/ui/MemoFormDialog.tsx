@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Palette, Pin, Tag } from "lucide-react";
+import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
 import {
@@ -46,6 +47,8 @@ export function MemoFormDialog({
   memo,
   tags,
   saveError,
+  saveErrorSeq,
+  tagsReady,
   submitting,
   onClose,
   onSave,
@@ -54,12 +57,17 @@ export function MemoFormDialog({
   /** 고를 수 있는 태그 이름 — 서버 목록 ∪ 메모에 남은 이름 */
   tags: string[];
   saveError: boolean;
+  /** 저장이 실패할 때마다 늘어난다 — 실패 Callout 을 화면에 들이는 신호 */
+  saveErrorSeq: number;
+  /** 태그 목록을 받았다 — 로딩 · 실패 중에는 "태그를 만들어요" 안내를 하지 않는다 */
+  tagsReady: boolean;
   submitting?: boolean;
   onClose: () => void;
   onSave: (
     values: MemoFormValues,
     id: number | undefined,
     pinned: boolean,
+    wasPinned: boolean,
   ) => Promise<void>;
 }) {
   const { t } = useTranslation("memo");
@@ -82,6 +90,8 @@ export function MemoFormDialog({
   const [color, setColor] = useState(initial.color);
   const [showError, setShowError] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
+  // 저장이 실패하면 본문이 내려가 있어도 맨 위 Callout 이 보이게 올린다(M2)
+  const errorRef = useScrollToError<HTMLDivElement>(saveError, saveErrorSeq);
 
   const dirty =
     title !== initial.title ||
@@ -108,6 +118,7 @@ export function MemoFormDialog({
       },
       memo?.rowId,
       pinned,
+      initial.pinned,
     );
   };
 
@@ -128,19 +139,27 @@ export function MemoFormDialog({
       <ResponsiveDialogContent
         title={isNew ? t("newMemo") : t("editMemo")}
         aria-describedby={undefined}
-        onOpenAutoFocus={(e) => {
-          e.preventDefault();
-          titleRef.current?.focus({ preventScroll: true });
-        }}
+        // 새 메모만 제목에 초점 — 수정은 표면이 받는다(폰에서 키보드가 바로 뜨지 않는다, 앱과 같다 — L10)
+        onOpenAutoFocus={
+          isNew
+            ? (e) => {
+                e.preventDefault();
+                titleRef.current?.focus({ preventScroll: true });
+              }
+            : undefined
+        }
       >
         <ResponsiveDialogBody>
           {saveError && (
-            <Callout tone="critical" role="alert" className="mb-x4">
-              {t("saveFailed")}
-            </Callout>
+            <div ref={errorRef}>
+              <Callout tone="critical" role="alert" className="mb-x4">
+                {t("saveFailed")}
+              </Callout>
+            </div>
           )}
           <Field
             label={t("titlePlaceholder")}
+            maxGraphemeCount={TITLE_MAX}
             invalid={showError && titleEmpty}
             errorMessage={t("titleRequired")}
             labelHidden
@@ -158,7 +177,12 @@ export function MemoFormDialog({
               maxLength={TITLE_MAX}
             />
           </Field>
-          <Field label={t("contentLabel")} labelHidden className="pb-x2">
+          <Field
+            label={t("contentLabel")}
+            labelHidden
+            maxGraphemeCount={CONTENT_MAX}
+            className="pb-x2"
+          >
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value.slice(0, CONTENT_MAX))}
@@ -196,7 +220,7 @@ export function MemoFormDialog({
                     }}
                   />
                   {/* 태그가 0개면 고를 게 '태그 없음' 뿐이라 어디서 만드는지 한 줄로 알린다(이름을 지어 넣지 않는다 — QA #105) */}
-                  {tags.length === 0 && (
+                  {tagsReady && tags.length === 0 && (
                     <p className="m-0 px-global-gutter pb-x2 pt-x4 text-center font-sans text-t4 text-fg-neutral-subtle">
                       {t("tagEmptyHint")}
                     </p>

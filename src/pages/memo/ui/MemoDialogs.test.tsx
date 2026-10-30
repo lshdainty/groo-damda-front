@@ -98,13 +98,15 @@ afterEach(() => {
   container.remove();
 });
 
-const form = (memo: Memo | null, saveError = false) =>
+const form = (memo: Memo | null, saveError = false, tagsReady = true) =>
   act(() =>
     root.render(
       <MemoFormDialog
         memo={memo}
         tags={["여행", "독서"]}
         saveError={saveError}
+        saveErrorSeq={saveError ? 1 : 0}
+        tagsReady={tagsReady}
         onClose={() => closed++}
         onSave={(values, id, pinned) => {
           saved.push({ values, id, pinned });
@@ -239,6 +241,49 @@ describe("메모 폼 (I-15 13)", () => {
   });
 });
 
+describe("메모 폼 — 검수 고침", () => {
+  it("저장 실패 Callout 은 화면에 들이도록 scrollIntoView 를 부른다(M2)", () => {
+    const spy = vi.fn();
+    Element.prototype.scrollIntoView = spy;
+    form(base, true);
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it("태그 목록을 못 받았으면 '태그는 설정에서 만들어요' 안내를 하지 않는다(L3)", () => {
+    form(null, false, false);
+    click(byName("태그, 태그 없음"));
+    expect(document.body.textContent).not.toContain("만들어요");
+  });
+
+  it("내용은 앞뒤 공백 · 빈 줄 그대로 보낸다 — trim 은 비었는지 판단에만 쓴다(M3)", () => {
+    form(base);
+    setValue(q<HTMLTextAreaElement>("textarea")!, "  들여쓴 줄\n\n");
+    click(byName("저장"));
+    expect(saved[0]?.values.content).toBe("  들여쓴 줄\n\n");
+  });
+
+  it('내용을 지우면 빈 글 "" 을 보낸다(웹 값 — 앱이 맞춘다)', () => {
+    form(base);
+    setValue(q<HTMLTextAreaElement>("textarea")!, "");
+    click(byName("저장"));
+    expect(saved[0]?.values.content).toBe("");
+  });
+
+  it("글자 수가 붙고(제목 200 · 내용 10,000) 이모지도 UTF-16 한도를 넘지 않는다(M6)", () => {
+    form(null);
+    expect(document.body.textContent).toContain("/10000");
+    expect(document.body.textContent).toContain("/200");
+    setValue(q<HTMLTextAreaElement>("textarea")!, "😀".repeat(6000));
+    const v = q<HTMLTextAreaElement>("textarea")!.value;
+    expect(v.length).toBeLessThanOrEqual(10_000);
+  });
+
+  it("수정 폼은 제목에 초점을 주지 않는다 — 새 메모만 첫 칸(L10)", () => {
+    form(base);
+    expect(document.activeElement).not.toBe(q("input"));
+  });
+});
+
 describe("메모 상세 (I-15 14)", () => {
   const detail = (memo: Memo, remove = () => Promise.resolve(true)) =>
     act(() =>
@@ -271,6 +316,11 @@ describe("메모 상세 (I-15 14)", () => {
     const text = document.body.textContent ?? "";
     expect(text).toMatch(/여행.*수정.*고정/);
     expect(q("p.whitespace-pre-wrap")?.textContent).toBe("첫 줄\n둘째 줄");
+  });
+
+  it("공백만 있는 본문은 '내용 없음' 이다(M3 — trim 은 비었는지 판단에만)", () => {
+    detail({ ...base, content: "   \n  " });
+    expect(document.body.textContent).toContain("내용 없음");
   });
 
   it("제목 · 본문이 비면 '제목 없음' · '내용 없음' 이다", () => {
@@ -312,6 +362,21 @@ describe("메모 상세 (I-15 14)", () => {
       document.body.querySelectorAll<HTMLElement>("[role=menuitem]"),
     ).map((e) => e.textContent?.trim());
     expect(items[0]).toBe("고정 해제");
+  });
+
+  it("지우지 못하면(false) 상세를 닫지 않는다", async () => {
+    detail(base, () => Promise.resolve(false));
+    click(byName("여행 계획 더보기"));
+    await act(async () =>
+      Array.from(document.body.querySelectorAll<HTMLElement>("[role=menuitem]"))
+        .find((e) => e.textContent?.includes("삭제"))!
+        .click(),
+    );
+    const confirm = Array.from(
+      document.body.querySelectorAll<HTMLElement>("[role=alertdialog] button"),
+    ).find((b) => b.textContent === "삭제")!;
+    await act(async () => confirm.click());
+    expect(closed).toBe(0);
   });
 
   it("확인 뒤 지우면 상세를 닫는다 · 지우지 못하면 닫지 않는다", async () => {
