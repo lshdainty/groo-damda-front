@@ -23,7 +23,6 @@ import {
   type Expense,
 } from "@/entities/expense";
 import { useSearchExpenses } from "@/features/expense/model/useExpenses";
-import { AddTxSheet } from "@/widgets/add-tx";
 import { TxDetailDialog } from "@/widgets/expense-detail/ui/TxDetailDialog";
 import {
   AdvancedFilter,
@@ -57,7 +56,6 @@ export function SearchPage() {
   const idle = isIdle(debounced);
   const query = useSearchExpenses(toSearchParams(debounced));
   const [detail, setDetail] = useState<Expense | null>(null);
-  const [editing, setEditing] = useState<Expense | null>(null);
 
   // 스크롤 상자는 셸의 main — 칩 줄이 이 상자 맨 위에서 숨고 드러난다
   const scrollRef = useRef<HTMLElement | null>(null);
@@ -183,22 +181,11 @@ export function SearchPage() {
       >
         {body}
       </div>
-      {detail && !editing && (
+      {detail && (
         <TxDetailDialog
           expense={detail}
           mobile={mobile}
           onClose={() => setDetail(null)}
-          onEdit={(e) => {
-            setDetail(null);
-            setEditing(e);
-          }}
-        />
-      )}
-      {editing && (
-        <AddTxSheet
-          expense={editing}
-          mobile={mobile}
-          onClose={() => setEditing(null)}
         />
       )}
     </div>
