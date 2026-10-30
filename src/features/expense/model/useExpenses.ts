@@ -12,11 +12,12 @@ export const useExpenses = (filters?: ExpenseListParams) => {
   });
 };
 
-export const useCreateExpense = () => {
+export const useCreateExpense = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: ExpenseFormValues) => expenseApi.createExpense(data),
+    mutationFn: (data: ExpenseFormValues) =>
+      expenseApi.createExpense(data, opts),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };
@@ -43,12 +44,12 @@ export const useBulkMarkFixed = () => {
   });
 };
 
-export const useUpdateExpense = () => {
+export const useUpdateExpense = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: ExpenseFormValues }) =>
-      expenseApi.updateExpense(id, data),
+      expenseApi.updateExpense(id, data, opts),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };
@@ -84,12 +85,12 @@ export const useCancelRefund = () => {
  * 고쳐 쓰기 — 잠긴 거래를 새 거래로 교체한다(D13). 옛 거래가 사라지고 새 거래가 생기므로
  * 거래 CRUD 와 같은 범위(`"ledger"`)를 턴다 — 카드 청구·잔액·분할·더치페이가 함께 움직인다.
  */
-export const useReplaceExpense = () => {
+export const useReplaceExpense = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: ExpenseFormValues }) =>
-      expenseApi.replaceExpense(id, data),
+      expenseApi.replaceExpense(id, data, opts),
     // 성공했을 때와 **404** 일 때 턴다. 404 는 옛 거래가 이미 없다는 뜻이다 — 응답만 못
     // 받은 채 다시 눌렀으면 교체는 앞선 요청에서 끝났다(다른 기기에서 지웠어도 같다). 안
     // 털면 목록에 사라진 옛 행이 남아 보인다(QA 26차 5). 그 밖의 실패는 서버가 아무것도

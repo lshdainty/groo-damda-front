@@ -10,11 +10,11 @@ export const useExpenseTemplates = () => {
   });
 };
 
-export const useCreateExpenseTemplate = () => {
+export const useCreateExpenseTemplate = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: ExpenseTemplateFormValues) =>
-      expenseTemplateApi.createTemplate(data),
+      expenseTemplateApi.createTemplate(data, opts),
     onSuccess: () => invalidateFor(queryClient, "expense-template"),
   });
 };

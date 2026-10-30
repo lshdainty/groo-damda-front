@@ -14,10 +14,14 @@ export const expenseTemplateApi = {
 
   createTemplate: async (
     data: ExpenseTemplateFormValues,
+    opts?: { silent?: boolean },
   ): Promise<ExpenseTemplate> => {
     const resp: ApiResponse<ExpenseTemplate> = await apiClient.post(
       "/v1/expense-template",
       data,
+      { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
+        silent?: boolean;
+      },
     );
     return resp.data;
   },

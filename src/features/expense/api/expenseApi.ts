@@ -35,10 +35,16 @@ export interface ExpenseSearchParams {
 }
 
 export const expenseApi = {
-  createExpense: async (data: ExpenseFormValues): Promise<Expense> => {
+  /** `silent` — 실패를 호출처(거래 추가 폼의 Callout)가 직접 알린다. 전역 서버 원문 토스트를 겹치지 않는다 */
+  createExpense: async (
+    data: ExpenseFormValues,
+    opts?: { silent?: boolean },
+  ): Promise<Expense> => {
+    const config: QuietRequestConfig = { silent: opts?.silent };
     const resp: ApiResponse<Expense> = await apiClient.post(
       "/v1/expense",
       data,
+      config,
     );
     return resp.data;
   },
@@ -54,10 +60,13 @@ export const expenseApi = {
   updateExpense: async (
     id: number,
     data: ExpenseFormValues,
+    opts?: { silent?: boolean },
   ): Promise<Expense> => {
+    const config: QuietRequestConfig = { silent: opts?.silent };
     const resp: ApiResponse<Expense> = await apiClient.put(
       `/v1/expense/${id}`,
       data,
+      config,
     );
     return resp.data;
   },
@@ -78,8 +87,12 @@ export const expenseApi = {
   replaceExpense: async (
     id: number,
     data: ExpenseFormValues,
+    opts?: { silent?: boolean },
   ): Promise<Expense> => {
-    const config: QuietRequestConfig = { silentStatuses: [404] };
+    const config: QuietRequestConfig = {
+      silentStatuses: [404],
+      silent: opts?.silent,
+    };
     const resp: ApiResponse<Expense> = await apiClient.post(
       `/v1/expense/${id}/replace`,
       data,

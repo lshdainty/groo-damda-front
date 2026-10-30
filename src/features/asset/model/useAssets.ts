@@ -157,24 +157,24 @@ export const useAssetTransfers = (params?: TransferListParams) => {
   });
 };
 
-export const useCreateTransfer = () => {
+export const useCreateTransfer = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: AssetTransferFormValues) =>
-      assetApi.createTransfer(data),
+      assetApi.createTransfer(data, opts),
     // 이자가 있는 이체는 지출 거래를 하나 만든다.
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };
 
 /** 이체 수정 — 서버가 이자 지출·잔액 이력을 다시 만든다. */
-export const useUpdateTransfer = () => {
+export const useUpdateTransfer = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: AssetTransferFormValues }) =>
-      assetApi.updateTransfer(id, data),
+      assetApi.updateTransfer(id, data, opts),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };
