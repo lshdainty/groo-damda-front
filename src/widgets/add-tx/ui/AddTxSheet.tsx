@@ -1122,71 +1122,41 @@ export function AddTxSheet({
                   // 카테고리 아이콘색 — 다크모드 light variant 자동 swap(앱 resolveChartColor 정합)
                   const catPal = getPaletteByColor(cat?.color);
                   return (
-                    <button
+                    <Chip
                       key={p.rowId}
-                      type="button"
+                      variant="outlineWeak"
+                      size="medium"
+                      selected={active}
+                      className="shrink-0"
+                      prefixIcon={
+                        cat ? (
+                          <span
+                            aria-hidden
+                            style={{ color: catPal.color }}
+                            className="inline-flex"
+                          >
+                            {renderIcon(
+                              cat.icon,
+                              cat.categoryName.charAt(0),
+                              14,
+                            )}
+                          </span>
+                        ) : undefined
+                      }
                       onClick={() => applyPreset(p)}
-                      style={{
-                        flex: "0 0 auto",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 7,
-                        padding: "7px 11px",
-                        // border 사각형 제거 — 아이콘+글씨만 노출. active 만 subtle 채움으로 강조.
-                        background: active
-                          ? "var(--bg-brand-subtle)"
-                          : "transparent",
-                        border: "none",
-                        borderRadius: "var(--radius-pill)",
-                        cursor: "pointer",
-                        fontSize: "var(--text-label-sm)",
-                        fontWeight: active ? 700 : 600,
-                        color: active
-                          ? "var(--fg-brand-strong)"
-                          : "var(--fg-primary)",
-                        whiteSpace: "nowrap",
-                        transition: "all 0.12s",
-                        fontFamily: "inherit",
-                      }}
                     >
-                      {cat && (
-                        <span
-                          style={{
-                            width: 18,
-                            height: 18,
-                            borderRadius: "var(--radius-sm)",
-                            background: catPal.bg,
-                            color: catPal.color,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {renderIcon(cat.icon, cat.categoryName.charAt(0), 11)}
-                        </span>
-                      )}
-                      <span>{p.templateName}</span>
+                      {p.templateName}
                       {showAmount && (
-                        <span
-                          className="num"
-                          style={{
-                            fontSize: "var(--text-badge)",
-                            color: active
-                              ? "var(--fg-brand-strong)"
-                              : "var(--fg-tertiary)",
-                            fontWeight: "600",
-                          }}
-                        >
+                        <span className="num ml-x1_5 text-fg-neutral-subtle">
                           {formatChartAxis(p.amount as number)}
                         </span>
                       )}
-                    </button>
+                    </Chip>
                   );
                 })}
                 {typePresets.length > topPresets.length && (
                   <Chip
-                    variant="solid"
+                    variant="outlineWeak"
                     size="medium"
                     className="shrink-0"
                     suffixIcon={<ChevronRight />}

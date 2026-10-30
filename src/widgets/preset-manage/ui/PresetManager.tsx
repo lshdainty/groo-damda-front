@@ -193,7 +193,6 @@ export function PresetManager({
           if (templatesQ.data === undefined) void templatesQ.refetch();
           if (categoriesQ.data === undefined) void categoriesQ.refetch();
         }}
-        className="px-x6"
       />
     );
   } else if (items.length === 0) {
@@ -210,7 +209,7 @@ export function PresetManager({
             ? { label: t("preset.add"), onClick: () => setEditing("new") }
             : undefined
         }
-        className="px-x6 [[data-slot=card]_&]:px-0"
+        className="[[data-slot=card]_&]:px-0"
       />
     );
   } else {
@@ -234,7 +233,7 @@ export function PresetManager({
   return (
     <>
       {mobile ? (
-        <div className="flex flex-col pb-x6">{content}</div>
+        <div className="flex min-h-full flex-col pb-x6">{content}</div>
       ) : (
         <>
           <ManagerHead

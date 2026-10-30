@@ -14,12 +14,17 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 
-const lists: { recurring?: unknown[]; presets?: unknown[] } = {};
+const lists: {
+  recurring?: unknown[];
+  presets?: unknown[];
+  categories?: unknown[];
+} = {};
 vi.mock("@/features/recurring-transaction", () => ({
   useRecurringTransactions: () => ({ data: lists.recurring }),
 }));
 vi.mock("@/features/expense", () => ({
   useExpenseTemplates: () => ({ data: lists.presets }),
+  useExpenseCategories: () => ({ data: lists.categories }),
 }));
 
 const { SettingsSubpageMobile } = await import("./SettingsSubpageMobile");
@@ -33,6 +38,7 @@ beforeEach(() => {
   root = createRoot(container);
   lists.recurring = undefined;
   lists.presets = undefined;
+  lists.categories = [];
 });
 afterEach(() => {
   act(() => root.unmount());
@@ -79,6 +85,14 @@ describe("폰 머리 추가 버튼", () => {
       expect(hasAddButton(id)).toBe(true);
     },
   );
+
+  it("프리셋 — 카테고리를 못 받았으면(실패 화면) 머리 추가가 없다", () => {
+    lists.presets = [{ rowId: 1 }];
+    lists.categories = undefined;
+    expect(hasAddButton("presets")).toBe(false);
+    lists.categories = [];
+    expect(hasAddButton("presets")).toBe(true);
+  });
 
   it("다른 섹션은 머리 오른쪽이 비어 있다", () => {
     expect(hasAddButton("devices")).toBe(false);
