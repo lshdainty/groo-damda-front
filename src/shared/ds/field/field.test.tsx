@@ -120,6 +120,28 @@ describe("Field", () => {
     expect(header.className).not.toContain("sr-only");
   });
 
+  it("글자 수는 세 자리마다 쉼표 — 10,000/10,000 · 4/200", () => {
+    render(
+      <Field label="메모" maxGraphemeCount={10000}>
+        <TestInput />
+      </Field>,
+    );
+    expect(count().textContent).toBe("0/10,000");
+  });
+
+  it("글자 수는 자소 단위다 — 국기 이모지 한 글자는 1(Intl.Segmenter, field-context.ts)", () => {
+    render(
+      <Field label="이름" maxGraphemeCount={3}>
+        <TestInput />
+      </Field>,
+    );
+    const el = input();
+    act(() => {
+      setNativeValue(el, "🇰🇷가");
+    });
+    expect(count().textContent).toBe("2/3");
+  });
+
   it("칸에 id 를 주면 라벨이 그 id 로 간다 — 칸에 직접 준 설명도 함께 잇는다", () => {
     render(
       <Field label="메모" description="목록에 보여요.">

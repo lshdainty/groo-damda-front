@@ -63,6 +63,9 @@ export interface FieldProps extends Omit<
   children: React.ReactNode;
 }
 
+// 글자 수는 세 자리마다 쉼표 — "10,000/10,000" · 줄어든 값은 "4/200"(언어와 상관없이 같은 모양)
+const formatCount = (n: number) => n.toLocaleString("en-US");
+
 const Field = React.forwardRef<HTMLDivElement, FieldProps>(
   (
     {
@@ -250,14 +253,14 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
                           : "text-fg-neutral"
                     }
                   >
-                    {count}
+                    {formatCount(count)}
                   </span>
                   <span
                     className={
                       invalid ? "text-fg-critical" : "text-fg-neutral-subtle"
                     }
                   >
-                    /{maxGraphemeCount}
+                    /{formatCount(maxGraphemeCount)}
                   </span>
                 </p>
               )}
