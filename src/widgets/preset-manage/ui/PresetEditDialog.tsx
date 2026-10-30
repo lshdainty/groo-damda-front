@@ -283,7 +283,12 @@ export function PresetEditDialog({
       // 이체 칸도 이 화면의 칸이다 — 지출·수입으로 바꿔 저장하면 `null` 로 지워진다.
       toAssetRowId: isTransfer ? toAssetRowId : null,
       fee: isTransfer && fee ? Number(fee) : null,
-      interestAmount: showInterest && interest ? Number(interest) : null,
+      // 자산을 받기 전이면 대출인지 모르니 읽어 온 값을 그대로 보낸다(받은 뒤에는 지금 규칙) — 안 그러면 조용히 null 로 저장된다
+      interestAmount:
+        (assetsQ.data === undefined ? isTransfer && lock : showInterest) &&
+        interest
+          ? Number(interest)
+          : null,
       assetRowId: assetRowId ?? null,
       expenseType: type,
       // 금액만 계약이 다르다 — `lockAmount` 와 한 쌍이라 서버가 둘을 함께 본다.

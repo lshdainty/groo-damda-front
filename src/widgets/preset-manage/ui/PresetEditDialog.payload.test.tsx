@@ -698,3 +698,26 @@ describe("카테고리를 늦게 받을 때 — 받기 전 유지 · 받았는�
     expect(document.body.textContent).toContain("preset.categoryRequired");
   });
 });
+
+describe("자산을 받기 전에 저장해도 이자는 읽어 온 그대로 나간다 (요청 본문)", () => {
+  it("자산 조회가 대기 중인 채 저장 → interestAmount 20000 유지", async () => {
+    assetState.loaded = false;
+    render({
+      ...basePreset,
+      expenseType: "TRANSFER",
+      categoryRowId: null,
+      categoryName: null,
+      assetRowId: 3,
+      toAssetRowId: 6,
+      toAssetName: "대출",
+      fee: 500,
+      interestAmount: 20000,
+      amount: 300000,
+      lockAmount: "Y",
+    });
+    await clickSave();
+
+    expect(sent.update!.interestAmount).toBe(20000);
+    assetState.loaded = true;
+  });
+});
