@@ -321,7 +321,7 @@ export function TxStep2({ f }: { f: TxForm }) {
             title={t("addTx.fromAccountRow")}
             prefix={<Wallet />}
             value={asset(f.fromAssetRowId)}
-            placeholder={t("addTx.selectPlaceholder")}
+            placeholder={t("addTx.fromAccountPick")}
             errorMessage={show && f.errors.from ? t("addTx.errFrom") : null}
           >
             {({ close }) => (
@@ -342,7 +342,7 @@ export function TxStep2({ f }: { f: TxForm }) {
             title={t("addTx.toAccount")}
             prefix={<Wallet />}
             value={asset(f.toAssetRowId)}
-            placeholder={t("addTx.selectPlaceholder")}
+            placeholder={t("addTx.toAccountPick")}
             errorMessage={show && f.errors.to ? t("addTx.errTo") : null}
           >
             {({ close }) => (
@@ -388,7 +388,7 @@ export function TxStep2({ f }: { f: TxForm }) {
             title={t("addTx.category")}
             prefix={<Tags />}
             value={catText}
-            placeholder={t("addTx.selectPlaceholder")}
+            placeholder={t("addTx.noCategoryValue")}
             dot={cat ? getPaletteByColor(cat.color).color : undefined}
             errorMessage={
               show && f.errors.category ? t("addTx.errCategory") : null
@@ -407,7 +407,11 @@ export function TxStep2({ f }: { f: TxForm }) {
               title={isIncome ? t("addTx.depositAccount") : t("addTx.account")}
               prefix={<Wallet />}
               value={asset(f.assetRowId)}
-              placeholder={t("addTx.none")}
+              placeholder={
+                isIncome
+                  ? t("addTx.noDepositAccount")
+                  : t("addTx.noAccountOption")
+              }
               surfaceTitle={t("addTx.account")}
             >
               {({ close }) => (
@@ -455,7 +459,9 @@ export function TxStep2({ f }: { f: TxForm }) {
               }
               prefix={<CreditCard />}
               value={methodLabel}
-              placeholder={none}
+              placeholder={
+                isIncome ? t("addTx.noIncomeMethod") : t("addTx.noMethodOption")
+              }
             >
               {({ close }) => (
                 <SimplePickBody

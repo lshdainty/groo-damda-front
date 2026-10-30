@@ -1648,6 +1648,11 @@ expense,addTx.memo,메모,Memo
 expense,addTx.none,없음,None
 expense,addTx.noAccountOption,계좌·카드 없음,No account or card
 expense,addTx.noMethodOption,결제 수단 없음,No payment method
+expense,addTx.noCategoryValue,카테고리 없음,No category
+expense,addTx.noDepositAccount,입금 계좌 없음,No deposit account
+expense,addTx.noIncomeMethod,수입 방식 없음,No income method
+expense,addTx.fromAccountPick,보내는 계좌 선택,Select the sending account
+expense,addTx.toAccountPick,받는 계좌 선택,Select the receiving account
 expense,addTx.toAccount,받는 계좌,To account
 expense,addTx.fromAccountRow,보내는 계좌,From account
 expense,addTx.errCategory,카테고리를 골라주세요.,Choose a category.
