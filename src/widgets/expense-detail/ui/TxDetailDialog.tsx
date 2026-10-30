@@ -165,8 +165,9 @@ export function TxDetailDialog({
   })();
   // 머리 숫자는 이 달 전체(이 거래 포함) — 줄은 최대 5 개라 넘으면 보조 글이 말한다
   const merchantMonthCount = historyQ.data?.length ?? 0;
+  // 환불된 거래는 합계에서 뺀다 — 환불 안내("합계에서 빠져요")와 머리 숫자가 어긋나지 않게
   const merchantMonthTotal = (historyQ.data ?? []).reduce(
-    (s, tx) => s + Math.abs(tx.amount),
+    (s, tx) => (tx.refundedAt ? s : s + Math.abs(tx.amount)),
     0,
   );
 

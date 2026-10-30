@@ -72,7 +72,7 @@ export function DetailHeadBlock({
   dateTime: string;
 }) {
   return (
-    <div data-slot="tx-detail-head" className="px-global-gutter pb-x3">
+    <div data-slot="tx-detail-head" className="px-global-gutter pb-x4">
       <div className="flex items-center gap-x3">
         {tile}
         <h3 className="m-0 min-w-0 flex-1 font-sans text-t7 font-bold text-fg-neutral [overflow-wrap:anywhere]">
