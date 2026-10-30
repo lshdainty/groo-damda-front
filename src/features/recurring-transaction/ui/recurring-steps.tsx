@@ -109,7 +109,7 @@ export function AmountStep({
   return (
     <div className="pb-x2 pt-x3">
       <AmountInput
-        size="large"
+        variant="underline"
         autoFocus
         aria-label={label}
         value={value}
