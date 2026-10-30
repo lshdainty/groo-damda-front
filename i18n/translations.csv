@@ -1433,16 +1433,16 @@ card,benefit.includeDiscontinued,단종 카드 포함,Include discontinued cards
 card,benefit.typeAll,전체,All
 card,benefit.emptyTitle,찾는 카드가 없어요,No cards found
 card,benefit.emptyDesc,다른 검색어나 조건으로 찾아보세요.,Try a different search term or filter.
-card,benefit.annualFeeAmount,연회비 {{amount}}원,Annual fee {{amount}} KRW
+card,benefit.annualFeeAmount,연회비 {{amount}}원,Annual fee ₩{{amount}}
 card,benefit.annualFeeLabel,연회비 {{label}},Annual fee {{label}}
 card,benefit.feeNone,없음,None
 card,benefit.feeUnknown,정보 없음,Unknown
 card,benefit.feeFree,무료,Free
-card,benefit.performanceAmount,실적 {{amount}}원,Spending {{amount}} KRW
+card,benefit.performanceAmount,실적 {{amount}}원,Spending ₩{{amount}}
 card,benefit.performanceNone,실적 없음,No spending requirement
 card,benefit.detailTitle,카드 상세,Card details
-card,benefit.annualFeeDomestic,국내전용 {{amount}}원,Domestic {{amount}} KRW
-card,benefit.performanceAtLeast,{{amount}}원 이상,{{amount}} KRW or more
+card,benefit.annualFeeDomestic,국내전용 {{amount}}원,Domestic ₩{{amount}}
+card,benefit.performanceAtLeast,{{amount}}원 이상,₩{{amount}} or more
 card,benefit.statAnnualFee,연회비,Annual fee
 card,benefit.statPerformance,전월 실적,Prior-month spending
 card,benefit.topTagsTitle,주요 혜택 태그,Key benefit tags
