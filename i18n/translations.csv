@@ -1654,6 +1654,7 @@ expense,addTx.errCategory,카테고리를 골라주세요.,Choose a category.
 expense,addTx.errFrom,보내는 계좌를 골라주세요.,Choose the account to send from.
 expense,addTx.errTo,받는 계좌를 골라주세요.,Choose the account to send to.
 expense,addTx.errFx,환율을 입력하거나 원화 금액을 넣어주세요.,Enter the exchange rate or the amount in won.
+expense,addTx.errInterest,이자는 금액보다 클 수 없어요.,Interest cannot be more than the amount.
 expense,addTx.splitsLoading,나눈 내역을 불러오는 중이에요. 잠시 뒤 다시 눌러주세요.,Loading the split items. Try again in a moment.
 expense,addTx.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't save. Please try again in a moment.
 expense,addTx.categoryLoadFailed,카테고리를 불러오지 못했어요,Couldn't load categories
@@ -1675,6 +1676,7 @@ expense,savePreset.amountRow,금액,Amount
 expense,savePreset.amountEmpty,비워 둠,Left empty
 expense,savePreset.amountHint,비워 두면 불러올 때 금액을 직접 넣어요.,"If left empty, you enter the amount each time you use it."
 expense,savePreset.nameRequired,프리셋 이름을 입력해주세요.,Enter a preset name.
+expense,savePreset.nameDuplicate,같은 이름의 프리셋이 있어요.,A preset with this name already exists.
 expense,savePreset.needParties,보내는 계좌와 받는 계좌를 먼저 골라주세요.,Choose the sending and receiving accounts first.
 expense,savePreset.saved,{{name}} 프리셋을 저장했어요,Saved the {{name}} preset
 expense,addTx.amountTooLarge,금액은 100억원까지 입력할 수 있어요.,Amount can be up to 10 billion won.

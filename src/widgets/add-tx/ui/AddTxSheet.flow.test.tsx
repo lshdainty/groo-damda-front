@@ -756,3 +756,166 @@ describe("결제 문자에서 온 내역의 거래 종류 (QA #123)", () => {
     expect(document.body.querySelector('[role="switch"]')).toBeNull();
   });
 });
+
+describe("외화 — 원화 금액 줄은 원화만 고친다 (H1)", () => {
+  it("$5.50 · 환율 1,350 거래의 청구액을 7,500 으로 고쳐도 현지 금액 · 환율은 그대로다", async () => {
+    prefs.defaultCurrency = "USD";
+    await open();
+    setValue(amountInput(), "5.50");
+    await press("addTx.next");
+    setValue(
+      document.body.querySelector<HTMLInputElement>(
+        'input[inputmode="decimal"]',
+      )!,
+      "1350",
+    );
+    await tick();
+    expect(dialogText()).toContain("7,425원");
+    click(row("addTx.krwAmount"));
+    await tick();
+    // 원화 줄 전용 칸 — 통화 칩이 없고 값은 원화다
+    const krw = document.body.querySelector<HTMLInputElement>(
+      'input[aria-label="addTx.krwAmount"]',
+    )!;
+    expect(krw.value).toBe("7,425");
+    expect(
+      document.body.querySelector('[aria-label="addTx.currencyChip"]'),
+    ).toBeNull();
+    setValue(krw, "7500");
+    await press("done");
+    expect(dialogText()).toContain("7,500원");
+    click(row("addTx.category"));
+    await tick();
+    click(lastButton("식비"));
+    await tick();
+    await press("addTx.add");
+    expect(sent.create).toMatchObject({
+      amount: 7500,
+      originalAmount: 5.5,
+      originalCurrency: "USD",
+      exchangeRate: 1350,
+    });
+  });
+
+  it("환율을 모르면 원화 금액만 넣어도 저장된다", async () => {
+    prefs.defaultCurrency = "USD";
+    await open();
+    setValue(amountInput(), "5.50");
+    await press("addTx.next");
+    click(row("addTx.krwAmount"));
+    await tick();
+    setValue(
+      document.body.querySelector<HTMLInputElement>(
+        'input[aria-label="addTx.krwAmount"]',
+      )!,
+      "7500",
+    );
+    await press("done");
+    click(row("addTx.category"));
+    await tick();
+    click(lastButton("식비"));
+    await tick();
+    await press("addTx.add");
+    expect(sent.create).toMatchObject({
+      amount: 7500,
+      originalAmount: 5.5,
+      originalCurrency: "USD",
+    });
+  });
+});
+
+describe("고칠 수 있는 거절은 서버에 가기 전에 칸 오류로 막는다 (M4)", () => {
+  it("이자가 금액보다 크면 보내지 않고 이자 줄 아래에 글을 보인다", async () => {
+    state.assets = [
+      asset(1, "주거래", "BANK_ACCOUNT"),
+      asset(3, "전세대출", "LOAN"),
+    ];
+    await open();
+    click(lastButton("addTx.transfer"));
+    await tick();
+    setValue(amountInput(), "100000");
+    await press("addTx.next");
+    click(row("addTx.fromAccountRow"));
+    await tick();
+    click(lastButton("주거래"));
+    await tick();
+    click(row("addTx.toAccount"));
+    await tick();
+    click(lastButton("전세대출"));
+    await tick();
+    click(row("addTx.interest"));
+    await tick();
+    setValue(
+      document.body.querySelector<HTMLInputElement>(
+        'input[aria-label="addTx.interest"]',
+      )!,
+      "200000",
+    );
+    await press("done");
+    await press("addTx.add");
+    expect(sent.calls).toBe(0);
+    expect(dialogText()).toContain("addTx.errInterest");
+  });
+
+  it("이미 있는 프리셋 이름이면 저장하지 않고 이름 칸 아래에 글을 보인다", async () => {
+    state.presets = [
+      {
+        rowId: 1,
+        templateName: "점심",
+        expenseType: "EXPENSE",
+        categoryRowId: 11,
+        lockAmount: "N",
+        amount: null,
+        useCount: 1,
+      },
+    ];
+    await open();
+    setValue(amountInput(), "7000");
+    await press("addTx.next");
+    click(row("addTx.category"));
+    await tick();
+    click(lastButton("식비"));
+    await tick();
+    click(
+      document.body.querySelector<HTMLElement>(
+        "[data-slot=bottom-sheet-back]",
+      )!,
+    );
+    await tick();
+    await press("addTx.saveCurrentInput");
+    setValue(
+      document.body.querySelector<HTMLInputElement>(
+        "[role=dialog] input:not([type=hidden])",
+      )!,
+      "점심",
+    );
+    await press("save");
+    expect(sent.preset).toBeNull();
+    expect(dialogText()).toContain("savePreset.nameDuplicate");
+  });
+});
+
+describe("한글 조합 중 Enter 는 저장하지 않는다 (L2)", () => {
+  it("조합 중 Enter 는 무시하고 조합이 끝난 Enter 만 저장한다", async () => {
+    await open({ expense });
+    const merchant = [...document.body.querySelectorAll("input")].find(
+      (i) => i.value === "식당",
+    )!;
+    await act(async () => {
+      merchant.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "Enter",
+          bubbles: true,
+          isComposing: true,
+        }),
+      );
+    });
+    expect(sent.calls).toBe(0);
+    await act(async () => {
+      merchant.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+      );
+    });
+    expect(sent.calls).toBe(1);
+  });
+});

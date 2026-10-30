@@ -37,6 +37,8 @@ const st = vi.hoisted(() => ({
   smsInstallment: null as number | null,
   /** 카드가 결제를 끝낸 마지막 회차의 말일. */
   closedThrough: "2026-08-31" as string | null,
+  /** 수정 저장 요청이 실패한다 */
+  updateFail: false,
 }));
 
 vi.mock("react-i18next", () => ({
@@ -72,11 +74,15 @@ vi.mock("@/features/expense", () => ({
   useUpdateExpense: () => ({
     mutate: (
       { data }: { id: number; data: Record<string, unknown> },
-      opts?: { onSuccess?: (r: unknown) => void },
+      opts?: {
+        onSuccess?: (r: unknown) => void;
+        onSettled?: () => void;
+      },
     ) => {
       st.update = data;
       st.updates += 1;
-      opts?.onSuccess?.(st.updateReply);
+      if (!st.updateFail) opts?.onSuccess?.(st.updateReply);
+      opts?.onSettled?.();
     },
     isPending: false,
   }),
@@ -233,6 +239,7 @@ beforeEach(() => {
   st.smsDate = "2026-08-20T10:00:00";
   st.smsInstallment = null;
   st.closedThrough = "2026-08-31";
+  st.updateFail = false;
   // Radix Select 는 포인터 캡처·스크롤 API 를 쓴다 — jsdom 엔 없어서 채워 준다.
   const proto = window.HTMLElement.prototype as unknown as Record<
     string,
@@ -507,5 +514,21 @@ describe("날짜가 닫힌 회차에 드는 새 카드 거래", () => {
 
     expect(bodyText()).toContain("closedCycle.note");
     expect(st.create).toBeNull();
+  });
+});
+
+describe("확인창을 거친 저장이 실패하면 (M1)", () => {
+  it("확인창이 닫혀 폼 맨 위 알림이 가려지지 않고, 폼은 그대로 남는다", async () => {
+    st.closedThrough = "2026-09-30";
+    st.updateFail = true;
+    render(cardExpense);
+    await click(sheetSave());
+    expect(bodyText()).toContain("closedCycle.note");
+
+    await click(dialogSave());
+
+    expect(st.updates).toBe(1);
+    expect(bodyText()).not.toContain("closedCycle.note");
+    expect(bodyText()).toContain("addTx.editTitle");
   });
 });

@@ -52,7 +52,14 @@ export type TxType = "EXPENSE" | "INCOME" | "TRANSFER";
 
 /** 검증이 걸리는 칸 — 틀린 칸에 초점을 옮긴다 */
 export type TxField =
-  "entry" | "category" | "from" | "to" | "fx" | "fxAmount" | "splits";
+  | "entry"
+  | "category"
+  | "from"
+  | "to"
+  | "fx"
+  | "fxAmount"
+  | "interest"
+  | "splits";
 
 /** 1단계 값 단계의 한 칸 */
 export type TxSub =
@@ -63,7 +70,9 @@ export type TxSub =
   | "sms"
   | "presetAll"
   | "presetSave"
-  | "presetAmount";
+  | "presetAmount"
+  /** 외화 거래의 원화 금액 줄 — 카드사 청구액으로 원화만 고친다(현지 금액 · 환율은 그대로) */
+  | "krwAmount";
 
 export type TxFormProps = {
   onClose: () => void;
@@ -284,6 +293,8 @@ export function useTxForm({
   const [rememberCard, setRememberCard] = useState(false);
   /** 문자 해석 확신이 낮다 — 2단계 맨 위 Callout 이 확인을 부탁한다 */
   const [smsLow, setSmsLow] = useState(false);
+  /** 문자를 읽는 중 — [문자 읽기] 버튼 진행 표시 */
+  const [smsLoading, setSmsLoading] = useState(false);
 
   // 분할 합 일치화: 금액을 바꿔 기존 분할 합과 어긋날 때 맞추기 플로우
   const [openReconcile, setOpenReconcile] = useState(false);
@@ -377,6 +388,7 @@ export function useTxForm({
     to: null,
     fx: null,
     fxAmount: null,
+    interest: null,
     splits: null,
   });
   const pendingFocus = useRef<TxField | null>(null);
@@ -592,6 +604,12 @@ export function useTxForm({
     to:
       type === "TRANSFER" &&
       (!toAssetRowId || (!!fromAssetRowId && fromAssetRowId === toAssetRowId)),
+    /** 이자는 상환액 안에 포함된 몫이라 그보다 클 수 없다(서버 ASSET_TRANSFER_INVALID_INTEREST) — 칸 오류로 먼저 막는다 */
+    interest:
+      type === "TRANSFER" &&
+      !!interest &&
+      amountNumber > 0 &&
+      Number(interest) > amountNumber,
     /** 외화인데 환율도 원화 금액도 없다 */
     fx: isForeignTx && entryNumber > 0 && amountNumber <= 0,
     splitsPending:
@@ -602,6 +620,7 @@ export function useTxForm({
     if (errors.category) return "category";
     if (errors.from) return "from";
     if (errors.to) return "to";
+    if (errors.interest) return "interest";
     if (errors.fx) return "fx";
     if (errors.tooLarge) return "fxAmount";
     if (errors.splitsPending) return "splits";
@@ -738,6 +757,8 @@ export function useTxForm({
   const savingRef = useRef(false);
   const unlock = () => {
     savingRef.current = false;
+    // 확인창을 거친 저장이 실패해도 확인창이 남아 알림을 가리지 않는다 — 성공이면 어차피 닫힌다
+    setSaveConfirm(null);
   };
   /** 저장 확인창의 저장 — 다시 잠그고 기다리던 저장을 보낸다. */
   const confirmSave = () => {
@@ -1057,7 +1078,8 @@ export function useTxForm({
 
   // ── 프리셋으로 저장 (E 32) — 같은 시트 안 한 단계 ──
   const openPresetSave = () => {
-    setPresetName(merchant);
+    // 이름은 12자까지 — 거래처가 더 길어도 처음 값이 상한을 넘지 않게 자른다
+    setPresetName([...merchant].slice(0, 12).join(""));
     setPresetAmount(amountNumber > 0 ? String(amountNumber) : "");
     setPresetShow(false);
     createPresetMut.reset();
@@ -1068,7 +1090,7 @@ export function useTxForm({
     setPresetShow(true);
     if (createPresetMut.isPending) return;
     const name = presetName.trim();
-    if (presetNeeds || !name) return;
+    if (presetNeeds || presetNameIssue) return;
     const transfer = type === "TRANSFER";
     const amt = parseAmount(presetAmount);
     const locked = amt > 0;
@@ -1099,6 +1121,13 @@ export function useTxForm({
     );
   };
   const presetFailed = createPresetMut.isError;
+  /** 프리셋 이름 — 비었거나 이미 있는 이름이면 칸 오류로 먼저 막는다(서버 EXPENSE_TEMPLATE_DUPLICATE_NAME) */
+  const presetNameIssue: "required" | "duplicate" | null =
+    presetName.trim().length === 0
+      ? "required"
+      : templates.some((p) => p.templateName === presetName.trim())
+        ? "duplicate"
+        : null;
 
   /** 문자 단계가 성공했다 — 채운 값으로 2단계 */
   const finishSms = () => {
@@ -1233,6 +1262,8 @@ export function useTxForm({
     openPresetSave,
     savePreset,
     presetFailed,
+    presetNameIssue,
+    presetSaving: createPresetMut.isPending,
     finishSms,
     presetNeeds,
     main,
@@ -1249,6 +1280,8 @@ export function useTxForm({
     errors,
     entryNumber,
     smsLow,
+    smsLoading,
+    setSmsLoading,
     setSmsLow,
     togglePreset,
     changeType,

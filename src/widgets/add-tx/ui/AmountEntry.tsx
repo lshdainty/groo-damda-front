@@ -94,7 +94,10 @@ export function AmountEntry({
         autoFocus={autoFocus}
         aria-invalid={invalid || undefined}
         value={formatDecimal(f.origAmount)}
-        onChange={(e) => f.setOrigAmount(sanitizeDecimal(e.target.value))}
+        onChange={(e) => {
+          f.setOrigAmount(sanitizeDecimal(e.target.value));
+          f.clearPresetMark();
+        }}
         onKeyDown={enter}
         suffix={showChip ? <CurrencyChip f={f} /> : undefined}
       />

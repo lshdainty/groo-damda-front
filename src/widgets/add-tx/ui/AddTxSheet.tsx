@@ -24,6 +24,7 @@ import { amountText } from "../lib/amount-format";
 import {
   AmountSub,
   FeeSub,
+  KrwAmountSub,
   MemoSub,
   PresetAllSub,
   PresetAmountSub,
@@ -105,6 +106,8 @@ function AddTxSheetBody(
   });
   const embedded = props.embed != null;
   const back = (): boolean => {
+    // 저장이 나가 있는 동안은 나가지 않는다 — 나가면 응답 뒤 콜백(onSaved · 알림)이 사라진다
+    if (f.submitting) return false;
     if (sub) return leave.request();
     if (twoOfTwo) {
       f.setMain("1");
@@ -170,6 +173,7 @@ function AddTxSheetBody(
     presetAll: t("addTx.presetAllTitle"),
     presetSave: t("savePreset.title"),
     presetAmount: t("addTx.amountStepTitle"),
+    krwAmount: t("addTx.krwAmount"),
   };
 
   const eyebrow = (text: string) => (
@@ -211,7 +215,11 @@ function AddTxSheetBody(
   let footer: React.ReactNode = null;
   if (sub === "sms") {
     footer = (
-      <Button size={btnSize} onClick={() => smsRunRef.current?.()}>
+      <Button
+        size={btnSize}
+        loading={f.smsLoading}
+        onClick={() => smsRunRef.current?.()}
+      >
         {t("sms.pasteAction")}
       </Button>
     );
@@ -219,7 +227,7 @@ function AddTxSheetBody(
     footer = (
       <Button
         size={btnSize}
-        loading={f.submitting}
+        loading={f.presetSaving}
         onClick={() =>
           f.savePreset((name) =>
             snackbar.show({
@@ -258,6 +266,8 @@ function AddTxSheetBody(
     )
   ) : sub === "amount" ? (
     <AmountSub f={f} />
+  ) : sub === "krwAmount" ? (
+    <KrwAmountSub f={f} />
   ) : sub === "memo" ? (
     <MemoSub f={f} />
   ) : sub === "fee" ? (
@@ -307,6 +317,7 @@ function AddTxSheetBody(
 
   if (props.embed) {
     const embedBack = () => {
+      if (f.submitting) return;
       if (sub) f.leaveSub(true);
       else if (twoOfTwo) f.setMain("1");
       else props.onBack?.();
@@ -369,7 +380,7 @@ function AddTxSheetBody(
         // 단계 안에서는 ← 가 묻는다 — 시트 전체를 닫는 물음은 단계 밖에서만
         dirty={f.dirty && !sub}
         onOpenChange={(next) => {
-          if (next) return;
+          if (next || f.submitting) return;
           if (sub) {
             void leave.request();
             return;

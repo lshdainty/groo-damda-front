@@ -94,7 +94,10 @@ export function CategoryPickBody({
         }
         suffix={on ? <Check aria-hidden /> : undefined}
         onClick={() => {
-          if (!on) f.setCategoryRowId(c.rowId);
+          if (!on) {
+            f.setCategoryRowId(c.rowId);
+            f.clearPresetMark();
+          }
           close();
         }}
       />

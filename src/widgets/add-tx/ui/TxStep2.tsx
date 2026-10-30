@@ -30,6 +30,7 @@ import {
   TimePickSurface,
 } from "@/widgets/calendar/ui/event-form/pickers";
 import { transferEligible } from "@/features/asset-transfer";
+import { isEnterSave } from "@/shared/lib/groo/enter-save";
 import { amountText } from "../lib/amount-format";
 import { INSTALLMENT_MONTHS, type TxForm } from "../model/use-tx-form";
 import { TypeChips } from "./TxStep1";
@@ -247,7 +248,7 @@ export function TxStep2({ f }: { f: TxForm }) {
             }
             onChange={(e) => f.setMerchant(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (isEnterSave(e)) {
                 e.preventDefault();
                 f.save();
               }
@@ -279,9 +280,10 @@ export function TxStep2({ f }: { f: TxForm }) {
               autoComplete="off"
               value={f.fxRate}
               placeholder="0"
-              onChange={(e) =>
-                f.setFxRate(e.target.value.replace(/[^0-9.]/g, ""))
-              }
+              onChange={(e) => {
+                f.setFxRate(e.target.value.replace(/[^0-9.]/g, ""));
+                f.clearPresetMark();
+              }}
             />
           </Field>
           <StepRow
@@ -291,7 +293,21 @@ export function TxStep2({ f }: { f: TxForm }) {
             value={f.amountNumber > 0 ? money(f.amountNumber) : none}
             empty={f.amountNumber <= 0}
             errorMessage={f.errors.tooLarge ? t("addTx.amountTooLarge") : null}
-            onClick={() => f.setSub("amount")}
+            onClick={() => f.setSub("krwAmount")}
+          />
+        </>
+      )}
+      {!isTransfer && f.isForeignTx && locked && (
+        <>
+          <LockedRow
+            title={t("addTx.fxRateLabel")}
+            prefix={<Percent />}
+            value={f.fxRate || none}
+          />
+          <LockedRow
+            title={t("addTx.krwAmount")}
+            prefix={<Coins />}
+            value={f.amountNumber > 0 ? money(f.amountNumber) : none}
           />
         </>
       )}
@@ -312,7 +328,10 @@ export function TxStep2({ f }: { f: TxForm }) {
                 close={close}
                 list={eligible.filter((a) => a.rowId !== f.toAssetRowId)}
                 value={f.fromAssetRowId}
-                onPick={(id) => f.setFromAssetRowId(id)}
+                onPick={(id) => {
+                  f.setFromAssetRowId(id);
+                  f.clearPresetMark();
+                }}
               />
             )}
           </PickRow>
@@ -330,7 +349,10 @@ export function TxStep2({ f }: { f: TxForm }) {
                 close={close}
                 list={eligible.filter((a) => a.rowId !== f.fromAssetRowId)}
                 value={f.toAssetRowId}
-                onPick={(id) => f.setToAssetRowId(id)}
+                onPick={(id) => {
+                  f.setToAssetRowId(id);
+                  f.clearPresetMark();
+                }}
               />
             )}
           </PickRow>
@@ -347,6 +369,10 @@ export function TxStep2({ f }: { f: TxForm }) {
               prefix={<Percent />}
               value={f.interest ? money(Number(f.interest)) : none}
               empty={!f.interest}
+              ref={f.refFor("interest")}
+              errorMessage={
+                show && f.errors.interest ? t("addTx.errInterest") : null
+              }
               onClick={() => f.setSub("interest")}
             />
           )}
@@ -389,7 +415,10 @@ export function TxStep2({ f }: { f: TxForm }) {
                   allowNone
                   list={f.filteredAssets}
                   value={f.assetRowId}
-                  onPick={(id) => f.setAssetRowId(id)}
+                  onPick={(id) => {
+                    f.setAssetRowId(id);
+                    f.clearPresetMark();
+                  }}
                 />
               )}
             </PickRow>
@@ -431,7 +460,10 @@ export function TxStep2({ f }: { f: TxForm }) {
                   label={t("addTx.paymentMethodRow")}
                   items={methodItems}
                   value={f.paymentMethod}
-                  onPick={f.setPaymentMethod}
+                  onPick={(v) => {
+                    f.setPaymentMethod(v);
+                    f.clearPresetMark();
+                  }}
                   close={close}
                 />
               )}
@@ -471,7 +503,10 @@ export function TxStep2({ f }: { f: TxForm }) {
                       })),
                     ]}
                     value={f.installmentMonths}
-                    onPick={f.setInstallmentMonths}
+                    onPick={(v) => {
+                      f.setInstallmentMonths(v);
+                      f.clearPresetMark();
+                    }}
                     close={close}
                   />
                 )}

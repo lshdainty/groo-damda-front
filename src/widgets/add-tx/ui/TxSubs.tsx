@@ -47,6 +47,35 @@ export function AmountSub({ f }: { f: TxForm }) {
   );
 }
 
+/** 원화 금액 단계(D 22) — 외화 거래의 카드사 청구액으로 원화만 고친다. 현지 금액 · 환율은 그대로(통화 칩 없음) */
+export function KrwAmountSub({ f }: { f: TxForm }) {
+  const { t } = useTranslation("expense");
+  const err = f.errors.tooLarge ? t("addTx.amountTooLarge") : undefined;
+  return (
+    <Field
+      label={t("addTx.krwAmount")}
+      invalid={!!err}
+      errorMessage={err}
+      className="px-global-gutter pb-x2 pt-x3 [&_label]:sr-only"
+    >
+      <AmountInput
+        variant="underline"
+        aria-label={t("addTx.krwAmount")}
+        autoFocus
+        value={f.amount}
+        max={MAX_AMOUNT}
+        onValueChange={f.setAmount}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            f.setSub(null);
+          }
+        }}
+      />
+    </Field>
+  );
+}
+
 /** 메모 단계 — Textarea 최대 500 */
 export function MemoSub({ f }: { f: TxForm }) {
   const { t } = useTranslation("expense");
@@ -121,6 +150,7 @@ export function SmsSub({
       return;
     }
     setLoading(true);
+    f.setSmsLoading(true);
     setNotice(null);
     try {
       const parsed = await parseSms(value, { silent: true });
@@ -140,6 +170,7 @@ export function SmsSub({
       setNotice(t("sms.parseFailed"));
     } finally {
       setLoading(false);
+      f.setSmsLoading(false);
     }
   };
   runRef.current = () => void run();
@@ -226,8 +257,10 @@ export function PresetSaveSub({ f }: { f: TxForm }) {
     f.assets.find((a) => a.rowId === f.assetRowId)?.assetName ?? null;
   const presetAmountNum = Number(f.presetAmount) || 0;
   const issue =
-    f.presetShow && f.presetName.trim().length === 0
-      ? t("savePreset.nameRequired")
+    f.presetShow && f.presetNameIssue
+      ? f.presetNameIssue === "required"
+        ? t("savePreset.nameRequired")
+        : t("savePreset.nameDuplicate")
       : null;
   const needs =
     f.presetShow && f.presetNeeds
