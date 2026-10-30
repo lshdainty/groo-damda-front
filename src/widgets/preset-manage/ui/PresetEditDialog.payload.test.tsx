@@ -675,3 +675,26 @@ describe("열 때 초점 (일정 폼 M-2 와 같다)", () => {
     ).not.toBeNull();
   });
 });
+
+describe("카테고리를 늦게 받을 때 — 받기 전 유지 · 받았는데 없으면 비움", () => {
+  it("받기 전에는 읽어 온 카테고리를 유지한다 → 받은 뒤 저장하면 그대로 나간다", async () => {
+    catState.fail = true; // 아직 못 받음(data 없음)
+    render(basePreset);
+    catState.fail = false;
+    render(basePreset);
+    await tick();
+    await clickSave();
+
+    expect(sent.update!.categoryRowId).toBe(11);
+  });
+
+  it("받았는데 목록에 없으면(지운 카테고리) 비운다 → 지운 id 가 저장되지 않는다", async () => {
+    catState.fail = false;
+    render({ ...basePreset, categoryRowId: 99, categoryName: "지운 카테고리" });
+    await tick();
+    await clickSave();
+
+    expect(sent.update).toBeNull();
+    expect(document.body.textContent).toContain("preset.categoryRequired");
+  });
+});
