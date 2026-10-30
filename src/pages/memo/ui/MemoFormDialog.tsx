@@ -159,7 +159,6 @@ export function MemoFormDialog({
           )}
           <Field
             label={t("titlePlaceholder")}
-            maxGraphemeCount={TITLE_MAX}
             invalid={showError && titleEmpty}
             errorMessage={t("titleRequired")}
             labelHidden

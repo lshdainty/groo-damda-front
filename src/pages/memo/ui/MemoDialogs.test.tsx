@@ -271,8 +271,9 @@ describe("메모 폼 — 검수 고침", () => {
 
   it("글자 수가 붙고(제목 200 · 내용 10,000) 이모지도 UTF-16 한도를 넘지 않는다(M6)", () => {
     form(null);
-    expect(document.body.textContent).toContain("/10000");
-    expect(document.body.textContent).toContain("/200");
+    // 글자 수는 내용에만 붙는다(textarea.md) — 제목은 상한 200 만 조용히 둔다
+    expect(document.body.textContent).toContain("0/10,000");
+    expect(document.body.textContent).not.toContain("/200");
     setValue(q<HTMLTextAreaElement>("textarea")!, "😀".repeat(6000));
     const v = q<HTMLTextAreaElement>("textarea")!.value;
     expect(v.length).toBeLessThanOrEqual(10_000);
