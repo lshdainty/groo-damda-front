@@ -581,6 +581,21 @@ describe("B 12 — 이 가맹점 이번 달", () => {
   });
 });
 
+describe("B 12 — 합계에서 환불된 거래를 뺀다", () => {
+  it("머리 합계는 환불된 거래를 더하지 않는다 — 환불 안내(합계에서 빠져요)와 같다", () => {
+    api.history = [
+      baseExpense,
+      other(1),
+      { ...other(2), refundedAt: "2026-09-12T12:00:00" },
+    ];
+    render();
+    // 3,000 + 3,000 = 6,000 — 환불된 3,000 을 더한 9,000 이 아니다
+    const bar = document.body.textContent ?? "";
+    expect(bar).toContain("6,000");
+    expect(bar).not.toContain("9,000");
+  });
+});
+
 describe("B 9 — 상태 Callout", () => {
   it("환불됨 — 문장 · [환불 취소]만 있고 수정 · 분할 · 환불은 없다", () => {
     render(refunded);
