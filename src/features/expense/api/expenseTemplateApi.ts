@@ -1,9 +1,14 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, type QuietRequestConfig } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
   ExpenseTemplate,
   ExpenseTemplateFormValues,
 } from "@/entities/expense-template";
+
+/** 호출처가 실패를 직접 알릴 때 전역 오류 토스트를 끈다 */
+export interface QuietOpts {
+  silent?: boolean;
+}
 
 export const expenseTemplateApi = {
   getTemplates: async (): Promise<ExpenseTemplate[]> => {
@@ -14,10 +19,13 @@ export const expenseTemplateApi = {
 
   createTemplate: async (
     data: ExpenseTemplateFormValues,
+    opts?: QuietOpts,
   ): Promise<ExpenseTemplate> => {
+    const config: QuietRequestConfig = { silent: opts?.silent };
     const resp: ApiResponse<ExpenseTemplate> = await apiClient.post(
       "/v1/expense-template",
       data,
+      config,
     );
     return resp.data;
   },
@@ -25,17 +33,22 @@ export const expenseTemplateApi = {
   updateTemplate: async (
     id: number,
     data: ExpenseTemplateFormValues,
+    opts?: QuietOpts,
   ): Promise<ExpenseTemplate> => {
+    const config: QuietRequestConfig = { silent: opts?.silent };
     const resp: ApiResponse<ExpenseTemplate> = await apiClient.put(
       `/v1/expense-template/${id}`,
       data,
+      config,
     );
     return resp.data;
   },
 
-  deleteTemplate: async (id: number): Promise<void> => {
+  deleteTemplate: async (id: number, opts?: QuietOpts): Promise<void> => {
+    const config: QuietRequestConfig = { silent: opts?.silent };
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/expense-template/${id}`,
+      config,
     );
     return resp.data;
   },

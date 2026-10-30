@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { expenseKeys, invalidateFor } from "@/shared/config";
 import { expenseTemplateApi } from "../api/expenseTemplateApi";
+import type { QuietOpts } from "../api/expenseTemplateApi";
 import type { ExpenseTemplateFormValues } from "@/entities/expense-template";
 
 export const useExpenseTemplates = () => {
@@ -10,16 +11,16 @@ export const useExpenseTemplates = () => {
   });
 };
 
-export const useCreateExpenseTemplate = () => {
+export const useCreateExpenseTemplate = (opts?: QuietOpts) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: ExpenseTemplateFormValues) =>
-      expenseTemplateApi.createTemplate(data),
+      expenseTemplateApi.createTemplate(data, opts),
     onSuccess: () => invalidateFor(queryClient, "expense-template"),
   });
 };
 
-export const useUpdateExpenseTemplate = () => {
+export const useUpdateExpenseTemplate = (opts?: QuietOpts) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -28,15 +29,15 @@ export const useUpdateExpenseTemplate = () => {
     }: {
       id: number;
       data: ExpenseTemplateFormValues;
-    }) => expenseTemplateApi.updateTemplate(id, data),
+    }) => expenseTemplateApi.updateTemplate(id, data, opts),
     onSuccess: () => invalidateFor(queryClient, "expense-template"),
   });
 };
 
-export const useDeleteExpenseTemplate = () => {
+export const useDeleteExpenseTemplate = (opts?: QuietOpts) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => expenseTemplateApi.deleteTemplate(id),
+    mutationFn: (id: number) => expenseTemplateApi.deleteTemplate(id, opts),
     onSuccess: () => invalidateFor(queryClient, "expense-template"),
   });
 };
