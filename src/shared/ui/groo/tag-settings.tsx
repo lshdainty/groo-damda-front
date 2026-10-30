@@ -1,14 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  EllipsisVertical,
-  Info,
-  Pencil,
-  Plus,
-  Tag,
-  Tags,
-  Trash2,
-} from "lucide-react";
+import { Info, Pencil, Plus, Tag, Tags, Trash2 } from "lucide-react";
+import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
 import { Card } from "@/shared/ds/card";
@@ -25,13 +18,6 @@ import {
 import { Field } from "@/shared/ds/field";
 import { Input } from "@/shared/ds/input";
 import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
-import {
-  ResponsiveMenu,
-  ResponsiveMenuContent,
-  ResponsiveMenuGroup,
-  ResponsiveMenuItem,
-  ResponsiveMenuTrigger,
-} from "@/shared/ds/menu";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
@@ -52,7 +38,7 @@ import { ManagerHead } from "@/shared/ui/groo/manager-layout";
  *
  * 폰(`mobile`): 흰 면 하나 — 안내 Callout(informative · 제목 없음) → 목록 제목 "… 태그 · N" + 글 버튼 "태그 추가" → 색 타일 40 줄.
  * 줄 누름 = 수정 폼, 밀기 = [수정, 삭제]. 줄 끝 ⋮ 는 두지 않는다(좁은 목록 줄 — 10-25).
- * 데스크톱 · 태블릿: 머리 설명(안내 상자는 두지 않는다 — 같은 말을 두 번 하지 않는다) + 오른쪽 [태그 추가] + 카드 하나, 줄 끝 ⋮ → Menu(1280 이상) · Menu Sheet [수정, 삭제].
+ * 데스크톱 · 태블릿: 머리 설명(안내 상자는 두지 않는다 — 같은 말을 두 번 하지 않는다) + 오른쪽 [태그 추가] + 카드 하나, 줄 끝 ⋮ 는 두지 않는다(list.md "목록 줄 끝에는 ⋮ 를 두지 않는다") — 줄 누름 → 수정 폼 → 바닥 [삭제] 가 길이다.
  *
  * 실패 안내는 서버 원문이 아니라 고정 글이다 — 저장 실패는 폼 안 Callout, 삭제 실패는 확인창을 닫고 critical 스낵바 + [다시 시도].
  * 부르는 쪽은 요청을 `silent` 로 보낸다.
@@ -111,6 +97,7 @@ export function TagSettings<T extends TagLike>({
   const [running, setRunning] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  const [saveErrorSeq, setSaveErrorSeq] = useState(0);
 
   const openEditor = (target: T | { kind: "new" }) => {
     setSaveError(false);
@@ -126,6 +113,7 @@ export function TagSettings<T extends TagLike>({
       setEditing(null);
     } catch {
       setSaveError(true);
+      setSaveErrorSeq((n) => n + 1);
     } finally {
       setSaving(false);
     }
@@ -151,47 +139,12 @@ export function TagSettings<T extends TagLike>({
     setAskDelete(null);
   };
 
-  const rowMenu = (tag: T) => (
-    <ResponsiveMenu>
-      <ResponsiveMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          ghostColor="neutralSubtle"
-          layout="iconOnly"
-          size="small"
-          className="relative z-1"
-          aria-label={t("tags.moreOf", { name: tag.tagName })}
-        >
-          <EllipsisVertical aria-hidden />
-        </Button>
-      </ResponsiveMenuTrigger>
-      <ResponsiveMenuContent title={tag.tagName} align="end">
-        <ResponsiveMenuGroup>
-          <ResponsiveMenuItem
-            label={tc("edit")}
-            icon={<Pencil aria-hidden />}
-            onSelect={() => openEditor(tag)}
-          />
-        </ResponsiveMenuGroup>
-        <ResponsiveMenuGroup>
-          <ResponsiveMenuItem
-            label={tc("delete")}
-            icon={<Trash2 aria-hidden />}
-            tone="critical"
-            onSelect={() => setAskDelete(tag)}
-          />
-        </ResponsiveMenuGroup>
-      </ResponsiveMenuContent>
-    </ResponsiveMenu>
-  );
-
   const row = (tag: T) => (
     <ListButtonItem
       key={tag.rowId}
       title={tag.tagName}
       detail={t("tags.usage", { count: tag.usageCount ?? 0 })}
       prefix={<TagTile color={tag.color} />}
-      suffix={mobile ? undefined : rowMenu(tag)}
       onClick={() => openEditor(tag)}
     />
   );
@@ -322,6 +275,7 @@ export function TagSettings<T extends TagLike>({
           tag={"rowId" in editing ? editing : null}
           existing={tags}
           saveError={saveError}
+          saveErrorSeq={saveErrorSeq}
           submitting={saving}
           onClose={() => setEditing(null)}
           onSave={(values) => void onSave(values)}
@@ -367,6 +321,7 @@ export function TagEditDialog<T extends TagLike>({
   tag,
   existing,
   saveError,
+  saveErrorSeq,
   submitting,
   onClose,
   onSave,
@@ -376,6 +331,8 @@ export function TagEditDialog<T extends TagLike>({
   tag: T | null;
   existing: readonly T[];
   saveError: boolean;
+  /** 저장이 실패할 때마다 늘어난다 — 실패 Callout 을 화면에 들이는 신호 */
+  saveErrorSeq: number;
   submitting?: boolean;
   onClose: () => void;
   onSave: (values: TagValues) => void;
@@ -384,6 +341,7 @@ export function TagEditDialog<T extends TagLike>({
   const { t } = useTranslation(ns);
   const { t: tc } = useTranslation("common");
   const isNew = !tag;
+  const errorRef = useScrollToError<HTMLDivElement>(saveError, saveErrorSeq);
   const [initial] = useState(() => ({
     name: tag?.tagName ?? "",
     // 새 태그는 안 쓴 첫 색 — 늘 빨강으로 시작하지 않는다. 고치는 태그는 저장된 색 그대로(팔레트 밖이어도 바꾸지 않는다)
@@ -397,6 +355,8 @@ export function TagEditDialog<T extends TagLike>({
 
   const key = chartColorOf(color);
   const selected: ColorSwatchValue = key ?? "current";
+  // 처음 저장된 색이 팔레트 밖이면 "지금 색" 칸을 끝까지 둔다 — 격자 색을 골라도 칸이 남아 다시 고르면 저장 값 그대로(color-swatch.md, L4)
+  const storedOutside = chartColorOf(initial.color) == null;
   const palette = getPaletteByColor(color);
   const nameTrim = name.trim();
   const issue = nameIssue(
@@ -436,9 +396,11 @@ export function TagEditDialog<T extends TagLike>({
         <ResponsiveDialogBody>
           <div className="flex flex-col gap-x4 pb-x2">
             {saveError && (
-              <Callout tone="critical" role="alert">
-                {t("tags.saveFailed")}
-              </Callout>
+              <div ref={errorRef}>
+                <Callout tone="critical" role="alert">
+                  {t("tags.saveFailed")}
+                </Callout>
+              </div>
             )}
             {/* 미리보기 */}
             <div
@@ -481,10 +443,10 @@ export function TagEditDialog<T extends TagLike>({
             <Field label={t("tags.color")}>
               <ColorSwatchGroup
                 value={selected}
-                currentColor={key ? undefined : (color ?? undefined)}
+                currentColor={storedOutside ? initial.color : undefined}
                 onValueChange={(v) => {
-                  // "지금 색" 칸을 고르면 저장 값을 그대로 둔다 — 몰래 바꾸지 않는다
-                  if (v !== "current") setColor(BASE_OF[v]!);
+                  // "지금 색" 칸을 고르면 저장 값 그대로 — 몰래 바꾸지 않는다
+                  setColor(v === "current" ? initial.color : BASE_OF[v]!);
                 }}
               />
             </Field>

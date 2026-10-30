@@ -1210,7 +1210,6 @@ memo,moreOf,{{name}} 더보기,More for {{name}}
 memo,modifiedAt,{{time}} 수정,Edited {{time}}
 memo,tags.loadFailed,태그를 불러오지 못했어요,Could not load tags
 memo,tags.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
-memo,tags.moreOf,{{name}} 더보기,More for {{name}}
 memo,tags.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
 memo,tags.deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
 notification,connectionLost,알림 연결이 끊어졌습니다,Notification connection lost
@@ -2672,7 +2671,6 @@ todo,tags.nameDuplicate,같은 이름의 태그가 이미 있어요.,A tag with 
 todo,tags.preview,미리보기,Preview
 todo,tags.loadFailed,태그를 불러오지 못했어요,Couldn't load tags
 todo,tags.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
-todo,tags.moreOf,{{name}} 더보기,More for {{name}}
 todo,tags.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
 todo,tags.deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
 constellation,strip.title,오늘의 밤하늘 · {{name}},Tonight's sky · {{name}}

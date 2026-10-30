@@ -123,14 +123,15 @@ describe.each([
     expect(container.innerHTML).not.toMatch(/text-ellipsis|truncate/);
   });
 
-  it("데스크톱 — 안내 상자 없이 카드 하나, 줄마다 ⋮ 가 있고 휴지통 · 꺾쇠는 없다", () => {
+  it("데스크톱 — 안내 상자 없이 카드 하나, 줄 끝 ⋮ · 휴지통 · 꺾쇠가 없다(list.md 줄 끝 ⋮ 금지 — 줄 → 수정 폼 → [삭제])", () => {
     render(ns, false, [tagOf(1, "회의록", 3)]);
     expect(container.querySelector("[data-slot=callout]")).toBeNull();
     expect(container.querySelector("[data-slot=card]")).toBeTruthy();
-    expect(
-      container.querySelector('button[aria-label="회의록 더보기"]'),
-    ).toBeTruthy();
+    expect(container.querySelector('button[aria-label$="더보기"]')).toBeNull();
     expect(container.querySelector('button[aria-label="삭제"]')).toBeNull();
+    // 대체 길 — 줄을 누르면 수정 폼, 폼 바닥에 [삭제]
+    openRow("회의록");
+    expect(buttonByText("삭제")).toBeTruthy();
   });
 
   it("태그가 없으면 첫 태그를 만들라고 안내한다 — 빈 화면으로 두지 않는다", () => {
@@ -212,7 +213,11 @@ describe.each([
       set.call(input, "새 태그");
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
+    const spy = vi.fn();
+    Element.prototype.scrollIntoView = spy;
     await act(async () => buttonByText("저장")!.click());
+    // 실패 Callout 을 화면에 들인다(M2)
+    expect(spy).toHaveBeenCalled();
     expect(create).toHaveBeenCalledWith({
       tagName: "새 태그",
       color: expect.stringMatching(/^#/),
