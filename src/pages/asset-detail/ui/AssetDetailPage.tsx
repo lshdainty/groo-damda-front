@@ -171,6 +171,12 @@ function Loaded({
   const assetHidden = asset.isAmountHidden === "Y";
   const isCard =
     asset.assetType === "CREDIT_CARD" || asset.assetType === "CHECK_CARD";
+  // 삭제 확인 제목 — 자산 종류를 따른다(관리 화면 · 앱과 같은 키 · 같은 글, #508 짝 표)
+  const deleteTitle = isCard
+    ? t("deleteConfirm.titleCard")
+    : asset.assetType === "INVESTMENT"
+      ? t("deleteConfirm.titleInvest")
+      : t("deleteConfirm.titleAccount");
   const title = isCard
     ? t("assetDetail.titleCard")
     : asset.assetType === "INVESTMENT"
@@ -304,8 +310,8 @@ function Loaded({
       )}
       {confirmDelete && (
         <ConfirmDialog
-          title={t("deleteConfirm.titleAsk")}
-          message={t("deleteConfirm.messageAfter", { name: asset.assetName })}
+          title={deleteTitle}
+          message={t("deleteConfirm.messageDetail", { name: asset.assetName })}
           confirmLabel={t("deleteConfirm.confirm")}
           danger
           loading={deleteAsset.isPending}

@@ -23,6 +23,7 @@ import { useMyFeatures } from "@/features/subscription/model/useSubscription";
 import { useStockSymbolName } from "@/features/stock/model/useStockMaster";
 import { useAssetMask } from "../../lib/asset-groups";
 import { AssetTradeDialog } from "../AssetTradeDialog";
+import { TradeDetailSurface } from "./TradeDetailSurface";
 
 /**
  * 보유 종목 한 줄(I-17 50) — List 줄 위 맞춤: 제목 종목 이름 · 설명 "{수량}{단위} · 현재가 {가격} 연동" / "직접 입력" · 뒤 기둥(오른쪽 맞춤)
@@ -142,16 +143,19 @@ export function HoldingRow({
 
 /**
  * 거래 기록(I-17 50) — 있을 때만. 목록 제목 "거래 기록 · {n}" + List 줄: 제목 "{매수 | 매도} · {종목} {수량}" · 설명 날짜(+ 매도 실현손익) · 뒤 금액.
- * 줄 끝 ⋮ 는 두지 않는다(10-25 줄 끝 ⋮ 원칙) — 줄을 누르면 거래 취소 확인이 열린다(동작이 하나뿐). 취소하면 예수금 · 보유 수량 · 원가가 거래 전으로 돌아간다.
+ * 줄 끝 ⋮ 는 두지 않는다(10-25 줄 끝 ⋮ 원칙) — 줄을 누르면 거래 기록 상세, 거기 바닥 왼쪽 [거래 취소] → 확인창. 취소하면 예수금 · 보유 수량 · 원가가 거래 전으로 돌아간다.
  */
 export function TradeHistory({ asset }: { asset: Asset }) {
   const { t } = useTranslation("asset");
   const m = useAssetMask("asset.detail", asset.isAmountHidden === "Y");
   const { data: trades } = useAssetTrades(asset.rowId);
   const deleteMut = useDeleteTrade();
+  // 줄을 누르면 거래 기록 상세(조회), 거기 바닥 왼쪽 [거래 취소] 가 확인창을 연다 — 한 번에 표면 하나
+  const [openId, setOpenId] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   if (!trades || trades.length === 0) return null;
   const target = trades.find((tr) => tr.rowId === confirmDelete) ?? null;
+  const opened = trades.find((tr) => tr.rowId === openId) ?? null;
   const titleId = `asset-trades-${asset.rowId}`;
   return (
     <section data-slot="asset-detail-trades" aria-labelledby={titleId}>
@@ -182,14 +186,25 @@ export function TradeHistory({ asset }: { asset: Asset }) {
                 {withCommaBreaks(m(`${KRW(tr.amount)}원`))}
               </span>
             }
-            aria-label={t("trade.cancelRow", {
+            aria-label={t("trade.openRow", {
               name: tr.holdingKey,
               date: tr.tradeDate.slice(0, 10),
             })}
-            onClick={() => setConfirmDelete(tr.rowId)}
+            onClick={() => setOpenId(tr.rowId)}
           />
         ))}
       </List>
+      {opened && (
+        <TradeDetailSurface
+          trade={opened}
+          mask={m}
+          onClose={() => setOpenId(null)}
+          onCancelTrade={() => {
+            setOpenId(null);
+            setConfirmDelete(opened.rowId);
+          }}
+        />
+      )}
       {target && (
         <ConfirmDialog
           title={t("trade.deleteTitle")}

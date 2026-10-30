@@ -812,14 +812,17 @@ asset,assetDetail.payAmountEmpty,결제 금액을 넣어주세요.,Enter the pay
 asset,assetDetail.payAmountOver,결제 금액은 {{amount}}까지예요.,The payment can be up to {{amount}}.
 asset,assetDetail.payFailed,결제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't process the payment. Please try again in a moment.
 asset,trade.recordTitle,거래 기록,Trade log
+asset,trade.detailTitle,거래 기록,Trade record
+asset,trade.kind,종류,Type
+asset,trade.unitPrice,단가,Unit price
+asset,trade.amountLabel,거래대금,Trade amount
+asset,trade.feeLabel,수수료 · 세금,Fees & tax
+asset,trade.openRow,{{date}} {{name}} 거래 기록,{{name}} trade record on {{date}}
 asset,trade.qtyRequired,수량을 넣어주세요.,Enter the quantity.
 asset,trade.amountRequired,거래대금을 넣어주세요.,Enter the trade amount.
 asset,trade.time,거래 시각,Trade time
 asset,trade.preview,거래 후 미리보기,Preview after the trade
-asset,trade.cancelRow,{{date}} {{name}} 거래 취소,Cancel {{name}} trade on {{date}}
 asset,trade.deleteConfirmTarget,{{date}} {{name}} {{qty}} {{kind}} 거래를 취소할까요? 예수금과 보유 수량이 거래 전으로 돌아가요.,Cancel the {{kind}} of {{qty}} {{name}} on {{date}}? Cash and quantity return to their pre-trade state.
-asset,deleteConfirm.titleAsk,삭제할까요?,Delete this?
-asset,deleteConfirm.messageAfter,"삭제한 ""{{name}}""은 목록에서 사라지고 되돌릴 수 없어요. 연결된 거래 내역은 그대로 남아요.","Once deleted, ""{{name}}"" disappears from the list and can't be restored. Linked transactions are kept."
 dashboard,title,대시보드,Dashboard
 dashboard,uncategorized,미분류,Uncategorized
 dashboard,welcome,환영합니다,Welcome
