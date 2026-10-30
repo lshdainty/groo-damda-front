@@ -116,11 +116,10 @@ describe("프리셋 상세", () => {
     expect(onEdit).toHaveBeenCalledTimes(1);
   });
 
-  it("상세 본문에 끝 흐림(scrollFog overlayBody — 위 20 · 아래 80)이 켜져 있다", () => {
+  it("상세 본문에는 끝 흐림을 켜지 않는다 — 고정 구성이라 시트가 내용 높이다(디자인 판정)", () => {
     const body = document.querySelector(
       "[data-slot=bottom-sheet-body], [data-slot=dialog-body]",
     );
-    expect(body?.className).toContain("scroll-pt-[20px]");
-    expect(body?.className).toContain("scroll-pb-[80px]");
+    expect(body?.className).not.toContain("scroll-pb-[80px]");
   });
 });
