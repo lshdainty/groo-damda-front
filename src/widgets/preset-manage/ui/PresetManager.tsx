@@ -1,43 +1,45 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { Bookmark, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+
+import { Button } from "@/shared/ds/button";
+import { Card } from "@/shared/ds/card";
+import { List } from "@/shared/ds/list";
+import { ResultSection } from "@/shared/ds/result-section";
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@/shared/ds/segmented-control";
+import { Skeleton } from "@/shared/ds/skeleton";
+import { useSnackbar } from "@/shared/ds/snackbar";
+import { SwipeActions, type SwipeAction } from "@/shared/ds/swipe-actions";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
-import { Button } from "@/shared/ui/button";
-import { Badge } from "@/shared/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { transferPartiesLabel } from "@/features/asset-transfer";
-import { renderIcon } from "@/shared/lib";
-import { KRW } from "@/shared/lib/groo/format";
-import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
+import { BandFailure, ListTitle } from "@/shared/ui/groo/band-parts";
+import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 import {
   useDeleteExpenseTemplate,
   useExpenseCategories,
   useExpenseTemplates,
 } from "@/features/expense";
+import { PresetListRow } from "@/features/expense/ui/preset-row";
 import type { ExpenseTemplate } from "@/entities/expense-template";
 import { PresetDetailDialog } from "./PresetDetailDialog";
 import { PresetEditDialog } from "./PresetEditDialog";
-import { SwipeActions, type SwipeAction } from "@/shared/ui/swipe-actions";
-import { Card } from "@/shared/ui/card";
-import { Skeleton as SkeletonBase } from "@/shared/ui/skeleton";
 
 type SortKey = "used" | "recent" | "name";
 
-// 모바일 카드 다이어트 — 리스트 셸: 모바일은 카드 없이, 데스크톱은 Card (.m-subpage 정합).
-function ListShell({
-  mobile,
-  children,
-}: {
-  mobile: boolean;
-  children: React.ReactNode;
-}) {
-  return mobile ? (
-    <div>{children}</div>
-  ) : (
-    <Card style={{ overflow: "hidden" }}>{children}</Card>
-  );
-}
+/** 정렬 칸 — 이름과 순서는 지금 그대로(화면에만 둔다, 서버 · 주소에 싣지 않는다) */
+const SORTS: { key: SortKey; label: string }[] = [
+  { key: "used", label: "preset.sortUsed" },
+  { key: "recent", label: "preset.sortRecent" },
+  { key: "name", label: "preset.sortName" },
+];
 
+/**
+ * 프리셋 관리(I-20 C 13 ~ 18) — 한 목록: 목록 제목("프리셋 n개") → 정렬 Segmented → 줄. 안내 상자 · 숫자 셋은 없다.
+ * 폰은 흰 면 하나(머리 오른쪽 "추가" 가 새 프리셋 — 비어 있으면 머리 버튼이 없고 본문 버튼 하나), 데스크톱은 제목 줄 [프리셋 추가] + 카드 하나다.
+ * 줄 누름 = 상세(폰 · 데스크톱 모두), 폰은 밀어서 [수정][삭제]. 줄 끝 ⋮ 는 없다(10-25 줄 끝 ⋮ 원칙 — 지우기는 상세 바닥).
+ */
 export function PresetManager({
   mobile,
   addRequest = 0,
@@ -47,31 +49,32 @@ export function PresetManager({
   addRequest?: number;
 }) {
   const { t } = useTranslation("expense");
-  const { t: tCommon } = useTranslation("common");
+  const { t: tc } = useTranslation("common");
+  const titleId = useId();
+  const snackbar = useSnackbar();
   const templatesQ = useExpenseTemplates();
   const categoriesQ = useExpenseCategories();
-  const deleteMut = useDeleteExpenseTemplate();
-  // 행 탭 → 상세. 스와이프만 남기면 제스처 없이는 아무것도 못 한다(WCAG 2.1.1).
+  // 삭제 실패는 전역 서버 원문 토스트 대신 아래 스낵바(고정 글 + 다시 시도)가 알린다
+  const deleteMut = useDeleteExpenseTemplate({ silent: true });
+
   const [detail, setDetail] = useState<ExpenseTemplate | null>(null);
-
-  const isLoading = templatesQ.isLoading || categoriesQ.isLoading;
-
-  const items: ExpenseTemplate[] = useMemo(
-    () => templatesQ.data ?? [],
-    [templatesQ.data],
-  );
-  const categories = useMemo(() => categoriesQ.data ?? [], [categoriesQ.data]);
-
-  const [sortBy, setSortBy] = useState<SortKey>("used");
   const [editing, setEditing] = useState<ExpenseTemplate | "new" | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ExpenseTemplate | null>(
+    null,
+  );
+  const [sortBy, setSortBy] = useState<SortKey>("used");
+
+  // 바깥(설정 폰 머리 "추가")이 올린 횟수가 바뀐 순간에만 새 폼을 연다. 렌더 중 조정이라 커밋을 한 번 더 태우지 않는다.
   const [seenAddRequest, setSeenAddRequest] = useState(addRequest);
   if (seenAddRequest !== addRequest) {
     setSeenAddRequest(addRequest);
     setEditing("new");
   }
-  const [confirmDelete, setConfirmDelete] = useState<ExpenseTemplate | null>(
-    null,
-  );
+
+  const isLoading = templatesQ.isLoading || categoriesQ.isLoading;
+  const failed = !isLoading && templatesQ.data === undefined;
+  const items = useMemo(() => templatesQ.data ?? [], [templatesQ.data]);
+  const categories = useMemo(() => categoriesQ.data ?? [], [categoriesQ.data]);
 
   const sorted = useMemo(() => {
     const arr = [...items];
@@ -86,475 +89,179 @@ export function PresetManager({
     return arr;
   }, [items, sortBy]);
 
-  const totalUses = items.reduce((s, p) => s + p.useCount, 0);
-  const expenseCount = items.filter((p) => p.expenseType === "EXPENSE").length;
-  const incomeCount = items.filter((p) => p.expenseType === "INCOME").length;
-  const transferCount = items.filter(
-    (p) => p.expenseType === "TRANSFER",
-  ).length;
-
   const categoryById = useMemo(() => {
     const m = new Map<number, (typeof categories)[number]>();
     for (const c of categories) m.set(c.rowId, c);
     return m;
   }, [categories]);
 
+  // 실패는 확인창을 닫고 스낵바로 — 창 위에 겹치지 않는다. "다시 시도" 는 같은 삭제를 다시 한다
+  const deleteFailed = (p: ExpenseTemplate) =>
+    snackbar.show({
+      message: t("preset.deleteFailed"),
+      tone: "critical",
+      action: {
+        label: tc("retry"),
+        onClick: () => {
+          deleteMut.mutateAsync(p.rowId).catch(() => deleteFailed(p));
+        },
+      },
+    });
+
+  const askDelete = (p: ExpenseTemplate) => setConfirmDelete(p);
+
   const onDelete = () => {
     if (!confirmDelete) return;
-    deleteMut.mutate(confirmDelete.rowId, {
+    const target = confirmDelete;
+    deleteMut.mutate(target.rowId, {
       onSuccess: () => setConfirmDelete(null),
+      onError: () => {
+        setConfirmDelete(null);
+        deleteFailed(target);
+      },
     });
   };
 
+  const sortControl = (
+    <div className="px-global-gutter py-x1">
+      <SegmentedControl
+        aria-label={t("preset.sortLabel")}
+        value={sortBy}
+        onValueChange={(v) => setSortBy(v as SortKey)}
+        className={mobile ? undefined : "w-[420px] max-w-full"}
+      >
+        {SORTS.map((s) => (
+          <SegmentedControlItem key={s.key} value={s.key}>
+            {t(s.label)}
+          </SegmentedControlItem>
+        ))}
+      </SegmentedControl>
+    </div>
+  );
+
+  const rows = sorted.map((p) => {
+    const category =
+      p.categoryRowId != null ? categoryById.get(p.categoryRowId) : undefined;
+    const row = (
+      <PresetListRow
+        preset={p}
+        category={category}
+        onClick={() => setDetail(p)}
+      />
+    );
+    if (!mobile) return row;
+    // 밀면 수정 · 삭제 — 줄을 누르면 상세이므로 밀기는 지름길이다(swipe-actions.md · WCAG 2.1.1). 지우기는 확인창 한 번
+    const actions: SwipeAction[] = [
+      {
+        label: tc("edit"),
+        icon: <Pencil />,
+        kind: "primary",
+        onSelect: () => setEditing(p),
+      },
+      {
+        label: tc("delete"),
+        icon: <Trash2 />,
+        kind: "destructive",
+        onSelect: () => askDelete(p),
+      },
+    ];
+    return (
+      <SwipeActions
+        key={p.rowId}
+        rowLabel={p.templateName}
+        enabled
+        actions={actions}
+      >
+        <List>{row}</List>
+      </SwipeActions>
+    );
+  });
+
+  let content: React.ReactNode;
+  if (isLoading) {
+    content = <PresetListSkeleton />;
+  } else if (failed) {
+    content = (
+      <BandFailure
+        title={t("preset.loadFailed")}
+        size={mobile ? "large" : "medium"}
+        onRetry={() => void templatesQ.refetch()}
+        className="px-x6"
+      />
+    );
+  } else if (items.length === 0) {
+    // 안내는 빈 화면에만 — 폰은 본문 버튼 하나, 데스크톱 카드 안은 제목 줄 [프리셋 추가] 가 있어 버튼이 없다
+    content = (
+      <ResultSection
+        kind="empty"
+        size={mobile ? "large" : "medium"}
+        icon={<Bookmark />}
+        title={t("preset.emptyTitle")}
+        description={t("preset.emptyDesc")}
+        primaryAction={
+          mobile
+            ? { label: t("preset.add"), onClick: () => setEditing("new") }
+            : undefined
+        }
+        className="px-x6 [[data-slot=card]_&]:px-0"
+      />
+    );
+  } else {
+    content = (
+      <>
+        <ListTitle id={titleId} first>
+          {t("preset.listTitle", { count: items.length })}
+        </ListTitle>
+        {sortControl}
+        {mobile ? (
+          <div aria-labelledby={titleId} role="group">
+            {rows}
+          </div>
+        ) : (
+          <List aria-labelledby={titleId}>{rows}</List>
+        )}
+      </>
+    );
+  }
+
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--spacing-2xl)",
-      }}
-    >
-      {/* 묶음 1 — 배너 + 취합카드(상단 정보 블록). 내부 gap md, 최상위 16 으로 묶음 2 와 분리(사용자 결정). */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--spacing-md)",
-        }}
-      >
-        {/* Intro */}
-        <div
-          style={{
-            padding: 14,
-            background: "var(--bg-brand-subtle)",
-            border: "1px solid var(--border-brand)",
-            borderRadius: "var(--radius-tile)",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              flexShrink: 0,
-              width: 32,
-              height: 32,
-              borderRadius: "var(--radius-md)",
-              background: "var(--bg-surface)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Bookmark size={16} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: "var(--text-label-sm)",
-                fontWeight: "700",
-                color: "var(--fg-brand-strong)",
-                marginBottom: 3,
-              }}
-            >
-              {t("preset.introTitle")}
-            </div>
-            <div
-              style={{
-                fontSize: "var(--text-caption)",
-                color: "var(--fg-secondary)",
-                lineHeight: "1.5",
-              }}
-            >
-              {t("preset.introDesc")}
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 8,
-          }}
-        >
-          {isLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: "10px 12px",
-                  background: "var(--bg-sunken)",
-                  borderRadius: "var(--radius-md)",
-                }}
+    <>
+      {mobile ? (
+        <div className="flex flex-col pb-x6">{content}</div>
+      ) : (
+        <>
+          <ManagerHead
+            title={t("presets")}
+            description={t("preset.manageDesc")}
+            actions={
+              // 제목 줄 오른쪽 주 동작 = Button small neutralOutline + 앞 아이콘 14, 글은 동작 이름(I-16 28)
+              <Button
+                variant="neutralOutline"
+                size="small"
+                onClick={() => setEditing("new")}
               >
-                <SkeletonBase className="h-3 w-16 mb-1.5" />
-                <SkeletonBase className="h-6 w-12" />
-              </div>
-            ))
-          ) : (
-            <>
-              <PMStat
-                label={t("preset.statSaved")}
-                value={String(items.length)}
-              />
-              <PMStat
-                label={t("preset.statUses")}
-                value={t("txDetail.countTimes", { count: totalUses })}
-              />
-              <PMStat
-                label={`${t("expense")} / ${t("income")} / ${t("addTx.transfer")}`}
-                value={`${expenseCount} / ${incomeCount} / ${transferCount}`}
-              />
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* 묶음 2 — Toolbar(정렬 toggle) + List. 한 묶음 유지(사용자 결정)하되 사이 간격은
-          모바일 0(플랫 리스트라 밀착) / 데스크톱 12 — 아래가 카드라 토글이 붙으면 답답함.
-          다른 묶음과는 최상위 gap(xl)으로 분리. */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: mobile ? 0 : 12,
-        }}
-      >
-        {/* Toolbar */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 8,
-            flexWrap: "wrap",
-          }}
-        >
-          <Tabs
-            value={sortBy}
-            onValueChange={(v) => v && setSortBy(v as SortKey)}
-            className="w-auto"
-          >
-            <TabsList variant="pills" size="sm">
-              {(
-                [
-                  { k: "used", l: t("preset.sortUsed") },
-                  { k: "recent", l: t("preset.sortRecent") },
-                  { k: "name", l: t("preset.sortName") },
-                ] as { k: SortKey; l: string }[]
-              ).map((o) => (
-                <TabsTrigger key={o.k} value={o.k}>
-                  {o.l}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-          <Button
-            type="button"
-            variant="accent"
-            style={{ padding: "7px 12px", fontSize: "var(--text-label-sm)" }}
-            onClick={() => setEditing("new")}
-          >
-            <Plus size={14} /> {t("preset.add")}
-          </Button>
-        </div>
-
-        {/* List — 모바일 카드 다이어트: 셸 카드 벗김 (.m-subpage) */}
-        <ListShell mobile={mobile}>
-          {isLoading ? (
-            <PresetManagerSkeleton mobile={mobile} />
-          ) : sorted.length === 0 ? (
-            <div style={{ padding: 60, textAlign: "center" }}>
-              <div
-                style={{
-                  display: "inline-flex",
-                  width: 48,
-                  height: 48,
-                  borderRadius: "var(--radius-lg)",
-                  background: "var(--bg-sunken)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 12,
-                }}
-              >
-                <Bookmark size={22} />
-              </div>
-              <div
-                style={{
-                  fontSize: "var(--text-body-sm)",
-                  fontWeight: "700",
-                  color: "var(--fg-primary)",
-                  marginBottom: 4,
-                }}
-              >
-                {t("preset.emptyTitle")}
-              </div>
-              <div
-                style={{
-                  fontSize: "var(--text-label-sm)",
-                  color: "var(--fg-tertiary)",
-                }}
-              >
-                {t("preset.emptyDesc")}
-              </div>
-            </div>
-          ) : (
-            sorted.map((p, i) => {
-              const cat =
-                p.categoryRowId != null
-                  ? categoryById.get(p.categoryRowId)
-                  : undefined;
-              const palette = cat ? getPaletteByColor(cat.color) : null;
-              const lock = p.lockAmount === "Y";
-              const amountDisplay =
-                lock && p.amount != null ? KRW(p.amount) : "—";
-              // 밀면 수정·삭제. 모바일은 행의 ✎·🗑 를 걷었으므로 탭(상세)이 비제스처
-              // 경로다. 데스크톱은 아이콘이 그대로 있어 스와이프를 통과시킨다.
-              const swipeActions: SwipeAction[] = [
-                {
-                  label: tCommon("edit"),
-                  icon: <Pencil />,
-                  kind: "primary",
-                  onSelect: () => setEditing(p),
-                },
-                {
-                  label: tCommon("delete"),
-                  icon: <Trash2 />,
-                  kind: "destructive",
-                  // 아래 ConfirmDialog 와 같은 문구 — 경로에 따라 말이 갈리면 안 된다.
-                  confirm: {
-                    title: t("preset.deleteTitle"),
-                    message: t("preset.deleteConfirmMessage", {
-                      name: p.templateName,
-                    }),
-                    loading: deleteMut.isPending,
-                  },
-                  // 스와이프가 위 confirm 으로 이미 물었다 — 여기서 확인창을 또 열면 두 번 묻는다(QA 30 15).
-                  onSelect: () => deleteMut.mutateAsync(p.rowId),
-                },
-              ];
-              return (
-                <SwipeActions
-                  key={p.rowId}
-                  rowId={`preset-${p.rowId}`}
-                  groupTag="preset-manager-list"
-                  rowLabel={p.templateName}
-                  enabled={mobile}
-                  actions={swipeActions}
-                >
-                  <div
-                    onClick={mobile ? () => setDetail(p) : undefined}
-                    role={mobile ? "button" : undefined}
-                    style={{
-                      cursor: mobile ? "pointer" : undefined,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      // 모바일 좌우 0 — 페이지가 24 를 쥔다(설정 리스트 공통 규칙).
-                      padding: mobile ? "12px 0" : "14px 16px",
-                      borderTop: i === 0 ? 0 : "1px solid var(--border-subtle)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        flexShrink: 0,
-                        width: 40,
-                        height: 40,
-                        borderRadius: "var(--radius-tile)",
-                        background: palette ? palette.bg : "var(--bg-sunken)",
-                        color: palette ? palette.color : "var(--fg-tertiary)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {cat
-                        ? renderIcon(cat.icon, cat.categoryName.charAt(0), 20)
-                        : renderIcon(null, "?", 18)}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          marginBottom: 2,
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: "var(--text-body-sm)",
-                            fontWeight: "700",
-                            color: "var(--fg-primary)",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {p.templateName}
-                        </div>
-                        {p.expenseType === "TRANSFER" && (
-                          <span
-                            style={{
-                              fontSize: "var(--text-badge)",
-                              fontWeight: "700",
-                              padding: "1px 5px",
-                              background: "var(--bg-sunken)",
-                              color: "var(--fg-tertiary)",
-                              borderRadius: "var(--radius-xs)",
-                            }}
-                          >
-                            {t("addTx.transfer")}
-                          </span>
-                        )}
-                        {p.expenseType === "INCOME" && (
-                          <span
-                            style={{
-                              fontSize: "var(--text-badge)",
-                              fontWeight: "700",
-                              padding: "1px 5px",
-                              background: "var(--bg-income-subtle)",
-                              color: "var(--fg-income)",
-                              borderRadius: "var(--radius-xs)",
-                            }}
-                          >
-                            {t("income")}
-                          </span>
-                        )}
-                        {!lock && (
-                          // badge.md secondary(neutral) — surface-input bg + text-primary. raw span→Badge(사용자 결정).
-                          <Badge variant="secondary">
-                            {t("preset.amountEmpty")}
-                          </Badge>
-                        )}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "var(--text-caption)",
-                          color: "var(--fg-tertiary)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          overflow: "hidden",
-                        }}
-                      >
-                        <span style={{ flexShrink: 0 }}>
-                          {/* 이체는 카테고리가 없다 — "카테고리 없음" 은 빠진 값이 아니라
-                              있을 수 없는 값이라, 그 자리에 출금 → 입금을 적는다. */}
-                          {p.expenseType === "TRANSFER"
-                            ? transferPartiesLabel(p.assetName, p.toAssetName)
-                            : (p.categoryName ?? t("preset.noCategory"))}
-                        </span>
-                        {p.merchant && (
-                          <>
-                            <span style={{ flexShrink: 0 }}>·</span>
-                            <span
-                              style={{
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {p.merchant}
-                            </span>
-                          </>
-                        )}
-                        {/* 이체 부제는 이미 "출금 → 입금" 이라 계좌를 또 붙이면
-                            "QA예금 → QA적금 · QA예금" 이 된다. */}
-                        {!mobile &&
-                          p.expenseType !== "TRANSFER" &&
-                          p.assetName && (
-                            <>
-                              <span style={{ flexShrink: 0 }}>·</span>
-                              <span style={{ flexShrink: 0 }}>
-                                {p.assetName}
-                              </span>
-                            </>
-                          )}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        flexShrink: 0,
-                        textAlign: "right",
-                        minWidth: mobile ? undefined : 80,
-                      }}
-                    >
-                      <div
-                        className="num"
-                        style={{
-                          fontSize: mobile ? 12.5 : 14,
-                          fontWeight: "700",
-                          // 이체는 지출도 수입도 아니다 — 가계부의 이체 행과 같이 중립색.
-                          color:
-                            p.expenseType === "TRANSFER"
-                              ? "var(--fg-primary)"
-                              : p.expenseType === "EXPENSE"
-                                ? "var(--fg-expense)"
-                                : "var(--fg-income)",
-                        }}
-                      >
-                        {lock && p.amount != null
-                          ? `${
-                              p.expenseType === "TRANSFER"
-                                ? ""
-                                : p.expenseType === "EXPENSE"
-                                  ? "−"
-                                  : "+"
-                            }${amountDisplay}`
-                          : "—"}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: mobile ? 10 : 10.5,
-                          color: "var(--fg-tertiary)",
-                          marginTop: 2,
-                        }}
-                      >
-                        {mobile
-                          ? t("txDetail.countTimes", { count: p.useCount })
-                          : t("preset.usedTimes", { count: p.useCount })}
-                      </div>
-                    </div>
-                    {/* 모바일은 아이콘을 두지 않는다 — 밀면 수정·삭제가 나오고 탭하면
-                    상세로 간다(사용자 결정). 데스크톱은 그대로. */}
-                    {!mobile && (
-                      <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                        <PMIconBtn
-                          icon="pencil"
-                          onClick={() => setEditing(p)}
-                          title={tCommon("edit")}
-                        />
-                        <PMIconBtn
-                          icon="trash"
-                          tone="danger"
-                          onClick={() => setConfirmDelete(p)}
-                          title={tCommon("delete")}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </SwipeActions>
-              );
-            })
-          )}
-        </ListShell>
-      </div>
+                <Plus aria-hidden />
+                {t("preset.add")}
+              </Button>
+            }
+          />
+          <Card body="list">
+            <div className="pb-x6">{content}</div>
+          </Card>
+        </>
+      )}
 
       {detail != null && (
         <PresetDetailDialog
           preset={detail}
           categories={categories}
-          mobile={mobile}
           onClose={() => setDetail(null)}
           onEdit={() => {
             setEditing(detail);
             setDetail(null);
           }}
           onDelete={() => {
-            setConfirmDelete(detail);
+            askDelete(detail);
             setDetail(null);
           }}
         />
@@ -562,127 +269,49 @@ export function PresetManager({
       {editing != null && (
         <PresetEditDialog
           preset={editing === "new" ? null : editing}
-          mobile={mobile}
           onClose={() => setEditing(null)}
         />
       )}
       {confirmDelete && (
         <ConfirmDialog
-          title={t("preset.deleteTitle")}
-          message={t("preset.deleteConfirmMessage", {
+          title={t("preset.deleteConfirmTitle", {
             name: confirmDelete.templateName,
           })}
-          confirmLabel={tCommon("delete")}
+          message={t("preset.deleteConfirmMessage")}
+          confirmLabel={tc("delete")}
           danger
           loading={deleteMut.isPending}
           onCancel={() => setConfirmDelete(null)}
           onConfirm={onDelete}
         />
       )}
-    </div>
-  );
-}
-
-/** PresetManager skeleton — 프리셋 row 리스트(icon + name/meta + amount + actions). */
-function PresetManagerSkeleton({ mobile }: { mobile: boolean }) {
-  return (
-    <>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: mobile ? "12px 8px" : "14px 16px",
-            borderTop: i === 0 ? 0 : "1px solid var(--border-subtle)",
-          }}
-        >
-          <SkeletonBase className="h-10 w-10 rounded-md shrink-0" />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <SkeletonBase className="h-4 w-32 mb-1.5" />
-            <SkeletonBase className="h-3 w-2/3" />
-          </div>
-          <div
-            style={{
-              flexShrink: 0,
-              textAlign: "right",
-              minWidth: mobile ? undefined : 80,
-            }}
-          >
-            <SkeletonBase className="h-4 w-20 ml-auto mb-1" />
-            <SkeletonBase className="h-3 w-12 ml-auto" />
-          </div>
-          <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-            <SkeletonBase className="h-8 w-8 rounded-md" />
-            <SkeletonBase className="h-8 w-8 rounded-md" />
-          </div>
-        </div>
-      ))}
     </>
   );
 }
 
-function PMStat({ label, value }: { label: string; value: string }) {
+/** 불러오는 중 — 목록 제목 · 정렬 자리는 그대로, 줄만 Skeleton 넷(타일 40 · 두 줄 · 오른쪽 두 줄) */
+function PresetListSkeleton() {
   return (
-    <div
-      style={{
-        padding: "10px 12px",
-        background: "var(--bg-sunken)",
-        borderRadius: "var(--radius-md)",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "var(--text-badge)",
-          fontWeight: "600",
-          color: "var(--fg-tertiary)",
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
-          marginBottom: 4,
-        }}
-      >
-        {label}
+    <div aria-hidden>
+      <div className="px-global-gutter py-x2">
+        <Skeleton text="t4" className="w-1/4" />
       </div>
-      <div
-        className="num"
-        style={{
-          fontSize: "var(--text-title-md)",
-          fontWeight: "800",
-          color: "var(--fg-primary)",
-          letterSpacing: "-0.022em",
-        }}
-      >
-        {value}
+      <div className="px-global-gutter py-x1">
+        <Skeleton radius="full" className="h-x10 w-full" />
       </div>
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="flex items-start gap-x3 px-global-gutter py-x3">
+          <Skeleton radius="12" className="size-x10 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-x1">
+            <Skeleton text="t5" className="w-1/2" />
+            <Skeleton text="t3" className="w-1/3" />
+          </div>
+          <div className="flex w-x20 shrink-0 flex-col items-end gap-x1">
+            <Skeleton text="t5" className="w-full" />
+            <Skeleton text="t3" className="w-1/2" />
+          </div>
+        </div>
+      ))}
     </div>
-  );
-}
-
-function PMIconBtn({
-  icon,
-  tone,
-  onClick,
-  title,
-}: {
-  icon: "pencil" | "trash";
-  tone?: "danger";
-  onClick: () => void;
-  title: string;
-}) {
-  const Comp = icon === "pencil" ? Pencil : Trash2;
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={onClick}
-      title={title}
-      aria-label={title}
-      className={
-        tone === "danger" ? "!text-[var(--color-fg-critical)]" : undefined
-      }
-    >
-      <Comp size={16} strokeWidth={1.9} />
-    </Button>
   );
 }

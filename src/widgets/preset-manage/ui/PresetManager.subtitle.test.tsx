@@ -21,11 +21,22 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/features/expense", () => ({
   useExpenseTemplates: () => ({ data: state.items, isLoading: false }),
   useExpenseCategories: () => ({ data: [], isLoading: false }),
-  useDeleteExpenseTemplate: () => ({ mutate: () => {}, isPending: false }),
+  useDeleteExpenseTemplate: () => ({
+    mutate: () => {},
+    mutateAsync: () => Promise.resolve(),
+    isPending: false,
+  }),
   useReorderExpenseTemplates: () => ({ mutate: () => {}, isPending: false }),
 }));
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
+}));
 vi.mock("./PresetEditDialog", () => ({ PresetEditDialog: () => null }));
-vi.mock("./PresetDetailDialog", () => ({ PresetDetailDialog: () => null }));
+vi.mock("./PresetDetailDialog", () => ({
+  PresetDetailDialog: ({ preset }: { preset: { templateName: string } }) => (
+    <div data-testid="detail">{preset.templateName}</div>
+  ),
+}));
 
 const { PresetManager } = await import("./PresetManager");
 
@@ -78,6 +89,9 @@ function render(mobile: boolean): string {
   return container.textContent ?? "";
 }
 
+const rows = () =>
+  Array.from(container.querySelectorAll<HTMLElement>("[data-slot=list-body]"));
+
 describe("데스크톱 계좌 접미 (#171 잔여)", () => {
   it("이체 행에는 계좌를 또 붙이지 않는다", () => {
     state.items = [preset(1, "적금이체", "TRANSFER")];
@@ -93,5 +107,56 @@ describe("데스크톱 계좌 접미 (#171 잔여)", () => {
     const text = render(false);
 
     expect(text).toContain("QA예금");
+  });
+});
+
+describe("목록 (I-20 C 14 · 15 · 17)", () => {
+  it("안내 상자 · 숫자 셋이 없고 목록 제목이 개수를 말한다", () => {
+    state.items = [preset(1, "점심", "EXPENSE"), preset(2, "월급", "INCOME")];
+    const text = render(true);
+
+    expect(text).toContain('preset.listTitle{"count":2}');
+    expect(text).not.toContain("preset.introTitle");
+    expect(text).not.toContain("preset.statSaved");
+  });
+
+  it("줄을 누르면 상세가 열린다 — 폰 · 데스크톱 모두", () => {
+    state.items = [preset(1, "점심", "EXPENSE")];
+    for (const mobile of [true, false]) {
+      render(mobile);
+      act(() => rows()[0]!.click());
+      expect(container.querySelector("[data-testid=detail]")?.textContent).toBe(
+        "점심",
+      );
+    }
+  });
+
+  it("줄 끝에 ⋮ 메뉴가 없다 — 줄 하나는 누름 하나", () => {
+    state.items = [preset(1, "점심", "EXPENSE")];
+    for (const mobile of [true, false]) {
+      render(mobile);
+      expect(container.querySelector("[aria-haspopup=menu]")).toBeNull();
+    }
+  });
+
+  it("정렬은 세 칸 — 사용 많은 순 · 최근 사용 · 이름순", () => {
+    state.items = [preset(1, "점심", "EXPENSE")];
+    const text = render(true);
+    expect(text).toContain("preset.sortUsed");
+    expect(text).toContain("preset.sortRecent");
+    expect(text).toContain("preset.sortName");
+  });
+
+  it("빈 화면 — 안내는 여기에만, 버튼은 폰에만 있다", () => {
+    state.items = [];
+    expect(render(true)).toContain("preset.emptyDesc");
+    expect(
+      container.querySelector("[data-slot=result-section] button"),
+    ).not.toBeNull();
+    render(false);
+    expect(container.textContent).toContain("preset.emptyDesc");
+    expect(
+      container.querySelector("[data-slot=result-section] button"),
+    ).toBeNull();
   });
 });

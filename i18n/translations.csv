@@ -1592,7 +1592,6 @@ expense,addTx.saveSplitAndSave,분할 맞추고 저장,Adjust splits & save
 expense,addTx.presetLoad,프리셋 불러오기,Load preset
 expense,addTx.presetApplied,적용됨,Applied
 expense,addTx.saveCurrentInput,현재 입력값 저장,Save current input
-expense,addTx.presetManageHint,설정 → 프리셋 관리,Settings → Manage presets
 expense,addTx.noPresets,저장된 프리셋이 없어요. 자주 쓰는 내역을 입력 후 “현재 입력값 저장”을 눌러보세요.,No saved presets. Enter a frequently used entry and tap “Save current input”.
 expense,addTx.presetFilledHint,프리셋 값이 채워졌어요. 금액·내역만 수정해서 저장하세요.,Preset values filled in. Edit only the amount and details then save.
 expense,addTx.clear,해제,Clear
@@ -1727,32 +1726,23 @@ expense,filter.chipAssets,계좌·카드 {{count}},{{count}} accounts
 expense,filter.chipExcludeOne,{{name}} 빼고,Excluding {{name}}
 expense,filter.chipAmountRanges,금액 {{count}}구간,{{count}} amount ranges
 expense,assetFilterBadge,{{name}} 필터 중,Filtering by {{name}}
-expense,preset.introTitle,프리셋이란?,What are presets?
-expense,preset.introDesc,"자주 쓰는 내역(점심·커피·교통비 등)을 미리 저장해두면, 내역 추가 화면에서 한 번 탭으로 카테고리·결제수단·내역을 모두 채워넣어요. 금액만 바꿔서 단건으로 저장하기 좋습니다.","Save frequently used entries (lunch, coffee, transit, etc.) in advance to fill in the category, payment method, and details with one tap on the add screen. Great for one-off saves by just changing the amount."
-expense,preset.statSaved,저장된 프리셋,Saved presets
-expense,preset.statUses,누적 사용,Total uses
 expense,preset.sortUsed,사용 많은 순,Most used
 expense,preset.sortRecent,최근 사용,Recently used
 expense,preset.sortName,이름순,By name
 expense,preset.add,프리셋 추가,Add preset
 expense,preset.emptyTitle,저장된 프리셋이 없어요,No saved presets
-expense,preset.emptyDesc,자주 쓰는 내역을 추가해 매번 입력하는 수고를 줄여보세요.,Add frequently used entries to save yourself repetitive input.
+expense,preset.emptyDesc,자주 쓰는 내역(점심 · 교통비 등)을 저장해 두면 내역을 추가할 때 한 번 눌러 카테고리 · 계좌 · 내역을 채워요.,"Save frequent entries (lunch, transit, etc.) and fill the category, account, and details with one tap when adding an entry."
 expense,preset.amountEmpty,금액 비움,Amount empty
 expense,preset.noCategory,카테고리 없음,No category
-expense,preset.usedTimes,{{count}}회 사용,Used {{count}} times
-expense,preset.deleteTitle,프리셋 삭제,Delete preset
 expense,preset.detailTitle,프리셋 상세,Preset detail
-expense,preset.typeLabel,유형,Type
-expense,preset.deleteConfirmMessage,"""{{name}}"" 프리셋을 삭제할까요? 이미 저장된 거래 내역에는 영향이 없어요. 삭제한 프리셋은 되돌릴 수 없어요.","Delete the ""{{name}}"" preset? Already-saved transactions are unaffected."
+expense,preset.typeLabel,종류,Type
+expense,preset.deleteConfirmMessage,이미 기록된 거래는 그대로 남아요. 삭제한 프리셋은 되돌릴 수 없어요.,Transactions already recorded stay as they are. A deleted preset cannot be restored.
 expense,preset.edit,프리셋 수정,Edit preset
 expense,preset.namePlaceholder,예: 점심 도시락,e.g. Lunch box
 expense,preset.nameTooLong,프리셋 이름은 12자 이내로 입력해주세요.,Keep the preset name to 12 characters or fewer.
 expense,preset.nameDuplicate,같은 이름의 프리셋이 이미 있어요.,A preset with that name already exists.
 expense,preset.defaultMerchant,기본 내역,Default details
-expense,preset.merchantPlaceholder,예: 한솥 도시락,e.g. Corner deli
-expense,preset.lockAmountTitle,고정 금액 사용,Use fixed amount
-expense,preset.lockAmountDesc,꺼두면 불러올 때 금액이 비어있어요. 매번 다른 금액일 때 편해요.,When off the amount is left empty on load. Handy when it varies each time.
-expense,preset.lockAmountLabel,고정 금액,Fixed amount
+expense,preset.merchantPlaceholder,예: 회사 앞 도시락,e.g. Office lunch box
 export,export,내보내기,Export
 export,fileFormat,파일 형식,File format
 export,preview,미리보기,Preview
@@ -2913,7 +2903,7 @@ recurring,fixed.income,고정 수입,Fixed income
 recurring,fixed.sub,이 반복이 앞으로 만드는 거래가 고정으로 기록돼요,Transactions this schedule creates from now on are recorded as fixed
 expense,preset.fixedTitle.expense,고정 지출로 기록,Record as fixed expense
 expense,preset.fixedTitle.income,고정 수입으로 기록,Record as fixed income
-expense,preset.fixedDesc,이 프리셋으로 만든 거래가 통계의 고정 항목으로 잡혀요. 위의 고정 금액과는 별개예요.,Transactions made from this preset count as fixed in statistics. This is separate from the fixed amount above.
+expense,preset.fixedDesc,이 프리셋으로 만든 거래가 통계의 고정 항목으로 잡혀요.,Transactions made from this preset count as fixed in statistics.
 stats,tab.fixed,고정·변동,Fixed vs. variable
 stats,fixedView.aria,보기 방식,View
 stats,fixedView.all,전체,All
@@ -3214,3 +3204,35 @@ calendar,form.rows,일정 정보,Event details
 calendar,form.rowsMore,반복 · 알림 · 장소 · 설명,"Repeat, reminder, location and description"
 calendar,quickAdd.detail,자세히,Details
 calendar,form.saveFailed,일정을 저장하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Could not save the event. Please try again in a moment.
+expense,presets,프리셋 관리,Manage presets
+expense,preset.manageDesc,자주 쓰는 내역을 저장해 두고 내역을 추가할 때 한 번 눌러 채워요.,Save frequent entries and fill them in with one tap when adding an entry.
+expense,preset.listTitle,프리셋 {{count}}개,{{count}} presets
+expense,preset.uses,{{count}}번,{{count}} uses
+expense,preset.sortLabel,정렬,Sort
+expense,preset.loadFailed,프리셋을 불러오지 못했어요,Could not load presets
+expense,preset.deleteFailed,프리셋을 삭제하지 못했어요,Could not delete the preset
+expense,preset.deleteConfirmTitle,"""{{name}}"" 프리셋을 삭제할까요?","Delete the ""{{name}}"" preset?"
+expense,preset.noteFixed,고정 금액,Fixed amount
+expense,preset.noteUses,{{count}}번 썼어요,Used {{count}} times
+expense,preset.noteUnused,아직 쓰지 않았어요,Not used yet
+expense,preset.noteLast,마지막 {{month}}월 {{day}}일,Last used {{month}}/{{day}}
+expense,preset.fixedOn,켬,On
+expense,preset.fixedOff,끔,Off
+expense,preset.nameRequired,이름을 입력해주세요.,Enter a name.
+expense,preset.categoryRequired,카테고리를 골라주세요.,Choose a category.
+expense,preset.fromRequired,보내는 계좌를 골라주세요.,Choose the sending account.
+expense,preset.toRequired,받는 계좌를 골라주세요.,Choose the receiving account.
+expense,preset.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
+expense,preset.amountLabel,금액,Amount
+expense,preset.feeLabel,수수료,Fee
+expense,preset.amountBlank,비워 둠,Left blank
+expense,preset.amountHint,비워 두면 불러올 때 금액을 직접 넣어요.,"If left blank, you enter the amount when you load it."
+expense,preset.noneValue,없음,None
+expense,preset.memoNone,메모 없음,No memo
+expense,preset.noAccount,계좌·카드 없음,No account or card
+expense,preset.noPayment,결제 수단 없음,No payment method
+expense,preset.noCategoryOfKind,이 종류의 카테고리가 없어요.,There are no categories of this type.
+expense,addTx.presetShowAll,모두 보기,Show all
+expense,addTx.presetPickTitle,프리셋 고르기,Choose a preset
+expense,addTx.presetSearch,프리셋 검색,Search presets
+expense,addTx.presetNoResult,찾는 프리셋이 없어요.,No presets found.

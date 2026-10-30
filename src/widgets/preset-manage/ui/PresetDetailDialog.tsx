@@ -1,164 +1,198 @@
 import { useTranslation } from "react-i18next";
 
-import { ModalShell } from "@/shared/ui/groo/dialogs";
-import { ModalViewFooter } from "@/shared/ui/groo/modal-footer";
+import { Button } from "@/shared/ds/button";
 import {
-  DetailHero,
-  DetailField,
-  DetailFieldGroup,
-} from "@/shared/ui/groo/detail";
-import { KRW } from "@/shared/lib/groo/format";
-import { renderIcon, tileRadius } from "@/shared/lib";
-import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+} from "@/shared/ds/dialog";
+import { dsMoney, withCommaBreaks } from "@/shared/ds/i18n";
+import { List, ListItem } from "@/shared/ds/list";
+import { useWideSurface } from "@/shared/ds/overlay";
+import { cn } from "@/shared/lib/cn";
+import { PresetTile } from "@/features/expense/ui/preset-row";
+import {
+  presetAmountColor,
+  presetAmountText,
+} from "@/features/expense/ui/preset-view";
 import type { ExpenseCategory } from "@/entities/expense";
 import type { ExpenseTemplate } from "@/entities/expense-template";
 
+const PAYMENT_KEYS: Record<string, string> = {
+  CASH: "form.paymentMethod.CASH",
+  CARD: "form.paymentMethod.CARD",
+  TRANSFER: "paymentTransferFull",
+  OTHER: "form.paymentMethod.OTHER",
+};
+
 /**
- * 프리셋 상세 — 행 탭 → 읽기 전용 상세 → footer 에서 삭제·수정.
- *
- * 모바일 행에서 `✎`·`🗑` 를 걷어냈다. 탭이 그 자리를 대신하는 비제스처 경로다 —
- * 스와이프만 남기면 제스처 없이는 아무것도 못 한다(spec swipe-actions.md · WCAG 2.1.1).
- *
- * 프리셋은 예정일이 없다(`ExpenseTemplate` 은 useCount·lastUsedAt 만 갖는다). 그래서
- * 반복 거래 상세와 달리 "다음 예정일" 섹션이 없고, 지금 저장된 내용만 보여준다.
+ * 프리셋 상세(I-20 C 18) — 조회 표면(바깥 누름 · 끌어내림으로 닫힌다). 머리(타일 48 + 이름) → 금액 → 설명 한 줄 → 키-값 줄.
+ * 값이 없는 줄은 그리지 않는다. 바닥: 시트는 [삭제] large 왼쪽 + [수정] 나머지, 대화상자는 [삭제] small 왼쪽 · [수정] small 오른쪽.
+ * 지우기 확인은 부르는 쪽이 한 번만 묻는다.
  */
 export function PresetDetailDialog({
   preset,
   categories,
-  mobile,
   onClose,
   onEdit,
   onDelete,
 }: {
   preset: ExpenseTemplate;
   categories: ExpenseCategory[];
-  mobile: boolean;
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation("expense");
-  const { t: tCommon } = useTranslation("common");
+  const { t: tc } = useTranslation("common");
+  const wide = useWideSurface();
 
-  const isExpense = preset.expenseType === "EXPENSE";
   const isTransfer = preset.expenseType === "TRANSFER";
-  const cat =
+  const isIncome = preset.expenseType === "INCOME";
+  const category =
     preset.categoryRowId != null
       ? categories.find((c) => c.rowId === preset.categoryRowId)
       : undefined;
-  const palette = cat ? getPaletteByColor(cat.color) : null;
-  // 금액 고정(lockAmount)이 아니면 쓸 때마다 입력한다 — 값이 없는 게 정상이다.
-  const locked = preset.lockAmount === "Y";
+  const amountText = presetAmountText(preset);
+  const uses = preset.useCount ?? 0;
+
+  // 설명 한 줄 — "고정 금액 · 3번 썼어요 · 마지막 10월 3일" (0번이면 "아직 쓰지 않았어요", 마지막 쓴 날이 없으면 그 조각을 뺀다)
+  const last = preset.lastUsedAt ? new Date(preset.lastUsedAt) : null;
+  const noteParts = [
+    amountText != null ? t("preset.noteFixed") : t("preset.amountEmpty"),
+    uses > 0 ? t("preset.noteUses", { count: uses }) : t("preset.noteUnused"),
+  ];
+  if (uses > 0 && last && !Number.isNaN(last.getTime())) {
+    noteParts.push(
+      t("preset.noteLast", {
+        month: last.getMonth() + 1,
+        day: last.getDate(),
+      }),
+    );
+  }
+
+  const rows: { key: string; name: string; value: string }[] = [];
+  const add = (key: string, name: string, value?: string | null) => {
+    if (value != null && value !== "") rows.push({ key, name, value });
+  };
+  add(
+    "type",
+    t("preset.typeLabel"),
+    isTransfer ? t("addTx.transfer") : isIncome ? t("income") : t("expense"),
+  );
+  if (isTransfer) {
+    add("from", t("addTx.fromAccount"), preset.assetName);
+    add("to", t("addTx.depositAccount"), preset.toAssetName);
+    add(
+      "fee",
+      t("addTx.fee"),
+      preset.fee != null && preset.fee > 0 ? dsMoney(preset.fee) : null,
+    );
+    add(
+      "interest",
+      t("addTx.interest"),
+      preset.interestAmount != null && preset.interestAmount > 0
+        ? dsMoney(preset.interestAmount)
+        : null,
+    );
+  } else {
+    add("category", t("category"), preset.categoryName);
+    add("asset", t("accountCard"), preset.assetName);
+    add(
+      "payment",
+      t("paymentMethodLabel"),
+      preset.paymentMethod
+        ? t(PAYMENT_KEYS[preset.paymentMethod] ?? "selectNone")
+        : null,
+    );
+    add("merchant", t("preset.defaultMerchant"), preset.merchant);
+  }
+  add("memo", t("memo"), preset.description);
+  if (!isTransfer) {
+    add(
+      "fixed",
+      t(isIncome ? "preset.fixedTitle.income" : "preset.fixedTitle.expense"),
+      preset.isFixed ? t("preset.fixedOn") : t("preset.fixedOff"),
+    );
+  }
 
   return (
-    <ModalShell
-      title={t("preset.detailTitle")}
-      onClose={onClose}
-      mobile={mobile}
-      size="md"
-      footer={
-        <ModalViewFooter
-          onDelete={onDelete}
-          deleteLabel={tCommon("delete")}
-          onEdit={onEdit}
-          editLabel={tCommon("edit")}
-        />
-      }
+    <ResponsiveDialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
     >
-      <DetailHero
-        icon={
-          <span
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: tileRadius(32),
-              background: palette ? palette.bg : "var(--bg-sunken)",
-              color: palette ? palette.color : "var(--fg-tertiary)",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
+      <ResponsiveDialogContent title={t("preset.detailTitle")}>
+        <ResponsiveDialogBody>
+          <div className="flex items-center gap-x3 pb-x2 pt-x1">
+            <PresetTile
+              preset={preset}
+              category={category}
+              className="size-x12 rounded-r4 [&>svg]:size-x6"
+              size={24}
+            />
+            <h3 className="m-0 min-w-0 font-sans text-t7 font-bold text-fg-neutral [overflow-wrap:anywhere]">
+              {preset.templateName}
+            </h3>
+          </div>
+          <div className="pb-x1 pt-x3">
+            {amountText != null && (
+              <p
+                data-slot="preset-detail-amount"
+                className={cn(
+                  "m-0 text-t9 font-bold tabular-nums",
+                  presetAmountColor(preset),
+                )}
+              >
+                {withCommaBreaks(amountText)}
+              </p>
+            )}
+            <p
+              data-slot="preset-detail-note"
+              className="m-0 pt-x1 pb-x2 text-t3 text-fg-neutral-subtle"
+            >
+              {noteParts.join(" · ")}
+            </p>
+          </div>
+          {/* 줄이 제 좌우 24 를 갖는다 — 본문 여백 24 를 풀어 화면 끝까지 */}
+          <List
+            aria-label={t("preset.detailTitle")}
+            className="-mx-x6 w-[calc(100%+var(--spacing-x12))]"
           >
-            {renderIcon(
-              cat?.icon ?? "bookmark",
-              cat?.categoryName?.charAt(0) ?? "·",
-              16,
-            )}
-          </span>
-        }
-        title={preset.templateName}
-        meta={t("preset.usedTimes", { count: preset.useCount ?? 0 })}
-      >
-        <span
-          className="num"
-          style={{
-            // 이체는 지출도 수입도 아니다 — 가계부의 이체 행과 같이 중립색·무부호.
-            color: !locked
-              ? "var(--fg-tertiary)"
-              : isTransfer
-                ? "var(--fg-primary)"
-                : isExpense
-                  ? "var(--fg-expense)"
-                  : "var(--fg-income)",
-          }}
-        >
-          {locked && preset.amount != null
-            ? `${isTransfer ? "" : isExpense ? "−" : "+"}${KRW(preset.amount)}`
-            : t("preset.amountEmpty")}
-        </span>
-      </DetailHero>
-
-      <DetailFieldGroup>
-        <DetailField label={t("preset.typeLabel")}>
-          {isTransfer
-            ? t("addTx.transfer")
-            : isExpense
-              ? t("expense")
-              : t("income")}
-        </DetailField>
-        {/* 이체에는 카테고리가 없다 — 대신 보내는·받는 계좌를 나눠 보여 준다. */}
-        {isTransfer ? (
-          <>
-            <DetailField label={t("addTx.fromAccount")}>
-              {preset.assetName ?? "-"}
-            </DetailField>
-            <DetailField label={t("addTx.depositAccount")}>
-              {preset.toAssetName ?? "-"}
-            </DetailField>
-            {preset.fee != null && preset.fee > 0 && (
-              <DetailField label={t("addTx.fee")}>
-                {KRW(preset.fee)}
-              </DetailField>
-            )}
-            {preset.interestAmount != null && preset.interestAmount > 0 && (
-              <DetailField label={t("addTx.interest")}>
-                {KRW(preset.interestAmount)}
-              </DetailField>
-            )}
-          </>
-        ) : (
-          <>
-            <DetailField label={t("category")}>
-              {preset.categoryName ?? "-"}
-            </DetailField>
-            <DetailField label={t("accountCard")}>
-              {preset.assetName ?? "-"}
-            </DetailField>
-          </>
-        )}
-        {preset.merchant && (
-          <DetailField label={t("preset.defaultMerchant")}>
-            {preset.merchant}
-          </DetailField>
-        )}
-        {/* 이 값의 이름은 **메모** 하나다 — 불러오면 거래 시트의 메모 칸으로 들어가고,
-            편집 폼도 앱(desk-app #330)도 그 이름으로 부른다. 여기만 `세부` 라
-            같은 값이 화면마다 다른 이름으로 보였다. */}
-        {preset.description && (
-          <DetailField label={t("memo")}>{preset.description}</DetailField>
-        )}
-      </DetailFieldGroup>
-    </ModalShell>
+            {rows.map((r) => (
+              <ListItem
+                key={r.key}
+                title={r.name}
+                suffixText
+                suffix={<span className="block text-end">{r.value}</span>}
+              />
+            ))}
+          </List>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
+          <div className="flex w-full items-center gap-x2">
+            <Button
+              variant="ghost"
+              ghostColor="critical"
+              size={wide ? "small" : "large"}
+              className="shrink-0"
+              onClick={onDelete}
+            >
+              {tc("delete")}
+            </Button>
+            <Button
+              variant="neutralSolid"
+              size={wide ? "small" : "large"}
+              className={wide ? "ml-auto" : "flex-1"}
+              onClick={onEdit}
+            >
+              {tc("edit")}
+            </Button>
+          </div>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
