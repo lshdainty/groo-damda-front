@@ -125,7 +125,7 @@ export function PresetDetailDialog({
       }}
     >
       <ResponsiveDialogContent title={t("preset.detailTitle")}>
-        <ResponsiveDialogBody>
+        <ResponsiveDialogBody scrollFog>
           <div className="flex items-center gap-x3 pb-x2 pt-x1">
             <PresetTile
               preset={preset}

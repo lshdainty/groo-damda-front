@@ -1726,8 +1726,8 @@ expense,filter.chipAssets,계좌·카드 {{count}},{{count}} accounts
 expense,filter.chipExcludeOne,{{name}} 빼고,Excluding {{name}}
 expense,filter.chipAmountRanges,금액 {{count}}구간,{{count}} amount ranges
 expense,assetFilterBadge,{{name}} 필터 중,Filtering by {{name}}
-expense,preset.sortUsed,사용 많은 순,Most used
-expense,preset.sortRecent,최근 사용,Recently used
+expense,preset.sortUsed,많이 쓴 순,Frequent
+expense,preset.sortRecent,최근 사용,Recent
 expense,preset.sortName,이름순,By name
 expense,preset.add,프리셋 추가,Add preset
 expense,preset.emptyTitle,저장된 프리셋이 없어요,No saved presets

@@ -115,4 +115,12 @@ describe("프리셋 상세", () => {
     act(() => buttonByText("edit")!.click());
     expect(onEdit).toHaveBeenCalledTimes(1);
   });
+
+  it("상세 본문에 끝 흐림(scrollFog overlayBody — 위 20 · 아래 80)이 켜져 있다", () => {
+    const body = document.querySelector(
+      "[data-slot=bottom-sheet-body], [data-slot=dialog-body]",
+    );
+    expect(body?.className).toContain("scroll-pt-[20px]");
+    expect(body?.className).toContain("scroll-pb-[80px]");
+  });
 });

@@ -654,3 +654,24 @@ describe("자산을 늦게 받아도 읽어 온 이자가 지워지지 않는다
     expect(sent.update!.interestAmount).toBe(20000);
   });
 });
+
+describe("열 때 초점 (일정 폼 M-2 와 같다)", () => {
+  it("새로 만들 때는 이름 칸에 초점", async () => {
+    render(null);
+    await tick();
+    expect(document.activeElement).toBe(textInput());
+  });
+
+  it("수정으로 열 때는 칸이 아니라 표면이 초점을 받는다 — 키보드를 올리지 않는다", async () => {
+    render(basePreset);
+    await tick();
+    const a = document.activeElement as HTMLElement | null;
+    expect(a?.tagName).not.toBe("INPUT");
+    expect(a?.tagName).not.toBe("TEXTAREA");
+    expect(
+      a?.closest(
+        "[data-slot=bottom-sheet-content], [data-slot=dialog-content]",
+      ),
+    ).not.toBeNull();
+  });
+});

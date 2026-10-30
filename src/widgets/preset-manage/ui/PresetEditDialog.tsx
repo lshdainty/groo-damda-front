@@ -487,10 +487,15 @@ export function PresetEditDialog({
               <StepDoneButton onClick={confirmStep} />
             ) : undefined
           }
-          onOpenAutoFocus={(e) => {
-            e.preventDefault();
-            nameRef.current?.focus({ preventScroll: true });
-          }}
+          // 새로 만들 때만 이름 칸에 초점 — 수정으로 열 때는 키보드를 올리지 않고 표면(시트 · 대화상자)이 초점을 받는다
+          onOpenAutoFocus={
+            isNew
+              ? (e) => {
+                  e.preventDefault();
+                  nameRef.current?.focus({ preventScroll: true });
+                }
+              : undefined
+          }
         >
           {leave.node}
           {step != null && !wide && <SheetStepDone onClick={confirmStep} />}
