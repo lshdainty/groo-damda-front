@@ -138,6 +138,11 @@ type Props = {
   onSaved?: (saved: Expense) => void;
   /** 이체 수정 저장이 끝났다 — `onSaved` 의 이체 짝 */
   onTransferSaved?: (saved: AssetTransfer) => void;
+  /**
+   * 고쳐 쓰기 저장이 끝났다(옛 거래가 지워지고 새 거래가 생겼다 — 404 로 이미 교체돼 있던 갈래 포함). 거래 상세가 돌아갈 거래가 없으니 상세까지
+   * 닫는다(I-21 7a). `onClose` 보다 먼저 불린다.
+   */
+  onReplaced?: () => void;
 };
 
 /** 고쳐 쓸 거래와 그 거래의 분할 — 분할은 교체 본문에 함께 실린다. */
@@ -174,6 +179,7 @@ export function AddTxSheet({
   rewrite,
   onSaved,
   onTransferSaved,
+  onReplaced,
 }: Props) {
   const { t, i18n } = useTranslation("expense");
   const { t: tc } = useTranslation("common");
@@ -678,6 +684,7 @@ export function AddTxSheet({
                 : null,
           });
           setSaveConfirm(null);
+          onReplaced?.();
           onClose();
         },
         // 404 = 옛 거래가 이미 없다 — 응답만 못 받은 채 다시 눌렀으면 교체는 앞선 요청에서
@@ -687,6 +694,7 @@ export function AddTxSheet({
         onError: (err) => {
           if (!isHttpStatus(err, 404)) return;
           setSaveConfirm(null);
+          onReplaced?.();
           onClose();
         },
         onSettled: unlock,

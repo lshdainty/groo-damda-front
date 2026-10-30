@@ -57,6 +57,7 @@ const api = vi.hoisted(() => ({
   addTx: null as null | {
     expense?: Expense;
     onSaved?: (e: Expense) => void;
+    onReplaced?: () => void;
     onClose: () => void;
   },
 }));
@@ -899,6 +900,16 @@ describe("7a — [수정] 은 상세 위에서 수정 폼을 열고 저장하면
       document.querySelector("[data-slot=tx-detail-head]")!.textContent,
     ).toContain("새 가맹점");
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("고쳐 쓰기 저장은 옛 거래가 지워져 돌아갈 상세가 없다 — 상세까지 모두 닫는다", () => {
+    render();
+    click(lastButton("edit"));
+    act(() => {
+      api.addTx!.onReplaced!();
+      api.addTx!.onClose();
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("저장 없이 닫으면 옛 값 그대로 상세로 돌아온다", () => {

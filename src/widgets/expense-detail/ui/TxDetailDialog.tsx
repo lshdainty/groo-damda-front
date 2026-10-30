@@ -354,6 +354,8 @@ export function TxDetailDialog({
         expense={expense}
         mobile={mobile}
         onSaved={(updated) => setMarked(updated)}
+        // 고쳐 쓰기는 옛 거래를 지우고 새 거래를 만든다 — 돌아갈 상세가 없어 시트를 모두 닫는다
+        onReplaced={onClose}
         onClose={() => setStep("detail")}
       />
     );
