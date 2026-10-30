@@ -105,7 +105,7 @@ export function MemoDetailDialog({
           headerAction={more}
           aria-describedby={undefined}
         >
-          <ResponsiveDialogBody>
+          <ResponsiveDialogBody scrollFog>
             <div className="flex items-start gap-x2 pb-x3">
               <span
                 aria-hidden

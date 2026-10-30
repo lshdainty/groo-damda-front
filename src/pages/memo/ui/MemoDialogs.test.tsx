@@ -149,6 +149,13 @@ describe("메모 폼 (I-15 13)", () => {
     expect(q("[data-slot=list-chevron]")).toBeNull();
   });
 
+  it("본문에 Scroll Fog 가 켜져 있다(넘칠 수 있는 긴 폼 — bottom-sheet.md)", () => {
+    form(null);
+    expect(
+      q("[data-slot=bottom-sheet-body]")?.getAttribute("data-scroll-fog"),
+    ).toBe("overlayBody");
+  });
+
   it("바닥은 [저장] 하나뿐이다 — 시트에는 [취소] 가 없다", () => {
     form(null);
     const footer = q("[data-slot=bottom-sheet-footer]")!;
@@ -216,6 +223,13 @@ describe("메모 상세 (I-15 14)", () => {
         />,
       ),
     );
+
+  it("상세 본문에도 Scroll Fog 가 켜져 있다(10,000자 본문)", () => {
+    detail(base);
+    expect(
+      q("[data-slot=bottom-sheet-body]")?.getAttribute("data-scroll-fog"),
+    ).toBe("overlayBody");
+  });
 
   it("머리 제목이 메모 제목이고 색 히어로 카드 · 테두리 본문 상자가 없다", () => {
     detail(base);

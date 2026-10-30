@@ -433,7 +433,7 @@ export function TagEditDialog<T extends TagLike>({
         title={isNew ? t("tags.new") : t("tags.editTitle")}
         aria-describedby={undefined}
       >
-        <ResponsiveDialogBody>
+        <ResponsiveDialogBody scrollFog>
           <div className="flex flex-col gap-x4 pb-x2">
             {saveError && (
               <Callout tone="critical" role="alert">
