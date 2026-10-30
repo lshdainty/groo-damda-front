@@ -107,7 +107,10 @@ export function PresetManager({
       action: {
         label: tc("retry"),
         onClick: () => {
-          deleteMut.mutateAsync(p.rowId).catch(() => deleteFailed(p));
+          deleteMut
+            .mutateAsync(p.rowId)
+            .then(() => setDetail((d) => (d?.rowId === p.rowId ? null : d)))
+            .catch(() => deleteFailed(p));
         },
       },
     });
@@ -118,7 +121,11 @@ export function PresetManager({
     if (!confirmDelete) return;
     const target = confirmDelete;
     deleteMut.mutate(target.rowId, {
-      onSuccess: () => setConfirmDelete(null),
+      onSuccess: () => {
+        setConfirmDelete(null);
+        // 지운 프리셋의 상세가 열려 있었으면 함께 닫는다
+        setDetail((d) => (d?.rowId === target.rowId ? null : d));
+      },
       onError: () => {
         setConfirmDelete(null);
         deleteFailed(target);
@@ -266,10 +273,8 @@ export function PresetManager({
             setEditing(detail);
             setDetail(null);
           }}
-          onDelete={() => {
-            askDelete(detail);
-            setDetail(null);
-          }}
+          // 상세는 그대로 두고 그 위에 확인창 — [취소] 하면 상세로 돌아온다(I-20 C 18)
+          onDelete={() => askDelete(detail)}
         />
       )}
       {editing != null && (
