@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Input } from "@/shared/ds/input";
+import { Skeleton } from "@/shared/ds/skeleton";
 import { List } from "@/shared/ds/list";
 import type { ExpenseCategory } from "@/entities/expense";
 import type { ExpenseTemplate } from "@/entities/expense-template";
@@ -20,6 +21,7 @@ export function PresetPickStep({
   categories,
   onPick,
   failed = false,
+  loading = false,
   onRetry,
 }: {
   /** 지금 종류의 프리셋 전부 */
@@ -27,6 +29,7 @@ export function PresetPickStep({
   categories: ExpenseCategory[];
   onPick: (preset: ExpenseTemplate) => void;
   /** 카테고리 조회가 실패했다 — 줄 타일이 "없는 카테고리" 로 읽히지 않게 실패 Result Section + 다시 시도 */
+  loading?: boolean;
   failed?: boolean;
   onRetry?: () => void;
 }) {
@@ -38,6 +41,15 @@ export function PresetPickStep({
         title={t("preset.categoryLoadFailed")}
         onRetry={() => onRetry?.()}
       />
+    );
+  }
+  if (loading) {
+    return (
+      <div aria-hidden className="flex flex-col gap-x3 px-global-gutter py-x3">
+        {[0, 1, 2, 3].map((i) => (
+          <Skeleton key={i} text="t5" className="w-1/2" />
+        ))}
+      </div>
     );
   }
   const q = norm(query);

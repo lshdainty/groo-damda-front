@@ -7,6 +7,7 @@ import {
 } from "@/shared/lib/groo/amount";
 import { useTranslation } from "react-i18next";
 import { Chip } from "@/shared/ds/chip";
+import { useStepBack } from "@/shared/ui/groo/use-step-back";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { Button as DsButton } from "@/shared/ds/button";
 import { PresetPickStep } from "@/features/expense/ui/PresetPickStep";
@@ -216,10 +217,10 @@ export function AddTxSheet({
 
   // 조회 실패는 프리셋 고르기 · 카테고리 자리의 실패 Result Section 이 알린다(서버 원문 토스트 끔)
   const categoriesQ = useExpenseCategories({ silent: true });
-  // 다시 받는 중에는 status 가 pending 으로 돌아가므로 오류 횟수로도 본다
+  // 실패는 status 가 error 일 때만 — 다시 받는 중(pending)에는 Skeleton(앱과 같다)
   const categoriesFailed =
-    categoriesQ.data === undefined &&
-    (categoriesQ.isError || categoriesQ.errorUpdateCount > 0);
+    categoriesQ.data === undefined && categoriesQ.isError;
+  const categoriesLoading = categoriesQ.data === undefined && !categoriesFailed;
   const assetsQ = useAssets();
   const createMut = useCreateExpense();
   const updateMut = useUpdateExpense();
@@ -365,6 +366,11 @@ export function AddTxSheet({
   const [savePresetOpen, setSavePresetOpen] = useState(false);
   // 프리셋 "모두 보기" — 같은 시트가 한 단계 들어간다(I-20 C 20)
   const [presetPickOpen, setPresetPickOpen] = useState(false);
+  // 기기 뒤로 가기 = 프리셋 고르기 한 단계만 닫는다(시트 전체를 닫지 않는다 — 쓰던 값이 남는다)
+  useStepBack(presetPickOpen, () => {
+    setPresetPickOpen(false);
+    return true;
+  });
 
   // 사용 빈도 높은 순으로 8개. 편집 모드에선 프리셋 row 자체가 안 보이므로 무관.
   //
@@ -985,6 +991,7 @@ export function AddTxSheet({
           presets={typePresets}
           categories={categories}
           failed={categoriesFailed}
+          loading={categoriesLoading}
           onRetry={() => void categoriesQ.refetch()}
           onPick={(p) => {
             applyPreset(p);

@@ -257,3 +257,38 @@ describe("카테고리 조회 실패 — 프리셋 고르기 (I-20 20-2 후속)"
     expect(text).not.toContain("지출9");
   });
 });
+
+describe("고르기 [다시 시도] 뒤 화면 (T7)", () => {
+  it("실패 한 벌 → [다시 시도] 로 refetch → 받으면 프리셋 줄이 보인다", () => {
+    templates = Array.from({ length: 9 }, (_, i) =>
+      preset(i + 1, `지출${i + 1}`, "EXPENSE"),
+    );
+    catFail = true;
+    const rerender = () =>
+      act(() =>
+        root.render(
+          <AddTxSheet onClose={() => {}} mobile={false} expense={null} />,
+        ),
+      );
+    rerender();
+    const all = [
+      ...document.body.querySelectorAll<HTMLButtonElement>("button"),
+    ].find((b) => b.textContent?.includes("addTx.presetShowAll"));
+    act(() => all!.click());
+    expect(document.body.textContent).toContain("preset.categoryLoadFailed");
+    const retry = [
+      ...document.body.querySelectorAll<HTMLButtonElement>("button"),
+    ].find(
+      (b) =>
+        b.textContent?.includes("다시 시도") ||
+        b.textContent?.includes("retry"),
+    );
+    act(() => retry!.click());
+    catFail = false;
+    rerender();
+    expect(document.body.textContent).not.toContain(
+      "preset.categoryLoadFailed",
+    );
+    expect(document.body.textContent).toContain("지출9");
+  });
+});
