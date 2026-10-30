@@ -7,6 +7,7 @@ import {
 } from "@/shared/lib/groo/amount";
 import { useTranslation } from "react-i18next";
 import { Chip } from "@/shared/ds/chip";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { Button as DsButton } from "@/shared/ds/button";
 import { PresetPickStep } from "@/features/expense/ui/PresetPickStep";
 import {
@@ -213,7 +214,12 @@ export function AddTxSheet({
     { v: "OTHER", l: t("form.paymentMethod.OTHER") },
   ];
 
-  const categoriesQ = useExpenseCategories();
+  // 조회 실패는 프리셋 고르기 · 카테고리 자리의 실패 Result Section 이 알린다(서버 원문 토스트 끔)
+  const categoriesQ = useExpenseCategories({ silent: true });
+  // 다시 받는 중에는 status 가 pending 으로 돌아가므로 오류 횟수로도 본다
+  const categoriesFailed =
+    categoriesQ.data === undefined &&
+    (categoriesQ.isError || categoriesQ.errorUpdateCount > 0);
   const assetsQ = useAssets();
   const createMut = useCreateExpense();
   const updateMut = useUpdateExpense();
@@ -978,6 +984,8 @@ export function AddTxSheet({
         <PresetPickStep
           presets={typePresets}
           categories={categories}
+          failed={categoriesFailed}
+          onRetry={() => void categoriesQ.refetch()}
           onPick={(p) => {
             applyPreset(p);
             setPresetPickOpen(false);
@@ -1496,6 +1504,12 @@ export function AddTxSheet({
                 >
                   {t("category")}
                 </div>
+                {categoriesFailed ? (
+                  <BandFailure
+                    title={t("preset.categoryLoadFailed")}
+                    onRetry={() => void categoriesQ.refetch()}
+                  />
+                ) : null}
                 <CategoryGrid>
                   {topCategories.map((c) => (
                     <CategoryTile

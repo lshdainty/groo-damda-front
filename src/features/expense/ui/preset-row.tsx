@@ -83,7 +83,8 @@ export function PresetValueColumn({ preset }: { preset: ExpenseTemplate }) {
       ) : (
         <span
           data-slot="preset-amount-empty"
-          className="block text-end text-t3 text-fg-neutral-subtle"
+          // 금액 줄(t5 22)과 같은 줄 높이 — 금액 있는 줄 · 비운 줄의 높이가 같다
+          className="block text-end text-t3 leading-[var(--text-t5--line-height)] text-fg-neutral-subtle"
         >
           {t("preset.amountEmpty")}
         </span>

@@ -3238,3 +3238,4 @@ expense,addTx.presetSearch,프리셋 검색,Search presets
 expense,addTx.presetNoResult,찾는 프리셋이 없어요.,No presets found.
 expense,preset.fromAccount,보내는 계좌,Sending account
 expense,preset.toAccount,받는 계좌,Receiving account
+expense,preset.categoryLoadFailed,카테고리를 불러오지 못했어요,Could not load categories

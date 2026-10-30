@@ -6,6 +6,7 @@ import { Input } from "@/shared/ds/input";
 import { List } from "@/shared/ds/list";
 import type { ExpenseCategory } from "@/entities/expense";
 import type { ExpenseTemplate } from "@/entities/expense-template";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { PresetListRow } from "./preset-row";
 
 const norm = (s: string) => s.replace(/\s+/g, "").toLowerCase();
@@ -18,14 +19,27 @@ export function PresetPickStep({
   presets,
   categories,
   onPick,
+  failed = false,
+  onRetry,
 }: {
   /** 지금 종류의 프리셋 전부 */
   presets: ExpenseTemplate[];
   categories: ExpenseCategory[];
   onPick: (preset: ExpenseTemplate) => void;
+  /** 카테고리 조회가 실패했다 — 줄 타일이 "없는 카테고리" 로 읽히지 않게 실패 Result Section + 다시 시도 */
+  failed?: boolean;
+  onRetry?: () => void;
 }) {
   const { t } = useTranslation("expense");
   const [query, setQuery] = useState("");
+  if (failed) {
+    return (
+      <BandFailure
+        title={t("preset.categoryLoadFailed")}
+        onRetry={() => onRetry?.()}
+      />
+    );
+  }
   const q = norm(query);
   const shown = presets
     .filter(

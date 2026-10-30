@@ -17,6 +17,9 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 
+let catFail = false;
+const catCalls: unknown[] = [];
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k }),
   initReactI18next: { type: "3rdParty", init: () => {} },
@@ -25,7 +28,23 @@ vi.mock("@/features/expense", () => ({
   // 저장 뒤 토스트(D4·D9) — 이 파일은 그 갈래를 보지 않는다.
   useLedgerResultToast: () => () => {},
   useReplaceExpense: () => ({ mutate: () => {}, isPending: false }),
-  useExpenseCategories: () => ({ data: [category], isLoading: false }),
+  useExpenseCategories: (opts?: unknown) => {
+    catCalls.push(opts);
+    return catFail
+      ? {
+          data: undefined,
+          isLoading: false,
+          isError: true,
+          errorUpdateCount: 1,
+          refetch: () => {},
+        }
+      : {
+          data: [category],
+          isLoading: false,
+          isError: false,
+          errorUpdateCount: 0,
+        };
+  },
   useExpenseTemplates: () => ({ data: templates, isLoading: false }),
   useCreateExpense: () => ({ mutate: () => {}, isPending: false }),
   useUpdateExpense: () => ({ mutate: () => {}, isPending: false }),
@@ -128,6 +147,8 @@ afterEach(() => {
   act(() => root.unmount());
   container.remove();
   templates = baseTemplates;
+  catFail = false;
+  catCalls.length = 0;
 });
 
 const chipNames = () =>
@@ -210,5 +231,29 @@ describe('"모두 보기" — 지금 종류의 프리셋이 칩 수(8)보다 많
     expect(
       document.body.querySelector("[data-slot=text-input-value]"),
     ).toBeTruthy();
+  });
+});
+
+describe("카테고리 조회 실패 — 프리셋 고르기 (I-20 20-2 후속)", () => {
+  it("조회는 silent 이고, 실패하면 프리셋 줄 대신 실패 한 벌 + 다시 시도", () => {
+    templates = Array.from({ length: 9 }, (_, i) =>
+      preset(i + 1, `지출${i + 1}`, "EXPENSE"),
+    );
+    catFail = true;
+    act(() =>
+      root.render(
+        <AddTxSheet onClose={() => {}} mobile={false} expense={null} />,
+      ),
+    );
+    expect(
+      catCalls.every((a) => (a as { silent?: boolean })?.silent === true),
+    ).toBe(true);
+    const all = [
+      ...document.body.querySelectorAll<HTMLButtonElement>("button"),
+    ].find((b) => b.textContent?.includes("addTx.presetShowAll"));
+    act(() => all!.click());
+    const text = document.body.textContent ?? "";
+    expect(text).toContain("preset.categoryLoadFailed");
+    expect(text).not.toContain("지출9");
   });
 });

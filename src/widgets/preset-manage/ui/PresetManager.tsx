@@ -54,7 +54,8 @@ export function PresetManager({
   const snackbar = useSnackbar();
   // 불러오기 실패는 아래 실패 Result Section 이 알린다 — 전역 서버 원문 토스트와 겹치지 않게 끈다
   const templatesQ = useExpenseTemplates({ silent: true });
-  const categoriesQ = useExpenseCategories();
+  // 카테고리 조회 실패도 같은 실패 한 벌(Result Section + 다시 시도)로 알린다 — 회색 타일로 "없는 카테고리" 처럼 읽히지 않게
+  const categoriesQ = useExpenseCategories({ silent: true });
   // 삭제 실패는 전역 서버 원문 토스트 대신 아래 스낵바(고정 글 + 다시 시도)가 알린다
   const deleteMut = useDeleteExpenseTemplate({ silent: true });
 
@@ -73,7 +74,9 @@ export function PresetManager({
   }
 
   const isLoading = templatesQ.isLoading || categoriesQ.isLoading;
-  const failed = !isLoading && templatesQ.data === undefined;
+  const failed =
+    !isLoading &&
+    (templatesQ.data === undefined || categoriesQ.data === undefined);
   const items = useMemo(() => templatesQ.data ?? [], [templatesQ.data]);
   const categories = useMemo(() => categoriesQ.data ?? [], [categoriesQ.data]);
 
@@ -186,7 +189,10 @@ export function PresetManager({
       <BandFailure
         title={t("preset.loadFailed")}
         size={mobile ? "large" : "medium"}
-        onRetry={() => void templatesQ.refetch()}
+        onRetry={() => {
+          if (templatesQ.data === undefined) void templatesQ.refetch();
+          if (categoriesQ.data === undefined) void categoriesQ.refetch();
+        }}
         className="px-x6"
       />
     );

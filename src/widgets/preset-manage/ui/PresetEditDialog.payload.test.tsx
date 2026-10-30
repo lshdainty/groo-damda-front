@@ -28,6 +28,7 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 
+const catState = vi.hoisted(() => ({ fail: false, args: [] as unknown[] }));
 const sent = vi.hoisted(() => ({
   update: null as Record<string, unknown> | null,
   create: null as Record<string, unknown> | null,
@@ -43,7 +44,23 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 vi.mock("@/features/expense", () => ({
-  useExpenseCategories: () => ({ data: categories, isLoading: false }),
+  useExpenseCategories: (opts?: unknown) => {
+    catState.args.push(opts);
+    return catState.fail
+      ? {
+          data: undefined,
+          isLoading: false,
+          isError: true,
+          errorUpdateCount: 1,
+          refetch: () => {},
+        }
+      : {
+          data: categories,
+          isLoading: false,
+          isError: false,
+          errorUpdateCount: 0,
+        };
+  },
   useExpenseTemplates: () => ({ data: [], isLoading: false }),
   useCreateExpenseTemplate: () => ({
     mutate: (data: Record<string, unknown>) => {
@@ -591,5 +608,20 @@ describe("이자는 금액을 따라간다 (2026-09-15 결정)", () => {
 
     expect(sent.update!.interestAmount).toBe(20000);
     expect(sent.update!.lockAmount).toBe("Y");
+  });
+});
+
+describe("카테고리 조회 실패 (I-20 20-2 후속)", () => {
+  it("카테고리 줄을 열면 고르기 대신 실패 한 벌이 나온다 — 조회는 silent", async () => {
+    catState.fail = true;
+    render(null);
+    await click(rowButton("category"));
+    await tick();
+    expect(document.body.textContent).toContain("preset.categoryLoadFailed");
+    expect(pickItemTitles()).not.toContain("식비");
+    expect(
+      catState.args.every((a) => (a as { silent?: boolean })?.silent),
+    ).toBe(true);
+    catState.fail = false;
   });
 });

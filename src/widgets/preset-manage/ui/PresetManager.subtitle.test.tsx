@@ -12,7 +12,12 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 
-const state = vi.hoisted(() => ({ items: [] as ExpenseTemplate[] }));
+const state = vi.hoisted(() => ({
+  items: [] as ExpenseTemplate[],
+  categoriesFail: false,
+  categoryArgs: [] as unknown[],
+  categoryRefetch: undefined as unknown as ReturnType<typeof vi.fn>,
+}));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -24,7 +29,17 @@ vi.mock("react-i18next", () => ({
 }));
 vi.mock("@/features/expense", () => ({
   useExpenseTemplates: () => ({ data: state.items, isLoading: false }),
-  useExpenseCategories: () => ({ data: [], isLoading: false }),
+  useExpenseCategories: (opts?: unknown) => {
+    state.categoryArgs.push(opts);
+    return state.categoriesFail
+      ? {
+          data: undefined,
+          isLoading: false,
+          isError: true,
+          refetch: state.categoryRefetch,
+        }
+      : { data: [], isLoading: false, isError: false };
+  },
   useDeleteExpenseTemplate: () => ({
     mutate: () => {},
     mutateAsync: () => Promise.resolve(),
@@ -84,6 +99,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  state.categoriesFail = false;
+  state.categoryArgs = [];
   act(() => root.unmount());
   container.remove();
 });
@@ -162,5 +179,34 @@ describe("목록 (I-20 C 14 · 15 · 17)", () => {
     expect(
       container.querySelector("[data-slot=result-section] button"),
     ).toBeNull();
+  });
+});
+
+describe("카테고리 조회 실패 (I-20 20-2 후속)", () => {
+  it("카테고리 조회는 silent — 서버 원문 토스트 대신 화면이 알린다", () => {
+    state.items = [preset(1, "점심", "EXPENSE")];
+    render(true);
+    expect(
+      state.categoryArgs.every(
+        (a) => (a as { silent?: boolean })?.silent === true,
+      ),
+    ).toBe(true);
+  });
+
+  it("실패하면 줄 대신 실패 Result Section + [다시 시도] — 회색 타일 목록이 아니다", () => {
+    state.items = [preset(1, "점심", "EXPENSE")];
+    state.categoriesFail = true;
+    state.categoryRefetch = vi.fn();
+    const text = render(true);
+
+    expect(text).toContain("preset.loadFailed");
+    expect(container.querySelectorAll("[data-slot=list-body]")).toHaveLength(0);
+    const retry = Array.from(container.querySelectorAll("button")).find(
+      (b) =>
+        b.textContent?.includes("retry") ||
+        b.textContent?.includes("다시 시도"),
+    );
+    act(() => retry!.click());
+    expect(state.categoryRefetch).toHaveBeenCalledTimes(1);
   });
 });

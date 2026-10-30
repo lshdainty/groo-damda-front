@@ -25,12 +25,14 @@ import { Input } from "@/shared/ds/input";
 import { List, ListButtonItem, ListSwitchItem } from "@/shared/ds/list";
 import { LogoTile } from "@/shared/ds/logo-tile";
 import { useWideSurface } from "@/shared/ds/overlay";
+import { Skeleton } from "@/shared/ds/skeleton";
 import { Textarea } from "@/shared/ds/textarea";
 import { MAX_AMOUNT, parseAmount } from "@/shared/lib/groo/amount";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { nameIssue } from "@/shared/lib/groo/name-policy";
 import { AmountInput } from "@/shared/ui/groo/amount-input";
 import { FormFooter } from "@/shared/ui/groo/form-footer";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { PickList } from "@/shared/ui/groo/pick-list";
 import { PickerRow } from "@/shared/ui/groo/picker-row";
 import { SheetStepDone, StepDoneButton } from "@/shared/ui/groo/step-parts";
@@ -130,7 +132,7 @@ export function PresetEditDialog({
   const { t: tc } = useTranslation("common");
   const wide = useWideSurface();
   const isNew = !preset;
-  const categoriesQ = useExpenseCategories();
+  const categoriesQ = useExpenseCategories({ silent: true });
   const assetsQ = useAssets();
   const templatesQ = useExpenseTemplates();
   // 저장 실패는 전역 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글)이 알린다
@@ -624,17 +626,41 @@ export function PresetEditDialog({
                         surfaceTitle={t("category")}
                         errorMessage={categoryErr}
                       >
-                        {({ close }) => (
-                          <CategoryPickList
-                            categories={categories}
-                            kind={type === "INCOME" ? "INCOME" : "EXPENSE"}
-                            selectedRowId={categoryRowId}
-                            onPick={(id) => {
-                              setCategoryRowId(id);
-                              close();
-                            }}
-                          />
-                        )}
+                        {({ close }) =>
+                          categoriesQ.data === undefined ? (
+                            categoriesQ.isError ||
+                            categoriesQ.errorUpdateCount > 0 ? (
+                              <BandFailure
+                                title={t("preset.categoryLoadFailed")}
+                                onRetry={() => void categoriesQ.refetch()}
+                              />
+                            ) : (
+                              // 다시 받는 중 — 비어 있는 목록("이 종류의 카테고리가 없어요")으로 읽히지 않게 Skeleton
+                              <div
+                                aria-hidden
+                                className="flex flex-col gap-x3 py-x3"
+                              >
+                                {[0, 1, 2].map((i) => (
+                                  <Skeleton
+                                    key={i}
+                                    text="t5"
+                                    className="w-1/2"
+                                  />
+                                ))}
+                              </div>
+                            )
+                          ) : (
+                            <CategoryPickList
+                              categories={categories}
+                              kind={type === "INCOME" ? "INCOME" : "EXPENSE"}
+                              selectedRowId={categoryRowId}
+                              onPick={(id) => {
+                                setCategoryRowId(id);
+                                close();
+                              }}
+                            />
+                          )
+                        }
                       </PickerRow>
                       <StepRow
                         icon={<FileText />}
