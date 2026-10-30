@@ -23,6 +23,10 @@ export function TypeChips({ f }: { f: TxForm }) {
     { v: "TRANSFER", l: t("addTx.transfer") },
   ];
   const lockedTo = f.isEdit ? f.type : null;
+  // 이체 수정은 "이체" 칩 하나만 둔다(D 25) — 다른 종류로 바꿀 수 없는 칸에 막힌 칩 둘을 늘어놓지 않는다
+  const shown = f.isEditTransfer
+    ? items.filter((o) => o.v === "TRANSFER")
+    : items;
   return (
     <ChipRadioGroup
       aria-label={t("addTx.typeGroup")}
@@ -31,7 +35,7 @@ export function TypeChips({ f }: { f: TxForm }) {
       layout="wrap"
       className="px-global-gutter pb-x2"
     >
-      {items.map((o) => (
+      {shown.map((o) => (
         <ChipRadio
           key={o.v}
           value={o.v}
