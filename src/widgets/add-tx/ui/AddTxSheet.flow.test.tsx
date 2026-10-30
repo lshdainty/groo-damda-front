@@ -35,6 +35,7 @@ const sent = vi.hoisted(() => ({
   calls: 0,
   /** 문자 전용 저장 경로(`/import/sms/commit`)로 나간 본문(QA #123) */
   sms: null as Record<string, unknown> | null,
+  transfer: null as Record<string, unknown> | null,
   /** 훅이 어떤 옵션으로 불렸나 — `silent` 를 켜야 전역 토스트가 겹치지 않는다 */
   opts: {} as Record<string, unknown>,
   snack: [] as string[],
@@ -130,7 +131,18 @@ vi.mock("@/features/asset", () => ({
     isError: false,
     refetch: () => {},
   }),
-  useCreateTransfer: () => ({ mutate: () => {}, isPending: false }),
+  useCreateTransfer: () => ({
+    mutate: (
+      data: Record<string, unknown>,
+      opts?: { onSuccess?: () => void },
+    ) => {
+      sent.transfer = data;
+      sent.calls += 1;
+      opts?.onSuccess?.();
+    },
+    isPending: false,
+    isError: false,
+  }),
   useUpdateTransfer: () => ({ mutate: () => {}, isPending: false }),
 }));
 vi.mock("@/features/sms", () => ({
@@ -244,7 +256,7 @@ beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   setupFormDom(false);
   __resetPointerBlockForTest();
-  sent.create = sent.update = sent.preset = sent.sms = null;
+  sent.create = sent.update = sent.preset = sent.sms = sent.transfer = null;
   state.parsed = null;
   state.assets = [];
   sent.touched = [];
@@ -917,5 +929,143 @@ describe("한글 조합 중 Enter 는 저장하지 않는다 (L2)", () => {
       );
     });
     expect(sent.calls).toBe(1);
+  });
+});
+
+describe("기본 통화 (QA #124 · D7)", () => {
+  it("설정이 늦게 도착해도 첫 렌더의 원화에 잠기지 않는다", async () => {
+    await open();
+    expect(
+      document.body.querySelector('[aria-label="addTx.currencyChip"]')!
+        .textContent,
+    ).toContain("KRW");
+    prefs.defaultCurrency = "USD";
+    await open();
+    expect(
+      document.body.querySelector('[aria-label="addTx.currencyChip"]')!
+        .textContent,
+    ).toContain("USD");
+  });
+
+  it("수정은 그 거래의 값으로 연다 — 기본 통화가 USD 여도 원화 거래가 해외 결제로 열리지 않는다", async () => {
+    prefs.defaultCurrency = "USD";
+    await open({ expense });
+    expect(dialogText()).toContain("12,000원");
+    expect(dialogText()).not.toContain("addTx.fxRateLabel");
+  });
+
+  it("기본 통화가 외화여도 현지 금액을 안 적으면 외화 셋이 모두 null 로 나간다", async () => {
+    prefs.defaultCurrency = "USD";
+    await open();
+    // 칩을 원화로 돌려 일반 거래로 저장 — 외화 입력이 흘러들지 않는다
+    click(
+      document.body.querySelector<HTMLElement>(
+        '[aria-label="addTx.currencyChip"]',
+      )!,
+    );
+    await tick();
+    click(lastButton("₩ KRW"));
+    await tick();
+    setValue(amountInput(), "5000");
+    await press("addTx.next");
+    click(row("addTx.category"));
+    await tick();
+    click(lastButton("식비"));
+    await tick();
+    await press("addTx.add");
+    expect(sent.create).toMatchObject({
+      amount: 5000,
+      originalAmount: null,
+      originalCurrency: null,
+      exchangeRate: null,
+    });
+  });
+});
+
+describe("프리셋 칩은 지금 종류의 것만 보여 준다", () => {
+  const p = (rowId: number, templateName: string, expenseType: string) => ({
+    rowId,
+    templateName,
+    expenseType,
+    categoryRowId: 11,
+    assetRowId: null,
+    toAssetRowId: null,
+    merchant: null,
+    paymentMethod: null,
+    description: null,
+    isFixed: false,
+    useCount: 5 - rowId,
+    lockAmount: "N",
+    amount: null,
+  });
+  beforeEach(() => {
+    state.presets = [
+      p(1, "점심칩", "EXPENSE"),
+      p(2, "월급칩", "INCOME"),
+      p(3, "적금칩", "TRANSFER"),
+    ];
+  });
+  const chips = () => document.body.textContent ?? "";
+
+  it("지출 — 지출 프리셋만", async () => {
+    await open();
+    expect(chips()).toContain("점심칩");
+    expect(chips()).not.toContain("월급칩");
+    expect(chips()).not.toContain("적금칩");
+  });
+
+  it("수입 — 수입 프리셋만", async () => {
+    await open();
+    click(lastButton("income"));
+    await tick();
+    expect(chips()).toContain("월급칩");
+    expect(chips()).not.toContain("점심칩");
+  });
+
+  it("이체 — 이체 프리셋만(칩 줄 자체는 뜬다)", async () => {
+    await open();
+    click(lastButton("addTx.transfer"));
+    await tick();
+    expect(chips()).toContain("적금칩");
+    expect(chips()).not.toContain("점심칩");
+  });
+});
+
+describe("이체 프리셋 사용 기록 (#174)", () => {
+  it("칩으로 채워 이체를 저장하면 사용 기록이 오른다 — 지출 · 수입과 같은 규칙", async () => {
+    state.assets = [
+      asset(1, "주거래", "BANK_ACCOUNT"),
+      asset(2, "비상금", "BANK_ACCOUNT"),
+    ];
+    state.presets = [
+      {
+        rowId: 7,
+        templateName: "적금칩",
+        expenseType: "TRANSFER",
+        categoryRowId: null,
+        assetRowId: 1,
+        toAssetRowId: 2,
+        fee: null,
+        interestAmount: null,
+        merchant: null,
+        paymentMethod: null,
+        description: null,
+        isFixed: false,
+        useCount: 1,
+        lockAmount: "Y",
+        amount: 100000,
+      },
+    ];
+    await open();
+    click(lastButton("addTx.transfer"));
+    await tick();
+    await pressStartingWith("적금칩");
+    await press("addTx.add");
+    expect(sent.transfer).toMatchObject({
+      fromAssetRowId: 1,
+      toAssetRowId: 2,
+      amount: 100000,
+    });
+    expect(sent.touched).toEqual([7]);
   });
 });
