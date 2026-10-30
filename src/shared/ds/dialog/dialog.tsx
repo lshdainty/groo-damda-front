@@ -496,17 +496,23 @@ export interface ResponsiveDialogContentProps extends Omit<
   onBack?: () => void;
   /** 열릴 때 초점 — 기본은 표면(컨테이너). 폼이 첫 칸에 초점을 줄 때 e.preventDefault() 하고 직접 옮긴다(두 표면 모두 같다) */
   onOpenAutoFocus?: (event: Event) => void;
+  /** 시트의 닫기 원 — 기본 켬. 같은 표면 안에서 한 단계 들어간 동안은 끈다(머리가 ← 와 "완료" 를 갖는다). 입력 폼 대화상자는 원래 닫기가 없다 */
+  showCloseButton?: boolean;
 }
 
 const ResponsiveDialogContent = React.forwardRef<
   HTMLDivElement,
   ResponsiveDialogContentProps
->(({ size, ...props }, ref) => {
+>(({ size, showCloseButton, ...props }, ref) => {
   const { wide } = useResponsive("ResponsiveDialogContent");
   return wide ? (
     <DialogContent ref={ref} size={size} {...props} />
   ) : (
-    <BottomSheetContent ref={ref} {...props} />
+    <BottomSheetContent
+      ref={ref}
+      showCloseButton={showCloseButton}
+      {...props}
+    />
   );
 });
 ResponsiveDialogContent.displayName = "ResponsiveDialogContent";
