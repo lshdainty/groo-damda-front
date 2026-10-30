@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Badge } from "@/shared/ds/badge";
 import { CardArt } from "@/shared/ds/image-frame";
 import { List, ListSwitchItem } from "@/shared/ds/list";
+import { wonPrefix } from "@/shared/lib/groo/format";
 import {
   SearchableList,
   SearchableListEmpty,
@@ -128,8 +129,7 @@ function CardProductList({
                       {c.annualFee &&
                         (c.annualFee.amount > 0
                           ? ` · ${t("editDialog.annualFeeValue", {
-                              amount:
-                                c.annualFee.amount.toLocaleString("ko-KR"),
+                              amount: `${wonPrefix()}${c.annualFee.amount.toLocaleString("ko-KR")}`,
                             })}`
                           : ` · ${t("editDialog.annualFeeFree")}`)}
                     </span>

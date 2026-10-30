@@ -69,6 +69,7 @@ import {
 } from "@/shared/ui/chart";
 import {
   KRW,
+  wonPrefix,
   MINUS,
   money,
   formatChartAxis,
@@ -1713,7 +1714,7 @@ function CardDetailBody({
           title={t("assetDetail.cancelPayment")}
           message={t("assetDetail.cancelPaymentConfirm", {
             date: formatDay(lastPayment.paymentDate).md,
-            amount: KRW(lastPayment.billingAmount),
+            amount: `${wonPrefix()}${KRW(lastPayment.billingAmount)}`,
           })}
           confirmLabel={t("assetDetail.cancelPayment")}
           danger

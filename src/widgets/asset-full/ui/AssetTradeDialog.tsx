@@ -26,7 +26,7 @@ import type {
   AssetTradeFormValues,
   TradeType,
 } from "@/entities/asset";
-import { KRW } from "@/shared/lib/groo/format";
+import { KRW, wonPrefix } from "@/shared/lib/groo/format";
 
 /**
  * 매수·매도 입력.
@@ -216,7 +216,7 @@ export function AssetTradeDialog({
           {t("trade.heldSummary", {
             qty: formatQty(holding.quantity, holding.holdingType ?? "STOCK"),
             avg: holding.avgPrice
-              ? KRW(Math.round(Number(holding.avgPrice)))
+              ? `${wonPrefix()}${KRW(Math.round(Number(holding.avgPrice)))}`
               : "—",
           })}
         </div>
