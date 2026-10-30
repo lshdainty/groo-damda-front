@@ -663,7 +663,8 @@ export function PresetEditDialog({
                         {({ close }) =>
                           assetPick(
                             t("preset.toAccount"),
-                            eligible,
+                            // 받는 계좌 후보에서는 보내는 계좌를 뺀다(보내는 계좌 후보에서는 받는 계좌를 빼지 않는다)
+                            eligible.filter((a) => a.rowId !== assetRowId),
                             toAssetRowId,
                             setToAssetRowId,
                             close,

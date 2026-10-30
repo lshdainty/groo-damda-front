@@ -776,6 +776,17 @@ describe("규칙 밖 값은 화면이 먼저 비운다 (D3 · D4)", () => {
     expect(pickItemTitles()).toContain("청약");
   });
 
+  it("받는 계좌 후보에서는 보내는 계좌를 뺀다", async () => {
+    render(null);
+    await click(chip("addTx.transfer"));
+    await pick("preset.fromAccount", "주거래");
+    await click(rowButton("preset.toAccount"));
+    await tick();
+    const titles = pickItemTitles();
+    expect(titles).toContain("청약");
+    expect(titles).not.toContain("주거래");
+  });
+
   it("지운 계좌를 가리키는 프리셋은 받은 뒤 계좌를 비워 보낸다(옛 id 가 안 나간다)", async () => {
     assetState.removed = [3];
     render(basePreset);

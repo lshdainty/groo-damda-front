@@ -213,7 +213,11 @@ export function PresetManager({
         description={t("preset.emptyDesc")}
         primaryAction={
           mobile
-            ? { label: t("preset.add"), onClick: () => setEditing("new") }
+            ? {
+                label: t("preset.add"),
+                icon: <Plus aria-hidden />,
+                onClick: () => setEditing("new"),
+              }
             : undefined
         }
         className="[[data-slot=card]_&]:px-0"
