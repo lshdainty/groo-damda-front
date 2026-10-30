@@ -143,7 +143,8 @@ export function MemoFormDialog({
             label={t("titlePlaceholder")}
             invalid={showError && titleEmpty}
             errorMessage={t("titleRequired")}
-            className="pb-x2 pt-x1 [&_label]:sr-only"
+            labelHidden
+            className="pb-x2 pt-x1"
           >
             <Input
               ref={titleRef}
@@ -157,7 +158,7 @@ export function MemoFormDialog({
               maxLength={TITLE_MAX}
             />
           </Field>
-          <Field label={t("contentLabel")} className="pb-x2 [&_label]:sr-only">
+          <Field label={t("contentLabel")} labelHidden className="pb-x2">
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value.slice(0, CONTENT_MAX))}

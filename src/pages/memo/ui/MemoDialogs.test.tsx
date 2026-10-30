@@ -156,6 +156,17 @@ describe("메모 폼 (I-15 13)", () => {
     ).toBe("overlayBody");
   });
 
+  it("제목 · 내용 칸의 라벨은 읽는 이름으로 남고 머리 줄은 흐름에 없다(칸 사이 gap 한 칸 더 없음)", () => {
+    form(null);
+    const headers = document.body.querySelectorAll("[data-slot=field-header]");
+    expect(headers.length).toBeGreaterThanOrEqual(2);
+    headers.forEach((h) => expect(h.className).toContain("sr-only"));
+    expect(q<HTMLInputElement>("input")!.labels?.[0]?.textContent).toBe("제목");
+    expect(q<HTMLTextAreaElement>("textarea")!.labels?.[0]?.textContent).toBe(
+      "내용",
+    );
+  });
+
   it("바닥은 [저장] 하나뿐이다 — 시트에는 [취소] 가 없다", () => {
     form(null);
     const footer = q("[data-slot=bottom-sheet-footer]")!;
