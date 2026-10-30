@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useLeaveConfirm } from "@/shared/ds/alert-dialog";
@@ -28,6 +28,11 @@ export interface DetailFooter {
   cancelLabel?: string;
 }
 
+function assignRef<T>(ref: React.Ref<T> | undefined, value: T | null) {
+  if (typeof ref === "function") ref(value);
+  else if (ref) (ref as React.MutableRefObject<T | null>).current = value;
+}
+
 /** 바닥 노드 — 함수면 ← 와 같은 `requestBack`(바뀐 값이 있으면 먼저 묻는다)을 넘겨 그린다 */
 function resolveFooterNode(
   node: ReactNode | ((requestBack: () => void) => ReactNode),
@@ -47,6 +52,12 @@ interface DetailSurfaceProps {
   subStep?: boolean;
   /** 단계에서 바뀐 값이 있다 — 상세로 돌아가기 · 닫기 전에 "작성한 내용이 사라져요" 를 묻는다 */
   dirty?: boolean;
+  /**
+   * 닫기 원 · 바깥 · 끌어내리기로 시트 전체를 닫을 때 물을 값 — 기본은 `dirty`. 끼운 수정 폼은 ← 는 단계 값(`dirty`)만, 닫기는 폼 전체 변경까지 묻는다(N7)
+   */
+  closeDirty?: boolean;
+  /** 저장 중이라 닫지 못한다 — 닫으면 응답 뒤 콜백(상세 갱신 · 알림)이 사라진다(L1) */
+  closeBlocked?: boolean;
   /** 한 단계 뒤(상세로) */
   onStepBack?: () => void;
   footer?: DetailFooter;
@@ -76,6 +87,8 @@ export function DetailSurface({
   onClose,
   subStep = false,
   dirty = false,
+  closeDirty,
+  closeBlocked = false,
   onStepBack,
   footer,
   footerNode,
@@ -87,6 +100,20 @@ export function DetailSurface({
   const wide = useWideSurface();
   const { t: tc } = useTranslation("common");
   const contentRef = useRef<HTMLDivElement | null>(null);
+  // 단계가 바뀌어 본문이 새로 만들어져도 상세로 돌아오면 읽던 자리로 — 단계 본문(환불 · 수정)은 늘 맨 위에서 시작한다(M5)
+  const detailScroll = useRef(0);
+  const bodyEl = useRef<HTMLDivElement | null>(null);
+  const setBody = (el: HTMLDivElement | null) => {
+    bodyEl.current = el;
+    assignRef(bodyRef, el);
+  };
+  const onBodyScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (bodyKey === "detail") detailScroll.current = e.currentTarget.scrollTop;
+  };
+  useLayoutEffect(() => {
+    if (bodyKey === "detail" && bodyEl.current)
+      bodyEl.current.scrollTop = detailScroll.current;
+  }, [bodyKey]);
   const stepLeave = useLeaveConfirm({
     dirty,
     leave: () => onStepBack?.(),
@@ -110,6 +137,11 @@ export function DetailSurface({
     },
   } as const;
 
+  // 값 하나를 치는 시트 단계처럼 바닥에 둘 것이 없으면 빈 바닥 틀을 그리지 않는다(L9)
+  const customFooter =
+    footerNode != null
+      ? resolveFooterNode(footerNode, () => void stepLeave.request())
+      : null;
   const del = footer?.onDelete ? (
     <Button
       variant="ghost"
@@ -129,19 +161,22 @@ export function DetailSurface({
         <Dialog
           open
           form={subStep}
-          dirty={subStep && dirty}
+          dirty={subStep && (closeDirty ?? dirty)}
           onOpenChange={(next) => {
-            if (!next) onClose();
+            if (!next && !closeBlocked) onClose();
           }}
         >
           <DialogContent title={title} {...stepProps}>
-            <DialogBody ref={bodyRef} key={bodyKey} scrollFog>
+            <DialogBody
+              ref={setBody}
+              onScroll={onBodyScroll}
+              key={bodyKey}
+              scrollFog
+            >
               <div className="-mx-x6">{children}</div>
             </DialogBody>
-            {footerNode ? (
-              <DialogFooter>
-                {resolveFooterNode(footerNode, () => void stepLeave.request())}
-              </DialogFooter>
+            {customFooter ? (
+              <DialogFooter>{customFooter}</DialogFooter>
             ) : footer && (del || footer.primary) ? (
               <DialogFooter>
                 {del}
@@ -176,9 +211,9 @@ export function DetailSurface({
       <BottomSheet
         open
         form={subStep}
-        dirty={subStep && dirty}
+        dirty={subStep && (closeDirty ?? dirty)}
         onOpenChange={(next) => {
-          if (!next) onClose();
+          if (!next && !closeBlocked) onClose();
         }}
       >
         <BottomSheetContent
@@ -189,13 +224,16 @@ export function DetailSurface({
           }
         >
           {stepDone}
-          <BottomSheetBody ref={bodyRef} key={bodyKey} scrollFog>
+          <BottomSheetBody
+            ref={setBody}
+            onScroll={onBodyScroll}
+            key={bodyKey}
+            scrollFog
+          >
             <div className="-mx-x6">{children}</div>
           </BottomSheetBody>
-          {footerNode ? (
-            <BottomSheetFooter>
-              {resolveFooterNode(footerNode, () => void stepLeave.request())}
-            </BottomSheetFooter>
+          {customFooter ? (
+            <BottomSheetFooter>{customFooter}</BottomSheetFooter>
           ) : footer && (del || footer.primary) ? (
             <BottomSheetFooter>
               <div className="flex w-full items-center gap-x2">

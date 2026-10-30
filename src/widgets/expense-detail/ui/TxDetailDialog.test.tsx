@@ -56,6 +56,8 @@ const api = vi.hoisted(() => ({
   confirms: [] as { title: string; danger?: boolean; singleAction?: boolean }[],
   /** 끼운 수정 폼이 값 하나를 치는 단계에 있다 */
   embedInSub: false,
+  submitting: false,
+  dirtyAll: false,
   begun: null as unknown,
   parts: null as
     | null
@@ -126,6 +128,7 @@ vi.mock("@/widgets/add-tx", () => ({
     return {
       main: "2",
       sub: null,
+      submitting: api.submitting,
       beginEdit: (seed: unknown) => {
         api.begun = seed;
       },
@@ -140,6 +143,7 @@ vi.mock("@/widgets/add-tx", () => ({
       body: <div data-testid="add-tx-sheet" />,
       footer: () => null,
       dirty: false,
+      dirtyAll: api.dirtyAll,
       onBack: () => o.onBack?.(),
       inSub: api.embedInSub,
       onDone: () => {},
@@ -300,6 +304,8 @@ beforeEach(async () => {
   api.confirms = [];
   api.addTx = null;
   api.embedInSub = false;
+  api.submitting = false;
+  api.dirtyAll = false;
   api.begun = null;
   api.parts = null;
   onClose.mockClear();
@@ -968,6 +974,30 @@ describe("7a — [수정] 은 상세 위에서 수정 폼을 열고 저장하면
     expect(api.begun).toEqual({
       rewrite: { of: baseExpense, splits: [] },
     });
+  });
+
+  it("저장 중에는 닫기 원이 시트를 닫지 않는다 — 닫으면 응답 뒤 상세 갱신 · 알림이 사라진다 (L1)", () => {
+    api.submitting = true;
+    render();
+    click(lastButton("edit"));
+    click(
+      document.querySelector<HTMLElement>("[data-slot=bottom-sheet-close]")!,
+    );
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("상세로 돌아오면 읽던 스크롤 자리로 간다 — 단계 본문이 새로 만들어져도 맨 위로 튀지 않는다 (M5)", () => {
+    render();
+    const body = () =>
+      document.querySelector<HTMLElement>("[data-slot=bottom-sheet-body]")!;
+    body().scrollTop = 120;
+    act(() => {
+      body().dispatchEvent(new Event("scroll", { bubbles: true }));
+    });
+    click(lastButton("edit"));
+    expect(body().scrollTop).toBe(0);
+    act(() => api.parts!.onBack());
+    expect(body().scrollTop).toBe(120);
   });
 
   it("수정 단계에서 ← 는 상세로 돌아온다 — 시트는 그대로", () => {

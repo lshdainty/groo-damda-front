@@ -415,6 +415,8 @@ export function TxDetailDialog({
         onClose={onClose}
         subStep={inRefund || editing}
         dirty={editing ? ep.dirty : refundDirty}
+        closeDirty={editing ? ep.dirtyAll : undefined}
+        closeBlocked={editing && form.submitting}
         onStepBack={
           editing
             ? ep.onBack

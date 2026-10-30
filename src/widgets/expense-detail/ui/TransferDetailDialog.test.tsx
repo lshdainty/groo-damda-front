@@ -23,6 +23,8 @@ const api = vi.hoisted(() => ({
   recurringSeed: null as unknown,
   /** 끼운 수정 폼이 값 하나를 치는 단계에 있다 */
   embedInSub: false,
+  submitting: false,
+  dirtyAll: false,
   begun: null as unknown,
   parts: null as
     | null
@@ -79,6 +81,7 @@ vi.mock("@/widgets/add-tx", () => ({
     return {
       main: "2",
       sub: null,
+      submitting: api.submitting,
       beginEdit: (seed: unknown) => {
         api.begun = seed;
       },
@@ -93,6 +96,7 @@ vi.mock("@/widgets/add-tx", () => ({
       body: <div data-testid="add-tx-sheet" />,
       footer: () => null,
       dirty: false,
+      dirtyAll: api.dirtyAll,
       onBack: () => o.onBack?.(),
       inSub: api.embedInSub,
       onDone: () => {},
@@ -163,6 +167,8 @@ beforeEach(async () => {
   api.recurringSeed = null;
   api.addTx = null;
   api.embedInSub = false;
+  api.submitting = false;
+  api.dirtyAll = false;
   api.begun = null;
   api.parts = null;
   onClose.mockClear();
