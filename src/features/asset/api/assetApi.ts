@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, type QuietRequestConfig } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
   Asset,
@@ -184,9 +184,13 @@ export const assetApi = {
     return resp.data;
   },
 
-  deleteTransfer: async (id: number): Promise<void> => {
+  deleteTransfer: async (
+    id: number,
+    options?: { silent?: boolean },
+  ): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/asset-transfer/${id}`,
+      options?.silent ? ({ silent: true } as QuietRequestConfig) : undefined,
     );
     return resp.data;
   },

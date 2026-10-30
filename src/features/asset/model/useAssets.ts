@@ -175,7 +175,7 @@ export const useUpdateTransfer = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: AssetTransferFormValues }) =>
       assetApi.updateTransfer(id, data),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };
 
@@ -231,8 +231,9 @@ export const useDeleteTransfer = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => assetApi.deleteTransfer(id),
-    // 이자 지출도 함께 사라진다 — 안 비우면 유령처럼 남아 보인다.
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    mutationFn: ({ id, silent }: { id: number; silent?: boolean }) =>
+      assetApi.deleteTransfer(id, { silent }),
+    // 이자 지출도 함께 사라진다 — 안 비우면 유령처럼 남아 보인다. 다시 받기를 기다린 뒤 호출처 콜백이 불려 지운 이체의 버튼이 남지 않는다
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };

@@ -49,7 +49,8 @@ export const useUpdateExpense = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: ExpenseFormValues }) =>
       expenseApi.updateExpense(id, data),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };
 
@@ -65,9 +66,18 @@ export const useRefundExpense = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, refundedAt }: { id: number; refundedAt?: string }) =>
-      expenseApi.refund(id, refundedAt),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    mutationFn: ({
+      id,
+      refundedAt,
+      silent,
+    }: {
+      id: number;
+      refundedAt?: string;
+      /** 실패를 호출처가 자기 자리에서 알리면 true — 기본(생략)은 전역 오류 토스트 */
+      silent?: boolean;
+    }) => expenseApi.refund(id, refundedAt, { silent }),
+    // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };
 
@@ -75,8 +85,10 @@ export const useCancelRefund = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => expenseApi.cancelRefund(id),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    mutationFn: ({ id, silent }: { id: number; silent?: boolean }) =>
+      expenseApi.cancelRefund(id, { silent }),
+    // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };
 
@@ -106,8 +118,13 @@ export const useDeleteExpense = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => expenseApi.deleteExpense(id),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    // 숫자 하나(밀기 삭제 등 기존 호출처)나 { id, silent } — 실패를 호출처가 알리면 silent
+    mutationFn: (arg: number | { id: number; silent?: boolean }) =>
+      typeof arg === "number"
+        ? expenseApi.deleteExpense(arg)
+        : expenseApi.deleteExpense(arg.id, { silent: arg.silent }),
+    // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };
 
