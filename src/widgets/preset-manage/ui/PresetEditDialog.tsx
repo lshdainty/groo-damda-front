@@ -207,7 +207,8 @@ export function PresetEditDialog({
     setFee("");
     setInterest("");
   }
-  if (!showInterest && interest) setInterest("");
+  // 자산을 아직 못 받았으면(대출인지 모른다) 읽어 온 이자를 지우지 않는다 — 먼저 지우면 받은 뒤에도 비어 저장하면 이자가 사라진다
+  if (assetsQ.data !== undefined && !showInterest && interest) setInterest("");
 
   const takenNames = (templatesQ.data ?? [])
     .filter((p) => p.rowId !== preset?.rowId)
