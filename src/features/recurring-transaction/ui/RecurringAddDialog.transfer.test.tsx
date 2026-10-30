@@ -237,3 +237,20 @@ describe("이체 반복", () => {
     expect(document.body.textContent).toContain("errCategory");
   });
 });
+
+describe("끝 흐림(scrollFog)", () => {
+  const bodyFog = () =>
+    document.body
+      .querySelector("[data-slot$='-body'][data-scroll-fog]")
+      ?.getAttribute("data-scroll-fog") ?? null;
+
+  it("폼 본문은 켜고, 넘치지 않는 단계(끝)는 끈다 — 390 × 844 보통 값에서 90% 에 닿을 때만 켠다", () => {
+    act(() => root.render(<RecurringAddDialog onClose={() => {}} />));
+    expect(bodyFog()).toBe("overlayBody");
+    const end = [
+      ...document.body.querySelectorAll<HTMLElement>("[data-slot=list-body]"),
+    ].find((el) => el.textContent?.startsWith("endRow"));
+    act(() => end!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(bodyFog()).toBeNull();
+  });
+});

@@ -179,6 +179,7 @@ export function CategoryPickRow({
       dot={picked ? getPaletteByColor(picked.color).color : undefined}
       surfaceTitle={surfaceTitle}
       errorMessage={errorMessage}
+      scrollFog
     >
       {({ close }) =>
         failed ? (
@@ -244,6 +245,7 @@ export function AssetPickRow({
       onClear={onClear}
       clearLabel={clearLabel}
       errorMessage={errorMessage}
+      scrollFog
     >
       {({ close }) =>
         assets.length === 0 ? (

@@ -545,6 +545,11 @@ export function RecurringAddDialog({
       {tc("done")}
     </Button>
   );
+  // 끝 흐림은 390 × 844 보통 값에서 본문이 시트 90%(759.6)에 닿을 때만 — 폼(1.20) · 매주 고르기(1.00)는 켜고,
+  // 매월 · 매년 · 매일 고르기 · 끝 · 메모 · 거래처 · 수수료 · 이자 단계는 넘치지 않아 끈다(결과표 "자연 높이 / 759.6")
+  const bodyFog =
+    step === "list" ||
+    (step === "repeat" && repeatDraft.frequency === "WEEKLY");
   const heading = isEdit ? t("editTitle") : t("addTitle");
 
   return (
@@ -574,7 +579,7 @@ export function RecurringAddDialog({
             {doneButton}
           </div>
         )}
-        <ResponsiveDialogBody scrollFog>
+        <ResponsiveDialogBody scrollFog={bodyFog}>
           {step === "list" && saveError && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">

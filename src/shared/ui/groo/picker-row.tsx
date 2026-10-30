@@ -60,6 +60,8 @@ export interface PickerRowProps {
   popoverClassName?: string;
   /** 본문 스크롤 대신 안쪽이 스스로 스크롤하는 고르기(아이콘 격자) */
   bodyless?: boolean;
+  /** 끝 흐림 — 길이가 사용자 값에 달린 목록형 고르기에만(카테고리 · 계좌 …). 달력 · 고정 선택지는 걸지 않는다 */
+  scrollFog?: boolean;
   onOpenAutoFocus?: (e: Event) => void;
 }
 
@@ -85,6 +87,7 @@ export const PickerRow = React.forwardRef<HTMLButtonElement, PickerRowProps>(
       sheetClassName,
       popoverClassName,
       bodyless,
+      scrollFog,
       onOpenAutoFocus,
     },
     ref,
@@ -214,7 +217,13 @@ export const PickerRow = React.forwardRef<HTMLButtonElement, PickerRowProps>(
                   className={sheetClassName}
                   onOpenAutoFocus={onOpenAutoFocus}
                 >
-                  {bodyless ? body : <BottomSheetBody>{body}</BottomSheetBody>}
+                  {bodyless ? (
+                    body
+                  ) : (
+                    <BottomSheetBody scrollFog={scrollFog}>
+                      {body}
+                    </BottomSheetBody>
+                  )}
                   {foot != null && (
                     <BottomSheetFooter>{foot}</BottomSheetFooter>
                   )}
@@ -230,7 +239,11 @@ export const PickerRow = React.forwardRef<HTMLButtonElement, PickerRowProps>(
                 className={popoverClassName}
                 onOpenAutoFocus={onOpenAutoFocus}
               >
-                {bodyless ? body : <PopoverBody>{body}</PopoverBody>}
+                {bodyless ? (
+                  body
+                ) : (
+                  <PopoverBody scrollFog={scrollFog}>{body}</PopoverBody>
+                )}
                 {foot != null && <PopoverFooter>{foot}</PopoverFooter>}
               </PopoverContent>
             </Popover>
