@@ -229,7 +229,7 @@ export function RecurringDetailDialog({
             <div className="flex items-center gap-x3 px-global-gutter pb-x2 pt-x4">
               <ListTile
                 className={cn(
-                  "size-x12 rounded-r4 [&>svg]:size-6",
+                  "size-x12 rounded-r4 [&>svg]:size-x6",
                   isTransfer && "bg-bg-neutral-weak text-fg-neutral",
                 )}
                 style={

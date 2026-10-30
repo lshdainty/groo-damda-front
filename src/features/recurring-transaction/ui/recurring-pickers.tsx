@@ -215,6 +215,7 @@ export function AssetPickRow({
   placeholder,
   surfaceTitle,
   assets,
+  valueAssets,
   value,
   onChange,
   onClear,
@@ -227,6 +228,8 @@ export function AssetPickRow({
   placeholder: string;
   surfaceTitle: string;
   assets: Asset[];
+  /** 줄 값을 읽을 전체 목록 — 저장된 계좌가 지금 조건의 고르기 목록에 없어도 이름을 보인다 */
+  valueAssets?: Asset[];
   value: number | null;
   onChange: (rowId: number) => void;
   onClear?: () => void;
@@ -234,7 +237,7 @@ export function AssetPickRow({
   errorMessage?: string | null;
   emptyText: string;
 }) {
-  const picked = assets.find((a) => a.rowId === value);
+  const picked = (valueAssets ?? assets).find((a) => a.rowId === value);
   return (
     <PickerRow
       title={title}

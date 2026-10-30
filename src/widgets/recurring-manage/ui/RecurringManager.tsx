@@ -71,7 +71,7 @@ export function RecurringManager({
   const { t } = useTranslation("recurring");
   const { t: tc } = useTranslation("common");
   const { t: ts } = useTranslation("settings");
-  const recurringsQ = useRecurringTransactions();
+  const recurringsQ = useRecurringTransactions(undefined, { silent: true });
   const categoriesQ = useExpenseCategories();
   // 일시정지 · 삭제의 실패는 아래 스낵바가 고정 글로 알린다(서버 원문 전역 토스트는 끈다)
   const toggleMut = useToggleRecurringTransaction({ silent: true });
@@ -209,7 +209,8 @@ export function RecurringManager({
           <TagGroup size="t3">
             {rowDetailParts(it, t).map((part, i) => (
               <TagGroupItem key={i} className="whitespace-nowrap">
-                {part}
+                {/* 항목 안 띄어쓰기는 NBSP — 항목은 한 덩어리로 다음 줄에 넘어간다(글 칸이 normal 이라 nowrap 만으로는 안쪽에서 끊긴다) */}
+                {part.replace(/ /g, "\u00a0")}
               </TagGroupItem>
             ))}
           </TagGroup>
@@ -350,10 +351,8 @@ export function RecurringManager({
             setDetailId(null);
           }}
           onToggle={() => togglePause(detail)}
-          onDelete={() => {
-            setConfirmDelete(detail);
-            setDetailId(null);
-          }}
+          // 확인창은 상세 위에 뜬다 — 취소 · 실패하면 상세가 그대로 남고, 지워지면 항목이 사라져 상세도 함께 내려간다
+          onDelete={() => setConfirmDelete(detail)}
         />
       )}
       {editing && (

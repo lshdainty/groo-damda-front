@@ -23,15 +23,21 @@ export const recurringTransactionApi = {
     return resp.data;
   },
 
-  getRecurrings: async (params?: {
-    upcoming?: boolean;
-    limit?: number;
-  }): Promise<{ recurringTransactions: RecurringTransaction[] }> => {
+  getRecurrings: async (
+    params?: {
+      upcoming?: boolean;
+      limit?: number;
+    },
+    options?: ApiOptions,
+  ): Promise<{ recurringTransactions: RecurringTransaction[] }> => {
     const q: Record<string, string> = {};
     if (params?.upcoming) q.upcoming = "true";
     if (params?.limit) q.limit = String(params.limit);
     const resp: ApiResponse<{ recurringTransactions: RecurringTransaction[] }> =
-      await apiClient.get("/v1/recurring-transactions", { params: q });
+      await apiClient.get("/v1/recurring-transactions", {
+        params: q,
+        ...quiet(options),
+      });
     return resp.data;
   },
 

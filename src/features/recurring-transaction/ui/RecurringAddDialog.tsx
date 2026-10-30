@@ -282,12 +282,10 @@ export function RecurringAddDialog({
   const eligible = transferEligible(assets);
   const showInterest = isTransfer && isLoanTarget(assets, f.toAssetRowId);
 
-  // 허용 목록에서 벗어난 값은 렌더 중에 비운다(한 번 비우면 조건이 닫혀 반복되지 않는다)
+  // 종류에 안 맞는 값은 렌더 중에 비운다(한 번 비우면 조건이 닫혀 반복되지 않는다).
+  // 계좌 · 이자처럼 **자산 목록이 있어야 판정되는 값**은 목록을 받은 뒤에만 비운다 — 수정으로 열 때 받기 전 값을 지우지 않게.
+  // 계좌가 결제 수단과 안 맞게 되는 것은 사람이 결제 수단 · 종류를 바꿀 때(아래 핸들러)만 비운다 — 저장된 값은 그대로 연다.
   const fix: Partial<FormState> = {};
-  if (f.assetRowId != null && !isTransfer) {
-    const picked = assets.find((a) => a.rowId === f.assetRowId);
-    if (picked && !allowAsset(picked)) fix.assetRowId = null;
-  }
   if (f.categoryRowId != null) {
     const cat = categories.find((c) => c.rowId === f.categoryRowId);
     // 목록을 아직 받지 못했으면 비우지 않는다(수정으로 열 때 저장된 카테고리를 날리지 않게)
@@ -301,8 +299,32 @@ export function RecurringAddDialog({
     fix.interest = "";
   }
   // 받는 계좌가 대출이 아니면 이자는 뜻이 없다.
-  if (isTransfer && !showInterest && f.interest) fix.interest = "";
+  if (assetsQ.data && isTransfer && !showInterest && f.interest)
+    fix.interest = "";
   if (Object.keys(fix).length > 0) setF((s) => ({ ...s, ...fix }));
+
+  // 결제 수단 · 종류를 바꿀 때 그 조건에 안 맞는 계좌는 비운다(사람이 바꾼 때만)
+  const dropMismatchedAsset = (
+    next: Pick<FormState, "type" | "paymentMethod">,
+  ) =>
+    setF((s) => {
+      const picked =
+        s.assetRowId != null
+          ? assets.find((a) => a.rowId === s.assetRowId)
+          : undefined;
+      if (!picked || next.type === "TRANSFER") return { ...s, ...next };
+      const allowed = next.paymentMethod
+        ? PAYMENT_ASSET_TYPES[next.paymentMethod]
+        : null;
+      const bad =
+        (allowed != null && !allowed.includes(picked.assetType)) ||
+        (next.type === "EXPENSE" && picked.assetType === "SAVINGS");
+      return { ...s, ...next, assetRowId: bad ? null : s.assetRowId };
+    });
+  const changeType = (type: TxType) =>
+    dropMismatchedAsset({ type, paymentMethod: f.paymentMethod });
+  const changePayment = (paymentMethod: string) =>
+    dropMismatchedAsset({ type: f.type, paymentMethod });
 
   const amountNumber = parseAmount(f.amount);
   const amountTooLarge = amountNumber > MAX_AMOUNT;
@@ -593,7 +615,7 @@ export function RecurringAddDialog({
               <ChipRadioGroup
                 aria-label={t("typeTitle")}
                 value={f.type}
-                onValueChange={(v) => set("type", v as TxType)}
+                onValueChange={(v) => changeType(v as TxType)}
                 className="mb-x4"
               >
                 <ChipRadio
@@ -678,6 +700,7 @@ export function RecurringAddDialog({
                         : te("accountCard")
                     }
                     assets={filteredAssets}
+                    valueAssets={assets}
                     value={f.assetRowId}
                     onChange={(id) => set("assetRowId", id)}
                     onClear={() => set("assetRowId", null)}
@@ -704,7 +727,7 @@ export function RecurringAddDialog({
                       label: te(pm.lKey),
                     }))}
                     value={f.paymentMethod}
-                    onChange={(v) => set("paymentMethod", v)}
+                    onChange={(v) => changePayment(v)}
                     onClear={() => set("paymentMethod", "")}
                     clearLabel={t("clearValue")}
                   />

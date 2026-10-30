@@ -254,3 +254,53 @@ describe("끝 흐림(scrollFog)", () => {
     expect(bodyFog()).toBeNull();
   });
 });
+
+describe("수정 폼이 저장된 값을 그대로 연다", () => {
+  it("결제 수단(카드)과 맞지 않는 저장된 계좌도 열 때 지우지 않는다 — 사람이 결제 수단을 바꿀 때만 비운다", () => {
+    act(() =>
+      root.render(
+        <RecurringAddDialog
+          recurring={{
+            rowId: 9,
+            userRowId: 1,
+            categoryRowId: 11,
+            categoryName: "식비",
+            assetRowId: 3,
+            assetName: "주거래",
+            toAssetRowId: null,
+            toAssetName: null,
+            fee: null,
+            interestAmount: null,
+            sourceExpenseRowId: null,
+            expenseType: "EXPENSE",
+            amount: 7_000,
+            description: null,
+            merchant: "관리비",
+            paymentMethod: "CARD",
+            frequency: "MONTHLY",
+            intervalValue: 1,
+            dayOfWeek: null,
+            dayOfMonth: 25,
+            executionTime: "09:00:00",
+            startDate: "2026-01-25",
+            endDate: null,
+            maxOccurrences: null,
+            executedCount: 0,
+            nextExecutionDate: "2026-11-25",
+            lastExecutedAt: null,
+            isActive: "Y",
+            autoLog: true,
+            notifyDayBefore: false,
+            createAt: "2026-01-01T00:00:00",
+            modifyAt: "2026-01-01T00:00:00",
+          }}
+          onClose={() => {}}
+        />,
+      ),
+    );
+    save("save");
+    expect(sent.update).not.toBeNull();
+    expect(sent.update!.assetRowId).toBe(3);
+    expect(sent.update!.paymentMethod).toBe("CARD");
+  });
+});
