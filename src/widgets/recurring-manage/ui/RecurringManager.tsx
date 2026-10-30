@@ -17,7 +17,7 @@ import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { SwipeActions } from "@/shared/ds/swipe-actions";
 import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
-import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
+import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 import { Icon } from "@/shared/ui/groo/primitives";
@@ -370,20 +370,31 @@ export function RecurringManager({
       )}
 
       {confirmDelete && (
-        <AlertConfirm
+        <ConfirmDialog
           title={t("deleteTitle", { name: displayTitle(confirmDelete, t) })}
           message={t("deleteMessage")}
+          confirmLabel={tc("delete")}
+          danger
+          loading={deleteMut.isPending}
           onConfirm={() =>
-            deleteMut.mutateAsync(confirmDelete.rowId).then(() =>
-              snackbar.show({
-                message: t("toastDeleted", {
-                  name: displayTitle(confirmDelete, t),
-                }),
-              }),
-            )
+            deleteMut.mutate(confirmDelete.rowId, {
+              onSuccess: () => {
+                snackbar.show({
+                  message: t("toastDeleted", {
+                    name: displayTitle(confirmDelete, t),
+                  }),
+                });
+                setConfirmDelete(null);
+              },
+              // 실패는 확인창을 닫은 뒤 스낵바(고정 글 + 다시 시도)로 — 창 위에는 겹치지 않는다
+              onError: () => {
+                const failed = confirmDelete;
+                setConfirmDelete(null);
+                deleteFailed(failed);
+              },
+            })
           }
-          onError={() => deleteFailed(confirmDelete)}
-          onClose={() => setConfirmDelete(null)}
+          onCancel={() => !deleteMut.isPending && setConfirmDelete(null)}
         />
       )}
     </>
