@@ -262,11 +262,13 @@ export const CardBenefitPage = () => {
         {mobile && (
           <InfiniteListEnd
             status={
-              infQ.isFetchNextPageError
-                ? "error"
-                : infQ.hasNextPage
-                  ? "loading"
-                  : "end"
+              infQ.isFetchingNextPage
+                ? "loading"
+                : infQ.isFetchNextPageError
+                  ? "error"
+                  : infQ.hasNextPage
+                    ? "loading"
+                    : "end"
             }
             endText={t("benefit.endText")}
             onReachEnd={() => {

@@ -61,7 +61,7 @@ export function performanceDetailText(s: CardCatalogSummary, t: TFunction) {
         amount: formatKRW(s.performance.requiredAmount),
       });
     }
-    return s.performance.requiredText ?? t("benefit.performanceNone");
+    return s.performance.requiredText || t("benefit.performanceNone");
   }
   return t("benefit.performanceNone");
 }
