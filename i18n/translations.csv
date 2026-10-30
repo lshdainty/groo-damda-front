@@ -1582,11 +1582,11 @@ expense,item,항목,Item
 expense,selectNone,선택 안 함,None
 expense,addTx.newTitle,거래 추가,Add transaction
 expense,addTx.editTitle,거래 수정,Edit transaction
-expense,addTx.autoSource.TRADE_REALIZED,주식을 팔아 생긴 실현손익이에요. 금액은 매매 내역에서 계산됩니다.,Realized P/L from a sale. The amount is calculated from the trade.
-expense,addTx.autoSource.TRANSFER_INTEREST,이체에 붙은 이자예요. 금액은 이체 내역에서 계산됩니다.,Interest on a transfer. The amount is calculated from the transfer.
+expense,addTx.autoSource.TRADE_REALIZED,주식을 팔아 생긴 실현손익이에요. 금액은 매매 내역에서 계산돼요.,Realized P/L from a sale. The amount is calculated from the trade.
+expense,addTx.autoSource.TRANSFER_INTEREST,이체에 붙은 이자예요. 금액은 이체 내역에서 계산돼요.,Interest on a transfer. The amount is calculated from the transfer.
 expense,addTx.autoSource.CARD_CARRYOVER,카드를 등록할 때 적은 이전 미결제 사용액이에요. 금액은 카드 수정에서 바꿔요.,The unpaid balance entered when the card was added. Change the amount by editing the card.
 expense,addTx.autoSource.CARD_CARRYOVER_DUE,카드를 등록할 때 적은 이전 미결제 사용액이에요. 금액은 카드 수정에서 바꿔요.,The unpaid balance entered when the card was added. Change the amount by editing the card.
-expense,addTx.autoSource.default,자동으로 만들어진 거래예요. 원래 거래를 지우면 함께 사라집니다.,Created automatically. It disappears when the original is deleted.
+expense,addTx.autoSource.default,자동으로 만들어진 거래예요. 원래 거래를 지우면 함께 사라져요.,Created automatically. It disappears when the original is deleted.
 expense,addTx.transfer,이체,Transfer
 expense,addTx.add,추가,Add
 expense,addTx.saveSplitAndSave,분할 맞추고 저장,Adjust splits & save
@@ -1631,11 +1631,11 @@ expense,addTx.interestSplit,원금 {{principal}}원 · 이자 {{interest}}원,Pr
 expense,transferFeePrefix,수수료,Fee
 expense,transferListTitle,이체 내역,Transfers
 expense,transferDeleteTitle,이체 삭제,Delete transfer
-expense,transferDeleteConfirm,이 이체를 삭제할까요? 양쪽 자산의 잔액이 되돌아가요. 삭제한 이체는 되돌릴 수 없어요.,Delete this transfer? Both assets' balances will be restored.
-expense,transferAutoSource.TRADE_SETTLEMENT,주식을 살 때 예수금이 모자라 자동으로 만들어진 이체예요. 매수를 취소하면 함께 사라집니다.,Created automatically to cover a shortfall when buying. It disappears when the purchase is cancelled.
-expense,transferAutoSource.CARD_PAYMENT,카드 자동결제로 만들어진 이체예요. 청구 회차와 묶여 있어 따로 고칠 수 없습니다.,Created by a card auto-payment. It is tied to the billing cycle and cannot be edited separately.
-expense,transferAutoSource.CARD_REFUND,카드에 남은 과납금을 결제계좌로 돌려준 이체예요. 카드 잔액을 직접 보정하면 다음 날 자동으로 다시 맞춰집니다.,Created to return a card overpayment to the payment account. Adjust the card balance directly and it reconciles automatically the next day.
-expense,transferAutoSource.default,자동으로 만들어진 이체예요. 원래 거래를 지우면 함께 사라집니다.,Created automatically. It disappears when the original is deleted.
+expense,transferDeleteConfirm,이 이체를 삭제할까요? 양쪽 계좌 잔액이 이체 전으로 돌아가요. 삭제한 이체는 되돌릴 수 없어요.,Delete this transfer? Both accounts' balances go back to before the transfer. A deleted transfer can't be restored.
+expense,transferAutoSource.TRADE_SETTLEMENT,주식을 살 때 예수금이 모자라 자동으로 만들어진 이체예요. 매수를 취소하면 함께 사라져요.,Created automatically to cover a shortfall when buying. It disappears when the purchase is cancelled.
+expense,transferAutoSource.CARD_PAYMENT,카드 자동결제로 만들어진 이체예요. 청구 회차와 묶여 있어 따로 고칠 수 없어요.,Created by a card auto-payment. It is tied to the billing cycle and cannot be edited separately.
+expense,transferAutoSource.CARD_REFUND,카드에 남은 과납금을 결제계좌로 돌려준 이체예요. 카드 잔액을 직접 보정하면 다음 날 자동으로 다시 맞춰져요.,Created to return a card overpayment to the payment account. Adjust the card balance directly and it reconciles automatically the next day.
+expense,transferAutoSource.default,자동으로 만들어진 이체예요. 원래 거래를 지우면 함께 사라져요.,Created automatically. It disappears when the original is deleted.
 expense,transferEmpty,이체 내역이 없어요,No transfers yet
 expense,transferWithdrawn,출금 합계,Total withdrawn
 expense,transferDeleted,이체를 삭제했어요,Transfer deleted
@@ -1653,29 +1653,41 @@ expense,savePreset.needCategory,저장하려면 먼저 카테고리를 선택해
 expense,txDetail.incomeTitle,수입 상세,Income details
 expense,txDetail.expenseTitle,지출 상세,Expense details
 expense,txDetail.uncategorized,미분류,Uncategorized
-expense,txDetail.empty,없음,None
-expense,txDetail.countItems,{{count}}개,{{count}}
 expense,txDetail.recurring,반복 설정,Recurring
 expense,txDetail.linked,연결됨,Linked
 expense,txDetail.dutchPay,더치페이,Dutch Pay
 expense,txDetail.refund,환불,Refund
 expense,txDetail.refundConfirmTitle,환불 처리,Mark as refunded
-expense,txDetail.refundConfirmBody,"이 거래를 환불로 표시하고 {{amount}}을 {{asset}}(으)로 되돌려요. 합계에서 빠져요.","Marks this transaction as refunded and returns {{amount}} to {{asset}}. It leaves your totals."
+expense,txDetail.refundConfirmBody,이 거래를 환불로 표시해요. 합계에서 빠지고 <b><amt>{{amount}}</amt></b>이 {{asset}}에 돌아가요.,"Marks this transaction as refunded. It leaves your totals, and <b><amt>{{amount}}</amt></b> returns to {{asset}}."
 expense,txDetail.refundConfirmBodyCardNoAccount,결제계좌가 없어 카드 잔액만 정리돼요.,"No payment account is linked, so only the card balance is adjusted."
 expense,txDetail.refundConfirmBodyClosed,이 거래를 환불로 표시해요. 합계에서 빠져요.,Marks this transaction as refunded. It leaves your totals.
 expense,txDetail.refundDate,환불일,Refund date
 expense,txDetail.refundConfirm,환불 처리,Mark refunded
-expense,txDetail.refundedAt,환불됨 · {{date}},Refunded · {{date}}
+expense,txDetail.refundedAt,환불됨 · {{date}} — 합계에서 빠져 있어요.,Refunded · {{date}} — left out of your totals.
 expense,txDetail.refundCancel,환불 취소,Undo refund
 expense,txDetail.refundCancelConfirm,환불 표시를 지울까요? 이 거래가 합계에 다시 들어가요.,Remove the refund mark? This transaction counts in your totals again.
 expense,txDetail.refundCancelConfirmTransfer,"환불 표시를 지울까요? 이 거래가 합계에 다시 들어가고, 환급된 금액도 되돌아가요.","Remove the refund mark? This transaction counts in your totals again, and any refunded amount is reversed."
 expense,txDetail.refundedReadonly,환불된 거래는 수정할 수 없어요. 먼저 환불을 취소해주세요,"Refunded transactions can't be edited. Undo the refund first"
 expense,txDetail.countCases,{{count}}건,{{count}}
 expense,txDetail.sumLabel,합계,Total
-expense,txDetail.prevAtMerchant,{{merchant}}에서의 이전 거래,Previous transactions at {{merchant}}
-expense,txDetail.thisMonth,이번 달,This month
 expense,txDetail.countTimes,{{count}}회,{{count}} times
 expense,txDetail.deleteMessage,"""{{name}}"" 거래를 삭제할까요? 연결된 자산 잔액이 함께 바뀌어요. 삭제한 거래는 되돌릴 수 없어요.","Delete the ""{{name}}"" transaction? The linked asset balance will be adjusted too."
+expense,txDetail.moreTitle,더 하기,More
+expense,txDetail.splitValue,{{count}}개로 나눔,Split into {{count}}
+expense,txDetail.splitHeader,내역 분할 {{count}}개,Split into {{count}}
+expense,txDetail.splitSum,합계,Total
+expense,txDetail.merchantTitle,이 가맹점 이번 달,This month at this merchant
+expense,txDetail.recentOnly,최근 5건만 보여요,Showing the latest 5 only
+expense,txDetail.splitLoadFailed,나눈 내역을 불러오지 못했어요,Could not load the split items
+expense,txDetail.refundDateToday,{{date}} · 오늘,{{date}} · Today
+expense,txDetail.refundDateHint,거래한 날({{date}})부터 오늘까지 고를 수 있어요.,You can pick a day from the transaction day ({{date}}) to today.
+expense,txDetail.refundFailed,환불하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Couldn't mark it as refunded. Please try again in a moment.
+expense,txDetail.refundCancelFailed,환불을 취소하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Couldn't undo the refund. Please try again in a moment.
+expense,txDetail.deleteFailed,거래를 삭제하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Couldn't delete the transaction. Please try again in a moment.
+expense,transferDeleteFailed,이체를 삭제하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Couldn't delete the transfer. Please try again in a moment.
+expense,transferDetailTitle,이체 상세,Transfer details
+expense,transferFromLabel,보내는 계좌,From account
+expense,transferToLabel,받는 계좌,To account
 expense,splitTx.extraAmount,추가 금액,Extra amount
 expense,splitTx.strategy.prop.title,비례 배분,Proportional
 expense,splitTx.strategy.prop.desc,비중대로 자동 조정,Auto-adjust by weight
@@ -2838,7 +2850,7 @@ expense,sms.cancelNotice,취소 문자예요. 자동 기록은 지원하지 않�
 expense,sms.lowConfidence,일부 항목을 읽지 못했어요. 확인하고 채워주세요.,Some fields could not be read. Please review and fill them in.
 expense,sms.parseFailed,문자를 읽지 못했어요. 잠시 후 다시 시도해주세요.,Could not read the text. Please try again in a moment.
 expense,sms.rememberCard,이 카드를 기억해서 다음부터 자동으로 연결하기,Remember this card and link it automatically next time
-expense,txDetail.recordOnlyNote,결제가 끝난 회차에 적은 거래라 기록만 남았어요. 계좌에서는 빠지지 않았어요,"This was added to a cycle that was already paid, so it is kept as a record only. It was not taken from your account"
+expense,txDetail.recordOnlyNote,결제가 끝난 회차에 적은 거래라 기록만 남았어요. 계좌에서는 빠지지 않았어요.,"This was added to a cycle that was already paid, so it is kept as a record only. It was not taken from your account"
 expense,txDetail.recordOnlyPartNote,이 중 <amt>{{amount}}</amt>은 결제가 끝난 회차분이라 기록만 남았어요. 남은 회차는 정상 청구돼요,"<amt>{{amount}}</amt> of this belongs to cycles that were already paid, so it is kept as a record only. The remaining installments are billed as usual"
 expense,closedCycle.note,이미 결제가 끝난 회차예요. 기록만 바뀌고 계좌 잔액은 그대로예요.,"This cycle has already been paid. Only the record changes, and your account balance stays the same."
 expense,closedCycle.partialNote,지난 회차분은 기록만 남아요.,Installments from cycles already paid stay as records only.

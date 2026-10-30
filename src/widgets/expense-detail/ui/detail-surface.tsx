@@ -1,0 +1,187 @@
+import { useRef, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+
+import { useLeaveConfirm } from "@/shared/ds/alert-dialog";
+import {
+  BottomSheet,
+  BottomSheetBody,
+  BottomSheetContent,
+  BottomSheetFooter,
+} from "@/shared/ds/bottom-sheet";
+import { Button } from "@/shared/ds/button";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+} from "@/shared/ds/dialog";
+import { useBackClose, useWideSurface } from "@/shared/ds/overlay";
+
+/** 바닥 버튼 — 거래 상세 · 이체 상세 · 상세 안 단계가 같은 모양을 쓴다 */
+export interface DetailFooter {
+  /** 왼쪽 [삭제] — ghost + critical, 내용 폭 */
+  onDelete?: () => void;
+  deleting?: boolean;
+  /** 주 버튼 — 상세는 [수정], 환불 단계는 [환불 처리] */
+  primary?: { label: string; onClick: () => void; loading?: boolean };
+  /** 1280 이상 단계의 [취소] — ← 와 같다(한 단계 뒤). 시트에는 그리지 않는다(위 ← · 닫기가 맡는다) */
+  cancelLabel?: string;
+}
+
+interface DetailSurfaceProps {
+  title: string;
+  /** 시트 · 대화상자를 모두 닫는다 */
+  onClose: () => void;
+  /**
+   * 상세 안 한 단계(환불 …)에 있나 — 입력 폼 규칙으로 바뀐다(바깥 · 끌기로 안 닫힘). ← · Esc · 기기 뒤로 가기 = 상세 단계로.
+   * 상세 단계(false)는 조회라 바깥 누름 · 끌어내림 · Esc 로 닫힌다.
+   */
+  subStep?: boolean;
+  /** 단계에서 바뀐 값이 있다 — 상세로 돌아가기 · 닫기 전에 "작성한 내용이 사라져요" 를 묻는다 */
+  dirty?: boolean;
+  /** 한 단계 뒤(상세로) */
+  onStepBack?: () => void;
+  footer?: DetailFooter;
+  /** 본문 요소를 단계마다 새로 그리게 하는 키 */
+  bodyKey: string;
+  children: ReactNode;
+}
+
+/**
+ * 거래 상세 · 이체 상세가 든 표면 (I-21 A 4 ~ 6 · B 7 · 13) — 1280 미만 ds Bottom Sheet(최대 480), 이상 Dialog 480.
+ * 같은 표면 안에서 머리 · 본문 · 바닥이 상세 ↔ 단계로 바뀐다. 시트를 닫았다 다시 열지 않는다.
+ *
+ * 닫는 길이 단계마다 다르다: 상세 = 조회(바깥 · 끌어내리기 · Esc · 닫기), 단계 = 입력 폼(← · Esc · 기기 뒤로 가기 = 상세로,
+ * 바뀐 값이 있으면 먼저 묻는다 / 닫기 원 = 모두 닫기).
+ */
+export function DetailSurface({
+  title,
+  onClose,
+  subStep = false,
+  dirty = false,
+  onStepBack,
+  footer,
+  bodyKey,
+  children,
+}: DetailSurfaceProps) {
+  const wide = useWideSurface();
+  const { t: tc } = useTranslation("common");
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const stepLeave = useLeaveConfirm({
+    dirty,
+    leave: () => onStepBack?.(),
+    contentRef,
+  });
+
+  // 기기 뒤로 가기(1280 미만) — 단계에서는 시트가 아니라 이 단계만 닫는다. 물어서 안 닫았으면 칸을 다시 쌓는다
+  useBackClose(!wide && subStep, (keep) => {
+    if (!stepLeave.request()) keep();
+  });
+
+  const stepProps = {
+    ref: contentRef,
+    "aria-describedby": undefined,
+    onBack: subStep ? () => void stepLeave.request() : undefined,
+    // Esc 는 한 단계 뒤 — 시트 전체를 닫는 건 닫기 원 · 바깥(상세만) · 끌어내리기(상세만)
+    onEscapeKeyDown: (e: KeyboardEvent) => {
+      if (!subStep) return;
+      e.preventDefault();
+      void stepLeave.request();
+    },
+  } as const;
+
+  const del = footer?.onDelete ? (
+    <Button
+      variant="ghost"
+      ghostColor="critical"
+      size={wide ? undefined : "large"}
+      className={wide ? "mr-auto" : "shrink-0"}
+      loading={footer.deleting}
+      onClick={footer.onDelete}
+    >
+      {tc("delete")}
+    </Button>
+  ) : null;
+
+  if (wide) {
+    return (
+      <>
+        <Dialog
+          open
+          form={subStep}
+          dirty={subStep && dirty}
+          onOpenChange={(next) => {
+            if (!next) onClose();
+          }}
+        >
+          <DialogContent title={title} {...stepProps}>
+            <DialogBody key={bodyKey} scrollFog>
+              <div className="-mx-x6">{children}</div>
+            </DialogBody>
+            {footer && (del || footer.primary) && (
+              <DialogFooter>
+                {del}
+                {footer.cancelLabel && (
+                  <Button
+                    variant="neutralWeak"
+                    onClick={() => void stepLeave.request()}
+                  >
+                    {footer.cancelLabel}
+                  </Button>
+                )}
+                {footer.primary && (
+                  <Button
+                    variant="neutralSolid"
+                    loading={footer.primary.loading}
+                    onClick={footer.primary.onClick}
+                  >
+                    {footer.primary.label}
+                  </Button>
+                )}
+              </DialogFooter>
+            )}
+          </DialogContent>
+        </Dialog>
+        {stepLeave.node}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <BottomSheet
+        open
+        form={subStep}
+        dirty={subStep && dirty}
+        onOpenChange={(next) => {
+          if (!next) onClose();
+        }}
+      >
+        <BottomSheetContent title={title} {...stepProps}>
+          <BottomSheetBody key={bodyKey} scrollFog>
+            <div className="-mx-x6">{children}</div>
+          </BottomSheetBody>
+          {footer && (del || footer.primary) && (
+            <BottomSheetFooter>
+              <div className="flex w-full items-center gap-x2">
+                {del}
+                {footer.primary && (
+                  <Button
+                    variant="neutralSolid"
+                    size="large"
+                    className="flex-1"
+                    loading={footer.primary.loading}
+                    onClick={footer.primary.onClick}
+                  >
+                    {footer.primary.label}
+                  </Button>
+                )}
+              </div>
+            </BottomSheetFooter>
+          )}
+        </BottomSheetContent>
+      </BottomSheet>
+      {stepLeave.node}
+    </>
+  );
+}
