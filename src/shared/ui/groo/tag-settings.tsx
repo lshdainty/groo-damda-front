@@ -280,7 +280,16 @@ export function TagSettings<T extends TagLike>({
           </div>
           <ListHeader as="div" variant="boldSolid" className="mt-x4">
             <h2 className="m-0 font-[inherit] text-[length:inherit]">
-              {t("tags.title")} · {tags.length}
+              {t("tags.title")} ·{" "}
+              {loading ? (
+                // 불러오는 동안에도 버튼은 진짜, 수 자리만 Skeleton
+                <Skeleton
+                  text="t4"
+                  className="inline-block w-x4 align-middle"
+                />
+              ) : (
+                tags.length
+              )}
             </h2>
             <Button
               variant="ghost"
