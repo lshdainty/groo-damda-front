@@ -1153,3 +1153,28 @@ describe("환율 칸 — 보이는 값에만 천 단위 쉼표, 보내는 값은
     });
   });
 });
+
+describe("이체 수정은 이체 칩 하나만 둔다 (D 25)", () => {
+  it("종류 칩이 이체 하나이고 고른 채 막혀 있다", async () => {
+    state.assets = [
+      asset(1, "주거래", "BANK_ACCOUNT"),
+      asset(2, "비상금", "BANK_ACCOUNT"),
+    ];
+    await open({
+      editTransfer: {
+        rowId: 7,
+        fromAssetRowId: 1,
+        toAssetRowId: 2,
+        amount: 300000,
+        fee: 0,
+        interestAmount: 0,
+        description: null,
+        transferDate: "2026-10-28T12:00:00",
+      } as never,
+    });
+    const radios = [
+      ...document.body.querySelectorAll<HTMLElement>('[role="radio"]'),
+    ];
+    expect(radios.map((r) => r.textContent)).toEqual(["addTx.transfer"]);
+  });
+});
