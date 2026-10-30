@@ -16,6 +16,7 @@ import { Callout } from "@/shared/ds/callout";
 import { formatDateValue, parseDayKey } from "@/shared/ds/date-picker";
 import { Field } from "@/shared/ds/field";
 import { Input } from "@/shared/ds/input";
+import { DecimalInput } from "./DecimalInput";
 import {
   List,
   ListCheckItem,
@@ -276,14 +277,12 @@ export function TxStep2({ f }: { f: TxForm }) {
             }
             className="px-global-gutter pb-x4"
           >
-            <Input
+            <DecimalInput
               ref={f.refFor("fx")}
-              inputMode="decimal"
-              autoComplete="off"
               value={f.fxRate}
-              placeholder="0"
-              onChange={(e) => {
-                f.setFxRate(e.target.value.replace(/[^0-9.]/g, ""));
+              maxDecimals={4}
+              onValueChange={(v) => {
+                f.setFxRate(v);
                 f.clearPresetMark();
               }}
             />
