@@ -162,7 +162,9 @@ describe("메모 폼 (I-15 13)", () => {
     const sheets = Array.from(
       document.body.querySelectorAll("[data-slot=bottom-sheet-body]"),
     );
-    expect(sheets.at(-1)?.getAttribute("data-scroll-fog")).toBe("overlayBody");
+    expect(sheets[sheets.length - 1]?.getAttribute("data-scroll-fog")).toBe(
+      "overlayBody",
+    );
   });
 
   it("제목 · 내용 칸의 라벨은 읽는 이름으로 남고 머리 줄은 흐름에 없다(칸 사이 gap 한 칸 더 없음)", () => {
