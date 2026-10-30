@@ -193,7 +193,6 @@ export const SECTIONS: SectionDef[] = [
  * 섹션 이름 · 설명으로 같은 제목 줄을 그린다 — 어느 섹션이든 본문 칸 맨 위가 같은 제목 줄로 시작한다.
  */
 export const NEEDS_DESKTOP_HEAD: SectionId[] = [
-  "recurring",
   "presets",
   "appearance",
   "data",
@@ -214,7 +213,6 @@ export const NEEDS_DESKTOP_HEAD: SectionId[] = [
  * `SettingsSubpageMobile.test.tsx` 가 잠근다. 남은 id 와 걷을 지시서는 I-16-1-web-result.md 표.
  */
 export const TEMP_BODY_PADDING: SectionId[] = [
-  "recurring",
   "presets",
   "calendar-share",
   "calendar-labels",

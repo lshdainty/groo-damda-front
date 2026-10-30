@@ -1,105 +1,88 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Bell,
-  PauseCircle,
-  Pause,
+  ArrowRightLeft,
   Pencil,
-  Play,
   Plus,
   Repeat,
-  TrendingDown,
-  TrendingUp,
   Trash2,
   Zap,
 } from "lucide-react";
-import { SwipeActions, type SwipeAction } from "@/shared/ui/swipe-actions";
-import { Button } from "@/shared/ui/button";
-import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
-import { renderIcon, tileRadius } from "@/shared/lib";
-import { parseLocalDate } from "@/shared/lib/date";
-import { KRW, minusOf, plusOf } from "@/shared/lib/groo/format";
+import { Badge } from "@/shared/ds/badge";
+import { Button } from "@/shared/ds/button";
+import { Card } from "@/shared/ds/card";
+import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
+import { ResultSection } from "@/shared/ds/result-section";
+import { Skeleton } from "@/shared/ds/skeleton";
+import { useSnackbar } from "@/shared/ds/snackbar";
+import { SwipeActions } from "@/shared/ds/swipe-actions";
+import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
+import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
+import { ManagerHead } from "@/shared/ui/groo/manager-layout";
+import { Icon } from "@/shared/ui/groo/primitives";
+import { cn } from "@/shared/lib/cn";
+import { isIconName } from "@/shared/lib";
+import { MINUS, money } from "@/shared/lib/groo/format";
 import { MaskAmount } from "@/shared/lib/groo/hide-amounts";
+import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import {
   useDeleteRecurringTransaction,
   useRecurringTransactions,
   useToggleRecurringTransaction,
 } from "@/features/recurring-transaction";
 import { useExpenseCategories } from "@/features/expense";
+import type { ExpenseCategory } from "@/entities/expense";
 import type { RecurringTransaction } from "@/entities/recurring-transaction";
-import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import {
   displayTitle,
   recurringAmountTone,
-  recurringSubtitle,
-  recurringSummary,
-  startOfDay,
+  rowDetailParts,
 } from "@/features/recurring-transaction/lib/recurring-format";
+import { monthTotal } from "@/features/recurring-transaction/lib/recurring-schedule";
 import { RecurringAddDialog } from "@/features/recurring-transaction/ui/RecurringAddDialog";
 import { RecurringDetailDialog } from "@/features/recurring-transaction/ui/RecurringDetailDialog";
-import { Card, CardContent } from "@/shared/ui/card";
-import { Skeleton as SkeletonBase } from "@/shared/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 
 /*
- * 빈 배열 상수 — `data ?? []` 는 로딩 중 매 렌더 **새 배열**이 되어, 이걸 의존성으로
- * 든 `useMemo` 가 통째로 무효화된다(memo 를 적어 둔 의미가 없어진다). 상수를 돌려주면
- * 참조가 고정된다.
+ * 빈 배열 상수 — `data ?? []` 는 로딩 중 매 렌더 **새 배열**이 되어 참조가 흔들린다. 상수를 돌려주면 참조가 고정된다.
  */
 const EMPTY_ITEMS: RecurringTransaction[] = [];
+const EMPTY_CATEGORIES: ExpenseCategory[] = [];
 
-type FilterKey = "all" | "expense" | "income" | "transfer" | "paused";
+const KINDS = ["EXPENSE", "INCOME", "TRANSFER"] as const;
+type Kind = (typeof KINDS)[number];
 
-// 모바일 카드 다이어트 — CardContent 조건부: 모바일은 패딩 없는 평문, 데스크톱은 CardContent.
-function MaybeContent({
-  mobile,
-  children,
-}: {
-  mobile: boolean;
-  children: React.ReactNode;
-}) {
-  return mobile ? <div>{children}</div> : <CardContent>{children}</CardContent>;
-}
-
-// 모바일 카드 다이어트 — 섹션 셸: 모바일은 카드 없이(.m-subpage 플랫), 데스크톱은 Card.
-function FlatShell({
-  mobile,
-  children,
-  cardStyle,
-}: {
-  mobile: boolean;
-  children: React.ReactNode;
-  cardStyle?: React.CSSProperties;
-}) {
-  return mobile ? (
-    <section>{children}</section>
-  ) : (
-    <Card style={cardStyle}>{children}</Card>
-  );
-}
-
+/**
+ * 반복 거래 관리(I-20 D 21 ~ 25) — 종류별 묶음(지출 → 수입 → 이체) + 묶음 머리 오른쪽 "이번 달" 합 + 줄.
+ * 줄을 누르면 상세(그 안에서 일시정지 · 수정 · 삭제), 폰은 밀어서 [수정][삭제]. 줄 끝에는 ⋮ 를 두지 않는다(좁은 목록 줄).
+ * 폰은 머리 오른쪽 "추가"(바깥에서 `addRequest`), 데스크톱은 제목 줄 [반복 거래 추가] + 카드 하나다.
+ */
 export function RecurringManager({
   mobile,
   addRequest = 0,
+  now = new Date(),
 }: {
   mobile: boolean;
   /** 바깥(설정 폰 머리 "추가")이 올리면 추가 폼을 연다 */
   addRequest?: number;
+  /** 이번 달을 정하는 '오늘' — 시험이 고정한다 */
+  now?: Date;
 }) {
   const { t } = useTranslation("recurring");
-  const { t: tExpense } = useTranslation("expense");
-  const { t: tCommon } = useTranslation("common");
+  const { t: tc } = useTranslation("common");
+  const { t: ts } = useTranslation("settings");
   const recurringsQ = useRecurringTransactions();
   const categoriesQ = useExpenseCategories();
-  const toggleMut = useToggleRecurringTransaction();
-  const deleteMut = useDeleteRecurringTransaction();
+  // 일시정지 · 삭제의 실패는 아래 스낵바가 고정 글로 알린다(서버 원문 전역 토스트는 끈다)
+  const toggleMut = useToggleRecurringTransaction({ silent: true });
+  const deleteMut = useDeleteRecurringTransaction({ silent: true });
+  const snackbar = useSnackbar();
 
-  const isLoading = recurringsQ.isLoading || categoriesQ.isLoading;
-
+  const isLoading = recurringsQ.isLoading;
+  const failed = recurringsQ.isError && !recurringsQ.data;
   const items = recurringsQ.data ?? EMPTY_ITEMS;
-  const categories = categoriesQ.data ?? [];
+  const categories = categoriesQ.data ?? EMPTY_CATEGORIES;
 
-  const [filter, setFilter] = useState<FilterKey>("all");
   const [editing, setEditing] = useState<RecurringTransaction | null>(null);
   const [adding, setAdding] = useState(false);
   const [seenAddRequest, setSeenAddRequest] = useState(addRequest);
@@ -107,1157 +90,336 @@ export function RecurringManager({
     setSeenAddRequest(addRequest);
     setAdding(true);
   }
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-  // 행 탭 → 상세. `⋮` 메뉴를 대신하는 비제스처 경로다 — 스와이프만 남기면
-  // 제스처 없이는 아무것도 못 한다(WCAG 2.1.1).
-  const [detail, setDetail] = useState<RecurringTransaction | null>(null);
-  const [toast, setToast] = useState<string>("");
-  const [pendingToggleId, setPendingToggleId] = useState<number | null>(null);
-  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 2200);
-  };
-
-  const filtered = useMemo(() => {
-    return items.filter((it) => {
-      const isActive = it.isActive === "Y";
-      if (filter === "expense") return it.expenseType === "EXPENSE" && isActive;
-      if (filter === "income") return it.expenseType === "INCOME" && isActive;
-      if (filter === "transfer")
-        return it.expenseType === "TRANSFER" && isActive;
-      if (filter === "paused") return !isActive;
-      return true;
-    });
-  }, [items, filter]);
-
-  const stats = useMemo(() => {
-    // 월 고정 지출·수입에는 이체가 안 들어간다 — 아래 필터가 종류를 못 박고 있다.
-    // 이체는 내 돈이 자리를 옮기는 것이라 쓴 돈도 번 돈도 아니다.
-    const active = items.filter((i) => i.isActive === "Y");
-    const monthlyExpense = active
-      .filter((i) => i.expenseType === "EXPENSE" && i.frequency === "MONTHLY")
-      .reduce((s, i) => s + Math.abs(i.amount), 0);
-    const monthlyIncome = active
-      .filter((i) => i.expenseType === "INCOME" && i.frequency === "MONTHLY")
-      .reduce((s, i) => s + i.amount, 0);
-    const today = startOfDay(new Date());
-    const next7 = active
-      .filter((i) => {
-        const due = parseLocalDate(i.nextExecutionDate);
-        if (!due) return false;
-        const diff = Math.ceil((due.getTime() - today.getTime()) / 86400000);
-        return diff >= 0 && diff <= 7;
-      })
-      .sort((a, b) => a.nextExecutionDate.localeCompare(b.nextExecutionDate));
-    return {
-      monthlyExpense,
-      monthlyIncome,
-      count: active.length,
-      paused: items.length - active.length,
-      next7,
-    };
-  }, [items]);
-
-  const counts = useMemo(
-    () => ({
-      all: items.length,
-      expense: items.filter(
-        (i) => i.expenseType === "EXPENSE" && i.isActive === "Y",
-      ).length,
-      income: items.filter(
-        (i) => i.expenseType === "INCOME" && i.isActive === "Y",
-      ).length,
-      transfer: items.filter(
-        (i) => i.expenseType === "TRANSFER" && i.isActive === "Y",
-      ).length,
-      paused: items.filter((i) => i.isActive !== "Y").length,
-    }),
-    [items],
-  );
+  const [confirmDelete, setConfirmDelete] =
+    useState<RecurringTransaction | null>(null);
+  // 상세는 id 로 든다 — 일시정지 · 다시 켜기 뒤 새 값으로 다시 그려야 한다
+  const [detailId, setDetailId] = useState<number | null>(null);
+  const detail = items.find((i) => i.rowId === detailId) ?? null;
 
   const togglePause = (it: RecurringTransaction) => {
-    if (pendingToggleId !== null) return;
-    setPendingToggleId(it.rowId);
+    if (toggleMut.isPending) return;
+    const name = displayTitle(it, t);
+    const wasActive = it.isActive === "Y";
     toggleMut.mutate(it.rowId, {
       onSuccess: () =>
-        showToast(
-          it.isActive === "Y"
-            ? t("toastPaused", { name: displayTitle(it, t) })
-            : t("toastResumed", { name: displayTitle(it, t) }),
-        ),
-      onSettled: () => setPendingToggleId(null),
+        snackbar.show({
+          message: wasActive
+            ? t("toastPaused", { name })
+            : t("toastResumed", { name }),
+        }),
+      onError: () =>
+        snackbar.show({
+          message: t(wasActive ? "pauseFailed" : "resumeFailed"),
+          tone: "critical",
+          action: { label: tc("retry"), onClick: () => togglePause(it) },
+        }),
     });
   };
 
-  const removeItem = (id: number) => {
-    const it = items.find((i) => i.rowId === id);
-    setPendingDeleteId(id);
-    deleteMut.mutate(id, {
-      onSuccess: () => {
-        setConfirmDeleteId(null);
-        if (it) showToast(t("toastDeleted", { name: displayTitle(it, t) }));
+  const deleteFailed = (it: RecurringTransaction) =>
+    snackbar.show({
+      message: t("deleteFailed"),
+      tone: "critical",
+      action: {
+        label: tc("retry"),
+        onClick: () => {
+          deleteMut.mutateAsync(it.rowId).catch(() => deleteFailed(it));
+        },
       },
-      onSettled: () => setPendingDeleteId(null),
     });
-  };
 
-  const FILTERS: { k: FilterKey; label: string; count: number }[] = [
-    { k: "all", label: t("filterAll"), count: counts.all },
-    { k: "expense", label: tExpense("expense"), count: counts.expense },
-    { k: "income", label: tExpense("income"), count: counts.income },
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const groups = KINDS.map((kind) => ({
+    kind,
+    list: items.filter((i) => i.expenseType === kind),
+    total: kind === "TRANSFER" ? null : monthTotal(items, kind, year, month),
+  })).filter((g) => g.list.length > 0);
+
+  const swipeActions = (it: RecurringTransaction) => [
     {
-      k: "transfer",
-      label: tExpense("addTx.transfer"),
-      count: counts.transfer,
+      label: tc("edit"),
+      icon: <Pencil />,
+      kind: "primary" as const,
+      onSelect: () => setEditing(it),
     },
-    { k: "paused", label: t("paused"), count: counts.paused },
+    {
+      label: tc("delete"),
+      icon: <Trash2 />,
+      kind: "destructive" as const,
+      onSelect: () => setConfirmDelete(it),
+    },
   ];
 
+  const kindLabel = (k: Kind) =>
+    t(
+      k === "EXPENSE"
+        ? "kindExpense"
+        : k === "INCOME"
+          ? "kindIncome"
+          : "kindTransfer",
+    );
+
+  const row = (it: RecurringTransaction) => {
+    const tone = recurringAmountTone(it);
+    const cat = categories.find((c) => c.rowId === it.categoryRowId);
+    const palette = getPaletteByColor(cat?.color);
+    const paused = it.isActive !== "Y";
+    const title = displayTitle(it, t);
+    const li = (
+      <ListButtonItem
+        key={it.rowId}
+        prefix={
+          <ListTile
+            className={
+              it.expenseType === "TRANSFER"
+                ? "bg-bg-neutral-weak text-fg-neutral"
+                : undefined
+            }
+            style={
+              it.expenseType === "TRANSFER"
+                ? undefined
+                : { background: palette.bg, color: palette.color }
+            }
+          >
+            {it.expenseType === "TRANSFER" ? (
+              <ArrowRightLeft aria-hidden />
+            ) : (
+              <Icon
+                name={cat && isIconName(cat.icon) ? cat.icon : "tag"}
+                size={20}
+              />
+            )}
+          </ListTile>
+        }
+        title={
+          <>
+            {title}
+            {it.autoLog && (
+              <Zap
+                role="img"
+                aria-label={t("autoLog")}
+                className="ml-x1 inline size-3.5 align-[-1px] text-fg-brand"
+              />
+            )}
+          </>
+        }
+        detail={
+          <TagGroup size="t3" truncate>
+            {rowDetailParts(it, t).map((part, i) => (
+              <TagGroupItem key={i} shrink={i === 0 ? 0 : 1}>
+                {part}
+              </TagGroupItem>
+            ))}
+          </TagGroup>
+        }
+        suffix={
+          <span className="flex flex-col items-end gap-x1">
+            <span
+              className={cn(
+                "text-end text-t5 font-bold tabular-nums",
+                tone.className,
+              )}
+            >
+              <MaskAmount card="etc.recurring">
+                {tone.sign}
+                {money(Math.abs(it.amount))}
+              </MaskAmount>
+            </span>
+            {paused && <Badge>{t("paused")}</Badge>}
+          </span>
+        }
+        onClick={() => setDetailId(it.rowId)}
+      />
+    );
+    return mobile ? (
+      <SwipeActions
+        key={it.rowId}
+        rowLabel={title}
+        enabled
+        actions={swipeActions(it)}
+      >
+        {li}
+      </SwipeActions>
+    ) : (
+      li
+    );
+  };
+
+  const groupHead = (g: (typeof groups)[number], first: boolean) => (
+    <ListHeader
+      as="div"
+      variant="boldSolid"
+      className={first ? (mobile ? "mt-x2" : undefined) : "mt-x4"}
+    >
+      <h2 className="m-0 min-w-0 font-[inherit] text-[length:inherit]">
+        {t("groupTitle", { kind: kindLabel(g.kind), count: g.list.length })}
+      </h2>
+      {g.total != null && (
+        <span className="shrink-0 whitespace-nowrap text-end tabular-nums">
+          {t("monthLead")}{" "}
+          <MaskAmount card="etc.recurring">
+            {`${g.kind === "EXPENSE" ? MINUS : "+"}${money(g.total)}`}
+          </MaskAmount>
+        </span>
+      )}
+    </ListHeader>
+  );
+
+  let body;
   if (isLoading) {
-    return <RecurringManagerSkeleton mobile={mobile} />;
+    body = <RecurringSkeleton />;
+  } else if (failed) {
+    body = (
+      <BandFailure
+        title={t("loadFailed")}
+        onRetry={() => void recurringsQ.refetch()}
+        band={mobile}
+        size={mobile ? "large" : "medium"}
+      />
+    );
+  } else if (items.length === 0) {
+    body = (
+      <ResultSection
+        kind="empty"
+        size={mobile ? "large" : "medium"}
+        as="h2"
+        icon={<Repeat aria-hidden />}
+        title={t("emptyTitle")}
+        description={t("emptyDesc")}
+        primaryAction={
+          mobile
+            ? {
+                label: t("addTitle"),
+                onClick: () => setAdding(true),
+              }
+            : undefined
+        }
+      />
+    );
+  } else {
+    body = (
+      <div className={cn("flex flex-col", mobile && "pb-x6")}>
+        {groups.map((g, i) => (
+          <section key={g.kind} aria-label={kindLabel(g.kind)}>
+            {groupHead(g, i === 0)}
+            <List>{g.list.map(row)}</List>
+          </section>
+        ))}
+      </div>
+    );
   }
 
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--spacing-xl)",
-      }}
-    >
-      {/* Summary stats — raised 카드(가계부 취합·예산 히어로 정합, 사용자 결정) */}
-      <Card variant="raised">
-        <CardContent>
-          {mobile ? (
-            <>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "var(--spacing-md)",
-                }}
-              >
-                <RecStat
-                  label={t("statActive")}
-                  value={t("countItems", { count: stats.count })}
-                  Icon={Repeat}
-                />
-                <RecStat
-                  label={t("paused")}
-                  value={t("countItems", { count: stats.paused })}
-                  Icon={PauseCircle}
-                  tone="muted"
-                />
-              </div>
-              <div
-                style={{
-                  height: 1,
-                  background: "var(--border-subtle)",
-                  margin: "12px 0",
-                }}
-              />
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "var(--spacing-md)",
-                }}
-              >
-                <RecStat
-                  label={t("statMonthlyExpense")}
-                  value={
-                    <MaskAmount card="etc.recurring">
-                      {minusOf(stats.monthlyExpense)}
-                      {KRW(Math.abs(stats.monthlyExpense))}
-                    </MaskAmount>
-                  }
-                  Icon={TrendingDown}
-                  tone="expense"
-                />
-                <RecStat
-                  label={t("statMonthlyIncome")}
-                  value={
-                    <MaskAmount card="etc.recurring">
-                      {plusOf(stats.monthlyIncome)}
-                      {KRW(Math.abs(stats.monthlyIncome))}
-                    </MaskAmount>
-                  }
-                  Icon={TrendingUp}
-                  tone="income"
-                />
-              </div>
-            </>
-          ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gap: "var(--spacing-xl)",
-              }}
-            >
-              <RecStat
-                label={t("statActive")}
-                value={t("countItems", { count: stats.count })}
-                Icon={Repeat}
-              />
-              <RecStat
-                label={t("statMonthlyExpense")}
-                value={
-                  <MaskAmount card="etc.recurring">
-                    {minusOf(stats.monthlyExpense)}
-                    {KRW(Math.abs(stats.monthlyExpense))}
-                  </MaskAmount>
-                }
-                Icon={TrendingDown}
-                tone="expense"
-              />
-              <RecStat
-                label={t("statMonthlyIncome")}
-                value={
-                  <MaskAmount card="etc.recurring">
-                    {plusOf(stats.monthlyIncome)}
-                    {KRW(Math.abs(stats.monthlyIncome))}
-                  </MaskAmount>
-                }
-                Icon={TrendingUp}
-                tone="income"
-              />
-              <RecStat
-                label={t("paused")}
-                value={t("countItems", { count: stats.paused })}
-                Icon={PauseCircle}
-                tone="muted"
-              />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+  const canAdd = !isLoading && !failed;
 
-      {/* Next 7 days — 모바일 카드 다이어트: 셸 카드 벗김 (내부 sunken 타일 유지) */}
-      {stats.next7.length > 0 && (
-        <FlatShell
-          mobile={mobile}
-          cardStyle={{
-            background: "var(--bg-surface)",
-            borderRadius: "var(--radius-card)",
-          }}
-        >
-          <MaybeContent mobile={mobile}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: "var(--text-body-sm)",
-                  fontWeight: "700",
-                  color: "var(--fg-primary)",
-                  margin: 0,
-                }}
-              >
-                {t("next7Days")}
-              </h3>
-              <span
-                style={{
-                  fontSize: "var(--text-caption)",
-                  color: "var(--fg-tertiary)",
-                }}
-              >
-                {t("scheduledCount", { count: stats.next7.length })}
-              </span>
-            </div>
-            {/* 다가오는 7일 타일은 헤더와 좌우 정렬(inset 0) — 추가 좌우 inset 제거(사용자 결정) */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--spacing-sm)",
-              }}
-            >
-              {stats.next7.map((it) => {
-                const today = startOfDay(new Date());
-                const due = parseLocalDate(it.nextExecutionDate) ?? today;
-                const days = Math.ceil(
-                  (due.getTime() - today.getTime()) / 86400000,
-                );
-                const isToday = days === 0;
-                const cat = categories.find(
-                  (c) => c.rowId === it.categoryRowId,
-                );
-                const palette = getPaletteByColor(cat?.color);
-                const tone = recurringAmountTone(it);
-                return (
-                  <div
-                    key={it.rowId}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "var(--spacing-md)",
-                      padding: "10px 12px",
-                      borderRadius: "var(--radius-sm)",
-                      background: isToday
-                        ? "color-mix(in oklch, var(--color-fg-critical) 8%, transparent)"
-                        : "var(--bg-sunken)",
-                      border: isToday
-                        ? "1px solid color-mix(in oklch, var(--color-fg-critical) 25%, transparent)"
-                        : "1px solid transparent",
-                    }}
-                  >
-                    <span
-                      className="num"
-                      style={{
-                        minWidth: 44,
-                        textAlign: "center",
-                        fontSize: "var(--text-badge)",
-                        fontWeight: "700",
-                        padding: "4px 8px",
-                        borderRadius: "var(--radius-sm)",
-                        background: isToday
-                          ? "var(--color-fg-critical)"
-                          : "var(--bg-surface)",
-                        color: isToday
-                          ? "var(--fg-on-danger)"
-                          : "var(--fg-secondary)",
-                      }}
-                    >
-                      {isToday ? t("today") : t("date:dday", { count: days })}
-                    </span>
-                    <span
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: tileRadius(28),
-                        background: palette.bg,
-                        color: palette.color,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {renderIcon(
-                        cat?.icon ?? "tag",
-                        cat?.categoryName?.charAt(0) ?? "·",
-                        14,
-                      )}
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: "var(--text-body-sm)",
-                          fontWeight: "600",
-                          color: "var(--fg-primary)",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {displayTitle(it, t)}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "var(--text-caption)",
-                          color: "var(--fg-tertiary)",
-                        }}
-                      >
-                        {recurringSubtitle(it, it.assetName ?? t("noAccount"))}{" "}
-                        · {recurringSummary(it, t)}
-                      </div>
-                    </div>
-                    <div
-                      className="num"
-                      style={{
-                        fontSize: "var(--text-body-sm)",
-                        fontWeight: "700",
-                        color: tone.color,
-                      }}
-                    >
-                      <MaskAmount card="etc.recurring">
-                        {tone.sign}
-                        {KRW(Math.abs(it.amount))}
-                      </MaskAmount>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </MaybeContent>
-        </FlatShell>
+  return (
+    <>
+      {mobile ? (
+        body
+      ) : (
+        <>
+          <ManagerHead
+            title={ts("sections.recurring.label")}
+            description={ts("sections.recurring.desc")}
+            actions={
+              canAdd ? (
+                <Button
+                  variant="neutralOutline"
+                  size="small"
+                  onClick={() => setAdding(true)}
+                >
+                  <Plus aria-hidden />
+                  {t("addTitle")}
+                </Button>
+              ) : undefined
+            }
+          />
+          <Card body="list">{body}</Card>
+        </>
       )}
 
-      {/* 헤더(전체 목록·추가) + 필터 토글 + 리스트 — label·toggle 은 카드 밖(사용자 결정,
-          계좌·카드/예산 관리 정합). 셋은 한 묶음이라 사이 간격은 여기서 제어. */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: mobile ? 0 : 12,
-        }}
-      >
-        <div>
-          {/* 1행: 라벨만 */}
-          <h3
-            style={{
-              fontSize: "var(--text-body-sm)",
-              fontWeight: "700",
-              color: "var(--fg-primary)",
-              margin: 0,
-            }}
-          >
-            {t("listTitle")}
-          </h3>
-          {/* 2행: 필터 토글(좌, 넘치면 가로 스크롤·스크롤바 숨김) + 추가 버튼(우) — 사용자 결정 */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--spacing-sm)",
-              marginTop: 4,
-            }}
-          >
-            <div
-              className="scrollbar-hide"
-              style={{ flex: 1, minWidth: 0, overflowX: "auto" }}
-            >
-              <Tabs
-                value={filter}
-                onValueChange={(v) => v && setFilter(v as FilterKey)}
-              >
-                <TabsList variant="pills" size="sm" className="w-max">
-                  {FILTERS.map((f) => (
-                    <TabsTrigger key={f.k} value={f.k} className="shrink-0">
-                      {f.label} {f.count}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            </div>
-            <Button
-              variant="accent"
-              size="sm"
-              className="shrink-0"
-              onClick={() => setAdding(true)}
-            >
-              <Plus size={14} /> {tCommon("add")}
-            </Button>
-          </div>
-        </div>
-
-        <FlatShell
-          mobile={mobile}
-          cardStyle={{
-            overflow: "hidden",
-            background: "var(--bg-surface)",
-            borderRadius: "var(--radius-card)",
-          }}
-        >
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {recurringsQ.isLoading && (
-              <>
-                {[0, 1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    // 실제 행과 같은 그리드·여백 — 아이콘 36, 모바일 패딩 '12px 0'.
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: mobile
-                        ? "36px 1fr auto"
-                        : "36px 1fr auto auto",
-                      alignItems: "center",
-                      gap: mobile ? 12 : 16,
-                      padding: mobile ? "12px 0" : "14px 20px",
-                      borderTop:
-                        i > 0 ? "1px solid var(--border-subtle)" : "none",
-                    }}
-                  >
-                    <SkeletonBase className="h-9 w-9 rounded-[var(--radius-md)]" />
-                    <div style={{ minWidth: 0 }}>
-                      {/* 제목 줄 — 실렌더 marginBottom 2 */}
-                      <SkeletonBase
-                        className="h-4 w-2/5"
-                        style={{ marginBottom: 2 }}
-                      />
-                      <SkeletonBase className="h-3 w-3/4" />
-                    </div>
-                    {/* 데스크톱 금액 열 — 실렌더 minWidth 110 */}
-                    {!mobile && (
-                      <SkeletonBase
-                        className="h-4 ml-auto"
-                        style={{ width: 110 }}
-                      />
-                    )}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--spacing-xs)",
-                      }}
-                    >
-                      {mobile ? (
-                        <>
-                          <SkeletonBase
-                            className="h-4 w-16"
-                            style={{ marginRight: 4 }}
-                          />
-                          <SkeletonBase className="h-8 w-8 rounded-[var(--radius-md)]" />
-                        </>
-                      ) : (
-                        /* RecAction(Button size=icon, h-9) 3개 — 재생/편집/삭제 */
-                        [0, 1, 2].map((a) => (
-                          <SkeletonBase
-                            key={a}
-                            className="h-9 w-9 rounded-[var(--radius-md)]"
-                          />
-                        ))
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
-            {!recurringsQ.isLoading && filtered.length === 0 && (
-              <div
-                style={{
-                  padding: 40,
-                  textAlign: "center",
-                  color: "var(--fg-tertiary)",
-                  fontSize: "var(--text-label-sm)",
-                }}
-              >
-                {t("empty")}
-              </div>
-            )}
-            {filtered.map((it, idx) => {
-              const isActive = it.isActive === "Y";
-              const tone = recurringAmountTone(it);
-              const cat = categories.find((c) => c.rowId === it.categoryRowId);
-              const palette = getPaletteByColor(cat?.color);
-              // 밀면 일시정지·수정·삭제가 바로 나온다. ⋮ 메뉴는 그대로 둔다 —
-              // 스와이프는 지름길이지 유일한 경로가 아니다(spec swipe-actions.md ·
-              // WCAG 2.1.1). 데스크톱은 행에 인라인 액션이 있어 통과시킨다.
-              // 액션 2개다. 셋을 넣으면 배지+라벨이 행 높이를 넘겨 트레이가 잘린다
-              // (앱에서 BOTTOM OVERFLOWED 로 실측). 일시정지는 상세 footer 에 있다.
-              const swipeActions: SwipeAction[] = [
-                {
-                  label: tCommon("edit"),
-                  icon: <Pencil />,
-                  kind: "primary",
-                  onSelect: () => setEditing(it),
-                },
-                {
-                  label: tCommon("delete"),
-                  icon: <Trash2 />,
-                  kind: "destructive",
-                  // 아래 ConfirmDialog 와 같은 키 — 같은 삭제인데 경로에 따라 문구가
-                  // 갈리면 안 된다.
-                  confirm: {
-                    title: t("deleteTitle"),
-                    message: t("deleteConfirmMessage", {
-                      name: displayTitle(it, t),
-                    }),
-                    loading: deleteMut.isPending,
-                  },
-                  onSelect: () => deleteMut.mutateAsync(it.rowId),
-                },
-              ];
-              return (
-                <SwipeActions
-                  key={it.rowId}
-                  rowId={`recurring-${it.rowId}`}
-                  groupTag="recurring-manager-list"
-                  rowLabel={displayTitle(it, t)}
-                  enabled={mobile}
-                  actions={swipeActions}
-                >
-                  <div
-                    // 행 탭 → 상세. 모바일에만 건다 — 데스크톱은 hover 액션(연필·일시정지·
-                    // 삭제)이 행 안에 있고, 모바일은 그 자리가 금액뿐이라 겹치지 않는다.
-                    // 프리셋 관리(`PresetManager.tsx`)와 같은 모양이고, 밀기만으로는
-                    // 상세에 닿을 길이 없던 것을 되살린다(WCAG 2.1.1 비제스처 경로).
-                    onClick={mobile ? () => setDetail(it) : undefined}
-                    role={mobile ? "button" : undefined}
-                    style={{
-                      cursor: mobile ? "pointer" : undefined,
-                      display: "grid",
-                      gridTemplateColumns: mobile
-                        ? "36px 1fr auto"
-                        : "36px 1fr auto auto",
-                      alignItems: "center",
-                      gap: mobile ? 12 : 16,
-                      // 행 좌우 inset 4(사용자 결정) — 라벨·토글은 inset 0.
-                      // 모바일 좌우 0 — 페이지가 24 를 쥔다(설정 리스트 공통 규칙).
-                      padding: mobile ? "12px 0" : "14px 20px",
-                      borderTop:
-                        idx > 0 ? "1px solid var(--border-subtle)" : "none",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: tileRadius(36),
-                        background: palette.bg,
-                        color: palette.color,
-                        opacity: isActive ? 1 : 0.55,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {renderIcon(
-                        cat?.icon ?? "tag",
-                        cat?.categoryName?.charAt(0) ?? "·",
-                        18,
-                      )}
-                    </span>
-                    <div style={{ minWidth: 0, opacity: isActive ? 1 : 0.55 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "var(--spacing-sm)",
-                          marginBottom: 2,
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: "var(--text-body-sm)",
-                            fontWeight: "600",
-                            color: "var(--fg-primary)",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {displayTitle(it, t)}
-                        </span>
-                        {!isActive && (
-                          <span
-                            style={{
-                              fontSize: "var(--text-badge)",
-                              fontWeight: "700",
-                              padding: "2px 6px",
-                              borderRadius: "var(--radius-xs)",
-                              background: "var(--bg-sunken)",
-                              color: "var(--fg-tertiary)",
-                              flexShrink: 0,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {t("paused")}
-                          </span>
-                        )}
-                        {it.maxOccurrences != null && (
-                          <span
-                            className="num"
-                            style={{
-                              fontSize: "var(--text-badge)",
-                              fontWeight: "700",
-                              padding: "2px 6px",
-                              borderRadius: "var(--radius-xs)",
-                              background: "var(--status-warning-subtle)",
-                              color: "var(--status-warning-fg)",
-                              flexShrink: 0,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {t("occurrencesBadge", {
-                              done: it.executedCount,
-                              total: it.maxOccurrences,
-                            })}
-                          </span>
-                        )}
-                        {it.autoLog && (
-                          <span
-                            title={t("autoLog")}
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              color: "var(--fg-brand-strong)",
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Zap size={11} strokeWidth={2.4} />
-                          </span>
-                        )}
-                        {it.notifyDayBefore && (
-                          <span
-                            title={t("notifyDayBefore")}
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              color: "var(--fg-tertiary)",
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Bell size={11} strokeWidth={2} />
-                          </span>
-                        )}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "var(--text-caption)",
-                          color: "var(--fg-tertiary)",
-                        }}
-                      >
-                        {recurringSummary(it, t)} ·{" "}
-                        {recurringSubtitle(it, it.assetName ?? t("noAccount"))}{" "}
-                        ·{" "}
-                        {t("nextDate", {
-                          date: it.nextExecutionDate.slice(5).replace("-", "/"),
-                        })}
-                      </div>
-                    </div>
-                    {!mobile && (
-                      <div
-                        className="num"
-                        style={{
-                          fontSize: "var(--text-body-sm)",
-                          fontWeight: "700",
-                          color: tone.color,
-                          textAlign: "right",
-                          minWidth: 110,
-                          opacity: isActive ? 1 : 0.55,
-                        }}
-                      >
-                        <MaskAmount card="etc.recurring">
-                          {tone.sign}
-                          {KRW(Math.abs(it.amount))}
-                        </MaskAmount>
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--spacing-xs)",
-                      }}
-                    >
-                      {mobile ? (
-                        <>
-                          <span
-                            className="num"
-                            style={{
-                              fontSize: "var(--text-label-sm)",
-                              fontWeight: "700",
-                              color: tone.color,
-                              marginRight: 4,
-                              flexShrink: 0,
-                              opacity: isActive ? 1 : 0.55,
-                            }}
-                          >
-                            <MaskAmount card="etc.recurring">
-                              {tone.sign}
-                              {KRW(Math.abs(it.amount))}
-                            </MaskAmount>
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <RecAction
-                            Icon={isActive ? Pause : Play}
-                            title={isActive ? t("pause") : t("resume")}
-                            onClick={() => togglePause(it)}
-                            loading={pendingToggleId === it.rowId}
-                            disabled={
-                              pendingToggleId !== null &&
-                              pendingToggleId !== it.rowId
-                            }
-                          />
-                          <RecAction
-                            Icon={Pencil}
-                            title={t("editAction")}
-                            onClick={() => setEditing(it)}
-                            disabled={
-                              pendingToggleId === it.rowId ||
-                              pendingDeleteId === it.rowId
-                            }
-                          />
-                          <RecAction
-                            Icon={Trash2}
-                            title={tCommon("delete")}
-                            tone="danger"
-                            onClick={() => setConfirmDeleteId(it.rowId)}
-                            loading={pendingDeleteId === it.rowId}
-                            disabled={pendingToggleId === it.rowId}
-                          />
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </SwipeActions>
-              );
-            })}
-          </div>
-        </FlatShell>
-      </div>
-
-      {detail != null && (
+      {detail && (
         <RecurringDetailDialog
           item={detail}
           categories={categories}
-          mobile={mobile}
-          onClose={() => setDetail(null)}
+          toggling={toggleMut.isPending}
+          onClose={() => setDetailId(null)}
           onEdit={() => {
             setEditing(detail);
-            setDetail(null);
+            setDetailId(null);
           }}
-          onToggle={() => {
-            togglePause(detail);
-            setDetail(null);
-          }}
+          onToggle={() => togglePause(detail)}
           onDelete={() => {
-            setConfirmDeleteId(detail.rowId);
-            setDetail(null);
+            setConfirmDelete(detail);
+            setDetailId(null);
           }}
         />
       )}
       {editing && (
         <RecurringAddDialog
           recurring={editing}
-          mobile={mobile}
           onClose={() => setEditing(null)}
-          onSaved={() => showToast(t("toastSaved"))}
+          onSaved={() => snackbar.show({ message: t("toastSaved") })}
         />
       )}
-
       {adding && (
         <RecurringAddDialog
-          mobile={mobile}
           onClose={() => setAdding(false)}
-          onCreated={() => showToast(t("toastAdded"))}
+          onCreated={() => snackbar.show({ message: t("toastAdded") })}
         />
       )}
 
-      {confirmDeleteId !== null && (
-        <ConfirmDialog
-          title={t("deleteTitle")}
-          message={t("deleteConfirmMessage", {
-            name: displayTitle(
-              items.find((i) => i.rowId === confirmDeleteId)!,
-              t,
-            ),
-          })}
-          confirmLabel={tCommon("delete")}
-          danger
-          loading={deleteMut.isPending}
-          onConfirm={() => removeItem(confirmDeleteId)}
-          onCancel={() => !deleteMut.isPending && setConfirmDeleteId(null)}
+      {confirmDelete && (
+        <AlertConfirm
+          title={t("deleteTitle", { name: displayTitle(confirmDelete, t) })}
+          message={t("deleteMessage")}
+          onConfirm={() =>
+            deleteMut.mutateAsync(confirmDelete.rowId).then(() =>
+              snackbar.show({
+                message: t("toastDeleted", {
+                  name: displayTitle(confirmDelete, t),
+                }),
+              }),
+            )
+          }
+          onError={() => deleteFailed(confirmDelete)}
+          onClose={() => setConfirmDelete(null)}
         />
       )}
+    </>
+  );
+}
 
-      {openMenuId !== null && (
-        <div
-          onClick={() => setOpenMenuId(null)}
-          style={{ position: "fixed", inset: 0, zIndex: "var(--z-sticky)" }}
-        />
-      )}
-
-      {toast && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 24,
-            left: "50%",
-            transform: "translateX(-50%)",
-            padding: "10px 18px",
-            background: "var(--fg-primary)",
-            color: "var(--bg-surface)",
-            borderRadius: "var(--radius-pill)",
-            fontSize: "var(--text-label-sm)",
-            fontWeight: "600",
-            boxShadow: "var(--shadow-lg)",
-            zIndex: "var(--z-snackbar)",
-          }}
-        >
-          {toast}
+/** 불러오는 중 — 묶음 머리 둘 + 줄 넷(타일 40 · 두 줄 · 금액) */
+function RecurringSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col pb-x6">
+      {[0, 1].map((g) => (
+        <div key={g}>
+          <div
+            className={cn(
+              "flex justify-between px-global-gutter py-x2",
+              g === 0 ? "mt-x2" : "mt-x4",
+            )}
+          >
+            <Skeleton className="h-x4 w-24" />
+            <Skeleton className="h-x4 w-32" />
+          </div>
+          {[0, 1].map((r) => (
+            <div
+              key={r}
+              className="flex items-center gap-x3 px-global-gutter py-x3"
+            >
+              <Skeleton className="size-x10 rounded-r3" />
+              <div className="flex min-w-0 flex-1 flex-col gap-x1_5">
+                <Skeleton className="h-x4 w-2/5" />
+                <Skeleton className="h-x3 w-3/5" />
+              </div>
+              <Skeleton className="h-x4 w-20" />
+            </div>
+          ))}
         </div>
-      )}
+      ))}
     </div>
   );
 }
-
-/** RecurringManager skeleton — summary 4 stat 카드 + 다가오는 7일 + 전체 목록. */
-function RecurringManagerSkeleton({ mobile }: { mobile: boolean }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--spacing-xl)",
-      }}
-    >
-      {/* Summary stats — raised(실제와 동일) */}
-      <Card variant="raised">
-        <CardContent>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(4, 1fr)",
-              gap: mobile ? 12 : 20,
-            }}
-          >
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                style={{ display: "flex", flexDirection: "column", gap: 6 }}
-              >
-                <SkeletonBase className="h-3 w-16" />
-                <SkeletonBase className="h-6 w-24" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Next 7 days — 실제와 동일: 모바일 플랫(라벨 0 + 타일 inset 10) / 데스크톱 카드 */}
-      <FlatShell
-        mobile={mobile}
-        cardStyle={{
-          background: "var(--bg-surface)",
-          borderRadius: "var(--radius-card)",
-        }}
-      >
-        <MaybeContent mobile={mobile}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 12,
-            }}
-          >
-            <SkeletonBase className="h-4 w-24" />
-            <SkeletonBase className="h-3 w-16" />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--spacing-sm)",
-            }}
-          >
-            {Array.from({ length: 2 }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--spacing-md)",
-                  padding: "10px 12px",
-                  borderRadius: "var(--radius-tile)",
-                  background: "var(--bg-sunken)",
-                }}
-              >
-                <SkeletonBase className="h-6 w-11 rounded-md shrink-0" />
-                <SkeletonBase className="h-8 w-8 rounded-md shrink-0" />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <SkeletonBase className="h-4 w-2/3 mb-1.5" />
-                  <SkeletonBase className="h-3 w-1/2" />
-                </div>
-                <SkeletonBase className="h-4 w-20 shrink-0" />
-              </div>
-            ))}
-          </div>
-        </MaybeContent>
-      </FlatShell>
-
-      {/* Filter chips + list — 실제와 동일: 모바일 플랫(라벨 0 + 행 inset 10) */}
-      {/* 헤더·토글은 카드 밖(실제 렌더 정합) */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: mobile ? 0 : 12,
-        }}
-      >
-        <div>
-          <SkeletonBase className="h-4 w-20" />
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              marginTop: 4,
-            }}
-          >
-            {Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonBase
-                key={i}
-                className="h-7 w-14 rounded-full shrink-0"
-              />
-            ))}
-            <SkeletonBase className="h-8 w-16 rounded-md ml-auto shrink-0" />
-          </div>
-        </div>
-        <FlatShell
-          mobile={mobile}
-          cardStyle={{
-            overflow: "hidden",
-            background: "var(--bg-surface)",
-            borderRadius: "var(--radius-card)",
-          }}
-        >
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <div
-                key={idx}
-                // 실제 행과 같은 그리드·여백 — 아이콘 36, 모바일 패딩 '12px 0'.
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: mobile
-                    ? "36px 1fr auto"
-                    : "36px 1fr auto auto",
-                  alignItems: "center",
-                  gap: mobile ? 12 : 16,
-                  padding: mobile ? "12px 0" : "14px 20px",
-                  borderTop:
-                    idx > 0 ? "1px solid var(--border-subtle)" : "none",
-                }}
-              >
-                <SkeletonBase className="h-9 w-9 rounded-[var(--radius-md)]" />
-                <div style={{ minWidth: 0 }}>
-                  {/* 제목 줄 — 실렌더 marginBottom 2 */}
-                  <SkeletonBase
-                    className="h-4 w-32"
-                    style={{ marginBottom: 2 }}
-                  />
-                  <SkeletonBase className="h-3 w-2/3" />
-                </div>
-                {/* 데스크톱 금액 열 — 실렌더 minWidth 110 */}
-                {!mobile && (
-                  <SkeletonBase
-                    className="h-4 ml-auto"
-                    style={{ width: 110 }}
-                  />
-                )}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--spacing-xs)",
-                  }}
-                >
-                  {mobile ? (
-                    <>
-                      <SkeletonBase
-                        className="h-4 w-16"
-                        style={{ marginRight: 4 }}
-                      />
-                      <SkeletonBase className="h-8 w-8 rounded-[var(--radius-md)]" />
-                    </>
-                  ) : (
-                    /* RecAction(Button size=icon, h-9) 3개 */
-                    [0, 1, 2].map((a) => (
-                      <SkeletonBase
-                        key={a}
-                        className="h-9 w-9 rounded-[var(--radius-md)]"
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </FlatShell>
-      </div>
-    </div>
-  );
-}
-
-function RecStat({
-  label,
-  value,
-  Icon,
-  tone,
-}: {
-  label: string;
-  value: React.ReactNode;
-  Icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
-  tone?: "expense" | "income" | "muted";
-}) {
-  const color =
-    tone === "expense"
-      ? "var(--color-fg-critical)"
-      : tone === "income"
-        ? "var(--fg-income)"
-        : tone === "muted"
-          ? "var(--fg-tertiary)"
-          : "var(--fg-primary)";
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          fontSize: "var(--text-caption)",
-          fontWeight: "600",
-          color: "var(--fg-tertiary)",
-          textTransform: "uppercase",
-          letterSpacing: "0.04em",
-        }}
-      >
-        <Icon size={12} strokeWidth={2} />
-        {label}
-      </div>
-      <div
-        className="num"
-        style={{
-          fontSize: "var(--text-title-lg)",
-          fontWeight: "700",
-          color,
-          lineHeight: "1.15",
-        }}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function RecAction({
-  Icon,
-  title,
-  onClick,
-  tone,
-  loading,
-  disabled,
-}: {
-  Icon: React.ComponentType<{
-    size?: number;
-    strokeWidth?: number;
-    className?: string;
-  }>;
-  title: string;
-  onClick: () => void;
-  tone?: "danger";
-  loading?: boolean;
-  disabled?: boolean;
-}) {
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      loading={loading}
-      disabled={disabled}
-      className={
-        tone === "danger" ? "!text-[var(--color-fg-critical)]" : undefined
-      }
-    >
-      {!loading && <Icon size={16} strokeWidth={1.9} />}
-    </Button>
-  );
-}
-
-/** 행·상세가 같은 제목을 쓴다 — 갈라지면 같은 항목이 두 이름으로 보인다. */
