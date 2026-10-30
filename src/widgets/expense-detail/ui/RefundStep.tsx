@@ -113,7 +113,7 @@ export function RefundStep({
             <ListButtonItem
               data-testid="refund-date-row"
               prefix={
-                <span className="inline-flex size-x6 items-center justify-center text-fg-neutral [&>svg]:size-[22px]">
+                <span className="inline-flex size-[22px] items-center justify-center text-fg-neutral [&>svg]:size-[22px]">
                   <CalendarDays aria-hidden />
                 </span>
               }
