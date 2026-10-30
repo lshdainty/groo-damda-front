@@ -205,9 +205,10 @@ export function RecurringManager({
           </>
         }
         detail={
-          <TagGroup size="t3" truncate>
+          // 항목 통째로 줄바꿈 — 잘리면 뜻 없는 항목(날짜 · 주기)이라 말줄임 대신 다음 줄로 넘긴다(20-4 CardRow 와 같은 방식)
+          <TagGroup size="t3">
             {rowDetailParts(it, t).map((part, i) => (
-              <TagGroupItem key={i} shrink={i === 0 ? 0 : 1}>
+              <TagGroupItem key={i} className="whitespace-nowrap">
                 {part}
               </TagGroupItem>
             ))}

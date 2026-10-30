@@ -2327,10 +2327,10 @@ recurring,sourceSub,구독료·월세 등 정기 거래에 쓰여요,For subscri
 recurring,paused,일시정지,Paused
 recurring,pause,일시정지,Pause
 recurring,resume,다시 켜기,Turn back on
-recurring,deleteTitle,"""{{name}}"" 반복을 삭제할까요?","Delete ""{{name}}""?"
+recurring,deleteTitle,"""{{name}}"" 반복 설정을 삭제할까요?","Delete the ""{{name}}"" recurring setting?"
 recurring,toastPaused,{{name}} 반복을 멈췄어요,Paused {{name}}
 recurring,toastResumed,{{name}} 반복을 다시 켰어요,Turned {{name}} back on
-recurring,toastDeleted,{{name}} 반복을 삭제했어요,Deleted {{name}}
+recurring,toastDeleted,{{name}} 반복 설정을 삭제했어요,Deleted the {{name}} recurring setting
 recurring,toastSaved,변경사항이 저장됐어요,Changes saved
 recurring,toastAdded,반복 거래가 추가됐어요,Recurring transaction added
 subscription,title,구독 관리,Manage subscription
@@ -2956,8 +2956,8 @@ recurring,emptyTitle,반복 거래가 없어요,No recurring transactions
 recurring,emptyDesc,구독 · 월세처럼 정해진 날 오가는 돈을 등록해 두면 그날 저절로 기록해요.,"Register money that moves on set days, like subscriptions or rent, and it records itself that day."
 recurring,pauseFailed,반복을 멈추지 못했어요,Could not pause the recurrence
 recurring,resumeFailed,반복을 다시 켜지 못했어요,Could not turn the recurrence back on
-recurring,deleteFailed,반복을 삭제하지 못했어요,Could not delete the recurrence
-recurring,deleteMessage,이미 기록된 거래는 그대로 남아요. 삭제한 반복은 되돌릴 수 없어요.,Transactions already recorded stay as they are. A deleted recurrence cannot be restored.
+recurring,deleteFailed,반복 설정을 삭제하지 못했어요,Could not delete the recurring setting
+recurring,deleteMessage,이미 기록된 거래는 그대로 남아요. 삭제한 반복 설정은 되돌릴 수 없어요.,Transactions already recorded stay as they are. A deleted recurring setting cannot be restored.
 expense,preset.fixedTitle.expense,고정 지출로 기록,Record as fixed expense
 expense,preset.fixedTitle.income,고정 수입으로 기록,Record as fixed income
 expense,preset.fixedDesc,이 프리셋으로 만든 거래가 통계의 고정 항목으로 잡혀요. 위의 고정 금액과는 별개예요.,Transactions made from this preset count as fixed in statistics. This is separate from the fixed amount above.
