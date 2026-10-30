@@ -1,0 +1,261 @@
+// 메모 추가 · 수정 폼 · 상세(I-15 13 · 14) — 실제 부품을 띄운 채로 잠근다. 번역은 CSV 원본에서 읽는다.
+import { readFileSync } from "node:fs";
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Memo, MemoFormValues } from "@/entities/memo";
+
+declare global {
+  var IS_REACT_ACT_ENVIRONMENT: boolean;
+}
+
+function koCopy(): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const line of readFileSync("i18n/translations.csv", "utf-8").split(
+    "\n",
+  )) {
+    const cells: string[] = [];
+    let cur = "";
+    let quoted = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (quoted && line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else quoted = !quoted;
+      } else if (c === "," && !quoted) {
+        cells.push(cur);
+        cur = "";
+      } else cur += c;
+    }
+    cells.push(cur);
+    const [ns, key, ko] = cells;
+    if ((ns === "memo" || ns === "common") && key)
+      out[`${ns}:${key}`] = ko ?? "";
+  }
+  return out;
+}
+const COPY = koCopy();
+
+vi.mock("react-i18next", () => ({
+  useTranslation: (ns?: string) => ({
+    t: (k: string, opts?: Record<string, unknown>) => {
+      const raw = COPY[`${ns ?? "common"}:${k}`];
+      if (raw == null) return k;
+      return raw.replace(/\{\{(\w+)\}\}/g, (_m, name: string) =>
+        String(opts?.[name] ?? ""),
+      );
+    },
+    i18n: { language: "ko" },
+  }),
+  initReactI18next: { type: "3rdParty", init: () => {} },
+}));
+
+const { MemoFormDialog } = await import("./MemoFormDialog");
+const { MemoDetailDialog } = await import("./MemoDetailDialog");
+
+const base: Memo = {
+  rowId: 7,
+  title: "여행 계획",
+  content: "첫 줄\n둘째 줄",
+  tag: "여행",
+  color: "#b36418",
+  isPinned: true,
+  createAt: "2026-10-01T00:00:00",
+  modifyAt: "2026-10-22T08:10:00",
+};
+
+let container: HTMLDivElement;
+let root: Root;
+let saved: { values: MemoFormValues; id?: number; pinned: boolean }[];
+let closed: number;
+
+beforeEach(() => {
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  saved = [];
+  closed = 0;
+  if (!globalThis.ResizeObserver) {
+    globalThis.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+  }
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    addEventListener() {},
+    removeEventListener() {},
+  })) as unknown as typeof window.matchMedia;
+  container = document.createElement("div");
+  document.body.appendChild(container);
+  root = createRoot(container);
+});
+
+afterEach(() => {
+  act(() => root.unmount());
+  container.remove();
+});
+
+const form = (memo: Memo | null, saveError = false) =>
+  act(() =>
+    root.render(
+      <MemoFormDialog
+        memo={memo}
+        tags={["여행", "독서"]}
+        saveError={saveError}
+        onClose={() => closed++}
+        onSave={(values, id, pinned) => {
+          saved.push({ values, id, pinned });
+          return Promise.resolve();
+        }}
+      />,
+    ),
+  );
+const q = <T extends Element = HTMLElement>(sel: string) =>
+  document.body.querySelector<T>(sel);
+const byName = (name: string) =>
+  Array.from(document.body.querySelectorAll<HTMLElement>("button")).find(
+    (b) => (b.getAttribute("aria-label") ?? b.textContent?.trim()) === name,
+  );
+const click = (el: Element | null | undefined) => {
+  expect(el, "누를 것이 있다").toBeTruthy();
+  act(() => (el as HTMLElement).click());
+};
+function setValue(el: HTMLInputElement | HTMLTextAreaElement, value: string) {
+  const proto =
+    el instanceof HTMLTextAreaElement
+      ? window.HTMLTextAreaElement.prototype
+      : window.HTMLInputElement.prototype;
+  act(() => {
+    Object.getOwnPropertyDescriptor(proto, "value")?.set?.call(el, value);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
+describe("메모 폼 (I-15 13)", () => {
+  it("제목 · 내용 아래 줄 칸 셋(태그 · 색상 · 상단에 고정)이 선 한 줄 뒤에 온다 — 꺾쇠 없음", () => {
+    form(null);
+    expect(q("[role=dialog]")).toBeTruthy();
+    expect(q("input")).toBeTruthy();
+    expect(q("textarea")).toBeTruthy();
+    const text = document.body.textContent ?? "";
+    expect(text).toContain("태그");
+    expect(text).toContain("태그 없음");
+    expect(text).toContain("색상");
+    expect(text).toContain("파랑");
+    expect(text).toContain("상단에 고정");
+    expect(q("[data-slot=list-chevron]")).toBeNull();
+  });
+
+  it("바닥은 [저장] 하나뿐이다 — 시트에는 [취소] 가 없다", () => {
+    form(null);
+    const footer = q("[data-slot=bottom-sheet-footer]")!;
+    expect(
+      Array.from(footer.querySelectorAll("button")).map((b) => b.textContent),
+    ).toEqual(["저장"]);
+  });
+
+  it("제목이 비면 [저장] 은 켜 둔 채 누를 때 칸 아래 오류를 보인다 — 저장은 나가지 않는다", () => {
+    form(null);
+    click(byName("저장"));
+    expect(document.body.textContent).toContain("제목을 입력해주세요.");
+    expect(saved).toHaveLength(0);
+  });
+
+  it("새 메모는 태그 없음 · 파랑 · 고정 끔으로 열리고, 저장 본문은 태그 null 이다", () => {
+    form(null);
+    setValue(q<HTMLInputElement>("input")!, "  새 메모  ");
+    click(byName("저장"));
+    expect(saved).toEqual([
+      {
+        values: { title: "새 메모", content: "", tag: null, color: "#2c70bf" },
+        id: undefined,
+        pinned: false,
+      },
+    ]);
+  });
+
+  it("있는 메모를 열면 지금 값이 그대로 들어 있고, 고정은 저장 인자로 넘어간다", () => {
+    form(base);
+    expect(q<HTMLInputElement>("input")!.value).toBe("여행 계획");
+    click(byName("저장"));
+    expect(saved[0]).toEqual({
+      values: {
+        title: "여행 계획",
+        content: "첫 줄\n둘째 줄",
+        tag: "여행",
+        color: "#b36418",
+      },
+      id: 7,
+      pinned: true,
+    });
+  });
+
+  it("저장이 실패하면 폼 맨 위 Callout 이 고정 글로 알린다", () => {
+    form(base, true);
+    const callout = q("[data-slot=callout]");
+    expect(callout?.textContent).toBe(
+      "저장하지 못했어요. 잠시 뒤 다시 시도해주세요.",
+    );
+    expect(callout?.getAttribute("data-tone")).toBe("critical");
+  });
+});
+
+describe("메모 상세 (I-15 14)", () => {
+  const detail = (memo: Memo, remove = () => Promise.resolve(true)) =>
+    act(() =>
+      root.render(
+        <MemoDetailDialog
+          memo={memo}
+          remove={remove}
+          onClose={() => closed++}
+          onEdit={() => {}}
+        />,
+      ),
+    );
+
+  it("머리 제목이 메모 제목이고 색 히어로 카드 · 테두리 본문 상자가 없다", () => {
+    detail(base);
+    expect(q("[role=dialog] h2")?.textContent).toBe("여행 계획");
+    expect(q("[data-slot=card]")).toBeNull();
+  });
+
+  it("메타는 '태그 · 시각 수정 · 고정' 한 줄이고 본문은 줄바꿈 그대로다", () => {
+    detail(base);
+    const text = document.body.textContent ?? "";
+    expect(text).toMatch(/여행.*수정.*고정/);
+    expect(q("p.whitespace-pre-wrap")?.textContent).toBe("첫 줄\n둘째 줄");
+  });
+
+  it("제목 · 본문이 비면 '제목 없음' · '내용 없음' 이다", () => {
+    detail({ ...base, title: "", content: null, isPinned: false });
+    expect(q("[role=dialog] h2")?.textContent).toBe("제목 없음");
+    expect(document.body.textContent).toContain("내용 없음");
+    expect(document.body.textContent).not.toContain("고정");
+  });
+
+  it("바닥은 [삭제] ghost critical + [수정] 이고, [삭제] 는 확인창을 먼저 연다", () => {
+    detail(base);
+    const del = byName("삭제")!;
+    expect(del.className).toContain("text-fg-critical");
+    click(del);
+    expect(q("[role=alertdialog]")?.textContent).toContain(
+      '"여행 계획" 메모를 삭제할까요?',
+    );
+    expect(q("[role=alertdialog]")?.textContent).toContain(
+      "삭제한 메모는 되돌릴 수 없어요.",
+    );
+  });
+
+  it("확인 뒤 지우면 상세를 닫는다 · 지우지 못하면 닫지 않는다", async () => {
+    detail(base, () => Promise.resolve(true));
+    click(byName("삭제"));
+    const confirm = Array.from(
+      document.body.querySelectorAll<HTMLElement>("[role=alertdialog] button"),
+    ).find((b) => b.textContent === "삭제")!;
+    await act(async () => confirm.click());
+    expect(closed).toBe(1);
+  });
+});
