@@ -49,6 +49,8 @@ export interface TxEmbedParts {
   footer: (requestBack: () => void) => React.ReactNode;
   /** 지금 자리에서 ← 로 나가면 버려지는 값이 있다 — 호스트가 "작성한 내용이 사라져요" 를 먼저 묻는다 */
   dirty: boolean;
+  /** 시트 전체를 닫을 때 물을 값 — 단계 안에서도 폼 전체의 바뀐 값을 본다(닫기 원 · 바깥) */
+  dirtyAll: boolean;
   /** 한 단계 뒤 — 호스트의 ← · Esc · 기기 뒤로 가기가 부른다(묻는 일은 호스트) */
   onBack: () => void;
   /** 단계 안에 있다(값 하나를 치는 단계 등) — 시트 머리의 닫기 원 자리에 "완료" 를 둘지 호스트가 정한다 */
@@ -320,6 +322,7 @@ export function useTxSheetParts(
         footer
       ),
     dirty: sub ? f.subDirty : f.dirty,
+    dirtyAll: f.dirty || f.subDirty,
     onBack: embedBack,
     inSub: showSubDone,
     onDone: subDone,
