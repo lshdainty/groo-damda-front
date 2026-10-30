@@ -14,12 +14,7 @@ type OutletCtx = { onAddTx: () => void; mobile: boolean };
 export const MemoPage = () => {
   const { mobile } = useOutletContext<OutletCtx>();
   const screen = useMemoScreen();
-  const { editing } = screen;
-  // 상세는 목록의 최신 값으로 그린다 — 머리 ⋮ 로 고정을 바꾸면 메타 · 메뉴 글이 바로 따라간다
-  const viewing =
-    screen.viewing &&
-    (screen.memos.find((m) => m.rowId === screen.viewing!.rowId) ??
-      screen.viewing);
+  const { editing, viewing } = screen;
 
   return (
     <>
@@ -45,6 +40,8 @@ export const MemoPage = () => {
           memo={"_new" in editing ? null : editing}
           tags={screen.tagNames}
           saveError={screen.saveError}
+          saveErrorSeq={screen.saveErrorSeq}
+          tagsReady={screen.tagsReady}
           submitting={screen.saving}
           onClose={screen.closeEditor}
           onSave={screen.save}
