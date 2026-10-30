@@ -90,9 +90,17 @@ function AddTxSheetBody(
           title={title}
           // 값 하나를 치는 단계는 닫기 원 자리에 "완료" 가 들어온다(I-09 29) — 닫기 원을 숨긴다
           className={
-            !wide && showSubDone
-              ? "[&_[data-slot=bottom-sheet-close]]:hidden"
-              : undefined
+            [
+              !wide && showSubDone
+                ? "[&_[data-slot=bottom-sheet-close]]:hidden"
+                : "",
+              // 제목 위 작은 글("2 / 2단계")이 있으면 ← 는 제목 첫 줄 가운데에 선다 — 작은 글 한 줄(t3 줄 높이)만큼 내린다(bottom-sheet.md:61)
+              twoOfTwo
+                ? "[&_[data-slot=bottom-sheet-back]]:mt-[var(--text-t3--line-height)] [&_[data-slot=dialog-back]]:mt-[var(--text-t3--line-height)]"
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ") || undefined
           }
           onBack={sub || twoOfTwo ? () => void back() : undefined}
           onOpenAutoFocus={(e) => {
