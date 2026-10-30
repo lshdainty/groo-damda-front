@@ -372,8 +372,8 @@ export function RecurringManager({
 
       {confirmDelete && (
         <ConfirmDialog
-          title={t("deleteTitle", { name: displayTitle(confirmDelete, t) })}
-          message={t("deleteMessage")}
+          title={t("deleteTitle")}
+          message={t("deleteMessage", { name: displayTitle(confirmDelete, t) })}
           confirmLabel={tc("delete")}
           danger
           loading={deleteMut.isPending}
