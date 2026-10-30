@@ -50,8 +50,11 @@ import {
 export interface TxEmbedParts {
   title: React.ReactNode;
   body: React.ReactNode;
-  /** 바닥 버튼들 — 시트는 large, 대화상자는 small([취소] 포함). 비면 null */
-  footer: React.ReactNode;
+  /**
+   * 바닥 버튼들 — 시트는 large, 대화상자는 small([취소] 포함). 호스트가 `requestBack` 을 넘기면 [취소] 가 ← 와 같이
+   * 바뀐 값을 먼저 묻는다(호스트가 묻는 일을 맡는다)
+   */
+  footer: (requestBack: () => void) => React.ReactNode;
   /** 지금 자리에서 ← 로 나가면 버려지는 값이 있다 — 호스트가 "작성한 내용이 사라져요" 를 먼저 묻는다 */
   dirty: boolean;
   /** 한 단계 뒤 — 호스트의 ← · Esc · 기기 뒤로 가기가 부른다(묻는 일은 호스트) */
@@ -338,24 +341,17 @@ function AddTxSheetBody(
               {body}
             </>
           ),
-          footer:
-            wide && sub ? (
+          footer: (requestBack) =>
+            wide ? (
               <>
-                <Button variant="neutralWeak" onClick={embedBack}>
+                <Button variant="neutralWeak" onClick={requestBack}>
                   {tc("cancel")}
                 </Button>
-                {showSubDone ? (
+                {sub && showSubDone ? (
                   <Button onClick={subDone}>{tc("done")}</Button>
                 ) : (
                   footer
                 )}
-              </>
-            ) : wide ? (
-              <>
-                <Button variant="neutralWeak" onClick={embedBack}>
-                  {tc("cancel")}
-                </Button>
-                {footer}
               </>
             ) : (
               footer

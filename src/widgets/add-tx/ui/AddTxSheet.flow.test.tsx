@@ -578,7 +578,7 @@ describe("호스트 시트 안에 한 단계로 끼우기 (I-21 7a)", () => {
               <button type="button" onClick={p.onBack}>
                 host-back
               </button>
-              {p.footer}
+              {p.footer(p.onBack)}
             </div>
           )}
         />,
