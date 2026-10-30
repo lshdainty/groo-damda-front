@@ -9,6 +9,8 @@ import {
 import { Trans, useTranslation } from "react-i18next";
 
 import { Button } from "@/shared/ds/button";
+import { useWideSurface } from "@/shared/ds/overlay";
+import { SnackbarAvoidOverlap } from "@/shared/ds/snackbar";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -77,6 +79,7 @@ export function RecurringDetailDialog({
   const { t: te } = useTranslation("expense");
   const { t: tc } = useTranslation("common");
 
+  const wide = useWideSurface();
   const tone = recurringAmountTone(item);
   const isTransfer = item.expenseType === "TRANSFER";
   const isActive = item.isActive === "Y";
@@ -150,6 +153,27 @@ export function RecurringDetailDialog({
       value: yesNo(!!item.isFixed),
     });
   }
+
+  const footer = (
+    <ResponsiveDialogFooter>
+      <Button
+        variant="neutralWeak"
+        loading={toggling}
+        onClick={onToggle}
+        className="flex-1 lg:flex-none"
+      >
+        {isActive ? <Pause aria-hidden /> : <Play aria-hidden />}
+        {isActive ? t("pause") : t("resume")}
+      </Button>
+      <Button
+        variant="neutralSolid"
+        onClick={onEdit}
+        className="flex-1 lg:flex-none"
+      >
+        {tc("edit")}
+      </Button>
+    </ResponsiveDialogFooter>
+  );
 
   return (
     <ResponsiveDialog
@@ -297,24 +321,8 @@ export function RecurringDetailDialog({
             )}
           </div>
         </ResponsiveDialogBody>
-        <ResponsiveDialogFooter>
-          <Button
-            variant="neutralWeak"
-            loading={toggling}
-            onClick={onToggle}
-            className="flex-1 lg:flex-none"
-          >
-            {isActive ? <Pause aria-hidden /> : <Play aria-hidden />}
-            {isActive ? t("pause") : t("resume")}
-          </Button>
-          <Button
-            variant="neutralSolid"
-            onClick={onEdit}
-            className="flex-1 lg:flex-none"
-          >
-            {tc("edit")}
-          </Button>
-        </ResponsiveDialogFooter>
+        {/* 시트(1280 미만)는 바닥에 붙어 있어 스낵바가 [다시 켜기] 를 덮는다 — 띠가 바닥 버튼 위 8 에 서게 한다(snackbar.md 피할 자리). 대화상자는 화면 가운데라 겹치지 않는다 */}
+        {wide ? footer : <SnackbarAvoidOverlap>{footer}</SnackbarAvoidOverlap>}
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );
