@@ -147,6 +147,9 @@ function AddTxSheetBody(
         mobile={props.mobile}
         onClose={props.onClose}
         rewrite={{ of: props.expense, splits: f.serverSplitForms }}
+        onReplaced={props.onReplaced}
+        embed={props.embed}
+        onBack={props.onBack}
       />
     );
   }
