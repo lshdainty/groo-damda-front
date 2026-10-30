@@ -94,6 +94,32 @@ describe("Field", () => {
     expect(describedBy(input())).toEqual(["목록에 이 이름으로 보여요."]);
   });
 
+  it("labelHidden — 라벨은 읽는 이름으로 남고 머리 줄은 흐름에서 빠져 칸 위 gap 이 한 칸 더 생기지 않는다", () => {
+    render(
+      <Field label="제목" labelHidden>
+        <TestInput />
+      </Field>,
+    );
+    // 읽는 이름 유지 — <label for> 가 칸을 잇는다
+    expect(label().tagName).toBe("LABEL");
+    expect(input().labels?.[0]).toBe(label());
+    expect(label().textContent).toBe("제목");
+    // 머리 줄이 sr-only(절대 위치) — flex 열의 gap 을 만들지 않는다
+    const header = container.querySelector("[data-slot=field-header]")!;
+    expect(header.className).toContain("sr-only");
+    expect(header.className).not.toContain("flex");
+  });
+
+  it("labelHidden 이어도 headerAction 이 있으면 머리는 보인다", () => {
+    render(
+      <Field label="제목" labelHidden headerAction={<button>도움말</button>}>
+        <TestInput />
+      </Field>,
+    );
+    const header = container.querySelector("[data-slot=field-header]")!;
+    expect(header.className).not.toContain("sr-only");
+  });
+
   it("칸에 id 를 주면 라벨이 그 id 로 간다 — 칸에 직접 준 설명도 함께 잇는다", () => {
     render(
       <Field label="메모" description="목록에 보여요.">
