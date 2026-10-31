@@ -39,7 +39,8 @@ function parseCSV(content) {
     const values = parseCSVLine(line);
     const row = {};
     headers.forEach((header, index) => {
-      row[header.trim()] = values[index]?.trim() || "";
+      // 값 안의 글자 그대로 `\n` 은 줄바꿈 하나다(CSV 가 줄 단위로 읽혀 진짜 줄바꿈은 못 쓴다)
+      row[header.trim()] = (values[index]?.trim() || "").replace(/\\n/g, "\n");
     });
     return row;
   });

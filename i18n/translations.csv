@@ -2885,7 +2885,7 @@ download,ios.desc,Sideloadly 처럼 IPA 를 직접 넣는 도구를 쓴다면 �
 download,ios.cta,IPA 내려받기,Download IPA
 download,webHint,앱 없이도 브라우저에서 모든 기능을 쓸 수 있어요.,Everything works in the browser without the app.
 expense,sms.pasteOpen,결제 문자 붙여넣기,Paste a payment text
-expense,sms.pastePlaceholder,카드사에서 온 결제 문자를 그대로 붙여넣어주세요,Paste the card payment text as it is
+expense,sms.pastePlaceholder,"[Web발신]\n숲빛카드 5,500원\n골목찻집","[Web발신]\nForest Card 5,500 KRW\nAlley Tea House"
 expense,sms.pasteAction,문자 읽기,Read text
 expense,sms.parsing,읽는 중…,Reading…
 expense,sms.notRecognized,결제 문자로 보이지 않아요. 문자 전체를 붙여넣었는지 확인해주세요.,This doesn't look like a payment text. Please check that the whole message was pasted.
