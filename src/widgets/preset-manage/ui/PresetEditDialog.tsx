@@ -515,7 +515,7 @@ export function PresetEditDialog({
               ? t("addTx.interestHint")
               : undefined
         }
-        className="pb-x2 pt-x3 [&_label]:sr-only"
+        className="pb-x2 [&_label]:sr-only"
       >
         <AmountInput
           variant="underline"
