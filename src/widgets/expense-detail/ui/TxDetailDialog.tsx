@@ -501,7 +501,7 @@ export function TxDetailDialog({
                 label={t("accountCard")}
                 value={
                   asset
-                    ? asset.institution
+                    ? asset.institution && asset.institution !== asset.assetName
                       ? `${asset.institution} · ${asset.assetName}`
                       : asset.assetName
                     : expense.assetName
