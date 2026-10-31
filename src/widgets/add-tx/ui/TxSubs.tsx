@@ -203,7 +203,7 @@ export function PresetAllSub({ f }: { f: TxForm }) {
     .filter((p) => p.expenseType === f.type)
     .sort((a, b) => b.useCount - a.useCount);
   return (
-    <div className="-mx-x6">
+    <>
       <List aria-label={t("addTx.presetAllTitle")}>
         {all.map((p) => {
           const cat = f.categories.find((c) => c.rowId === p.categoryRowId);
@@ -239,7 +239,7 @@ export function PresetAllSub({ f }: { f: TxForm }) {
           );
         })}
       </List>
-    </div>
+    </>
   );
 }
 
@@ -255,6 +255,15 @@ export function PresetSaveSub({ f }: { f: TxForm }) {
     f.assets.find((a) => a.rowId === f.toAssetRowId)?.assetName ?? null;
   const assetName =
     f.assets.find((a) => a.rowId === f.assetRowId)?.assetName ?? null;
+  const catParent =
+    cat?.parentRowId != null
+      ? f.categories.find((c) => c.rowId === cat.parentRowId)
+      : null;
+  const catLabel = cat
+    ? catParent
+      ? `${catParent.categoryName} · ${cat.categoryName}`
+      : cat.categoryName
+    : t("savePreset.noCategory");
   const presetAmountNum = Number(f.presetAmount) || 0;
   const issue =
     f.presetShow && f.presetNameIssue
@@ -271,7 +280,7 @@ export function PresetSaveSub({ f }: { f: TxForm }) {
   return (
     <>
       {f.presetFailed && (
-        <div className="px-global-gutter pb-x3">
+        <div className="px-global-gutter pb-x5">
           <Callout tone="critical" role="alert">
             {t("addTx.saveFailed")}
           </Callout>
@@ -287,7 +296,7 @@ export function PresetSaveSub({ f }: { f: TxForm }) {
           detail={
             isTransfer
               ? transferPartiesLabel(fromName, toName)
-              : `${cat?.categoryName ?? t("savePreset.noCategory")}${assetName ? ` · ${assetName}` : ""}`
+              : `${catLabel}${assetName ? ` · ${assetName}` : ""}`
           }
           prefix={
             isTransfer ? (

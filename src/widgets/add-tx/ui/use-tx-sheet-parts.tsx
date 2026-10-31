@@ -297,7 +297,7 @@ export function useTxSheetParts(
     body: (
       <>
         {f.saveFailed && !sub && f.main === "2" && (
-          <div className="px-global-gutter pb-x3">
+          <div className="px-global-gutter pb-x5">
             <Callout tone="critical" role="alert">
               {t("addTx.saveFailed")}
             </Callout>
