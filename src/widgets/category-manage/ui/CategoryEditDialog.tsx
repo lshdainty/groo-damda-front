@@ -277,7 +277,9 @@ export function CategoryEditDialog({
             </ResponsiveMenu>
           ) : undefined
         }
+        // 새 카테고리만 이름 칸에 초점 — 수정은 표면이 받는다(폰에서 키보드가 가리지 않게)
         onOpenAutoFocus={(e) => {
+          if (!isNew) return;
           e.preventDefault();
           nameRef.current?.focus({ preventScroll: true });
         }}

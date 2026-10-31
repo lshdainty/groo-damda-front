@@ -145,9 +145,13 @@ export function BudgetFormDialog({
     >
       <ResponsiveDialogContent
         title={title}
+        // 새 예산만 첫 칸(카테고리 · 총 예산은 금액)에 초점 — 수정은 표면이 받는다(막지 않는다. 폰에서 키보드가 가리지 않게)
         onOpenAutoFocus={(e) => {
+          if (!isNew) return;
           e.preventDefault();
-          amountRef.current?.focus({ preventScroll: true });
+          (isTotal ? amountRef : catRef).current?.focus({
+            preventScroll: true,
+          });
         }}
       >
         <ResponsiveDialogBody>
