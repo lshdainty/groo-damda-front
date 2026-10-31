@@ -154,6 +154,13 @@ describe.each([
     openRow("운동");
     const del = buttonByText("삭제")!;
     expect(del.className).toContain("text-fg-critical");
+    // 시트 바닥 [삭제] 는 주 버튼과 같은 large 48(글자만큼 폭) — small 이 아니다(I-15 215)
+    expect(del.className).toContain("min-h-[48px]");
+    // 본문 끝에 따로 여백을 두지 않는다 — 바닥 위 12 는 바닥이 갖는다
+    expect(
+      document.body.querySelector("[data-slot=bottom-sheet-body] > div")
+        ?.className,
+    ).not.toContain("pb-x2");
     act(() => del.click());
     expect(document.body.querySelector("[role=alertdialog]")).toBeTruthy();
     const text = screenText();

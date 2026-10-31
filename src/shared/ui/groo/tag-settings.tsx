@@ -394,7 +394,7 @@ export function TagEditDialog<T extends TagLike>({
         aria-describedby={undefined}
       >
         <ResponsiveDialogBody>
-          <div className="flex flex-col gap-x4 pb-x2">
+          <div className="flex flex-col gap-x4">
             {saveError && (
               <div ref={errorRef}>
                 <Callout tone="critical" role="alert">
