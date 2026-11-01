@@ -270,6 +270,10 @@ describe("Chip (버튼)", () => {
     expect(l!.className).toContain("min-h-[40px]");
     expect(l!.className).toContain("min-w-[52px]");
     expect(l!.className).toContain("px-x4");
+    // 글이 있는 칩은 위아래 (높이 − 19) ÷ 2 — 글자 크기 설정이 커지면 줄 높이를 따라 늘어난다(100% 는 min-h 와 같은 32 · 36 · 40)
+    expect(s!.className).toContain("py-[6.5px]");
+    expect(m!.className).toContain("py-[8.5px]");
+    expect(l!.className).toContain("py-[10.5px]");
     // 아이콘만 있는 칩은 원 — 폭 = 높이, 좌우 여백 없음
     expect(icon!.className).toContain("w-[36px]");
     expect(icon!.className).toContain("px-0");
