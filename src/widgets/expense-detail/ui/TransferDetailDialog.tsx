@@ -78,7 +78,7 @@ export function TransferDetailDialog({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [openRecurring, setOpenRecurring] = useState(false);
   const deleteMut = useDeleteTransfer();
-  const assetsQ = useAssets();
+  const assetsQ = useAssets({ silent: true });
   // 수정 저장의 응답으로 갈아 그린다(부모는 목록에서 집은 스냅샷을 준다)
   const [saved, setSaved] = useState<AssetTransfer | null>(null);
   const transfer = saved?.rowId === transferProp.rowId ? saved : transferProp;

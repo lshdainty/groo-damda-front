@@ -105,8 +105,8 @@ export function TxDetailDialog({
     "split" | "recurring" | "dutch" | null
   >(null);
 
-  const categoriesQ = useExpenseCategories();
-  const assetsQ = useAssets();
+  const categoriesQ = useExpenseCategories({ silent: true });
+  const assetsQ = useAssets({ silent: true });
   const splitsQ = useExpenseSplits(expense.rowId);
   const recurringsQ = useRecurringTransactions();
   const dutchPaysQ = useDutchPays();
