@@ -236,8 +236,8 @@ export function useTxForm({
   const [rewriting, setRewriting] = useState(false);
   const notifyResult = useLedgerResultToast();
 
-  const categoriesQ = useExpenseCategories();
-  const assetsQ = useAssets();
+  const categoriesQ = useExpenseCategories({ silent: true });
+  const assetsQ = useAssets({ silent: true });
   // 저장 실패는 폼 맨 위 Callout 이 알린다 — 전역 서버 원문 토스트와 겹치지 않게 호출처 silent
   const createMut = useCreateExpense({ silent: true });
   const updateMut = useUpdateExpense({ silent: true });
