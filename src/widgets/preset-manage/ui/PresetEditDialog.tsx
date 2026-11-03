@@ -213,7 +213,13 @@ export function PresetEditDialog({
   const amountNumber = parseAmount(amount);
   const lock = amountNumber > 0;
   // 이자는 **금액이 있을 때만** 받는다(금액이 매달 다르면 이자도 매달 다르다 — 2026-09-15). 금액을 비우면 이자도 비운다.
-  const showInterest = isTransfer && lock && isLoanTarget(assets, toAssetRowId);
+  // 자산을 아직 못 받았거나 못 받았으면(실패) 읽어 온 이자가 있는 한 보인다 — 모르는 채로 감추면 오류 글도 안 보이고 이자가 사라진다(앱과 같다)
+  const showInterest =
+    isTransfer &&
+    lock &&
+    (assetsQ.data !== undefined
+      ? isLoanTarget(assets, toAssetRowId)
+      : interest !== "");
 
   // ── 규칙 밖 값은 화면이 먼저 비운다 — 서버가 거절해도 다시 해서는 안 되는 값이다 ──────────────
   // 받기 전에는 읽어 온 값을 유지하고, 받았는데 목록에 없으면(지운 것) 비운다. 읽어 온 값을 비운 것은 사용자가 바꾼 것이 아니므로
@@ -223,7 +229,13 @@ export function PresetEditDialog({
   // 이체에는 카테고리가 없다 · 종류가 다르면 맞지 않는다 · 지운 카테고리 · 하위가 생겨 상위가 된 카테고리(말단만 받는다)
   if (categoryRowId != null) {
     const cat = categories.find((c) => c.rowId === categoryRowId);
-    if (isTransfer || (cat && cat.expenseType !== type)) {
+    // 종류를 바꿨으면 목록을 받기 전이어도 비운다 — 다른 종류의 카테고리는 늘 틀리다(처음 값도 같이 맞춘다)
+    const typeChanged = type !== initial.type;
+    if (
+      isTransfer ||
+      (cat && cat.expenseType !== type) ||
+      (categoriesQ.data === undefined && typeChanged)
+    ) {
       setCategoryRowId(null);
     } else if (
       categoriesQ.data !== undefined &&
