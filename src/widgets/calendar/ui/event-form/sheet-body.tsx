@@ -34,6 +34,7 @@ import {
   MultiChoiceSheet,
   TimePickSurface,
 } from "./pickers";
+import { DotValue } from "@/widgets/calendar/ui/dot-value";
 import { NO_LABEL, reminderKey, type EventFormView } from "./types";
 
 const ROW_ICON = "size-[22px]";
@@ -64,28 +65,6 @@ function Piece({
     >
       {children}
     </button>
-  );
-}
-
-/** 값 글 앞에 색 점 8 + 사이 6 (캘린더 · 라벨 줄) */
-function DotValue({
-  color,
-  children,
-}: {
-  color?: string;
-  children: ReactNode;
-}) {
-  return (
-    <span className="inline-flex items-center gap-x1.5">
-      {color && (
-        <span
-          aria-hidden
-          className="size-[8px] shrink-0 rounded-full"
-          style={{ background: color }}
-        />
-      )}
-      <span>{children}</span>
-    </span>
   );
 }
 
@@ -196,7 +175,8 @@ export function EventFormSheetBody({
         label={t("form.title")}
         invalid={showErrors && titleEmpty}
         errorMessage={t("form.titleRequired")}
-        className="pb-x2 pt-x1 [&_label]:sr-only"
+        labelHidden
+        className="pb-x2 pt-x1"
       >
         <Input
           size="large"

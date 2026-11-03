@@ -121,7 +121,12 @@ export function PresetEditDialog({
   // (한 번 비우면 조건이 닫히므로 렌더 중에 맞춰도 반복되지 않는다)
   if (categoryRowId != null) {
     const cat = categories.find((c) => c.rowId === categoryRowId);
-    if (isTransfer || !cat || cat.expenseType !== type) setCategoryRowId(null);
+    // 받기 전에는 읽어 온 값을 유지하고, 받았는데 목록에 없으면(지운 카테고리) 비운다 — 안 비우면 지운 id 가 저장된다
+    if (
+      isTransfer ||
+      (categoriesQ.data !== undefined && (!cat || cat.expenseType !== type))
+    )
+      setCategoryRowId(null);
   }
   // 이체가 아니게 되면 남아 있던 이체 칸을 지운다 — 실려 나가면 서버가 거절한다.
   if (!isTransfer && (toAssetRowId != null || fee || interest)) {
@@ -129,7 +134,8 @@ export function PresetEditDialog({
     setFee("");
     setInterest("");
   }
-  if (!showInterest && interest) setInterest("");
+  // 자산을 아직 못 받았으면(대출인지 모른다) 읽어 온 이자를 지우지 않는다 — 먼저 지우면 받은 뒤에도 비어 저장하면 이자가 사라진다
+  if (assetsQ.data !== undefined && !showInterest && interest) setInterest("");
 
   const topCategories = useMemo(
     () =>
@@ -203,7 +209,13 @@ export function PresetEditDialog({
       // 이체 칸도 이 화면의 칸이다 — 지출·수입으로 바꿔 저장하면 `null` 로 지워진다.
       toAssetRowId: isTransfer ? toAssetRowId : null,
       fee: isTransfer && fee ? Number(fee) : null,
-      interestAmount: showInterest && interest ? Number(interest) : null,
+      // 자산을 받기 전이면 대출인지 모르니 읽어 온 값을 그대로 보낸다(받은 뒤에는 지금 규칙) — 안 그러면 조용히 null 로 저장된다
+      interestAmount:
+        (assetsQ.data === undefined
+          ? isTransfer && lockAmount
+          : showInterest) && interest
+          ? Number(interest)
+          : null,
       // 아래 넷은 이 다이얼로그가 그리는 칸이다 — 비운 채 저장하면 지워져야 한다.
       // `undefined` 로 키를 빼면 새 서버가 "안 고침" 으로 읽어, 화면만 지워진 척 닫히고
       // 옛 계좌·거래처·메모·결제수단이 서버에 그대로 남았다.

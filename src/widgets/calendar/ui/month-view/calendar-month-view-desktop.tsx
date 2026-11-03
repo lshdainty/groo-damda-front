@@ -55,8 +55,8 @@ const CELL_HEIGHT = "h-[104px]";
 interface IProps {
   singleDayEvents: IEvent[];
   multiDayEvents: IEvent[];
-  /** 칩을 누르면 그 일정 상세(지금은 팝오버) */
-  onEventClick: (event: IEvent, el: HTMLElement) => void;
+  /** 칩을 누르면 그 일정 상세 — `day` 는 칩이 놓인 칸의 날(이어지는 일정의 띠 조각은 누른 칸의 날) */
+  onEventClick: (event: IEvent, el: HTMLElement, day: Date) => void;
 }
 
 function MonthGrid({ singleDayEvents, multiDayEvents, onEventClick }: IProps) {
@@ -200,7 +200,7 @@ function MonthGrid({ singleDayEvents, multiDayEvents, onEventClick }: IProps) {
                       key={i}
                       slot={slot}
                       density="wide"
-                      onClick={onEventClick}
+                      onClick={(ev, el) => onEventClick(ev, el, date)}
                     />
                   ) : (
                     <MonthChipSpacer key={i} density="wide" />
