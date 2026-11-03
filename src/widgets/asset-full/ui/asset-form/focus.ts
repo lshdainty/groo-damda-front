@@ -9,3 +9,12 @@ const FIRST_FIELD =
 export function focusFirstField(root: HTMLElement | null | undefined) {
   root?.querySelector<HTMLElement>(FIRST_FIELD)?.focus({ preventScroll: true });
 }
+
+/** 2단계 폼의 이름 칸 — 고르기 단추(combobox)·읽기 전용을 건너뛴 첫 글 입력 칸 */
+export function focusNameField(root: HTMLElement | null | undefined) {
+  root
+    ?.querySelector<HTMLElement>(
+      "input:not([type=hidden]):not([type=radio]):not([type=checkbox]):not([readonly]):not([disabled]):not([role=combobox])",
+    )
+    ?.focus({ preventScroll: true });
+}

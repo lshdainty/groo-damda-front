@@ -212,7 +212,9 @@ export function TodoFormDialog({
     >
       <ResponsiveDialogContent
         title={isNew ? t("newTodo") : t("editTodoTitle")}
+        // 새 할 일만 제목 칸에 초점 — 수정은 표면이 받는다(폰에서 키보드가 가리지 않게)
         onOpenAutoFocus={(e) => {
+          if (!isNew) return;
           e.preventDefault();
           titleRef.current?.focus({ preventScroll: true });
         }}

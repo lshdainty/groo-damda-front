@@ -82,7 +82,8 @@ export function EventFormSheetChildren({ flow }: { flow: EventFormFlow }) {
           <Field
             label={t("form.description")}
             maxGraphemeCount={CONTENT_MAX}
-            className="pb-x2 pt-x1 [&_label]:sr-only"
+            labelHidden
+            className="pb-x2 pt-x1"
           >
             <Textarea
               autoFocus

@@ -48,6 +48,8 @@ export interface ResultSectionAction {
   href?: string;
   /** 누른 일이 끝날 때까지 — Button 의 로딩(href 와 함께 쓰지 않는다) */
   loading?: boolean;
+  /** 앞 아이콘 — 새로 만드는 동작("프리셋 추가" + plus)에만. 크기 · 간격은 Button 이 정한다(앱 `PResultAction.icon` 과 같은 이름) */
+  icon?: React.ReactNode;
 }
 
 type ResultSectionCommon = Omit<
@@ -127,6 +129,7 @@ function ActionButton({
         className={className}
       >
         <a href={action.href} onClick={action.onClick}>
+          {action.icon}
           {action.label}
         </a>
       </Button>
@@ -142,6 +145,7 @@ function ActionButton({
       loading={action.loading}
       onClick={action.onClick}
     >
+      {action.icon}
       {action.label}
     </Button>
   );

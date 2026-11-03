@@ -193,6 +193,7 @@ export function CategoryMoveTxDialog({
                     target ? getPaletteByColor(target.color).color : undefined
                   }
                   surfaceTitle={t("moveTx.target")}
+                  scrollFog
                   errorMessage={
                     show.target && targetRowId == null
                       ? t("moveTx.errTarget")
