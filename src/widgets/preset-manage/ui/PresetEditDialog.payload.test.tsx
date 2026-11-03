@@ -760,7 +760,7 @@ describe("규칙 밖 값은 화면이 먼저 비운다 (D3 · D4)", () => {
     await pick("preset.fromAccount", "주거래");
     await pick("preset.toAccount", "청약");
     await pick("preset.fromAccount", "청약");
-    expect(valueOf("preset.toAccount")).toBe("addTx.selectPlaceholder");
+    expect(valueOf("preset.toAccount")).toBe("preset.toAccountPick");
     await clickSave("add");
 
     expect(sent.create).toBeNull();
@@ -801,7 +801,7 @@ describe("규칙 밖 값은 화면이 먼저 비운다 (D3 · D4)", () => {
     render({ ...basePreset, assetRowId: 5, assetName: "체크" });
     await click(chip("addTx.transfer"));
     await tick();
-    expect(valueOf("preset.fromAccount")).toBe("addTx.selectPlaceholder");
+    expect(valueOf("preset.fromAccount")).toBe("preset.fromAccountPick");
   });
 
   it("하위가 생겨 상위가 된 카테고리를 가리키는 프리셋은 카테고리를 비운다", async () => {

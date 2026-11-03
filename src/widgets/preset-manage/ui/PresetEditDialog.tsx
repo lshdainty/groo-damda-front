@@ -643,7 +643,7 @@ export function PresetEditDialog({
                             ? assetLabel(assetById(assetRowId)!)
                             : null
                         }
-                        placeholder={t("addTx.selectPlaceholder")}
+                        placeholder={t("preset.fromAccountPick")}
                         surfaceTitle={t("preset.fromAccount")}
                         errorMessage={fromErr}
                       >
@@ -671,7 +671,7 @@ export function PresetEditDialog({
                             ? assetLabel(assetById(toAssetRowId)!)
                             : null
                         }
-                        placeholder={t("addTx.selectPlaceholder")}
+                        placeholder={t("preset.toAccountPick")}
                         surfaceTitle={t("preset.toAccount")}
                         errorMessage={toErr}
                       >
@@ -721,7 +721,7 @@ export function PresetEditDialog({
                             ? getPaletteByColor(selectedCategory.color).color
                             : undefined
                         }
-                        placeholder={t("preset.noneValue")}
+                        placeholder={t("preset.categoryPick")}
                         surfaceTitle={t("category")}
                         errorMessage={categoryErr}
                       >
