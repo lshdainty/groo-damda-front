@@ -723,7 +723,7 @@ export function RecurringAddDialog({
                     value={f.categoryRowId}
                     onChange={(id) => set("categoryRowId", id)}
                     errorMessage={showErrors ? errCategory : null}
-                    emptyText={te("expNoCategoryForType")}
+                    emptyText={te("preset.noCategoryOfKind")}
                     failed={categoriesQ.isError && !categoriesQ.data}
                     onRetry={() => void categoriesQ.refetch()}
                   />
