@@ -1,48 +1,108 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Repeat } from "lucide-react";
-import { ConfirmDialog, ModalShell } from "@/shared/ui/groo/dialogs";
-import { ModalViewFooter } from "@/shared/ui/groo/modal-footer";
+import { ArrowRightLeft, Lock, Repeat } from "lucide-react";
+
+import { Callout } from "@/shared/ds/callout";
+import { List, ListItem } from "@/shared/ds/list";
+import { LogoTile } from "@/shared/ds/logo-tile";
+import { useSnackbar } from "@/shared/ds/snackbar";
+import { KRW, isEn } from "@/shared/lib/groo/format";
 import {
   HIDE_AMOUNTS_MASK,
   useHideAmounts,
 } from "@/shared/lib/groo/hide-amounts-core";
-import { KRW, isEn } from "@/shared/lib/groo/format";
-import { formatMonthDayDow } from "@/shared/lib/date";
-import { DetailQuickAction } from "@/shared/ui/groo/detail";
-import { useDeleteTransfer } from "@/features/asset";
+import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
+import { useAssets, useDeleteTransfer } from "@/features/asset";
 import { RecurringAddDialog } from "@/features/recurring-transaction/ui/RecurringAddDialog";
-import type { AssetTransfer } from "@/entities/asset";
+import { useTxForm, useTxSheetParts } from "@/widgets/add-tx";
+import { SheetStepDone } from "@/widgets/calendar/ui/event-form/step-header";
+import type { Asset, AssetTransfer } from "@/entities/asset";
+
+import { dateTimeLabel } from "@/widgets/expense-detail/lib/detail-format";
+import { DetailSurface } from "./detail-surface";
+import {
+  AmountText,
+  DetailHeadBlock,
+  KvRow,
+  MoreSection,
+  StatusSlot,
+  TxDetailSkeleton,
+} from "./tx-detail-parts";
+
+/** 계좌 한 줄 — 앞 Logo Tile 40(그 자산의 기관) · 이름 · 설명 "보내는 계좌" / "받는 계좌". 누르지 않는다 */
+function AccountRow({
+  name,
+  asset,
+  role,
+}: {
+  name: string;
+  asset?: Asset;
+  role: string;
+}) {
+  return (
+    <ListItem
+      prefix={
+        <LogoTile
+          size={40}
+          // 지운 자산이라 못 찾으면 이름만 — Logo Tile 은 첫 글자를 그린다
+          name={asset?.institution || asset?.assetName || name}
+        />
+      }
+      title={name}
+      detail={role}
+    />
+  );
+}
 
 /**
- * 이체 상세 — 보기 + 수정 + 삭제.
+ * 이체 상세 — 거래 상세와 한 벌이다 (I-21 C 15 ~ 18). 머리(회색 타일 + "이체" + 금액 + 날짜) → 보내는 · 받는 계좌 줄 → 값 줄 → "더 하기" 반복 설정.
  *
- * <p>수정·삭제는 서버가 이자 지출·잔액 이력을 되돌렸다 다시 만든다. rowId 는 유지되므로
- * 이 이체를 가리키던 참조가 끊기지 않는다.
+ * <p>수정·삭제는 서버가 이자 지출·잔액 이력을 되돌렸다 다시 만든다. rowId 는 유지되므로 이 이체를 가리키던 참조가 끊기지 않는다.
+ * [수정]은 상세 위에서 수정 폼을 열고 저장하면 응답 이체로 상세를 다시 그린다(7a).
  *
- * <p>시스템이 만든 이체(매수 예수금 충당·카드 자동결제)는 금액이 원본과 묶여 있어
- * 고칠 수 없다 — 버튼을 감추고 왜 그런지 적어 둔다.
+ * <p>시스템이 만든 이체(매수 예수금 충당·카드 자동결제)는 금액이 원본과 묶여 있어 고칠 수 없다 — 버튼을 감추고 왜 그런지 적어 둔다.
  */
 export function TransferDetailDialog({
-  transfer,
+  transfer: transferProp,
   mobile,
   onClose,
-  onEdit,
 }: {
   transfer: AssetTransfer;
+  /** 표면은 ds 가 1280 으로 정한다 — 아직 옛 겹침 대화상자(반복 폼 · 수정 폼)에만 넘긴다 */
   mobile: boolean;
   onClose: () => void;
-  /** 수정 폼으로 넘긴다. 안 넘기면 수정 버튼이 없다. */
-  onEdit?: (transfer: AssetTransfer) => void;
 }) {
   const { t } = useTranslation("expense");
   const { t: tc } = useTranslation("common");
+  const snackbar = useSnackbar();
+  const [step, setStep] = useState<"detail" | "edit">("detail");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [openRecurring, setOpenRecurring] = useState(false);
   const deleteMut = useDeleteTransfer();
+  const assetsQ = useAssets({ silent: true });
+  // 수정 저장의 응답으로 갈아 그린다(부모는 목록에서 집은 스냅샷을 준다)
+  const [saved, setSaved] = useState<AssetTransfer | null>(null);
+  const transfer = saved?.rowId === transferProp.rowId ? saved : transferProp;
+  // 수정 폼 — 상세가 한 번 들고 같은 시트 안 한 단계로 보인다(7a). [수정] 때 이 이체로 갈아 끼운다
+  const [editing, setEditing] = useState<AssetTransfer | null>(null);
+  const form = useTxForm({
+    editTransfer: editing ?? undefined,
+    onTransferSaved: (updated) => setSaved(updated),
+    onClose: () => setStep("detail"),
+  });
+  const formParts = useTxSheetParts(form, {
+    mobile,
+    embedded: true,
+    onClose: () => setStep("detail"),
+    onBack: () => setStep("detail"),
+  });
+  const startEdit = () => {
+    setEditing(transfer);
+    form.beginEdit({ editTransfer: transfer });
+    setStep("edit");
+  };
 
-  // 이체 상세는 지금까지 어떤 카드로도 가려지지 않았다 — 거래 상세와 같은 카드로 묶는다.
-  // 금액만 가리고 수수료를 남기면 `이체금액 = 출금총액 − 수수료` 로 좁혀지므로 한 덩어리로 본다.
+  // 이체 상세는 거래 상세와 같은 카드로 묶는다. 금액만 가리고 수수료를 남기면 `이체금액 = 출금총액 − 수수료` 로 좁혀지므로 한 덩어리로 본다.
   const hidden = useHideAmounts("ledger.txDetail", "transfer");
   const fee = transfer.fee ?? 0;
   const interest = transfer.interestAmount ?? 0;
@@ -53,119 +113,150 @@ export function TransferDetailDialog({
       ? HIDE_AMOUNTS_MASK
       : `${isEn() ? "₩" : ""}${KRW(v, { abs: true })}${isEn() ? "" : "원"}`;
 
-  const handleConfirmDelete = () => {
-    deleteMut.mutate(transfer.rowId, {
-      onSuccess: () => {
-        setConfirmDelete(false);
-        onClose();
+  const assets = assetsQ.data?.assets ?? [];
+  const fromAsset = assets.find((a) => a.rowId === transfer.fromAssetRowId);
+  const toAsset = assets.find((a) => a.rowId === transfer.toAssetRowId);
+
+  const runDelete = () => {
+    // 실패는 서버 글 대신 고정 글 — 확인창을 닫고 스낵바 + [다시 시도](28-3)
+    deleteMut.mutate(
+      { id: transfer.rowId, silent: true },
+      {
+        onSuccess: () => {
+          setConfirmDelete(false);
+          onClose();
+        },
+        onError: () => {
+          setConfirmDelete(false);
+          snackbar.show({
+            message: t("transferDeleteFailed"),
+            tone: "critical",
+            action: { label: tc("retry"), onClick: runDelete },
+          });
+        },
       },
-      // onError: 전역 인터셉터가 서버 메시지를 토스트로 노출
-    });
+    );
   };
 
-  const rows: { label: string; value: string }[] = [
-    { label: t("addTx.fromAccount"), value: transfer.fromAssetName },
-    { label: t("addTx.depositAccount"), value: transfer.toAssetName },
-    { label: t("form.amount"), value: won(transfer.amount) },
-    ...(fee > 0 ? [{ label: t("transferFeePrefix"), value: won(fee) }] : []),
-    // 보내는 쪽에서 실제로 빠져나간 금액 — 수수료가 있으면 이체 금액과 다르다.
-    ...(fee > 0
-      ? [{ label: t("transferWithdrawn"), value: won(transfer.amount + fee) }]
-      : []),
-    // 대출 상환에만 있다. 이자는 부채를 줄이지 않고 은행으로 나가는 비용이라,
-    // 안 보여 주면 "왜 원금이 이만큼밖에 안 줄었지" 가 된다.
-    ...(interest > 0
-      ? [
-          { label: t("addTx.interest"), value: won(interest) },
-          {
-            label: t("transferPrincipal"),
-            value: won(transfer.principalAmount),
-          },
-        ]
-      : []),
-    {
-      label: t("form.date"),
-      value: `${formatMonthDayDow(transfer.transferDate.slice(0, 10))} ${transfer.transferDate.slice(11, 16)}`,
-    },
-    ...(transfer.description
-      ? [{ label: t("memo"), value: transfer.description }]
-      : []),
-  ];
+  const isEditing = step === "edit";
+  const ep = formParts.embedParts;
 
   return (
     <>
-      <ModalShell
-        title={t("addTx.transfer")}
+      <DetailSurface
+        title={isEditing ? ep.title : t("transferDetailTitle")}
         onClose={onClose}
-        size="sm"
-        mobile={mobile}
+        subStep={isEditing}
+        dirty={isEditing ? ep.dirty : false}
+        closeDirty={isEditing ? ep.dirtyAll : undefined}
+        closeBlocked={isEditing && form.submitting}
+        onStepBack={isEditing ? ep.onBack : undefined}
+        footerNode={isEditing ? ep.footer : undefined}
+        bodyRef={isEditing ? ep.bodyRef : undefined}
+        // 값 하나를 치는 단계는 닫기 원 자리에 "완료" — 표면 경계는 1280(시트는 768 ~ 1279 포함)이라 mobile 로 가르지 않는다
+        stepDone={
+          isEditing && ep.inSub ? (
+            <SheetStepDone onClick={ep.onDone} />
+          ) : undefined
+        }
+        bodyKey={isEditing ? `edit:${form.main}:${form.sub ?? ""}` : "detail"}
         footer={
-          <ModalViewFooter
-            onDelete={locked ? undefined : () => setConfirmDelete(true)}
-            deleteLabel={tc("delete")}
-            onEdit={locked || !onEdit ? undefined : () => onEdit(transfer)}
-          />
+          isEditing || locked
+            ? undefined
+            : {
+                onDelete: () => setConfirmDelete(true),
+                deleting: deleteMut.isPending,
+                primary: { label: tc("edit"), onClick: startEdit },
+              }
         }
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {/* 왜 고칠 수 없는지 알려 준다 — 버튼만 없으면 고장으로 보인다. */}
-          {locked && (
-            <div
-              style={{
-                padding: "10px 12px",
-                borderRadius: "var(--radius-md)",
-                background: "var(--bg-sunken)",
-                fontSize: "var(--text-caption)",
-                color: "var(--fg-tertiary)",
-                lineHeight: 1.6,
-              }}
-            >
-              {t(`transferAutoSource.${transfer.autoSource}`, {
-                defaultValue: t("transferAutoSource.default"),
-              })}
-            </div>
-          )}
-          {/* 반복 설정 — 이 이체와 <b>같은 값으로 규칙을 새로 만든다</b>. 이 이체 자체는
-              건드리지 않는다: 이미 일어난 이체와 앞으로 실행될 규칙은 별개다(사용자 결정).
-              시스템이 만든 이체는 잠겨 있어 반복으로 옮길 대상이 아니다. */}
-          {!locked && (
-            <div style={{ marginBottom: 4 }}>
-              <DetailQuickAction
-                icon={Repeat}
-                label={t("txDetail.recurring")}
-                onClick={() => setOpenRecurring(true)}
+        {isEditing ? (
+          ep.body
+        ) : assetsQ.isLoading ? (
+          <TxDetailSkeleton />
+        ) : (
+          <>
+            <DetailHeadBlock
+              tile={
+                <span
+                  aria-hidden
+                  className="inline-grid size-x12 shrink-0 place-items-center rounded-r4 bg-chart-gray-weak text-chart-gray"
+                >
+                  <ArrowRightLeft size={24} />
+                </span>
+              }
+              name={t("addTx.transfer")}
+              amount={
+                <AmountText amount={transfer.amount} sign="" kind="transfer" />
+              }
+              dateTime={dateTimeLabel(transfer.transferDate)}
+            />
+
+            {/* 왜 고칠 수 없는지 알려 준다 — 버튼만 없으면 고장으로 보인다. */}
+            {locked && (
+              <StatusSlot>
+                <Callout tone="neutral" icon={<Lock aria-hidden />}>
+                  {t(`transferAutoSource.${transfer.autoSource}`, {
+                    defaultValue: t("transferAutoSource.default"),
+                  })}
+                </Callout>
+              </StatusSlot>
+            )}
+
+            <List data-slot="transfer-detail-accounts">
+              <AccountRow
+                name={transfer.fromAssetName}
+                asset={fromAsset}
+                role={t("transferFromLabel")}
               />
-            </div>
-          )}
-          {rows.map((r) => (
-            <div
-              key={r.label}
-              style={{ display: "flex", alignItems: "baseline", gap: 12 }}
-            >
-              <span
-                style={{
-                  fontSize: "var(--text-label-sm)",
-                  color: "var(--fg-tertiary)",
-                  minWidth: 88,
-                  flexShrink: 0,
-                }}
-              >
-                {r.label}
-              </span>
-              <span
-                style={{
-                  fontSize: "var(--text-body-sm)",
-                  color: "var(--fg-primary)",
-                  fontWeight: 600,
-                  wordBreak: "break-word",
-                }}
-              >
-                {r.value}
-              </span>
-            </div>
-          ))}
-        </div>
-      </ModalShell>
+              <AccountRow
+                name={transfer.toAssetName}
+                asset={toAsset}
+                role={t("transferToLabel")}
+              />
+            </List>
+
+            <List data-slot="tx-detail-kv" className="pt-x1">
+              {fee > 0 && (
+                <KvRow label={t("transferFeePrefix")} value={won(fee)} />
+              )}
+              {/* 보내는 쪽에서 실제로 빠져나간 금액 — 수수료가 있으면 이체 금액과 다르다. */}
+              {fee > 0 && (
+                <KvRow
+                  label={t("transferWithdrawn")}
+                  value={won(transfer.amount + fee)}
+                />
+              )}
+              {/* 대출 상환에만 있다. 이자는 부채를 줄이지 않고 은행으로 나가는 비용이라, 안 보여 주면 "왜 원금이 이만큼밖에 안 줄었지" 가 된다. */}
+              {interest > 0 && (
+                <>
+                  <KvRow label={t("addTx.interest")} value={won(interest)} />
+                  <KvRow
+                    label={t("transferPrincipal")}
+                    value={won(transfer.principalAmount)}
+                  />
+                </>
+              )}
+              <KvRow label={t("memo")} value={transfer.description} />
+            </List>
+
+            {/* 반복 설정 — 이 이체와 같은 값으로 규칙을 새로 만든다. 이 이체 자체는 건드리지 않는다. 시스템이 만든 이체는 잠겨 있다. */}
+            {!locked && (
+              <MoreSection
+                rows={[
+                  {
+                    key: "recurring",
+                    icon: <Repeat aria-hidden />,
+                    label: t("txDetail.recurring"),
+                    onClick: () => setOpenRecurring(true),
+                  },
+                ]}
+              />
+            )}
+          </>
+        )}
+      </DetailSurface>
+      {isEditing && formParts.overlays}
 
       {openRecurring && (
         <RecurringAddDialog
@@ -192,7 +283,7 @@ export function TransferDetailDialog({
           danger
           loading={deleteMut.isPending}
           onCancel={() => !deleteMut.isPending && setConfirmDelete(false)}
-          onConfirm={handleConfirmDelete}
+          onConfirm={runDelete}
         />
       )}
     </>

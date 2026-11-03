@@ -18,7 +18,11 @@ import {
   TableStatusRow,
 } from "@/shared/ds/table";
 import { Badge } from "@/shared/ds/badge";
-import { BottomSheet, BottomSheetContent } from "@/shared/ds/bottom-sheet";
+import {
+  BottomSheet,
+  BottomSheetBody,
+  BottomSheetContent,
+} from "@/shared/ds/bottom-sheet";
 import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
 import { withCommaBreaks } from "@/shared/ds/i18n";
@@ -110,7 +114,9 @@ export function WatchToggle({
   const sheet = (
     <BottomSheet open={picking} onOpenChange={setPicking}>
       <BottomSheetContent title={t("watch.pickGroup")}>
-        {choices}
+        <BottomSheetBody scrollFog className="px-0">
+          {choices}
+        </BottomSheetBody>
       </BottomSheetContent>
     </BottomSheet>
   );
@@ -300,7 +306,7 @@ function ChartBlock({
   const availability = useCandleAvailability();
   return (
     <div className="mt-x4">
-      <div style={{ height }}>
+      <div style={availability === "yes" ? undefined : { height }}>
         {availability === "yes" ? (
           <LightweightStockChart
             symbol={symbol}
@@ -480,7 +486,7 @@ export function QuotesBand({
       };
     });
 
-  const head = (cols: string[]) => (
+  const head = (cols: string[], book = false) => (
     <thead>
       <tr className="text-t3 font-medium text-fg-neutral-subtle">
         {cols.map((c, i) => (
@@ -488,9 +494,14 @@ export function QuotesBand({
             key={c}
             scope="col"
             className={cn(
-              "whitespace-nowrap px-x1 pb-x1 font-medium first:pl-0 last:pr-0",
-              i === 0 ? "text-start" : "text-end",
-              cols.length === 3 && i === 1 && "text-center",
+              // 호가 표는 가격 칸이 먼저(줄지 않는다), 잔량 칸은 쉼표 뒤(<wbr>)에서만 줄을 바꿔 남는 폭에 들어온다 — 글자는 줄이지 않고 말줄임 · 축약도 쓰지 않는다(DESIGN.md 돈)
+              "px-x1 pb-x1 font-medium first:pl-0 last:pr-0",
+              book && i === 1 ? "w-px whitespace-nowrap" : "break-keep",
+              i === 0
+                ? "text-start"
+                : cols.length === 3 && i === 1
+                  ? "text-center"
+                  : "text-end",
             )}
           >
             {c}
@@ -509,15 +520,15 @@ export function QuotesBand({
               className="absolute inset-y-x1 right-0 rounded-[4px] bg-bg-critical-weak"
               style={{ width: barWidth(e.q) }}
             />
-            <span className="relative block pr-x1_5 text-end text-t3 tabular-nums text-fg-neutral-subtle">
-              {qtyText(e.q)}
+            <span className="relative block pr-x1 text-end text-t3 tabular-nums text-fg-neutral-subtle">
+              {withCommaBreaks(qtyText(e.q))}
             </span>
           </>
         )}
       </td>
       <td
         className={cn(
-          "whitespace-nowrap px-x1 text-center text-t4 font-bold tabular-nums",
+          "w-px whitespace-nowrap px-x1 text-center text-t4 font-bold tabular-nums",
           side === "ask" ? "text-fg-informative" : "text-fg-critical",
         )}
       >
@@ -531,8 +542,8 @@ export function QuotesBand({
               className="absolute inset-y-x1 left-0 rounded-[4px] bg-bg-informative-weak"
               style={{ width: barWidth(e.q) }}
             />
-            <span className="relative block pl-x1_5 text-t3 tabular-nums text-fg-neutral-subtle">
-              {qtyText(e.q)}
+            <span className="relative block pl-x1 text-t3 tabular-nums text-fg-neutral-subtle">
+              {withCommaBreaks(qtyText(e.q))}
             </span>
           </>
         )}
@@ -573,11 +584,14 @@ export function QuotesBand({
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <caption className="sr-only">{t("quotes.orderbook")}</caption>
-                  {head([
-                    t("orderbook.bidVolume"),
-                    t("quotes.tradePrice"),
-                    t("orderbook.askVolume"),
-                  ])}
+                  {head(
+                    [
+                      t("orderbook.bidVolume"),
+                      t("quotes.tradePrice"),
+                      t("orderbook.askVolume"),
+                    ],
+                    true,
+                  )}
                   <tbody>
                     {asks.map((a) => bookRow(a, "ask"))}
                     <tr className={ROW}>

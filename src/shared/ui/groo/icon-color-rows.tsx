@@ -115,8 +115,10 @@ export function ColorPickerRow({
   onChange: (hex: string) => void;
 }) {
   const dsT = useDsText();
+  // 처음 열 때 저장된 색 — 팔레트 밖이면 "지금 색" 칸을 끝까지 둔다(격자 색을 골라도 사라지지 않고, 다시 고르면 저장 값 그대로)
+  const [stored] = useState(value);
+  const storedOutside = chartColorOf(stored) == null;
   const key = chartColorOf(value);
-  const inPalette = key != null;
   const selected: ColorSwatchValue = key ?? "current";
   const name = key ? colorName(key) : dsT("colorSwatch.currentCustom");
   const dot = key ? `var(--color-chart-${key})` : value;
@@ -135,10 +137,10 @@ export function ColorPickerRow({
           <ColorSwatchGroup
             aria-label={title}
             value={selected}
-            currentColor={inPalette ? undefined : value}
+            currentColor={storedOutside ? stored : undefined}
             onValueChange={(v) => {
-              // "지금 색" 칸을 고르면 저장 값을 그대로 둔다 — 몰래 바꾸지 않는다
-              if (v !== "current") onChange(BASE_OF[v]!);
+              // "지금 색" 칸을 고르면 저장 값으로 되돌린다 — 몰래 바꾸지 않는다
+              onChange(v === "current" ? stored : BASE_OF[v]!);
               close();
             }}
           />

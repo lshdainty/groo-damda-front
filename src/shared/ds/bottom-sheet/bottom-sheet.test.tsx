@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Button } from "@/shared/ds/button";
+import { SnackbarProvider } from "@/shared/ds/snackbar";
 
 import {
   BottomSheet,
@@ -380,6 +381,28 @@ describe("본문 · 바닥 · 손잡이", () => {
     expect(
       document.querySelector("[data-slot=bottom-sheet-footer]")!.className,
     ).toMatch(/flex-wrap-reverse.*\[&>\*\]:grow/);
+  });
+
+  it("바닥은 스낵바가 피할 자리다 — 띠가 바닥 버튼 윗변 위 8 에 선다(--snackbar-avoid = 바닥 높이)", async () => {
+    vi.spyOn(document.documentElement, "clientHeight", "get").mockReturnValue(
+      800,
+    );
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+      top: 700,
+      width: 360,
+      height: 100,
+    } as DOMRect);
+    render(
+      <SnackbarProvider>
+        <Sheet />
+      </SnackbarProvider>,
+    );
+    open();
+    await tick();
+    const region = document.querySelector<HTMLElement>(
+      "[data-slot=snackbar-region]",
+    )!;
+    expect(region.style.getPropertyValue("--snackbar-avoid")).toBe("100px");
   });
 
   it("스냅 높이가 있으면 손잡이를 달고 보조 기술에서 숨긴다 — 누르면 다음 높이, 마지막에서 닫는다", async () => {

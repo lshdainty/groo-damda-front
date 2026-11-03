@@ -210,10 +210,11 @@ export const listDetailVariants = cva(
 
 // 뒤 붙이개 — 줄지 않고 본문이 양보한다(value=node: 금액 · 화살표 · 컨트롤 · 작은 버튼은 한 덩어리).
 // 글로 넘긴 값(value=text: 이메일 · 계좌번호 · 긴 이름)은 본문이 1em 이 된 뒤에야 줄고 줄 끝에서 끊는다 — 본문 위로 넘치지 않는다(Q-001 A).
-// 값 글자(t5 · 옅은 색) · 화살표 18. 안의 버튼 · 링크는 줄의 ::after 위로 올라 따로 눌린다.
+// 값 글자(t5 · 옅은 색) · 화살표 18. 안의 버튼 · 링크는 줄의 ::after 위로 올라 따로 눌린다. 단 Input Button 의 누르는 층(상자를 덮는 absolute)은 제외한다 —
+// relative 로 덮으면 폭 0 이 된다
 // 강조 줄을 올리거나 누르면 값 글자만 짙어진다 — 화살표는 그대로 옅은 색
 export const listSuffixVariants = cva(
-  "flex items-center gap-x1 font-sans text-t5 [&>svg]:size-x4_5 [&>svg]:shrink-0 [&_a]:relative [&_a]:z-1 [&_button]:relative [&_button]:z-1",
+  "flex items-center gap-x1 font-sans text-t5 [&>svg]:size-x4_5 [&>svg]:shrink-0 [&_a]:relative [&_a]:z-1 [&_button:not([data-slot=input-button]>button)]:relative [&_button:not([data-slot=input-button]>button)]:z-1",
   {
     variants: {
       disabled: {

@@ -9,6 +9,7 @@ import {
   minusOf,
   money,
   plusOf,
+  wonPrefix,
 } from "./format";
 import { niceAxis, niceCeil } from "./chartAxis";
 
@@ -336,5 +337,20 @@ describe("KRW / money 음수 부호 (I-31)", () => {
     expect(money(-1000)).toBe("\u2212₩1,000");
     expect(money(1000, { sign: true })).toBe("+₩1,000");
     expect(money(1000)).toBe("₩1,000");
+  });
+});
+
+describe("wonPrefix — 영어 금액 접두는 값이 있는 호출처만 붙인다", () => {
+  afterEach(async () => {
+    await i18n.changeLanguage("ko");
+  });
+
+  it('ko 는 빈 글, en 은 ₩ — 값이 없는 "—" 에는 붙이지 않는다(호출처 몫)', async () => {
+    await i18n.changeLanguage("ko");
+    expect(wonPrefix()).toBe("");
+    await i18n.changeLanguage("en");
+    expect(`${wonPrefix()}${KRW(1234567)}`).toBe("₩1,234,567");
+    const none = "—";
+    expect(none).not.toContain("₩");
   });
 });

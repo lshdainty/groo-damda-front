@@ -40,10 +40,14 @@ export const useNetWorthTrend = (months = 12) => {
   });
 };
 
-export const useAssetBalanceTrend = (assetId: number, weeks: number) => {
+export const useAssetBalanceTrend = (
+  assetId: number,
+  weeks: number,
+  opts?: { silent?: boolean },
+) => {
   return useQuery({
     queryKey: assetKeys.balanceTrend(assetId, weeks),
-    queryFn: () => assetApi.getAssetBalanceTrend(assetId, weeks),
+    queryFn: () => assetApi.getAssetBalanceTrend(assetId, weeks, opts),
     enabled: assetId > 0 && weeks > 0,
     // 자산 잔액 추이는 자주 바뀌지 않으므로 5분간 fresh.
     // 탭(3개월/6개월/1년) 전환 시 이미 조회한 기간은 즉시 재사용.
@@ -85,16 +89,17 @@ export const useDeleteAsset = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => assetApi.deleteAsset(id),
+    // silent — 실패는 호출처가 확인창 뒤 스낵바(useConfirmFail)로 말한다
+    mutationFn: (id: number) => assetApi.deleteAsset(id, { silent: true }),
     // 자산만 사라지는 게 아니다 — 그 자산의 거래도 함께 사라진다.
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };
 
-export const useCardBilling = (id: number) => {
+export const useCardBilling = (id: number, opts?: { silent?: boolean }) => {
   return useQuery({
     queryKey: assetKeys.billing(id),
-    queryFn: () => assetApi.getCardBilling(id),
+    queryFn: () => assetApi.getCardBilling(id, opts),
     enabled: id > 0,
   });
 };
@@ -150,32 +155,35 @@ export const useReorderAssets = () => {
   });
 };
 
-export const useAssetTransfers = (params?: TransferListParams) => {
+export const useAssetTransfers = (
+  params?: TransferListParams,
+  opts?: { silent?: boolean },
+) => {
   return useQuery({
     queryKey: assetKeys.transfers(params),
-    queryFn: () => assetApi.getTransfers(params),
+    queryFn: () => assetApi.getTransfers(params, opts),
   });
 };
 
-export const useCreateTransfer = () => {
+export const useCreateTransfer = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: AssetTransferFormValues) =>
-      assetApi.createTransfer(data),
+      assetApi.createTransfer(data, opts),
     // 이자가 있는 이체는 지출 거래를 하나 만든다.
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };
 
 /** 이체 수정 — 서버가 이자 지출·잔액 이력을 다시 만든다. */
-export const useUpdateTransfer = () => {
+export const useUpdateTransfer = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: AssetTransferFormValues }) =>
-      assetApi.updateTransfer(id, data),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+      assetApi.updateTransfer(id, data, opts),
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };
 
@@ -231,8 +239,9 @@ export const useDeleteTransfer = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => assetApi.deleteTransfer(id),
-    // 이자 지출도 함께 사라진다 — 안 비우면 유령처럼 남아 보인다.
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    mutationFn: ({ id, silent }: { id: number; silent?: boolean }) =>
+      assetApi.deleteTransfer(id, { silent }),
+    // 이자 지출도 함께 사라진다 — 안 비우면 유령처럼 남아 보인다. 다시 받기를 기다린 뒤 호출처 콜백이 불려 지운 이체의 버튼이 남지 않는다
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };

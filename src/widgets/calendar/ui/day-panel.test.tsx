@@ -127,3 +127,97 @@ describe("그날 패널", () => {
     expect(container.querySelector("[data-slot=day-panel-empty]")).toBeNull();
   });
 });
+
+describe("그날 패널 상세 단계 (I-09b 15 · 2-A)", () => {
+  const detail = (over: Partial<IEvent> = {}, canEdit = true) => {
+    const fns = {
+      onAdd: vi.fn(),
+      onTapEvent: vi.fn(),
+      onBack: vi.fn(),
+      onEdit: vi.fn(),
+      onDelete: vi.fn(),
+    };
+    const e = event(2, { title: "분기 회고", location: "본사", ...over });
+    act(() =>
+      root.render(
+        <DayPanel
+          date={new Date(2026, 9, 22)}
+          events={[e]}
+          loading={false}
+          detail={e}
+          canEdit={canEdit}
+          {...fns}
+        />,
+      ),
+    );
+    return { fns, e };
+  };
+  const panel = () => container.querySelector("[data-slot=day-panel]")!;
+  const byText = (text: string) =>
+    [...panel().querySelectorAll("button")].find(
+      (b) => b.textContent === text,
+    ) as HTMLButtonElement;
+
+  it('머리는 "‹ 10월 22일 (목)" 글 단추 — 눌러 목록으로 돌아간다. 목록 머리(추가 · 일정 수)는 없다', () => {
+    const { fns } = detail();
+    const back = panel().querySelector<HTMLButtonElement>("button")!;
+    expect(back.textContent).toBe("10월 22일 (목)");
+    expect(back.getAttribute("aria-label")).toBe("panel.backToList");
+    expect(back.className).toContain("font-bold");
+    expect(panel().querySelector("svg")).not.toBeNull();
+    expect(panel().textContent).not.toContain("panel.count");
+    act(() => back.click());
+    expect(fns.onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("본문은 같은 상세 본문 부품(패널 자리) — 제목 · 장소 줄이 보이고 제목이 초점을 받는다", () => {
+    detail();
+    expect(
+      panel().querySelector("[data-slot=event-detail-head]")!.className,
+    ).toContain("pr-x5");
+    expect(panel().textContent).toContain("분기 회고");
+    expect(panel().textContent).toContain("본사");
+    expect(document.activeElement).toBe(
+      panel().querySelector("[data-slot=event-detail-title]"),
+    );
+  });
+
+  it("본문만 스크롤하고 끝 흐림이 늘 켜져 있다 — 머리 · 바닥은 스크롤 밖", () => {
+    detail();
+    const fog = panel().querySelector("[data-slot=scroll-fog]")!;
+    expect(fog.getAttribute("data-use")).toBe("overlayBody");
+    expect(fog.className).toContain("overflow-y-auto");
+    expect(
+      fog.contains(panel().querySelector("[data-slot=day-panel-footer]")),
+    ).toBe(false);
+  });
+
+  it("바닥 [삭제][수정] — 위에 1px 선, 누르면 그 일정을 알린다", () => {
+    const { fns, e } = detail();
+    const footer = panel().querySelector("[data-slot=day-panel-footer]")!;
+    expect(footer.className).toContain("border-t");
+    act(() => byText("delete").click());
+    expect(fns.onDelete).toHaveBeenCalledWith(e);
+    act(() => byText("edit").click());
+    expect(fns.onEdit).toHaveBeenCalledWith(e);
+  });
+
+  it("읽기 전용이면 바닥 자체가 없다", () => {
+    detail({}, false);
+    expect(panel().querySelector("[data-slot=day-panel-footer]")).toBeNull();
+  });
+
+  it("패널 안에서 Esc 는 목록으로", () => {
+    const { fns } = detail();
+    act(() => {
+      panel().dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "Escape",
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+    expect(fns.onBack).toHaveBeenCalledTimes(1);
+  });
+});

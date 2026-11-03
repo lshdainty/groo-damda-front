@@ -1,13 +1,18 @@
-import { Plus } from "lucide-react";
+import { ChevronLeft, Plus } from "lucide-react";
 import { isToday } from "date-fns";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/shared/ds/button";
 import { Card } from "@/shared/ds/card";
+import { ScrollFog } from "@/shared/ds/scroll-fog";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { List, ListItem } from "@/shared/ds/list";
 import { formatMonthDayDow } from "@/shared/lib/date";
+import { cn } from "@/shared/lib/cn";
+import { eventKey } from "@/widgets/calendar/lib/event-key";
 import { DayEventList } from "@/widgets/calendar/ui/day-event-list";
+import { EventDetailBody } from "@/widgets/calendar/ui/event-detail/event-detail-body";
 import type { IEvent } from "@/widgets/calendar/model/interfaces";
 
 /**
@@ -21,6 +26,11 @@ export function DayPanel({
   loading,
   onAdd,
   onTapEvent,
+  detail,
+  canEdit = false,
+  onBack,
+  onEdit,
+  onDelete,
   className,
 }: {
   date: Date;
@@ -28,10 +38,94 @@ export function DayPanel({
   loading: boolean;
   onAdd: () => void;
   onTapEvent: (event: IEvent, el: HTMLElement) => void;
+  /** 주면 패널이 이 일정의 상세 단계로 바뀐다(2-A) — 머리 "‹ 날짜" 로 목록에 돌아온다 */
+  detail?: IEvent | null;
+  /** 상세 바닥 [삭제][수정]을 둔다(읽기 전용이면 바닥 자체가 없다) */
+  canEdit?: boolean;
+  onBack?: () => void;
+  onEdit?: (event: IEvent) => void;
+  onDelete?: (event: IEvent) => void;
   className?: string;
 }) {
   const { t } = useTranslation("calendar");
+  const { t: tc } = useTranslation("common");
   const label = formatMonthDayDow(date);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const lastKey = useRef<string | null>(null);
+  const detailKey = detail ? eventKey(detail) : null;
+
+  // 상세로 들어가면 제목으로, 목록으로 돌아오면 연 줄로 초점을 옮긴다(처음 그릴 때는 건드리지 않는다)
+  useEffect(() => {
+    if (detailKey) {
+      lastKey.current = detailKey;
+      titleRef.current?.focus({ preventScroll: true });
+    } else if (lastKey.current) {
+      document
+        .querySelector<HTMLElement>(
+          `[data-slot=day-panel] [data-event-key="${lastKey.current}"]`,
+        )
+        ?.focus({ preventScroll: true });
+      lastKey.current = null;
+    }
+  }, [detailKey]);
+
+  if (detail) {
+    return (
+      <Card
+        data-slot="day-panel"
+        data-step="detail"
+        aria-label={detail.title}
+        className={cn("flex flex-col p-0", className)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            e.preventDefault();
+            onBack?.();
+          }
+        }}
+      >
+        <div className="flex shrink-0 items-center pb-x2 pl-x6 pr-x5 pt-x4">
+          <Button
+            variant="ghost"
+            size="small"
+            flush="left"
+            className="font-bold"
+            aria-label={t("panel.backToList", { date: label })}
+            onClick={onBack}
+          >
+            <ChevronLeft aria-hidden />
+            {label}
+          </Button>
+        </div>
+        <ScrollFog use="overlayBody" className="min-h-0 flex-1">
+          <EventDetailBody
+            event={detail}
+            placement="panel"
+            titleRef={titleRef}
+          />
+        </ScrollFog>
+        {canEdit && (
+          <div
+            data-slot="day-panel-footer"
+            className="flex shrink-0 items-center gap-x2 border-t border-stroke-neutral-subtle px-x5 pb-x4 pt-x3"
+          >
+            <Button
+              variant="ghost"
+              ghostColor="critical"
+              size="small"
+              className="mr-auto"
+              onClick={() => onDelete?.(detail)}
+            >
+              {tc("delete")}
+            </Button>
+            <Button size="small" onClick={() => onEdit?.(detail)}>
+              {tc("edit")}
+            </Button>
+          </div>
+        )}
+      </Card>
+    );
+  }
+
   return (
     <Card
       data-slot="day-panel"

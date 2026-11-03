@@ -9,11 +9,11 @@ import { commitSms, type SmsCommitRequest } from "../api/smsApi";
  * 체크했다면 (카드 힌트 → 자산) 을 기억한다. 만들어지는 지출 자체는 같으므로
  * 무효화 범위도 일반 생성과 같다.
  */
-export const useCommitSms = () => {
+export const useCommitSms = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: SmsCommitRequest) => commitSms(request),
+    mutationFn: (request: SmsCommitRequest) => commitSms(request, opts),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };

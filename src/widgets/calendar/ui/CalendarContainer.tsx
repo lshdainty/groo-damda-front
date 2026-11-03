@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 
+import { useSnackbar } from "@/shared/ds/snackbar";
+
 import { useIsMobile } from "@/shared/hooks";
 import { useCalendarScreen } from "@/widgets/calendar/model/use-calendar-screen";
 import { CalendarDesktop } from "@/widgets/calendar/ui/CalendarDesktop";
@@ -30,13 +32,14 @@ const CalendarContainer = ({
   onRetry = () => {},
 }: IProps) => {
   const { t } = useTranslation("calendar");
+  const snackbar = useSnackbar();
   const isMobile = useIsMobile();
   const screen = useCalendarScreen(events);
   const {
     editingEvent,
     setEditingEvent,
-    deletingEventId,
-    setDeletingEventId,
+    deleting,
+    setDeleting,
     creatingDate,
     setCreatingDate,
     deleteEvent,
@@ -76,25 +79,40 @@ const CalendarContainer = ({
           event={editingEvent}
           onClose={() => setEditingEvent(null)}
           onDelete={() => {
-            setDeletingEventId(editingEvent.rowId);
+            setDeleting({
+              id: editingEvent.rowId,
+              title: editingEvent.title,
+              recurring: !!editingEvent.rrule,
+            });
             setEditingEvent(null);
           }}
         />
       )}
 
       {/* Delete Confirmation — 삭제 확인은 전부 ConfirmDialog 한 모양이다(spec alert-dialog.md) */}
-      {deletingEventId !== null && (
+      {deleting !== null && (
         <ConfirmDialog
           title={t("deleteConfirm.title")}
-          message={t("deleteConfirm.message", {
-            name: events.find((e) => e.id === deletingEventId)?.title ?? "",
-          })}
+          // 반복 일정은 행 하나를 지우면 모든 회차가 사라진다(서버) — 확인창이 그렇게 말한다(I-09b 8)
+          message={t(
+            deleting.recurring
+              ? "deleteConfirm.messageRecurring"
+              : "deleteConfirm.message",
+            { name: deleting.title },
+          )}
           confirmLabel={t("deleteConfirm.confirm")}
           cancelLabel={t("deleteConfirm.cancel")}
           danger
           loading={deleteEvent.isPending}
-          onCancel={() => setDeletingEventId(null)}
-          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleting(null)}
+          onConfirm={() =>
+            handleConfirmDelete(() =>
+              snackbar.show({
+                message: t("deleteConfirm.failed"),
+                tone: "critical",
+              }),
+            )
+          }
         />
       )}
     </div>

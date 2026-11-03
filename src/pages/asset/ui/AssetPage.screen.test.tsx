@@ -35,9 +35,6 @@ vi.mock("lucide-react/dynamic", async (importOriginal) => ({
   ...(await importOriginal<typeof import("lucide-react/dynamic")>()),
   DynamicIcon: () => <span />,
 }));
-vi.mock("@/widgets/asset-full/ui/AssetDetailDialog", () => ({
-  AssetDetailDialog: () => null,
-}));
 vi.mock("@/features/stock/model/useStockMaster", () => ({
   useStockSymbolName: () => ({ data: undefined }),
 }));

@@ -1,22 +1,23 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
-import { ModalShell } from "@/shared/ui/groo/dialogs";
-import { ModalFooter } from "@/shared/ui/groo/modal-footer";
-import { Field, FieldLabel } from "@/shared/ui/field";
-import { Input } from "@/shared/ui/input";
+import { Button } from "@/shared/ds/button";
+import { ChipRadio, ChipRadioGroup } from "@/shared/ds/chip";
+import { DatePicker, dayKey, parseDayKey } from "@/shared/ds/date-picker";
 import {
-  blockNonDigitKey,
-  sanitizeAmountInput,
-} from "@/shared/lib/groo/amount";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+} from "@/shared/ds/dialog";
+import { Field } from "@/shared/ds/field";
+import { Input } from "@/shared/ds/input";
+import { List, ListItem } from "@/shared/ds/list";
+import { useWideSurface } from "@/shared/ds/overlay";
+import { Select, SelectGroup, SelectItem } from "@/shared/ds/select";
+import { AmountInput } from "@/shared/ui/groo/amount-input";
+import { PickerRow } from "@/shared/ui/groo/picker-row";
+import { i18n } from "@/shared/i18n/config";
 import { useCreateTrade, useAssets, useTradePreview } from "@/features/asset";
 import { useStockSymbolName } from "@/features/stock/model/useStockMaster";
 import { sanitizeQty, qtyNumber, formatQty } from "@/entities/asset";
@@ -26,7 +27,7 @@ import type {
   AssetTradeFormValues,
   TradeType,
 } from "@/entities/asset";
-import { KRW } from "@/shared/lib/groo/format";
+import { KRW, money } from "@/shared/lib/groo/format";
 
 /**
  * 매수·매도 입력.
@@ -42,19 +43,17 @@ export function AssetTradeDialog({
   asset,
   holding,
   defaultType = "BUY",
-  mobile,
   onClose,
 }: {
   asset: Asset;
   /** 어떤 종목인지 정해진 채로 들어온다 — 여기서 다시 고르게 하면 편집과 역할이 겹친다. */
   holding: AssetHolding;
   defaultType?: TradeType;
-  mobile: boolean;
   onClose: () => void;
 }) {
-  const uid = useId(); // 결제 계좌 칸 이름 잇기
   const { t } = useTranslation("asset");
   const { t: tc } = useTranslation("common");
+  const wide = useWideSurface();
   const createMut = useCreateTrade();
   const { data: assetsData } = useAssets();
   // 결제 계좌 후보 — 이 증권계좌 자신은 뺀다(예수금 경로와 같아진다).
@@ -80,6 +79,15 @@ export function AssetTradeDialog({
   const [tradeDate, setTradeDate] = useState(() =>
     format(new Date(), "yyyy-MM-dd'T'HH:mm"),
   );
+  // 거래일은 날짜 고르기(Date Picker) · 시각은 시 칸 — 합쳐 지금 몸통의 tradeDate 가 된다(요청은 그대로)
+  const dayPart = tradeDate.slice(0, 10);
+  const timePart = tradeDate.slice(11, 16);
+  const [dateDraft, setDateDraft] = useState<Date | undefined>(undefined);
+  const dateText = new Intl.DateTimeFormat(i18n.language, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(parseDayKey(dayPart));
   const [description, setDescription] = useState("");
   // 결제 계좌 — 비우면 증권계좌 예수금에서. 예수금을 따로 관리하지 않으면 통장을 고른다.
   const [settlementAssetRowId, setSettlementAssetRowId] = useState<
@@ -160,7 +168,17 @@ export function AssetTradeDialog({
     // 예수금이 모자라도 막지 않는다 — 기록용 앱이라 마이너스로 쌓이는 게 정상이다.
     true;
 
+  const [tried, setTried] = useState(false);
+  const qtyError =
+    tried && qty <= 0
+      ? t("trade.qtyRequired")
+      : isSell && qty > heldQty
+        ? t("trade.insufficientQty")
+        : undefined;
+  const amountError =
+    tried && amountNum <= 0 ? t("trade.amountRequired") : undefined;
   const submit = () => {
+    setTried(true);
     if (!canSubmit || payload == null) return;
     // 미리보기에 보낸 것과 같은 몸통을 보낸다 — 보여 준 값과 저장될 값이 다를 수 없다.
     createMut.mutate(payload, {
@@ -171,223 +189,233 @@ export function AssetTradeDialog({
     });
   };
 
+  const critical = viaCash && (cashAfter ?? 0) < 0;
+  const dirty =
+    quantity !== "" || amount !== "" || fee !== "" || description !== "";
   return (
-    <ModalShell
-      title={t("trade.title")}
-      onClose={onClose}
-      size="sm"
-      mobile={mobile}
-      footer={
-        <ModalFooter
-          onCancel={onClose}
-          cancelLabel={tc("cancel")}
-          onSave={submit}
-          saveLabel={isSell ? t("trade.actionSell") : t("trade.actionBuy")}
-          saving={createMut.isPending}
-          saveDisabled={!canSubmit}
-        />
-      }
+    <ResponsiveDialog
+      open
+      form
+      dirty={dirty}
+      onOpenChange={(next) => !next && onClose()}
     >
-      <Tabs
-        value={type}
-        onValueChange={(v) => {
-          if (!v) return;
-          setType(v as typeof type);
-        }}
-        className="mb-[14px]"
-      >
-        <TabsList variant="pill" size="sm" className="w-full">
-          <TabsTrigger value="BUY" className="flex-1">
-            {t("trade.buy")}
-          </TabsTrigger>
-          <TabsTrigger value="SELL" className="flex-1">
-            {t("trade.sell")}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {/* 어떤 종목인지 — 여기서 고르는 게 아니라 이미 정해져서 들어온다.
-          종목 추가는 편집(토스 검색)에서 한다. */}
-      <div className="mb-[14px] rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-sunken)] px-3 py-2.5">
-        <div style={{ fontSize: "var(--text-body-sm)", fontWeight: 700 }}>
-          {holdingName}
-        </div>
-        <div className="mt-0.5 text-[11.5px] text-[var(--fg-tertiary)]">
-          {t("trade.heldSummary", {
-            qty: formatQty(holding.quantity, holding.holdingType ?? "STOCK"),
-            avg: holding.avgPrice
-              ? KRW(Math.round(Number(holding.avgPrice)))
-              : "—",
-          })}
-        </div>
-      </div>
-
-      <Field className="mb-[14px]">
-        <FieldLabel>{t("trade.quantity")}</FieldLabel>
-        <Input
-          value={quantity}
-          onChange={(e) => setQuantity(sanitizeQty(e.target.value))}
-          inputMode="decimal"
-          placeholder="0"
-        />
-      </Field>
-
-      <Field className="mb-[14px]">
-        <FieldLabel>{t("trade.amount")}</FieldLabel>
-        <Input
-          value={amount}
-          onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
-          onKeyDown={blockNonDigitKey}
-          inputMode="numeric"
-          placeholder="0"
-        />
-        <div className="mt-1.5 text-[11.5px] text-[var(--fg-tertiary)]">
-          {t("trade.amountHelp")}
-        </div>
-      </Field>
-
-      <Field className="mb-[14px]">
-        <FieldLabel>{t("trade.fee")}</FieldLabel>
-        <Input
-          value={fee}
-          onChange={(e) => setFee(sanitizeAmountInput(e.target.value))}
-          onKeyDown={blockNonDigitKey}
-          inputMode="numeric"
-          placeholder="0"
-        />
-      </Field>
-
-      {/* 결제 계좌는 매수에만. 매도 대금은 예수금에 남기고 사용자가 이체로 관리한다 —
-          팔았다고 통장으로 자동 이체되지는 않는다. */}
-      {!isSell && (
-        <Field className="mb-[14px]">
-          <FieldLabel id={`${uid}settle-label`}>
-            {t("trade.settlement")}
-          </FieldLabel>
-          <Select
-            value={
-              settlementAssetRowId != null
-                ? String(settlementAssetRowId)
-                : "__cash__"
-            }
-            onValueChange={(v) =>
-              setSettlementAssetRowId(v === "__cash__" ? null : Number(v))
-            }
-          >
-            <SelectTrigger
-              id={`${uid}settle`}
-              aria-labelledby={`${uid}settle-label ${uid}settle`}
+      <ResponsiveDialogContent title={t("trade.title")}>
+        <ResponsiveDialogBody>
+          <div className="flex flex-col gap-x4 pb-x2">
+            {/* 매수 · 매도 — 2 ~ 4개 폼 값은 칩 하나 고르기(DESIGN.desk 칩) */}
+            <ChipRadioGroup
+              aria-label={t("trade.title")}
+              value={type}
+              onValueChange={(v) => v && setType(v as typeof type)}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__cash__">
-                {t("trade.settlementCash")}
-              </SelectItem>
-              {settlementOptions.map((a) => (
-                <SelectItem key={a.rowId} value={String(a.rowId)}>
-                  {a.institution
-                    ? `${a.institution} · ${a.assetName}`
-                    : a.assetName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="mt-1.5 text-[11.5px] text-[var(--fg-tertiary)]">
-            {viaCash
-              ? t("trade.settlementCashHelp")
-              : t("trade.settlementAccountHelp")}
-          </div>
-        </Field>
-      )}
+              <ChipRadio variant="outlineStrong" size="medium" value="BUY">
+                {t("trade.buy")}
+              </ChipRadio>
+              <ChipRadio variant="outlineStrong" size="medium" value="SELL">
+                {t("trade.sell")}
+              </ChipRadio>
+            </ChipRadioGroup>
 
-      <Field className="mb-[14px]">
-        <FieldLabel>{t("trade.date")}</FieldLabel>
-        <Input
-          type="datetime-local"
-          value={tradeDate}
-          onChange={(e) => setTradeDate(e.target.value)}
-        />
-      </Field>
+            {/* 어떤 종목인지 — 여기서 고르는 게 아니라 이미 정해져서 들어온다. 종목 추가는 편집(검색)에서 한다. */}
+            <List aria-label={t("trade.holding")} className="-mx-global-gutter">
+              <ListItem
+                title={holdingName}
+                detail={t("trade.heldSummary", {
+                  qty: formatQty(
+                    holding.quantity,
+                    holding.holdingType ?? "STOCK",
+                  ),
+                  avg: holding.avgPrice
+                    ? money(Math.round(Number(holding.avgPrice)))
+                    : "—",
+                })}
+              />
+            </List>
 
-      <Field className="mb-[14px]">
-        <FieldLabel>{t("trade.memo")}</FieldLabel>
-        <Input
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder={t("trade.memoPlaceholder")}
-          maxLength={200}
-        />
-      </Field>
-
-      {/* 예수금이 어떻게 되는지 먼저 보여 준다 — 저장하고 나서 놀라지 않게. */}
-      <div
-        className="rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-sunken)] px-3 py-2.5"
-        style={{ fontSize: "var(--text-body-sm)" }}
-      >
-        <div className="flex items-center justify-between">
-          <span className="text-[var(--fg-secondary)]">
-            {viaCash ? t("trade.cashAfter") : t("trade.settlementDelta")}
-          </span>
-          <span
-            className="num font-bold"
-            style={{
-              color:
-                viaCash && (cashAfter ?? 0) < 0
-                  ? "var(--color-fg-critical)"
-                  : "var(--fg-primary)",
-            }}
-          >
-            {/* 서버가 아직 답하기 전에는 자리만 잡아 둔다 — 틀린 값을 잠깐 보여 주느니 낫다. */}
-            {cashAfter == null || cashDelta == null
-              ? "—"
-              : viaCash
-                ? `${KRW(cashAfter)}원`
-                : `${cashDelta >= 0 ? "+" : "−"}${KRW(Math.abs(cashDelta))}원`}
-          </span>
-        </div>
-        {realizedPreview != null && (
-          <div className="mt-1.5 flex items-center justify-between">
-            <span className="text-[var(--fg-secondary)]">
-              {t("trade.realizedPreview")}
-            </span>
-            <span
-              className="num font-bold"
-              style={{
-                color:
-                  realizedPreview >= 0
-                    ? "var(--fg-income)"
-                    : "var(--fg-expense)",
-              }}
+            <Field
+              label={t("trade.quantity")}
+              invalid={qtyError != null}
+              errorMessage={qtyError}
             >
-              {realizedPreview >= 0 ? "+" : "−"}
-              {KRW(Math.abs(realizedPreview))}원
-            </span>
+              <Input
+                value={quantity}
+                onChange={(e) => setQuantity(sanitizeQty(e.target.value))}
+                inputMode="decimal"
+                placeholder="0"
+              />
+            </Field>
+
+            <Field
+              label={t("trade.amount")}
+              description={t("trade.amountHelp")}
+              invalid={amountError != null}
+              errorMessage={amountError}
+            >
+              <AmountInput value={amount} onValueChange={setAmount} />
+            </Field>
+
+            <Field label={t("trade.fee")} indicator={t("editDialog.optional")}>
+              <AmountInput value={fee} onValueChange={setFee} />
+            </Field>
+
+            {/* 결제 계좌는 매수에만. 매도 대금은 예수금에 남기고 사용자가 이체로 관리한다 — 팔았다고 통장으로 자동 이체되지는 않는다. */}
+            {!isSell && (
+              <Field
+                label={t("trade.settlement")}
+                description={
+                  viaCash
+                    ? t("trade.settlementCashHelp")
+                    : t("trade.settlementAccountHelp")
+                }
+              >
+                <Select
+                  value={
+                    settlementAssetRowId != null
+                      ? String(settlementAssetRowId)
+                      : "__cash__"
+                  }
+                  onValueChange={(v) =>
+                    setSettlementAssetRowId(v === "__cash__" ? null : Number(v))
+                  }
+                >
+                  <SelectGroup>
+                    <SelectItem
+                      value="__cash__"
+                      label={t("trade.settlementCash")}
+                    />
+                  </SelectGroup>
+                  <SelectGroup>
+                    {settlementOptions.map((a) => (
+                      <SelectItem
+                        key={a.rowId}
+                        value={String(a.rowId)}
+                        label={
+                          a.institution
+                            ? `${a.institution} · ${a.assetName}`
+                            : a.assetName
+                        }
+                      />
+                    ))}
+                  </SelectGroup>
+                </Select>
+              </Field>
+            )}
+
+            {/* 거래일 — 고르는 값이라 Input Button 줄 + Date Picker(1280 미만 시트 · 이상 팝오버, "완료" 로 넣는다) */}
+            <div className="-mx-global-gutter">
+              <PickerRow
+                title={t("trade.date")}
+                value={dateText}
+                surfaceTitle={t("trade.date")}
+                onOpen={() => setDateDraft(parseDayKey(dayPart))}
+                popoverClassName="w-[336px]"
+                pickerActions={({ close }) => (
+                  <Button
+                    disabled={!dateDraft}
+                    onClick={() => {
+                      if (dateDraft)
+                        setTradeDate(`${dayKey(dateDraft)}T${timePart}`);
+                      close();
+                    }}
+                  >
+                    {t("savingGoal.done")}
+                  </Button>
+                )}
+              >
+                <DatePicker
+                  selection="single"
+                  aria-label={t("trade.date")}
+                  value={dateDraft}
+                  onValueChange={setDateDraft}
+                  autoFocus
+                />
+              </PickerRow>
+            </div>
+            <Field label={t("trade.time")}>
+              <Input
+                type="time"
+                value={timePart}
+                onChange={(e) =>
+                  setTradeDate(`${dayPart}T${e.target.value || timePart}`)
+                }
+              />
+            </Field>
+
+            <Field label={t("trade.memo")} indicator={t("editDialog.optional")}>
+              <Input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t("trade.memoPlaceholder")}
+                maxLength={200}
+              />
+            </Field>
+
+            {/* 예수금이 어떻게 되는지 먼저 보여 준다 — 저장하고 나서 놀라지 않게. 키-값 줄 */}
+            <List aria-label={t("trade.preview")} className="-mx-global-gutter">
+              <ListItem
+                title={
+                  viaCash ? t("trade.cashAfter") : t("trade.settlementDelta")
+                }
+                suffix={
+                  <span
+                    className={`text-end font-bold tabular-nums ${critical ? "text-fg-critical" : "text-fg-neutral"}`}
+                  >
+                    {/* 서버가 아직 답하기 전에는 자리만 잡아 둔다 — 틀린 값을 잠깐 보여 주느니 낫다. */}
+                    {cashAfter == null || cashDelta == null
+                      ? "—"
+                      : viaCash
+                        ? money(cashAfter)
+                        : `${cashDelta >= 0 ? "+" : "−"}${money(Math.abs(cashDelta))}`}
+                  </span>
+                }
+              />
+              {realizedPreview != null && (
+                <ListItem
+                  title={t("trade.realizedPreview")}
+                  suffix={
+                    <span className="text-end font-bold tabular-nums text-fg-neutral">
+                      {realizedPreview >= 0 ? "+" : "−"}
+                      {money(Math.abs(realizedPreview))}
+                    </span>
+                  }
+                />
+              )}
+            </List>
+            {/* 예수금이 모자라면 결제 계좌에서 그만큼 끌어온다 — 이체가 한 건 생긴다는 걸 미리 알린다. */}
+            {fundingAmount > 0 && (
+              <p className="m-0 text-t3 text-fg-neutral-subtle">
+                {t("trade.fundingNotice", { amount: KRW(fundingAmount) })}
+              </p>
+            )}
+            {!isSell && critical && (
+              <p className="m-0 text-t3 text-fg-critical">
+                {t("trade.insufficientCash")}
+              </p>
+            )}
           </div>
-        )}
-        {/* 예수금이 모자라면 결제 계좌에서 그만큼 끌어온다 — 이체가 한 건 생긴다는 걸 미리 알린다. */}
-        {fundingAmount > 0 && (
-          <div className="mt-1.5 text-[11.5px] text-[var(--fg-tertiary)]">
-            {t("trade.fundingNotice", { amount: KRW(fundingAmount) })}
-          </div>
-        )}
-        {!isSell && viaCash && (cashAfter ?? 0) < 0 && (
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
           <div
-            className="mt-1.5 text-[11.5px]"
-            style={{ color: "var(--color-fg-critical)" }}
+            className={
+              wide ? "ml-auto flex items-center gap-x2" : "flex min-w-0 flex-1"
+            }
           >
-            {t("trade.insufficientCash")}
+            {wide && (
+              <Button variant="neutralWeak" size="small" onClick={onClose}>
+                {tc("cancel")}
+              </Button>
+            )}
+            <Button
+              size={wide ? "small" : "large"}
+              className={wide ? undefined : "flex-1"}
+              loading={createMut.isPending}
+              onClick={submit}
+            >
+              {isSell ? t("trade.actionSell") : t("trade.actionBuy")}
+            </Button>
           </div>
-        )}
-        {isSell && qty > heldQty && (
-          <div
-            className="mt-1.5 text-[11.5px]"
-            style={{ color: "var(--color-fg-critical)" }}
-          >
-            {t("trade.insufficientQty")}
-          </div>
-        )}
-      </div>
-    </ModalShell>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

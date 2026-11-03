@@ -41,7 +41,8 @@ export const tagGroupVariants = cva("font-sans", {
     truncate: {
       false: "inline-block break-keep [overflow-wrap:break-word]",
       // min-width 0 — 제목 옆처럼 flex 줄의 칸이어도 줄어들어 말줄임한다
-      true: "inline-flex min-w-0 max-w-full items-center whitespace-nowrap",
+      // overflow-x clip — 줄어들 수 없는 항목(shrink 0)만으로 칸 폭이 모자라면 "줄 끝이 잘린다"(tag-group.md). 자르지 않으면 넘친 글이 옆 칸(금액)을 덮는다
+      true: "inline-flex min-w-0 max-w-full items-center overflow-x-clip whitespace-nowrap",
     },
   },
   defaultVariants: { size: "t2", truncate: false },

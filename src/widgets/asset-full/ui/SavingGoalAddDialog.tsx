@@ -195,7 +195,9 @@ export function SavingGoalAddDialog({
     >
       <ResponsiveDialogContent
         title={isEdit ? t("savingGoal.titleEdit") : t("savingGoal.titleAdd")}
+        // 새 목표만 이름 칸에 초점 — 수정은 표면이 받는다(폰에서 키보드가 가리지 않게)
         onOpenAutoFocus={(e) => {
+          if (isEdit) return;
           e.preventDefault();
           nameRef.current?.focus({ preventScroll: true });
         }}

@@ -250,9 +250,6 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
   const [transferDetail, setTransferDetail] = useState<AssetTransfer | null>(
     null,
   );
-  const [editingTransfer, setEditingTransfer] = useState<AssetTransfer | null>(
-    null,
-  );
   // 밀기 · ⋮ 의 삭제 — 확인창을 기다리는 동작
   const [pendingAction, setPendingAction] = useState<ExpenseSwipeAction | null>(
     null,
@@ -769,10 +766,6 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
             expense={detail}
             mobile
             onClose={() => setDetail(null)}
-            onEdit={(e) => {
-              setDetail(null);
-              setEditing(e);
-            }}
           />
         )}
         {editing && (
@@ -782,22 +775,11 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
             onClose={() => setEditing(null)}
           />
         )}
-        {transferDetail && !editingTransfer && (
+        {transferDetail && (
           <TransferDetailDialog
             transfer={transferDetail}
             mobile
             onClose={() => setTransferDetail(null)}
-            onEdit={(tr) => {
-              setTransferDetail(null);
-              setEditingTransfer(tr);
-            }}
-          />
-        )}
-        {editingTransfer && (
-          <AddTxSheet
-            editTransfer={editingTransfer}
-            mobile
-            onClose={() => setEditingTransfer(null)}
           />
         )}
         {filterOpen && (

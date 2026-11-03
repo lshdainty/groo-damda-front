@@ -1,5 +1,5 @@
 export { memoApi } from "./api/memoApi";
-export type { MemoListParams } from "./api/memoApi";
+export type { MemoListParams, MemoRequestOptions } from "./api/memoApi";
 export {
   useMemos,
   useMemo,

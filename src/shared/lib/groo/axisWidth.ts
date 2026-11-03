@@ -10,8 +10,12 @@ import { niceAxis } from "./chartAxis";
  * 웹폰트가 늦게 도착하면 `document.fonts.ready` 뒤에 한 번 더 잰다.
  */
 export const AXIS_TICK_FONT_SIZE = "var(--text-badge)";
-/** 눈금 글자 옆 여백(recharts tickMargin + 안전 여유). */
-const AXIS_PAD = 10;
+/**
+ * 눈금 글자 옆 여백 — recharts 가 축 폭에서 따로 덜어 가는 것의 합이다. ds 차트 `chartAxisProps` 는 tickMargin 8 을 주고
+ * tickLine 만 끌 뿐 tickSize(기본 6)는 그대로라 글자는 축 끝에서 6 + 8 = 14 안쪽에 놓인다. 여기에 올림 오차 2 를 더해 16.
+ * 예전 10 은 글자 끝이 4 만큼 잘렸다("1,300만" → "300만", 360 · 390 에서 확인).
+ */
+const AXIS_PAD = 16;
 
 const estimate = (s: string): number =>
   [...s].reduce((w, c) => w + (c > "ᄀ" ? 11 : 7), 0);

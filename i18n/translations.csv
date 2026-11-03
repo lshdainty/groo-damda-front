@@ -67,6 +67,7 @@ layout,changePassword,비밀번호 변경,Change Password
 layout,home,홈,Home
 layout,stocks,증권,Stocks
 layout,stockDetail,종목 상세,Stock details
+layout,assetDetail,자산 상세,Asset details
 layout,stockPortfolio,포트폴리오 구성,Portfolio breakdown
 layout,budget,예산,Budget
 layout,stats,통계,Stats
@@ -222,7 +223,6 @@ todo,form.memoPlaceholder,추가 메모 (선택),Additional note (optional)
 calendar,title,캘린더,Calendar
 calendar,addEvent,일정 추가,Add event
 calendar,editEvent,일정 수정,Edit event
-calendar,deleteEvent,일정 삭제,Delete Event
 calendar,allDay,종일,All Day
 calendar,noEvents,이 날에 일정이 없어요.,No events on this day.
 calendar,events,일정,Events
@@ -248,6 +248,8 @@ calendar,form.endDate,종료일,End Date
 calendar,form.endBeforeStart,종료가 시작보다 빠를 수 없어요,End cannot be before the start
 calendar,deleteConfirm.title,일정 삭제,Delete event
 calendar,deleteConfirm.message,"""{{name}}"" 일정을 삭제할까요? 삭제한 일정은 되돌릴 수 없어요.","Delete the ""{{name}}"" event? This action cannot be undone."
+calendar,deleteConfirm.messageRecurring,"""{{name}}"" 일정은 반복 일정이라 모든 회차가 함께 삭제돼요. 삭제한 일정은 되돌릴 수 없어요.","""{{name}}"" is a repeating event, so every occurrence will be deleted. This action cannot be undone."
+calendar,deleteConfirm.failed,일정을 삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete the event. Please try again in a moment.
 calendar,deleteConfirm.cancel,취소,Cancel
 calendar,deleteConfirm.confirm,삭제,Delete
 calendar,label,라벨,Label
@@ -281,7 +283,6 @@ memo,newMemo,메모 추가,Add memo
 memo,untitled,제목 없음,Untitled
 memo,empty,메모가 없습니다,No memos yet
 memo,createFirst,첫 번째 메모를 작성해보세요,Create your first memo
-memo,pinned,고정됨,Pinned
 memo,pin,고정,Pin
 memo,unpin,고정 해제,Unpin
 memo,swipePin,고정,Pin
@@ -292,20 +293,9 @@ memo,allMemos,전체 메모,All Memos
 memo,preview,미리보기,Preview
 memo,editor,편집,Editor
 memo,markdown,마크다운으로 작성,Write in markdown
-memo,folder.title,폴더,Folders
-memo,folder.create,새 폴더,New Folder
-memo,folder.rename,폴더 이름 변경,Rename Folder
-memo,folder.delete,폴더 삭제,Delete Folder
-memo,folder.name,폴더 이름,Folder Name
-memo,folder.namePlaceholder,폴더 이름을 입력하세요,Enter folder name
 memo,deleteConfirm.title,메모 삭제,Delete memo
 memo,deleteConfirm.message,"""{{name}}"" 메모를 삭제할까요? 삭제한 메모는 되돌릴 수 없어요.","Delete the ""{{name}}"" memo? This action cannot be undone."
-memo,deleteConfirm.cancel,취소,Cancel
-memo,deleteConfirm.confirm,삭제,Delete
-memo,detailTitle,메모 상세,Memo details
 memo,detail.noContent,내용 없음,No content
-memo,folderDeleteConfirm.title,폴더 삭제,Delete Folder
-memo,folderDeleteConfirm.message,이 폴더를 삭제하시겠습니까? 폴더 내 메모는 이동됩니다.,Are you sure you want to delete this folder? Memos inside will be moved.
 calculator,title,계산기,Calculator
 calculator,history,계산 기록,History
 calculator,clearHistory,기록 삭제,Clear History
@@ -504,6 +494,13 @@ asset,form.includeInTotal,전체 자산 합계에 포함,Include in total assets
 asset,form.includeInTotalDesc,순자산·총자산 계산에 반영됩니다,Reflected in net worth and total asset calculations
 asset,deleteConfirm.title,자산 삭제,Delete asset
 asset,deleteConfirm.message,"""{{name}}""을(를) 삭제할까요? 이 작업은 되돌릴 수 없습니다.","Delete ""{{name}}""? This action cannot be undone."
+asset,deleteConfirm.failed,자산을 삭제하지 못했어요.,Couldn't delete the asset.
+asset,assetDetail.installmentPayoffFailed,할부를 정리하지 못했어요.,Couldn't pay off the installment.
+asset,assetDetail.installmentUndoFailed,할부 정리를 되돌리지 못했어요.,Couldn't undo the installment payoff.
+asset,assetDetail.cancelPaymentFailed,결제를 취소하지 못했어요.,Couldn't cancel the payment.
+asset,trade.cancelFailed,거래를 취소하지 못했어요.,Couldn't cancel the trade.
+asset,trade.canceled,거래를 취소했어요.,Trade canceled.
+asset,assetDetail.titleDefault,자산 상세,Asset details
 asset,deleteConfirm.cancel,취소,Cancel
 asset,deleteConfirm.confirm,삭제,Delete
 asset,group.account,계좌,Account
@@ -564,7 +561,7 @@ asset,cardAdd.outstanding,이전 미결제 사용액 (원),Unpaid balance (KRW)
 asset,cardAdd.outstandingHint,청구될 금액을 입력하세요. 총 부채에 반영됩니다.,Enter the billed amount. It counts toward total debt.
 asset,cardAdd.selectRequired,카드 선택 필요,Select a card
 asset,cardAdd.title,카드 추가,Add card
-asset,editDialog.annualFeeValue,연회비 {{amount}}원,Annual fee {{amount}} KRW
+asset,editDialog.annualFeeValue,연회비 {{amount}}원,Annual fee {{amount}}
 asset,editDialog.annualFeeFree,연회비 무료,No annual fee
 asset,editDialog.creditLimit,신용한도,Credit limit
 asset,editDialog.nameTooLong,별칭은 30자 이내로 입력해주세요.,Keep the alias to 30 characters or fewer.
@@ -701,24 +698,20 @@ asset,loadFailed.goals,저축 목표를 불러오지 못했어요,Couldn't load 
 asset,accountDepositTitle,계좌 · 예금,Accounts & Deposits
 asset,assetDetail.statusCompleted,완료,Completed
 asset,assetDetail.statusPending,대기,Pending
-asset,assetDetail.statusFailed,실패,Failed
 asset,assetDetail.statusSkipped,건너뜀,Skipped
 asset,assetDetail.perfMonth,{{ym}} 실적,{{ym}} spending
 asset,assetDetail.achieved,달성,Achieved
 asset,assetDetail.remainingLabel,남은,Remaining
 asset,assetDetail.toastPaid,결제가 기록되었어요,Payment recorded
-asset,assetDetail.toastPayFail,결제 처리에 실패했어요,Failed to process payment
 asset,assetDetail.billingLoadError,청구 정보를 불러오지 못했어요,Couldn't load billing info
 asset,assetDetail.paymentDue,결제 예정,Payment due
 asset,assetDetail.payNow,지금 결제,Pay now
 asset,assetDetail.cancelPayment,결제 취소,Cancel payment
-asset,assetDetail.cancelPaymentConfirm,{{date}}에 낸 {{amount}}원을 되돌려요. 통장 잔액과 카드 청구가 결제 전으로 돌아가요.,Reverts the {{amount}} KRW paid on {{date}}. The account balance and card billing return to the state before payment.
+asset,assetDetail.cancelPaymentConfirm,{{date}}에 낸 {{amount}}원을 되돌려요. 통장 잔액과 카드 청구가 결제 전으로 돌아가요.,Reverts the {{amount}} paid on {{date}}. The account balance and card billing return to the state before payment.
 asset,assetDetail.toastPaymentCancelled,결제를 취소했어요,Payment cancelled
-asset,assetDetail.billedMonthly,매월 {{day}}일 결제,Billed on day {{day}} each month
 asset,assetDetail.billingPeriod,{{start}}~{{end}} 사용분,Usage {{start}}–{{end}}
 asset,assetDetail.scheduledTag,예정,Upcoming
 asset,assetDetail.paidDone,결제 완료,Paid
-asset,assetDetail.usagePeriod,카드 이용 기간 {{period}},Card usage period {{period}}
 asset,assetDetail.installmentFallback,할부,Installment
 asset,assetDetail.installmentSeq,{{seq}}/{{total}}회차,Payment {{seq}} of {{total}}
 asset,assetDetail.installmentPrincipal,원금 {{amount}},Principal {{amount}}
@@ -729,28 +722,25 @@ asset,assetDetail.installmentPayoffConfirm,남은 할부 {{amount}}을 이번 �
 asset,assetDetail.installmentPayoffUndo,되돌리기,Undo
 asset,assetDetail.installmentPayoffUndoConfirm,남은 원금 정리를 취소하고 원래 회차대로 나눠 낼까요?,Cancel the payoff and return to the original installment schedule?
 asset,assetDetail.installmentPaidOffBadge,남은 원금 정리됨,Paid off
-asset,assetDetail.limitSettings,한도 · 결제 설정,Limit · payment
 asset,assetDetail.limitUsage,한도 사용,Limit usage
 asset,assetDetail.limitPctUsed,{{pct}}% 사용,{{pct}}% used
 asset,assetDetail.limitOf,{{used}} / 한도 {{limit}},{{used}} / Limit {{limit}}
 asset,assetDetail.limitRemain,잔여 {{amount}},Remaining {{amount}}
-asset,assetDetail.limitEdit,한도 · 결제일 변경,Edit limit · payment day
-asset,assetDetail.perfDone,이번 달 실적 달성,Monthly target met
 asset,assetDetail.perfRemain,실적까지 {{amount}},{{amount}} to target
 asset,assetDetail.usageHistory,이용 내역,Usage history
 asset,assetDetail.sortRecent,최근순,Recent
 asset,assetDetail.sortAmount,고액순,Amount
 asset,assetDetail.sortCategory,카테고리별,Category
-asset,assetDetail.periodPick,기간 선택,Select period
+asset,assetDetail.periodPick,결제 회차,Billing cycle
 asset,assetDetail.noUsage,이용 내역이 없어요.,No usage history yet.
 asset,assetDetail.billingHistory,청구 이력,Billing history
 asset,assetDetail.paymentDateLabel,결제일,Payment date
 asset,assetDetail.paymentDayMissing,결제일을 넣어주세요,Please set a payment day
-asset,assetDetail.payConfirm,결제 예정액 <strong>{{amount}}</strong>을 지금 결제 처리할까요?,Pay <strong>{{amount}}</strong> now?
-asset,assetDetail.paymentDateNote,결제일은 {{date}} 입니다.,The payment date is {{date}}.
+asset,assetDetail.payConfirm,결제 예정액 {{amount}}을 지금 결제할까요?,Pay the {{amount}} due now?
+asset,assetDetail.paymentDateNote,{{date}} 결제 예정분이에요.,This is the amount due {{date}}.
 asset,assetDetail.payAction,결제하기,Pay
 asset,assetDetail.payAmount,결제 금액,Payment amount
-asset,assetDetail.payRemainder,남은 {{amount}}은 결제일에 빠져요,{{amount}} remaining will be paid on the payment date
+asset,assetDetail.payRemainder,남은 {{amount}}은 결제일에 빠져요.,The remaining {{amount}} will be paid on the payment date.
 asset,editDialog.balanceEditHelp,잔액을 바꾸면 지금 이전의 내역은 이 잔액에 이미 들어 있는 것으로 보고 이후 내역만 더해져요.,Changing the balance treats everything before now as already included. Only later transactions are added.
 asset,assetDetail.payMoveNote,계좌에서는 사용액으로 잡힌 {{amount}}만 빠져요. 나머지는 청구 기록으로만 남아요.,Only {{amount}} counted as card usage will leave the account. The rest is recorded as billed only.
 asset,assetDetail.payNoAccountNote,연결된 결제 계좌가 없어 이체 없이 사용액만 정리돼요.,No payment account is linked so the usage is settled without a transfer.
@@ -782,7 +772,6 @@ asset,assetDetail.titleAccount,계좌 상세,Account details
 asset,assetDetail.valueCard,이번 달 결제 예정,Due this month
 asset,assetDetail.valueCheckCard,이번 달 사용액,Spent this month
 asset,assetDetail.monthTx,이번 달 내역,This month
-asset,assetDetail.showAmounts,금액 표시,Show amounts
 asset,assetDetail.hideAmounts,금액 가리기,Hide amounts
 asset,assetDetail.trendUsage,사용 추이,Usage trend
 asset,assetDetail.trendValuation,평가액 추이,Valuation trend
@@ -795,6 +784,41 @@ asset,assetDetail.noData,표시할 데이터가 없어요,No data to display
 asset,assetDetail.recentTx,최근 거래,Recent transactions
 asset,assetDetail.viewAll,전체 보기,View all
 asset,assetDetail.noLinkedTx,연결된 거래 내역이 없어요.,No linked transactions.
+asset,assetDetail.notFoundTitle,자산을 찾을 수 없어요,Asset not found
+asset,assetDetail.notFoundDesc,지웠거나 없는 자산이에요.,It was deleted or doesn't exist.
+asset,assetDetail.toAssets,자산으로,Go to assets
+asset,assetDetail.assetLoadFailed,자산을 불러오지 못했어요,Couldn't load the asset
+asset,assetDetail.trendLoadFailed,추이를 불러오지 못했어요,Couldn't load the trend
+asset,assetDetail.txLoadFailed,내역을 불러오지 못했어요,Couldn't load the transactions
+asset,assetDetail.moreOf,{{name}} 더보기,More actions for {{name}}
+asset,assetDetail.daySumOut,지출,Spent
+asset,assetDetail.daySumIn,수입,Income
+asset,assetDetail.tableWeek,주,Week
+asset,assetDetail.periodAria,추이 기간,Trend period
+asset,assetDetail.sortAria,이용 내역 정렬,Sort usage history
+asset,assetDetail.dueOn,{{date}} 결제,Paid {{date}}
+asset,assetDetail.paymentDayValue,매월 {{day}}일,Day {{day}} each month
+asset,assetDetail.usagePeriodLabel,카드 이용 기간,Card usage period
+asset,assetDetail.billingInfo,결제 정보,Billing info
+asset,assetDetail.cycleMix,이번 회차 구성,This cycle
+asset,assetDetail.perfTitle,{{month}}월 실적,Month {{month}} target
+asset,assetDetail.perfAchieved,실적 달성,Target met
+asset,assetDetail.yearLabel,{{year}}년,{{year}}
+asset,assetDetail.payAmountEmpty,결제 금액을 넣어주세요.,Enter the payment amount.
+asset,assetDetail.payAmountOver,결제 금액은 {{amount}}까지예요.,The payment can be up to {{amount}}.
+asset,assetDetail.payFailed,결제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't process the payment. Please try again in a moment.
+asset,trade.recordTitle,거래 기록,Trade log
+asset,trade.detailTitle,거래 기록,Trade record
+asset,trade.kind,종류,Type
+asset,trade.unitPrice,단가,Unit price
+asset,trade.amountLabel,거래대금,Trade amount
+asset,trade.feeLabel,수수료 · 세금,Fees & tax
+asset,trade.openRow,{{date}} {{name}} 거래 기록,{{name}} trade record on {{date}}
+asset,trade.qtyRequired,수량을 넣어주세요.,Enter the quantity.
+asset,trade.amountRequired,거래대금을 넣어주세요.,Enter the trade amount.
+asset,trade.time,거래 시각,Trade time
+asset,trade.preview,거래 후 미리보기,Preview after the trade
+asset,trade.deleteConfirmTarget,{{date}} {{name}} {{qty}} {{kind}} 거래를 취소할까요? 예수금과 보유 수량이 거래 전으로 돌아가요.,Cancel the {{kind}} of {{qty}} {{name}} on {{date}}? Cash and quantity return to their pre-trade state.
 dashboard,title,대시보드,Dashboard
 dashboard,uncategorized,미분류,Uncategorized
 dashboard,welcome,환영합니다,Welcome
@@ -1182,11 +1206,11 @@ memo,all,전체,All
 memo,noResults,결과가 없어요,No results
 memo,noMemos,메모가 없어요,No memos
 memo,noResultsHint,다른 검색어를 입력해보세요.,Try a different search.
-memo,noMemosHint,"생각이 떠오를 때, 새 메모를 만들어보세요.",Jot down a new memo when inspiration strikes.
+memo,noMemosHint,오른쪽 아래 + 버튼으로 첫 메모를 써보세요.,Tap the + button at the bottom right to write your first memo.
 memo,allMemosSection,모든 메모,All memos
 memo,subtitle,생각·기록을 한곳에,Thoughts and notes in one place
 memo,titlePlaceholder,제목,Title
-memo,titleRequired,제목을 입력해주세요,Please enter a title
+memo,titleRequired,제목을 입력해주세요.,Please enter a title.
 memo,contentPlaceholder,여기에 메모를 작성해주세요,Write your memo here
 memo,tagLabel,태그,Tag
 memo,pinToTop,상단에 고정,Pin to top
@@ -1194,7 +1218,7 @@ memo,colorLabel,색상,Color
 memo,noTag,태그 없음,No tag
 memo,tagEmptyHint,태그는 설정 › 메모 태그에서 만들어요.,Create tags in Settings › Memo tags.
 memo,tags.title,메모 태그,Memo tags
-memo,tags.desc,메모에 붙이는 태그예요. 목록 필터와 태그별 묶음에 사용돼요.,Tags for your memos — used in list filters and tag grouping.
+memo,tags.desc,"메모에 붙이는 태그예요. 메모 화면의 거르기에 쓰여요. 태그를 지우면 그 메모는 '태그 없음' 으로 남아요.","Tags you attach to memos. They are used to filter the memo screen. If you delete a tag, its memos stay as 'No tag'."
 memo,tags.new,태그 추가,Add tag
 memo,tags.usage,{{count}}건에 사용 중,Used by {{count}} memos
 memo,tags.empty,태그가 없어요,No tags yet
@@ -1210,6 +1234,19 @@ memo,tags.nameRequired,이름을 입력해주세요.,Please enter a name.
 memo,tags.nameTooLong,이름은 12자 이내로 입력해주세요.,Keep the name under 12 characters.
 memo,tags.nameDuplicate,같은 이름의 태그가 이미 있어요.,A tag with that name already exists.
 memo,tags.preview,미리보기,Preview
+memo,loadFailed,메모를 불러오지 못했어요,Could not load memos
+memo,loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
+memo,tagFilter,태그로 거르기,Filter by tag
+memo,saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
+memo,deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
+memo,pinFailed,고정을 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not change the pin. Please try again in a moment.
+memo,contentLabel,내용,Content
+memo,moreOf,{{name}} 더보기,More for {{name}}
+memo,modifiedAt,{{time}} 수정,Edited {{time}}
+memo,tags.loadFailed,태그를 불러오지 못했어요,Could not load tags
+memo,tags.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
+memo,tags.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
+memo,tags.deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
 notification,connectionLost,알림 연결이 끊어졌습니다,Notification connection lost
 notification,connectionRestored,알림 연결이 복구되었습니다,Notification connection restored
 notification,newNotification,새 알림,New notification
@@ -1273,10 +1310,8 @@ user,currentPasswordPlaceholder,현재 비밀번호를 입력해주세요,Enter 
 user,currentPasswordRequired,현재 비밀번호를 입력해주세요,Current password is required
 user,currentPasswordInvalid,현재 비밀번호가 맞지 않아요,That current password doesn't match
 user,newPassword,새 비밀번호,New Password
-user,newPasswordPlaceholder,새 비밀번호를 입력하세요,Enter your new password
 user,newPasswordRequired,새 비밀번호를 입력해주세요,New password is required
 user,confirmPassword,새 비밀번호 확인,Confirm New Password
-user,confirmPasswordPlaceholder,새 비밀번호를 다시 입력하세요,Re-enter your new password
 user,confirmPasswordRequired,새 비밀번호 확인을 입력해주세요,Password confirmation is required
 user,passwordMismatch,새 비밀번호가 일치하지 않아요,New passwords do not match
 user,passwordMatched,새 비밀번호가 일치해요,New passwords match
@@ -1285,7 +1320,7 @@ user,passwordRuleSpecial,특수문자 1자 이상,At least 1 special character
 user,passwordPolicyUnmet,비밀번호 조건을 모두 충족해주세요,Password does not meet the requirements
 user,passwordSameAsCurrent,현재 비밀번호와 다른 비밀번호를 입력해주세요,New password must be different from the current one
 user,passwordChangeSuccess,비밀번호를 바꿨어요,Password changed successfully
-user,passwordChangeError,비밀번호를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요,Couldn't change your password. Please try again shortly
+user,passwordChangeError,비밀번호를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change your password. Please try again shortly.
 user,withdraw.title,그루 담다 이용 해지,Stop using 그루 담다
 user,withdraw.intro,이용을 해지하면 바로 로그인이 막히고 되돌릴 수 없어요.,Stopping 그루 담다 signs you out immediately and cannot be undone.
 user,impact.calendarsOwned,내가 만든 공유 캘린더 {{count}}개가 삭제되고 멤버도 볼 수 없어요,{{count}} shared calendar(s) you created will be deleted — members lose access too
@@ -1581,48 +1616,36 @@ expense,item,항목,Item
 expense,selectNone,선택 안 함,None
 expense,addTx.newTitle,거래 추가,Add transaction
 expense,addTx.editTitle,거래 수정,Edit transaction
-expense,addTx.autoSource.TRADE_REALIZED,주식을 팔아 생긴 실현손익이에요. 금액은 매매 내역에서 계산됩니다.,Realized P/L from a sale. The amount is calculated from the trade.
-expense,addTx.autoSource.TRANSFER_INTEREST,이체에 붙은 이자예요. 금액은 이체 내역에서 계산됩니다.,Interest on a transfer. The amount is calculated from the transfer.
+expense,addTx.autoSource.TRADE_REALIZED,주식을 팔아 생긴 실현손익이에요. 금액은 매매 내역에서 계산돼요.,Realized P/L from a sale. The amount is calculated from the trade.
+expense,addTx.autoSource.TRANSFER_INTEREST,이체에 붙은 이자예요. 금액은 이체 내역에서 계산돼요.,Interest on a transfer. The amount is calculated from the transfer.
 expense,addTx.autoSource.CARD_CARRYOVER,카드를 등록할 때 적은 이전 미결제 사용액이에요. 금액은 카드 수정에서 바꿔요.,The unpaid balance entered when the card was added. Change the amount by editing the card.
 expense,addTx.autoSource.CARD_CARRYOVER_DUE,카드를 등록할 때 적은 이전 미결제 사용액이에요. 금액은 카드 수정에서 바꿔요.,The unpaid balance entered when the card was added. Change the amount by editing the card.
-expense,addTx.autoSource.default,자동으로 만들어진 거래예요. 원래 거래를 지우면 함께 사라집니다.,Created automatically. It disappears when the original is deleted.
+expense,addTx.autoSource.default,자동으로 만들어진 거래예요. 원래 거래를 지우면 함께 사라져요.,Created automatically. It disappears when the original is deleted.
 expense,addTx.transfer,이체,Transfer
 expense,addTx.add,추가,Add
-expense,addTx.saveSplitAndSave,분할 맞추고 저장,Adjust splits & save
-expense,addTx.presetLoad,프리셋 불러오기,Load preset
-expense,addTx.presetApplied,적용됨,Applied
+expense,addTx.saveSplitAndSave,나눈 내역 맞추고 저장,Adjust split items & save
+expense,addTx.presetLoad,프리셋,Presets
+expense,addTx.presetApplied,{{name}} 적용됨,{{name}} applied
 expense,addTx.saveCurrentInput,현재 입력값 저장,Save current input
-expense,addTx.presetManageHint,설정 → 프리셋 관리,Settings → Manage presets
-expense,addTx.noPresets,저장된 프리셋이 없어요. 자주 쓰는 내역을 입력 후 “현재 입력값 저장”을 눌러보세요.,No saved presets. Enter a frequently used entry and tap “Save current input”.
-expense,addTx.presetFilledHint,프리셋 값이 채워졌어요. 금액·내역만 수정해서 저장하세요.,Preset values filled in. Edit only the amount and details then save.
-expense,addTx.clear,해제,Clear
-expense,addTx.splitMismatchTitle,분할 내역과 금액이 달라요,Split total does not match the amount
-expense,addTx.newTotal,새 총액,New total
-expense,addTx.splitSum,분할 합계,Split total
-expense,addTx.difference,차이,difference
-expense,addTx.matchSplits,분할 내역 맞추기,Adjust splits
+expense,addTx.noPresets,저장된 프리셋이 없어요. 값을 넣고 “현재 입력값 저장” 을 누르면 만들어져요.,No saved presets yet. Enter values and tap “Save current input” to create one.
+expense,addTx.splitMismatchTitle,나눈 내역과 금액이 달라요,The split items don't match the amount
+expense,addTx.matchSplits,나눈 내역 맞추기,Adjust split items
 expense,addTx.subCategoryPlaceholder,세부 카테고리,Subcategory
-expense,addTx.parent,상위,Parent
 expense,addTx.detail,세부,Details
 expense,addTx.incomeSource,수입처,Income source
-expense,addTx.merchantPlaceholder,예: 스타벅스 강남점,e.g. Starbucks Gangnam
-expense,addTx.incomeSourcePlaceholder,예: (주)그루,e.g. Acme Inc.
+expense,addTx.merchantPlaceholder,예: 회사 앞 도시락,e.g. Lunch near the office
+expense,addTx.incomeSourcePlaceholder,예: 월급,e.g. Salary
 expense,addTx.incomeMethod,수입 방식,Income method
 expense,addTx.depositAccount,입금 계좌,Deposit account
-expense,addTx.basisOf,{{method}} 기준,by {{method}}
-expense,addTx.noAssetForMethod,해당 결제 수단에 연결된 자산이 없어요.,No assets linked to this payment method.
 expense,addTx.installment,할부,Installment
 expense,addTx.lumpSum,일시불,Lump sum
 expense,addTx.installmentMonths,{{months}}개월,{{months}} months
 expense,addTx.installmentHint,매달 약 {{perMonth}}원씩 {{months}}회 청구돼요,About {{perMonth}} per month for {{months}} months
-expense,addTx.currency,통화,Currency
-expense,addTx.originalAmountPlaceholder,현지 금액,Local amount
-expense,addTx.exchangeRatePlaceholder,환율,Rate
 expense,addTx.fxHint,{{original}} × {{rate}} = {{krw}}원,{{original}} × {{rate}} = {{krw}}
 expense,txDetail.foreignPayment,해외 결제,Foreign payment
-expense,addTx.fromAccount,출금 계좌,From account
+expense,addTx.fromAccount,보내는 계좌,From account
 expense,addTx.selectPlaceholder,선택,Select
-expense,addTx.fee,수수료 (선택),Fee (optional)
+expense,addTx.fee,수수료,Fee
 expense,addTx.interest,이자,Interest
 expense,transferPrincipal,원금,Principal
 expense,addTx.interestHint,상환액 중 이자 몫 — 부채는 이자를 뺀 만큼만 줄어들어요,The interest portion — debt decreases only by the rest
@@ -1630,51 +1653,118 @@ expense,addTx.interestSplit,원금 {{principal}}원 · 이자 {{interest}}원,Pr
 expense,transferFeePrefix,수수료,Fee
 expense,transferListTitle,이체 내역,Transfers
 expense,transferDeleteTitle,이체 삭제,Delete transfer
-expense,transferDeleteConfirm,이 이체를 삭제할까요? 양쪽 자산의 잔액이 되돌아가요. 삭제한 이체는 되돌릴 수 없어요.,Delete this transfer? Both assets' balances will be restored.
-expense,transferAutoSource.TRADE_SETTLEMENT,주식을 살 때 예수금이 모자라 자동으로 만들어진 이체예요. 매수를 취소하면 함께 사라집니다.,Created automatically to cover a shortfall when buying. It disappears when the purchase is cancelled.
-expense,transferAutoSource.CARD_PAYMENT,카드 자동결제로 만들어진 이체예요. 청구 회차와 묶여 있어 따로 고칠 수 없습니다.,Created by a card auto-payment. It is tied to the billing cycle and cannot be edited separately.
-expense,transferAutoSource.CARD_REFUND,카드에 남은 과납금을 결제계좌로 돌려준 이체예요. 카드 잔액을 직접 보정하면 다음 날 자동으로 다시 맞춰집니다.,Created to return a card overpayment to the payment account. Adjust the card balance directly and it reconciles automatically the next day.
-expense,transferAutoSource.default,자동으로 만들어진 이체예요. 원래 거래를 지우면 함께 사라집니다.,Created automatically. It disappears when the original is deleted.
+expense,transferDeleteConfirm,이 이체를 삭제할까요? 양쪽 계좌 잔액이 이체 전으로 돌아가요. 삭제한 이체는 되돌릴 수 없어요.,Delete this transfer? Both accounts' balances go back to before the transfer. A deleted transfer can't be restored.
+expense,transferAutoSource.TRADE_SETTLEMENT,주식을 살 때 예수금이 모자라 자동으로 만들어진 이체예요. 매수를 취소하면 함께 사라져요.,Created automatically to cover a shortfall when buying. It disappears when the purchase is cancelled.
+expense,transferAutoSource.CARD_PAYMENT,카드 자동결제로 만들어진 이체예요. 청구 회차와 묶여 있어 따로 고칠 수 없어요.,Created by a card auto-payment. It is tied to the billing cycle and cannot be edited separately.
+expense,transferAutoSource.CARD_REFUND,카드에 남은 과납금을 결제계좌로 돌려준 이체예요. 카드 잔액을 직접 보정하면 다음 날 자동으로 다시 맞춰져요.,Created to return a card overpayment to the payment account. Adjust the card balance directly and it reconciles automatically the next day.
+expense,transferAutoSource.default,자동으로 만들어진 이체예요. 원래 거래를 지우면 함께 사라져요.,Created automatically. It disappears when the original is deleted.
 expense,transferEmpty,이체 내역이 없어요,No transfers yet
 expense,transferWithdrawn,출금 합계,Total withdrawn
 expense,transferDeleted,이체를 삭제했어요,Transfer deleted
 expense,addTx.optional,선택 사항,Optional
-expense,addTx.amountTooLarge,금액은 100억원까지 입력할 수 있어요,Amount can be up to 10 billion won
+expense,addTx.stepMeta,{{current}} / {{total}}단계,Step {{current}} of {{total}}
+expense,addTx.next,다음,Next
+expense,addTx.typeGroup,거래 종류,Transaction type
+expense,addTx.entryRequired,금액을 입력해주세요.,Enter an amount.
+expense,addTx.currencyChip,"통화, {{code}}","Currency, {{code}}"
+expense,addTx.currencyTitle,통화,Currency
+expense,addTx.presetLoadFailed,프리셋을 불러오지 못했어요.,Couldn't load presets.
+expense,addTx.emptyPresetHint,“{{name}}” 프리셋은 금액이 비어 있어요. 금액을 넣고 [다음]을 눌러주세요.,The “{{name}}” preset has no amount. Enter one and press Next.
+expense,addTx.presetAllTitle,프리셋 고르기,Choose a preset
+expense,addTx.showAll,모두 보기,See all
+expense,addTx.category,카테고리,Category
+expense,addTx.account,계좌·카드,Account or card
+expense,addTx.paymentMethodRow,결제 수단,Payment method
+expense,addTx.incomeMethodRow,수입 방식,Income method
+expense,addTx.dateRow,날짜,Date
+expense,addTx.timeRow,시각,Time
+expense,addTx.memo,메모,Memo
+expense,addTx.none,없음,None
+expense,addTx.noAccountOption,계좌·카드 없음,No account or card
+expense,addTx.noMethodOption,결제 수단 없음,No payment method
+expense,addTx.noCategoryValue,카테고리 없음,No category
+expense,addTx.deletedAsset,지운 계좌,Deleted account
+expense,addTx.deletedCategory,지운 카테고리,Deleted category
+expense,addTx.noDepositAccount,입금 계좌 없음,No deposit account
+expense,addTx.noIncomeMethod,수입 방식 없음,No income method
+expense,addTx.fromAccountPick,보내는 계좌 선택,Select the sending account
+expense,addTx.toAccountPick,받는 계좌 선택,Select the receiving account
+expense,addTx.toAccount,받는 계좌,To account
+expense,addTx.fromAccountRow,보내는 계좌,From account
+expense,addTx.errCategory,카테고리를 골라주세요.,Choose a category.
+expense,addTx.errFrom,보내는 계좌를 골라주세요.,Choose the account to send from.
+expense,addTx.errTo,받는 계좌를 골라주세요.,Choose the account to send to.
+expense,addTx.errFx,환율을 입력하거나 원화 금액을 넣어주세요.,Enter the exchange rate or the amount in won.
+expense,addTx.errInterest,이자는 금액보다 클 수 없어요.,Interest cannot be more than the amount.
+expense,addTx.splitsLoading,나눈 내역을 불러오는 중이에요. 잠시 뒤 다시 눌러주세요.,Loading the split items. Try again in a moment.
+expense,addTx.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't save. Please try again in a moment.
+expense,addTx.categoryLoadFailed,카테고리를 불러오지 못했어요,Couldn't load categories
+expense,addTx.assetLoadFailed,계좌·카드를 불러오지 못했어요,Couldn't load accounts and cards
+expense,addTx.noCategoryOfType,이 종류의 카테고리가 없어요.,There are no categories of this kind.
+expense,addTx.noPickableAsset,이 결제 수단에 맞는 계좌·카드가 없어요.,No account or card fits this payment method.
+expense,addTx.fxRateLabel,환율,Exchange rate
+expense,addTx.krwAmount,원화 금액,Amount in won
+expense,addTx.amountStepTitle,금액,Amount
+expense,addTx.memoStepTitle,메모,Memo
+expense,addTx.feeStepTitle,수수료,Fee
+expense,addTx.interestStepTitle,이자,Interest
+expense,addTx.splitDiffOver,{{diff}}원 넘쳐요.,{{diff}} over.
+expense,addTx.splitDiffShort,{{diff}}원 모자라요.,{{diff}} short.
+expense,addTx.splitMismatchBody,새 총액 {{total}}원 · 나눈 합계 {{sum}}원 — {{diffText}},New total {{total}} · split total {{sum}} — {{diffText}}
+expense,sms.label,결제 문자,Payment text
+expense,sms.help,카드사에서 온 결제 문자를 그대로 붙여넣어주세요. 읽은 금액 · 가맹점 · 시각이 칸에 채워져요.,"Paste the payment text from your card company as it is. The amount, merchant and time it finds are filled in."
+expense,savePreset.amountRow,금액,Amount
+expense,savePreset.amountEmpty,비워 둠,Left empty
+expense,savePreset.amountHint,비워 두면 불러올 때 금액을 직접 넣어요.,"If left empty, you enter the amount each time you use it."
+expense,savePreset.nameRequired,프리셋 이름을 입력해주세요.,Enter a preset name.
+expense,savePreset.nameDuplicate,같은 이름의 프리셋이 있어요.,A preset with this name already exists.
+expense,savePreset.needParties,보내는 계좌와 받는 계좌를 먼저 골라주세요.,Choose the sending and receiving accounts first.
+expense,savePreset.saved,{{name}} 프리셋을 저장했어요,Saved the {{name}} preset
+expense,addTx.amountTooLarge,금액은 100억원까지 입력할 수 있어요.,Amount can be up to 10 billion won.
 expense,savePreset.title,프리셋으로 저장,Save as preset
 expense,savePreset.noMerchant,내역 없음,No details
 expense,savePreset.noCategory,카테고리 미선택,No category
 expense,savePreset.name,프리셋 이름,Preset name
 expense,savePreset.namePlaceholder,예: 점심 도시락,e.g. Lunch box
-expense,savePreset.lockAmount,금액도 함께 저장,Save amount too
-expense,savePreset.lockOn,{{amount}}원이 항상 채워집니다.,{{amount}}원 will always be filled in.
-expense,savePreset.lockOff,체크 해제 시 금액은 비워두고 매번 직접 입력합니다.,"When unchecked, the amount stays empty and you enter it each time."
-expense,savePreset.needCategory,저장하려면 먼저 카테고리를 선택해주세요.,Please select a category first to save.
+expense,savePreset.needCategory,카테고리를 먼저 골라주세요.,Choose a category first.
 expense,txDetail.incomeTitle,수입 상세,Income details
 expense,txDetail.expenseTitle,지출 상세,Expense details
 expense,txDetail.uncategorized,미분류,Uncategorized
-expense,txDetail.empty,없음,None
-expense,txDetail.countItems,{{count}}개,{{count}}
 expense,txDetail.recurring,반복 설정,Recurring
 expense,txDetail.linked,연결됨,Linked
 expense,txDetail.dutchPay,더치페이,Dutch Pay
 expense,txDetail.refund,환불,Refund
 expense,txDetail.refundConfirmTitle,환불 처리,Mark as refunded
-expense,txDetail.refundConfirmBody,"이 거래를 환불로 표시하고 {{amount}}을 {{asset}}(으)로 되돌려요. 합계에서 빠져요.","Marks this transaction as refunded and returns {{amount}} to {{asset}}. It leaves your totals."
+expense,txDetail.refundConfirmBody,이 거래를 환불로 표시해요. 합계에서 빠지고 <b><amt>{{amount}}</amt></b>이 {{asset}}에 돌아가요.,"Marks this transaction as refunded. It leaves your totals, and <b><amt>{{amount}}</amt></b> returns to {{asset}}."
 expense,txDetail.refundConfirmBodyCardNoAccount,결제계좌가 없어 카드 잔액만 정리돼요.,"No payment account is linked, so only the card balance is adjusted."
 expense,txDetail.refundConfirmBodyClosed,이 거래를 환불로 표시해요. 합계에서 빠져요.,Marks this transaction as refunded. It leaves your totals.
 expense,txDetail.refundDate,환불일,Refund date
 expense,txDetail.refundConfirm,환불 처리,Mark refunded
-expense,txDetail.refundedAt,환불됨 · {{date}},Refunded · {{date}}
+expense,txDetail.refundedAt,환불됨 · {{date}} — 합계에서 빠져 있어요.,Refunded · {{date}} — left out of your totals.
 expense,txDetail.refundCancel,환불 취소,Undo refund
 expense,txDetail.refundCancelConfirm,환불 표시를 지울까요? 이 거래가 합계에 다시 들어가요.,Remove the refund mark? This transaction counts in your totals again.
 expense,txDetail.refundCancelConfirmTransfer,"환불 표시를 지울까요? 이 거래가 합계에 다시 들어가고, 환급된 금액도 되돌아가요.","Remove the refund mark? This transaction counts in your totals again, and any refunded amount is reversed."
 expense,txDetail.refundedReadonly,환불된 거래는 수정할 수 없어요. 먼저 환불을 취소해주세요,"Refunded transactions can't be edited. Undo the refund first"
 expense,txDetail.countCases,{{count}}건,{{count}}
 expense,txDetail.sumLabel,합계,Total
-expense,txDetail.prevAtMerchant,{{merchant}}에서의 이전 거래,Previous transactions at {{merchant}}
-expense,txDetail.thisMonth,이번 달,This month
 expense,txDetail.countTimes,{{count}}회,{{count}} times
 expense,txDetail.deleteMessage,"""{{name}}"" 거래를 삭제할까요? 연결된 자산 잔액이 함께 바뀌어요. 삭제한 거래는 되돌릴 수 없어요.","Delete the ""{{name}}"" transaction? The linked asset balance will be adjusted too."
+expense,txDetail.moreTitle,더 하기,More
+expense,txDetail.splitValue,{{count}}개로 나눔,Split into {{count}}
+expense,txDetail.splitHeader,내역 분할 {{count}}개,Split into {{count}}
+expense,txDetail.splitSum,합계,Total
+expense,txDetail.merchantTitle,이 가맹점 이번 달,This month at this merchant
+expense,txDetail.recentOnly,최근 5건만 보여요,Showing the latest 5 only
+expense,txDetail.splitLoadFailed,나눈 내역을 불러오지 못했어요,Could not load the split items
+expense,txDetail.refundDateToday,{{date}} · 오늘,{{date}} · Today
+expense,txDetail.refundDateHint,거래한 날({{date}})부터 오늘까지 고를 수 있어요.,You can pick a day from the transaction day ({{date}}) to today.
+expense,txDetail.refundFailed,환불하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't mark it as refunded. Please try again in a moment.
+expense,txDetail.refundCancelFailed,환불을 취소하지 못했어요.,Couldn't undo the refund.
+expense,txDetail.deleteFailed,거래를 삭제하지 못했어요.,Couldn't delete the transaction.
+expense,transferDeleteFailed,이체를 삭제하지 못했어요.,Couldn't delete the transfer.
+expense,transferDetailTitle,이체 상세,Transfer details
+expense,transferFromLabel,보내는 계좌,From account
+expense,transferToLabel,받는 계좌,To account
 expense,splitTx.extraAmount,추가 금액,Extra amount
 expense,splitTx.strategy.prop.title,비례 배분,Proportional
 expense,splitTx.strategy.prop.desc,비중대로 자동 조정,Auto-adjust by weight
@@ -1727,32 +1817,23 @@ expense,filter.chipAssets,계좌·카드 {{count}},{{count}} accounts
 expense,filter.chipExcludeOne,{{name}} 빼고,Excluding {{name}}
 expense,filter.chipAmountRanges,금액 {{count}}구간,{{count}} amount ranges
 expense,assetFilterBadge,{{name}} 필터 중,Filtering by {{name}}
-expense,preset.introTitle,프리셋이란?,What are presets?
-expense,preset.introDesc,"자주 쓰는 내역(점심·커피·교통비 등)을 미리 저장해두면, 내역 추가 화면에서 한 번 탭으로 카테고리·결제수단·내역을 모두 채워넣어요. 금액만 바꿔서 단건으로 저장하기 좋습니다.","Save frequently used entries (lunch, coffee, transit, etc.) in advance to fill in the category, payment method, and details with one tap on the add screen. Great for one-off saves by just changing the amount."
-expense,preset.statSaved,저장된 프리셋,Saved presets
-expense,preset.statUses,누적 사용,Total uses
-expense,preset.sortUsed,사용 많은 순,Most used
-expense,preset.sortRecent,최근 사용,Recently used
+expense,preset.sortUsed,많이 쓴 순,Frequent
+expense,preset.sortRecent,최근 사용,Recent
 expense,preset.sortName,이름순,By name
 expense,preset.add,프리셋 추가,Add preset
 expense,preset.emptyTitle,저장된 프리셋이 없어요,No saved presets
-expense,preset.emptyDesc,자주 쓰는 내역을 추가해 매번 입력하는 수고를 줄여보세요.,Add frequently used entries to save yourself repetitive input.
+expense,preset.emptyDesc,자주 쓰는 내역(점심 · 교통비 등)을 저장해 두면 내역을 추가할 때 한 번 눌러 카테고리 · 계좌 · 내역을 채워요.,"Save frequent entries (lunch, transit, etc.) and fill the category, account, and details with one tap when adding an entry."
 expense,preset.amountEmpty,금액 비움,Amount empty
 expense,preset.noCategory,카테고리 없음,No category
-expense,preset.usedTimes,{{count}}회 사용,Used {{count}} times
-expense,preset.deleteTitle,프리셋 삭제,Delete preset
 expense,preset.detailTitle,프리셋 상세,Preset detail
-expense,preset.typeLabel,유형,Type
-expense,preset.deleteConfirmMessage,"""{{name}}"" 프리셋을 삭제할까요? 이미 저장된 거래 내역에는 영향이 없어요. 삭제한 프리셋은 되돌릴 수 없어요.","Delete the ""{{name}}"" preset? Already-saved transactions are unaffected."
+expense,preset.typeLabel,종류,Type
+expense,preset.deleteConfirmMessage,이미 기록된 거래는 그대로 남아요. 삭제한 프리셋은 되돌릴 수 없어요.,Transactions already recorded stay as they are. A deleted preset cannot be restored.
 expense,preset.edit,프리셋 수정,Edit preset
 expense,preset.namePlaceholder,예: 점심 도시락,e.g. Lunch box
 expense,preset.nameTooLong,프리셋 이름은 12자 이내로 입력해주세요.,Keep the preset name to 12 characters or fewer.
 expense,preset.nameDuplicate,같은 이름의 프리셋이 이미 있어요.,A preset with that name already exists.
 expense,preset.defaultMerchant,기본 내역,Default details
-expense,preset.merchantPlaceholder,예: 한솥 도시락,e.g. Corner deli
-expense,preset.lockAmountTitle,고정 금액 사용,Use fixed amount
-expense,preset.lockAmountDesc,꺼두면 불러올 때 금액이 비어있어요. 매번 다른 금액일 때 편해요.,When off the amount is left empty on load. Handy when it varies each time.
-expense,preset.lockAmountLabel,고정 금액,Fixed amount
+expense,preset.merchantPlaceholder,예: 회사 앞 도시락,e.g. Office lunch box
 export,export,내보내기,Export
 export,fileFormat,파일 형식,File format
 export,preview,미리보기,Preview
@@ -1793,6 +1874,7 @@ settings,theme.label,테마,Theme
 settings,language.label,언어,Language
 settings,language.ko,한국어,한국어
 settings,language.en,English,English
+settings,language.system,시스템,System
 settings,theme.light,라이트,Light
 settings,theme.lightDesc,밝은 배경,Light background
 settings,theme.dark,다크,Dark
@@ -1873,7 +1955,7 @@ settings,currency.KRW,대한민국 원,Korean Won
 settings,currency.USD,미국 달러,US Dollar
 settings,currency.EUR,유로,Euro
 settings,currency.JPY,일본 엔,Japanese Yen
-settings,currency.desc,새 자산·거래를 만들 때 이 통화가 먼저 골라져요,New assets and transactions start with this currency
+settings,currency.desc,새 자산·거래를 만들 때 이 통화가 먼저 골라져요.,New assets and transactions start with this currency.
 settings,page.title,설정,Settings
 settings,page.subtitle,카테고리·계좌·알림 등,Categories · accounts · alerts
 settings,sections.categories.label,카테고리 관리,Manage categories
@@ -1894,10 +1976,10 @@ settings,sections.calendarShare.desc,다중 캘린더 생성과 멤버 공유 �
 settings,sections.calendarLabels.label,캘린더 라벨,Calendar labels
 settings,sections.calendarLabels.desc,전 캘린더 공용 라벨 관리,Manage labels shared across all calendars
 settings,sections.appearance.label,표시 설정,Display settings
-settings,sections.appearance.desc,테마·밀도·기본 통화,Theme · density · default currency
+settings,sections.appearance.desc,테마·언어·기준 지역·기본 통화,"Theme · language · region · default currency"
 settings,region.label,기준 지역,Region
 settings,region.placeholder,지역 선택,Select a region
-settings,region.desc,'오늘'과 통계의 하루를 이 지역 기준으로 계산해요. 화면의 시간은 기기 시간대로 보여요,Days for 'today' and statistics are calculated in this region. On-screen times follow your device's time zone
+settings,region.desc,'오늘'과 통계의 하루를 이 지역 기준으로 계산해요. 화면의 시간은 기기 시간대로 보여요.,"Days for 'today' and statistics are calculated in this region. On-screen times follow your device's time zone."
 settings,sections.notifications.label,알림 설정,Notification settings
 settings,sections.notifications.desc,결제 예정·예산 초과 알림,Payment due and budget overage alerts
 settings,sections.data.label,데이터 내보내기,Export data
@@ -1917,6 +1999,7 @@ settings,groups.data,데이터,Data
 settings,groups.account,계정,Account
 settings,account.defaultName,사용자,User
 settings,account.edit,수정,Edit
+settings,account.editSoon,프로필 수정은 곧 열려요.,Profile editing is coming soon.
 settings,account.joined,가입 {{date}},Joined {{date}}
 settings,account.group.security,보안,Security
 settings,account.group.connected,연결된 계정,Linked Accounts
@@ -1929,8 +2012,6 @@ settings,account.biometric.label,생체 인증,Biometric Authentication
 settings,account.biometric.desc,앱에서 설정 가능,Available in the app
 settings,account.devices.label,로그인된 기기,Signed-in Devices
 settings,account.devices.desc,현재 기기,Current device
-settings,account.loginHistory.label,로그인 기록,Login History
-settings,account.loginHistory.desc,최근 30일,Last 30 days
 settings,sections.devices.label,로그인된 기기,Signed-in devices
 settings,sections.devices.desc,이 계정으로 로그인된 기기예요. 낯선 기기가 있으면 로그아웃해주세요.,These devices are signed in to your account. Log out any you don't recognize.
 settings,devices.current,현재 기기,Current device
@@ -1951,11 +2032,9 @@ settings,account.linked,연결됨,Connected
 settings,account.notLinked,연결 안 됨,Not connected
 settings,account.link,연결,Connect
 settings,account.unlink,해제,Disconnect
-settings,account.provider.kakao,카카오,Kakao
-settings,account.provider.naver,네이버,Naver
 settings,account.logout.label,로그아웃,Log Out
 settings,account.logout.desc,이 기기에서만,This device only
-settings,account.logout.confirmMessage,정말 로그아웃 하시겠어요?,Log out of this device?
+settings,account.logout.confirmMessage,이 기기에서 로그아웃할까요?,Log out of this device?
 settings,account.withdraw.label,그루 담다 이용 해지,Stop using 그루 담다
 settings,account.withdraw.desc,복구할 수 없어요,Cannot be undone
 settings,account.comingSoon,다음 단계에서 구현,Coming in a future update
@@ -1966,8 +2045,13 @@ settings,account.sub.proPromo,증권 투자는 Pro 전용 · 지금 시작하기
 settings,account.sub.proStart,Pro 시작,Start Pro
 settings,account.sub.perMonth,/ 월,/ mo
 settings,account.toast.linked,{{name}} 계정이 연결되었어요,{{name}} account connected
-settings,account.toast.linkError,계정 연결에 실패했어요,Failed to connect the account
+settings,account.toast.linkError,계정을 연결하지 못했어요.,Couldn't connect the account.
 settings,account.toast.unlinked,Google 연결을 해제했어요,Google account disconnected
+settings,account.toast.unlinkError,연결을 해제하지 못했어요.,Couldn't disconnect the account.
+settings,account.providersError,연결 상태를 불러오지 못했어요,Couldn't load the connection status
+settings,prefs.regionLoadError,기준 지역을 불러오지 못했어요,Couldn't load the region
+settings,prefs.currencyLoadError,기본 통화를 불러오지 못했어요,Couldn't load the default currency
+settings,prefs.saveFailed,설정을 바꾸지 못했어요.,Couldn't change the setting.
 stocks,nav.title,증권,Stocks
 stocks,detail.sheetTitle,종목 상세,Stock details
 stocks,summary.title,내 투자 평가금액,My portfolio value
@@ -2349,7 +2433,7 @@ subscription,currentPlan,현재 플랜,Current plan
 subscription,freeDesc,기본 가계부 기능,Basic budget features
 subscription,perMonth,월,mo
 subscription,perYear,년,yr
-subscription,pricePerMonthNote,월 {{price}}원 꼴 · {{pct}}% 절약,≈ {{price}} KRW/mo · Save {{pct}}%
+subscription,pricePerMonthNote,월 {{price}}원 꼴 · {{pct}}% 절약,≈ {{price}}/mo · Save {{pct}}%
 subscription,monthlyBilling,월 단위 결제,Billed monthly
 subscription,comparisonTitle,기능 비교,Feature comparison
 subscription,colFeature,기능,Feature
@@ -2532,15 +2616,12 @@ export,import.failReason.parentHasTx,이 카테고리에는 거래가 직접 달
 export,import.failReason.resolve,카테고리나 자산을 찾지 못했어요,Couldn't match the category or asset
 export,import.failReason.save,저장하는 중에 오류가 나서 가져오지 못했어요,"Something went wrong while saving, so it could not be imported"
 export,import.failReason.unknown,알 수 없는 이유로 가져오지 못했어요,Couldn't import it for an unknown reason
-calendar,detail.start,시작,Start
-calendar,detail.end,종료,End
 calendar,detail.dday,D-DAY,D-DAY
 calendar,detail.ddayLeft,D-{{n}},D-{{n}}
 calendar,detail.ddayPast,{{n}}일 지남,{{n}}d ago
 calendar,detail.durationH,{{h}}시간,{{h}}h
 calendar,detail.durationHM,{{h}}시간 {{m}}분,{{h}}h {{m}}m
 calendar,detail.durationM,{{m}}분,{{m}}m
-calendar,detail.memo,메모,Memo
 category,reorderEdit,순서 바꾸기,Reorder
 category,reorderDone,완료,Done
 category,reorderHint,"손잡이를 끌어 순서를 바꿔요. 상위는 상위끼리, 하위는 같은 상위 안에서 옮겨요.",Drag the handle to reorder. Parents move among parents; subcategories move within their parent.
@@ -2570,7 +2651,7 @@ expense,txm.today,오늘,Today
 expense,txm.yesterday,어제,Yesterday
 expense,txm.monthCalendar,월 달력,Month calendar
 expense,txm.loadFailed,거래를 불러오지 못했어요,Couldn't load transactions
-expense,txm.loadFailedDesc,잠시 뒤에 다시 시도해주세요.,Please try again in a moment.
+expense,txm.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
 expense,txm.emptyFiltered,조건에 맞는 거래가 없어요,No transactions match
 expense,txm.emptyFilteredDesc,조건을 바꾸거나 지워보세요.,Change or clear the filters.
 expense,filter.appliedGroup,적용한 필터,Applied filters
@@ -2646,6 +2727,9 @@ todo,tags.nameTooLong,이름은 12자 이내로 입력해주세요.,Keep the nam
 todo,tags.nameDuplicate,같은 이름의 태그가 이미 있어요.,A tag with that name already exists.
 todo,tags.preview,미리보기,Preview
 todo,tags.loadFailed,태그를 불러오지 못했어요,Couldn't load tags
+todo,tags.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
+todo,tags.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
+todo,tags.deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
 constellation,strip.title,오늘의 밤하늘 · {{name}},Tonight's sky · {{name}}
 constellation,strip.done,{{name}} 수집 완료!,{{name}} collected!
 constellation,nightSky.title,밤하늘,Night sky
@@ -2721,7 +2805,7 @@ asset,trade.noHolding,보유 종목이 없어요,No holdings yet
 asset,trade.addNewHolding,새 종목 사기,Buy a new holding
 asset,trade.pickExisting,보유 종목에서 고르기,Pick from holdings
 asset,trade.newHoldingPlaceholder,종목명을 적어주세요,Enter a holding name
-asset,trade.heldSummary,보유 {{qty}} · 평단가 {{avg}}원,Holding {{qty}} · avg {{avg}} KRW
+asset,trade.heldSummary,보유 {{qty}} · 평단가 {{avg}},Holding {{qty}} · avg {{avg}}
 asset,trade.quantity,수량,Quantity
 asset,trade.amount,거래대금 (원),Trade amount (KRW)
 asset,trade.amountHelp,수수료를 뺀 금액이에요. 수수료는 아래에 따로 적어주세요.,Excluding fees. Enter fees separately below.
@@ -2743,20 +2827,17 @@ asset,trade.entryBuy,매수,Buy
 asset,trade.entrySell,매도,Sell
 asset,trade.history,거래 내역,Trade history
 asset,trade.empty,아직 매수·매도 기록이 없어요,No trades recorded yet
-asset,trade.deleted,거래를 취소했어요,Trade cancelled
-asset,trade.deleteConfirm,이 거래를 취소하시겠어요? 예수금과 보유 수량이 거래 전으로 돌아가요.,Cancel this trade? Cash and quantity return to their pre-trade state.
 asset,trade.deleteTitle,거래 취소,Cancel trade
 asset,trade.deleteAction,거래 취소,Cancel trade
 asset,holdings.avgPrice,평단가,Avg price
 asset,holdings.totalCost,매수원가,Cost basis
-asset,holdings.avgPriceInline,평단가 {{avg}}원,avg {{avg}} KRW
+asset,holdings.avgPriceInline,평단가 {{avg}}원,avg {{avg}}
 asset,holdings.holdingBalance,평가금액,Holdings
 asset,holdings.emptySub,보유 종목 없음,No holdings
 asset,holdings.firstAndMore,{{name}} 외 {{n}}종목,{{name}} and {{n}} more
 asset,holdings.linkedSub,{{n}}주 · 현재가 {{price}} 연동,{{n}} shares · live at {{price}}
 asset,holdings.linkedPending,{{n}}주 · 시세 연동 대기,{{n}} shares · awaiting live price
 asset,holdings.manualSub,직접 입력,Manual entry
-asset,holdings.emptyDetail,보유 종목이 없어요. 편집에서 종목을 추가해보세요.,No holdings yet. Add them from Edit.
 asset,holdings.todayChange,오늘 {{sign}}{{amount}}원,Today {{sign}}₩{{amount}}
 asset,holdings.editSummary,{{n}}종목 · {{total}}원,{{n}} holdings · ₩{{total}}
 asset,holdings.searchPlaceholder,종목 이름 검색,Search stock name
@@ -2807,15 +2888,15 @@ download,ios.desc,Sideloadly 처럼 IPA 를 직접 넣는 도구를 쓴다면 �
 download,ios.cta,IPA 내려받기,Download IPA
 download,webHint,앱 없이도 브라우저에서 모든 기능을 쓸 수 있어요.,Everything works in the browser without the app.
 expense,sms.pasteOpen,결제 문자 붙여넣기,Paste a payment text
-expense,sms.pastePlaceholder,카드사에서 온 결제 문자를 그대로 붙여넣어주세요,Paste the card payment text as it is
+expense,sms.pastePlaceholder,"[Web발신]\n숲빛카드 5,500원\n골목찻집","[Web발신]\nForest Card 5,500 KRW\nAlley Tea House"
 expense,sms.pasteAction,문자 읽기,Read text
 expense,sms.parsing,읽는 중…,Reading…
 expense,sms.notRecognized,결제 문자로 보이지 않아요. 문자 전체를 붙여넣었는지 확인해주세요.,This doesn't look like a payment text. Please check that the whole message was pasted.
 expense,sms.cancelNotice,취소 문자예요. 자동 기록은 지원하지 않아요 — 원래 지출을 찾아 환불로 기록해주세요.,This is a cancellation text. Automatic recording is not supported — find the original expense and record it as a refund.
 expense,sms.lowConfidence,일부 항목을 읽지 못했어요. 확인하고 채워주세요.,Some fields could not be read. Please review and fill them in.
-expense,sms.parseFailed,문자를 읽지 못했어요. 잠시 후 다시 시도해주세요.,Could not read the text. Please try again in a moment.
+expense,sms.parseFailed,문자를 읽지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not read the text. Please try again in a moment.
 expense,sms.rememberCard,이 카드를 기억해서 다음부터 자동으로 연결하기,Remember this card and link it automatically next time
-expense,txDetail.recordOnlyNote,결제가 끝난 회차에 적은 거래라 기록만 남았어요. 계좌에서는 빠지지 않았어요,"This was added to a cycle that was already paid, so it is kept as a record only. It was not taken from your account"
+expense,txDetail.recordOnlyNote,결제가 끝난 회차에 적은 거래라 기록만 남았어요. 계좌에서는 빠지지 않았어요.,"This was added to a cycle that was already paid, so it is kept as a record only. It was not taken from your account"
 expense,txDetail.recordOnlyPartNote,이 중 <amt>{{amount}}</amt>은 결제가 끝난 회차분이라 기록만 남았어요. 남은 회차는 정상 청구돼요,"<amt>{{amount}}</amt> of this belongs to cycles that were already paid, so it is kept as a record only. The remaining installments are billed as usual"
 expense,closedCycle.note,이미 결제가 끝난 회차예요. 기록만 바뀌고 계좌 잔액은 그대로예요.,"This cycle has already been paid. Only the record changes, and your account balance stays the same."
 expense,closedCycle.partialNote,지난 회차분은 기록만 남아요.,Installments from cycles already paid stay as records only.
@@ -2880,8 +2961,8 @@ stocks,market.state.HALTED,일시 마감,Temporarily closed
 stocks,market.state.BEFORE_OPEN,개장 전,Before open
 expense,fixed.switch.expense,고정 지출,Fixed expense
 expense,fixed.switch.income,고정 수입,Fixed income
-expense,fixed.hint.expense,월세·통신비처럼 매달 나가는 돈이에요. 통계에서 따로 나눠 볼 수 있어요,Money that goes out every month like rent or phone bills. You can view it separately in statistics
-expense,fixed.hint.income,월급처럼 매달 들어오는 돈이에요. 통계에서 따로 나눠 볼 수 있어요,Money that comes in every month like a salary. You can view it separately in statistics
+expense,fixed.hint.expense,월세·통신비처럼 매달 나가는 돈이에요. 통계에서 따로 나눠 볼 수 있어요.,Money that goes out every month like rent or phone bills. You can see it separately in statistics.
+expense,fixed.hint.income,월급처럼 매달 들어오는 돈이에요. 통계에서 따로 나눠 볼 수 있어요.,Money that comes in every month like a salary. You can see it separately in statistics.
 expense,fixed.badge,고정,Fixed
 recurring,fixed.expense,고정 지출,Fixed expense
 recurring,fixed.income,고정 수입,Fixed income
@@ -2960,7 +3041,7 @@ recurring,deleteFailed,반복 설정을 삭제하지 못했어요,Could not dele
 recurring,deleteMessage,"""{{name}}"" 반복 설정을 삭제할까요? 이미 기록된 거래는 그대로 남아요. 삭제한 반복 설정은 되돌릴 수 없어요.","Delete the ""{{name}}"" recurring setting? Transactions already recorded stay as they are. A deleted recurring setting cannot be restored."
 expense,preset.fixedTitle.expense,고정 지출로 기록,Record as fixed expense
 expense,preset.fixedTitle.income,고정 수입으로 기록,Record as fixed income
-expense,preset.fixedDesc,이 프리셋으로 만든 거래가 통계의 고정 항목으로 잡혀요. 위의 고정 금액과는 별개예요.,Transactions made from this preset count as fixed in statistics. This is separate from the fixed amount above.
+expense,preset.fixedDesc,이 프리셋으로 만든 거래가 통계의 고정 항목으로 잡혀요.,Transactions made from this preset count as fixed in statistics.
 stats,tab.fixed,고정·변동,Fixed vs. variable
 stats,fixedView.aria,보기 방식,View
 stats,fixedView.all,전체,All
@@ -3244,6 +3325,7 @@ calendar,view.year,연,Year
 calendar,view.agenda,목록,List
 calendar,panel.count,일정 {{count}}개,{{count}} events
 calendar,panel.today,오늘,Today
+calendar,panel.backToList,{{date}} 일정 목록으로,Back to events on {{date}}
 calendar,loadFailed,일정을 불러오지 못했어요,Couldn't load events
 calendar,loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
 calendar,form.none,없음,None
@@ -3261,3 +3343,39 @@ calendar,form.rows,일정 정보,Event details
 calendar,form.rowsMore,반복 · 알림 · 장소 · 설명,"Repeat, reminder, location and description"
 calendar,quickAdd.detail,자세히,Details
 calendar,form.saveFailed,일정을 저장하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Could not save the event. Please try again in a moment.
+expense,presets,프리셋 관리,Manage presets
+expense,preset.manageDesc,자주 쓰는 내역을 저장해 두고 내역을 추가할 때 한 번 눌러 채워요.,Save frequent entries and fill them in with one tap when adding an entry.
+expense,preset.listTitle,프리셋 {{count}}개,{{count}} presets
+expense,preset.uses,{{count}}번,{{count}} uses
+expense,preset.sortLabel,정렬,Sort
+expense,preset.loadFailed,프리셋을 불러오지 못했어요,Could not load presets
+expense,preset.deleteFailed,프리셋을 삭제하지 못했어요,Could not delete the preset
+expense,preset.deleteConfirmTitle,"""{{name}}"" 프리셋을 삭제할까요?","Delete the ""{{name}}"" preset?"
+expense,preset.noteFixed,고정 금액,Fixed amount
+expense,preset.noteUses,{{count}}번 썼어요,Used {{count}} times
+expense,preset.noteUnused,아직 쓰지 않았어요,Not used yet
+expense,preset.noteLast,마지막 {{month}}월 {{day}}일,Last used {{month}}/{{day}}
+expense,preset.fixedOn,켬,On
+expense,preset.fixedOff,끔,Off
+expense,preset.nameRequired,이름을 입력해주세요.,Enter a name.
+expense,preset.categoryRequired,카테고리를 골라주세요.,Choose a category.
+expense,preset.fromRequired,보내는 계좌를 골라주세요.,Choose the sending account.
+expense,preset.toRequired,받는 계좌를 골라주세요.,Choose the receiving account.
+expense,preset.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
+expense,preset.amountLabel,금액,Amount
+expense,preset.feeLabel,수수료,Fee
+expense,preset.amountBlank,비워 둠,Left blank
+expense,preset.amountHint,비워 두면 불러올 때 금액을 직접 넣어요.,"If left blank, you enter the amount when you load it."
+expense,preset.noneValue,없음,None
+expense,preset.memoNone,메모 없음,No memo
+expense,preset.noAccount,계좌·카드 없음,No account or card
+expense,preset.noPayment,결제 수단 없음,No payment method
+expense,preset.noCategoryOfKind,이 종류의 카테고리가 없어요.,There are no categories of this type.
+expense,addTx.presetShowAll,모두 보기,Show all
+expense,addTx.presetPickTitle,프리셋 고르기,Choose a preset
+expense,addTx.presetSearch,프리셋 검색,Search presets
+expense,addTx.presetNoResult,찾는 프리셋이 없어요.,No presets found.
+expense,preset.fromAccount,보내는 계좌,Sending account
+expense,preset.toAccount,받는 계좌,Receiving account
+expense,preset.categoryLoadFailed,카테고리를 불러오지 못했어요,Could not load categories
+expense,preset.interestTooBig,이자는 금액보다 클 수 없어요.,Interest cannot be greater than the amount.

@@ -50,7 +50,6 @@ vi.mock("./AssetEditDialog", () => ({
     return null;
   },
 }));
-vi.mock("./AssetDetailDialog", () => ({ AssetDetailDialog: () => null }));
 
 const { AccountManager } = await import("./AccountManager");
 
