@@ -16,6 +16,7 @@ import {
   type OpenChange,
 } from "@/shared/ds/overlay";
 import { useScrollFog } from "@/shared/ds/scroll-fog";
+import { SnackbarAvoidOverlap } from "@/shared/ds/snackbar";
 
 import {
   SHEET_BODY,
@@ -48,7 +49,8 @@ import { useDsText } from "@/shared/ds/i18n";
  *   BottomSheetContent   시트 — title(늘) · description(덧붙일 말이 있을 때만). 오른쪽 위 닫기 버튼(showCloseButton, 기본 켬)
  *   BottomSheetBody      본문 — 좌우 화면 여백 24, 넘치면 이 안에서 스크롤. scrollFog 면 끝 흐림(Scroll Fog — 늘 켜진
  *                        위 20 · 아래 80 + 본문 안 여백 위 20 · 아래 80) — 넘칠 수 있는 본문(목록 · 긴 폼)에만 준다
- *   BottomSheetFooter    바닥 — 버튼 하나면 폭 전체, 둘이면 반씩(사이 8). Button large 48 을 크기를 주지 않은 바로 아래 자식에 넣는다
+ *   BottomSheetFooter    바닥 — 버튼 하나면 폭 전체, 둘이면 반씩(사이 8). Button large 48 을 크기를 주지 않은 바로 아래 자식에 넣는다.
+ *                        스낵바는 이 바닥 버튼의 윗변 위 8 에 뜬다(버튼마다 SnackbarAvoidOverlap 으로 감싸 있다)
  *   BottomSheetSurface   바탕 — 딤 · 시트 · 손잡이와 닫는 길(Esc · 바깥 · 끌기 · 초점)만. 머리가 다른 시트(Menu Sheet)가 이 위에 짠다.
  *                        BottomSheetContent 도 이것 위에 머리 · 닫기 버튼을 얹은 것이다. handle="always" 면 스냅 높이가 없어도 손잡이를 단다
  *
@@ -558,7 +560,15 @@ const BottomSheetFooter = React.forwardRef<
     className={cn(SHEET_FOOTER, className)}
     {...props}
   >
-    {withButtonSize(children, "large")}
+    {/* 스낵바가 피할 자리는 바닥 영역(위 여백 12 포함)이 아니라 버튼이다 — snackbar.md "바닥 버튼 위 8".
+        버튼마다 감싸면 세로로 쌓여도 가장 위 버튼의 윗변 위 8 에 선다 */}
+    {React.Children.map(withButtonSize(children, "large"), (child) =>
+      React.isValidElement(child) ? (
+        <SnackbarAvoidOverlap>{child}</SnackbarAvoidOverlap>
+      ) : (
+        child
+      ),
+    )}
   </ResponsivePair>
 ));
 BottomSheetFooter.displayName = "BottomSheetFooter";
