@@ -261,6 +261,7 @@ export function RecurringAddDialog({
   }>({});
   const [showErrors, setShowErrors] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  const [assetsFailed, setAssetsFailed] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const amountRef = useRef<HTMLInputElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
@@ -289,8 +290,29 @@ export function RecurringAddDialog({
   if (f.categoryRowId != null) {
     const cat = categories.find((c) => c.rowId === f.categoryRowId);
     // 목록을 아직 받지 못했으면 비우지 않는다(수정으로 열 때 저장된 카테고리를 날리지 않게)
-    if (categoriesQ.data && (isTransfer || !cat || cat.expenseType !== f.type))
+    // 규칙 밖 값(지운 카테고리 · 종류가 다른 것 · 하위가 생겨 상위가 된 것)은 목록이 온 뒤 비운다 — 저장 때 칸 오류("카테고리를 골라주세요.")
+    if (
+      categoriesQ.data &&
+      (isTransfer ||
+        !cat ||
+        cat.expenseType !== f.type ||
+        categories.some((c) => c.parentRowId === cat.rowId))
+    )
       fix.categoryRowId = null;
+  }
+  // 지운 계좌 · 카드가 된 이체 계좌도 자산 목록이 온 뒤 비운다
+  if (assetsQ.data) {
+    if (
+      f.assetRowId != null &&
+      !(isTransfer ? eligible : assets).some((a) => a.rowId === f.assetRowId)
+    )
+      fix.assetRowId = null;
+    if (
+      f.toAssetRowId != null &&
+      isTransfer &&
+      !eligible.some((a) => a.rowId === f.toAssetRowId)
+    )
+      fix.toAssetRowId = null;
   }
   // 이체가 아니게 되면 남아 있던 이체 칸을 지운다 — 실려 나가면 서버가 거절한다.
   if (!isTransfer && (f.toAssetRowId != null || f.fee || f.interest)) {
@@ -339,6 +361,9 @@ export function RecurringAddDialog({
     {
       endDate: f.endMode === "DATE" ? f.endDate : null,
       maxOccurrences: f.endMode === "COUNT" ? Number(f.endCount) : null,
+      executedCount: recurring?.executedCount ?? 0,
+      intervalValue: recurring?.intervalValue ?? 1,
+      fromKey: todayLocalKey(),
     },
   );
 
@@ -364,15 +389,23 @@ export function RecurringAddDialog({
         : f.endMode === "COUNT" && Number(f.endCount) < 1
           ? t("errCountMin")
           : null;
+  const errInterest =
+    isTransfer &&
+    f.interest &&
+    Number(f.interest) > 0 &&
+    Number(f.interest) > amountNumber
+      ? t("errInterestOver")
+      : null;
   const ready =
     !errAmount &&
+    !errInterest &&
     !errCategory &&
     !(isTransfer && !transferPartiesReady(f.assetRowId, f.toAssetRowId)) &&
     !errEnd;
 
   const dirty = JSON.stringify(f) !== JSON.stringify(initial);
 
-  const save = () => {
+  const save = async () => {
     if (submitting) return;
     if (!ready) {
       setShowErrors(true);
@@ -380,18 +413,32 @@ export function RecurringAddDialog({
       return;
     }
     setSaveError(false);
+    setAssetsFailed(false);
+    // 이자 판정은 자산 목록이 있어야 한다 — 서버 PUT 은 빠진 키를 null 로 덮으므로 목록이 없으면 받아 온 뒤 정하고, 못 받으면 요청하지 않는다
+    let assetList = assets;
+    if (isTransfer && !assetsQ.data) {
+      const r = await assetsQ.refetch();
+      if (!r.data) {
+        setAssetsFailed(true);
+        return;
+      }
+      assetList = r.data.assets;
+    }
+    const interestOn = isTransfer && isLoanTarget(assetList, f.toAssetRowId);
     const data: RecurringTransactionFormValues = {
       categoryRowId: isTransfer ? undefined : (f.categoryRowId ?? undefined),
       assetRowId: f.assetRowId ?? undefined,
       // 이체 칸은 이체일 때만 싣는다 — 지출·수입에 실려 가면 서버가 거절한다.
       toAssetRowId: isTransfer ? (f.toAssetRowId ?? undefined) : undefined,
-      fee: isTransfer && f.fee ? Number(f.fee) : undefined,
+      // 0 은 없음(null) — 수수료 · 이자 칸에 0 을 쳐도 0 을 보내지 않는다
+      fee: isTransfer && Number(f.fee) > 0 ? Number(f.fee) : undefined,
       interestAmount:
-        showInterest && f.interest ? Number(f.interest) : undefined,
+        interestOn && Number(f.interest) > 0 ? Number(f.interest) : undefined,
       sourceExpenseRowId: undefined, // 처음부터 추가 — 원본 거래 없음
       expenseType: f.type,
       amount: amountNumber,
-      description: f.description || undefined,
+      // 공백만이면 없음(본문은 다듬지 않고 빈지만 본다)
+      description: f.description.trim() ? f.description : undefined,
       merchant: isTransfer ? undefined : f.merchant || undefined,
       paymentMethod: isTransfer ? undefined : f.paymentMethod || undefined,
       frequency: f.frequency,
@@ -602,6 +649,11 @@ export function RecurringAddDialog({
           </div>
         )}
         <ResponsiveDialogBody scrollFog={bodyFog}>
+          {step === "list" && assetsFailed && (
+            <Callout tone="critical" role="alert" className="mb-x4">
+              {t("assetsLoadFailed")}
+            </Callout>
+          )}
           {step === "list" && saveError && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
@@ -742,7 +794,15 @@ export function RecurringAddDialog({
                       surfaceTitle={te("addTx.fromAccount")}
                       assets={eligible}
                       value={f.assetRowId}
-                      onChange={(id) => set("assetRowId", id)}
+                      onChange={(id) =>
+                        setF((s) => ({
+                          ...s,
+                          assetRowId: id,
+                          // 보내는 계좌와 같은 받는 계좌는 비운다
+                          toAssetRowId:
+                            s.toAssetRowId === id ? null : s.toAssetRowId,
+                        }))
+                      }
                       errorMessage={showErrors ? errFrom : null}
                       emptyText={t("noAssets")}
                     />
@@ -761,7 +821,9 @@ export function RecurringAddDialog({
                       prefix={<Banknote />}
                       title={t("feeRow")}
                       value={
-                        f.fee ? `${KRW(Number(f.fee))}${tc("searchWon")}` : ""
+                        Number(f.fee) > 0
+                          ? `${KRW(Number(f.fee))}${tc("searchWon")}`
+                          : ""
                       }
                       placeholder={t("noneValue")}
                       onClick={() => enterText("fee")}
@@ -771,12 +833,13 @@ export function RecurringAddDialog({
                         prefix={<Percent />}
                         title={t("interestRow")}
                         value={
-                          f.interest
+                          Number(f.interest) > 0
                             ? `${KRW(Number(f.interest))}${tc("searchWon")}`
                             : ""
                         }
                         placeholder={t("noneValue")}
                         onClick={() => enterText("interest")}
+                        errorMessage={showErrors ? errInterest : null}
                       />
                     )}
                   </>

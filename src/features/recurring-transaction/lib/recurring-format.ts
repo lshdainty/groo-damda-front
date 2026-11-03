@@ -80,12 +80,11 @@ export function rowDetailParts(
   it: RecurringTransaction,
   t: TFunction,
 ): string[] {
-  const lead =
-    it.isActive !== "Y"
+  const lead = isFinished(it)
+    ? t("rowFinished")
+    : it.isActive !== "Y"
       ? t("rowPaused")
-      : isFinished(it)
-        ? t("rowFinished")
-        : t("rowNext", { date: nextDateText(it.nextExecutionDate) });
+      : t("rowNext", { date: nextDateText(it.nextExecutionDate) });
   const end = endPiece(it, t);
   return [lead, cycleSentence(it, t), ...(end ? [end] : [])];
 }

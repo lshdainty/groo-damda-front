@@ -157,19 +157,31 @@ export function upcomingDates(
   return out;
 }
 
-/** 폼 안내 — 시작일에서 센 첫 회차들(끝 · 횟수 안). 지금 폼 값으로 */
+/**
+ * 폼 안내 — 서버처럼 **오늘 이후** 첫 회차부터(`firstOccurrenceOnOrAfter(start, today)` · ServiceImpl 129 · 207) 저장된 간격대로 센다.
+ * 지난 회차는 채워 넣지 않는다. 최대 횟수는 남은 횟수(최대 − 실행)로 자른다.
+ */
 export function previewNextDates(
   startIso: string,
   freq: RecurringFrequency,
   dayOfWeekUi: number, // 0=일~6=토
   dayOfMonth: number,
   count: number,
-  limits?: { endDate?: string | null; maxOccurrences?: number | null },
+  limits?: {
+    endDate?: string | null;
+    maxOccurrences?: number | null;
+    /** 이미 실행한 횟수 */
+    executedCount?: number;
+    /** 저장된 간격(격주 · 격월) — 기본 1 */
+    intervalValue?: number;
+    /** 이 날 이전 회차는 건너뛴다 — 오늘 'YYYY-MM-DD' */
+    fromKey?: string;
+  },
 ): string[] {
   const rule: ScheduleRule = {
     startDate: startIso,
     frequency: freq,
-    intervalValue: 1,
+    intervalValue: limits?.intervalValue ?? 1,
     dayOfWeek: dayOfWeekUi === 0 ? 7 : dayOfWeekUi,
     dayOfMonth: freq === "MONTHLY" ? dayOfMonth : null,
     endDate: limits?.endDate ?? null,
@@ -177,20 +189,29 @@ export function previewNextDates(
   };
   let cur = firstOccurrence(rule);
   if (!cur) return [];
+  const remaining =
+    rule.maxOccurrences != null
+      ? rule.maxOccurrences - (limits?.executedCount ?? 0)
+      : Number.POSITIVE_INFINITY;
   const out: string[] = [];
-  for (let n = 1; out.length < count && n <= MAX_STEPS; n++) {
+  for (
+    let n = 0;
+    out.length < count && out.length < remaining && n < MAX_STEPS;
+    n++
+  ) {
     const key = localDateKey(cur);
     if (rule.endDate && key > rule.endDate.slice(0, 10)) break;
-    if (rule.maxOccurrences != null && n > rule.maxOccurrences) break;
-    out.push(key);
+    if (!limits?.fromKey || key >= limits.fromKey) out.push(key);
     cur = stepOccurrence(cur, rule);
   }
   return out;
 }
 
-/** 끝남 — 쉬지 않았는데 다음 날짜가 끝 날짜 뒤이거나 실행 수가 최대 횟수에 닿았다 */
+/**
+ * 끝남 — 실행 수가 최대 횟수에 닿았거나 다음 날짜가 끝 날짜 뒤다. **`isActive` 와 상관없다**: 서버 `markExecuted` 는 횟수를 채우면
+ * isActive 를 N 으로 바꾼다(RecurringTransaction.java:259) — 그것을 "쉬는 중" 으로 보이면 안 된다.
+ */
 export function isFinished(it: RecurringTransaction): boolean {
-  if (it.isActive !== "Y") return false;
   if (it.maxOccurrences != null && it.executedCount >= it.maxOccurrences)
     return true;
   if (it.endDate && it.nextExecutionDate > it.endDate.slice(0, 10)) return true;
@@ -201,6 +222,11 @@ function monthBounds(year: number, month: number) {
   const mm = String(month).padStart(2, "0");
   const last = String(lengthOfMonth(year, month - 1)).padStart(2, "0");
   return { from: `${year}-${mm}-01`, to: `${year}-${mm}-${last}` };
+}
+
+/** 쉬는 중 — 꺼져 있고 끝난 것이 아니다 */
+export function isPaused(it: RecurringTransaction): boolean {
+  return it.isActive !== "Y" && !isFinished(it);
 }
 
 /**
@@ -216,7 +242,7 @@ export function monthTotal(
   const { from, to } = monthBounds(year, month);
   let sum = 0;
   for (const it of items) {
-    if (it.isActive !== "Y" || it.expenseType !== type) continue;
+    if (isPaused(it) || it.expenseType !== type) continue;
     const n = occurrencesBetween(it, from, to).length;
     sum += Math.abs(it.amount) * n;
   }

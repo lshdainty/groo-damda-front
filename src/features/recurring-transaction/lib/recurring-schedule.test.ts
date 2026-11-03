@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { RecurringTransaction } from "@/entities/recurring-transaction";
 import {
   isFinished,
+  isPaused,
   monthTotal,
   occurrencesBetween,
   previewNextDates,
@@ -162,21 +163,57 @@ describe("다음 예정일 · 끝남", () => {
       }),
     ).toHaveLength(2);
   });
-  it("끝남 — 횟수에 닿았거나 다음 날짜가 끝 날짜 뒤, 쉬는 중은 아니다", () => {
+  it("끝남 — 서버가 횟수를 채우며 isActive 를 N 으로 바꾼 상태도 끝남이다(쉬는 중이 아니다)", () => {
+    // 서버 markExecuted(RecurringTransaction.java:259): 횟수를 채우면 isActive=N
+    const doneByCount = rec({
+      maxOccurrences: 3,
+      executedCount: 3,
+      isActive: "N",
+    });
+    expect(isFinished(doneByCount)).toBe(true);
+    expect(isPaused(doneByCount)).toBe(false);
     expect(isFinished(rec({ maxOccurrences: 3, executedCount: 3 }))).toBe(true);
     expect(
       isFinished(
         rec({ endDate: "2026-09-15", nextExecutionDate: "2026-10-15" }),
       ),
     ).toBe(true);
+  });
+  it("쉬는 중 — 꺼져 있고 끝나지 않았다 · 이달 합에서는 빠지고 끝난 반복의 마지막 회차는 센다", () => {
+    const paused = rec({ isActive: "N", amount: 5_000 });
+    expect(isPaused(paused)).toBe(true);
+    expect(monthTotal([paused], "EXPENSE", 2026, 10)).toBe(0);
+    const doneThisMonth = rec({
+      amount: 7_000,
+      dayOfMonth: 5,
+      startDate: "2026-08-05",
+      maxOccurrences: 3,
+      executedCount: 3,
+      isActive: "N",
+      nextExecutionDate: "2026-11-05",
+    });
+    // 8 · 9 · 10월 5일이 1 · 2 · 3번째 — 서버가 꺼 두어도 마지막 회차가 든 달은 센다
+    expect(monthTotal([doneThisMonth], "EXPENSE", 2026, 10)).toBe(7_000);
+    expect(monthTotal([doneThisMonth], "EXPENSE", 2026, 11)).toBe(0);
+  });
+  it("폼 안내는 오늘 이후 첫 회차부터 · 저장된 간격대로 · 남은 횟수로 자른다", () => {
     expect(
-      isFinished(
-        rec({
-          isActive: "N",
-          endDate: "2026-09-15",
-          nextExecutionDate: "2026-10-15",
-        }),
-      ),
-    ).toBe(false);
+      previewNextDates("2025-01-01", "MONTHLY", 0, 1, 3, {
+        fromKey: "2026-11-03",
+      }),
+    ).toEqual(["2026-12-01", "2027-01-01", "2027-02-01"]);
+    expect(
+      previewNextDates("2026-01-05", "MONTHLY", 0, 5, 3, {
+        intervalValue: 2,
+        fromKey: "2026-11-03",
+      }),
+    ).toEqual(["2027-01-05", "2027-03-05", "2027-05-05"]);
+    expect(
+      previewNextDates("2026-01-05", "MONTHLY", 0, 5, 3, {
+        maxOccurrences: 12,
+        executedCount: 10,
+        fromKey: "2026-11-03",
+      }),
+    ).toHaveLength(2);
   });
 });

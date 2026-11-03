@@ -3022,6 +3022,8 @@ recurring,errEndBeforeStart,끝나는 날이 시작일보다 빨라요.,The end 
 recurring,errCountMax,{{max}}번까지 입력할 수 있어요.,You can enter up to {{max}} times.
 recurring,errCountMin,1번 이상 입력해주세요.,Enter 1 or more.
 recurring,saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
+recurring,errInterestOver,이자는 금액보다 클 수 없어요.,Interest can't be more than the amount.
+recurring,assetsLoadFailed,계좌 목록을 불러오지 못해 저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,"Couldn't load your accounts, so it wasn't saved. Please try again in a moment."
 recurring,nextDatesLine,다음 예정일 — {{dates}},Next dates — {{dates}}
 recurring,memoPlaceholder,메모를 적어 주세요,Write a note
 recurring,clearValue,값 지우기,Clear value

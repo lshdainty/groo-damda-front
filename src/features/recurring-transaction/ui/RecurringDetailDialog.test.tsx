@@ -122,8 +122,12 @@ describe("반복 거래 상세", () => {
   });
 
   it("끝남이면 끝남 문장 · 다음 예정일 묶음 없음", () => {
-    show(item({ maxOccurrences: 9, executedCount: 9 }));
+    // 서버가 횟수를 채우며 만드는 상태 — isActive=N
+    show(item({ maxOccurrences: 9, executedCount: 9, isActive: "N" }));
     expect(document.body.textContent).toContain("sentenceFinished");
+    expect(document.body.textContent).not.toContain("sentencePaused");
+    expect(buttons()).not.toContain("resume");
+    expect(buttons()).not.toContain("pause");
     expect(document.body.textContent).not.toContain("nextDatesTitle");
   });
 

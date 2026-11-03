@@ -40,7 +40,10 @@ import {
   recurringAmountTone,
   rowDetailParts,
 } from "@/features/recurring-transaction/lib/recurring-format";
-import { monthTotal } from "@/features/recurring-transaction/lib/recurring-schedule";
+import {
+  isPaused,
+  monthTotal,
+} from "@/features/recurring-transaction/lib/recurring-schedule";
 import { RecurringAddDialog } from "@/features/recurring-transaction/ui/RecurringAddDialog";
 import { RecurringDetailDialog } from "@/features/recurring-transaction/ui/RecurringDetailDialog";
 
@@ -114,7 +117,13 @@ export function RecurringManager({
       onError: () =>
         confirmFail({
           message: t(wasActive ? "pauseFailed" : "resumeFailed"),
-          retry: () => toggleMut.mutateAsync(it.rowId),
+          // 토글은 뒤집기만 한다 — 응답만 실패하고 서버에는 반영됐으면 다시 뒤집지 않게, 최신 상태를 받아 이미 목표면 보내지 않는다
+          retry: async () => {
+            const r = await recurringsQ.refetch();
+            const cur = r.data?.find((x) => x.rowId === it.rowId);
+            if (cur && (cur.isActive === "Y") === !wasActive) return;
+            await toggleMut.mutateAsync(it.rowId);
+          },
           onRetried: done,
         }),
     });
@@ -166,7 +175,7 @@ export function RecurringManager({
     const tone = recurringAmountTone(it);
     const cat = categories.find((c) => c.rowId === it.categoryRowId);
     const palette = getPaletteByColor(cat?.color);
-    const paused = it.isActive !== "Y";
+    const paused = isPaused(it);
     const title = displayTitle(it, t);
     const li = (
       <ListButtonItem
@@ -387,6 +396,7 @@ export function RecurringManager({
                   }),
                 });
                 setConfirmDelete(null);
+                setDetailId(null);
               },
               // 실패는 확인창을 닫은 뒤 스낵바(고정 글 + 다시 시도)로 — 창 위에는 겹치지 않는다
               onError: () => {

@@ -82,8 +82,9 @@ export function RecurringDetailDialog({
   const wide = useWideSurface();
   const tone = recurringAmountTone(item);
   const isTransfer = item.expenseType === "TRANSFER";
-  const isActive = item.isActive === "Y";
   const finished = isFinished(item);
+  // 끝남은 서버가 isActive 를 N 으로 바꿔도 "쉬는 중" 이 아니다(isFinished 가 먼저)
+  const isActive = item.isActive === "Y" && !finished;
   const cat = categories.find((c) => c.rowId === item.categoryRowId);
   const palette = getPaletteByColor(cat?.color);
   const name = displayTitle(item, t);
@@ -156,15 +157,18 @@ export function RecurringDetailDialog({
 
   const footer = (
     <ResponsiveDialogFooter>
-      <Button
-        variant="neutralWeak"
-        loading={toggling}
-        onClick={onToggle}
-        className="flex-1 lg:flex-none"
-      >
-        {isActive ? <Pause aria-hidden /> : <Play aria-hidden />}
-        {isActive ? t("pause") : t("resume")}
-      </Button>
+      {/* 끝난 반복은 일시정지 · 다시 켜기가 뜻이 없다(채운 횟수 · 지난 끝 날짜) — 수정만 */}
+      {!finished && (
+        <Button
+          variant="neutralWeak"
+          loading={toggling}
+          onClick={onToggle}
+          className="flex-1 lg:flex-none"
+        >
+          {isActive ? <Pause aria-hidden /> : <Play aria-hidden />}
+          {isActive ? t("pause") : t("resume")}
+        </Button>
+      )}
       <Button
         variant="neutralSolid"
         onClick={onEdit}
@@ -205,11 +209,15 @@ export function RecurringDetailDialog({
                   icon={<Pencil aria-hidden />}
                   onSelect={onEdit}
                 />
-                <ResponsiveMenuItem
-                  label={isActive ? t("pause") : t("resume")}
-                  icon={isActive ? <Pause aria-hidden /> : <Play aria-hidden />}
-                  onSelect={onToggle}
-                />
+                {!finished && (
+                  <ResponsiveMenuItem
+                    label={isActive ? t("pause") : t("resume")}
+                    icon={
+                      isActive ? <Pause aria-hidden /> : <Play aria-hidden />
+                    }
+                    onSelect={onToggle}
+                  />
+                )}
               </ResponsiveMenuGroup>
               <ResponsiveMenuGroup>
                 <ResponsiveMenuItem
@@ -268,14 +276,14 @@ export function RecurringDetailDialog({
               data-slot="recurring-sentence"
               className="m-0 px-global-gutter pb-x2 pt-x1 font-sans text-t5 text-fg-neutral"
             >
-              {!isActive ? (
+              {finished ? (
+                t("sentenceFinished")
+              ) : !isActive ? (
                 <Trans
                   t={t}
                   i18nKey="sentencePaused"
                   components={{ b: <strong className="font-bold" /> }}
                 />
-              ) : finished ? (
-                t("sentenceFinished")
               ) : (
                 <>
                   {t("sentenceLead", { cycle, end: endSentence(item, t) })}{" "}
