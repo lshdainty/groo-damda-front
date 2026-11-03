@@ -209,7 +209,7 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
  * 할부 정리 요청이 실제로 청구할 금액 — 서버(Expense 상환 회차)와 같은 셈: 원금 − 앞 회차 정상 분할 합.
  * 나머지(원금 mod 개월)는 1회차에 몰려 있어 2회차부터는 앞 합에 들어간다. 미리 보기 응답이 없어 같은 식을 쓴다.
  */
-export function installmentPayoffAmount(due: InstallmentDue): number {
+function installmentPayoffAmount(due: InstallmentDue): number {
   const { principalAmount: p, installmentMonths: n, sequence: seq } = due;
   const base = Math.floor(p / n);
   const before = (seq - 1) * base + (seq >= 2 ? p % n : 0);
