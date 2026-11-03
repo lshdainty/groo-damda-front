@@ -36,7 +36,8 @@ const HEAD_ACTION_SECTIONS: SectionId[] = [
 
 /** 반복 · 프리셋은 본문이 쓰는 것과 같은 조회(캐시 공유)로 "비어 있지 않은가" 를 본다 — 해당 섹션일 때만 마운트 */
 function RecurringGate({ children }: { children: React.ReactNode }) {
-  const q = useRecurringTransactions();
+  // 머리의 "추가" 판정용 — 실패는 본문이 실패 화면으로 알린다(서버 원문 알림을 끈다)
+  const q = useRecurringTransactions(undefined, { silent: true });
   return (q.data?.length ?? 0) > 0 ? <>{children}</> : null;
 }
 function PresetGate({ children }: { children: React.ReactNode }) {
