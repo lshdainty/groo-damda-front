@@ -55,13 +55,13 @@ export interface PickerRowProps {
   /** 고르기 표면 바닥 버튼(날짜의 "완료"), 없으면 바닥 없음. 이름이 footer 가 아닌 까닭: tests/dialog-footers 는 footer prop 안의 Button 을 막는다 */
   pickerActions?:
     React.ReactNode | ((api: { close: () => void }) => React.ReactNode);
-  /** 고르기 시트 본문에 Scroll Fog(끝 흐림)를 건다 — 개수가 사용자 데이터에 따라 느는 목록(태그)에. 칸 두셋처럼 늘 들어맞는 고르기에는 걸지 않는다 */
-  scrollFog?: boolean;
   /** 시트 높이 같은 모양 */
   sheetClassName?: string;
   popoverClassName?: string;
   /** 본문 스크롤 대신 안쪽이 스스로 스크롤하는 고르기(아이콘 격자) */
   bodyless?: boolean;
+  /** 끝 흐림 — 길이가 사용자 값에 달린 목록형 고르기에만(카테고리 · 계좌 …). 달력 · 고정 선택지는 걸지 않는다 */
+  scrollFog?: boolean;
   onOpenAutoFocus?: (e: Event) => void;
 }
 
@@ -239,7 +239,11 @@ export const PickerRow = React.forwardRef<HTMLButtonElement, PickerRowProps>(
                 className={popoverClassName}
                 onOpenAutoFocus={onOpenAutoFocus}
               >
-                {bodyless ? body : <PopoverBody>{body}</PopoverBody>}
+                {bodyless ? (
+                  body
+                ) : (
+                  <PopoverBody scrollFog={scrollFog}>{body}</PopoverBody>
+                )}
                 {foot != null && <PopoverFooter>{foot}</PopoverFooter>}
               </PopoverContent>
             </Popover>

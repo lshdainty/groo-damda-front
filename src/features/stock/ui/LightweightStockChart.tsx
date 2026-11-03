@@ -561,10 +561,30 @@ export function LightweightStockChart({
     return () => clearInterval(id);
   }, [symbol, interval]);
 
+  const fixed = typeof height === "number";
+
   return (
-    <div style={{ position: "relative", width: "100%", height }}>
-      <div ref={wrapRef} style={{ position: "absolute", inset: 0 }} />
-      {legend && <StockChartLegend legend={legend} isUs={isUs} />}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        // 숫자면 height 는 차트 그림의 높이다 — 범례 줄이 그만큼 위에 더해진다(글자를 키운 사람에게
+        // 차트를 빼앗지 않는다). "100%"(앱 임베드)는 틀이 정해 준 높이를 범례와 나눠 쓴다.
+        height: fixed ? undefined : height,
+      }}
+    >
+      {/* 범례는 그림 위 자기 줄이다 — 축 눈금 · 캔들과 겹치지 않는다. */}
+      <StockChartLegend legend={legend} isUs={isUs} />
+      <div
+        ref={wrapRef}
+        style={{
+          position: "relative",
+          ...(fixed
+            ? { height, flex: "none" }
+            : { flex: "1 1 0", minHeight: 0 }),
+        }}
+      />
     </div>
   );
 }

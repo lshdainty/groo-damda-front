@@ -440,6 +440,8 @@ export function TagEditDialog<T extends TagLike>({
                 }}
                 placeholder={t("tags.namePlaceholder")}
                 autoComplete="off"
+                // 새 태그만 이름 칸에 초점 — 수정은 표면이 받는다(main #524 와 같다)
+                autoFocus={isNew}
               />
             </Field>
             <Field label={t("tags.color")}>

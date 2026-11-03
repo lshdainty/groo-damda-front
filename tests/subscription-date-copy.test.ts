@@ -15,7 +15,7 @@ import { describe, expect, it } from "vitest";
  */
 const CSV = "i18n/translations.csv";
 const DIALOG = "src/features/subscription/ui/SubscriptionDialog.tsx";
-const SETTINGS = "src/pages/settings/ui/SettingsPage.tsx";
+const SETTINGS = "src/widgets/account-settings/ui/AccountSection.tsx";
 
 /** CSV 한 줄 → [ko, en]. 없으면 undefined. */
 function row(ns: string, key: string): string[] | undefined {

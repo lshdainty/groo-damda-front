@@ -407,7 +407,9 @@ export function AssetEditDialog({
                 ? () => backToKind.request()
                 : undefined
           }
+          // 수정은 처음부터 폼이라 표면이 받는다 — 새 자산만 1단계 첫 칸, 2단계 폼은 들어갈 때 이름 칸(FormStep)
           onOpenAutoFocus={(e) => {
+            if (!isNew) return;
             e.preventDefault();
             focusFirstField(contentRef.current);
           }}

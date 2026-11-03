@@ -28,7 +28,7 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 
-const { SubscriptionRow } = await import("./SettingsPage");
+const { SubscriptionRow } = await import("./AccountSection");
 
 let container: HTMLDivElement;
 let root: Root;

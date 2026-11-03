@@ -7,7 +7,7 @@ import { AccountFields } from "./AccountFields";
 import { CardFields } from "./CardFields";
 import { InvestFields } from "./InvestFields";
 import { CheckRows } from "./CheckRows";
-import { focusFirstField } from "./focus";
+import { focusNameField } from "./focus";
 
 /**
  * 추가 · 수정 2단계(I-17 B · C) — 그 종류의 칸만. 칸 사이 24(Field ↔ Field), 마지막 칸 ↔ 체크 줄 둘은 한 면 안 16(T14).
@@ -24,9 +24,10 @@ export function FormStep({
 }) {
   const { t, tCommon, isNew, editingGroup, submitTick } = f;
   const bodyRef = useRef<HTMLDivElement>(null);
+  // 새 자산은 2단계에 들어가면 이름 칸에 초점 — 수정은 표면이 받는다(폰에서 키보드가 가리지 않게)
   useEffect(() => {
-    focusFirstField(bodyRef.current);
-  }, []);
+    if (isNew) focusNameField(bodyRef.current);
+  }, [isNew]);
   // 못 보낸 채 [추가] · [저장] 을 누르면 첫 오류 칸으로
   useEffect(() => {
     if (submitTick === 0) return;
