@@ -15,6 +15,7 @@ import {
   qtyNumber,
   type Asset,
   type AssetHolding,
+  type AssetTrade,
   type TradeType,
 } from "@/entities/asset";
 import { holdingsOf, useAssetTrades, useDeleteTrade } from "@/features/asset";
@@ -24,6 +25,9 @@ import { useStockSymbolName } from "@/features/stock/model/useStockMaster";
 import { useAssetMask } from "../../lib/asset-groups";
 import { AssetTradeDialog } from "../AssetTradeDialog";
 import { TradeDetailSurface } from "./TradeDetailSurface";
+import { useTradeLabel } from "./trade-label";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
+import { useSnackbar } from "@/shared/ds/snackbar";
 
 /**
  * 보유 종목 한 줄(I-17 50) — List 줄 위 맞춤: 제목 종목 이름 · 설명 "{수량}{단위} · 현재가 {가격} 연동" / "직접 입력" · 뒤 기둥(오른쪽 맞춤)
@@ -106,7 +110,13 @@ export function HoldingRow({
         <span className="flex min-w-0 flex-col items-end gap-x0_5">
           <span className="text-end text-t5 font-bold tabular-nums text-fg-neutral">
             {value != null ? withCommaBreaks(m(won(value))) : null}
-            {value == null && <Skeleton text="t5" className="w-x10" />}
+            {value == null &&
+              (holding.linked &&
+              (!live || (price != null && unitKrw == null)) ? (
+                "—"
+              ) : (
+                <Skeleton text="t5" className="w-x10" />
+              ))}
           </span>
           {changePct != null && (
             <Delta
@@ -149,7 +159,6 @@ export function TradeHistory({ asset }: { asset: Asset }) {
   const { t } = useTranslation("asset");
   const m = useAssetMask("asset.detail", asset.isAmountHidden === "Y");
   const { data: trades } = useAssetTrades(asset.rowId);
-  const deleteMut = useDeleteTrade();
   // 줄을 누르면 거래 기록 상세(조회), 거기 바닥 왼쪽 [거래 취소] 가 확인창을 연다 — 한 번에 표면 하나
   const [openId, setOpenId] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
@@ -164,33 +173,11 @@ export function TradeHistory({ asset }: { asset: Asset }) {
       </ListTitle>
       <List aria-labelledby={titleId}>
         {trades.map((tr) => (
-          <ListButtonItem
+          <TradeRow
             key={tr.rowId}
-            title={`${tr.tradeType === "SELL" ? t("trade.sell") : t("trade.buy")} · ${tr.holdingKey} ${tr.quantity}`}
-            detail={
-              <>
-                {tr.tradeDate.slice(0, 10)}
-                {tr.realizedPl != null && tr.realizedPl !== 0 && (
-                  <>
-                    {" · "}
-                    {t("trade.realizedPreview")}{" "}
-                    {m(
-                      `${tr.realizedPl > 0 ? "+" : MINUS}${KRW(Math.abs(tr.realizedPl))}`,
-                    )}
-                  </>
-                )}
-              </>
-            }
-            suffix={
-              <span className="text-end text-t5 font-bold tabular-nums text-fg-neutral">
-                {withCommaBreaks(m(money(tr.amount)))}
-              </span>
-            }
-            aria-label={t("trade.openRow", {
-              name: tr.holdingKey,
-              date: tr.tradeDate.slice(0, 10),
-            })}
-            onClick={() => setOpenId(tr.rowId)}
+            tr={tr}
+            m={m}
+            onOpen={() => setOpenId(tr.rowId)}
           />
         ))}
       </List>
@@ -206,28 +193,103 @@ export function TradeHistory({ asset }: { asset: Asset }) {
         />
       )}
       {target && (
-        <ConfirmDialog
-          title={t("trade.deleteTitle")}
-          message={t("trade.deleteConfirmTarget", {
-            date: target.tradeDate.slice(0, 10),
-            name: target.holdingKey,
-            qty: target.quantity,
-            kind:
-              target.tradeType === "SELL" ? t("trade.sell") : t("trade.buy"),
-          })}
-          confirmLabel={t("trade.deleteAction")}
-          danger
-          loading={deleteMut.isPending}
-          onCancel={() => setConfirmDelete(null)}
-          onConfirm={() =>
-            deleteMut.mutate(target.rowId, {
-              onSuccess: () => setConfirmDelete(null),
-              onError: () => setConfirmDelete(null),
-            })
-          }
+        <TradeCancelConfirm
+          target={target}
+          onClose={() => setConfirmDelete(null)}
         />
       )}
     </section>
+  );
+}
+
+function TradeRow({
+  tr,
+  m,
+  onOpen,
+}: {
+  tr: AssetTrade;
+  m: (v: string) => string;
+  onOpen: () => void;
+}) {
+  const { t } = useTranslation("asset");
+  const label = useTradeLabel(tr);
+  return (
+    <ListButtonItem
+      title={`${tr.tradeType === "SELL" ? t("trade.sell") : t("trade.buy")} · ${label.name} ${label.qty}`}
+      detail={
+        <>
+          {tr.tradeDate.slice(0, 10)}
+          {tr.realizedPl != null && tr.realizedPl !== 0 && (
+            <>
+              {" · "}
+              {t("trade.realizedPreview")}{" "}
+              {m(
+                `${tr.realizedPl > 0 ? "+" : MINUS}${KRW(Math.abs(tr.realizedPl))}`,
+              )}
+            </>
+          )}
+        </>
+      }
+      suffix={
+        <span className="text-end text-t5 font-bold tabular-nums text-fg-neutral">
+          {withCommaBreaks(m(money(tr.amount)))}
+        </span>
+      }
+      aria-label={t("trade.openRow", {
+        name: label.name,
+        date: tr.tradeDate.slice(0, 10),
+      })}
+      onClick={onOpen}
+    />
+  );
+}
+
+/** 거래 취소 확인 — 실패는 확인창을 닫고 critical 스낵바 + [다시 시도](요청 silent), 성공은 스낵바로 알린다 */
+function TradeCancelConfirm({
+  target,
+  onClose,
+}: {
+  target: AssetTrade;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation("asset");
+  const label = useTradeLabel(target);
+  const deleteMut = useDeleteTrade();
+  const confirmFail = useConfirmFail();
+  const snackbar = useSnackbar();
+  const done = () => snackbar.show({ message: t("trade.canceled") });
+  return (
+    <ConfirmDialog
+      title={t("trade.deleteTitle")}
+      message={t("trade.deleteConfirmTarget", {
+        date: target.tradeDate.slice(0, 10),
+        name: label.name,
+        qty: label.qty,
+        kind: target.tradeType === "SELL" ? t("trade.sell") : t("trade.buy"),
+      })}
+      confirmLabel={t("trade.deleteAction")}
+      danger
+      loading={deleteMut.isPending}
+      onCancel={() => {
+        if (!deleteMut.isPending) onClose();
+      }}
+      onConfirm={() =>
+        deleteMut.mutateAsync(target.rowId).then(
+          () => {
+            onClose();
+            done();
+          },
+          () => {
+            onClose();
+            confirmFail({
+              message: t("trade.cancelFailed"),
+              retry: () => deleteMut.mutateAsync(target.rowId),
+              onRetried: done,
+            });
+          },
+        )
+      }
+    />
   );
 }
 

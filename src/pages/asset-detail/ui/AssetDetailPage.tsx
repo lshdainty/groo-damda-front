@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   useLocation,
   useNavigate,
@@ -95,7 +95,7 @@ export function AssetDetailPage() {
       <Frame
         mobile={mobile}
         parent={parent}
-        title={t("assetDetail.titleAccount")}
+        title={t("assetDetail.titleDefault")}
       >
         <div aria-hidden className="px-global-gutter pt-x4">
           <div className="flex items-center gap-x3">
@@ -116,7 +116,7 @@ export function AssetDetailPage() {
       <Frame
         mobile={mobile}
         parent={parent}
-        title={t("assetDetail.titleAccount")}
+        title={t("assetDetail.titleDefault")}
       >
         <BandFailure
           size={mobile ? "large" : "medium"}
@@ -131,7 +131,7 @@ export function AssetDetailPage() {
       <Frame
         mobile={mobile}
         parent={parent}
-        title={t("assetDetail.titleAccount")}
+        title={t("assetDetail.titleDefault")}
       >
         <ResultSection
           kind="empty"
@@ -166,6 +166,13 @@ function Loaded({
   const updateAsset = useUpdateAsset();
   const deleteAsset = useDeleteAsset();
   const confirmFail = useConfirmFail();
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [unlockOpen, setUnlockOpen] = useState(false);
@@ -333,7 +340,10 @@ function Loaded({
                 confirmFail({
                   message: t("deleteConfirm.failed"),
                   retry: () => deleteAsset.mutateAsync(asset.rowId),
-                  onRetried: leave,
+                  // 스낵바를 띄운 채 이미 화면을 떠났으면 한 번 더 뒤로 가지 않는다
+                  onRetried: () => {
+                    if (mounted.current) leave();
+                  },
                 });
               },
             )

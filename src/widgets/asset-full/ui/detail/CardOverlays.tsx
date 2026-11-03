@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation, Trans } from "react-i18next";
 import { Badge } from "@/shared/ds/badge";
 import { Button } from "@/shared/ds/button";
@@ -18,7 +18,8 @@ import { AmountInput } from "@/shared/ui/groo/amount-input";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import { KRW, formatDay, money, wonPrefix } from "@/shared/lib/groo/format";
 import { useAssetMask } from "../../lib/asset-groups";
-import type { Asset } from "@/entities/asset";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
+import type { Asset, InstallmentDue } from "@/entities/asset";
 import type { CardDetail } from "./use-card-detail";
 
 /**
@@ -66,7 +67,7 @@ export function PeriodPicker({
                   )}
                 </span>
               }
-              detail={m(`${KRW(s.amount)}원`)}
+              detail={m(money(s.amount))}
             />
           ))}
         </ListRadioGroup>
@@ -106,6 +107,9 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
   const wide = useWideSurface();
   const m = useAssetMask("asset.detail", asset.isAmountHidden === "Y");
   const [initial] = useState(c.payAmount);
+  const { setPayFailed } = c;
+  // 지난번 실패 띠가 다시 열 때 남아 있지 않게
+  useEffect(() => setPayFailed(false), [setPayFailed]);
   const [tried, setTried] = useState(false);
   const empty = c.payAmountNum <= 0;
   const over = c.payAmountNum > c.upcoming;
@@ -146,6 +150,9 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
                 ? ` ${t("assetDetail.paymentDateNote", { date: formatDay(date).md })}`
                 : ""}
             </p>
+            {c.payFailed && (
+              <Callout tone="critical">{t("assetDetail.payFailed")}</Callout>
+            )}
             {c.payMoveNote && <Callout tone="warning">{c.payMoveNote}</Callout>}
             <Field
               label={t("assetDetail.payAmount")}
@@ -198,9 +205,27 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
   );
 }
 
+/**
+ * 할부 정리 요청이 실제로 청구할 금액 — 서버(Expense 상환 회차)와 같은 셈: 원금 − 앞 회차 정상 분할 합.
+ * 나머지(원금 mod 개월)는 1회차에 몰려 있어 2회차부터는 앞 합에 들어간다. 미리 보기 응답이 없어 같은 식을 쓴다.
+ */
+export function installmentPayoffAmount(due: InstallmentDue): number {
+  const { principalAmount: p, installmentMonths: n, sequence: seq } = due;
+  const base = Math.floor(p / n);
+  const before = (seq - 1) * base + (seq >= 2 ? p % n : 0);
+  return p - before;
+}
+
 /** 카드 상세 위에 하나씩 뜨는 표면들 — 지금 결제 폼 · 할부 정리 / 되돌리기 확인 · 결제 취소 확인(I-17 K 53 · 55). 겹치지 않는다 */
 export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
   const { t } = useTranslation("asset");
+  const m = useAssetMask("asset.detail", asset.isAmountHidden === "Y");
+  const confirmFail = useConfirmFail();
+  const runPayoff = (target: { due: InstallmentDue; undo?: boolean }) =>
+    c.installmentPayoff.mutateAsync({
+      expenseId: target.due.expenseRowId,
+      undo: target.undo,
+    });
   return (
     <>
       {c.confirmPay && <PayDialog asset={asset} c={c} />}
@@ -215,7 +240,7 @@ export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
             c.payoffTarget.undo
               ? t("assetDetail.installmentPayoffUndoConfirm")
               : t("assetDetail.installmentPayoffConfirm", {
-                  amount: money(c.payoffTarget.due.amount),
+                  amount: m(money(installmentPayoffAmount(c.payoffTarget.due))),
                 })
           }
           confirmLabel={
@@ -229,9 +254,19 @@ export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
           }}
           onConfirm={() => {
             const target = c.payoffTarget!;
-            c.installmentPayoff.mutate(
-              { expenseId: target.due.expenseRowId, undo: target.undo },
-              { onSuccess: () => c.setPayoffTarget(null) },
+            runPayoff(target).then(
+              () => c.setPayoffTarget(null),
+              () => {
+                c.setPayoffTarget(null);
+                confirmFail({
+                  message: t(
+                    target.undo
+                      ? "assetDetail.installmentUndoFailed"
+                      : "assetDetail.installmentPayoffFailed",
+                  ),
+                  retry: () => runPayoff(target),
+                });
+              },
             );
           }}
         />
@@ -241,7 +276,7 @@ export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
           title={t("assetDetail.cancelPayment")}
           message={t("assetDetail.cancelPaymentConfirm", {
             date: formatDay(c.lastPayment.paymentDate).md,
-            amount: `${wonPrefix()}${KRW(c.lastPayment.billingAmount)}`,
+            amount: m(`${wonPrefix()}${KRW(c.lastPayment.billingAmount)}`),
           })}
           confirmLabel={t("assetDetail.cancelPayment")}
           danger
@@ -250,10 +285,17 @@ export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
             if (!c.cancelPayment.isPending) c.setConfirmCancelPay(false);
           }}
           onConfirm={() => {
-            c.cancelPayment.mutate(c.lastPayment!.rowId, {
-              onSuccess: () => c.setConfirmCancelPay(false),
-              onError: () => c.setConfirmCancelPay(false),
-            });
+            const id = c.lastPayment!.rowId;
+            c.cancelPayment.mutateAsync(id).then(
+              () => c.setConfirmCancelPay(false),
+              () => {
+                c.setConfirmCancelPay(false);
+                confirmFail({
+                  message: t("assetDetail.cancelPaymentFailed"),
+                  retry: () => c.cancelPayment.mutateAsync(id),
+                });
+              },
+            );
           }}
         />
       )}

@@ -14,7 +14,8 @@ import {
 } from "@/shared/ds/dialog";
 import { List } from "@/shared/ds/list";
 import { useWideSurface } from "@/shared/ds/overlay";
-import { KRW, MINUS } from "@/shared/lib/groo/format";
+import { MINUS, money } from "@/shared/lib/groo/format";
+import { useTradeLabel } from "./trade-label";
 import { qtyNumber, type AssetTrade } from "@/entities/asset";
 import { KvRow } from "./KvRow";
 
@@ -36,6 +37,7 @@ export function TradeDetailSurface({
 }) {
   const { t } = useTranslation("asset");
   const wide = useWideSurface();
+  const label = useTradeLabel(trade);
   const qty = qtyNumber(trade.quantity) ?? 0;
   const unit = qty > 0 ? Math.round(trade.amount / qty) : null;
   const sell = trade.tradeType === "SELL";
@@ -45,26 +47,23 @@ export function TradeDetailSurface({
         label={t("trade.kind")}
         value={sell ? t("trade.sell") : t("trade.buy")}
       />
-      <KvRow label={t("trade.holding")} value={trade.holdingKey} />
-      <KvRow label={t("trade.quantity")} value={trade.quantity} />
+      <KvRow label={t("trade.holding")} value={label.name} />
+      <KvRow label={t("trade.quantity")} value={label.qty} />
       <KvRow
         label={t("trade.unitPrice")}
-        value={unit != null ? mask(`${KRW(unit)}원`) : null}
+        value={unit != null ? mask(money(unit)) : null}
       />
-      <KvRow
-        label={t("trade.amountLabel")}
-        value={mask(`${KRW(trade.amount)}원`)}
-      />
+      <KvRow label={t("trade.amountLabel")} value={mask(money(trade.amount))} />
       <KvRow
         label={t("trade.feeLabel")}
-        value={trade.fee > 0 ? mask(`${KRW(trade.fee)}원`) : null}
+        value={trade.fee > 0 ? mask(money(trade.fee)) : null}
       />
       <KvRow
         label={t("trade.realizedPreview")}
         value={
           sell && trade.realizedPl != null && trade.realizedPl !== 0
             ? mask(
-                `${trade.realizedPl > 0 ? "+" : MINUS}${KRW(Math.abs(trade.realizedPl))}원`,
+                `${trade.realizedPl > 0 ? "+" : MINUS}${money(Math.abs(trade.realizedPl))}`,
               )
             : null
         }
@@ -92,7 +91,7 @@ export function TradeDetailSurface({
     return (
       <Dialog open onOpenChange={(next) => !next && onClose()}>
         <DialogContent title={t("trade.detailTitle")}>
-          <DialogBody scrollFog>
+          <DialogBody>
             <div className="-mx-x6">{body}</div>
           </DialogBody>
           <DialogFooter>{cancel}</DialogFooter>
@@ -102,7 +101,7 @@ export function TradeDetailSurface({
   return (
     <BottomSheet open onOpenChange={(next) => !next && onClose()}>
       <BottomSheetContent title={t("trade.detailTitle")}>
-        <BottomSheetBody scrollFog>
+        <BottomSheetBody>
           <div className="-mx-x6">{body}</div>
         </BottomSheetBody>
         <BottomSheetFooter>

@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { parseAmount } from "@/shared/lib/groo/amount";
 import type { Asset, InstallmentDue } from "@/entities/asset";
 import type { Expense } from "@/entities/expense";
@@ -292,8 +291,11 @@ export function useCardDetail(asset: Asset) {
         ? t("assetDetail.payMoveNote", { amount: money(cardDebt) })
         : null;
 
+  const [payFailed, setPayFailed] = useState(false);
   const handlePay = () => {
-    if (!payAmountValid) return;
+    // 버튼과 Enter 가 같은 길 — 요청 중이면 두 번째는 보내지 않는다
+    if (!canPay || !payAmountValid) return;
+    setPayFailed(false);
     payCard.mutate(
       {
         id: asset.rowId,
@@ -304,10 +306,8 @@ export function useCardDetail(asset: Asset) {
         onSuccess: () => {
           setConfirmPay(false);
         },
-        onError: () => {
-          setConfirmPay(false);
-          toast.error(t("assetDetail.payFailed"));
-        },
+        // 폼을 연 채 맨 위 Callout 으로 말하고 입력한 금액은 둔다
+        onError: () => setPayFailed(true),
       },
     );
   };
@@ -339,6 +339,8 @@ export function useCardDetail(asset: Asset) {
     cancelPayment,
     installmentPayoff,
     payoffTarget,
+    payFailed,
+    setPayFailed,
     setPayoffTarget,
     lastPayment,
     confirmCancelPay,

@@ -494,7 +494,13 @@ asset,form.includeInTotal,전체 자산 합계에 포함,Include in total assets
 asset,form.includeInTotalDesc,순자산·총자산 계산에 반영됩니다,Reflected in net worth and total asset calculations
 asset,deleteConfirm.title,자산 삭제,Delete asset
 asset,deleteConfirm.message,"""{{name}}""을(를) 삭제할까요? 이 작업은 되돌릴 수 없습니다.","Delete ""{{name}}""? This action cannot be undone."
-asset,deleteConfirm.failed,자산을 삭제하지 못했어요.,Could not delete the asset.
+asset,deleteConfirm.failed,자산을 삭제하지 못했어요.,Couldn't delete the asset.
+asset,assetDetail.installmentPayoffFailed,할부를 정리하지 못했어요.,Couldn't pay off the installment.
+asset,assetDetail.installmentUndoFailed,할부 정리를 되돌리지 못했어요.,Couldn't undo the installment payoff.
+asset,assetDetail.cancelPaymentFailed,결제를 취소하지 못했어요.,Couldn't cancel the payment.
+asset,trade.cancelFailed,거래를 취소하지 못했어요.,Couldn't cancel the trade.
+asset,trade.canceled,거래를 취소했어요.,Trade canceled.
+asset,assetDetail.titleDefault,자산 상세,Asset details
 asset,deleteConfirm.cancel,취소,Cancel
 asset,deleteConfirm.confirm,삭제,Delete
 asset,group.account,계좌,Account

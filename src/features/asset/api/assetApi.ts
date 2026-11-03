@@ -127,7 +127,11 @@ export const assetApi = {
     const resp: ApiResponse<BillingItem> = await apiClient.post(
       `/v1/asset/${id}/pay`,
       undefined,
-      Object.keys(params).length > 0 ? { params } : undefined,
+      // silent — 실패는 지금 결제 폼 맨 위 Callout 이 말한다
+      {
+        ...(Object.keys(params).length > 0 ? { params } : {}),
+        ...silentConfig({ silent: true }),
+      },
     );
     return resp.data;
   },
@@ -139,6 +143,8 @@ export const assetApi = {
   ): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.post(
       `/v1/asset/${cardId}/installments/${expenseId}/payoff`,
+      undefined,
+      silentConfig({ silent: true }),
     );
     return resp.data;
   },
@@ -150,6 +156,7 @@ export const assetApi = {
   ): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/asset/${cardId}/installments/${expenseId}/payoff`,
+      silentConfig({ silent: true }),
     );
     return resp.data;
   },
@@ -158,6 +165,7 @@ export const assetApi = {
   cancelCardPayment: async (billingRowId: number): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/card-billing/${billingRowId}`,
+      silentConfig({ silent: true }),
     );
     return resp.data;
   },
@@ -255,6 +263,7 @@ export const assetApi = {
   deleteTrade: async (id: number): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/asset-trade/${id}`,
+      silentConfig({ silent: true }),
     );
     return resp.data;
   },
