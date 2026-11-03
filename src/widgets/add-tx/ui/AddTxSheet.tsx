@@ -6,11 +6,17 @@ import {
   sanitizeAmountInput,
 } from "@/shared/lib/groo/amount";
 import { useTranslation } from "react-i18next";
+import { Chip } from "@/shared/ds/chip";
+import { useStepBack } from "@/shared/ui/groo/use-step-back";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
+import { Button as DsButton } from "@/shared/ds/button";
+import { PresetPickStep } from "@/features/expense/ui/PresetPickStep";
 import {
   AlertTriangle,
   Bookmark,
   Info,
-  MoreHorizontal,
+  ArrowLeft,
+  ChevronRight,
   Plus,
   Scissors,
 } from "lucide-react";
@@ -224,7 +230,12 @@ export function AddTxSheet({
     { v: "OTHER", l: t("form.paymentMethod.OTHER") },
   ];
 
-  const categoriesQ = useExpenseCategories();
+  // 조회 실패는 프리셋 고르기 · 카테고리 자리의 실패 Result Section 이 알린다(서버 원문 토스트 끔)
+  const categoriesQ = useExpenseCategories({ silent: true });
+  // 실패는 status 가 error 일 때만 — 다시 받는 중(pending)에는 Skeleton(앱과 같다)
+  const categoriesFailed =
+    categoriesQ.data === undefined && categoriesQ.isError;
+  const categoriesLoading = categoriesQ.data === undefined && !categoriesFailed;
   const assetsQ = useAssets();
   const createMut = useCreateExpense();
   const updateMut = useUpdateExpense();
@@ -368,6 +379,13 @@ export function AddTxSheet({
   );
   const [activePresetId, setActivePresetId] = useState<number | null>(null);
   const [savePresetOpen, setSavePresetOpen] = useState(false);
+  // 프리셋 "모두 보기" — 같은 시트가 한 단계 들어간다(I-20 C 20)
+  const [presetPickOpen, setPresetPickOpen] = useState(false);
+  // 기기 뒤로 가기 = 프리셋 고르기 한 단계만 닫는다(시트 전체를 닫지 않는다 — 쓰던 값이 남는다)
+  useStepBack(presetPickOpen, () => {
+    setPresetPickOpen(false);
+    return true;
+  });
 
   // 사용 빈도 높은 순으로 8개. 편집 모드에선 프리셋 row 자체가 안 보이므로 무관.
   //
@@ -385,6 +403,12 @@ export function AddTxSheet({
         .filter((p) => p.expenseType === type)
         .sort((a, b) => b.useCount - a.useCount)
         .slice(0, 8),
+    [templates, type],
+  );
+
+  // 지금 종류의 프리셋 개수 — "모두 보기" 는 칩(8)보다 많을 때만 뜬다(전체 개수가 아니다)
+  const typePresets = useMemo(
+    () => templates.filter((p) => p.expenseType === type),
     [templates, type],
   );
 
@@ -954,684 +978,422 @@ export function AddTxSheet({
       // 무엇을 하는 중인지 제목이 말한다 — 새 거래 · 거래 수정 · 고쳐 쓰기(새 거래로 교체).
       // 한때 식이 빠져 값 없는 prop(`title`)만 남아 제목이 비어 그려졌다(a262255).
       title={
-        isRewrite
-          ? t("addTx.rewrite")
-          : isEdit
-            ? t("addTx.editTitle")
-            : t("addTx.newTitle")
+        presetPickOpen ? (
+          // 프리셋 고르기 한 단계 — 제목 앞 ← 가 내역 단계로 돌아간다
+          <span className="flex items-center gap-x1">
+            <DsButton
+              variant="ghost"
+              ghostColor="neutral"
+              layout="iconOnly"
+              size="small"
+              aria-label={tc("back")}
+              onClick={() => setPresetPickOpen(false)}
+            >
+              <ArrowLeft aria-hidden />
+            </DsButton>
+            {t("addTx.presetPickTitle")}
+          </span>
+        ) : isRewrite ? (
+          t("addTx.rewrite")
+        ) : isEdit ? (
+          t("addTx.editTitle")
+        ) : (
+          t("addTx.newTitle")
+        )
       }
       onClose={onClose}
       size="md"
-      footer={Footer}
+      footer={presetPickOpen ? undefined : Footer}
       mobile={mobile}
       // 금액·가맹점 칸에서 Enter 로 저장(QA #132). `save` 는 이미 저장이 나가 있으면
       // 그냥 돌아오므로 Enter 를 눌러 둔 채 반복 발화해도 거래가 겹쳐 생기지 않는다 —
       // 그 가드가 없어 할 일 빠른 추가가 여러 건을 만들었다(#122).
-      onEnterSave={save}
+      onEnterSave={presetPickOpen ? undefined : save}
     >
-      {/* 타입 segment — spec tabs.md variant="pill" (container) */}
-      <Tabs
-        value={type}
-        onValueChange={(v) => {
-          if (!v) return;
-          const lockedTo = isEdit ? (expense?.expenseType ?? type) : null;
-          if (lockedTo != null && v !== lockedTo) return;
-          // 고쳐 쓰기는 거래를 거래로 바꾼다 — 이체로는 못 바꾼다(교체 API 가 지출·수입만 받는다).
-          if (isRewrite && v === "TRANSFER") return;
-          setType(v as TxType);
-          clearPresetMark();
-        }}
-        className="mb-[var(--spacing-md)]"
-      >
-        <TabsList variant="pill" size="sm" className="w-full">
-          {(
-            [
-              { v: "EXPENSE", l: t("expense") },
-              { v: "INCOME", l: t("income") },
-              { v: "TRANSFER", l: t("addTx.transfer") },
-            ] as { v: TxType; l: string }[]
-          ).map((o) => {
-            const disabled = isEdit
-              ? o.v !== (expense?.expenseType ?? type)
-              : isRewrite && o.v === "TRANSFER";
-            return (
-              <TabsTrigger
-                key={o.v}
-                value={o.v}
-                disabled={disabled}
-                aria-label={o.l}
-                className="flex-1"
-              >
-                {o.l}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-      </Tabs>
+      {presetPickOpen && (
+        <PresetPickStep
+          presets={typePresets}
+          categories={categories}
+          failed={categoriesFailed}
+          loading={categoriesLoading}
+          onRetry={() => void categoriesQ.refetch()}
+          onPick={(p) => {
+            applyPreset(p);
+            setPresetPickOpen(false);
+          }}
+        />
+      )}
+      {/* 내역 단계 — 프리셋 고르기가 열려 있는 동안은 숨기기만 한다(입력값 · 상태는 그대로) */}
+      <div className={presetPickOpen ? "hidden" : "contents"}>
+        {/* 타입 segment — spec tabs.md variant="pill" (container) */}
+        <Tabs
+          value={type}
+          onValueChange={(v) => {
+            if (!v) return;
+            const lockedTo = isEdit ? (expense?.expenseType ?? type) : null;
+            if (lockedTo != null && v !== lockedTo) return;
+            // 고쳐 쓰기는 거래를 거래로 바꾼다 — 이체로는 못 바꾼다(교체 API 가 지출·수입만 받는다).
+            if (isRewrite && v === "TRANSFER") return;
+            setType(v as TxType);
+            clearPresetMark();
+          }}
+          className="mb-[var(--spacing-md)]"
+        >
+          <TabsList variant="pill" size="sm" className="w-full">
+            {(
+              [
+                { v: "EXPENSE", l: t("expense") },
+                { v: "INCOME", l: t("income") },
+                { v: "TRANSFER", l: t("addTx.transfer") },
+              ] as { v: TxType; l: string }[]
+            ).map((o) => {
+              const disabled = isEdit
+                ? o.v !== (expense?.expenseType ?? type)
+                : isRewrite && o.v === "TRANSFER";
+              return (
+                <TabsTrigger
+                  key={o.v}
+                  value={o.v}
+                  disabled={disabled}
+                  aria-label={o.l}
+                  className="flex-1"
+                >
+                  {o.l}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </Tabs>
 
-      {/* 프리셋 불러오기 — 신규 추가일 때만 노출. 이체 탭에도 이체 프리셋이 뜬다.
+        {/* 프리셋 불러오기 — 신규 추가일 때만 노출. 이체 탭에도 이체 프리셋이 뜬다.
           고쳐 쓰기는 옮겨 적는 중이라 프리셋이 채워 둔 값을 덮으면 안 된다. */}
-      {!isEdit && !isRewrite && (
-        <div style={{ marginBottom: 20 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 8,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <Bookmark size={13} style={{ color: "var(--fg-tertiary)" }} />
-              <span
-                style={{
-                  fontSize: "var(--text-badge)",
-                  color: "var(--fg-tertiary)",
-                  fontWeight: "600",
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                }}
-              >
-                {t("addTx.presetLoad")}
-              </span>
-              {activePresetId != null && (
+        {!isEdit && !isRewrite && (
+          <div style={{ marginBottom: 20 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Bookmark size={13} style={{ color: "var(--fg-tertiary)" }} />
                 <span
                   style={{
                     fontSize: "var(--text-badge)",
-                    color: "var(--fg-brand-strong)",
-                    fontWeight: "700",
-                    padding: "2px 6px",
-                    background: "var(--bg-brand-subtle)",
-                    borderRadius: "var(--radius-xs)",
+                    color: "var(--fg-tertiary)",
+                    fontWeight: "600",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
                   }}
                 >
-                  {t("addTx.presetApplied")}
+                  {t("addTx.presetLoad")}
                 </span>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setSavePresetOpen(true)}
-              disabled={!canSavePreset}
-              style={{
-                background: "transparent",
-                border: 0,
-                padding: 0,
-                fontSize: "var(--text-caption)",
-                color: canSavePreset
-                  ? "var(--fg-brand-strong)"
-                  : "var(--fg-tertiary)",
-                fontWeight: "600",
-                cursor: canSavePreset ? "pointer" : "not-allowed",
-                display: "flex",
-                alignItems: "center",
-                gap: 3,
-                fontFamily: "inherit",
-              }}
-            >
-              <Plus size={12} /> {t("addTx.saveCurrentInput")}
-            </button>
-          </div>
-
-          {topPresets.length > 0 ? (
-            <div
-              className="scrollbar-hide"
-              style={{
-                display: "flex",
-                gap: 6,
-                overflowX: "auto",
-                paddingBottom: 4,
-                marginLeft: -2,
-                paddingLeft: 2,
-                marginRight: -2,
-                paddingRight: 2,
-              }}
-            >
-              {topPresets.map((p) => {
-                const active = activePresetId === p.rowId;
-                const showAmount = p.lockAmount === "Y" && p.amount != null;
-                const cat =
-                  p.categoryRowId != null
-                    ? categories.find((c) => c.rowId === p.categoryRowId)
-                    : undefined;
-                // 카테고리 아이콘색 — 다크모드 light variant 자동 swap(앱 resolveChartColor 정합)
-                const catPal = getPaletteByColor(cat?.color);
-                return (
-                  <button
-                    key={p.rowId}
-                    type="button"
-                    onClick={() => applyPreset(p)}
+                {activePresetId != null && (
+                  <span
                     style={{
-                      flex: "0 0 auto",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 7,
-                      padding: "7px 11px",
-                      // border 사각형 제거 — 아이콘+글씨만 노출. active 만 subtle 채움으로 강조.
-                      background: active
-                        ? "var(--bg-brand-subtle)"
-                        : "transparent",
-                      border: "none",
-                      borderRadius: "var(--radius-pill)",
-                      cursor: "pointer",
-                      fontSize: "var(--text-label-sm)",
-                      fontWeight: active ? 700 : 600,
-                      color: active
-                        ? "var(--fg-brand-strong)"
-                        : "var(--fg-primary)",
-                      whiteSpace: "nowrap",
-                      transition: "all 0.12s",
-                      fontFamily: "inherit",
+                      fontSize: "var(--text-badge)",
+                      color: "var(--fg-brand-strong)",
+                      fontWeight: "700",
+                      padding: "2px 6px",
+                      background: "var(--bg-brand-subtle)",
+                      borderRadius: "var(--radius-xs)",
                     }}
                   >
-                    {cat && (
-                      <span
-                        style={{
-                          width: 18,
-                          height: 18,
-                          borderRadius: "var(--radius-sm)",
-                          background: catPal.bg,
-                          color: catPal.color,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                        }}
-                      >
-                        {renderIcon(cat.icon, cat.categoryName.charAt(0), 11)}
-                      </span>
-                    )}
-                    <span>{p.templateName}</span>
-                    {showAmount && (
-                      <span
-                        className="num"
-                        style={{
-                          fontSize: "var(--text-badge)",
-                          color: active
-                            ? "var(--fg-brand-strong)"
-                            : "var(--fg-tertiary)",
-                          fontWeight: "600",
-                        }}
-                      >
-                        {formatChartAxis(p.amount as number)}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-              {templates.length > topPresets.length && (
-                <span
-                  style={{
-                    flex: "0 0 auto",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                    padding: "7px 11px",
-                    background: "transparent",
-                    border: "1px dashed var(--border-default)",
-                    borderRadius: "var(--radius-pill)",
-                    fontSize: "var(--text-caption)",
-                    fontWeight: "600",
-                    color: "var(--fg-tertiary)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <MoreHorizontal size={14} />
-                  {t("addTx.presetManageHint")}
-                </span>
-              )}
-            </div>
-          ) : (
-            <div
-              style={{
-                padding: "8px 10px",
-                background: "var(--bg-sunken)",
-                border: "1px dashed var(--border-default)",
-                borderRadius: "var(--radius-md)",
-                fontSize: "var(--text-caption)",
-                color: "var(--fg-tertiary)",
-              }}
-            >
-              {t("addTx.noPresets")}
-            </div>
-          )}
-
-          {activePresetId != null && (
-            <div
-              style={{
-                marginTop: 8,
-                padding: "8px 10px",
-                background: "var(--bg-brand-subtle)",
-                border: "1px solid var(--border-brand)",
-                borderRadius: "var(--radius-md)",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <Info size={13} style={{ color: "var(--fg-brand-strong)" }} />
-              <span
-                style={{
-                  fontSize: "var(--text-caption)",
-                  color: "var(--fg-brand-strong)",
-                  fontWeight: "600",
-                  flex: 1,
-                }}
-              >
-                {t("addTx.presetFilledHint")}
-              </span>
+                    {t("addTx.presetApplied")}
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
-                onClick={clearPresetMark}
+                onClick={() => setSavePresetOpen(true)}
+                disabled={!canSavePreset}
                 style={{
                   background: "transparent",
                   border: 0,
                   padding: 0,
-                  fontSize: "var(--text-badge)",
-                  color: "var(--fg-brand-strong)",
-                  fontWeight: "700",
-                  cursor: "pointer",
-                  textDecoration: "underline",
+                  fontSize: "var(--text-caption)",
+                  color: canSavePreset
+                    ? "var(--fg-brand-strong)"
+                    : "var(--fg-tertiary)",
+                  fontWeight: "600",
+                  cursor: canSavePreset ? "pointer" : "not-allowed",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 3,
                   fontFamily: "inherit",
                 }}
               >
-                {t("addTx.clear")}
+                <Plus size={12} /> {t("addTx.saveCurrentInput")}
               </button>
             </div>
-          )}
-        </div>
-      )}
 
-      {/* 결제 문자 붙여넣기 — 새 지출에만. 편집·고쳐 쓰기·이체는 이미 값이 정해져 있고,
-          문자로 저장하면 전용 경로로 나가 고쳐 쓰기(교체)가 안 된다. */}
-      {!isEdit && !isRewrite && type === "EXPENSE" && (
-        <SmsPasteField onParsed={applySms} />
-      )}
-
-      {/* 금액 — 다른 필드와 동일한 라벨+인풋 (모바일 처럼 깔끔하게) */}
-      <Field style={{ marginBottom: 18 }}>
-        <FieldLabel>{t("form.amount")}</FieldLabel>
-        <Input
-          className="num"
-          value={amount}
-          onChange={(e) =>
-            setAmount(sanitizeAmountInput(e.target.value, amountCap))
-          }
-          onKeyDown={blockNonDigitKey}
-          placeholder="0"
-          inputMode="numeric"
-          disabled={moneyFieldsLocked}
-          style={{
-            fontSize: "var(--text-title-md)",
-            fontWeight: "700",
-            color: amountColor,
-          }}
-        />
-        {amountTooLarge && (
-          <p
-            style={{
-              margin: "6px 0 0",
-              fontSize: "var(--text-caption)",
-              color: "var(--color-fg-critical)",
-            }}
-          >
-            {t("addTx.amountTooLarge")}
-          </p>
-        )}
-        {/* 왜 못 고치는지 알려 준다 — 잠긴 칸만 보여 주면 고장으로 보인다. */}
-        {isAutoGenerated && (
-          <div className="mt-1.5 text-[11.5px] text-[var(--fg-tertiary)]">
-            {t(`addTx.autoSource.${expense?.autoSource}`, {
-              defaultValue: t("addTx.autoSource.default"),
-            })}
-          </div>
-        )}
-        {/* 결제가 끝난 거래 — 돈 칸 대신 [고쳐 쓰기](D12·D13). 잠긴 칸 바로 옆에 두어야
-            어디서 바꾸는지 찾지 않는다. 자동 생성 거래는 원본을 고쳐야 해서 교체도 없다.
-            고쳐 쓸 수 없는 잠긴 거래(중도 정리한 할부)는 버튼 없이 왜 못 바꾸는지만 말한다 —
-            안내가 없는 버튼을 가리키면 안 된다. */}
-        {isMoneyLocked && !isAutoGenerated && (
-          <div
-            data-testid="money-locked-note"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginTop: 6,
-            }}
-          >
-            <span className="flex-1 text-[11.5px] text-[var(--fg-tertiary)]">
-              {isReplaceable
-                ? t("addTx.moneyLockedNote")
-                : t("addTx.moneyLockedPaidOffNote")}
-            </span>
-            {isReplaceable && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={!canRewrite}
-                onClick={() => setRewriting(true)}
-              >
-                {t("addTx.rewrite")}
-              </Button>
-            )}
-          </div>
-        )}
-      </Field>
-
-      {/* 해외 결제 — 원 통화·환율. 금액(원화)은 둘을 곱해 자동으로 채워진다. */}
-      {type !== "TRANSFER" && (
-        <Field style={{ marginBottom: 18 }}>
-          <FieldLabel {...nameOf("cur").label}>
-            {t("addTx.currency")}
-          </FieldLabel>
-          <div style={{ display: "flex", gap: 8 }}>
-            <div style={{ width: isForeignTx ? 110 : "100%" }}>
-              <Select
-                value={origCurrency}
-                disabled={moneyFieldsLocked}
-                onValueChange={(v) => {
-                  setOrigCurrency(v);
-                  clearPresetMark();
+            {topPresets.length > 0 ? (
+              <div
+                className="scrollbar-hide"
+                style={{
+                  display: "flex",
+                  gap: 6,
+                  overflowX: "auto",
+                  paddingBottom: 4,
+                  marginLeft: -2,
+                  paddingLeft: 2,
+                  marginRight: -2,
+                  paddingRight: 2,
                 }}
               >
-                <SelectTrigger {...nameOf("cur").trigger}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
-                      {c.symbol} {c.code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {isForeignTx && (
-              <>
-                <Input
-                  className="num"
-                  value={origAmount}
-                  onChange={(e) => {
-                    setOrigAmount(e.target.value.replace(/[^0-9.]/g, ""));
-                    clearPresetMark();
+                {topPresets.map((p) => {
+                  const active = activePresetId === p.rowId;
+                  const showAmount = p.lockAmount === "Y" && p.amount != null;
+                  const cat =
+                    p.categoryRowId != null
+                      ? categories.find((c) => c.rowId === p.categoryRowId)
+                      : undefined;
+                  // 카테고리 아이콘색 — 다크모드 light variant 자동 swap(앱 resolveChartColor 정합)
+                  const catPal = getPaletteByColor(cat?.color);
+                  return (
+                    <Chip
+                      key={p.rowId}
+                      variant="outlineWeak"
+                      size="medium"
+                      selected={active}
+                      className="shrink-0"
+                      prefixIcon={
+                        cat ? (
+                          <span
+                            aria-hidden
+                            style={{ color: catPal.color }}
+                            className="inline-flex"
+                          >
+                            {renderIcon(
+                              cat.icon,
+                              cat.categoryName.charAt(0),
+                              14,
+                            )}
+                          </span>
+                        ) : undefined
+                      }
+                      onClick={() => applyPreset(p)}
+                    >
+                      {p.templateName}
+                      {showAmount && (
+                        <span className="num ml-x1_5 text-fg-neutral-subtle">
+                          {formatChartAxis(p.amount as number)}
+                        </span>
+                      )}
+                    </Chip>
+                  );
+                })}
+                {typePresets.length > topPresets.length && (
+                  <Chip
+                    variant="outlineWeak"
+                    size="medium"
+                    className="shrink-0"
+                    suffixIcon={<ChevronRight />}
+                    onClick={() => setPresetPickOpen(true)}
+                  >
+                    {t("addTx.presetShowAll")}
+                  </Chip>
+                )}
+              </div>
+            ) : (
+              <div
+                style={{
+                  padding: "8px 10px",
+                  background: "var(--bg-sunken)",
+                  border: "1px dashed var(--border-default)",
+                  borderRadius: "var(--radius-md)",
+                  fontSize: "var(--text-caption)",
+                  color: "var(--fg-tertiary)",
+                }}
+              >
+                {t("addTx.noPresets")}
+              </div>
+            )}
+
+            {activePresetId != null && (
+              <div
+                style={{
+                  marginTop: 8,
+                  padding: "8px 10px",
+                  background: "var(--bg-brand-subtle)",
+                  border: "1px solid var(--border-brand)",
+                  borderRadius: "var(--radius-md)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <Info size={13} style={{ color: "var(--fg-brand-strong)" }} />
+                <span
+                  style={{
+                    fontSize: "var(--text-caption)",
+                    color: "var(--fg-brand-strong)",
+                    fontWeight: "600",
+                    flex: 1,
                   }}
-                  placeholder={t("addTx.originalAmountPlaceholder")}
-                  inputMode="decimal"
-                  disabled={moneyFieldsLocked}
-                  style={{ flex: 1 }}
-                />
-                <Input
-                  className="num"
-                  value={fxRate}
-                  onChange={(e) => {
-                    setFxRate(e.target.value.replace(/[^0-9.]/g, ""));
-                    clearPresetMark();
+                >
+                  {t("addTx.presetFilledHint")}
+                </span>
+                <button
+                  type="button"
+                  onClick={clearPresetMark}
+                  style={{
+                    background: "transparent",
+                    border: 0,
+                    padding: 0,
+                    fontSize: "var(--text-badge)",
+                    color: "var(--fg-brand-strong)",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                    fontFamily: "inherit",
                   }}
-                  placeholder={t("addTx.exchangeRatePlaceholder")}
-                  inputMode="decimal"
-                  disabled={moneyFieldsLocked}
-                  style={{ flex: 1 }}
-                />
-              </>
+                >
+                  {t("addTx.clear")}
+                </button>
+              </div>
             )}
           </div>
-          {isForeignTx && Number(origAmount) > 0 && Number(fxRate) > 0 && (
-            <div
+        )}
+
+        {/* 결제 문자 붙여넣기 — 새 지출에만. 편집·고쳐 쓰기·이체는 이미 값이 정해져 있고,
+          문자로 저장하면 전용 경로로 나가 고쳐 쓰기(교체)가 안 된다. */}
+        {!isEdit && !isRewrite && type === "EXPENSE" && (
+          <SmsPasteField onParsed={applySms} />
+        )}
+
+        {/* 금액 — 다른 필드와 동일한 라벨+인풋 (모바일 처럼 깔끔하게) */}
+        <Field style={{ marginBottom: 18 }}>
+          <FieldLabel>{t("form.amount")}</FieldLabel>
+          <Input
+            className="num"
+            value={amount}
+            onChange={(e) =>
+              setAmount(sanitizeAmountInput(e.target.value, amountCap))
+            }
+            onKeyDown={blockNonDigitKey}
+            placeholder="0"
+            inputMode="numeric"
+            disabled={moneyFieldsLocked}
+            style={{
+              fontSize: "var(--text-title-md)",
+              fontWeight: "700",
+              color: amountColor,
+            }}
+          />
+          {amountTooLarge && (
+            <p
               style={{
+                margin: "6px 0 0",
                 fontSize: "var(--text-caption)",
-                color: "var(--fg-tertiary)",
-                marginTop: 4,
+                color: "var(--color-fg-critical)",
               }}
             >
-              {t("addTx.fxHint", {
-                original: formatOriginalAmount(
-                  Number(origAmount),
-                  origCurrency,
-                  i18n.language,
-                ),
-                rate: Number(fxRate).toLocaleString(i18n.language),
-                krw: KRW(Math.round(Number(origAmount) * Number(fxRate))),
+              {t("addTx.amountTooLarge")}
+            </p>
+          )}
+          {/* 왜 못 고치는지 알려 준다 — 잠긴 칸만 보여 주면 고장으로 보인다. */}
+          {isAutoGenerated && (
+            <div className="mt-1.5 text-[11.5px] text-[var(--fg-tertiary)]">
+              {t(`addTx.autoSource.${expense?.autoSource}`, {
+                defaultValue: t("addTx.autoSource.default"),
               })}
             </div>
           )}
-        </Field>
-      )}
-
-      {/* 분할 합 불일치 경고 — 금액을 바꿔 기존 분할 합과 어긋날 때 */}
-      {splitMismatch && (
-        <div
-          style={{
-            marginBottom: 18,
-            padding: "13px 15px",
-            borderRadius: "var(--radius-lg)",
-            background: "var(--color-bg-warning-weak)",
-            border: "1px solid var(--color-stroke-warning-solid)",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 11,
-          }}
-        >
-          <span
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: "var(--radius-md)",
-              flexShrink: 0,
-              marginTop: 1,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "var(--color-bg-warning-weak-pressed)",
-              color: "var(--status-warning-fg)",
-            }}
-          >
-            <AlertTriangle size={16} />
-          </span>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          {/* 결제가 끝난 거래 — 돈 칸 대신 [고쳐 쓰기](D12·D13). 잠긴 칸 바로 옆에 두어야
+            어디서 바꾸는지 찾지 않는다. 자동 생성 거래는 원본을 고쳐야 해서 교체도 없다.
+            고쳐 쓸 수 없는 잠긴 거래(중도 정리한 할부)는 버튼 없이 왜 못 바꾸는지만 말한다 —
+            안내가 없는 버튼을 가리키면 안 된다. */}
+          {isMoneyLocked && !isAutoGenerated && (
             <div
+              data-testid="money-locked-note"
               style={{
-                fontSize: "var(--text-label-sm)",
-                fontWeight: "700",
-                color: "var(--fg-primary)",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 6,
               }}
             >
-              {t("addTx.splitMismatchTitle")}
-            </div>
-            <div
-              style={{
-                fontSize: "var(--text-caption)",
-                color: "var(--fg-secondary)",
-                marginTop: 3,
-                lineHeight: "1.5",
-              }}
-            >
-              {t("addTx.newTotal")} <b className="num">{money(amountNumber)}</b>{" "}
-              · {t("addTx.splitSum")} <b className="num">{money(splitSum)}</b> ·{" "}
-              <b className="num" style={{ color: "var(--status-warning-fg)" }}>
-                {amountNumber - splitSum > 0 ? "+" : "−"}
-                {money(Math.abs(amountNumber - splitSum))}
-              </b>{" "}
-              {t("addTx.difference")}
-            </div>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setOpenReconcile(true)}
-              style={{ marginTop: 10 }}
-            >
-              <Scissors size={13} /> {t("addTx.matchSplits")}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {type !== "TRANSFER" ? (
-        <>
-          {/* 카테고리 */}
-          {topCategories.length > 0 && (
-            <div style={{ marginBottom: "var(--spacing-md)" }}>
-              <div
-                {...nameOf("cat").label}
-                style={{
-                  fontSize: "var(--text-badge)",
-                  color: "var(--fg-tertiary)",
-                  fontWeight: "600",
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                  marginBottom: "var(--spacing-sm)",
-                }}
-              >
-                {t("category")}
-              </div>
-              <CategoryGrid>
-                {topCategories.map((c) => (
-                  <CategoryTile
-                    key={c.rowId}
-                    name={c.categoryName}
-                    color={c.color ?? undefined}
-                    icon={c.icon}
-                    active={selectedParentId === c.rowId}
-                    onClick={() => {
-                      const firstChild = childrenByParent.get(c.rowId)?.[0];
-                      setCategoryRowId(firstChild ? firstChild.rowId : c.rowId);
-                      clearPresetMark();
-                    }}
-                  />
-                ))}
-              </CategoryGrid>
-
-              {/* 하위 카테고리 (선택된 부모에 자식이 있을 때) */}
-              {selectedParentId != null &&
-                (childrenByParent.get(selectedParentId)?.length ?? 0) > 0 && (
-                  <div style={{ marginTop: 10 }}>
-                    <Select
-                      value={categoryRowId != null ? String(categoryRowId) : ""}
-                      onValueChange={(v) => setCategoryRowId(Number(v))}
-                    >
-                      <SelectTrigger {...nameOf("cat").trigger}>
-                        <SelectValue
-                          placeholder={t("addTx.subCategoryPlaceholder")}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {/* 상위 자신은 고를 수 없다 — 이 칸은 하위가 있는 상위에서만 뜨고, 하위가
-                            있는 상위에는 서버가 거래를 안 받는다(EXP_009). 종전엔 첫 칸에 상위가 있어
-                            고르면 저장에서 "상위 카테고리에는 거래를 등록할 수 없어요" 였다(QA 30 13). */}
-                        <SelectGroup>
-                          <SelectLabel>{t("addTx.detail")}</SelectLabel>
-                          {(childrenByParent.get(selectedParentId) ?? []).map(
-                            (child) => (
-                              <SelectItem
-                                key={child.rowId}
-                                value={String(child.rowId)}
-                              >
-                                {child.categoryName}
-                              </SelectItem>
-                            ),
-                          )}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+              <span className="flex-1 text-[11.5px] text-[var(--fg-tertiary)]">
+                {isReplaceable
+                  ? t("addTx.moneyLockedNote")
+                  : t("addTx.moneyLockedPaidOffNote")}
+              </span>
+              {isReplaceable && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!canRewrite}
+                  onClick={() => setRewriting(true)}
+                >
+                  {t("addTx.rewrite")}
+                </Button>
+              )}
             </div>
           )}
+        </Field>
 
-          {/* 거래처 */}
-          <Field style={{ marginBottom: 14 }}>
-            <FieldLabel>
-              {type === "INCOME" ? t("addTx.incomeSource") : t("form.merchant")}
+        {/* 해외 결제 — 원 통화·환율. 금액(원화)은 둘을 곱해 자동으로 채워진다. */}
+        {type !== "TRANSFER" && (
+          <Field style={{ marginBottom: 18 }}>
+            <FieldLabel {...nameOf("cur").label}>
+              {t("addTx.currency")}
             </FieldLabel>
-            <Input
-              value={merchant}
-              maxLength={100}
-              onChange={(e) => setMerchant(e.target.value)}
-              placeholder={
-                type === "INCOME"
-                  ? t("addTx.incomeSourcePlaceholder")
-                  : t("addTx.merchantPlaceholder")
-              }
-            />
-          </Field>
-
-          {/* 결제 수단 — 먼저 선택, 계좌·카드 목록을 필터링 */}
-          <Field style={{ marginBottom: 14 }}>
-            <FieldLabel {...nameOf("pm").label}>
-              {type === "INCOME"
-                ? t("addTx.incomeMethod")
-                : t("paymentMethodLabel")}
-            </FieldLabel>
-            <Select
-              value={paymentMethod || "__none__"}
-              // 결제수단을 바꾸면 허용 목록에서 빠진 자산이 풀린다(allowAsset) — 자산 칸을
-              // 잠가도 이 길로 자산이 바뀌므로 함께 잠근다.
-              disabled={moneyFieldsLocked}
-              onValueChange={(v) => {
-                setPaymentMethod(v === "__none__" ? "" : v);
-                clearPresetMark();
-              }}
-            >
-              <SelectTrigger {...nameOf("pm").trigger}>
-                <SelectValue placeholder={t("selectNone")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">{t("selectNone")}</SelectItem>
-                {PAYMENT_METHODS.map((pm) => (
-                  <SelectItem key={pm.v} value={pm.v}>
-                    {pm.l}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-
-          {/* 계좌·카드 — 결제 수단에 맞춰 필터 */}
-          <Field style={{ marginBottom: 14 }}>
-            <FieldLabel {...nameOf("asset").label}>
-              {type === "INCOME" ? t("addTx.depositAccount") : t("accountCard")}
-              {paymentMethod && filteredAssets.length !== assets.length && (
-                <span
-                  style={{
-                    color: "var(--fg-tertiary)",
-                    fontWeight: "400",
-                    marginLeft: 4,
+            <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ width: isForeignTx ? 110 : "100%" }}>
+                <Select
+                  value={origCurrency}
+                  disabled={moneyFieldsLocked}
+                  onValueChange={(v) => {
+                    setOrigCurrency(v);
+                    clearPresetMark();
                   }}
                 >
-                  (
-                  {t("addTx.basisOf", {
-                    method:
-                      PAYMENT_METHODS.find((p) => p.v === paymentMethod)?.l ??
-                      "",
-                  })}
-                  )
-                </span>
+                  <SelectTrigger {...nameOf("cur").trigger}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.symbol} {c.code}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {isForeignTx && (
+                <>
+                  <Input
+                    className="num"
+                    value={origAmount}
+                    onChange={(e) => {
+                      setOrigAmount(e.target.value.replace(/[^0-9.]/g, ""));
+                      clearPresetMark();
+                    }}
+                    placeholder={t("addTx.originalAmountPlaceholder")}
+                    inputMode="decimal"
+                    disabled={moneyFieldsLocked}
+                    style={{ flex: 1 }}
+                  />
+                  <Input
+                    className="num"
+                    value={fxRate}
+                    onChange={(e) => {
+                      setFxRate(e.target.value.replace(/[^0-9.]/g, ""));
+                      clearPresetMark();
+                    }}
+                    placeholder={t("addTx.exchangeRatePlaceholder")}
+                    inputMode="decimal"
+                    disabled={moneyFieldsLocked}
+                    style={{ flex: 1 }}
+                  />
+                </>
               )}
-            </FieldLabel>
-            <Select
-              value={assetRowId != null ? String(assetRowId) : "__none__"}
-              disabled={moneyFieldsLocked}
-              onValueChange={(v) => {
-                setAssetRowId(v === "__none__" ? null : Number(v));
-                clearPresetMark();
-              }}
-            >
-              <SelectTrigger {...nameOf("asset").trigger}>
-                <SelectValue placeholder={t("selectNone")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">{t("selectNone")}</SelectItem>
-                {filteredAssets.map((a) => (
-                  <SelectItem key={a.rowId} value={String(a.rowId)}>
-                    {a.institution
-                      ? `${a.institution} · ${a.assetName}`
-                      : a.assetName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {paymentMethod && filteredAssets.length === 0 && (
+            </div>
+            {isForeignTx && Number(origAmount) > 0 && Number(fxRate) > 0 && (
               <div
                 style={{
                   fontSize: "var(--text-caption)",
@@ -1639,63 +1401,271 @@ export function AddTxSheet({
                   marginTop: 4,
                 }}
               >
-                {t("addTx.noAssetForMethod")}
+                {t("addTx.fxHint", {
+                  original: formatOriginalAmount(
+                    Number(origAmount),
+                    origCurrency,
+                    i18n.language,
+                  ),
+                  rate: Number(fxRate).toLocaleString(i18n.language),
+                  krw: KRW(Math.round(Number(origAmount) * Number(fxRate))),
+                })}
               </div>
             )}
-            {/* 문자로 들어온 카드를 아직 안 외운 경우에만 물어본다.
-                한 번 켜 두면 다음 문자부터는 자산을 고르는 단계가 사라진다. */}
-            {smsDraft?.parsed.cardHint && !smsDraft.parsed.assetRemembered && (
-              <label
+          </Field>
+        )}
+
+        {/* 분할 합 불일치 경고 — 금액을 바꿔 기존 분할 합과 어긋날 때 */}
+        {splitMismatch && (
+          <div
+            style={{
+              marginBottom: 18,
+              padding: "13px 15px",
+              borderRadius: "var(--radius-lg)",
+              background: "var(--color-bg-warning-weak)",
+              border: "1px solid var(--color-stroke-warning-solid)",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 11,
+            }}
+          >
+            <span
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: "var(--radius-md)",
+                flexShrink: 0,
+                marginTop: 1,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "var(--color-bg-warning-weak-pressed)",
+                color: "var(--status-warning-fg)",
+              }}
+            >
+              <AlertTriangle size={16} />
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  marginTop: 8,
-                  fontSize: "var(--text-caption)",
-                  color:
-                    assetRowId == null
-                      ? "var(--fg-tertiary)"
-                      : "var(--fg-secondary)",
-                  cursor: assetRowId == null ? "default" : "pointer",
+                  fontSize: "var(--text-label-sm)",
+                  fontWeight: "700",
+                  color: "var(--fg-primary)",
                 }}
               >
-                <Checkbox
-                  checked={assetRowId != null && rememberCard}
-                  disabled={assetRowId == null}
-                  onCheckedChange={(v) => setRememberCard(v === true)}
-                />
-                {t("sms.rememberCard")}
-              </label>
-            )}
-          </Field>
+                {t("addTx.splitMismatchTitle")}
+              </div>
+              <div
+                style={{
+                  fontSize: "var(--text-caption)",
+                  color: "var(--fg-secondary)",
+                  marginTop: 3,
+                  lineHeight: "1.5",
+                }}
+              >
+                {t("addTx.newTotal")}{" "}
+                <b className="num">{money(amountNumber)}</b> ·{" "}
+                {t("addTx.splitSum")} <b className="num">{money(splitSum)}</b> ·{" "}
+                <b
+                  className="num"
+                  style={{ color: "var(--status-warning-fg)" }}
+                >
+                  {amountNumber - splitSum > 0 ? "+" : "−"}
+                  {money(Math.abs(amountNumber - splitSum))}
+                </b>{" "}
+                {t("addTx.difference")}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setOpenReconcile(true)}
+                style={{ marginTop: 10 }}
+              >
+                <Scissors size={13} /> {t("addTx.matchSplits")}
+              </Button>
+            </div>
+          </div>
+        )}
 
-          {/* 할부 — 신용카드 지출에만. 청구는 이 개월 수로 나뉘어 잡힌다. */}
-          {showInstallment && (
+        {type !== "TRANSFER" ? (
+          <>
+            {/* 카테고리 */}
+            {topCategories.length > 0 && (
+              <div style={{ marginBottom: "var(--spacing-md)" }}>
+                <div
+                  {...nameOf("cat").label}
+                  style={{
+                    fontSize: "var(--text-badge)",
+                    color: "var(--fg-tertiary)",
+                    fontWeight: "600",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                    marginBottom: "var(--spacing-sm)",
+                  }}
+                >
+                  {t("category")}
+                </div>
+                {categoriesFailed ? (
+                  <BandFailure
+                    title={t("preset.categoryLoadFailed")}
+                    onRetry={() => void categoriesQ.refetch()}
+                  />
+                ) : null}
+                <CategoryGrid>
+                  {topCategories.map((c) => (
+                    <CategoryTile
+                      key={c.rowId}
+                      name={c.categoryName}
+                      color={c.color ?? undefined}
+                      icon={c.icon}
+                      active={selectedParentId === c.rowId}
+                      onClick={() => {
+                        const firstChild = childrenByParent.get(c.rowId)?.[0];
+                        setCategoryRowId(
+                          firstChild ? firstChild.rowId : c.rowId,
+                        );
+                        clearPresetMark();
+                      }}
+                    />
+                  ))}
+                </CategoryGrid>
+
+                {/* 하위 카테고리 (선택된 부모에 자식이 있을 때) */}
+                {selectedParentId != null &&
+                  (childrenByParent.get(selectedParentId)?.length ?? 0) > 0 && (
+                    <div style={{ marginTop: 10 }}>
+                      <Select
+                        value={
+                          categoryRowId != null ? String(categoryRowId) : ""
+                        }
+                        onValueChange={(v) => setCategoryRowId(Number(v))}
+                      >
+                        <SelectTrigger {...nameOf("cat").trigger}>
+                          <SelectValue
+                            placeholder={t("addTx.subCategoryPlaceholder")}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {/* 상위 자신은 고를 수 없다 — 이 칸은 하위가 있는 상위에서만 뜨고, 하위가
+                            있는 상위에는 서버가 거래를 안 받는다(EXP_009). 종전엔 첫 칸에 상위가 있어
+                            고르면 저장에서 "상위 카테고리에는 거래를 등록할 수 없어요" 였다(QA 30 13). */}
+                          <SelectGroup>
+                            <SelectLabel>{t("addTx.detail")}</SelectLabel>
+                            {(childrenByParent.get(selectedParentId) ?? []).map(
+                              (child) => (
+                                <SelectItem
+                                  key={child.rowId}
+                                  value={String(child.rowId)}
+                                >
+                                  {child.categoryName}
+                                </SelectItem>
+                              ),
+                            )}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+              </div>
+            )}
+
+            {/* 거래처 */}
             <Field style={{ marginBottom: 14 }}>
-              <FieldLabel {...nameOf("inst").label}>
-                {t("addTx.installment")}
+              <FieldLabel>
+                {type === "INCOME"
+                  ? t("addTx.incomeSource")
+                  : t("form.merchant")}
+              </FieldLabel>
+              <Input
+                value={merchant}
+                maxLength={100}
+                onChange={(e) => setMerchant(e.target.value)}
+                placeholder={
+                  type === "INCOME"
+                    ? t("addTx.incomeSourcePlaceholder")
+                    : t("addTx.merchantPlaceholder")
+                }
+              />
+            </Field>
+
+            {/* 결제 수단 — 먼저 선택, 계좌·카드 목록을 필터링 */}
+            <Field style={{ marginBottom: 14 }}>
+              <FieldLabel {...nameOf("pm").label}>
+                {type === "INCOME"
+                  ? t("addTx.incomeMethod")
+                  : t("paymentMethodLabel")}
               </FieldLabel>
               <Select
-                value={installmentMonths || "__none__"}
+                value={paymentMethod || "__none__"}
+                // 결제수단을 바꾸면 허용 목록에서 빠진 자산이 풀린다(allowAsset) — 자산 칸을
+                // 잠가도 이 길로 자산이 바뀌므로 함께 잠근다.
                 disabled={moneyFieldsLocked}
                 onValueChange={(v) => {
-                  setInstallmentMonths(v === "__none__" ? "" : v);
+                  setPaymentMethod(v === "__none__" ? "" : v);
                   clearPresetMark();
                 }}
               >
-                <SelectTrigger {...nameOf("inst").trigger}>
-                  <SelectValue placeholder={t("addTx.lumpSum")} />
+                <SelectTrigger {...nameOf("pm").trigger}>
+                  <SelectValue placeholder={t("selectNone")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">{t("addTx.lumpSum")}</SelectItem>
-                  {INSTALLMENT_MONTHS.map((m) => (
-                    <SelectItem key={m} value={String(m)}>
-                      {t("addTx.installmentMonths", { months: m })}
+                  <SelectItem value="__none__">{t("selectNone")}</SelectItem>
+                  {PAYMENT_METHODS.map((pm) => (
+                    <SelectItem key={pm.v} value={pm.v}>
+                      {pm.l}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {installmentMonths && amountNumber > 0 && (
+            </Field>
+
+            {/* 계좌·카드 — 결제 수단에 맞춰 필터 */}
+            <Field style={{ marginBottom: 14 }}>
+              <FieldLabel {...nameOf("asset").label}>
+                {type === "INCOME"
+                  ? t("addTx.depositAccount")
+                  : t("accountCard")}
+                {paymentMethod && filteredAssets.length !== assets.length && (
+                  <span
+                    style={{
+                      color: "var(--fg-tertiary)",
+                      fontWeight: "400",
+                      marginLeft: 4,
+                    }}
+                  >
+                    (
+                    {t("addTx.basisOf", {
+                      method:
+                        PAYMENT_METHODS.find((p) => p.v === paymentMethod)?.l ??
+                        "",
+                    })}
+                    )
+                  </span>
+                )}
+              </FieldLabel>
+              <Select
+                value={assetRowId != null ? String(assetRowId) : "__none__"}
+                disabled={moneyFieldsLocked}
+                onValueChange={(v) => {
+                  setAssetRowId(v === "__none__" ? null : Number(v));
+                  clearPresetMark();
+                }}
+              >
+                <SelectTrigger {...nameOf("asset").trigger}>
+                  <SelectValue placeholder={t("selectNone")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">{t("selectNone")}</SelectItem>
+                  {filteredAssets.map((a) => (
+                    <SelectItem key={a.rowId} value={String(a.rowId)}>
+                      {a.institution
+                        ? `${a.institution} · ${a.assetName}`
+                        : a.assetName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {paymentMethod && filteredAssets.length === 0 && (
                 <div
                   style={{
                     fontSize: "var(--text-caption)",
@@ -1703,110 +1673,182 @@ export function AddTxSheet({
                     marginTop: 4,
                   }}
                 >
-                  {t("addTx.installmentHint", {
-                    months: installmentMonths,
-                    perMonth: KRW(
-                      Math.floor(amountNumber / Number(installmentMonths)),
-                    ),
-                  })}
+                  {t("addTx.noAssetForMethod")}
                 </div>
               )}
+              {/* 문자로 들어온 카드를 아직 안 외운 경우에만 물어본다.
+                한 번 켜 두면 다음 문자부터는 자산을 고르는 단계가 사라진다. */}
+              {smsDraft?.parsed.cardHint &&
+                !smsDraft.parsed.assetRemembered && (
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginTop: 8,
+                      fontSize: "var(--text-caption)",
+                      color:
+                        assetRowId == null
+                          ? "var(--fg-tertiary)"
+                          : "var(--fg-secondary)",
+                      cursor: assetRowId == null ? "default" : "pointer",
+                    }}
+                  >
+                    <Checkbox
+                      checked={assetRowId != null && rememberCard}
+                      disabled={assetRowId == null}
+                      onCheckedChange={(v) => setRememberCard(v === true)}
+                    />
+                    {t("sms.rememberCard")}
+                  </label>
+                )}
             </Field>
-          )}
-        </>
-      ) : (
-        <TransferAccountFields
-          assets={assets}
-          fromAssetRowId={fromAssetRowId}
-          toAssetRowId={toAssetRowId}
-          fee={fee}
-          interest={interest}
-          amountNumber={amountNumber}
-          onFromChange={setFromAssetRowId}
-          onToChange={setToAssetRowId}
-          onFeeChange={setFee}
-          onInterestChange={setInterest}
-        />
-      )}
 
-      {/* 날짜·시간 — 이체도 동일(백엔드 transferDate 가 DATETIME).
+            {/* 할부 — 신용카드 지출에만. 청구는 이 개월 수로 나뉘어 잡힌다. */}
+            {showInstallment && (
+              <Field style={{ marginBottom: 14 }}>
+                <FieldLabel {...nameOf("inst").label}>
+                  {t("addTx.installment")}
+                </FieldLabel>
+                <Select
+                  value={installmentMonths || "__none__"}
+                  disabled={moneyFieldsLocked}
+                  onValueChange={(v) => {
+                    setInstallmentMonths(v === "__none__" ? "" : v);
+                    clearPresetMark();
+                  }}
+                >
+                  <SelectTrigger {...nameOf("inst").trigger}>
+                    <SelectValue placeholder={t("addTx.lumpSum")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">
+                      {t("addTx.lumpSum")}
+                    </SelectItem>
+                    {INSTALLMENT_MONTHS.map((m) => (
+                      <SelectItem key={m} value={String(m)}>
+                        {t("addTx.installmentMonths", { months: m })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {installmentMonths && amountNumber > 0 && (
+                  <div
+                    style={{
+                      fontSize: "var(--text-caption)",
+                      color: "var(--fg-tertiary)",
+                      marginTop: 4,
+                    }}
+                  >
+                    {t("addTx.installmentHint", {
+                      months: installmentMonths,
+                      perMonth: KRW(
+                        Math.floor(amountNumber / Number(installmentMonths)),
+                      ),
+                    })}
+                  </div>
+                )}
+              </Field>
+            )}
+          </>
+        ) : (
+          <TransferAccountFields
+            assets={assets}
+            fromAssetRowId={fromAssetRowId}
+            toAssetRowId={toAssetRowId}
+            fee={fee}
+            interest={interest}
+            amountNumber={amountNumber}
+            onFromChange={setFromAssetRowId}
+            onToChange={setToAssetRowId}
+            onFeeChange={setFee}
+            onInterestChange={setInterest}
+          />
+        )}
+
+        {/* 날짜·시간 — 이체도 동일(백엔드 transferDate 가 DATETIME).
           시각이 있어야 같은 날 잔액수정보다 뒤에 일어난 이체가 앵커에 지워지지 않는다. */}
-      <Field style={{ marginBottom: 14 }}>
-        <FieldLabel>{t("dateTime")}</FieldLabel>
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 116px", gap: 8 }}
-        >
-          <InputDatePicker
-            value={expenseDate}
-            onValueChange={setExpenseDate}
-            disabled={moneyFieldsLocked}
-          />
-          <InputTimePicker
-            value={expenseTime}
-            onValueChange={setExpenseTime}
-            minuteStep={5}
-            disabled={moneyFieldsLocked}
-          />
-        </div>
-      </Field>
+        <Field style={{ marginBottom: 14 }}>
+          <FieldLabel>{t("dateTime")}</FieldLabel>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 116px",
+              gap: 8,
+            }}
+          >
+            <InputDatePicker
+              value={expenseDate}
+              onValueChange={setExpenseDate}
+              disabled={moneyFieldsLocked}
+            />
+            <InputTimePicker
+              value={expenseTime}
+              onValueChange={setExpenseTime}
+              minuteStep={5}
+              disabled={moneyFieldsLocked}
+            />
+          </div>
+        </Field>
 
-      {/* 고정 수입·지출 — 이체에는 없다(내 통장끼리 옮기는 돈이라 합계가 안 달라진다).
+        {/* 고정 수입·지출 — 이체에는 없다(내 통장끼리 옮기는 돈이라 합계가 안 달라진다).
           문자 초안도 없다: 저장이 전용 경로(`/import/sms/commit`)라 고정 표식을 못 싣는다 —
           스위치를 두면 켜도 조용히 무시된다. 저장한 뒤 거래를 열어 켜거나 통계의 정리 화면에서 바꾼다. */}
-      {!isTransfer && !smsDraft && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            marginBottom: 14,
-          }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <div
-              id="tx-fixed-label"
-              style={{
-                fontSize: "var(--text-body-sm)",
-                fontWeight: 500,
-                color: "var(--fg-primary)",
-              }}
-            >
-              {type === "INCOME"
-                ? t("fixed.switch.income")
-                : t("fixed.switch.expense")}
+        {!isTransfer && !smsDraft && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              marginBottom: 14,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div
+                id="tx-fixed-label"
+                style={{
+                  fontSize: "var(--text-body-sm)",
+                  fontWeight: 500,
+                  color: "var(--fg-primary)",
+                }}
+              >
+                {type === "INCOME"
+                  ? t("fixed.switch.income")
+                  : t("fixed.switch.expense")}
+              </div>
+              <div
+                style={{
+                  fontSize: "var(--text-caption)",
+                  color: "var(--fg-tertiary)",
+                  marginTop: 2,
+                }}
+              >
+                {type === "INCOME"
+                  ? t("fixed.hint.income")
+                  : t("fixed.hint.expense")}
+              </div>
             </div>
-            <div
-              style={{
-                fontSize: "var(--text-caption)",
-                color: "var(--fg-tertiary)",
-                marginTop: 2,
-              }}
-            >
-              {type === "INCOME"
-                ? t("fixed.hint.income")
-                : t("fixed.hint.expense")}
-            </div>
+            <Switch
+              checked={isFixed}
+              onCheckedChange={setIsFixed}
+              aria-labelledby="tx-fixed-label"
+            />
           </div>
-          <Switch
-            checked={isFixed}
-            onCheckedChange={setIsFixed}
-            aria-labelledby="tx-fixed-label"
-          />
-        </div>
-      )}
+        )}
 
-      {/* 메모 */}
-      <Field style={{ marginBottom: 4 }}>
-        <FieldLabel>{t("memo")}</FieldLabel>
-        <Textarea
-          value={description}
-          maxLength={500}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder={t("addTx.optional")}
-          style={{ minHeight: 64 }}
-        />
-      </Field>
+        {/* 메모 */}
+        <Field style={{ marginBottom: 4 }}>
+          <FieldLabel>{t("memo")}</FieldLabel>
+          <Textarea
+            value={description}
+            maxLength={500}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder={t("addTx.optional")}
+            style={{ minHeight: 64 }}
+          />
+        </Field>
+      </div>
 
       {savePresetOpen && (
         <SavePresetDialog

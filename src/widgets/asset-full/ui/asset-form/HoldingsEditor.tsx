@@ -5,7 +5,7 @@ import { Input } from "@/shared/ds/input";
 import { ListHeader } from "@/shared/ds/list";
 import { Field } from "@/shared/ds/field";
 import { AmountInput } from "@/shared/ui/groo/amount-input";
-import { KRW } from "@/shared/lib/groo/format";
+import { KRW, wonPrefix } from "@/shared/lib/groo/format";
 import { MAX_BALANCE } from "@/shared/lib/groo/amount";
 import {
   HOLDING_UNIT_KEY,
@@ -187,7 +187,9 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
                               <Input
                                 readOnly
                                 value={val != null ? KRW(val) : "—"}
-                                suffix={tCommon("searchWon")}
+                                suffix={
+                                  val != null ? tCommon("searchWon") : undefined
+                                }
                               />
                             ) : (
                               <AmountInput
@@ -214,12 +216,12 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
                               h.totalCost > 0 &&
                               qtyNumber(h.quantity)
                                 ? t("holdings.avgPriceInline", {
-                                    avg: KRW(
+                                    avg: `${wonPrefix()}${KRW(
                                       Math.round(
                                         h.totalCost /
                                           (qtyNumber(h.quantity) || 1),
                                       ),
-                                    ),
+                                    )}`,
                                   })
                                 : undefined
                             }

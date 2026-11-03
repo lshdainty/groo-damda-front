@@ -7,7 +7,7 @@ import { ModalFooter } from "@/shared/ui/groo/modal-footer";
 import { Badge } from "@/shared/ui/badge";
 import { Card } from "@/shared/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
-import { KRW, money } from "@/shared/lib/groo/format";
+import { KRW, money, wonPrefix } from "@/shared/lib/groo/format";
 import { toLocalDateKey } from "@/shared/lib/date";
 import {
   useMyFeatures,
@@ -378,7 +378,7 @@ export function SubscriptionDialog({
           >
             {cycle === "yearly"
               ? t("pricePerMonthNote", {
-                  price: KRW(proPerMonth),
+                  price: `${wonPrefix()}${KRW(proPerMonth)}`,
                   pct: savePct,
                 })
               : t("monthlyBilling")}

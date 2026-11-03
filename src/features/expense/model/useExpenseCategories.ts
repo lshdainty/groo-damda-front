@@ -12,10 +12,11 @@ type ReorderItem = {
   parentRowId: number | null;
 };
 
-export const useExpenseCategories = () => {
+/** `silent` — 불러오기 실패를 호출처가 직접 알릴 때(실패 Result Section) 전역 서버 원문 토스트를 끈다 */
+export const useExpenseCategories = (opts?: { silent?: boolean }) => {
   return useQuery({
     queryKey: expenseKeys.categories(),
-    queryFn: () => expenseCategoryApi.getCategories(),
+    queryFn: () => expenseCategoryApi.getCategories(opts),
   });
 };
 

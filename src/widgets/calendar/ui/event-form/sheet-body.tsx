@@ -175,7 +175,8 @@ export function EventFormSheetBody({
         label={t("form.title")}
         invalid={showErrors && titleEmpty}
         errorMessage={t("form.titleRequired")}
-        className="pb-x2 pt-x1 [&_label]:sr-only"
+        labelHidden
+        className="pb-x2 pt-x1"
       >
         <Input
           size="large"

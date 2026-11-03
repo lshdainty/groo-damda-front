@@ -440,3 +440,26 @@ describe("별칭은 수정에서도 필수 — 자동 이름 없음", () => {
     );
   });
 });
+
+describe("처음 초점 — 새 폼은 첫 칸, 수정 폼은 표면(폰에서 키보드가 가리지 않게)", () => {
+  it("새 계좌: 2단계로 들어가면 이름 칸에 초점", () => {
+    open(null);
+    pick("accountSub.checking");
+    click(nextBtn());
+    expect(document.activeElement).toBe(fieldControl("editDialog.nameLabel"));
+  });
+
+  it("수정: 열어도 글 입력 칸에 초점이 가지 않는다(표면이 받는다)", () => {
+    open(asset("BANK_ACCOUNT"));
+    const active = document.activeElement as HTMLElement | null;
+    expect(active?.tagName).not.toBe("INPUT");
+    expect(active?.tagName).not.toBe("TEXTAREA");
+    expect(
+      document
+        .querySelector(
+          "[data-slot=bottom-sheet-content],[data-slot=dialog-content]",
+        )
+        ?.contains(active),
+    ).toBe(true);
+  });
+});

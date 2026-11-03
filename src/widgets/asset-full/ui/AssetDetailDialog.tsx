@@ -69,6 +69,7 @@ import {
 } from "@/shared/ui/chart";
 import {
   KRW,
+  wonPrefix,
   MINUS,
   money,
   formatChartAxis,
@@ -1713,7 +1714,7 @@ function CardDetailBody({
           title={t("assetDetail.cancelPayment")}
           message={t("assetDetail.cancelPaymentConfirm", {
             date: formatDay(lastPayment.paymentDate).md,
-            amount: KRW(lastPayment.billingAmount),
+            amount: `${wonPrefix()}${KRW(lastPayment.billingAmount)}`,
           })}
           confirmLabel={t("assetDetail.cancelPayment")}
           danger
@@ -1780,7 +1781,7 @@ function HoldingRow({
       // 통화를 하나로 가정하지 않는다 — 나무를 붙이며 JPY·HKD·CNY 가 들어왔다.
       priceLabel =
         price.currency === "KRW"
-          ? `${KRW(price.price)}원`
+          ? money(price.price)
           : price.currency === "USD"
             ? `$${price.price.toLocaleString()}`
             : `${price.price.toLocaleString()} ${price.currency}`;
@@ -1957,7 +1958,7 @@ function TradeHistory({ assetRowId }: { assetRowId: number }) {
             className="num"
             style={{ fontSize: "var(--text-body-sm)", fontWeight: 700 }}
           >
-            {KRW(tr.amount)}원
+            {money(tr.amount)}
           </span>
           {tr.realizedPl != null && tr.realizedPl !== 0 && (
             <span

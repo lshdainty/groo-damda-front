@@ -15,8 +15,8 @@
 - 코드 레벨 분석도 병행하여 데이터 변환, 타입 불일치 등 숨은 버그 찾기
 
 ## 빌드 확인
-- 프론트: `cd /Users/lshdainty/study/porest-desk-front && npx vite build`
-- 백엔드: `cd /Users/lshdainty/study/porest-desk-back && ./gradlew build -x test`
+- 프론트: `cd /Users/lshdainty/study/groo-damda-front && npx vite build`
+- 백엔드: `cd /Users/lshdainty/study/groo-damda-back && ./gradlew build -x test`
 - 수정 후 반드시 빌드 확인
 
 ## 커밋
