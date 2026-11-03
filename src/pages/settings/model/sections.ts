@@ -194,7 +194,6 @@ export const SECTIONS: SectionDef[] = [
  */
 export const NEEDS_DESKTOP_HEAD: SectionId[] = [
   "recurring",
-  "presets",
   "appearance",
   "data",
   "account",
@@ -215,7 +214,6 @@ export const NEEDS_DESKTOP_HEAD: SectionId[] = [
  */
 export const TEMP_BODY_PADDING: SectionId[] = [
   "recurring",
-  "presets",
   "calendar-share",
   "calendar-labels",
   "memo-tags",
