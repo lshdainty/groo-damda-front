@@ -228,8 +228,8 @@ export function RecurringAddDialog({
   const createMut = useCreateRecurringTransaction({ silent: true });
   const updateMut = useUpdateRecurringTransaction({ silent: true });
   const isEdit = recurring != null;
-  const categoriesQ = useExpenseCategories();
-  const assetsQ = useAssets();
+  const categoriesQ = useExpenseCategories({ silent: true });
+  const assetsQ = useAssets({ silent: true });
   const categories = useMemo(() => categoriesQ.data ?? [], [categoriesQ.data]);
   const assets: Asset[] = useMemo(
     () => assetsQ.data?.assets ?? [],
