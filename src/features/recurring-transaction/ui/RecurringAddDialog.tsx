@@ -323,7 +323,15 @@ export function RecurringAddDialog({
   // 받는 계좌가 대출이 아니면 이자는 뜻이 없다.
   if (assetsQ.data && isTransfer && !showInterest && f.interest)
     fix.interest = "";
-  if (Object.keys(fix).length > 0) setF((s) => ({ ...s, ...fix }));
+  if (Object.keys(fix).length > 0) {
+    setF((s) => ({ ...s, ...fix }));
+    // 규칙 밖이라 값이 비워졌으면 바로 칸 오류로 보인다 — 값이 사라진 이유가 보여야 한다
+    if (
+      "categoryRowId" in fix ||
+      (isTransfer && ("assetRowId" in fix || "toAssetRowId" in fix))
+    )
+      setShowErrors(true);
+  }
 
   // 결제 수단 · 종류를 바꿀 때 그 조건에 안 맞는 계좌는 비운다(사람이 바꾼 때만)
   const dropMismatchedAsset = (
