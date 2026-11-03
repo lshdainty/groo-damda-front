@@ -15,7 +15,11 @@ declare global {
 }
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (k: string) => k, i18n: { language: "ko" } }),
+  useTranslation: () => ({
+    t: (k: string, o?: Record<string, unknown>) =>
+      o ? `${k}${JSON.stringify(o)}` : k,
+    i18n: { language: "ko" },
+  }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 
@@ -41,8 +45,19 @@ const preset = {
 let container: HTMLDivElement;
 let root: Root;
 
+const onEdit = vi.fn();
+const onDelete = vi.fn();
+
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as never;
+  window.history.replaceState(null, "");
+  onEdit.mockClear();
+  onDelete.mockClear();
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -51,19 +66,25 @@ beforeEach(() => {
       <PresetDetailDialog
         preset={preset}
         categories={[]}
-        mobile={false}
         onClose={() => {}}
-        onEdit={() => {}}
-        onDelete={() => {}}
+        onEdit={onEdit}
+        onDelete={onDelete}
       />,
     ),
   );
 });
 
-afterEach(() => {
+afterEach(async () => {
   act(() => root.unmount());
   container.remove();
+  document.body.removeAttribute("style");
+  await new Promise((r) => setTimeout(r, 50));
 });
+
+const buttonByText = (text: string) =>
+  Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(
+    (b) => b.textContent?.trim() === text,
+  );
 
 describe("프리셋 상세", () => {
   it("메모 칸의 이름은 `메모` 다 — 편집 폼·거래 시트와 같은 키를 쓴다", () => {
@@ -72,5 +93,33 @@ describe("프리셋 상세", () => {
     expect(shown).toContain("memo");
     // `세부`(addTx.detail)로 되돌아가면 여기가 빨개진다.
     expect(shown).not.toContain("addTx.detail");
+  });
+
+  it("값이 없는 줄은 그리지 않는다 — '-' 자리표시자가 없다", () => {
+    const shown = document.body.textContent ?? "";
+    // 카테고리 · 계좌 이름이 비어 있다
+    expect(shown).not.toContain("accountCard");
+    expect(shown).not.toContain("preset.noCategory");
+  });
+
+  it("설명 한 줄 — 고정 금액 · 쓴 횟수(마지막 쓴 날이 없으면 그 조각을 뺀다)", () => {
+    const note = document.querySelector("[data-slot=preset-detail-note]");
+    expect(note?.textContent).toContain("preset.noteFixed");
+    expect(note?.textContent).toContain('preset.noteUses{"count":3}');
+    expect(note?.textContent).not.toContain("preset.noteLast");
+  });
+
+  it("바닥 [삭제] · [수정] 이 동작을 부른다", () => {
+    act(() => buttonByText("delete")!.click());
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    act(() => buttonByText("edit")!.click());
+    expect(onEdit).toHaveBeenCalledTimes(1);
+  });
+
+  it("상세 본문에는 끝 흐림을 켜지 않는다 — 고정 구성이라 시트가 내용 높이다(디자인 판정)", () => {
+    const body = document.querySelector(
+      "[data-slot=bottom-sheet-body], [data-slot=dialog-body]",
+    );
+    expect(body?.className).not.toContain("scroll-pb-[80px]");
   });
 });

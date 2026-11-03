@@ -55,10 +55,22 @@ export const chipVariants = cva(
       },
     },
     compoundVariants: [
-      // 크기 × 모양 — 최소 폭 · 좌우 여백(SEED 루트 + 글 여백), 아이콘만 있으면 원 + 아이콘 14 · 16 · 16
-      { size: "small", layout: "withText", className: "min-w-[44px] px-x3" },
-      { size: "medium", layout: "withText", className: "min-w-[48px] px-x3_5" },
-      { size: "large", layout: "withText", className: "min-w-[52px] px-x4" },
+      // 크기 × 모양 — 글이 있는 칩은 위아래 (높이 − 19) ÷ 2(19 = 글 t4 줄 높이)를 px 로 둔다 — 글자 크기 설정이 커지면 줄 높이(rem)만 커져 칩이 글 줄 높이 + (높이 − 19)로 늘고 100% 는 높이 그대로다(앱 small 200% 38 + 13 = 51, chip.md 큰 글자). 최소 폭 · 좌우 여백(SEED 루트 + 글 여백), 아이콘만 있으면 원 + 아이콘 14 · 16 · 16
+      {
+        size: "small",
+        layout: "withText",
+        className: "min-w-[44px] px-x3 py-[6.5px]",
+      },
+      {
+        size: "medium",
+        layout: "withText",
+        className: "min-w-[48px] px-x3_5 py-[8.5px]",
+      },
+      {
+        size: "large",
+        layout: "withText",
+        className: "min-w-[52px] px-x4 py-[10.5px]",
+      },
       {
         size: "small",
         layout: "iconOnly",
@@ -165,9 +177,9 @@ export const inputChipVariants = cva(
   {
     variants: {
       size: {
-        small: "min-h-[32px] min-w-[44px] px-x3",
-        medium: "min-h-[36px] min-w-[48px] px-x3_5",
-        large: "min-h-[40px] min-w-[52px] px-x4",
+        small: "min-h-[32px] min-w-[44px] px-x3 py-[6.5px]",
+        medium: "min-h-[36px] min-w-[48px] px-x3_5 py-[8.5px]",
+        large: "min-h-[40px] min-w-[52px] px-x4 py-[10.5px]",
       },
     },
     defaultVariants: { size: "medium" },

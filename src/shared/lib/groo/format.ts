@@ -100,6 +100,12 @@ export const money = (
   return m ? `${m[1]}₩${m[2]}` : `₩${s}`;
 };
 
+/**
+ * 영어 금액 접두 — en `₩`, ko 는 빈 글(ko 는 글(CSV)의 "원" 접미가 맡는다).
+ * 접두를 CSV 에 박으면 값이 없어 "—" 가 올 때 "₩—" 가 된다 — 값이 있는 호출처만 `${wonPrefix()}${KRW(n)}` 로 붙인다.
+ */
+export const wonPrefix = (): string => (isEn() ? "₩" : "");
+
 /** 소수 첫째 자리까지 반올림. 단위를 올릴지 판단할 때도 이 값으로 본다. */
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 

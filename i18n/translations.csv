@@ -282,7 +282,6 @@ memo,newMemo,메모 추가,Add memo
 memo,untitled,제목 없음,Untitled
 memo,empty,메모가 없습니다,No memos yet
 memo,createFirst,첫 번째 메모를 작성해보세요,Create your first memo
-memo,pinned,고정됨,Pinned
 memo,pin,고정,Pin
 memo,unpin,고정 해제,Unpin
 memo,swipePin,고정,Pin
@@ -293,20 +292,9 @@ memo,allMemos,전체 메모,All Memos
 memo,preview,미리보기,Preview
 memo,editor,편집,Editor
 memo,markdown,마크다운으로 작성,Write in markdown
-memo,folder.title,폴더,Folders
-memo,folder.create,새 폴더,New Folder
-memo,folder.rename,폴더 이름 변경,Rename Folder
-memo,folder.delete,폴더 삭제,Delete Folder
-memo,folder.name,폴더 이름,Folder Name
-memo,folder.namePlaceholder,폴더 이름을 입력하세요,Enter folder name
 memo,deleteConfirm.title,메모 삭제,Delete memo
 memo,deleteConfirm.message,"""{{name}}"" 메모를 삭제할까요? 삭제한 메모는 되돌릴 수 없어요.","Delete the ""{{name}}"" memo? This action cannot be undone."
-memo,deleteConfirm.cancel,취소,Cancel
-memo,deleteConfirm.confirm,삭제,Delete
-memo,detailTitle,메모 상세,Memo details
 memo,detail.noContent,내용 없음,No content
-memo,folderDeleteConfirm.title,폴더 삭제,Delete Folder
-memo,folderDeleteConfirm.message,이 폴더를 삭제하시겠습니까? 폴더 내 메모는 이동됩니다.,Are you sure you want to delete this folder? Memos inside will be moved.
 calculator,title,계산기,Calculator
 calculator,history,계산 기록,History
 calculator,clearHistory,기록 삭제,Clear History
@@ -565,7 +553,7 @@ asset,cardAdd.outstanding,이전 미결제 사용액 (원),Unpaid balance (KRW)
 asset,cardAdd.outstandingHint,청구될 금액을 입력하세요. 총 부채에 반영됩니다.,Enter the billed amount. It counts toward total debt.
 asset,cardAdd.selectRequired,카드 선택 필요,Select a card
 asset,cardAdd.title,카드 추가,Add card
-asset,editDialog.annualFeeValue,연회비 {{amount}}원,Annual fee {{amount}} KRW
+asset,editDialog.annualFeeValue,연회비 {{amount}}원,Annual fee {{amount}}
 asset,editDialog.annualFeeFree,연회비 무료,No annual fee
 asset,editDialog.creditLimit,신용한도,Credit limit
 asset,editDialog.nameTooLong,별칭은 30자 이내로 입력해주세요.,Keep the alias to 30 characters or fewer.
@@ -713,7 +701,7 @@ asset,assetDetail.billingLoadError,청구 정보를 불러오지 못했어요,Co
 asset,assetDetail.paymentDue,결제 예정,Payment due
 asset,assetDetail.payNow,지금 결제,Pay now
 asset,assetDetail.cancelPayment,결제 취소,Cancel payment
-asset,assetDetail.cancelPaymentConfirm,{{date}}에 낸 {{amount}}원을 되돌려요. 통장 잔액과 카드 청구가 결제 전으로 돌아가요.,Reverts the {{amount}} KRW paid on {{date}}. The account balance and card billing return to the state before payment.
+asset,assetDetail.cancelPaymentConfirm,{{date}}에 낸 {{amount}}원을 되돌려요. 통장 잔액과 카드 청구가 결제 전으로 돌아가요.,Reverts the {{amount}} paid on {{date}}. The account balance and card billing return to the state before payment.
 asset,assetDetail.toastPaymentCancelled,결제를 취소했어요,Payment cancelled
 asset,assetDetail.billedMonthly,매월 {{day}}일 결제,Billed on day {{day}} each month
 asset,assetDetail.billingPeriod,{{start}}~{{end}} 사용분,Usage {{start}}–{{end}}
@@ -1183,11 +1171,11 @@ memo,all,전체,All
 memo,noResults,결과가 없어요,No results
 memo,noMemos,메모가 없어요,No memos
 memo,noResultsHint,다른 검색어를 입력해보세요.,Try a different search.
-memo,noMemosHint,"생각이 떠오를 때, 새 메모를 만들어보세요.",Jot down a new memo when inspiration strikes.
+memo,noMemosHint,오른쪽 아래 + 버튼으로 첫 메모를 써보세요.,Tap the + button at the bottom right to write your first memo.
 memo,allMemosSection,모든 메모,All memos
 memo,subtitle,생각·기록을 한곳에,Thoughts and notes in one place
 memo,titlePlaceholder,제목,Title
-memo,titleRequired,제목을 입력해주세요,Please enter a title
+memo,titleRequired,제목을 입력해주세요.,Please enter a title.
 memo,contentPlaceholder,여기에 메모를 작성해주세요,Write your memo here
 memo,tagLabel,태그,Tag
 memo,pinToTop,상단에 고정,Pin to top
@@ -1195,7 +1183,7 @@ memo,colorLabel,색상,Color
 memo,noTag,태그 없음,No tag
 memo,tagEmptyHint,태그는 설정 › 메모 태그에서 만들어요.,Create tags in Settings › Memo tags.
 memo,tags.title,메모 태그,Memo tags
-memo,tags.desc,메모에 붙이는 태그예요. 목록 필터와 태그별 묶음에 사용돼요.,Tags for your memos — used in list filters and tag grouping.
+memo,tags.desc,"메모에 붙이는 태그예요. 메모 화면의 거르기에 쓰여요. 태그를 지우면 그 메모는 '태그 없음' 으로 남아요.","Tags you attach to memos. They are used to filter the memo screen. If you delete a tag, its memos stay as 'No tag'."
 memo,tags.new,태그 추가,Add tag
 memo,tags.usage,{{count}}건에 사용 중,Used by {{count}} memos
 memo,tags.empty,태그가 없어요,No tags yet
@@ -1211,6 +1199,19 @@ memo,tags.nameRequired,이름을 입력해주세요.,Please enter a name.
 memo,tags.nameTooLong,이름은 12자 이내로 입력해주세요.,Keep the name under 12 characters.
 memo,tags.nameDuplicate,같은 이름의 태그가 이미 있어요.,A tag with that name already exists.
 memo,tags.preview,미리보기,Preview
+memo,loadFailed,메모를 불러오지 못했어요,Could not load memos
+memo,loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
+memo,tagFilter,태그로 거르기,Filter by tag
+memo,saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
+memo,deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
+memo,pinFailed,고정을 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not change the pin. Please try again in a moment.
+memo,contentLabel,내용,Content
+memo,moreOf,{{name}} 더보기,More for {{name}}
+memo,modifiedAt,{{time}} 수정,Edited {{time}}
+memo,tags.loadFailed,태그를 불러오지 못했어요,Could not load tags
+memo,tags.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
+memo,tags.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
+memo,tags.deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
 notification,connectionLost,알림 연결이 끊어졌습니다,Notification connection lost
 notification,connectionRestored,알림 연결이 복구되었습니다,Notification connection restored
 notification,newNotification,새 알림,New notification
@@ -1274,10 +1275,8 @@ user,currentPasswordPlaceholder,현재 비밀번호를 입력해주세요,Enter 
 user,currentPasswordRequired,현재 비밀번호를 입력해주세요,Current password is required
 user,currentPasswordInvalid,현재 비밀번호가 맞지 않아요,That current password doesn't match
 user,newPassword,새 비밀번호,New Password
-user,newPasswordPlaceholder,새 비밀번호를 입력하세요,Enter your new password
 user,newPasswordRequired,새 비밀번호를 입력해주세요,New password is required
 user,confirmPassword,새 비밀번호 확인,Confirm New Password
-user,confirmPasswordPlaceholder,새 비밀번호를 다시 입력하세요,Re-enter your new password
 user,confirmPasswordRequired,새 비밀번호 확인을 입력해주세요,Password confirmation is required
 user,passwordMismatch,새 비밀번호가 일치하지 않아요,New passwords do not match
 user,passwordMatched,새 비밀번호가 일치해요,New passwords match
@@ -1286,7 +1285,7 @@ user,passwordRuleSpecial,특수문자 1자 이상,At least 1 special character
 user,passwordPolicyUnmet,비밀번호 조건을 모두 충족해주세요,Password does not meet the requirements
 user,passwordSameAsCurrent,현재 비밀번호와 다른 비밀번호를 입력해주세요,New password must be different from the current one
 user,passwordChangeSuccess,비밀번호를 바꿨어요,Password changed successfully
-user,passwordChangeError,비밀번호를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요,Couldn't change your password. Please try again shortly
+user,passwordChangeError,비밀번호를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change your password. Please try again shortly.
 user,withdraw.title,그루 담다 이용 해지,Stop using 그루 담다
 user,withdraw.intro,이용을 해지하면 바로 로그인이 막히고 되돌릴 수 없어요.,Stopping 그루 담다 signs you out immediately and cannot be undone.
 user,impact.calendarsOwned,내가 만든 공유 캘린더 {{count}}개가 삭제되고 멤버도 볼 수 없어요,{{count}} shared calendar(s) you created will be deleted — members lose access too
@@ -1783,32 +1782,23 @@ expense,filter.chipAssets,계좌·카드 {{count}},{{count}} accounts
 expense,filter.chipExcludeOne,{{name}} 빼고,Excluding {{name}}
 expense,filter.chipAmountRanges,금액 {{count}}구간,{{count}} amount ranges
 expense,assetFilterBadge,{{name}} 필터 중,Filtering by {{name}}
-expense,preset.introTitle,프리셋이란?,What are presets?
-expense,preset.introDesc,"자주 쓰는 내역(점심·커피·교통비 등)을 미리 저장해두면, 내역 추가 화면에서 한 번 탭으로 카테고리·결제수단·내역을 모두 채워넣어요. 금액만 바꿔서 단건으로 저장하기 좋습니다.","Save frequently used entries (lunch, coffee, transit, etc.) in advance to fill in the category, payment method, and details with one tap on the add screen. Great for one-off saves by just changing the amount."
-expense,preset.statSaved,저장된 프리셋,Saved presets
-expense,preset.statUses,누적 사용,Total uses
-expense,preset.sortUsed,사용 많은 순,Most used
-expense,preset.sortRecent,최근 사용,Recently used
+expense,preset.sortUsed,많이 쓴 순,Frequent
+expense,preset.sortRecent,최근 사용,Recent
 expense,preset.sortName,이름순,By name
 expense,preset.add,프리셋 추가,Add preset
 expense,preset.emptyTitle,저장된 프리셋이 없어요,No saved presets
-expense,preset.emptyDesc,자주 쓰는 내역을 추가해 매번 입력하는 수고를 줄여보세요.,Add frequently used entries to save yourself repetitive input.
+expense,preset.emptyDesc,자주 쓰는 내역(점심 · 교통비 등)을 저장해 두면 내역을 추가할 때 한 번 눌러 카테고리 · 계좌 · 내역을 채워요.,"Save frequent entries (lunch, transit, etc.) and fill the category, account, and details with one tap when adding an entry."
 expense,preset.amountEmpty,금액 비움,Amount empty
 expense,preset.noCategory,카테고리 없음,No category
-expense,preset.usedTimes,{{count}}회 사용,Used {{count}} times
-expense,preset.deleteTitle,프리셋 삭제,Delete preset
 expense,preset.detailTitle,프리셋 상세,Preset detail
-expense,preset.typeLabel,유형,Type
-expense,preset.deleteConfirmMessage,"""{{name}}"" 프리셋을 삭제할까요? 이미 저장된 거래 내역에는 영향이 없어요. 삭제한 프리셋은 되돌릴 수 없어요.","Delete the ""{{name}}"" preset? Already-saved transactions are unaffected."
+expense,preset.typeLabel,종류,Type
+expense,preset.deleteConfirmMessage,이미 기록된 거래는 그대로 남아요. 삭제한 프리셋은 되돌릴 수 없어요.,Transactions already recorded stay as they are. A deleted preset cannot be restored.
 expense,preset.edit,프리셋 수정,Edit preset
 expense,preset.namePlaceholder,예: 점심 도시락,e.g. Lunch box
 expense,preset.nameTooLong,프리셋 이름은 12자 이내로 입력해주세요.,Keep the preset name to 12 characters or fewer.
 expense,preset.nameDuplicate,같은 이름의 프리셋이 이미 있어요.,A preset with that name already exists.
 expense,preset.defaultMerchant,기본 내역,Default details
-expense,preset.merchantPlaceholder,예: 한솥 도시락,e.g. Corner deli
-expense,preset.lockAmountTitle,고정 금액 사용,Use fixed amount
-expense,preset.lockAmountDesc,꺼두면 불러올 때 금액이 비어있어요. 매번 다른 금액일 때 편해요.,When off the amount is left empty on load. Handy when it varies each time.
-expense,preset.lockAmountLabel,고정 금액,Fixed amount
+expense,preset.merchantPlaceholder,예: 회사 앞 도시락,e.g. Office lunch box
 export,export,내보내기,Export
 export,fileFormat,파일 형식,File format
 export,preview,미리보기,Preview
@@ -1849,6 +1839,7 @@ settings,theme.label,테마,Theme
 settings,language.label,언어,Language
 settings,language.ko,한국어,한국어
 settings,language.en,English,English
+settings,language.system,시스템,System
 settings,theme.light,라이트,Light
 settings,theme.lightDesc,밝은 배경,Light background
 settings,theme.dark,다크,Dark
@@ -1929,7 +1920,7 @@ settings,currency.KRW,대한민국 원,Korean Won
 settings,currency.USD,미국 달러,US Dollar
 settings,currency.EUR,유로,Euro
 settings,currency.JPY,일본 엔,Japanese Yen
-settings,currency.desc,새 자산·거래를 만들 때 이 통화가 먼저 골라져요,New assets and transactions start with this currency
+settings,currency.desc,새 자산·거래를 만들 때 이 통화가 먼저 골라져요.,New assets and transactions start with this currency.
 settings,page.title,설정,Settings
 settings,page.subtitle,카테고리·계좌·알림 등,Categories · accounts · alerts
 settings,sections.categories.label,카테고리 관리,Manage categories
@@ -1950,10 +1941,10 @@ settings,sections.calendarShare.desc,다중 캘린더 생성과 멤버 공유 �
 settings,sections.calendarLabels.label,캘린더 라벨,Calendar labels
 settings,sections.calendarLabels.desc,전 캘린더 공용 라벨 관리,Manage labels shared across all calendars
 settings,sections.appearance.label,표시 설정,Display settings
-settings,sections.appearance.desc,테마·밀도·기본 통화,Theme · density · default currency
+settings,sections.appearance.desc,테마·언어·기준 지역·기본 통화,"Theme · language · region · default currency"
 settings,region.label,기준 지역,Region
 settings,region.placeholder,지역 선택,Select a region
-settings,region.desc,'오늘'과 통계의 하루를 이 지역 기준으로 계산해요. 화면의 시간은 기기 시간대로 보여요,Days for 'today' and statistics are calculated in this region. On-screen times follow your device's time zone
+settings,region.desc,'오늘'과 통계의 하루를 이 지역 기준으로 계산해요. 화면의 시간은 기기 시간대로 보여요.,"Days for 'today' and statistics are calculated in this region. On-screen times follow your device's time zone."
 settings,sections.notifications.label,알림 설정,Notification settings
 settings,sections.notifications.desc,결제 예정·예산 초과 알림,Payment due and budget overage alerts
 settings,sections.data.label,데이터 내보내기,Export data
@@ -1973,6 +1964,7 @@ settings,groups.data,데이터,Data
 settings,groups.account,계정,Account
 settings,account.defaultName,사용자,User
 settings,account.edit,수정,Edit
+settings,account.editSoon,프로필 수정은 곧 열려요.,Profile editing is coming soon.
 settings,account.joined,가입 {{date}},Joined {{date}}
 settings,account.group.security,보안,Security
 settings,account.group.connected,연결된 계정,Linked Accounts
@@ -1985,8 +1977,6 @@ settings,account.biometric.label,생체 인증,Biometric Authentication
 settings,account.biometric.desc,앱에서 설정 가능,Available in the app
 settings,account.devices.label,로그인된 기기,Signed-in Devices
 settings,account.devices.desc,현재 기기,Current device
-settings,account.loginHistory.label,로그인 기록,Login History
-settings,account.loginHistory.desc,최근 30일,Last 30 days
 settings,sections.devices.label,로그인된 기기,Signed-in devices
 settings,sections.devices.desc,이 계정으로 로그인된 기기예요. 낯선 기기가 있으면 로그아웃해주세요.,These devices are signed in to your account. Log out any you don't recognize.
 settings,devices.current,현재 기기,Current device
@@ -2007,11 +1997,9 @@ settings,account.linked,연결됨,Connected
 settings,account.notLinked,연결 안 됨,Not connected
 settings,account.link,연결,Connect
 settings,account.unlink,해제,Disconnect
-settings,account.provider.kakao,카카오,Kakao
-settings,account.provider.naver,네이버,Naver
 settings,account.logout.label,로그아웃,Log Out
 settings,account.logout.desc,이 기기에서만,This device only
-settings,account.logout.confirmMessage,정말 로그아웃 하시겠어요?,Log out of this device?
+settings,account.logout.confirmMessage,이 기기에서 로그아웃할까요?,Log out of this device?
 settings,account.withdraw.label,그루 담다 이용 해지,Stop using 그루 담다
 settings,account.withdraw.desc,복구할 수 없어요,Cannot be undone
 settings,account.comingSoon,다음 단계에서 구현,Coming in a future update
@@ -2022,8 +2010,13 @@ settings,account.sub.proPromo,증권 투자는 Pro 전용 · 지금 시작하기
 settings,account.sub.proStart,Pro 시작,Start Pro
 settings,account.sub.perMonth,/ 월,/ mo
 settings,account.toast.linked,{{name}} 계정이 연결되었어요,{{name}} account connected
-settings,account.toast.linkError,계정 연결에 실패했어요,Failed to connect the account
+settings,account.toast.linkError,계정을 연결하지 못했어요.,Couldn't connect the account.
 settings,account.toast.unlinked,Google 연결을 해제했어요,Google account disconnected
+settings,account.toast.unlinkError,연결을 해제하지 못했어요.,Couldn't disconnect the account.
+settings,account.providersError,연결 상태를 불러오지 못했어요,Couldn't load the connection status
+settings,prefs.regionLoadError,기준 지역을 불러오지 못했어요,Couldn't load the region
+settings,prefs.currencyLoadError,기본 통화를 불러오지 못했어요,Couldn't load the default currency
+settings,prefs.saveFailed,설정을 바꾸지 못했어요.,Couldn't change the setting.
 stocks,nav.title,증권,Stocks
 stocks,detail.sheetTitle,종목 상세,Stock details
 stocks,summary.title,내 투자 평가금액,My portfolio value
@@ -2430,7 +2423,7 @@ subscription,currentPlan,현재 플랜,Current plan
 subscription,freeDesc,기본 가계부 기능,Basic budget features
 subscription,perMonth,월,mo
 subscription,perYear,년,yr
-subscription,pricePerMonthNote,월 {{price}}원 꼴 · {{pct}}% 절약,≈ {{price}} KRW/mo · Save {{pct}}%
+subscription,pricePerMonthNote,월 {{price}}원 꼴 · {{pct}}% 절약,≈ {{price}}/mo · Save {{pct}}%
 subscription,monthlyBilling,월 단위 결제,Billed monthly
 subscription,comparisonTitle,기능 비교,Feature comparison
 subscription,colFeature,기능,Feature
@@ -2724,6 +2717,9 @@ todo,tags.nameTooLong,이름은 12자 이내로 입력해주세요.,Keep the nam
 todo,tags.nameDuplicate,같은 이름의 태그가 이미 있어요.,A tag with that name already exists.
 todo,tags.preview,미리보기,Preview
 todo,tags.loadFailed,태그를 불러오지 못했어요,Couldn't load tags
+todo,tags.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
+todo,tags.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
+todo,tags.deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
 constellation,strip.title,오늘의 밤하늘 · {{name}},Tonight's sky · {{name}}
 constellation,strip.done,{{name}} 수집 완료!,{{name}} collected!
 constellation,nightSky.title,밤하늘,Night sky
@@ -2799,7 +2795,7 @@ asset,trade.noHolding,보유 종목이 없어요,No holdings yet
 asset,trade.addNewHolding,새 종목 사기,Buy a new holding
 asset,trade.pickExisting,보유 종목에서 고르기,Pick from holdings
 asset,trade.newHoldingPlaceholder,종목명을 적어주세요,Enter a holding name
-asset,trade.heldSummary,보유 {{qty}} · 평단가 {{avg}}원,Holding {{qty}} · avg {{avg}} KRW
+asset,trade.heldSummary,보유 {{qty}} · 평단가 {{avg}},Holding {{qty}} · avg {{avg}}
 asset,trade.quantity,수량,Quantity
 asset,trade.amount,거래대금 (원),Trade amount (KRW)
 asset,trade.amountHelp,수수료를 뺀 금액이에요. 수수료는 아래에 따로 적어주세요.,Excluding fees. Enter fees separately below.
@@ -2827,7 +2823,7 @@ asset,trade.deleteTitle,거래 취소,Cancel trade
 asset,trade.deleteAction,거래 취소,Cancel trade
 asset,holdings.avgPrice,평단가,Avg price
 asset,holdings.totalCost,매수원가,Cost basis
-asset,holdings.avgPriceInline,평단가 {{avg}}원,avg {{avg}} KRW
+asset,holdings.avgPriceInline,평단가 {{avg}}원,avg {{avg}}
 asset,holdings.holdingBalance,평가금액,Holdings
 asset,holdings.emptySub,보유 종목 없음,No holdings
 asset,holdings.firstAndMore,{{name}} 외 {{n}}종목,{{name}} and {{n}} more
@@ -2966,7 +2962,7 @@ recurring,fixed.income,고정 수입,Fixed income
 recurring,fixed.sub,이 반복이 앞으로 만드는 거래가 고정으로 기록돼요,Transactions this schedule creates from now on are recorded as fixed
 expense,preset.fixedTitle.expense,고정 지출로 기록,Record as fixed expense
 expense,preset.fixedTitle.income,고정 수입으로 기록,Record as fixed income
-expense,preset.fixedDesc,이 프리셋으로 만든 거래가 통계의 고정 항목으로 잡혀요. 위의 고정 금액과는 별개예요.,Transactions made from this preset count as fixed in statistics. This is separate from the fixed amount above.
+expense,preset.fixedDesc,이 프리셋으로 만든 거래가 통계의 고정 항목으로 잡혀요.,Transactions made from this preset count as fixed in statistics.
 stats,tab.fixed,고정·변동,Fixed vs. variable
 stats,fixedView.aria,보기 방식,View
 stats,fixedView.all,전체,All
@@ -3267,4 +3263,40 @@ calendar,form.endTime,종료 시각,End time
 calendar,form.rows,일정 정보,Event details
 calendar,form.rowsMore,반복 · 알림 · 장소 · 설명,"Repeat, reminder, location and description"
 calendar,quickAdd.detail,자세히,Details
-calendar,form.saveFailed,일정을 저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save the event. Please try again in a moment.
+calendar,form.saveFailed,일정을 저장하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Could not save the event. Please try again in a moment.
+expense,presets,프리셋 관리,Manage presets
+expense,preset.manageDesc,자주 쓰는 내역을 저장해 두고 내역을 추가할 때 한 번 눌러 채워요.,Save frequent entries and fill them in with one tap when adding an entry.
+expense,preset.listTitle,프리셋 {{count}}개,{{count}} presets
+expense,preset.uses,{{count}}번,{{count}} uses
+expense,preset.sortLabel,정렬,Sort
+expense,preset.loadFailed,프리셋을 불러오지 못했어요,Could not load presets
+expense,preset.deleteFailed,프리셋을 삭제하지 못했어요,Could not delete the preset
+expense,preset.deleteConfirmTitle,"""{{name}}"" 프리셋을 삭제할까요?","Delete the ""{{name}}"" preset?"
+expense,preset.noteFixed,고정 금액,Fixed amount
+expense,preset.noteUses,{{count}}번 썼어요,Used {{count}} times
+expense,preset.noteUnused,아직 쓰지 않았어요,Not used yet
+expense,preset.noteLast,마지막 {{month}}월 {{day}}일,Last used {{month}}/{{day}}
+expense,preset.fixedOn,켬,On
+expense,preset.fixedOff,끔,Off
+expense,preset.nameRequired,이름을 입력해주세요.,Enter a name.
+expense,preset.categoryRequired,카테고리를 골라주세요.,Choose a category.
+expense,preset.fromRequired,보내는 계좌를 골라주세요.,Choose the sending account.
+expense,preset.toRequired,받는 계좌를 골라주세요.,Choose the receiving account.
+expense,preset.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
+expense,preset.amountLabel,금액,Amount
+expense,preset.feeLabel,수수료,Fee
+expense,preset.amountBlank,비워 둠,Left blank
+expense,preset.amountHint,비워 두면 불러올 때 금액을 직접 넣어요.,"If left blank, you enter the amount when you load it."
+expense,preset.noneValue,없음,None
+expense,preset.memoNone,메모 없음,No memo
+expense,preset.noAccount,계좌·카드 없음,No account or card
+expense,preset.noPayment,결제 수단 없음,No payment method
+expense,preset.noCategoryOfKind,이 종류의 카테고리가 없어요.,There are no categories of this type.
+expense,addTx.presetShowAll,모두 보기,Show all
+expense,addTx.presetPickTitle,프리셋 고르기,Choose a preset
+expense,addTx.presetSearch,프리셋 검색,Search presets
+expense,addTx.presetNoResult,찾는 프리셋이 없어요.,No presets found.
+expense,preset.fromAccount,보내는 계좌,Sending account
+expense,preset.toAccount,받는 계좌,Receiving account
+expense,preset.categoryLoadFailed,카테고리를 불러오지 못했어요,Could not load categories
+expense,preset.interestTooBig,이자는 금액보다 클 수 없어요.,Interest cannot be greater than the amount.

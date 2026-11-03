@@ -329,4 +329,15 @@ describe("TagGroup", () => {
     expect(itemRef.current!.style.maxWidth).toBe("80px");
     expect(itemRef.current!.style.flexShrink).toBe("1");
   });
+
+  it("truncate 는 가로로 자른다 — 줄지 않는 항목만으로 폭이 모자라도 넘친 글이 옆 칸(금액)을 덮지 않는다", () => {
+    const group = render(
+      <TagGroup truncate>
+        <TagGroupItem shrink={0}>카페 · 간식 · 디저트 모임</TagGroupItem>
+      </TagGroup>,
+    );
+    expect(group.className).toContain("overflow-x-clip");
+    const wrap = render(<TagGroup>식비</TagGroup>);
+    expect(wrap.className).not.toContain("overflow-x-clip");
+  });
 });

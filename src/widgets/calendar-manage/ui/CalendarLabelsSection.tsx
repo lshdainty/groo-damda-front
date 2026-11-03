@@ -513,7 +513,7 @@ function LabelEditDialog({
           }}
           placeholder={t("labelsSection.namePlaceholder")}
           maxLength={14}
-          autoFocus
+          autoFocus={!label}
         />
         <NameCounter len={nameTrim.length} max={12} err={err} />
       </Field>

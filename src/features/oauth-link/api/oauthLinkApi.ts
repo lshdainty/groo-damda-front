@@ -6,6 +6,13 @@
  */
 import { apiClient } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
+import type { AxiosRequestConfig } from "axios";
+
+/**
+ * 세 요청 모두 전역 오류 알림 대신 화면이 고정 글로 알린다(I-14 10) — 그루 계정이 쓴 글("Cannot unlink the only authentication method")이
+ * 화면에 닿지 않게 한다. 전역 핸들러의 `silent` 확장은 base.ts 의 QuietRequestConfig 다.
+ */
+const QUIET = { silent: true } as AxiosRequestConfig & { silent: boolean };
 
 export interface ProviderInfo {
   /** 대문자 provider 타입 (예: "GOOGLE") */
@@ -22,6 +29,7 @@ export const oauthLinkApi = {
   getProviders: async (): Promise<ProviderInfo[]> => {
     const resp: ApiResponse<ProviderInfo[]> = await apiClient.get(
       "/v1/oauth/providers",
+      QUIET,
     );
     return resp.data;
   },
@@ -33,11 +41,12 @@ export const oauthLinkApi = {
     const resp: ApiResponse<{ startUrl: string }> = await apiClient.post(
       `/v1/oauth/link/${provider}`,
       { returnUrl },
+      QUIET,
     );
     return resp.data;
   },
 
   unlink: async (provider: string): Promise<void> => {
-    await apiClient.delete(`/v1/oauth/link/${provider}`);
+    await apiClient.delete(`/v1/oauth/link/${provider}`, QUIET);
   },
 };

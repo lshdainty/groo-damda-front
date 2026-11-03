@@ -193,6 +193,22 @@ describe("호가 · 체결 — 나무는 칸이 비어 올 수 있다 (M4)", () 
     expect(bars.some((b) => b.style.width === "0%")).toBe(true);
     expect(bars.every((b) => !b.style.width.includes("NaN"))).toBe(true);
   });
+  it("잔량은 쉼표 뒤 <wbr> 로만 줄을 바꾸고 말줄임 · 폭 0 칸을 쓰지 않는다 — 글자를 줄이지 않는다(DESIGN.md 돈)", () => {
+    const el = render(
+      book(
+        [{ price: "1010", volume: "12345678" }],
+        [{ price: "990", volume: "1234567" }],
+      ),
+    );
+    expect(el.querySelectorAll("tbody td wbr").length).toBeGreaterThanOrEqual(
+      2,
+    );
+    expect(el.textContent).toContain("12,345,678");
+    expect(el.textContent).toContain("1,234,567");
+    expect(el.innerHTML).not.toContain("truncate");
+    expect(el.innerHTML).not.toContain("max-w-0");
+    expect(el.innerHTML).not.toContain("text-ellipsis");
+  });
   it("모든 칸이 null 이면 '호가 정보가 없어요'", () => {
     const el = render(book([{ price: null, volume: null }], []));
     expect(el.textContent).toContain("quotes.orderbookEmpty");
