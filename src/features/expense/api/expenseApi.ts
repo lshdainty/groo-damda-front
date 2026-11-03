@@ -35,10 +35,16 @@ export interface ExpenseSearchParams {
 }
 
 export const expenseApi = {
-  createExpense: async (data: ExpenseFormValues): Promise<Expense> => {
+  /** `silent` — 실패를 호출처(거래 추가 폼의 Callout)가 직접 알린다. 전역 서버 원문 토스트를 겹치지 않는다 */
+  createExpense: async (
+    data: ExpenseFormValues,
+    opts?: { silent?: boolean },
+  ): Promise<Expense> => {
+    const config: QuietRequestConfig = { silent: opts?.silent };
     const resp: ApiResponse<Expense> = await apiClient.post(
       "/v1/expense",
       data,
+      config,
     );
     return resp.data;
   },
@@ -54,10 +60,13 @@ export const expenseApi = {
   updateExpense: async (
     id: number,
     data: ExpenseFormValues,
+    opts?: { silent?: boolean },
   ): Promise<Expense> => {
+    const config: QuietRequestConfig = { silent: opts?.silent };
     const resp: ApiResponse<Expense> = await apiClient.put(
       `/v1/expense/${id}`,
       data,
+      config,
     );
     return resp.data;
   },
@@ -78,8 +87,12 @@ export const expenseApi = {
   replaceExpense: async (
     id: number,
     data: ExpenseFormValues,
+    opts?: { silent?: boolean },
   ): Promise<Expense> => {
-    const config: QuietRequestConfig = { silentStatuses: [404] };
+    const config: QuietRequestConfig = {
+      silentStatuses: [404],
+      silent: opts?.silent,
+    };
     const resp: ApiResponse<Expense> = await apiClient.post(
       `/v1/expense/${id}/replace`,
       data,
@@ -95,10 +108,15 @@ export const expenseApi = {
    * 결제가 끝난 회차의 카드 거래면 통계에서만 빠지고 통장은 그대로다(D1). 열린 회차에서
    * 미리 낸 돈이 남으면 결제계좌로 돌려준다(응답의 `refundedAmount`, D3·D4).
    */
-  refund: async (id: number, refundedAt?: string): Promise<Expense> => {
+  refund: async (
+    id: number,
+    refundedAt?: string,
+    options?: { silent?: boolean },
+  ): Promise<Expense> => {
     const resp: ApiResponse<Expense> = await apiClient.post(
       `/v1/expense/${id}/refund`,
       refundedAt ? { refundedAt } : {},
+      options?.silent ? ({ silent: true } as QuietRequestConfig) : undefined,
     );
     return resp.data;
   },
@@ -107,9 +125,13 @@ export const expenseApi = {
    * 환불 취소 — 표식을 걷고 원거래를 되살린다. 옛 환불이 만든 환급 이체가 묶여 있으면
    * (`refundTransferRowId`) 그 이체도 되돌린다.
    */
-  cancelRefund: async (id: number): Promise<Expense> => {
+  cancelRefund: async (
+    id: number,
+    options?: { silent?: boolean },
+  ): Promise<Expense> => {
     const resp: ApiResponse<Expense> = await apiClient.delete(
       `/v1/expense/${id}/refund`,
+      options?.silent ? ({ silent: true } as QuietRequestConfig) : undefined,
     );
     return resp.data;
   },
@@ -118,9 +140,15 @@ export const expenseApi = {
    * 지운다. 열린 회차에서 미리 낸 돈이 남아 결제계좌로 돌려줬다면 그 금액이 함께 온다 —
    * 화면이 "미리 낸 돈 중 N원이 계좌로 돌아왔어요" 를 말할 재료다(D4).
    */
-  deleteExpense: async (id: number): Promise<DeleteExpenseResult> => {
+  deleteExpense: async (
+    id: number,
+    options?: { silent?: boolean },
+  ): Promise<DeleteExpenseResult> => {
     const resp: ApiResponse<DeleteExpenseResult | null> =
-      await apiClient.delete(`/v1/expense/${id}`);
+      await apiClient.delete(
+        `/v1/expense/${id}`,
+        options?.silent ? ({ silent: true } as QuietRequestConfig) : undefined,
+      );
     return resp.data ?? { refundedAmount: null };
   },
 

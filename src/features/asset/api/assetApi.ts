@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, type QuietRequestConfig } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
   Asset,
@@ -156,10 +156,14 @@ export const assetApi = {
 
   createTransfer: async (
     data: AssetTransferFormValues,
+    opts?: { silent?: boolean },
   ): Promise<AssetTransfer> => {
     const resp: ApiResponse<AssetTransfer> = await apiClient.post(
       "/v1/asset-transfer",
       data,
+      { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
+        silent?: boolean;
+      },
     );
     return resp.data;
   },
@@ -168,10 +172,14 @@ export const assetApi = {
   updateTransfer: async (
     id: number,
     data: AssetTransferFormValues,
+    opts?: { silent?: boolean },
   ): Promise<AssetTransfer> => {
     const resp: ApiResponse<AssetTransfer> = await apiClient.put(
       `/v1/asset-transfer/${id}`,
       data,
+      { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
+        silent?: boolean;
+      },
     );
     return resp.data;
   },
@@ -184,9 +192,13 @@ export const assetApi = {
     return resp.data;
   },
 
-  deleteTransfer: async (id: number): Promise<void> => {
+  deleteTransfer: async (
+    id: number,
+    options?: { silent?: boolean },
+  ): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/asset-transfer/${id}`,
+      options?.silent ? ({ silent: true } as QuietRequestConfig) : undefined,
     );
     return resp.data;
   },

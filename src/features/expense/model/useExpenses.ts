@@ -12,11 +12,12 @@ export const useExpenses = (filters?: ExpenseListParams) => {
   });
 };
 
-export const useCreateExpense = () => {
+export const useCreateExpense = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: ExpenseFormValues) => expenseApi.createExpense(data),
+    mutationFn: (data: ExpenseFormValues) =>
+      expenseApi.createExpense(data, opts),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };
@@ -43,13 +44,14 @@ export const useBulkMarkFixed = () => {
   });
 };
 
-export const useUpdateExpense = () => {
+export const useUpdateExpense = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: ExpenseFormValues }) =>
-      expenseApi.updateExpense(id, data),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+      expenseApi.updateExpense(id, data, opts),
+    // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };
 
@@ -65,9 +67,18 @@ export const useRefundExpense = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, refundedAt }: { id: number; refundedAt?: string }) =>
-      expenseApi.refund(id, refundedAt),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    mutationFn: ({
+      id,
+      refundedAt,
+      silent,
+    }: {
+      id: number;
+      refundedAt?: string;
+      /** 실패를 호출처가 자기 자리에서 알리면 true — 기본(생략)은 전역 오류 토스트 */
+      silent?: boolean;
+    }) => expenseApi.refund(id, refundedAt, { silent }),
+    // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };
 
@@ -75,8 +86,10 @@ export const useCancelRefund = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => expenseApi.cancelRefund(id),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    mutationFn: ({ id, silent }: { id: number; silent?: boolean }) =>
+      expenseApi.cancelRefund(id, { silent }),
+    // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };
 
@@ -84,12 +97,12 @@ export const useCancelRefund = () => {
  * 고쳐 쓰기 — 잠긴 거래를 새 거래로 교체한다(D13). 옛 거래가 사라지고 새 거래가 생기므로
  * 거래 CRUD 와 같은 범위(`"ledger"`)를 턴다 — 카드 청구·잔액·분할·더치페이가 함께 움직인다.
  */
-export const useReplaceExpense = () => {
+export const useReplaceExpense = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: ExpenseFormValues }) =>
-      expenseApi.replaceExpense(id, data),
+      expenseApi.replaceExpense(id, data, opts),
     // 성공했을 때와 **404** 일 때 턴다. 404 는 옛 거래가 이미 없다는 뜻이다 — 응답만 못
     // 받은 채 다시 눌렀으면 교체는 앞선 요청에서 끝났다(다른 기기에서 지웠어도 같다). 안
     // 털면 목록에 사라진 옛 행이 남아 보인다(QA 26차 5). 그 밖의 실패는 서버가 아무것도
@@ -106,8 +119,13 @@ export const useDeleteExpense = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => expenseApi.deleteExpense(id),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    // 숫자 하나(밀기 삭제 등 기존 호출처)나 { id, silent } — 실패를 호출처가 알리면 silent
+    mutationFn: (arg: number | { id: number; silent?: boolean }) =>
+      typeof arg === "number"
+        ? expenseApi.deleteExpense(arg)
+        : expenseApi.deleteExpense(arg.id, { silent: arg.silent }),
+    // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게
+    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
   });
 };
 
