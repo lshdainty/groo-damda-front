@@ -174,10 +174,13 @@ export const useExpenseHeatmap = (startDate: string, endDate: string) => {
   });
 };
 
-export const useSearchExpenses = (params: ExpenseSearchParams) => {
+export const useSearchExpenses = (
+  params: ExpenseSearchParams,
+  opts?: { silent?: boolean },
+) => {
   return useQuery({
     queryKey: expenseKeys.search(params),
-    queryFn: () => expenseApi.searchExpenses(params),
+    queryFn: () => expenseApi.searchExpenses(params, opts),
     enabled: Object.values(params).some((v) => v !== undefined && v !== ""),
   });
 };

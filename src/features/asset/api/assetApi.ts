@@ -22,6 +22,13 @@ export interface TransferListParams {
   endDate?: string;
 }
 
+/** silent — 실패를 호출처가 화면 안에서 고정 글로 말한다(전역 서버 원문 토스트와 겹치지 않게, 호출처 단위) */
+type SilentOpts = { silent?: boolean };
+const silentConfig = (opts?: SilentOpts) =>
+  (opts?.silent
+    ? { silent: true }
+    : {}) as import("axios").AxiosRequestConfig & { silent?: boolean };
+
 export const assetApi = {
   createAsset: async (data: AssetFormValues): Promise<Asset> => {
     const resp: ApiResponse<Asset> = await apiClient.post("/v1/asset", data);
@@ -57,8 +64,11 @@ export const assetApi = {
     return resp.data;
   },
 
-  deleteAsset: async (id: number): Promise<void> => {
-    const resp: ApiResponse<void> = await apiClient.delete(`/v1/asset/${id}`);
+  deleteAsset: async (id: number, opts?: SilentOpts): Promise<void> => {
+    const resp: ApiResponse<void> = await apiClient.delete(
+      `/v1/asset/${id}`,
+      silentConfig(opts),
+    );
     return resp.data;
   },
 
@@ -83,17 +93,23 @@ export const assetApi = {
   getAssetBalanceTrend: async (
     assetId: number,
     weeks: number,
+    opts?: SilentOpts,
   ): Promise<AssetBalancePoint[]> => {
     const resp: ApiResponse<{ trend: AssetBalancePoint[] }> =
       await apiClient.get(`/v1/asset/${assetId}/balance-trend`, {
         params: { weeks },
+        ...silentConfig(opts),
       });
     return resp.data.trend;
   },
 
-  getCardBilling: async (id: number): Promise<CardBilling> => {
+  getCardBilling: async (
+    id: number,
+    opts?: SilentOpts,
+  ): Promise<CardBilling> => {
     const resp: ApiResponse<CardBilling> = await apiClient.get(
       `/v1/asset/${id}/billing`,
+      silentConfig(opts),
     );
     return resp.data;
   },
@@ -111,7 +127,11 @@ export const assetApi = {
     const resp: ApiResponse<BillingItem> = await apiClient.post(
       `/v1/asset/${id}/pay`,
       undefined,
-      Object.keys(params).length > 0 ? { params } : undefined,
+      // silent — 실패는 지금 결제 폼 맨 위 Callout 이 말한다
+      {
+        ...(Object.keys(params).length > 0 ? { params } : {}),
+        ...silentConfig({ silent: true }),
+      },
     );
     return resp.data;
   },
@@ -123,6 +143,8 @@ export const assetApi = {
   ): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.post(
       `/v1/asset/${cardId}/installments/${expenseId}/payoff`,
+      undefined,
+      silentConfig({ silent: true }),
     );
     return resp.data;
   },
@@ -134,6 +156,7 @@ export const assetApi = {
   ): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/asset/${cardId}/installments/${expenseId}/payoff`,
+      silentConfig({ silent: true }),
     );
     return resp.data;
   },
@@ -142,6 +165,7 @@ export const assetApi = {
   cancelCardPayment: async (billingRowId: number): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/card-billing/${billingRowId}`,
+      silentConfig({ silent: true }),
     );
     return resp.data;
   },
@@ -186,9 +210,13 @@ export const assetApi = {
 
   getTransfers: async (
     params?: TransferListParams,
+    opts?: SilentOpts,
   ): Promise<{ transfers: AssetTransfer[] }> => {
     const resp: ApiResponse<{ transfers: AssetTransfer[] }> =
-      await apiClient.get("/v1/asset-transfers", { params });
+      await apiClient.get("/v1/asset-transfers", {
+        params,
+        ...silentConfig(opts),
+      });
     return resp.data;
   },
 
@@ -235,6 +263,7 @@ export const assetApi = {
   deleteTrade: async (id: number): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/asset-trade/${id}`,
+      silentConfig({ silent: true }),
     );
     return resp.data;
   },

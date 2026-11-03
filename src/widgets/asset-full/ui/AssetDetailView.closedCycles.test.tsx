@@ -37,20 +37,29 @@ vi.mock("@/shared/lib/groo/hide-amounts-core", async (orig) => ({
 
 // 차트·거래창·확인창은 이 주장과 무관하다 — 껍데기로 바꿔 recharts 까지 들어오지 않게 한다.
 vi.mock("recharts", () => ({
-  Area: () => null,
-  AreaChart: () => null,
   CartesianGrid: () => null,
+  Line: () => null,
+  LineChart: () => null,
   XAxis: () => null,
   YAxis: () => null,
 }));
-vi.mock("@/shared/ui/chart", () => ({
-  ChartContainer: () => null,
+vi.mock("@/shared/ds/chart", () => ({
+  Chart: () => null,
+  ChartDataTable: () => null,
   ChartTooltip: () => null,
+  ChartTooltipContent: () => null,
+  chartAxisProps: () => ({}),
+  chartGridProps: {},
+  formatAxisWon: (v: number) => String(v),
+}));
+vi.mock("@/widgets/add-tx", () => ({ AddTxSheet: () => null }));
+vi.mock("@/widgets/expense-detail/ui/TxDetailDialog", () => ({
+  TxDetailDialog: () => null,
+}));
+vi.mock("@/widgets/expense-detail/ui/TransferDetailDialog", () => ({
+  TransferDetailDialog: () => null,
 }));
 vi.mock("./AssetTradeDialog", () => ({ AssetTradeDialog: () => null }));
-vi.mock("@/widgets/account-settings/ui/HideAmountsUnlockDialog", () => ({
-  HideAmountsUnlockDialog: () => null,
-}));
 
 const empty = { data: undefined, isLoading: false, isFetching: false };
 const billing = vi.hoisted(() => ({ data: undefined as unknown }));
@@ -93,7 +102,7 @@ vi.mock("@/entities/expense", () => ({
   isRefundedTx: () => false,
 }));
 
-const { AssetDetailDialog } = await import("./AssetDetailDialog");
+const { AssetDetailView } = await import("./AssetDetailView");
 
 const card: Asset = {
   userRowId: 1,
@@ -200,11 +209,11 @@ let root: Root;
 function render(asset: Asset = card, onEdit?: (a: Asset) => void) {
   act(() =>
     root.render(
-      <AssetDetailDialog
+      <AssetDetailView
         asset={asset}
-        onClose={() => {}}
-        onEdit={onEdit}
+        desk={false}
         mobile={false}
+        onEdit={() => onEdit?.(asset)}
       />,
     ),
   );
@@ -247,13 +256,15 @@ const click = (el: Element) =>
 /** 회차 선택 시트를 열어 그 금액의 회차를 고른다. */
 function pick(amountText: string) {
   click(buttonWith("assetDetail.scheduledTag")!);
-  const row = [...document.body.querySelectorAll("button")].find(
-    (b) =>
-      (b.textContent ?? "").includes(amountText) &&
-      !(b.textContent ?? "").includes("assetDetail.scheduledTag"),
+  // 고르기 줄은 라디오 줄(ListRadioItem) — 줄의 글(label)이 가리키는 라디오를 누른다
+  const label = [...document.body.querySelectorAll("label")].find(
+    (l) =>
+      (l.textContent ?? "").includes(amountText) &&
+      !(l.textContent ?? "").includes("assetDetail.scheduledTag"),
   );
-  if (!row) throw new Error(`회차를 찾지 못했다: ${amountText}`);
-  click(row);
+  const radio = label && document.getElementById(label.htmlFor);
+  if (!radio) throw new Error(`회차를 찾지 못했다: ${amountText}`);
+  click(radio);
 }
 
 const byTestId = (id: string) =>
@@ -323,7 +334,7 @@ describe("닫힌 회차 머리 = 지금 기록 합(D10)", () => {
 });
 
 describe("닫힌 회차 화면", () => {
-  it("[지금 결제] 타일이 없다 — 예정 회차엔 있다(24차 7)", () => {
+  it("[지금 결제] 단추가 없다 — 예정 회차엔 있다(24차 7)", () => {
     render();
     expect(buttonWith("assetDetail.payNow")).toBeDefined();
 
@@ -447,19 +458,12 @@ describe("결제일 없는 신용카드(D8 · QA 26차 6)", () => {
     };
   });
 
-  it("결제일 행 자리에 '결제일을 넣어 주세요' 가 뜨고, 누르면 그 카드의 수정 폼으로 간다", () => {
-    render(noDay);
+  it("결제일 행 자리에 '결제일을 넣어 주세요' 가 뜨고, 누르면 수정 폼을 연다(페이지 위 — 주소를 옮기지 않는다)", () => {
+    const edited: number[] = [];
+    render(noDay, (a) => edited.push(a.rowId));
 
     expect(missing()?.textContent).toContain("assetDetail.paymentDayMissing");
     click(buttonWith("assetDetail.paymentDayMissing")!);
-    expect(nav.to).toEqual(["/desk/settings?section=accounts&edit=9"]);
-  });
-
-  it("호스트가 [수정]을 쥐고 있으면 그걸 부른다 — 설정의 관리 화면은 폼을 바로 연다", () => {
-    const edited: number[] = [];
-    render(noDay, (a) => edited.push(a.rowId));
-    click(buttonWith("assetDetail.paymentDayMissing")!);
-
     expect(edited).toEqual([9]);
     expect(nav.to).toEqual([]);
   });
@@ -472,5 +476,45 @@ describe("결제일 없는 신용카드(D8 · QA 26차 6)", () => {
     render();
 
     expect(missing()).toBeNull();
+  });
+});
+
+describe("회차 없음 · 한도 · 동작 줄(I-17 46 · 47)", () => {
+  it("회차가 하나도 없으면 회차 단추 없이 '이번 달 결제 예정 · 0원' 이고 '—' 는 어디에도 없다", () => {
+    billing.data = {
+      ...(billing.data as Record<string, unknown>),
+      upcomingAmount: 0,
+      nextPaymentDate: null,
+      upcomingPeriodStart: null,
+      upcomingPeriodEnd: null,
+      nextCycle: null,
+      closedCycles: [],
+      history: [],
+    };
+    render();
+    expect(bodyText()).toContain("assetDetail.valueCard");
+    expect(bodyText()).toContain("0원");
+    expect(bodyText()).not.toContain("—");
+    expect(buttonWith("assetDetail.dueOn")).toBeUndefined();
+  });
+
+  it("한도 사용 — 80% 를 넘어도 경고 색이 없고, 넘치면 '초과' 글이 fg-critical 이다", () => {
+    render({ ...card, balance: -4_500_000 } as Asset);
+    const warn = [...document.body.querySelectorAll("*")].filter((e) =>
+      /chart-red|--color-chart-red/.test(e.getAttribute("style") ?? ""),
+    );
+    expect(warn).toHaveLength(0);
+    expect(bodyText()).toContain("assetDetail.limitPctUsed");
+
+    render({ ...card, balance: -6_000_000 } as Asset);
+    expect(document.body.querySelector("[role='meter']")).not.toBeNull();
+    expect(document.body.querySelector(".text-fg-critical")).not.toBeNull();
+  });
+
+  it("동작은 ds 버튼 둘이다 — 타일 · 알약 · '한도 · 결제 설정' 이 없다", () => {
+    render();
+    expect(buttonWith("assetDetail.payNow")).toBeDefined();
+    expect(buttonWith("assetDetail.limitSettings")).toBeUndefined();
+    expect(buttonWith("assetDetail.limitEdit")).toBeUndefined();
   });
 });
