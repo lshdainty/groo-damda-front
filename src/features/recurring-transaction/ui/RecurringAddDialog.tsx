@@ -747,6 +747,8 @@ export function RecurringAddDialog({
                 )}
                 {!isTransfer && (
                   <AssetPickRow
+                    failed={assetsQ.isError && !assetsQ.data}
+                    onRetry={() => void assetsQ.refetch()}
                     prefix={<Wallet className={ROW_ICON} />}
                     title={
                       f.type === "INCOME"
@@ -806,6 +808,8 @@ export function RecurringAddDialog({
                 {isTransfer && (
                   <>
                     <AssetPickRow
+                      failed={assetsQ.isError && !assetsQ.data}
+                      onRetry={() => void assetsQ.refetch()}
                       prefix={<Wallet className={ROW_ICON} />}
                       title={te("addTx.fromAccount")}
                       placeholder={t("pickValue", {
@@ -827,12 +831,14 @@ export function RecurringAddDialog({
                       emptyText={t("noAssets")}
                     />
                     <AssetPickRow
+                      failed={assetsQ.isError && !assetsQ.data}
+                      onRetry={() => void assetsQ.refetch()}
                       prefix={<Wallet className={ROW_ICON} />}
-                      title={te("addTx.depositAccount")}
+                      title={te("preset.toAccount")}
                       placeholder={t("pickValue", {
-                        name: te("addTx.depositAccount"),
+                        name: te("preset.toAccount"),
                       })}
-                      surfaceTitle={te("addTx.depositAccount")}
+                      surfaceTitle={te("preset.toAccount")}
                       assets={eligible.filter((a) => a.rowId !== f.assetRowId)}
                       value={f.toAssetRowId}
                       onChange={(id) => set("toAssetRowId", id)}

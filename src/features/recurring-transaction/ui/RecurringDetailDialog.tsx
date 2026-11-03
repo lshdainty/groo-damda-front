@@ -106,7 +106,7 @@ export function RecurringDetailDialog({
   const yesNo = (on: boolean) => (on ? t("on") : t("off"));
   if (isTransfer) {
     add("from", te("addTx.fromAccount"), item.assetName);
-    add("to", te("addTx.depositAccount"), item.toAssetName);
+    add("to", te("preset.toAccount"), item.toAssetName);
     add("fee", t("feeRow"), item.fee ? money(item.fee) : null);
     add(
       "interest",

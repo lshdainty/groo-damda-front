@@ -222,6 +222,8 @@ export function AssetPickRow({
   clearLabel,
   errorMessage,
   emptyText,
+  failed,
+  onRetry,
 }: {
   prefix?: ReactNode;
   title: string;
@@ -236,7 +238,11 @@ export function AssetPickRow({
   clearLabel?: string;
   errorMessage?: string | null;
   emptyText: string;
+  /** 자산 목록을 못 받았다 — 빈 글이 아니라 실패 한 벌(고정 글 + 다시 시도) */
+  failed?: boolean;
+  onRetry?: () => void;
 }) {
+  const { t: tAsset } = useTranslation("asset");
   const picked = (valueAssets ?? assets).find((a) => a.rowId === value);
   return (
     <PickerRow
@@ -251,7 +257,13 @@ export function AssetPickRow({
       scrollFog
     >
       {({ close }) =>
-        assets.length === 0 ? (
+        failed ? (
+          <BandFailure
+            title={tAsset("manager.loadFailed")}
+            onRetry={() => onRetry?.()}
+            className="-mx-x6"
+          />
+        ) : assets.length === 0 ? (
           <p className="m-0 py-x3 font-sans text-t4 text-fg-neutral-subtle">
             {emptyText}
           </p>
