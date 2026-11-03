@@ -12,6 +12,8 @@ export interface EventReminderInfo {
 
 export interface CalendarEvent {
   rowId: number;
+  /** 만든 사람 — 서버 응답이 싣는다. 수정 · 삭제 권한 판정(만든 사람이거나 캘린더 편집 권한)에 쓴다 */
+  userRowId?: number | null;
   title: string;
   description: string | null;
   eventType: CalendarEventType;

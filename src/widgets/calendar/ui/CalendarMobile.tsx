@@ -1,24 +1,11 @@
-import { X } from "lucide-react";
-import { useTranslation } from "react-i18next";
-
-import { useBackClose } from "@/shared/ds/overlay";
-import { DayEventsDialog } from "@/widgets/calendar/ui/DayEventsDialog";
-import { EventDetailPopover } from "@/widgets/calendar/ui/EventDetailPopover";
 import { CalendarHeaderMobile } from "@/widgets/calendar/ui/header/calendar-header-mobile";
 import { CalendarLoadFailed } from "@/widgets/calendar/ui/calendar-load-failed";
+import { EventDetailSurface } from "@/widgets/calendar/ui/event-detail/event-detail-surface";
 import {
   CalendarMonthViewMobile,
   WeekdayRow,
 } from "@/widgets/calendar/ui/month-view/calendar-month-view-mobile";
 import { CalendarMonthViewMobileSkeleton } from "@/widgets/calendar/ui/month-view/calendar-month-view-mobile-skeleton";
-import {
-  Drawer,
-  DrawerBody,
-  DrawerClose,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/shared/ui/drawer";
 
 import type { CalendarScreen } from "@/widgets/calendar/model/use-calendar-screen";
 
@@ -29,26 +16,20 @@ interface IProps {
   onRetry: () => void;
 }
 
-/** 폰(768 미만) 캘린더 — 달 줄 + 월 격자만. 날을 누르면 일별 시트, 일정을 누르면 상세 Drawer. */
+/**
+ * 폰(768 미만) 캘린더 — 달 줄 + 월 격자만. 날을 누르면 그날 시트가 뜨고, 일정을 누르면 같은 시트가 상세로 바뀐다
+ * (목록 → 상세 → 수정 폼 — `EventDetailSurface`, I-09b 5 · 9).
+ */
 const CalendarMobile = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
-  const { t } = useTranslation("calendar");
   const {
-    selectedEvent,
-    handleClosePopover,
-    handleEditEvent,
-    handleDeleteEvent,
     singleDayEvents,
     multiDayEvents,
     dayDate,
     setDayDate,
     dayEvents,
     setCreatingDate,
-    setSelectedEvent,
+    requestDelete,
   } = screen;
-  // 일정 상세는 모바일에서만 drawer 다(데스크톱은 Popover) — 그때만 뒤로가기로 닫는다(QA #129).
-  // ds 의 뒤로 가기 훅을 쓴다 — 그날 시트(ds Bottom Sheet)가 닫히며 되감는 popstate 를 옛 훅은 "상세 닫기" 로 읽어 일정을 눌러도 상세가 안 떴다
-  // (09-1 회귀 — `detail-back-close.test.tsx`). ds 훅은 자기가 부른 되감기의 popstate 를 건너뛴다.
-  useBackClose(!!selectedEvent, () => handleClosePopover());
 
   return (
     <>
@@ -73,52 +54,17 @@ const CalendarMobile = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
         />
       )}
 
-      {/* Event Detail — 모바일은 표준 모바일 drawer 패턴(DrawerHeader+제목+X), 데스크톱·태블릿은 Popover */}
-      <Drawer
-        open={!!selectedEvent}
-        onOpenChange={(open) => {
-          if (!open) handleClosePopover();
-        }}
-      >
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle className="flex-1">{t("eventDetail")}</DrawerTitle>
-            <DrawerClose asChild>
-              <button
-                type="button"
-                aria-label={t("close")}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-0 bg-transparent text-[var(--fg-secondary)] cursor-pointer hover:bg-[var(--bg-muted)] hover:text-[var(--fg-primary)] transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </DrawerClose>
-          </DrawerHeader>
-          <DrawerBody className="pb-5">
-            {selectedEvent && (
-              <EventDetailPopover
-                event={selectedEvent}
-                onEdit={handleEditEvent}
-                onDelete={handleDeleteEvent}
-              />
-            )}
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
-
-      {/* 모바일 월간뷰 일별 이벤트 시트 — 앱 _DayEventsSheetBody 정합 */}
+      {/* 그날 시트 — 한 시트 안에서 목록 → 상세 → 수정 폼. 시트를 닫았다 다시 열지 않는다 */}
       {dayDate && (
-        <DayEventsDialog
-          date={dayDate}
+        <EventDetailSurface
+          listDate={dayDate}
           events={dayEvents}
           onClose={() => setDayDate(null)}
           onAdd={() => {
             setCreatingDate(dayDate);
             setDayDate(null);
           }}
-          onTapEvent={(e) => {
-            setDayDate(null);
-            setSelectedEvent(e);
-          }}
+          onRequestDelete={requestDelete}
         />
       )}
     </>

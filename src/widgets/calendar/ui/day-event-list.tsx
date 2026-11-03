@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { List, ListButtonItem, ListItem, ListTile } from "@/shared/ds/list";
 import { eventBadgeTone } from "@/widgets/calendar/lib/helpers";
+import { eventKey } from "@/widgets/calendar/lib/event-key";
 import { eventLineDetail } from "@/widgets/calendar/lib/event-line";
 import type { IEvent } from "@/widgets/calendar/model/interfaces";
 
@@ -54,6 +55,7 @@ export function DayEventList({
           <ListButtonItem
             key={`${e.id}-${e.startDate}`}
             {...common}
+            data-event-key={eventKey(e)}
             onClick={(ev) => onTapEvent(e, ev.currentTarget)}
           />
         );

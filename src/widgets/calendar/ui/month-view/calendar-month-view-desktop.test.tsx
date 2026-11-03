@@ -11,6 +11,7 @@ declare global {
 
 const mocks = vi.hoisted(() => ({
   setSelectedDate: vi.fn(),
+  openQuickAdd: vi.fn(),
   selected: new Date(2026, 9, 22),
 }));
 
@@ -44,7 +45,7 @@ vi.mock("@/widgets/calendar/model/drag-select-provider", async () => {
           updateSelection: () => {},
           endSelection: () => {},
           isDateInSelection: () => false,
-          openQuickAdd: () => {},
+          openQuickAdd: mocks.openQuickAdd,
         }}
       >
         {children}
@@ -62,6 +63,7 @@ let root: Root;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   mocks.setSelectedDate.mockClear();
+  mocks.openQuickAdd.mockClear();
   mocks.selected = new Date(2026, 9, 22);
   vi.stubGlobal(
     "ResizeObserver",
@@ -203,7 +205,10 @@ describe("데스크톱 월 격자", () => {
     act(() => chip.click());
     expect(onClick).toHaveBeenCalledTimes(1);
     expect((onClick.mock.calls[0]![0] as IEvent).id).toBe(7);
+    // 칩이 놓인 칸의 날을 함께 알린다(상세를 여는 쪽이 그 날을 고른다) — 칩 누름이 칸 누름으로 번지지 않는다
+    expect((onClick.mock.calls[0]![2] as Date).getDate()).toBe(22);
     expect(mocks.setSelectedDate).not.toHaveBeenCalled();
+    expect(mocks.openQuickAdd).not.toHaveBeenCalled();
   });
 
   it("긴 칩 제목은 칸 안에서 말줄임이고 칸을 넘지 않는다", () => {

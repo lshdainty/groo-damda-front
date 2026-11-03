@@ -359,6 +359,9 @@ export function PresetEditDialog({
         interest
           ? Number(interest)
           : null,
+      // 아래 넷은 이 다이얼로그가 그리는 칸이다 — 비운 채 저장하면 지워져야 한다.
+      // `undefined` 로 키를 빼면 새 서버가 "안 고침" 으로 읽어, 화면만 지워진 척 닫히고
+      // 옛 계좌·거래처·메모·결제수단이 서버에 그대로 남았다.
       assetRowId: assetRowId ?? null,
       expenseType: type,
       // 금액만 계약이 다르다 — `lockAmount` 와 한 쌍이라 서버가 둘을 함께 본다.

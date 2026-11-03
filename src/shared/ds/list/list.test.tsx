@@ -4,6 +4,7 @@ import { act, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import * as variants from "./list-variants";
 import {
   List,
   ListButtonItem,
@@ -318,7 +319,7 @@ describe("List · ListItem", () => {
         "text-fg-neutral-subtle",
         "[&>svg]:size-x4_5",
         "[&_a]:z-1",
-        "[&_button]:z-1",
+        "[&_button:not([data-slot=input-button]>button)]:z-1",
       ]),
     );
   });
@@ -674,7 +675,9 @@ describe("ListButtonItem · ListLinkItem", () => {
     expect(onRow).toHaveBeenCalledTimes(1);
     expect(onSmall).toHaveBeenCalledTimes(1);
     // 안의 버튼은 덮개 위로 올린다 — 줄을 어디 눌러도 눌리지만 버튼은 따로 눌린다
-    expect(classes(slot("list-suffix"))).toContain("[&_button]:z-1");
+    expect(classes(slot("list-suffix"))).toContain(
+      "[&_button:not([data-slot=input-button]>button)]:z-1",
+    );
   });
 
   it("className 은 버튼에 · rootProps 는 li 에 · ref 는 버튼으로 · type 을 바꿀 수 있다", () => {
@@ -2079,5 +2082,18 @@ describe("List — 글 값은 줄 수와 상관없이 줄 끝 오른쪽 맞춤",
     expect(text.className).toContain("text-end");
     expect(node.dataset.value).toBe("node");
     expect(node.className).not.toContain("text-end");
+  });
+});
+
+describe("뒤 붙이개 안의 버튼", () => {
+  it("Input Button 의 누르는 층(상자를 덮는 absolute)은 relative 로 덮지 않는다", () => {
+    const { listSuffixVariants } = variants;
+    const cls = listSuffixVariants();
+    // 일반 버튼 · 링크는 줄의 ::after 위로 올린다
+    expect(cls).toContain(
+      "[&_button:not([data-slot=input-button]>button)]:relative",
+    );
+    // 모든 button 에 거는 규칙은 없다 — 있으면 Input Button 층의 폭이 0 이 된다
+    expect(cls).not.toMatch(/(^|\s)\[&_button\]:relative/);
   });
 });
