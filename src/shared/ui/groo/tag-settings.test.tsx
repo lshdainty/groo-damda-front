@@ -186,6 +186,19 @@ describe.each([
     expect(body.getAttribute("data-scroll-fog")).toBeNull();
   });
 
+  it("안 바꾼 옛 이름은 12자 검사에서 뺀다 — 저장이 막히지 않는다(D5)", async () => {
+    const update = vi.fn().mockResolvedValue(undefined);
+    render(
+      ns,
+      true,
+      [tagOf(1, "열두 글자를 넘게 저장돼 있던 아주 긴 태그 이름", 2)],
+      { update },
+    );
+    openRow("열두 글자를 넘게");
+    await act(async () => buttonByText("저장")!.click());
+    expect(update).toHaveBeenCalledTimes(1);
+  });
+
   it("새 태그 폼에는 [삭제] 가 없다", () => {
     render(ns, true, []);
     act(() => buttonByText("태그 추가")!.click());

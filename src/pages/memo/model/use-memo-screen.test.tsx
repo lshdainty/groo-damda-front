@@ -168,4 +168,31 @@ describe("useMemoScreen", () => {
     expect(cur().saveErrorSeq).toBe(1);
     expect(state.show).not.toHaveBeenCalled();
   });
+
+  it("다시 시도는 지금 열린 다른 폼을 건드리지 않는다 — 성공해도 닫지 않고 실패해도 Callout 을 안 띄운다(N2)", async () => {
+    mount();
+    act(() => cur().openEditor({ _new: true }));
+    let fail: (e: unknown) => void = () => {};
+    state.create.mockReturnValueOnce(new Promise((_, rej) => (fail = rej)));
+    let p!: Promise<void>;
+    act(() => {
+      p = cur().save({ title: "A" }, undefined, false, false);
+    });
+    act(() => cur().closeEditor());
+    await act(async () => {
+      fail(new Error("서버"));
+      await p;
+    });
+    const retry = state.show.mock.calls[0]![0].action.onClick as () => void;
+    // 그새 다른 폼 B 를 열어 쓰는 중
+    act(() => cur().openEditor({ _new: true }));
+    state.create.mockResolvedValueOnce(memo(9));
+    await act(async () => retry());
+    expect(cur().editing).not.toBeNull();
+    expect(cur().saveError).toBe(false);
+    state.create.mockRejectedValueOnce(new Error("서버"));
+    await act(async () => retry());
+    expect(cur().saveError).toBe(false);
+    expect(state.show).toHaveBeenCalledTimes(2);
+  });
 });

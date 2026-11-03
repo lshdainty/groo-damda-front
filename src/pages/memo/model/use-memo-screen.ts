@@ -117,14 +117,17 @@ export function useMemoScreen() {
    * 바꾼 값에 끌려 토글되지 않는다, L7). 저장이 끝나고 목록을 다시 받은 뒤에 폼을 닫는다.
    * 저장 중 ✕ 로 닫았다면(다른 폼을 열었다면) 성공은 그 폼을 건드리지 않고 실패는 스낵바 + 다시 시도로 알린다(L8).
    */
-  const save = async (
+  const submit = async (
     values: MemoFormValues,
     id: number | undefined,
     pin: boolean,
     wasPinned: boolean,
+    detached: boolean,
   ): Promise<void> => {
-    const mine = session.current;
-    setSaveError(false);
+    // 닫힌 폼의 저장(다시 시도)은 지금 열린 폼을 건드리지 않는다 — 성공 · 실패 모두 스낵바로만(N2)
+    const mine = detached ? -1 : session.current;
+    const formIsMine = () => !detached && session.current === mine;
+    if (formIsMine()) setSaveError(false);
     let saved: Memo;
     try {
       saved =
@@ -132,7 +135,7 @@ export function useMemoScreen() {
           ? await updateMemo.mutateAsync({ id, data: values })
           : await createMemo.mutateAsync(values);
     } catch {
-      if (session.current === mine) {
+      if (formIsMine()) {
         setSaveError(true);
         setSaveErrorSeq((n) => n + 1);
       } else {
@@ -141,17 +144,23 @@ export function useMemoScreen() {
           tone: "critical",
           action: {
             label: tc("retry"),
-            onClick: () => void save(values, id, pin, wasPinned),
+            onClick: () => void submit(values, id, pin, wasPinned, true),
           },
         });
       }
       return;
     }
-    if (session.current === mine) closeEditor();
+    if (formIsMine()) closeEditor();
     if (pin !== wasPinned) {
       await pinOf({ ...saved, isPinned: wasPinned });
     }
   };
+  const save = (
+    values: MemoFormValues,
+    id: number | undefined,
+    pin: boolean,
+    wasPinned: boolean,
+  ): Promise<void> => submit(values, id, pin, wasPinned, false);
 
   return {
     memosQ,

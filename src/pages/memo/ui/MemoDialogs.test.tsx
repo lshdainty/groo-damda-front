@@ -241,6 +241,22 @@ describe("메모 폼 (I-15 13)", () => {
   });
 });
 
+describe("메모 폼 — 기기 뒤로 가기(폰, B3)", () => {
+  it("뒤로 가기(popstate)는 바뀐 값이 없으면 폼을 닫는다", async () => {
+    form(base);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(closed).toBe(1);
+  });
+});
+
 describe("메모 폼 — 검수 고침", () => {
   it("저장 실패 Callout 은 화면에 들이도록 scrollIntoView 를 부른다(M2)", () => {
     const spy = vi.fn();

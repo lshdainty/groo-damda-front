@@ -359,9 +359,11 @@ export function TagEditDialog<T extends TagLike>({
   const storedOutside = chartColorOf(initial.color) == null;
   const palette = getPaletteByColor(color);
   const nameTrim = name.trim();
+  // 안 바꾼 옛 이름은 12자 검사에서 뺀다(예전에 더 길게 저장된 이름 — 앱과 같다, D5). 겹침 · 빈 값 검사는 그대로
+  const unchanged = tag != null && nameTrim === tag.tagName;
   const issue = nameIssue(
     name,
-    NAME_MAX,
+    unchanged ? Number.MAX_SAFE_INTEGER : NAME_MAX,
     existing.filter((x) => x.rowId !== tag?.rowId).map((x) => x.tagName),
   );
   const err =
