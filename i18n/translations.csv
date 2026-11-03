@@ -1679,10 +1679,10 @@ expense,txDetail.recentOnly,최근 5건만 보여요,Showing the latest 5 only
 expense,txDetail.splitLoadFailed,나눈 내역을 불러오지 못했어요,Could not load the split items
 expense,txDetail.refundDateToday,{{date}} · 오늘,{{date}} · Today
 expense,txDetail.refundDateHint,거래한 날({{date}})부터 오늘까지 고를 수 있어요.,You can pick a day from the transaction day ({{date}}) to today.
-expense,txDetail.refundFailed,환불하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Couldn't mark it as refunded. Please try again in a moment.
-expense,txDetail.refundCancelFailed,환불을 취소하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Couldn't undo the refund. Please try again in a moment.
-expense,txDetail.deleteFailed,거래를 삭제하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Couldn't delete the transaction. Please try again in a moment.
-expense,transferDeleteFailed,이체를 삭제하지 못했어요. 잠시 뒤에 다시 시도해주세요.,Couldn't delete the transfer. Please try again in a moment.
+expense,txDetail.refundFailed,환불하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't mark it as refunded. Please try again in a moment.
+expense,txDetail.refundCancelFailed,환불을 취소하지 못했어요.,Couldn't undo the refund.
+expense,txDetail.deleteFailed,거래를 삭제하지 못했어요.,Couldn't delete the transaction.
+expense,transferDeleteFailed,이체를 삭제하지 못했어요.,Couldn't delete the transfer.
 expense,transferDetailTitle,이체 상세,Transfer details
 expense,transferFromLabel,보내는 계좌,From account
 expense,transferToLabel,받는 계좌,To account
