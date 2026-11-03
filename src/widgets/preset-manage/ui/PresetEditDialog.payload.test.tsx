@@ -28,8 +28,12 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 
-const catState = vi.hoisted(() => ({ loaded: true }));
-const assetState = vi.hoisted(() => ({ loaded: true }));
+const assetState = vi.hoisted(() => ({
+  loaded: true,
+  removed: [] as number[],
+}));
+const saveState = vi.hoisted(() => ({ fail: false }));
+const catState = vi.hoisted(() => ({ fail: false, args: [] as unknown[] }));
 const sent = vi.hoisted(() => ({
   update: null as Record<string, unknown> | null,
   create: null as Record<string, unknown> | null,
@@ -37,24 +41,49 @@ const sent = vi.hoisted(() => ({
 
 // 라벨 키를 그대로 흘려보낸다 — 여기서 보는 건 페이로드뿐이다.
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (k: string) => k }),
+  useTranslation: () => ({
+    t: (k: string, o?: Record<string, unknown>) =>
+      o ? `${k}${JSON.stringify(o)}` : k,
+    i18n: { language: "ko" },
+  }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 vi.mock("@/features/expense", () => ({
-  useExpenseCategories: () => ({
-    data: catState.loaded ? [category] : undefined,
-    isLoading: !catState.loaded,
-  }),
+  useExpenseCategories: (opts?: unknown) => {
+    catState.args.push(opts);
+    return catState.fail
+      ? {
+          data: undefined,
+          isLoading: false,
+          isError: true,
+          errorUpdateCount: 1,
+          refetch: () => {},
+        }
+      : {
+          data: categories,
+          isLoading: false,
+          isError: false,
+          errorUpdateCount: 0,
+        };
+  },
   useExpenseTemplates: () => ({ data: [], isLoading: false }),
   useCreateExpenseTemplate: () => ({
-    mutate: (data: Record<string, unknown>) => {
+    mutate: (
+      data: Record<string, unknown>,
+      opts?: { onError?: () => void },
+    ) => {
       sent.create = data;
+      if (saveState.fail) opts?.onError?.();
     },
     isPending: false,
   }),
   useUpdateExpenseTemplate: () => ({
-    mutate: ({ data }: { id: number; data: Record<string, unknown> }) => {
+    mutate: (
+      { data }: { id: number; data: Record<string, unknown> },
+      opts?: { onError?: () => void },
+    ) => {
       sent.update = data;
+      if (saveState.fail) opts?.onError?.();
     },
     isPending: false,
   }),
@@ -62,7 +91,11 @@ vi.mock("@/features/expense", () => ({
 vi.mock("@/features/asset", () => ({
   useAssets: () => ({
     data: assetState.loaded
-      ? { assets: [asset, savings, card, loan] }
+      ? {
+          assets: [asset, savings, card, loan].filter(
+            (a) => !assetState.removed.includes(a.rowId),
+          ),
+        }
       : undefined,
     isLoading: !assetState.loaded,
   }),
@@ -80,6 +113,25 @@ const category: ExpenseCategory = {
   createAt: "2026-01-01T00:00:00",
   modifyAt: "2026-01-01T00:00:00",
 };
+
+/** 식비(하위 없음) · 교통(하위 버스) — 하위가 있는 상위는 고를 수 없다 */
+const categories: ExpenseCategory[] = [
+  category,
+  {
+    ...category,
+    rowId: 13,
+    categoryName: "교통",
+    sortOrder: 1,
+    hasChildren: true,
+  },
+  {
+    ...category,
+    rowId: 14,
+    categoryName: "버스",
+    sortOrder: 2,
+    parentRowId: 13,
+  },
+];
 
 const asset: Asset = {
   rowId: 3,
@@ -162,34 +214,52 @@ let root: Root;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as never;
   sent.update = null;
   sent.create = null;
-  // Radix Select 는 포인터 캡처·스크롤 API 를 쓴다 — jsdom 엔 없어서 채워 준다.
-  const proto = window.HTMLElement.prototype as unknown as Record<
-    string,
-    unknown
-  >;
-  proto.hasPointerCapture = () => false;
-  proto.setPointerCapture = () => {};
-  proto.releasePointerCapture = () => {};
-  proto.scrollIntoView = () => {};
+  window.history.replaceState(null, "");
+  // 폭 1280 미만(시트) — 고르기는 폼 시트 위 고르기 시트다
+  window.matchMedia = ((query: string) => ({
+    matches: query.includes("never-wide"),
+    media: query,
+    addEventListener() {},
+    removeEventListener() {},
+  })) as unknown as typeof window.matchMedia;
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
 });
 
-afterEach(() => {
+afterEach(async () => {
   act(() => root.unmount());
   container.remove();
+  document.body.removeAttribute("style");
+  await new Promise((r) => setTimeout(r, 50));
 });
 
 function render(preset: ExpenseTemplate | null) {
   act(() =>
-    root.render(
-      <PresetEditDialog preset={preset} mobile={false} onClose={() => {}} />,
-    ),
+    root.render(<PresetEditDialog preset={preset} onClose={() => {}} />),
   );
 }
+
+const tick = (ms = 0) =>
+  act(async () => {
+    await new Promise((r) => setTimeout(r, ms));
+  });
+const click = (el: Element | undefined | null) => {
+  if (!el) throw new Error("누를 요소를 찾지 못했다");
+  return act(async () => {
+    el.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, cancelable: true }),
+    );
+    await new Promise((r) => setTimeout(r, 0));
+  });
+};
 
 /** 리액트가 관리하는 입력에 값을 넣는다(setter 를 우회하면 상태가 안 바뀐다). */
 function setValue(el: HTMLInputElement | HTMLTextAreaElement, value: string) {
@@ -205,38 +275,53 @@ function setValue(el: HTMLInputElement | HTMLTextAreaElement, value: string) {
   });
 }
 
-const byValue = (v: string) =>
-  [...document.body.querySelectorAll<HTMLInputElement>("input")].find(
-    (el) => el.value === v,
+const textInput = () =>
+  document.querySelector<HTMLInputElement>("[data-slot=text-input-value]")!;
+const textarea = () => document.querySelector<HTMLTextAreaElement>("textarea")!;
+const buttonByText = (text: string) =>
+  Array.from(document.querySelectorAll<HTMLElement>("button")).find(
+    (b) => b.textContent?.trim() === text,
   );
+/** 폼 줄 — 제목으로 찾는다 */
+const rowOf = (title: string) =>
+  Array.from(
+    document.querySelectorAll<HTMLElement>("[data-slot=list-item]"),
+  ).find(
+    (li) => li.querySelector("[data-slot=list-title]")?.textContent === title,
+  )!;
+const valueOf = (title: string) =>
+  rowOf(title).querySelector("[data-slot=list-suffix]")?.textContent;
+const rowButton = (title: string) =>
+  rowOf(title).querySelector<HTMLElement>("[data-slot=list-body]");
+/** 고르기 시트 안의 줄 */
+const pickItem = (text: string) =>
+  Array.from(
+    document.querySelectorAll<HTMLElement>("[data-slot=list-body]"),
+  ).find((b) => b.textContent?.includes(text));
+const pickItemTitles = () =>
+  Array.from(
+    document.querySelectorAll<HTMLElement>("[data-slot=list-body]"),
+  ).map((b) => b.querySelector("[data-slot=list-title]")?.textContent);
 
-/** 메모 칸만 textarea 다 — 값이 아니라 태그로 집는다(빈 채로도 찾아야 한다). */
-const memoBox = () =>
-  document.body.querySelector<HTMLTextAreaElement>("textarea");
-
-const byText = <T extends Element>(selector: string, text: string) =>
-  [...document.body.querySelectorAll<T>(selector)].find(
-    (el) => el.textContent?.trim() === text,
-  );
-
-/** Radix Select 를 실제로 연다 — 키보드로 열고 항목을 고른다(포인터는 jsdom 에서 안 뜬다). */
-function pickOption(triggerText: string, optionText: string) {
-  const trigger = byText<HTMLButtonElement>("button", triggerText);
-  if (!trigger) throw new Error(`셀렉트를 찾지 못했다: ${triggerText}`);
-  act(() => {
-    trigger.focus();
-    trigger.dispatchEvent(
-      new KeyboardEvent("keydown", { key: " ", bubbles: true }),
-    );
-  });
-  const option = byText("[role='option']", optionText);
-  if (!option) throw new Error(`항목을 찾지 못했다: ${optionText}`);
-  act(() =>
-    option.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
-    ),
-  );
+/** 줄을 눌러 고르기 시트를 열고 항목을 고른다 */
+async function pick(rowTitle: string, itemText: string) {
+  await click(rowButton(rowTitle));
+  await tick();
+  await click(pickItem(itemText));
+  await tick();
 }
+/** 치는 값 줄을 눌러 한 단계 들어가 값을 넣고 "done" 을 누른다 */
+async function typeInStep(rowTitle: string, value: string, multiline = false) {
+  await click(rowButton(rowTitle));
+  await tick();
+  setValue(multiline ? textarea() : textInput(), value);
+  await click(buttonByText("done"));
+  await tick();
+}
+const chip = (label: string) =>
+  Array.from(document.querySelectorAll<HTMLElement>("[role=radio]")).find(
+    (b) => b.textContent === label,
+  )!;
 
 /**
  * 서버가 실제로 받는 본문.
@@ -250,17 +335,14 @@ function wire(payload: Record<string, unknown> | null) {
   return JSON.parse(JSON.stringify(payload)) as Record<string, unknown>;
 }
 
-function clickSave(label: "save" | "add" = "save") {
-  const save = byText<HTMLButtonElement>("button", label);
-  if (!save) throw new Error("저장 버튼을 찾지 못했다");
-  act(() => save.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-}
+const clickSave = (label: "save" | "add" = "save") =>
+  click(buttonByText(label));
 
 describe("비운 칸은 명시 null 로 나간다 (QA #325 회귀)", () => {
-  it("거래처를 지우면 null 이 나간다 — 안 건드린 칸은 그대로", () => {
+  it("거래처를 지우면 null 이 나간다 — 안 건드린 칸은 그대로", async () => {
     render(basePreset);
-    setValue(byValue("김밥천국")!, "");
-    clickSave();
+    await typeInStep("preset.defaultMerchant", "");
+    await clickSave();
 
     expect(sent.update).not.toBeNull();
     // `undefined` 였다면 직렬화에서 키째 빠져 서버가 "안 고침" 으로 읽는다.
@@ -271,10 +353,10 @@ describe("비운 칸은 명시 null 로 나간다 (QA #325 회귀)", () => {
     expect(sent.update!.assetRowId).toBe(3);
   });
 
-  it("결제수단을 '선택 안 함' 으로 되돌리면 null 이 나간다", () => {
+  it("결제수단을 '결제 수단 없음' 으로 되돌리면 null 이 나간다", async () => {
     render(basePreset);
-    pickOption("form.paymentMethod.CARD", "selectNone");
-    clickSave();
+    await pick("paymentMethodLabel", "preset.noPayment");
+    await clickSave();
 
     expect(wire(sent.update)).toHaveProperty("paymentMethod");
     expect(sent.update!.paymentMethod).toBeNull();
@@ -283,10 +365,10 @@ describe("비운 칸은 명시 null 로 나간다 (QA #325 회귀)", () => {
     expect(sent.update!.assetRowId).toBe(3);
   });
 
-  it("계좌를 '선택 안 함' 으로 되돌리면 null 이 나간다", () => {
+  it("계좌를 '계좌·카드 없음' 으로 되돌리면 null 이 나간다", async () => {
     render(basePreset);
-    pickOption("국민 · 주거래", "selectNone");
-    clickSave();
+    await pick("accountCard", "preset.noAccount");
+    await clickSave();
 
     expect(wire(sent.update)).toHaveProperty("assetRowId");
     expect(sent.update!.assetRowId).toBeNull();
@@ -295,10 +377,10 @@ describe("비운 칸은 명시 null 로 나간다 (QA #325 회귀)", () => {
     expect(sent.update!.paymentMethod).toBe("CARD");
   });
 
-  it("공백만 남긴 거래처도 비운 것으로 본다", () => {
+  it("공백만 남긴 거래처도 비운 것으로 본다", async () => {
     render(basePreset);
-    setValue(byValue("김밥천국")!, "   ");
-    clickSave();
+    await typeInStep("preset.defaultMerchant", "   ");
+    await clickSave();
 
     expect(sent.update!.merchant).toBeNull();
   });
@@ -309,22 +391,21 @@ describe("메모는 이제 이 화면의 칸이다 (D2)", () => {
     render(basePreset);
 
     // 안 채우고 열면, 이름만 고쳐 저장해도 메모가 `null` 로 나가 지워진다.
-    // 칸이 생겨서 오히려 위험해진 자리다 — 자산 통화 칸과 같은 순서로 잠근다.
-    expect(memoBox()?.value).toBe("회사 근처 단골");
+    expect(valueOf("memo")).toContain("회사 근처 단골");
   });
 
-  it("안 건드리면 읽어 온 메모가 그대로 나간다", () => {
+  it("안 건드리면 읽어 온 메모가 그대로 나간다", async () => {
     render(basePreset);
-    setValue(byValue("점심")!, "점심값");
-    clickSave();
+    setValue(textInput(), "점심값");
+    await clickSave();
 
     expect(sent.update!.description).toBe("회사 근처 단골");
   });
 
-  it("메모를 지우면 null 이 나간다 — 키를 빼면 옛 메모가 서버에 남는다", () => {
+  it("메모를 지우면 null 이 나간다 — 키를 빼면 옛 메모가 서버에 남는다", async () => {
     render(basePreset);
-    setValue(memoBox()!, "");
-    clickSave();
+    await typeInStep("memo", "", true);
+    await clickSave();
 
     expect(wire(sent.update)).toHaveProperty("description");
     expect(sent.update!.description).toBeNull();
@@ -332,43 +413,102 @@ describe("메모는 이제 이 화면의 칸이다 (D2)", () => {
     expect(sent.update!.merchant).toBe("김밥천국");
   });
 
-  it("공백만 남긴 메모도 비운 것으로 본다", () => {
+  it("공백만 남긴 메모도 비운 것으로 본다", async () => {
     render(basePreset);
-    setValue(memoBox()!, "   ");
-    clickSave();
+    await typeInStep("memo", "   ", true);
+    await clickSave();
 
     expect(sent.update!.description).toBeNull();
   });
 });
 
-describe("금액은 lockAmount 와 한 쌍이다", () => {
-  it("고정을 켠 프리셋은 금액을 싣는다", () => {
+describe("금액은 한 줄이다 — 금액이 있으면 고정, 비우면 직접 넣는다 (2-B)", () => {
+  it("'고정 금액 사용' 스위치는 없다 — 스위치는 고정 지출 하나뿐", () => {
     render({ ...basePreset, lockAmount: "Y", amount: 9000 });
-    clickSave();
+    expect(document.body.textContent).not.toContain("lockAmountTitle");
+    expect(document.querySelectorAll("[role=switch]")).toHaveLength(1);
+  });
+
+  it("금액 줄 값 — 금액이 있으면 금액", () => {
+    render({ ...basePreset, lockAmount: "Y", amount: 9000 });
+    expect(valueOf("preset.amountLabel")).toContain("9,000");
+  });
+
+  it("금액 줄 값 — 금액이 없으면 '비워 둠'", () => {
+    render(basePreset);
+    expect(valueOf("preset.amountLabel")).toBe("preset.amountBlank");
+  });
+
+  it("금액이 있는 프리셋은 금액을 싣고 lockAmount Y", async () => {
+    render({ ...basePreset, lockAmount: "Y", amount: 9000 });
+    await clickSave();
 
     expect(sent.update!.amount).toBe(9000);
     expect(sent.update!.lockAmount).toBe("Y");
   });
 
-  it("고정을 끈 프리셋은 금액 키를 뺀다 — 금액칸 자체가 안 그려진다", () => {
+  it("금액이 없는 프리셋은 금액 키를 뺀다 — 서버가 짝으로 버린다", async () => {
     render(basePreset);
-    clickSave();
+    await clickSave();
 
-    // 서버가 짝으로 보고 버린다(`resolveAmount`: 고정이 아니면 항상 null).
     expect(wire(sent.update)).not.toHaveProperty("amount");
     expect(sent.update!.lockAmount).toBe("N");
+  });
+
+  it("금액 줄에서 금액을 넣으면 lockAmount Y + amount", async () => {
+    render(basePreset);
+    await typeInStep("preset.amountLabel", "12000");
+    await clickSave();
+
+    expect(sent.update!.amount).toBe(12000);
+    expect(sent.update!.lockAmount).toBe("Y");
+  });
+
+  it("금액을 비우면 lockAmount N · 금액 키 없음", async () => {
+    render({ ...basePreset, lockAmount: "Y", amount: 9000 });
+    await typeInStep("preset.amountLabel", "");
+    await clickSave();
+
+    expect(sent.update!.lockAmount).toBe("N");
+    expect(wire(sent.update)).not.toHaveProperty("amount");
+  });
+
+  it("금액 단계 안내 글은 '비워 두면 …' 이다", async () => {
+    render(basePreset);
+    await click(rowButton("preset.amountLabel"));
+    await tick();
+    expect(document.body.textContent).toContain("preset.amountHint");
+  });
+});
+
+describe("검증은 누를 때 칸 아래에 나온다", () => {
+  it("빈 이름 · 카테고리 없이 [추가] → 오류 · 요청 0", async () => {
+    render(null);
+    await clickSave("add");
+
+    expect(sent.create).toBeNull();
+    expect(document.body.textContent).toContain("preset.nameRequired");
+    expect(document.body.textContent).toContain("preset.categoryRequired");
+  });
+
+  it("이체는 보내는 · 받는 계좌를 고르라고 알린다", async () => {
+    render(null);
+    await click(chip("addTx.transfer"));
+    setValue(textInput(), "적금 이체");
+    await clickSave("add");
+
+    expect(sent.create).toBeNull();
+    expect(document.body.textContent).toContain("preset.fromRequired");
+    expect(document.body.textContent).toContain("preset.toRequired");
   });
 });
 
 describe("새로 만들 때도 같은 본문이다", () => {
-  it("빈 폼으로 만들면 비운 칸이 전부 null 로 나간다", () => {
+  it("빈 폼으로 만들면 비운 칸이 전부 null 로 나간다", async () => {
     render(null);
-    setValue(byValue("")!, "새 프리셋");
-    const tile = [...document.body.querySelectorAll("button")].find((b) =>
-      b.textContent?.includes("식비"),
-    );
-    act(() => tile!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    clickSave("add");
+    setValue(textInput(), "새 프리셋");
+    await pick("category", "식비");
+    await clickSave("add");
 
     expect(sent.create).not.toBeNull();
     expect(sent.create!.templateName).toBe("새 프리셋");
@@ -377,35 +517,35 @@ describe("새로 만들 때도 같은 본문이다", () => {
     expect(sent.create!.paymentMethod).toBeNull();
     expect(sent.create!.assetRowId).toBeNull();
     expect(sent.create!.description).toBeNull();
+    expect(sent.create!.lockAmount).toBe("N");
     // 등록 경로는 `Optional` 이 아니라 값을 그대로 받는다 — null 과 키 없음이 같은 뜻이다.
     expect(sent.update).toBeNull();
   });
 });
 
-describe("이체 프리셋", () => {
-  /**
-   * 탭을 옮긴다 — 라벨은 t() 가 키를 그대로 흘린다.
-   * radix Tabs 는 `mousedown` 에서 바꾼다. `click` 만 쏘면 아무 일도 안 일어난다.
-   */
-  function switchTab(label: string) {
-    const tab = byText<HTMLButtonElement>("button", label);
-    if (!tab) throw new Error(`탭을 찾지 못했다: ${label}`);
-    act(() =>
-      tab.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })),
-    );
-  }
-
-  it("보내는·받는 계좌와 수수료가 본문에 실린다", () => {
+describe("카테고리 고르기 — 하위가 있는 상위는 못 고른다", () => {
+  it("하위가 있는 상위는 목록 제목, 하위와 하위 없는 최상위만 고르는 줄", async () => {
     render(null);
-    switchTab("addTx.transfer");
-    setValue(byValue("")!, "적금 이체"); // 첫 input = 이름
-    pickOption("addTx.selectPlaceholder", "국민 · 주거래");
-    pickOption("addTx.selectPlaceholder", "국민 · 청약");
-    const feeBox = [
-      ...document.body.querySelectorAll<HTMLInputElement>("input"),
-    ].find((el) => el.placeholder === "0");
-    setValue(feeBox!, "500");
-    clickSave("add");
+    await click(rowButton("category"));
+    await tick();
+
+    const titles = pickItemTitles();
+    expect(titles).toContain("버스");
+    expect(titles).toContain("식비");
+    // 상위 "교통" 은 목록 제목이지 줄이 아니다
+    expect(titles).not.toContain("교통");
+  });
+});
+
+describe("이체 프리셋", () => {
+  it("보내는·받는 계좌와 수수료가 본문에 실린다", async () => {
+    render(null);
+    await click(chip("addTx.transfer"));
+    setValue(textInput(), "적금 이체");
+    await pick("preset.fromAccount", "주거래");
+    await pick("preset.toAccount", "청약");
+    await typeInStep("preset.feeLabel", "500");
+    await clickSave("add");
 
     expect(sent.create).not.toBeNull();
     expect(sent.create!.expenseType).toBe("TRANSFER");
@@ -416,28 +556,19 @@ describe("이체 프리셋", () => {
     expect(sent.create!.categoryRowId).toBeNull();
   });
 
-  it("카드는 이체 상대 목록에 없다 — 서버도 400 으로 막는다", () => {
+  it("카드는 이체 상대 목록에 없다 — 서버도 400 으로 막는다", async () => {
     render(null);
-    switchTab("addTx.transfer");
-    const trigger = byText<HTMLButtonElement>(
-      "button",
-      "addTx.selectPlaceholder",
-    );
-    act(() => {
-      trigger!.focus();
-      trigger!.dispatchEvent(
-        new KeyboardEvent("keydown", { key: " ", bubbles: true }),
-      );
-    });
-    const options = [...document.body.querySelectorAll("[role='option']")].map(
-      (el) => el.textContent?.trim(),
-    );
-    expect(options).toContain("국민 · 주거래");
-    expect(options).toContain("국민 · 청약");
-    expect(options).not.toContain("국민 · 체크");
+    await click(chip("addTx.transfer"));
+    await click(rowButton("preset.fromAccount"));
+    await tick();
+
+    const titles = pickItemTitles();
+    expect(titles).toContain("주거래");
+    expect(titles).toContain("청약");
+    expect(titles).not.toContain("체크");
   });
 
-  it("이체를 지출로 바꿔 저장하면 이체 칸이 null 로 지워진다", () => {
+  it("이체를 지출로 바꿔 저장하면 이체 칸이 null 로 지워진다", async () => {
     render({
       ...basePreset,
       expenseType: "TRANSFER",
@@ -447,14 +578,10 @@ describe("이체 프리셋", () => {
       toAssetName: "청약",
       fee: 500,
     });
-    switchTab("expense");
-    // 지출에는 카테고리가 필요하다 — 타일을 눌러 고른다(타일 글자는 머리글자+이름).
-    const tile = [
-      ...document.body.querySelectorAll<HTMLButtonElement>("button"),
-    ].find((el) => el.textContent?.includes("식비"));
-    if (!tile) throw new Error("카테고리 타일을 찾지 못했다");
-    act(() => tile.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    clickSave();
+    await click(chip("expense"));
+    // 지출에는 카테고리가 필요하다
+    await pick("category", "식비");
+    await clickSave();
 
     const body = wire(sent.update);
     expect(body).toHaveProperty("toAssetRowId");
@@ -480,22 +607,10 @@ describe("이자는 금액을 따라간다 (2026-09-15 결정)", () => {
     lockAmount: "Y",
   };
 
-  it("고정 금액을 끄면 이자가 null 로 나간다 — 계좌·수수료는 남는다", () => {
-    const repo = render(loanPreset);
-    void repo;
-    // "고정 금액 사용" 체크를 끈다.
-    const check = [
-      ...document.body.querySelectorAll<HTMLElement>(
-        "[role='checkbox'], input",
-      ),
-    ].find(
-      (el) =>
-        el.getAttribute("role") === "checkbox" ||
-        (el as HTMLInputElement).type === "checkbox",
-    );
-    if (!check) throw new Error("고정 금액 체크를 찾지 못했다");
-    act(() => check.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    clickSave();
+  it("금액을 비우면 이자가 null 로 나간다 — 계좌·수수료는 남는다", async () => {
+    render(loanPreset);
+    await typeInStep("preset.amountLabel", "");
+    await clickSave();
 
     const body = wire(sent.update);
     expect(body).toHaveProperty("interestAmount");
@@ -506,17 +621,32 @@ describe("이자는 금액을 따라간다 (2026-09-15 결정)", () => {
     expect(sent.update!.fee).toBe(500);
   });
 
-  it("고정 금액이 켜져 있으면 이자가 그대로 나간다", () => {
+  it("금액이 있으면 이자가 그대로 나간다", async () => {
     render(loanPreset);
-    clickSave();
+    await clickSave();
 
     expect(sent.update!.interestAmount).toBe(20000);
     expect(sent.update!.lockAmount).toBe("Y");
   });
 });
 
-describe("자산을 늦게 받아도 읽어 온 이자가 지워지지 않는다", () => {
-  it("처음엔 자산이 없고 나중에 받는다 → 저장하면 이자가 그대로 나간다", () => {
+describe("카테고리 조회 실패 (I-20 20-2 후속)", () => {
+  it("카테고리 줄을 열면 고르기 대신 실패 한 벌이 나온다 — 조회는 silent", async () => {
+    catState.fail = true;
+    render(null);
+    await click(rowButton("category"));
+    await tick();
+    expect(document.body.textContent).toContain("preset.categoryLoadFailed");
+    expect(pickItemTitles()).not.toContain("식비");
+    expect(
+      catState.args.every((a) => (a as { silent?: boolean })?.silent),
+    ).toBe(true);
+    catState.fail = false;
+  });
+});
+
+describe("자산을 늦게 받아도 읽어 온 이자가 지워지지 않는다 (20-2 후속 — 렌더가 찾음)", () => {
+  it("처음엔 자산이 없고 나중에 받는다 → 저장하면 이자가 그대로 나간다", async () => {
     assetState.loaded = false;
     const loanPreset: ExpenseTemplate = {
       ...basePreset,
@@ -534,35 +664,59 @@ describe("자산을 늦게 받아도 읽어 온 이자가 지워지지 않는다
     render(loanPreset);
     assetState.loaded = true;
     render(loanPreset);
-    clickSave();
-
+    await tick();
+    expect(valueOf("addTx.interest")).toContain("20,000");
+    await clickSave();
     expect(sent.update!.interestAmount).toBe(20000);
   });
 });
 
-describe("카테고리를 늦게 받을 때 — 받기 전 유지 · 받았는데 없으면 비움", () => {
-  it("받기 전에는 읽어 온 카테고리를 유지한다 → 받은 뒤 저장하면 그대로 나간다", () => {
-    catState.loaded = false;
-    render(basePreset);
-    catState.loaded = true;
-    render(basePreset);
-    clickSave();
-
-    expect(sent.update!.categoryRowId).toBe(11);
-    catState.loaded = true;
+describe("열 때 초점 (일정 폼 M-2 와 같다)", () => {
+  it("새로 만들 때는 이름 칸에 초점", async () => {
+    render(null);
+    await tick();
+    expect(document.activeElement).toBe(textInput());
   });
 
-  it("받았는데 목록에 없으면(지운 카테고리) 비운다 → 지운 id 가 저장되지 않는다", () => {
-    catState.loaded = true;
+  it("수정으로 열 때는 칸이 아니라 표면이 초점을 받는다 — 키보드를 올리지 않는다", async () => {
+    render(basePreset);
+    await tick();
+    const a = document.activeElement as HTMLElement | null;
+    expect(a?.tagName).not.toBe("INPUT");
+    expect(a?.tagName).not.toBe("TEXTAREA");
+    expect(
+      a?.closest(
+        "[data-slot=bottom-sheet-content], [data-slot=dialog-content]",
+      ),
+    ).not.toBeNull();
+  });
+});
+
+describe("카테고리를 늦게 받을 때 — 받기 전 유지 · 받았는데 없으면 비움", () => {
+  it("받기 전에는 읽어 온 카테고리를 유지한다 → 받은 뒤 저장하면 그대로 나간다", async () => {
+    catState.fail = true; // 아직 못 받음(data 없음)
+    render(basePreset);
+    catState.fail = false;
+    render(basePreset);
+    await tick();
+    await clickSave();
+
+    expect(sent.update!.categoryRowId).toBe(11);
+  });
+
+  it("받았는데 목록에 없으면(지운 카테고리) 비운다 → 지운 id 가 저장되지 않는다", async () => {
+    catState.fail = false;
     render({ ...basePreset, categoryRowId: 99, categoryName: "지운 카테고리" });
-    clickSave();
+    await tick();
+    await clickSave();
 
     expect(sent.update).toBeNull();
+    expect(document.body.textContent).toContain("preset.categoryRequired");
   });
 });
 
 describe("자산을 받기 전에 저장해도 이자는 읽어 온 그대로 나간다 (요청 본문)", () => {
-  it("자산 조회가 대기 중인 채 저장 → interestAmount 20000 유지", () => {
+  it("자산 조회가 대기 중인 채 저장 → interestAmount 20000 유지", async () => {
     assetState.loaded = false;
     render({
       ...basePreset,
@@ -577,9 +731,184 @@ describe("자산을 받기 전에 저장해도 이자는 읽어 온 그대로 �
       amount: 300000,
       lockAmount: "Y",
     });
-    clickSave();
+    await clickSave();
 
     expect(sent.update!.interestAmount).toBe(20000);
     assetState.loaded = true;
+  });
+});
+
+describe("저장이 실패하면 (T6)", () => {
+  it("폼은 열린 채 고정 글 Callout 이 뜨고 값은 그대로 — 서버 글은 없다", async () => {
+    saveState.fail = true;
+    render(basePreset);
+    await clickSave();
+
+    expect(sent.update).not.toBeNull();
+    expect(document.body.textContent).toContain("preset.saveFailed");
+    // 폼은 닫히지 않았다 — 이름 칸이 그대로 있다
+    expect(textInput().value).toBe("점심");
+    saveState.fail = false;
+  });
+});
+
+describe("규칙 밖 값은 화면이 먼저 비운다 (D3 · D4)", () => {
+  it("보내는 계좌를 받는 계좌와 같게 고르면 받는 계좌가 비고, 저장하면 그 칸 아래 안내", async () => {
+    render(null);
+    await click(chip("addTx.transfer"));
+    setValue(textInput(), "같은 계좌");
+    await pick("preset.fromAccount", "주거래");
+    await pick("preset.toAccount", "청약");
+    await pick("preset.fromAccount", "청약");
+    expect(valueOf("preset.toAccount")).toBe("addTx.selectPlaceholder");
+    await clickSave("add");
+
+    expect(sent.create).toBeNull();
+    expect(document.body.textContent).toContain("preset.toRequired");
+  });
+
+  it("보내는 계좌 후보에서 받는 계좌를 빼지 않는다", async () => {
+    render(null);
+    await click(chip("addTx.transfer"));
+    await pick("preset.toAccount", "청약");
+    await click(rowButton("preset.fromAccount"));
+    await tick();
+    expect(pickItemTitles()).toContain("청약");
+  });
+
+  it("받는 계좌 후보에서는 보내는 계좌를 뺀다", async () => {
+    render(null);
+    await click(chip("addTx.transfer"));
+    await pick("preset.fromAccount", "주거래");
+    await click(rowButton("preset.toAccount"));
+    await tick();
+    const titles = pickItemTitles();
+    expect(titles).toContain("청약");
+    expect(titles).not.toContain("주거래");
+  });
+
+  it("지운 계좌를 가리키는 프리셋은 받은 뒤 계좌를 비워 보낸다(옛 id 가 안 나간다)", async () => {
+    assetState.removed = [3];
+    render(basePreset);
+    await tick();
+    await clickSave();
+
+    expect(sent.update!.assetRowId).toBeNull();
+    assetState.removed = [];
+  });
+
+  it("카드 계좌인 지출 프리셋을 이체로 바꾸면 보내는 계좌를 비운다", async () => {
+    render({ ...basePreset, assetRowId: 5, assetName: "체크" });
+    await click(chip("addTx.transfer"));
+    await tick();
+    expect(valueOf("preset.fromAccount")).toBe("addTx.selectPlaceholder");
+  });
+
+  it("하위가 생겨 상위가 된 카테고리를 가리키는 프리셋은 카테고리를 비운다", async () => {
+    render({ ...basePreset, categoryRowId: 13, categoryName: "교통" });
+    await tick();
+    await clickSave();
+
+    expect(sent.update).toBeNull();
+    expect(document.body.textContent).toContain("preset.categoryRequired");
+  });
+
+  it("이자가 금액보다 크면 칸 아래 글로 막는다 · 요청 0", async () => {
+    render({
+      ...basePreset,
+      expenseType: "TRANSFER",
+      categoryRowId: null,
+      categoryName: null,
+      assetRowId: 3,
+      toAssetRowId: 6,
+      toAssetName: "대출",
+      interestAmount: 20000,
+      amount: 10000,
+      lockAmount: "Y",
+    });
+    await tick();
+    await clickSave();
+
+    expect(sent.update).toBeNull();
+    expect(document.body.textContent).toContain("preset.interestTooBig");
+  });
+
+  it("100억 넘는 옛 금액은 글로 알린다 · 요청 0", async () => {
+    render({ ...basePreset, lockAmount: "Y", amount: 20_000_000_000 });
+    await tick();
+    await clickSave();
+
+    expect(sent.update).toBeNull();
+    expect(document.body.textContent).toContain("amountTooLarge");
+  });
+
+  it("수수료 0 은 비운 것과 같다 — null", async () => {
+    render({
+      ...basePreset,
+      expenseType: "TRANSFER",
+      categoryRowId: null,
+      categoryName: null,
+      assetRowId: 3,
+      toAssetRowId: 4,
+    });
+    await typeInStep("preset.feeLabel", "0");
+    await clickSave();
+
+    expect(sent.update!.fee).toBeNull();
+    expect(valueOf("preset.feeLabel")).toBe("preset.noneValue");
+  });
+
+  it("지운 카테고리를 가리키는 프리셋은 열기만 해서는 바뀐 값이 아니다 — 닫을 때 묻지 않는다", async () => {
+    const onClose = vi.fn();
+    act(() =>
+      root.render(
+        <PresetEditDialog
+          preset={{ ...basePreset, categoryRowId: 99, categoryName: "지운" }}
+          onClose={onClose}
+        />,
+      ),
+    );
+    await tick();
+    act(() => {
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+      );
+    });
+    await tick();
+    expect(document.querySelector("[role=alertdialog]")).toBeNull();
+  });
+});
+
+describe("고정 표식 · 종류 바꾸기 본문 (T7)", () => {
+  it("지출 프리셋의 고정 표식은 본문에 실리고, 이체로 바꾸면 키가 빠진다", async () => {
+    render({ ...basePreset, isFixed: true });
+    await clickSave();
+    expect(sent.update!.isFixed).toBe(true);
+    sent.update = null;
+    act(() => root.unmount());
+    root = createRoot(container);
+    render({
+      ...basePreset,
+      isFixed: true,
+      categoryRowId: null,
+      categoryName: null,
+      expenseType: "TRANSFER",
+      assetRowId: 3,
+      toAssetRowId: 4,
+    });
+    await clickSave();
+    expect(wire(sent.update)).not.toHaveProperty("isFixed");
+  });
+
+  it("지출 프리셋을 이체로 바꿔 저장하면 카테고리가 명시 null 로 나간다", async () => {
+    render(basePreset);
+    await click(chip("addTx.transfer"));
+    await pick("preset.fromAccount", "주거래");
+    await pick("preset.toAccount", "청약");
+    await clickSave();
+
+    expect(wire(sent.update)).toHaveProperty("categoryRowId");
+    expect(sent.update!.categoryRowId).toBeNull();
+    expect(sent.update!.expenseType).toBe("TRANSFER");
   });
 });

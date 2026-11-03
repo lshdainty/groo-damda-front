@@ -6,7 +6,7 @@ import {
   TopNavigationTextButton,
   TopNavigationTitle,
 } from "@/shared/ds/top-navigation";
-import { useExpenseTemplates } from "@/features/expense";
+import { useExpenseCategories, useExpenseTemplates } from "@/features/expense";
 import { useRecurringTransactions } from "@/features/recurring-transaction";
 import {
   TEMP_BODY_PADDING,
@@ -40,7 +40,10 @@ function RecurringGate({ children }: { children: React.ReactNode }) {
   return (q.data?.length ?? 0) > 0 ? <>{children}</> : null;
 }
 function PresetGate({ children }: { children: React.ReactNode }) {
-  const q = useExpenseTemplates();
+  // 목록(프리셋 · 카테고리)을 못 받았으면 추가하지 않는다 — 본문이 실패 화면이다(I-20 C 13)
+  const q = useExpenseTemplates({ silent: true });
+  const cats = useExpenseCategories({ silent: true });
+  if (cats.data === undefined) return null;
   return (q.data?.length ?? 0) > 0 ? <>{children}</> : null;
 }
 
