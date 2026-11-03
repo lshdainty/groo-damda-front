@@ -41,7 +41,6 @@ import {
   periodMonthBounds,
   type FilterValue,
 } from "@/features/expense/model/filter";
-import { AddTxSheet } from "@/widgets/add-tx";
 import { TxDetailDialog } from "@/widgets/expense-detail/ui/TxDetailDialog";
 import { TransferDetailDialog } from "@/widgets/expense-detail/ui/TransferDetailDialog";
 import { monthFromQuery } from "@/pages/expense/lib/month-query";
@@ -231,11 +230,7 @@ export function ExpenseDesktop() {
 
   // ── 상세 · 수정 · 이체 상세 (여는 자리만 — 시트 안 모양은 거래 시트 몫) ──
   const [detail, setDetail] = useState<Expense | null>(null);
-  const [editing, setEditing] = useState<Expense | null>(null);
   const [transferDetail, setTransferDetail] = useState<AssetTransfer | null>(
-    null,
-  );
-  const [editingTransfer, setEditingTransfer] = useState<AssetTransfer | null>(
     null,
   );
 
@@ -481,40 +476,18 @@ export function ExpenseDesktop() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {transferDetail && !editingTransfer && (
+      {transferDetail && (
         <TransferDetailDialog
           transfer={transferDetail}
           mobile={false}
           onClose={() => setTransferDetail(null)}
-          onEdit={(tr) => {
-            setTransferDetail(null);
-            setEditingTransfer(tr);
-          }}
         />
       )}
-      {editingTransfer && (
-        <AddTxSheet
-          editTransfer={editingTransfer}
-          mobile={false}
-          onClose={() => setEditingTransfer(null)}
-        />
-      )}
-      {detail && !editing && (
+      {detail && (
         <TxDetailDialog
           expense={detail}
           mobile={false}
           onClose={() => setDetail(null)}
-          onEdit={(e) => {
-            setDetail(null);
-            setEditing(e);
-          }}
-        />
-      )}
-      {editing && (
-        <AddTxSheet
-          expense={editing}
-          mobile={false}
-          onClose={() => setEditing(null)}
         />
       )}
     </Frame>

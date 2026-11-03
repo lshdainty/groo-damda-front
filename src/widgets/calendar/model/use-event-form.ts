@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { format } from "date-fns";
 
@@ -212,7 +212,14 @@ export function useEventForm({
     }
   }, [defaultCalendar, selectedCalendarRowId, setValue, event]);
 
-  useEffect(() => {
+  // 폼 값이 어느 일정으로 맞춰졌나 — reset 이 **끝난** 뒤에 적는다. 제목 같은 값으로 "맞춰졌나" 를 짐작하면 같은 이름의 일정 · 나갔다 다시 연 같은 일정에서 reset 보다 먼저 참이 된다.
+  // 일정 객체 자체(참조)로 가르므로 같은 일정을 다시 열어도(새 스냅샷) 새로 맞춰져야 참이다
+  const [syncedEvent, setSyncedEvent] = useState<
+    CalendarEvent | null | undefined
+  >(undefined);
+  // 그리기 전에(layout) 맞춘다 — 폼 칸이 이미 붙은 뒤 reset 이 오면 RHF 가 등록(`_fields`)을 비워 칸이 다시 등록되지 않고 값이 사라진다(상세 → 수정 때 제목이 빈 칸으로 열림).
+  // 일정 상세가 든 시트는 칸을 그린 뒤가 아니라 이 맞춤이 끝난 뒤에 그린다(`EventDetailSurface` 의 formReady).
+  useLayoutEffect(() => {
     if (event) {
       const reminderMins = event.reminders?.map((r) => r.minutesBefore) ?? [];
       reset({
@@ -240,6 +247,9 @@ export function useEventForm({
         ),
       );
     }
+    // reset 이 끝났다는 신호를 렌더로 알린다 — 값(제목 등)으로 짐작하지 않으려고 effect 안에서 상태로 적는다(reset 보다 먼저 참이 될 길이 없다)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSyncedEvent(event ?? null);
   }, [
     event,
     reset,
@@ -376,6 +386,9 @@ export function useEventForm({
 
   return {
     form,
+    /** 폼 값이 이 일정으로 맞춰졌다(reset 끝남) — 칸을 그려도 된다. 맞춰지기 전에 칸이 먼저 붙으면 RHF 가 등록을 비워 칸이 빈 채 값이 안 먹는다 */
+    isSyncedWith: (e: CalendarEvent | null | undefined) =>
+      syncedEvent !== undefined && syncedEvent === (e ?? null),
     handleSubmit,
     onFormSubmit,
     selectableCalendars,

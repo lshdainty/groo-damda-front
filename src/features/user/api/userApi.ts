@@ -206,6 +206,10 @@ export const userApi = {
   getPreferences: async (): Promise<UserPreferences> => {
     const resp: ApiResponse<UserPreferences> = await apiClient.get(
       "/v1/users/me/preferences",
+      // 표시 설정 화면이 고정 글로 알린다(I-14 21) — 전역 알림이 서버 글을 띄우지 않게
+      { silent: true } as import("axios").AxiosRequestConfig & {
+        silent?: boolean;
+      },
     );
     return resp.data;
   },
@@ -216,6 +220,9 @@ export const userApi = {
     const resp: ApiResponse<UserPreferences> = await apiClient.patch(
       "/v1/users/me/preferences",
       data,
+      { silent: true } as import("axios").AxiosRequestConfig & {
+        silent?: boolean;
+      },
     );
     return resp.data;
   },

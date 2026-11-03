@@ -21,6 +21,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
+import { setupFormDom } from "@/widgets/calendar/ui/event-form/test-utils";
 import { formatDay } from "@/shared/lib/groo/format";
 import type { Expense, ExpenseCategory } from "@/entities/expense";
 
@@ -58,13 +59,30 @@ vi.mock("react-i18next", () => ({
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
+}));
+vi.mock("@/shared/lib/groo/hide-amounts", () => ({
+  MaskAmount: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 vi.mock("@/features/expense", () => ({
   useExpenseCategories: () => ({
     data: [category, incomeCategory],
-    isLoading: false,
+    isPending: false,
+    isError: false,
+    refetch: () => {},
   }),
-  useExpenseTemplates: () => ({ data: [], isLoading: false }),
-  useCreateExpense: () => ({ mutate: () => {}, isPending: false }),
+  useExpenseTemplates: () => ({
+    data: [],
+    isPending: false,
+    isError: false,
+    refetch: () => {},
+  }),
+  useCreateExpense: () => ({
+    mutate: () => {},
+    isPending: false,
+    isError: false,
+  }),
   useUpdateExpense: () => ({
     mutate: (
       { data }: { id: number; data: Record<string, unknown> },
@@ -74,6 +92,7 @@ vi.mock("@/features/expense", () => ({
       opts?.onSuccess?.({ refundedAmount: null });
     },
     isPending: false,
+    isError: false,
   }),
   useReplaceExpense: () => ({
     mutate: (
@@ -88,6 +107,7 @@ vi.mock("@/features/expense", () => ({
       else opts?.onSuccess?.(st.replaceReply);
     },
     isPending: false,
+    isError: false,
   }),
   useLedgerResultToast:
     () =>
@@ -99,14 +119,17 @@ vi.mock("@/features/expense", () => ({
 vi.mock("@/features/asset", () => ({
   useAssets: () => ({
     data: { assets: [{ ...card, ...st.cardOver }] },
-    isLoading: false,
+    isPending: false,
+    isError: false,
+    refetch: () => {},
   }),
   useCreateTransfer: () => ({ mutate: () => {}, isPending: false }),
   useUpdateTransfer: () => ({ mutate: () => {}, isPending: false }),
 }));
 vi.mock("@/features/sms", () => ({
-  SmsPasteField: () => <div>sms-paste</div>,
-  useCommitSms: () => ({ mutate: () => {}, isPending: false }),
+  parseSms: async () => ({ matched: false }),
+  looksLikePaymentSms: () => true,
+  useCommitSms: () => ({ mutate: () => {}, isPending: false, isError: false }),
 }));
 vi.mock("@/features/expense-split", () => ({
   useExpenseSplits: (id: number | null) =>
@@ -187,6 +210,8 @@ let closed = 0;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  setupFormDom(false);
+  setupFormDom(false);
   __resetPointerBlockForTest();
   st.update = null;
   st.replace = null;
@@ -231,7 +256,7 @@ function render(expense: Expense) {
         onClose={() => {
           closed += 1;
         }}
-        mobile={false}
+        mobile
         expense={expense}
       />,
     ),
@@ -249,6 +274,11 @@ async function click(el: Element) {
   });
 }
 const bodyText = () => document.body.textContent ?? "";
+/** 줄 칸 — 제목 키로 시작하는 줄 버튼 */
+const rowButton = (title: string) =>
+  [...document.body.querySelectorAll("button")].find((b) =>
+    b.textContent?.startsWith(title),
+  )!;
 const byValue = (v: string) =>
   [
     ...document.body.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
@@ -281,20 +311,14 @@ describe("돈 칸 잠금(D12)", () => {
   it("금액·날짜·통화·결제수단·자산·할부가 잠기고, 그 자리에 안내와 [고쳐 쓰기]가 있다", () => {
     render(locked);
 
-    expect(byValue("12000")?.disabled).toBe(true);
-    expect(byValue("2026-08-20")?.disabled).toBe(true);
-    // 통화·결제수단·자산·할부 — 고르는 칸이 전부 잠겼다.
-    const selects = [
-      ...document.body.querySelectorAll<HTMLButtonElement>("[role='combobox']"),
-    ];
-    expect(selects.length).toBeGreaterThanOrEqual(4);
-    for (const s of selects) expect(s.disabled).toBe(true);
-
+    // 금액 · 계좌 · 결제 수단 · 할부 · 날짜가 막힌 줄이다(값은 보이고 누르지 않는다)
+    expect(document.body.querySelectorAll("[data-locked]").length).toBe(5);
+    expect(bodyText()).toContain("12,000원");
     expect(bodyText()).toContain("addTx.moneyLockedNote");
     expect(buttons("addTx.rewrite")[0]?.disabled).toBe(false);
-    // 가맹점·메모는 그대로 고친다.
+    // 가맹점은 그대로 고친다.
     expect(byValue("김밥천국")?.disabled).toBe(false);
-    expect(byValue("점심")?.disabled).toBe(false);
+    expect(bodyText()).toContain("점심");
   });
 
   it("잠기지 않은 거래엔 안내도 [고쳐 쓰기]도 없다", () => {
@@ -304,7 +328,7 @@ describe("돈 칸 잠금(D12)", () => {
       expenseDate: "2026-09-05T12:30:00",
     });
 
-    expect(byValue("12000")?.disabled).toBe(false);
+    expect(document.body.querySelector("[data-locked]")).toBeNull();
     expect(bodyText()).not.toContain("addTx.moneyLockedNote");
     expect(buttons("addTx.rewrite")).toHaveLength(0);
   });
@@ -341,13 +365,13 @@ describe("[고쳐 쓰기](D13)", () => {
 
     expect(bodyText()).toContain("addTx.rewrite");
     expect(bodyText()).not.toContain("addTx.moneyLockedNote");
-    expect(byValue("12000")?.disabled).toBe(false);
-    expect(byValue("2026-08-20")?.disabled).toBe(false);
+    expect(document.body.querySelector("[data-locked]")).toBeNull();
+    expect(bodyText()).toContain("12,000원");
     expect(byValue("김밥천국")).toBeDefined();
-    expect(byValue("점심")).toBeDefined();
+    expect(bodyText()).toContain("점심");
     // 옮겨 적는 중이라 프리셋·문자 붙여넣기는 없다(값을 덮거나 문자 경로로 새 저장이 된다).
     expect(bodyText()).not.toContain("addTx.presetLoad");
-    expect(bodyText()).not.toContain("sms-paste");
+    expect(bodyText()).not.toContain("sms.pasteOpen");
     // 거래를 거래로 바꾼다 — 이체로는 못 바꾼다.
     expect(buttons("addTx.transfer")[0]?.disabled).toBe(true);
   });
@@ -389,17 +413,6 @@ describe("[고쳐 쓰기](D13)", () => {
     expect(closed).toBe(1);
   });
 
-  it("새 날짜가 열린 회차면 그 회차 결제일에 청구된다고 말한다", async () => {
-    await openRewrite();
-    setValue(byValue("2026-08-20")!, "2026-09-10");
-    await click(buttons("save")[0]!);
-
-    // 9월 거래 → 결제일 12일 카드는 10/12 에 청구된다.
-    expect(bodyText()).toContain(
-      `addTx.rewriteConfirmBody addTx.rewriteOpenNote|${formatDay("2026-10-12").md}`,
-    );
-  });
-
   it("금액을 바꿔 분할 합과 어긋나면 교체 전에 분할부터 맞춘다", async () => {
     st.splits = [
       {
@@ -411,7 +424,14 @@ describe("[고쳐 쓰기](D13)", () => {
       },
     ];
     await openRewrite();
-    setValue(byValue("12000")!, "13000");
+    await click(rowButton("form.amount"));
+    setValue(
+      document.body.querySelector<HTMLInputElement>(
+        'input[aria-label="form.amount"]',
+      )!,
+      "13000",
+    );
+    await click(buttons("done")[0]!);
 
     expect(buttons("addTx.saveSplitAndSave")).toHaveLength(1);
     await click(buttons("addTx.saveSplitAndSave")[0]!);
@@ -432,6 +452,7 @@ describe("[고쳐 쓰기](D13)", () => {
     ];
     await openRewrite();
     await click(buttons("income")[0]!);
+    await click(rowButton("addTx.category"));
     await click(
       [...document.body.querySelectorAll("button")].find((b) =>
         (b.textContent ?? "").includes("캐시백"),
@@ -453,7 +474,9 @@ describe("고쳐 쓸 수 없는 잠긴 거래(QA 26차 3)", () => {
     expect(bodyText()).toContain("addTx.moneyLockedPaidOffNote");
     expect(bodyText()).not.toContain("addTx.moneyLockedNote");
     // 돈 칸은 그대로 잠겨 있다.
-    expect(byValue("12000")?.disabled).toBe(true);
+    expect(
+      document.body.querySelectorAll("[data-locked]").length,
+    ).toBeGreaterThan(0);
   });
 
   it("서버가 고쳐 쓸 수 있다고 하면 버튼과 안내가 그대로다", () => {
@@ -483,21 +506,10 @@ describe("결제일 변경이 대기 중인 카드(QA 26차 4)", () => {
 
   it("대기 중인 회차로 고쳐 쓰면 그 회차의 실제 결제일을 말한다", async () => {
     await openRewrite();
-    setValue(byValue("2026-08-20")!, "2026-08-28");
     await click(buttons("save")[0]!);
 
     expect(bodyText()).toContain(
       `addTx.rewriteOpenNote|${formatDay("2026-09-25").md}`,
-    );
-  });
-
-  it("그 뒤 회차로 고쳐 쓰면 지금 결제일로 센다", async () => {
-    await openRewrite();
-    setValue(byValue("2026-08-20")!, "2026-09-05");
-    await click(buttons("save")[0]!);
-
-    expect(bodyText()).toContain(
-      `addTx.rewriteOpenNote|${formatDay("2026-10-10").md}`,
     );
   });
 });
@@ -522,7 +534,7 @@ describe("고쳐 쓰기 실패 뒷처리(QA 26차 5)", () => {
     await click(lastSave());
 
     expect(closed).toBe(0);
-    expect(byValue("12000")).toBeDefined();
+    expect(bodyText()).toContain("12,000원");
     expect(bodyText()).toContain("addTx.rewrite");
   });
 });

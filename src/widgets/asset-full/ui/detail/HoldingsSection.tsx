@@ -7,7 +7,7 @@ import { Skeleton } from "@/shared/ds/skeleton";
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import { ListTitle } from "@/shared/ui/groo/band-parts";
-import { MINUS, KRW, formatChangeRate } from "@/shared/lib/groo/format";
+import { MINUS, KRW, money, formatChangeRate } from "@/shared/lib/groo/format";
 import { won } from "@/shared/lib/groo/money-text";
 import {
   HOLDING_UNIT_KEY,
@@ -69,7 +69,7 @@ export function HoldingRow({
       // 통화를 하나로 가정하지 않는다 — 나무를 붙이며 JPY·HKD·CNY 가 들어왔다.
       priceLabel =
         price.currency === "KRW"
-          ? `${KRW(price.price)}원`
+          ? money(price.price)
           : price.currency === "USD"
             ? `$${price.price.toLocaleString()}`
             : `${price.price.toLocaleString()} ${price.currency}`;
@@ -183,7 +183,7 @@ export function TradeHistory({ asset }: { asset: Asset }) {
             }
             suffix={
               <span className="text-end text-t5 font-bold tabular-nums text-fg-neutral">
-                {withCommaBreaks(m(`${KRW(tr.amount)}원`))}
+                {withCommaBreaks(m(money(tr.amount)))}
               </span>
             }
             aria-label={t("trade.openRow", {

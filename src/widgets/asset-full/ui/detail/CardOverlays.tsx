@@ -16,7 +16,7 @@ import { useWideSurface } from "@/shared/ds/overlay";
 import { Popover, PopoverAnchor, PopoverContent } from "@/shared/ds/popover";
 import { AmountInput } from "@/shared/ui/groo/amount-input";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
-import { KRW, formatDay, money } from "@/shared/lib/groo/format";
+import { KRW, formatDay, money, wonPrefix } from "@/shared/lib/groo/format";
 import { useAssetMask } from "../../lib/asset-groups";
 import type { Asset } from "@/entities/asset";
 import type { CardDetail } from "./use-card-detail";
@@ -241,7 +241,7 @@ export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
           title={t("assetDetail.cancelPayment")}
           message={t("assetDetail.cancelPaymentConfirm", {
             date: formatDay(c.lastPayment.paymentDate).md,
-            amount: KRW(c.lastPayment.billingAmount),
+            amount: `${wonPrefix()}${KRW(c.lastPayment.billingAmount)}`,
           })}
           confirmLabel={t("assetDetail.cancelPayment")}
           danger

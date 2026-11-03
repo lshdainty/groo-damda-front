@@ -116,9 +116,13 @@ export const calendarApi = {
     return fromApiEvent(resp.data as unknown as Record<string, unknown>);
   },
 
-  deleteEvent: async (id: number): Promise<void> => {
+  deleteEvent: async (
+    id: number,
+    options?: EventRequestOptions,
+  ): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/calendar/event/${id}`,
+      quiet(options),
     );
     return resp.data;
   },

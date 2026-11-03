@@ -9,10 +9,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CalendarEventFormValues } from "@/entities/calendar";
 
-const { put, post } = vi.hoisted(() => ({ put: vi.fn(), post: vi.fn() }));
+const { put, post, del } = vi.hoisted(() => ({
+  put: vi.fn(),
+  post: vi.fn(),
+  del: vi.fn(),
+}));
 
 vi.mock("@/shared/api", () => ({
-  apiClient: { put, post, get: vi.fn(), delete: vi.fn() },
+  apiClient: { put, post, get: vi.fn(), delete: del },
 }));
 
 const { calendarApi } = await import("./calendarApi");
@@ -28,6 +32,7 @@ const workEvent: CalendarEventFormValues = {
 
 beforeEach(() => {
   put.mockReset().mockResolvedValue({ data: {} });
+  del.mockReset().mockResolvedValue({ data: null });
   post.mockReset().mockResolvedValue({ data: {} });
 });
 
@@ -110,5 +115,15 @@ describe("silent 옵션", () => {
     await calendarApi.updateEvent(7, workEvent, { silent: true });
     expect(post.mock.calls[0]![2]).toEqual({ silent: true });
     expect(put.mock.calls[0]![2]).toEqual({ silent: true });
+  });
+});
+
+describe("삭제의 silent 옵션 (I-09b W8)", () => {
+  it("옵션이 없으면 설정을 넘기지 않고, silent: true 면 { silent: true } 를 싣는다", async () => {
+    await calendarApi.deleteEvent(7);
+    await calendarApi.deleteEvent(7, { silent: true });
+    expect(del.mock.calls[0]![0]).toBe("/v1/calendar/event/7");
+    expect(del.mock.calls[0]![1]).toBeUndefined();
+    expect(del.mock.calls[1]![1]).toEqual({ silent: true });
   });
 });

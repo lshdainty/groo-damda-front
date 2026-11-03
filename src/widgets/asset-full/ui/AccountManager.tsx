@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Landmark, Pencil, Plus, Trash2 } from "lucide-react";
 import type {
@@ -67,6 +68,7 @@ export function AccountManager({
   const createAsset = useCreateAsset();
   const updateAsset = useUpdateAsset();
   const deleteAsset = useDeleteAsset();
+  const confirmFail = useConfirmFail();
 
   const assets: Asset[] = assetsData?.assets ?? EMPTY_ASSETS;
 
@@ -354,6 +356,12 @@ export function AccountManager({
           })}
           confirmLabel={t("deleteConfirm.confirm")}
           onConfirm={() => deleteAsset.mutateAsync(confirmDelete.rowId)}
+          onError={() =>
+            confirmFail({
+              message: t("deleteConfirm.failed"),
+              retry: () => deleteAsset.mutateAsync(confirmDelete.rowId),
+            })
+          }
           onClose={() => setConfirmDelete(null)}
         />
       )}

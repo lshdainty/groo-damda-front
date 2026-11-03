@@ -6,6 +6,7 @@ import {
   useParams,
 } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import {
   Eye,
   EyeOff,
@@ -164,6 +165,7 @@ function Loaded({
   const { t: tc } = useTranslation("common");
   const updateAsset = useUpdateAsset();
   const deleteAsset = useDeleteAsset();
+  const confirmFail = useConfirmFail();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [unlockOpen, setUnlockOpen] = useState(false);
@@ -319,14 +321,22 @@ function Loaded({
             if (!deleteAsset.isPending) setConfirmDelete(false);
           }}
           onConfirm={() =>
-            deleteAsset.mutate(asset.rowId, {
+            deleteAsset.mutateAsync(asset.rowId).then(
               // 지우면 ← 와 같은 길로 돌아간다 — 돌아간 목록에서 그 줄이 사라진 모습
-              onSuccess: () => {
+              () => {
                 setConfirmDelete(false);
                 leave();
               },
-              onError: () => setConfirmDelete(false),
-            })
+              // 실패 — 확인창을 닫고 critical 스낵바. [다시 시도] 는 묻지 않고 바로 재요청
+              () => {
+                setConfirmDelete(false);
+                confirmFail({
+                  message: t("deleteConfirm.failed"),
+                  retry: () => deleteAsset.mutateAsync(asset.rowId),
+                  onRetried: leave,
+                });
+              },
+            )
           }
         />
       )}

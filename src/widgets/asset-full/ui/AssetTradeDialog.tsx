@@ -27,7 +27,7 @@ import type {
   AssetTradeFormValues,
   TradeType,
 } from "@/entities/asset";
-import { KRW } from "@/shared/lib/groo/format";
+import { KRW, money } from "@/shared/lib/groo/format";
 
 /**
  * 매수·매도 입력.
@@ -226,7 +226,7 @@ export function AssetTradeDialog({
                     holding.holdingType ?? "STOCK",
                   ),
                   avg: holding.avgPrice
-                    ? KRW(Math.round(Number(holding.avgPrice)))
+                    ? money(Math.round(Number(holding.avgPrice)))
                     : "—",
                 })}
               />
@@ -364,8 +364,8 @@ export function AssetTradeDialog({
                     {cashAfter == null || cashDelta == null
                       ? "—"
                       : viaCash
-                        ? `${KRW(cashAfter)}원`
-                        : `${cashDelta >= 0 ? "+" : "−"}${KRW(Math.abs(cashDelta))}원`}
+                        ? money(cashAfter)
+                        : `${cashDelta >= 0 ? "+" : "−"}${money(Math.abs(cashDelta))}`}
                   </span>
                 }
               />
@@ -375,7 +375,7 @@ export function AssetTradeDialog({
                   suffix={
                     <span className="text-end font-bold tabular-nums text-fg-neutral">
                       {realizedPreview >= 0 ? "+" : "−"}
-                      {KRW(Math.abs(realizedPreview))}원
+                      {money(Math.abs(realizedPreview))}
                     </span>
                   }
                 />

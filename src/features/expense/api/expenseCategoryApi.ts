@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, type QuietRequestConfig } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
   ExpenseCategory,
@@ -16,9 +16,12 @@ export const expenseCategoryApi = {
     return resp.data;
   },
 
-  getCategories: async (): Promise<ExpenseCategory[]> => {
+  getCategories: async (opts?: {
+    silent?: boolean;
+  }): Promise<ExpenseCategory[]> => {
+    const config: QuietRequestConfig = { silent: opts?.silent };
     const resp: ApiResponse<{ categories: ExpenseCategory[] }> =
-      await apiClient.get("/v1/expense/categories");
+      await apiClient.get("/v1/expense/categories", config);
     return resp.data.categories;
   },
 

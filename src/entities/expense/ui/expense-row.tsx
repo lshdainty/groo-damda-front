@@ -114,12 +114,12 @@ export function ExpenseRow({
     </>
   );
 
-  // 설명이 줄어드는 정도는 tag-group.md "줄어드는 정도" 예 그대로(03-E 5 B) — 카테고리 · 시각은 줄지 않고(0) 긴 계좌 이름만 줄어든다(2).
+  // 줄어드는 건 이름 항목(카테고리 1 · 계좌 2)이고 시각 · 날짜는 줄지 않는다(0) — tag-group.md "줄어드는 정도"(꼭 보여야 할 항목은 shrink 0). 카테고리를 0 으로 두면 긴 카테고리가 칸을 먼저 채워 시각이 금액 칸으로 밀렸다.
   // `shrink` 는 차례가 아니라 넘친 폭을 글 폭 × shrink 비율로 나누는 값이다. 모두 최소 폭이어도 넘치면 줄 끝이 잘린다(스펙이 받아들인 동작).
   // 값은 늘 오른쪽이고, 줄 안 폭이 16em 미만이면 ds 가 값을 본문 아래로 내린다(CHANGELOG 03-D 결정 1 B) — 값 길이로 가르지 않는다.
   const detail = (
     <TagGroup size="t3" truncate>
-      <TagGroupItem shrink={0}>
+      <TagGroupItem shrink={1}>
         {expense.categoryName ?? t("others")}
       </TagGroupItem>
       {expense.assetName && (
