@@ -219,12 +219,10 @@ export const TEMP_BODY_PADDING: SectionId[] = [
   "calendar-share",
   "calendar-labels",
   "memo-tags",
-  "appearance",
   "notifications",
   // data 는 걷지 않는다 — I-05 05-2 의 데이터 본문이 바깥 24 를 전제로 목록 · 바닥 바를 음수 여백으로 되돌려 쓴다.
   // 걷으면 그 줄이 화면 밖으로 24 씩 나간다(디자인시스템 검수 10-23).
   "data",
-  "account",
 ];
 
 // 외부 링크 항목은 열 내부 화면이 없으므로 URL 로 직접 접근 가능한 섹션에서 제외한다.

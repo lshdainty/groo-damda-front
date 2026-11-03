@@ -1066,7 +1066,7 @@ function MemoEditDialog({
           placeholder={t("titlePlaceholder")}
           aria-invalid={error}
           maxLength={TITLE_MAX}
-          autoFocus
+          autoFocus={isNew}
         />
         {error && (
           <div

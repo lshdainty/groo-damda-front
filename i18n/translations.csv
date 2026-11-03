@@ -1274,10 +1274,8 @@ user,currentPasswordPlaceholder,현재 비밀번호를 입력해주세요,Enter 
 user,currentPasswordRequired,현재 비밀번호를 입력해주세요,Current password is required
 user,currentPasswordInvalid,현재 비밀번호가 맞지 않아요,That current password doesn't match
 user,newPassword,새 비밀번호,New Password
-user,newPasswordPlaceholder,새 비밀번호를 입력하세요,Enter your new password
 user,newPasswordRequired,새 비밀번호를 입력해주세요,New password is required
 user,confirmPassword,새 비밀번호 확인,Confirm New Password
-user,confirmPasswordPlaceholder,새 비밀번호를 다시 입력하세요,Re-enter your new password
 user,confirmPasswordRequired,새 비밀번호 확인을 입력해주세요,Password confirmation is required
 user,passwordMismatch,새 비밀번호가 일치하지 않아요,New passwords do not match
 user,passwordMatched,새 비밀번호가 일치해요,New passwords match
@@ -1286,7 +1284,7 @@ user,passwordRuleSpecial,특수문자 1자 이상,At least 1 special character
 user,passwordPolicyUnmet,비밀번호 조건을 모두 충족해주세요,Password does not meet the requirements
 user,passwordSameAsCurrent,현재 비밀번호와 다른 비밀번호를 입력해주세요,New password must be different from the current one
 user,passwordChangeSuccess,비밀번호를 바꿨어요,Password changed successfully
-user,passwordChangeError,비밀번호를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요,Couldn't change your password. Please try again shortly
+user,passwordChangeError,비밀번호를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change your password. Please try again shortly.
 user,withdraw.title,그루 담다 이용 해지,Stop using 그루 담다
 user,withdraw.intro,이용을 해지하면 바로 로그인이 막히고 되돌릴 수 없어요.,Stopping 그루 담다 signs you out immediately and cannot be undone.
 user,impact.calendarsOwned,내가 만든 공유 캘린더 {{count}}개가 삭제되고 멤버도 볼 수 없어요,{{count}} shared calendar(s) you created will be deleted — members lose access too
@@ -1794,6 +1792,7 @@ settings,theme.label,테마,Theme
 settings,language.label,언어,Language
 settings,language.ko,한국어,한국어
 settings,language.en,English,English
+settings,language.system,시스템,System
 settings,theme.light,라이트,Light
 settings,theme.lightDesc,밝은 배경,Light background
 settings,theme.dark,다크,Dark
@@ -1874,7 +1873,7 @@ settings,currency.KRW,대한민국 원,Korean Won
 settings,currency.USD,미국 달러,US Dollar
 settings,currency.EUR,유로,Euro
 settings,currency.JPY,일본 엔,Japanese Yen
-settings,currency.desc,새 자산·거래를 만들 때 이 통화가 먼저 골라져요,New assets and transactions start with this currency
+settings,currency.desc,새 자산·거래를 만들 때 이 통화가 먼저 골라져요.,New assets and transactions start with this currency.
 settings,page.title,설정,Settings
 settings,page.subtitle,카테고리·계좌·알림 등,Categories · accounts · alerts
 settings,sections.categories.label,카테고리 관리,Manage categories
@@ -1895,10 +1894,10 @@ settings,sections.calendarShare.desc,다중 캘린더 생성과 멤버 공유 �
 settings,sections.calendarLabels.label,캘린더 라벨,Calendar labels
 settings,sections.calendarLabels.desc,전 캘린더 공용 라벨 관리,Manage labels shared across all calendars
 settings,sections.appearance.label,표시 설정,Display settings
-settings,sections.appearance.desc,테마·밀도·기본 통화,Theme · density · default currency
+settings,sections.appearance.desc,테마·언어·기준 지역·기본 통화,"Theme · language · region · default currency"
 settings,region.label,기준 지역,Region
 settings,region.placeholder,지역 선택,Select a region
-settings,region.desc,'오늘'과 통계의 하루를 이 지역 기준으로 계산해요. 화면의 시간은 기기 시간대로 보여요,Days for 'today' and statistics are calculated in this region. On-screen times follow your device's time zone
+settings,region.desc,'오늘'과 통계의 하루를 이 지역 기준으로 계산해요. 화면의 시간은 기기 시간대로 보여요.,"Days for 'today' and statistics are calculated in this region. On-screen times follow your device's time zone."
 settings,sections.notifications.label,알림 설정,Notification settings
 settings,sections.notifications.desc,결제 예정·예산 초과 알림,Payment due and budget overage alerts
 settings,sections.data.label,데이터 내보내기,Export data
@@ -1918,6 +1917,7 @@ settings,groups.data,데이터,Data
 settings,groups.account,계정,Account
 settings,account.defaultName,사용자,User
 settings,account.edit,수정,Edit
+settings,account.editSoon,프로필 수정은 곧 열려요.,Profile editing is coming soon.
 settings,account.joined,가입 {{date}},Joined {{date}}
 settings,account.group.security,보안,Security
 settings,account.group.connected,연결된 계정,Linked Accounts
@@ -1930,8 +1930,6 @@ settings,account.biometric.label,생체 인증,Biometric Authentication
 settings,account.biometric.desc,앱에서 설정 가능,Available in the app
 settings,account.devices.label,로그인된 기기,Signed-in Devices
 settings,account.devices.desc,현재 기기,Current device
-settings,account.loginHistory.label,로그인 기록,Login History
-settings,account.loginHistory.desc,최근 30일,Last 30 days
 settings,sections.devices.label,로그인된 기기,Signed-in devices
 settings,sections.devices.desc,이 계정으로 로그인된 기기예요. 낯선 기기가 있으면 로그아웃해주세요.,These devices are signed in to your account. Log out any you don't recognize.
 settings,devices.current,현재 기기,Current device
@@ -1952,11 +1950,9 @@ settings,account.linked,연결됨,Connected
 settings,account.notLinked,연결 안 됨,Not connected
 settings,account.link,연결,Connect
 settings,account.unlink,해제,Disconnect
-settings,account.provider.kakao,카카오,Kakao
-settings,account.provider.naver,네이버,Naver
 settings,account.logout.label,로그아웃,Log Out
 settings,account.logout.desc,이 기기에서만,This device only
-settings,account.logout.confirmMessage,정말 로그아웃 하시겠어요?,Log out of this device?
+settings,account.logout.confirmMessage,이 기기에서 로그아웃할까요?,Log out of this device?
 settings,account.withdraw.label,그루 담다 이용 해지,Stop using 그루 담다
 settings,account.withdraw.desc,복구할 수 없어요,Cannot be undone
 settings,account.comingSoon,다음 단계에서 구현,Coming in a future update
@@ -1967,8 +1963,13 @@ settings,account.sub.proPromo,증권 투자는 Pro 전용 · 지금 시작하기
 settings,account.sub.proStart,Pro 시작,Start Pro
 settings,account.sub.perMonth,/ 월,/ mo
 settings,account.toast.linked,{{name}} 계정이 연결되었어요,{{name}} account connected
-settings,account.toast.linkError,계정 연결에 실패했어요,Failed to connect the account
+settings,account.toast.linkError,계정을 연결하지 못했어요.,Couldn't connect the account.
 settings,account.toast.unlinked,Google 연결을 해제했어요,Google account disconnected
+settings,account.toast.unlinkError,연결을 해제하지 못했어요.,Couldn't disconnect the account.
+settings,account.providersError,연결 상태를 불러오지 못했어요,Couldn't load the connection status
+settings,prefs.regionLoadError,기준 지역을 불러오지 못했어요,Couldn't load the region
+settings,prefs.currencyLoadError,기본 통화를 불러오지 못했어요,Couldn't load the default currency
+settings,prefs.saveFailed,설정을 바꾸지 못했어요.,Couldn't change the setting.
 stocks,nav.title,증권,Stocks
 stocks,detail.sheetTitle,종목 상세,Stock details
 stocks,summary.title,내 투자 평가금액,My portfolio value

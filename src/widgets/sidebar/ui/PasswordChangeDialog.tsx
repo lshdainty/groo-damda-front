@@ -1,7 +1,4 @@
-import { useEffect } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useRef, useState } from "react";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -9,12 +6,18 @@ import {
   passwordChangeErrorKey,
   useChangePasswordMutation,
 } from "@/features/user";
-import { ModalShell } from "@/shared/ui/groo/dialogs";
-import { ModalFooter } from "@/shared/ui/groo/modal-footer";
-import { useIsMobile } from "@/shared/hooks";
-import { Form } from "@/shared/ui/form";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
+import { Button } from "@/shared/ds/button";
+import { Callout } from "@/shared/ds/callout";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogCancel,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+} from "@/shared/ds/dialog";
+import { Field } from "@/shared/ds/field";
+import { useScrollToError } from "@/features/expense/model/useScrollToError";
+import { Input } from "@/shared/ds/input";
 import { PASSWORD_RULES, isPasswordValid } from "@/shared/lib";
 
 interface PasswordChangeDialogProps {
@@ -22,143 +25,50 @@ interface PasswordChangeDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const createFormSchema = (t: (key: string) => string) =>
-  z
-    .object({
-      currentPassword: z.string().min(1, t("currentPasswordRequired")),
-      // 정책(8자 이상·특수문자)은 PASSWORD_RULES 단일 소스 — 체크리스트가 이미 미달 항목을
-      // 짚어주므로 필드 에러는 한 줄로만 남긴다.
-      newPassword: z
-        .string()
-        .min(1, t("newPasswordRequired"))
-        .refine(isPasswordValid, { message: t("passwordPolicyUnmet") }),
-      confirmPassword: z.string().min(1, t("confirmPasswordRequired")),
-    })
-    .refine((data) => data.newPassword === data.confirmPassword, {
-      message: t("passwordMismatch"),
-      path: ["confirmPassword"],
-    })
-    // 서버(SSO)도 현재와 동일한 비밀번호를 거부한다 — 제출 전에 걸러 왕복을 줄인다.
-    .refine(
-      (data) =>
-        !data.currentPassword || data.newPassword !== data.currentPassword,
-      {
-        message: t("passwordSameAsCurrent"),
-        path: ["newPassword"],
-      },
-    );
-
 /**
- * 입력 중 규칙 충족 여부 체크리스트.
- * 값이 비어 있으면 표시하지 않는다(입력 전 경고로 겁주지 않게).
- * 이 레포에서 비밀번호를 새로 만드는 화면은 여기뿐이라 다이얼로그 로컬로 둔다.
+ * 비밀번호 바꾸기(I-14 14 ~ 16) — ds Responsive Dialog 입력 폼. 1280 이상 대화상자 480(바닥 [취소] [저장]) · 미만 시트(위 닫기 원 + 바닥 [저장]).
+ * 칸 셋은 필수 표시도 자리 글도 없다(셋 모두 필수라 표시하지 않고, 조건은 새 비밀번호 아래 체크 줄이 말한다).
+ * [저장]은 네 조건(현재 칸 값 · 조건 충족 · 확인 일치 · 현재와 다름)이 맞을 때만 눌린다. 실패 글은 서버 글이 아니라 고정 글이다 —
+ * 현재 비밀번호가 틀리면(USER_003) 그 칸 오류, 그 밖은 본문 맨 위 Callout.
+ * 열려 있는 동안에만 마운트되므로(부르는 쪽이 조건부로 그린다) 칸 값은 처음부터 빈 값으로 서고 reset 이 따로 필요 없다.
  */
-const PasswordRules = ({
-  password,
-  t,
-}: {
-  password: string;
-  t: (key: string) => string;
-}) => {
-  if (!password) return null;
-
-  return (
-    <ul className="grid gap-1 pt-0.5" aria-live="polite">
-      {PASSWORD_RULES.map((rule) => {
-        const ok = rule.test(password);
-        const Icon = ok ? Check : X;
-        return (
-          <li
-            key={rule.key}
-            className={`flex items-center gap-1.5 text-xs ${
-              ok ? "text-[var(--status-success-fg)]" : "text-muted-foreground"
-            }`}
-          >
-            <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span>{t(rule.key)}</span>
-          </li>
-        );
-      })}
-    </ul>
-  );
-};
-
-/**
- * 확인 입력이 새 비밀번호와 같은지 실시간 표시.
- * 확인 입력이 비어 있으면 표시하지 않는다(입력 시작 전부터 불일치로 겁주지 않게).
- * 불일치는 규칙 미달(아직 채우는 중)과 달리 두 값이 어긋난 '충돌'이라
- * 위 체크리스트의 muted 대신 destructive 로 분명하게 보여준다.
- */
-const PasswordMatch = ({
-  password,
-  confirmPassword,
-  t,
-}: {
-  password: string;
-  confirmPassword: string;
-  t: (key: string) => string;
-}) => {
-  if (!confirmPassword) return null;
-
-  const matched = password === confirmPassword;
-  const Icon = matched ? Check : X;
-
-  return (
-    <p
-      className={`flex items-center gap-1.5 text-xs ${
-        matched ? "text-[var(--status-success-fg)]" : "text-fg-critical"
-      }`}
-      aria-live="polite"
-    >
-      <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-      <span>{matched ? t("passwordMatched") : t("passwordMismatch")}</span>
-    </p>
-  );
-};
-
-type PasswordChangeFormValues = z.infer<ReturnType<typeof createFormSchema>>;
-
 export const PasswordChangeDialog = ({
-  open,
   onOpenChange,
 }: PasswordChangeDialogProps) => {
   const { t } = useTranslation("user");
-  const isMobile = useIsMobile();
   const { t: tc } = useTranslation("common");
   const changePasswordMutation = useChangePasswordMutation();
 
-  const form = useForm<PasswordChangeFormValues>({
-    resolver: zodResolver(createFormSchema(t)),
-    defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    },
-  });
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  // 현재 비밀번호가 틀렸다는 서버 판정 — 그 칸 값을 고치면 걷는다
+  const [currentWrong, setCurrentWrong] = useState(false);
+  const [failed, setFailed] = useState(false);
+  // 실패마다 새로 생기는 값 — 같은 실패가 이어져도 Callout 을 보이는 자리로 다시 올린다
+  const [failedAt, setFailedAt] = useState(0);
+  // 글자를 키우거나 키보드가 올라와 본문이 스크롤될 때, 아래 [저장] 을 눌러 실패하면 맨 위 Callout 이 화면 밖이다(폼 저장 실패 규칙)
+  const failedRef = useScrollToError<HTMLDivElement>(failed, failedAt);
+  const currentRef = useRef<HTMLInputElement>(null);
 
-  // 체크리스트·일치 표시용 — 입력할 때마다 갱신
-  const newPassword =
-    useWatch({ control: form.control, name: "newPassword" }) ?? "";
-  const confirmPassword =
-    useWatch({ control: form.control, name: "confirmPassword" }) ?? "";
+  const rulesOk = isPasswordValid(next);
+  const sameAsCurrent = next !== "" && current !== "" && next === current;
+  const mismatch = confirm !== "" && confirm !== next;
+  const canSubmit =
+    current !== "" &&
+    next !== "" &&
+    rulesOk &&
+    confirm === next &&
+    !sameAsCurrent;
+  const dirty = current !== "" || next !== "" || confirm !== "";
 
-  useEffect(() => {
-    if (open) {
-      form.reset({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    }
-  }, [open, form]);
-
-  const onSubmit = (values: PasswordChangeFormValues) => {
+  const submit = () => {
+    if (!canSubmit || changePasswordMutation.isPending) return;
+    setFailed(false);
+    // 다시 제출하면 지난 판정(현재 비밀번호 틀림)은 걷는다 — 서버 장애로 실패하면 현재 칸 오류와 Callout 이 함께 보이지 않게
+    setCurrentWrong(false);
     changePasswordMutation.mutate(
-      {
-        currentPassword: values.currentPassword,
-        newPassword: values.newPassword,
-        confirmPassword: values.confirmPassword,
-      },
+      { currentPassword: current, newPassword: next, confirmPassword: confirm },
       {
         onSuccess: () => {
           toast.success(t("passwordChangeSuccess"), {
@@ -166,128 +76,138 @@ export const PasswordChangeDialog = ({
           });
           onOpenChange(false);
         },
-        // 실패 문구는 여기서 정한다 — 요청이 `silent` 라 전역 토스트를 안 탄다.
-        // 예전엔 전역 인터셉터가 서버 message 를 그대로 띄웠고, 그 문장은 desk 가
-        // 아니라 **SSO 가 쓴 것**이었다(QA #128).
+        // 실패 문구는 여기서 정한다 — 요청이 `silent` 라 전역 토스트를 안 탄다(QA #128). 서버 글은 어디에도 내지 않는다.
         onError: (e) => {
-          const key = passwordChangeErrorKey(e);
-          // 현재 비밀번호가 틀린 건 그 칸의 문제다 — 토스트로 띄우면 어느 칸을
-          // 고쳐야 하는지 안 보인다. 칸 밑에 붙인다.
-          if (key === "currentPasswordInvalid") {
-            form.setError("currentPassword", {
-              type: "server",
-              message: t("currentPasswordInvalid"),
-            });
-            form.setFocus("currentPassword");
+          if (passwordChangeErrorKey(e) === "currentPasswordInvalid") {
+            setCurrentWrong(true);
+            currentRef.current?.focus();
             return;
           }
-          toast.error(t(key), { id: "password-change-error" });
+          setFailed(true);
+          setFailedAt((n) => n + 1);
         },
       },
     );
   };
 
-  if (!open) return null;
-
-  const Footer = (
-    <ModalFooter
-      onCancel={() => onOpenChange(false)}
-      cancelLabel={tc("cancel")}
-      onSave={form.handleSubmit(onSubmit)}
-      saveLabel={tc("save")}
-      saving={changePasswordMutation.isPending}
-    />
-  );
-
   return (
-    <ModalShell
-      title={t("passwordChange")}
-      onClose={() => onOpenChange(false)}
-      // 모바일은 drawer 로 둔다. 규칙 체크리스트(8자 이상·특수문자)와 불일치 문구가
-      // 입력 중에 붙었다 떨어졌다 하며 세로가 길어지는데, 가운데 뜨는 dialog 는
-      // 그때마다 위아래로 튄다. 시트는 아래에 붙어 있어 늘어나도 흔들리지 않는다.
-      mobile={isMobile}
-      size="sm"
-      footer={Footer}
+    <ResponsiveDialog
+      open
+      form
+      dirty={dirty}
+      onOpenChange={(o) => {
+        if (!o) onOpenChange(false);
+      }}
     >
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <p className="text-sm text-muted-foreground mb-4">
-            {t("passwordChangeDescription")}
-          </p>
-          <div className="grid gap-4">
-            <div className="grid gap-1.5">
-              <Label
-                htmlFor="currentPassword"
-                className="flex items-center gap-1.5"
-              >
-                {t("currentPassword")}
-                <span className="text-fg-critical">*</span>
-              </Label>
+      <ResponsiveDialogContent
+        title={t("passwordChange")}
+        description={t("passwordChangeDescription")}
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          currentRef.current?.focus({ preventScroll: true });
+        }}
+      >
+        <ResponsiveDialogBody>
+          <div className="flex flex-col gap-x5">
+            {failed && (
+              <div ref={failedRef}>
+                <Callout tone="critical" role="alert">
+                  {t("passwordChangeError")}
+                </Callout>
+              </div>
+            )}
+            <Field
+              id="currentPassword"
+              label={t("currentPassword")}
+              invalid={currentWrong}
+              errorMessage={t("currentPasswordInvalid")}
+            >
               <Input
-                id="currentPassword"
+                ref={currentRef}
                 type="password"
-                placeholder={t("currentPasswordPlaceholder")}
-                {...form.register("currentPassword")}
+                size="large"
+                autoComplete="current-password"
+                value={current}
+                onChange={(e) => {
+                  setCurrent(e.target.value);
+                  setCurrentWrong(false);
+                }}
               />
-              {form.formState.errors.currentPassword && (
-                <p className="text-sm text-fg-critical">
-                  {form.formState.errors.currentPassword.message}
-                </p>
-              )}
-            </div>
-            <div className="grid gap-1.5">
-              <Label
-                htmlFor="newPassword"
-                className="flex items-center gap-1.5"
-              >
-                {t("newPassword")}
-                <span className="text-fg-critical">*</span>
-              </Label>
+            </Field>
+            <Field
+              id="newPassword"
+              label={t("newPassword")}
+              invalid={sameAsCurrent}
+              errorMessage={t("passwordSameAsCurrent")}
+              description={next ? <PasswordRules password={next} /> : undefined}
+            >
               <Input
-                id="newPassword"
                 type="password"
-                placeholder={t("newPasswordPlaceholder")}
-                {...form.register("newPassword")}
+                size="large"
+                autoComplete="new-password"
+                value={next}
+                onChange={(e) => setNext(e.target.value)}
               />
-              {form.formState.errors.newPassword && (
-                <p className="text-sm text-fg-critical">
-                  {form.formState.errors.newPassword.message}
-                </p>
-              )}
-              {/* 입력 중 실시간 규칙 표시 — 저장 누르기 전에 미달 조건을 알 수 있게 */}
-              <PasswordRules password={newPassword} t={t} />
-            </div>
-            <div className="grid gap-1.5">
-              <Label
-                htmlFor="confirmPassword"
-                className="flex items-center gap-1.5"
-              >
-                {t("confirmPassword")}
-                <span className="text-fg-critical">*</span>
-              </Label>
+            </Field>
+            <Field
+              id="confirmPassword"
+              label={t("confirmPassword")}
+              invalid={mismatch}
+              errorMessage={t("passwordMismatch")}
+              description={
+                confirm !== "" && !mismatch ? (
+                  <span className="flex items-center gap-x1 text-fg-positive">
+                    <Check aria-hidden className="size-4 shrink-0" />
+                    {t("passwordMatched")}
+                  </span>
+                ) : undefined
+              }
+            >
               <Input
-                id="confirmPassword"
                 type="password"
-                placeholder={t("confirmPasswordPlaceholder")}
-                {...form.register("confirmPassword")}
+                size="large"
+                autoComplete="new-password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
               />
-              {/* 불일치는 아래 PasswordMatch 가 입력 중에 이미 보여주므로, 여기선 미입력 에러만 남긴다 */}
-              {form.formState.errors.confirmPassword && !confirmPassword && (
-                <p className="text-sm text-fg-critical">
-                  {form.formState.errors.confirmPassword.message}
-                </p>
-              )}
-              {/* 입력 중 실시간 일치 표시 — 저장 누르기 전에 알 수 있게 */}
-              <PasswordMatch
-                password={newPassword}
-                confirmPassword={confirmPassword}
-                t={t}
-              />
-            </div>
+            </Field>
           </div>
-        </form>
-      </Form>
-    </ModalShell>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
+          <ResponsiveDialogCancel>{tc("cancel")}</ResponsiveDialogCancel>
+          <Button
+            disabled={!canSubmit}
+            loading={changePasswordMutation.isPending}
+            onClick={submit}
+          >
+            {tc("save")}
+          </Button>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 };
+
+/** 새 비밀번호 조건 체크 줄 — 충족 `check` · 미달 `x`, 줄 사이 4(값이 있을 때만 부른다) */
+function PasswordRules({ password }: { password: string }) {
+  const { t } = useTranslation("user");
+  return (
+    <ul className="m-0 flex list-none flex-col gap-x1 p-0" aria-live="polite">
+      {PASSWORD_RULES.map((rule) => {
+        const ok = rule.test(password);
+        const Icon = ok ? Check : X;
+        return (
+          <li
+            key={rule.key}
+            className={`flex items-center gap-x1 ${
+              ok ? "text-fg-positive" : "text-fg-neutral-subtle"
+            }`}
+          >
+            <Icon aria-hidden className="size-4 shrink-0" />
+            <span>{t(rule.key)}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}

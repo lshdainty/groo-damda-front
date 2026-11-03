@@ -141,6 +141,24 @@ function setValue(el: HTMLInputElement | HTMLTextAreaElement, value: string) {
 }
 
 describe("추가 · 수정 폼 (I-10 20)", () => {
+  it("처음 초점 — 새 할 일은 제목 칸, 수정은 글 입력 칸이 아닌 표면(폰에서 키보드가 가리지 않게)", async () => {
+    form(null);
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    expect(document.activeElement).toBe(
+      q("input[placeholder='할 일을 적어주세요']"),
+    );
+    act(() => root.unmount());
+    root = createRoot(container);
+    form(base);
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    expect(document.activeElement?.tagName).not.toBe("INPUT");
+    expect(document.activeElement?.tagName).not.toBe("TEXTAREA");
+  });
+
   it("칸은 세로로 하나씩 — 제목(필수 점) · 마감일 · 태그 · 우선순위 칩 · 메모", () => {
     form(null);
     const labels = Array.from(

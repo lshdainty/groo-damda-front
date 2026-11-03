@@ -519,7 +519,7 @@ function TagEditDialog({
           }}
           placeholder={t("tags.namePlaceholder")}
           maxLength={14}
-          autoFocus
+          autoFocus={isNew}
         />
         <NameCounter len={nameTrim.length} max={12} err={err} />
       </Field>

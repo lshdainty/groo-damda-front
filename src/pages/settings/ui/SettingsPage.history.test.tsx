@@ -43,6 +43,7 @@ vi.mock("@/widgets/notification-manage", () => ({
 }));
 vi.mock("@/widgets/data-transfer", () => ({ DataExportSection: stub("data") }));
 vi.mock("@/widgets/account-settings", () => ({
+  AccountSection: stub("account"),
   AppearanceSection: stub("appearance"),
   DevicesSection: stub("devices"),
   HideAmountsSection: stub("hide-amounts"),
