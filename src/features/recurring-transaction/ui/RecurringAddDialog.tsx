@@ -708,7 +708,7 @@ export function RecurringAddDialog({
                   <CategoryPickRow
                     prefix={<Tags className={ROW_ICON} />}
                     title={te("category")}
-                    placeholder={te("addTx.selectPlaceholder")}
+                    placeholder={t("pickValue", { name: te("category") })}
                     surfaceTitle={te("category")}
                     categories={categories}
                     type={kind}
@@ -745,7 +745,12 @@ export function RecurringAddDialog({
                         ? te("addTx.depositAccount")
                         : te("accountCard")
                     }
-                    placeholder={te("selectNone")}
+                    placeholder={t("noValue", {
+                      name:
+                        f.type === "INCOME"
+                          ? te("addTx.depositAccount")
+                          : te("accountCard"),
+                    })}
                     surfaceTitle={
                       f.type === "INCOME"
                         ? te("addTx.depositAccount")
@@ -768,7 +773,12 @@ export function RecurringAddDialog({
                         ? te("addTx.incomeMethod")
                         : te("paymentMethodLabel")
                     }
-                    placeholder={te("selectNone")}
+                    placeholder={t("noValue", {
+                      name:
+                        f.type === "INCOME"
+                          ? te("addTx.incomeMethod")
+                          : te("paymentMethodLabel"),
+                    })}
                     surfaceTitle={
                       f.type === "INCOME"
                         ? te("addTx.incomeMethod")
@@ -790,7 +800,9 @@ export function RecurringAddDialog({
                     <AssetPickRow
                       prefix={<Wallet className={ROW_ICON} />}
                       title={te("addTx.fromAccount")}
-                      placeholder={te("addTx.selectPlaceholder")}
+                      placeholder={t("pickValue", {
+                        name: te("addTx.fromAccount"),
+                      })}
                       surfaceTitle={te("addTx.fromAccount")}
                       assets={eligible}
                       value={f.assetRowId}
@@ -809,7 +821,9 @@ export function RecurringAddDialog({
                     <AssetPickRow
                       prefix={<Wallet className={ROW_ICON} />}
                       title={te("addTx.depositAccount")}
-                      placeholder={te("addTx.selectPlaceholder")}
+                      placeholder={t("pickValue", {
+                        name: te("addTx.depositAccount"),
+                      })}
                       surfaceTitle={te("addTx.depositAccount")}
                       assets={eligible.filter((a) => a.rowId !== f.assetRowId)}
                       value={f.toAssetRowId}
