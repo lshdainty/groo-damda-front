@@ -15,6 +15,7 @@ import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { SwipeActions } from "@/shared/ds/swipe-actions";
 import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
@@ -96,36 +97,37 @@ export function RecurringManager({
   const [detailId, setDetailId] = useState<number | null>(null);
   const detail = items.find((i) => i.rowId === detailId) ?? null;
 
+  // 확인창 · 버튼 뒤 요청의 실패 — 공용 훅: critical 스낵바 + [다시 시도](묻지 않고 같은 요청을 바로)
+  const confirmFail = useConfirmFail();
   const togglePause = (it: RecurringTransaction) => {
     if (toggleMut.isPending) return;
     const name = displayTitle(it, t);
     const wasActive = it.isActive === "Y";
+    const done = () =>
+      snackbar.show({
+        message: wasActive
+          ? t("toastPaused", { name })
+          : t("toastResumed", { name }),
+      });
     toggleMut.mutate(it.rowId, {
-      onSuccess: () =>
-        snackbar.show({
-          message: wasActive
-            ? t("toastPaused", { name })
-            : t("toastResumed", { name }),
-        }),
+      onSuccess: done,
       onError: () =>
-        snackbar.show({
+        confirmFail({
           message: t(wasActive ? "pauseFailed" : "resumeFailed"),
-          tone: "critical",
-          action: { label: tc("retry"), onClick: () => togglePause(it) },
+          retry: () => toggleMut.mutateAsync(it.rowId),
+          onRetried: done,
         }),
     });
   };
 
   const deleteFailed = (it: RecurringTransaction) =>
-    snackbar.show({
+    confirmFail({
       message: t("deleteFailed"),
-      tone: "critical",
-      action: {
-        label: tc("retry"),
-        onClick: () => {
-          deleteMut.mutateAsync(it.rowId).catch(() => deleteFailed(it));
-        },
-      },
+      retry: () => deleteMut.mutateAsync(it.rowId),
+      onRetried: () =>
+        snackbar.show({
+          message: t("toastDeleted", { name: displayTitle(it, t) }),
+        }),
     });
 
   const year = now.getFullYear();

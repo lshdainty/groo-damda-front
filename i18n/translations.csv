@@ -3035,9 +3035,9 @@ recurring,monthLead,이번 달,This month
 recurring,loadFailed,반복 거래를 불러오지 못했어요,Could not load recurring transactions
 recurring,emptyTitle,반복 거래가 없어요,No recurring transactions
 recurring,emptyDesc,구독 · 월세처럼 정해진 날 오가는 돈을 등록해 두면 그날 저절로 기록해요.,"Register money that moves on set days, like subscriptions or rent, and it records itself that day."
-recurring,pauseFailed,반복을 멈추지 못했어요,Could not pause the recurrence
-recurring,resumeFailed,반복을 다시 켜지 못했어요,Could not turn the recurrence back on
-recurring,deleteFailed,반복 설정을 삭제하지 못했어요,Could not delete the recurring setting
+recurring,pauseFailed,반복 설정을 멈추지 못했어요.,Couldn't pause the recurring setting.
+recurring,resumeFailed,반복 설정을 다시 켜지 못했어요.,Couldn't turn the recurring setting back on.
+recurring,deleteFailed,반복 설정을 삭제하지 못했어요.,Couldn't delete the recurring setting.
 recurring,deleteMessage,"""{{name}}"" 반복 설정을 삭제할까요? 이미 기록된 거래는 그대로 남아요. 삭제한 반복 설정은 되돌릴 수 없어요.","Delete the ""{{name}}"" recurring setting? Transactions already recorded stay as they are. A deleted recurring setting cannot be restored."
 expense,preset.fixedTitle.expense,고정 지출로 기록,Record as fixed expense
 expense,preset.fixedTitle.income,고정 수입으로 기록,Record as fixed income
