@@ -34,12 +34,13 @@ import {
   MultiChoiceSheet,
   TimePickSurface,
 } from "./pickers";
+import { DotValue } from "@/widgets/calendar/ui/dot-value";
 import { NO_LABEL, reminderKey, type EventFormView } from "./types";
 
 const ROW_ICON = "size-[22px]";
 
 /** 날짜 · 시각 조각 — 누르는 자리 44 이상, 글은 자르지 않고 줄을 바꾼다(time-picker.md:71). 줄 높이는 다른 줄과 같게 위아래로 블리드한다(44 − 22 의 절반 11, list.md "위아래로 블리드해 줄 높이를 바꾸지 않는다") */
-function Piece({
+export function Piece({
   label,
   onClick,
   expanded,
@@ -67,24 +68,11 @@ function Piece({
   );
 }
 
-/** 값 글 앞에 색 점 8 + 사이 6 (캘린더 · 라벨 줄) */
-function DotValue({
-  color,
-  children,
-}: {
-  color?: string;
-  children: ReactNode;
-}) {
+/** 날짜 · 시각 조각 묶음 — 값 글자 끝이 다른 줄과 같은 선에 서도록 조각의 안쪽 여백만큼 오른쪽으로 블리드하고, 좁은 줄에서 값이 내려가면 왼쪽으로 푼다(거래 폼과 같은 부품) */
+export function PieceGroup({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-x1.5">
-      {color && (
-        <span
-          aria-hidden
-          className="size-[8px] shrink-0 rounded-full"
-          style={{ background: color }}
-        />
-      )}
-      <span>{children}</span>
+    <span className="-mr-x1 flex flex-wrap items-center justify-end gap-y-[22px] @max-[calc(16rem+48px)]/list-item:mr-0 @max-[calc(16rem+48px)]/list-item:-ml-x1">
+      {children}
     </span>
   );
 }
@@ -152,7 +140,7 @@ export function EventFormSheetBody({
         title={t(`form.${kind}`)}
         suffixText
         suffix={
-          <span className="-mr-x1 flex flex-wrap items-center justify-end gap-y-[22px] @max-[calc(16rem+48px)]/list-item:mr-0 @max-[calc(16rem+48px)]/list-item:-ml-x1">
+          <PieceGroup>
             <DayPickSurface
               title={dayName}
               value={day}
@@ -184,7 +172,7 @@ export function EventFormSheetBody({
                 )}
               />
             )}
-          </span>
+          </PieceGroup>
         }
       />
     );
@@ -196,7 +184,8 @@ export function EventFormSheetBody({
         label={t("form.title")}
         invalid={showErrors && titleEmpty}
         errorMessage={t("form.titleRequired")}
-        className="pb-x2 pt-x1 [&_label]:sr-only"
+        labelHidden
+        className="pb-x2 pt-x1"
       >
         <Input
           size="large"

@@ -69,10 +69,16 @@ export interface SmsCommitResult {
 // ─── API ───────────────────────────────────────────────────────
 
 /** 문자 해석 — 저장하지 않는다(미리보기). */
-export async function parseSms(text: string): Promise<SmsParseResult> {
+export async function parseSms(
+  text: string,
+  opts?: { silent?: boolean },
+): Promise<SmsParseResult> {
   const resp: ApiResponse<SmsParseResult> = await apiClient.post(
     "/v1/import/sms/parse",
     { text },
+    { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
+      silent?: boolean;
+    },
   );
   return resp.data;
 }
@@ -80,10 +86,14 @@ export async function parseSms(text: string): Promise<SmsParseResult> {
 /** 확정 값으로 지출 생성. */
 export async function commitSms(
   request: SmsCommitRequest,
+  opts?: { silent?: boolean },
 ): Promise<SmsCommitResult> {
   const resp: ApiResponse<SmsCommitResult> = await apiClient.post(
     "/v1/import/sms/commit",
     request,
+    { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
+      silent?: boolean;
+    },
   );
   return resp.data;
 }

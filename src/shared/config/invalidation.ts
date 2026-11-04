@@ -175,8 +175,27 @@ export type ChangeKind = keyof typeof INVALIDATION_MAP;
  * 호출처는 "무엇이 바뀌었는지" 이름 하나만 고른다 — 어느 도메인이 딸려 늙는지는
  * 위 표가 안다.
  */
-export const invalidateFor = (queryClient: QueryClient, change: ChangeKind) => {
-  for (const queryKey of INVALIDATION_MAP[change]) {
-    queryClient.invalidateQueries({ queryKey });
-  }
-};
+export function invalidateFor(
+  queryClient: QueryClient,
+  change: ChangeKind,
+): void;
+/**
+ * `{ wait: true }` 면 다시 받기가 끝날 때까지 기다리는 약속을 돌려준다 — 뮤테이션 `onSuccess` 에서 돌려주면 `mutate(…, { onSuccess })` 의
+ * 호출처 콜백은 새 값이 캐시에 들어온 뒤에 불린다(저장 뒤 상세가 옛 값을 보이거나 지운 일정의 버튼이 남는 틈을 막는다).
+ * 기본(옵션 없음)은 기다리지 않는다 — 다른 모든 호출처는 그대로다.
+ */
+export function invalidateFor(
+  queryClient: QueryClient,
+  change: ChangeKind,
+  options: { wait: true },
+): Promise<unknown>;
+export function invalidateFor(
+  queryClient: QueryClient,
+  change: ChangeKind,
+  options?: { wait?: boolean },
+): Promise<unknown> | void {
+  const pending = INVALIDATION_MAP[change].map((queryKey) =>
+    queryClient.invalidateQueries({ queryKey }),
+  );
+  if (options?.wait) return Promise.all(pending);
+}

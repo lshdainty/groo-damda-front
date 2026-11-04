@@ -207,4 +207,22 @@ describe("ResultSection", () => {
     expect(ref.current).toBe(box);
     expect(box.id).toBe("empty-ledger");
   });
+
+  it("버튼 앞 아이콘(icon) — 새로 만드는 동작에만, 글 앞에 놓인다", () => {
+    render(
+      <ResultSection
+        icon={<Receipt />}
+        title="저장된 프리셋이 없어요"
+        primaryAction={{
+          label: "프리셋 추가",
+          icon: <Receipt data-testid="plus" />,
+          onClick: () => {},
+        }}
+      />,
+    );
+    const btn = slot("result-section-actions")!
+      .firstElementChild as HTMLElement;
+    expect(btn.firstElementChild?.getAttribute("data-testid")).toBe("plus");
+    expect(btn.textContent).toBe("프리셋 추가");
+  });
 });

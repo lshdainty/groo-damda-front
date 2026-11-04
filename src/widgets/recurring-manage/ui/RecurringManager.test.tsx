@@ -1,16 +1,9 @@
-// 월 요약이 부호를 손으로 박고 있었다 — 지출은 `-{KRW(v)}`, 수입은 `+{KRW(v)}`.
-//
-// 두 가지가 같이 틀린다 — 하이픈이 ASCII 라 같은 카드 안의 `−` 와 폭이 갈리고(QA #22),
-// 반복 지출이 하나도 없으면 `-0` 이 남는다(QA #1). 둘 다 공용 `minusOf` 가 이미
-// 해결한 문제이고, 앱 `RecurringScreen` 은 #317 에서 그렇게 갔다
-// (`krwSigned(monthlyExpense.abs(), masked, sign: minusOf(monthlyExpense))`).
-// 같은 화면을 두 플랫폼이 그리므로 **글자가 갈리면 안 된다.**
-//
-// 수입 쪽 `+0` 은 그대로 남아 있었다 — 반복 수입이 하나도 없으면 지출 칸은 `0`,
-// 바로 옆 수입 칸은 `+0` 이었다. 같은 결함이라 같은 헬퍼(`plusOf`)로 닫는다.
+// 반복 거래 관리(I-20 D 21 ~ 25) — 종류별 묶음(지출 → 수입 → 이체) · 묶음 머리 "이번 달" 합 · 줄 · 줄 누름 = 상세 · 줄 ⋮ 없음.
+// 합은 규칙으로 센다(매주 · 매년 포함, 쉬는 반복 제외) — 셈 표 자체는 recurring-schedule.test.ts 가 본다.
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SwipeActionsProvider } from "@/shared/ds/swipe-actions";
 import { MINUS } from "@/shared/lib/groo/format";
 import type { RecurringTransaction } from "@/entities/recurring-transaction";
 import type { TxKind } from "@/entities/expense";
@@ -19,27 +12,49 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 
-const state = vi.hoisted(() => ({ items: [] as RecurringTransaction[] }));
+const state = vi.hoisted(() => ({
+  items: [] as RecurringTransaction[],
+  isLoading: false,
+  isError: false,
+}));
 
 vi.mock("@/features/recurring-transaction", () => ({
-  useRecurringTransactions: () => ({ data: state.items, isLoading: false }),
-  useToggleRecurringTransaction: () => ({ mutate: () => {} }),
-  useDeleteRecurringTransaction: () => ({ mutate: () => {} }),
+  useRecurringTransactions: () => ({
+    data: state.isError ? undefined : state.items,
+    isLoading: state.isLoading,
+    isError: state.isError,
+    refetch: () => {},
+  }),
+  useToggleRecurringTransaction: () => ({ mutate: () => {}, isPending: false }),
+  useDeleteRecurringTransaction: () => ({
+    mutate: () => {},
+    mutateAsync: () => Promise.resolve(),
+    isPending: false,
+  }),
 }));
 vi.mock("@/features/expense", () => ({
   useExpenseCategories: () => ({ data: [], isLoading: false }),
 }));
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (k: string) => k }),
+  useTranslation: () => ({
+    t: (k: string, o?: Record<string, unknown>) =>
+      o ? `${k}${JSON.stringify(o)}` : k,
+    i18n: { language: "ko" },
+  }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-// 추가·상세 다이얼로그는 자체 쿼리를 여럿 건다 — 여기선 요약 숫자만 본다.
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: () => {} }),
+}));
+// 추가·상세 다이얼로그는 자체 쿼리를 여럿 건다 — 여기선 목록만 본다.
 vi.mock("@/features/recurring-transaction/ui/RecurringAddDialog", () => ({
   RecurringAddDialog: () => null,
 }));
 vi.mock("@/features/recurring-transaction/ui/RecurringDetailDialog", () => ({
   // 열렸는지만 본다 — 안의 내용은 이 다이얼로그의 자기 테스트가 본다.
-  RecurringDetailDialog: () => <div data-testid="recurring-detail" />,
+  RecurringDetailDialog: (p: { item: { rowId: number } }) => (
+    <div data-testid="recurring-detail" data-id={p.item.rowId} />
+  ),
 }));
 
 const { RecurringManager } = await import("./RecurringManager");
@@ -50,6 +65,8 @@ let root: Root;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   state.items = [];
+  state.isLoading = false;
+  state.isError = false;
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -98,79 +115,129 @@ const txOf = (
   modifyAt: "2026-01-01T00:00:00",
 });
 
-/** 모바일·데스크톱이 요약을 따로 그린다 — 한쪽만 고치면 다른 쪽에 그대로 남는다. */
+// 시험 시계 고정 — 이번 달 = 2026년 10월(데이터의 날짜도 이 달에 걸려 있다)
+const NOW = new Date(2026, 9, 23);
+
 function render(mobile: boolean): string {
-  act(() => root.render(<RecurringManager mobile={mobile} />));
+  act(() =>
+    root.render(
+      <SwipeActionsProvider>
+        <RecurringManager mobile={mobile} now={NOW} />
+      </SwipeActionsProvider>,
+    ),
+  );
   return container.textContent ?? "";
 }
 
-describe.each([
-  ["모바일", true],
-  ["데스크톱", false],
-])("반복 거래 월 지출 요약 (%s)", (_label, mobile) => {
-  it("반복 지출이 없으면 `-0` 이 아니라 `0` 이다(QA #1)", () => {
-    state.items = [];
-    const out = render(mobile);
-    expect(out).not.toContain("-0");
-    expect(out).not.toContain(`${MINUS}0`);
-  });
-
-  it("부호는 U+2212 — ASCII 하이픈이 아니다(QA #22)", () => {
-    state.items = [txOf(7_560)];
-    const out = render(mobile);
-    expect(out).toContain(`${MINUS}7,560`);
-    expect(out).not.toContain("-7,560");
-  });
+const named = (id: number, over: Partial<RecurringTransaction>) => ({
+  ...txOf(7_000),
+  rowId: id,
+  ...over,
 });
 
 describe.each([
-  ["모바일", true],
+  ["폰", true],
   ["데스크톱", false],
-])("반복 거래 월 수입 요약 (%s)", (_label, mobile) => {
-  it("반복 수입이 없으면 `+0` 이 아니라 `0` 이다 — 지출 `−0` 과 같은 결함(QA #1)", () => {
-    state.items = [];
-    const out = render(mobile);
-    expect(out).not.toContain("+0");
-  });
-
-  it("지출만 있어도 수입 칸에 `+0` 이 남지 않는다", () => {
-    state.items = [txOf(7_560)];
-    const out = render(mobile);
-    expect(out).not.toContain("+0");
-  });
-
-  it("수입이 있으면 `+` 를 붙인다", () => {
-    state.items = [txOf(3_200_000, "INCOME")];
-    const out = render(mobile);
-    expect(out).toContain("+3,200,000");
-  });
-});
-
-describe("행을 눌러 상세를 연다 (#173)", () => {
-  /** 주석은 "행 탭 → 상세(WCAG 2.1.1 비제스처 경로)" 라고 적혀 있었는데 `setDetail(it)`
-   *  를 부르는 곳이 없어, 모바일 웹은 밀기 말고는 상세에 닿을 길이 없었다.
-   *  프리셋 관리(`PresetManager`)는 같은 자리가 이미 연결돼 있다. */
-  const row = () =>
-    [...container.querySelectorAll<HTMLElement>("[role='button']")].find((el) =>
-      el.textContent?.includes("구독"),
+])("종류별 묶음 (%s)", (_label, mobile) => {
+  it("묶음 차례는 지출 → 수입 → 이체 · 빈 묶음은 그리지 않는다", () => {
+    state.items = [
+      named(1, { expenseType: "TRANSFER", description: "이체줄" }),
+      named(2, { expenseType: "INCOME", description: "수입줄" }),
+      named(3, { description: "지출줄" }),
+    ];
+    render(mobile);
+    const heads = [...container.querySelectorAll("h2")].map(
+      (h) => h.textContent,
     );
-
-  const detailOpen = () =>
-    document.body.querySelector("[data-testid='recurring-detail']") != null;
-
-  it("모바일 — 행을 누르면 상세가 열린다", () => {
-    state.items = [txOf(7000)];
-    render(true);
-    const r = row();
-    expect(r, "모바일 행이 누를 수 있는 요소가 아니다").toBeTruthy();
-    act(() => r!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    expect(detailOpen()).toBe(true);
+    expect(heads).toEqual([
+      'groupTitle{"kind":"kindExpense","count":1}',
+      'groupTitle{"kind":"kindIncome","count":1}',
+      'groupTitle{"kind":"kindTransfer","count":1}',
+    ]);
+    state.items = [named(3, { description: "지출줄" })];
+    render(mobile);
+    expect(container.querySelectorAll("h2")).toHaveLength(1);
   });
 
-  it("데스크톱 — 행은 안 눌린다. 연필·일시정지·삭제가 행 안에 있다", () => {
-    state.items = [txOf(7000)];
-    render(false);
-    expect(row()).toBeUndefined();
-    expect(detailOpen()).toBe(false);
+  it("지출 합은 U+2212 부호 · 수입 합은 + · 이체 묶음에는 합이 없다", () => {
+    state.items = [
+      named(1, {
+        description: "지출줄",
+        amount: 7_560,
+        startDate: "2026-01-01",
+      }),
+      named(2, {
+        expenseType: "INCOME",
+        description: "수입줄",
+        amount: 3_200_000,
+      }),
+      named(3, { expenseType: "TRANSFER", description: "이체줄" }),
+    ];
+    const out = render(mobile);
+    expect(out).toContain(`monthLead ${MINUS}7,560원`);
+    expect(out).toContain("monthLead +3,200,000원");
+    expect(out.match(/monthLead/g)).toHaveLength(2);
+  });
+
+  it("쉬는 반복은 합에서 빼고 줄에 배지를 단다(흐리지 않는다)", () => {
+    state.items = [
+      named(1, { description: "쉬는줄", amount: 9_999, isActive: "N" }),
+    ];
+    const out = render(mobile);
+    expect(out).toContain(`monthLead ${MINUS}0원`);
+    expect(out).toContain("paused");
+    const row = container.querySelector<HTMLElement>("[data-slot=list-item]")!;
+    expect(row.style.opacity).toBe("");
+  });
+
+  it("목록이 없으면 빈 화면 · 실패하면 실패 화면", () => {
+    state.items = [];
+    expect(render(mobile)).toContain("emptyTitle");
+    state.isError = true;
+    expect(render(mobile)).toContain("loadFailed");
+  });
+});
+
+describe("줄", () => {
+  const rows = () => [
+    ...container.querySelectorAll<HTMLElement>("[data-slot=list-body]"),
+  ];
+
+  it("줄 끝 ⋮ 가 없다 — 좁은 목록 줄은 누르면 상세로 들어간다(10-25 원칙)", () => {
+    state.items = [txOf(7_000)];
+    render(true);
+    expect(container.querySelector("button[aria-label*='moreOf']")).toBeNull();
+    expect(container.querySelector("[data-slot=menu-trigger]")).toBeNull();
+  });
+
+  it("줄을 누르면 상세가 열린다(폰 · 데스크톱 모두)", () => {
+    for (const mobile of [true, false]) {
+      state.items = [txOf(7_000)];
+      render(mobile);
+      const r = rows().find((el) => el.textContent?.includes("구독"));
+      expect(r).toBeTruthy();
+      act(() => r!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+      expect(
+        document.body.querySelector("[data-testid='recurring-detail']"),
+      ).not.toBeNull();
+      act(() => root.render(<div />));
+    }
+  });
+
+  it("지출 금액은 빨강이 아니라 fg-neutral · 수입은 fg-brand", () => {
+    state.items = [
+      named(1, { description: "지출줄" }),
+      named(2, { expenseType: "INCOME", description: "수입줄" }),
+    ];
+    render(true);
+    const amounts = [...container.querySelectorAll<HTMLElement>("span")].filter(
+      (el) =>
+        /^[−+]7,000원$/.test(el.textContent ?? "") &&
+        el.className.includes("font-bold"),
+    );
+    expect(amounts.map((a) => a.className.includes("text-fg-neutral"))).toEqual(
+      [true, false],
+    );
+    expect(amounts[1]!.className).toContain("text-fg-brand");
   });
 });

@@ -158,7 +158,53 @@ describe("비밀번호 변경 실패 문구 (QA #128)", () => {
 
     await submit();
 
-    expect(toasts.error).toEqual(["passwordChangeError"]);
+    // 토스트가 아니라 본문 맨 위 Callout — 값은 남는다
+    expect(toasts.error).toEqual([]);
+    const alert = document.body.querySelector('[role="alert"]');
+    expect(alert?.textContent).toContain("passwordChangeError");
+    expect(field("currentPassword").value).toBe("old-one!");
+  });
+
+  it("현재 비밀번호가 틀리면 그 칸에 초점이 간다", async () => {
+    next.error = wrongCurrentPassword;
+    act(() =>
+      root.render(<PasswordChangeDialog open onOpenChange={() => {}} />),
+    );
+
+    await submit();
+
+    expect(document.activeElement).toBe(field("currentPassword"));
+  });
+
+  it("네 조건이 맞기 전에는 [저장]이 막혀 있고, 필수 표시 · 자리 글이 없다", () => {
+    act(() =>
+      root.render(<PasswordChangeDialog open onOpenChange={() => {}} />),
+    );
+    const save = [...document.body.querySelectorAll("button")].find(
+      (b) => b.textContent?.trim() === "save",
+    )!;
+    expect(save.disabled).toBe(true);
+
+    // 현재와 같은 새 비밀번호 — 조건은 맞아도 막힌다
+    setValue(field("currentPassword"), "same-one!");
+    setValue(field("newPassword"), "same-one!");
+    setValue(field("confirmPassword"), "same-one!");
+    expect(save.disabled).toBe(true);
+    expect(document.body.textContent).toContain("passwordSameAsCurrent");
+
+    // 확인 불일치
+    setValue(field("newPassword"), "new-one!");
+    expect(save.disabled).toBe(true);
+    expect(document.body.textContent).toContain("passwordMismatch");
+
+    setValue(field("confirmPassword"), "new-one!");
+    expect(save.disabled).toBe(false);
+
+    for (const id of ["currentPassword", "newPassword", "confirmPassword"]) {
+      expect(field(id).placeholder).toBe("");
+      expect(field(id).type).toBe("password");
+    }
+    expect(document.body.textContent).not.toContain("*");
   });
 
   it("성공하면 실패 문구가 안 뜬다 — 반대편", async () => {
@@ -179,5 +225,44 @@ describe("비밀번호 변경 실패 문구 (QA #128)", () => {
     expect(document.body.textContent).not.toContain("currentPasswordInvalid");
     expect(toasts.error).toEqual([]);
     expect(closed).toBe(true);
+  });
+
+  it("현재 비밀번호가 틀렸다는 판정은 다시 제출하면 걷힌다 — 다른 실패와 함께 보이지 않는다", async () => {
+    next.error = wrongCurrentPassword;
+    act(() =>
+      root.render(<PasswordChangeDialog open onOpenChange={() => {}} />),
+    );
+    await submit();
+    expect(document.body.textContent).toContain("currentPasswordInvalid");
+
+    next.error = {
+      message: "Request failed with status code 503",
+      response: { status: 503, data: { code: "SSO_001", message: "SSO down" } },
+    };
+    const save = [...document.body.querySelectorAll("button")].find(
+      (b) => b.textContent?.trim() === "save",
+    )!;
+    await act(async () => {
+      save.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(document.body.textContent).not.toContain("currentPasswordInvalid");
+    expect(document.body.querySelector('[role="alert"]')).not.toBeNull();
+  });
+
+  it("저장이 실패하면 Callout 을 보이는 자리로 올린다(scrollIntoView)", async () => {
+    next.error = {
+      message: "Request failed with status code 503",
+      response: { status: 503, data: { code: "SSO_001", message: "SSO down" } },
+    };
+    const calls: Element[] = [];
+    Element.prototype.scrollIntoView = function (this: Element) {
+      calls.push(this);
+    };
+    act(() =>
+      root.render(<PasswordChangeDialog open onOpenChange={() => {}} />),
+    );
+    await submit();
+    expect(calls.some((el) => el.querySelector('[role="alert"]'))).toBe(true);
   });
 });

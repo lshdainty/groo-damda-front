@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, RefreshCw } from "lucide-react";
@@ -9,8 +8,7 @@ import { ScreenBands } from "@/shared/ui/groo/screen-bands";
 import { PageHead } from "@/shared/ui/groo/page-head";
 import { useHideAmounts } from "@/shared/lib/groo/hide-amounts-core";
 import { useOpenHideAmountsSettings } from "@/shared/lib/groo/hide-amounts-nav";
-import { AssetDetailDialog } from "@/widgets/asset-full/ui/AssetDetailDialog";
-import { editAssetPath, type Asset } from "@/entities/asset";
+import type { Asset } from "@/entities/asset";
 import { useAssetGroups, type OutletCtx } from "./asset-model";
 import {
   AssetEmpty,
@@ -26,24 +24,16 @@ export const AssetPage = () => {
   return mobile ? <AssetMobile /> : <AssetDesktop />;
 };
 
-/** 자산 상세 대화상자 — 줄을 누르면 연다(상세 페이지로 바꾸는 것은 I-17 17-3). 수정은 그 자산의 폼 주소로 간다(D9) */
-function useDetail(mobile: boolean) {
+/**
+ * 자산 줄을 누르면 상세 페이지로 간다(I-17 36) — `/desk/asset/{id}`. 어디서 왔는지는 `state.from` 으로 넘긴다("‹ 자산" 글을 정한다).
+ * 시트 · 대화상자를 띄우지 않는다.
+ */
+function useDetail() {
   const navigate = useNavigate();
-  const [detailAsset, setDetailAsset] = useState<Asset | null>(null);
-  const dialog = detailAsset && (
-    <AssetDetailDialog
-      asset={detailAsset}
-      mobile={mobile}
-      onClose={() => setDetailAsset(null)}
-      // 그 자산의 수정 폼으로 바로 간다(D9) — 목록에서 다시 찾아 연필을 누르지 않게.
-      // 폼은 설정의 관리 화면 한 곳에 있고, 여기선 주소로 어느 자산인지만 넘긴다.
-      onEdit={(a) => {
-        navigate(editAssetPath(a.rowId));
-        setDetailAsset(null);
-      }}
-    />
-  );
-  return { open: setDetailAsset, dialog };
+  return {
+    open: (a: Asset) =>
+      navigate(`/desk/asset/${a.rowId}`, { state: { from: "asset" } }),
+  };
 }
 
 const isEmptyOf = (g: ReturnType<typeof useAssetGroups>) =>
@@ -62,7 +52,7 @@ function AssetDesktop() {
   const { t } = useTranslation("asset");
   const hidden = useHideAmounts();
   const g = useAssetGroups();
-  const detail = useDetail(false);
+  const detail = useDetail();
   // 여기서 바로 가리지 않는다 — 가릴 카드를 고르는 설정으로 보낸다.
   const handleHideToggle = useOpenHideAmountsSettings("asset");
   const isEmpty = isEmptyOf(g);
@@ -191,7 +181,6 @@ function AssetDesktop() {
           </div>
         )}
       </div>
-      {detail.dialog}
     </div>
   );
 }
@@ -203,7 +192,7 @@ function AssetDesktop() {
 function AssetMobile() {
   const g = useAssetGroups();
   const { t } = useTranslation("asset");
-  const detail = useDetail(true);
+  const detail = useDetail();
   const open = detail.open;
 
   if (isEmptyOf(g)) {
@@ -282,7 +271,6 @@ function AssetMobile() {
       <div data-band="flush" data-section="goals">
         <SavingGoalsSection place="band" />
       </div>
-      {detail.dialog}
     </ScreenBands>
   );
 }

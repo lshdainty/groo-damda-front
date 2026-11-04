@@ -1,4 +1,4 @@
-// 이체 반복이 **보내는 것**을 고정한다.
+// 이체 반복이 **보내는 것**을 고정한다(I-20 D 26 — 줄 칸 폼으로 다시 짠 뒤에도 본문은 그대로).
 //
 // 이 본문은 밤마다 서버가 그대로 실행한다 — 잘못 저장되면 화면엔 "저장됐다" 가 남고
 // 자정 배치만 조용히 실패한다(로그만 남는다). 그래서 세 가지를 못 박는다.
@@ -18,10 +18,16 @@ declare global {
 
 const sent = vi.hoisted(() => ({
   create: null as Record<string, unknown> | null,
+  update: null as Record<string, unknown> | null,
 }));
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (k: string) => k }),
+  useTranslation: () => ({
+    t: (k: string, o?: Record<string, unknown>) =>
+      o ? `${k}${JSON.stringify(o)}` : k,
+    i18n: { language: "ko" },
+  }),
+  Trans: ({ children }: { children?: unknown }) => children ?? null,
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 vi.mock("@/features/expense", () => ({
@@ -41,7 +47,9 @@ vi.mock("@/features/recurring-transaction", () => ({
     isPending: false,
   }),
   useUpdateRecurringTransaction: () => ({
-    mutate: () => {},
+    mutate: (arg: { data: Record<string, unknown> }) => {
+      sent.update = arg.data;
+    },
     isPending: false,
   }),
 }));
@@ -99,7 +107,20 @@ let root: Root;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as never;
+  window.history.replaceState(null, "");
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    addEventListener() {},
+    removeEventListener() {},
+  })) as unknown as typeof window.matchMedia;
   sent.create = null;
+  sent.update = null;
   const proto = window.HTMLElement.prototype as unknown as Record<
     string,
     unknown
@@ -111,14 +132,13 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
-  act(() =>
-    root.render(<RecurringAddDialog mobile={false} onClose={() => {}} />),
-  );
 });
 
-afterEach(() => {
+afterEach(async () => {
   act(() => root.unmount());
   container.remove();
+  document.body.removeAttribute("style");
+  await new Promise((r) => setTimeout(r, 50));
 });
 
 const byText = <T extends Element>(selector: string, text: string) =>
@@ -126,110 +146,161 @@ const byText = <T extends Element>(selector: string, text: string) =>
     (el) => el.textContent?.trim() === text,
   );
 
-function setValue(el: HTMLInputElement, value: string) {
-  const setter = Object.getOwnPropertyDescriptor(
-    window.HTMLInputElement.prototype,
-    "value",
-  )?.set;
-  act(() => {
-    setter?.call(el, value);
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-}
-
-/** radix Tabs 는 `mousedown` 에서 바꾼다 — `click` 만 쏘면 아무 일도 안 일어난다. */
-function switchTab(label: string) {
-  const tab = byText<HTMLButtonElement>("button", label);
-  if (!tab) throw new Error(`탭을 찾지 못했다: ${label}`);
-  act(() => tab.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })));
-}
-
-/** Radix Select 를 키보드로 연다 — 포인터는 jsdom 에서 안 뜬다. */
-function openSelect(triggerText: string) {
-  const trigger = byText<HTMLButtonElement>("button", triggerText);
-  if (!trigger) throw new Error(`셀렉트를 찾지 못했다: ${triggerText}`);
-  act(() => {
-    trigger.focus();
-    trigger.dispatchEvent(
-      new KeyboardEvent("keydown", { key: " ", bubbles: true }),
-    );
-  });
-}
-
-function pickOption(triggerText: string, optionText: string) {
-  openSelect(triggerText);
-  const option = byText("[role='option']", optionText);
-  if (!option) throw new Error(`항목을 찾지 못했다: ${optionText}`);
-  act(() =>
-    option.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
-    ),
-  );
-}
-
-const amountBox = () =>
-  [...document.body.querySelectorAll<HTMLInputElement>("input")].find(
-    (el) => el.placeholder === "0",
-  )!;
-
-function save() {
-  const btn = byText<HTMLButtonElement>("button", "add");
+/** 주 버튼 — 켜 둔 채 누를 때 검증한다 */
+function save(label = "add") {
+  const btn = byText<HTMLButtonElement>("button", label);
   if (!btn) throw new Error("저장 버튼을 찾지 못했다");
   act(() => btn.dispatchEvent(new MouseEvent("click", { bubbles: true })));
 }
 
-describe("이체 반복", () => {
-  it("받는 계좌·수수료가 실리고, 카테고리·거래처는 안 실린다", () => {
-    switchTab("addTx.transfer");
-    setValue(amountBox(), "300000");
-    pickOption("addTx.selectPlaceholder", "국민 · 주거래");
-    pickOption("addTx.selectPlaceholder", "국민 · 청약");
-    // 금액칸 다음의 "0" 자리가 수수료다.
-    const boxes = [
-      ...document.body.querySelectorAll<HTMLInputElement>("input"),
-    ].filter((el) => el.placeholder === "0");
-    setValue(boxes[1]!, "500");
-    save();
+const seed = {
+  fromAssetRowId: 3,
+  toAssetRowId: 4,
+  amount: 300_000,
+  fee: 500,
+  interestAmount: null,
+  description: null,
+  startDate: "2026-10-25",
+};
 
+describe("이체 반복", () => {
+  it("이체 씨앗으로 열면 받는 계좌 · 수수료가 실리고, 카테고리 · 거래처는 안 실린다", () => {
+    act(() =>
+      root.render(
+        <RecurringAddDialog transferSeed={seed} onClose={() => {}} />,
+      ),
+    );
+    save();
     expect(sent.create).not.toBeNull();
     expect(sent.create!.expenseType).toBe("TRANSFER");
     expect(sent.create!.assetRowId).toBe(3);
     expect(sent.create!.toAssetRowId).toBe(4);
     expect(sent.create!.fee).toBe(500);
+    expect(sent.create!.startDate).toBe("2026-10-25");
     expect(sent.create!.categoryRowId).toBeUndefined();
     expect(sent.create!.merchant).toBeUndefined();
     expect(sent.create!.paymentMethod).toBeUndefined();
   });
 
-  it("양쪽 계좌가 없으면 저장이 열리지 않는다 — 자정마다 조용히 실패할 규칙이 된다", () => {
-    switchTab("addTx.transfer");
-    setValue(amountBox(), "300000");
+  it("빈 채 [추가] 를 누르면 칸 아래 오류가 뜨고 요청은 나가지 않는다", () => {
+    act(() => root.render(<RecurringAddDialog onClose={() => {}} />));
     save();
     expect(sent.create).toBeNull();
+    expect(document.body.textContent).toContain("errAmount");
+    expect(document.body.textContent).toContain("errCategory");
   });
 
-  it("카드는 이체 상대 목록에 없다 — 서버도 400 으로 막는다", () => {
-    switchTab("addTx.transfer");
-    openSelect("addTx.selectPlaceholder");
-    const options = [...document.body.querySelectorAll("[role='option']")].map(
-      (el) => el.textContent?.trim(),
+  it("지출 · 수입은 카테고리를 꼭 골라야 저장된다 — 카테고리 없이 저장된 옛 반복을 열고 저장해도 같다", () => {
+    act(() =>
+      root.render(
+        <RecurringAddDialog
+          recurring={{
+            rowId: 9,
+            userRowId: 1,
+            categoryRowId: null,
+            categoryName: null,
+            assetRowId: 3,
+            assetName: "주거래",
+            toAssetRowId: null,
+            toAssetName: null,
+            fee: null,
+            interestAmount: null,
+            sourceExpenseRowId: null,
+            expenseType: "EXPENSE",
+            amount: 7_000,
+            description: null,
+            merchant: "관리비",
+            paymentMethod: null,
+            frequency: "MONTHLY",
+            intervalValue: 1,
+            dayOfWeek: null,
+            dayOfMonth: 25,
+            executionTime: "09:00:00",
+            startDate: "2026-01-25",
+            endDate: null,
+            maxOccurrences: null,
+            executedCount: 0,
+            nextExecutionDate: "2026-11-25",
+            lastExecutedAt: null,
+            isActive: "Y",
+            autoLog: true,
+            notifyDayBefore: false,
+            createAt: "2026-01-01T00:00:00",
+            modifyAt: "2026-01-01T00:00:00",
+          }}
+          onClose={() => {}}
+        />,
+      ),
     );
-    expect(options).toContain("국민 · 주거래");
-    expect(options).toContain("국민 · 청약");
-    expect(options).not.toContain("국민 · 체크");
+    save("save");
+    expect(sent.update).toBeNull();
+    expect(document.body.textContent).toContain("errCategory");
   });
+});
 
-  it("지출로 되돌리면 이체 칸이 빠진다", () => {
-    switchTab("addTx.transfer");
-    setValue(amountBox(), "300000");
-    pickOption("addTx.selectPlaceholder", "국민 · 주거래");
-    pickOption("addTx.selectPlaceholder", "국민 · 청약");
-    switchTab("expense");
-    save();
+describe("끝 흐림(scrollFog)", () => {
+  const bodyFog = () =>
+    document.body
+      .querySelector("[data-slot$='-body'][data-scroll-fog]")
+      ?.getAttribute("data-scroll-fog") ?? null;
 
-    expect(sent.create!.expenseType).toBe("EXPENSE");
-    expect(sent.create!.toAssetRowId).toBeUndefined();
-    expect(sent.create!.fee).toBeUndefined();
-    expect(sent.create!.interestAmount).toBeUndefined();
+  it("폼 본문은 켜고, 넘치지 않는 단계(끝)는 끈다 — 390 × 844 보통 값에서 90% 에 닿을 때만 켠다", () => {
+    act(() => root.render(<RecurringAddDialog onClose={() => {}} />));
+    expect(bodyFog()).toBe("overlayBody");
+    const end = [
+      ...document.body.querySelectorAll<HTMLElement>("[data-slot=list-body]"),
+    ].find((el) => el.textContent?.startsWith("endRow"));
+    act(() => end!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(bodyFog()).toBeNull();
+  });
+});
+
+describe("수정 폼이 저장된 값을 그대로 연다", () => {
+  it("결제 수단(카드)과 맞지 않는 저장된 계좌도 열 때 지우지 않는다 — 사람이 결제 수단을 바꿀 때만 비운다", () => {
+    act(() =>
+      root.render(
+        <RecurringAddDialog
+          recurring={{
+            rowId: 9,
+            userRowId: 1,
+            categoryRowId: 11,
+            categoryName: "식비",
+            assetRowId: 3,
+            assetName: "주거래",
+            toAssetRowId: null,
+            toAssetName: null,
+            fee: null,
+            interestAmount: null,
+            sourceExpenseRowId: null,
+            expenseType: "EXPENSE",
+            amount: 7_000,
+            description: null,
+            merchant: "관리비",
+            paymentMethod: "CARD",
+            frequency: "MONTHLY",
+            intervalValue: 1,
+            dayOfWeek: null,
+            dayOfMonth: 25,
+            executionTime: "09:00:00",
+            startDate: "2026-01-25",
+            endDate: null,
+            maxOccurrences: null,
+            executedCount: 0,
+            nextExecutionDate: "2026-11-25",
+            lastExecutedAt: null,
+            isActive: "Y",
+            autoLog: true,
+            notifyDayBefore: false,
+            createAt: "2026-01-01T00:00:00",
+            modifyAt: "2026-01-01T00:00:00",
+          }}
+          onClose={() => {}}
+        />,
+      ),
+    );
+    save("save");
+    expect(sent.update).not.toBeNull();
+    expect(sent.update!.assetRowId).toBe(3);
+    expect(sent.update!.paymentMethod).toBe("CARD");
   });
 });

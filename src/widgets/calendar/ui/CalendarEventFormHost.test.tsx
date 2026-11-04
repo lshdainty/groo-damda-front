@@ -377,7 +377,7 @@ describe("저장 요청은 silent 로 부른다", () => {
 });
 
 describe("다른 호출처는 silent 를 넘기지 않는다", () => {
-  it("useCreateEvent · useUpdateEvent 는 Host 밖에서 쓰이지 않는다 — 기본(전역 토스트)이 남는다", async () => {
+  it("useCreateEvent · useUpdateEvent 를 부르는 곳은 Host 와 일정 상세 시트뿐이다 — 둘 다 폼 Callout 으로 알려 silent 를 넘기고, 나머지는 기본(전역 토스트)이 남는다", async () => {
     const { readdirSync, readFileSync, statSync } = await import("node:fs");
     const { join } = await import("node:path");
     const hits: string[] = [];
@@ -393,8 +393,14 @@ describe("다른 호출처는 silent 를 넘기지 않는다", () => {
     };
     walk(join(process.cwd(), "src"));
     const callers = hits.filter((f) => !f.endsWith("useCalendarEvents.ts"));
-    expect(callers.map((f) => f.split("/").pop())).toEqual([
+    expect(callers.map((f) => f.split("/").pop()).sort()).toEqual([
       "CalendarEventFormHost.tsx",
+      "event-detail-surface.tsx",
     ]);
+    // 상세가 든 시트(수정 폼 단계)도 같은 폼 Callout 을 그리므로 silent 로 부른다
+    const surface = callers.find((f) =>
+      f.endsWith("event-detail-surface.tsx"),
+    )!;
+    expect(readFileSync(surface, "utf8")).toMatch(/silent:\s*true/);
   });
 });

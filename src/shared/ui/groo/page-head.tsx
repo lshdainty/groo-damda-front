@@ -8,12 +8,15 @@ import { cn } from "@/shared/lib/cn";
  * 좌우 여백 32 · 머리 아래 20 은 둘러싼 화면 상자(`.page` 등)가 맡는다. 폰은 상단 바의 제목이 화면 제목이라 쓰지 않는다.
  */
 export function PageHead({
+  leading,
   title,
   description,
   actions,
   className,
   style,
 }: {
+  /** 제목 앞 붙이개(자산 상세의 Logo Tile 48 — 오른쪽 12). 없으면 지금 모양 그대로 */
+  leading?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
@@ -22,10 +25,20 @@ export function PageHead({
 }) {
   return (
     <div className={cn("page__head", className)} style={style}>
-      <div className="min-w-0">
-        <ScreenTitle className="mt-0">{title}</ScreenTitle>
-        {description != null && <p className="sub">{description}</p>}
-      </div>
+      {leading != null ? (
+        <div className="flex min-w-0 items-start gap-x3">
+          <span className="shrink-0">{leading}</span>
+          <div className="min-w-0">
+            <ScreenTitle className="mt-0">{title}</ScreenTitle>
+            {description != null && <p className="sub">{description}</p>}
+          </div>
+        </div>
+      ) : (
+        <div className="min-w-0">
+          <ScreenTitle className="mt-0">{title}</ScreenTitle>
+          {description != null && <p className="sub">{description}</p>}
+        </div>
+      )}
       {actions != null && <div className="right">{actions}</div>}
     </div>
   );

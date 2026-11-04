@@ -373,6 +373,9 @@ function createAvoidance(setOffset: (offset: number) => void) {
     const viewport = document.documentElement.clientHeight;
     let top = viewport;
     for (const el of avoided) {
+      // 모달(시트 · 대화상자)이 열려 있으면 Radix 가 그 밖을 aria-hidden 으로 가린다 — 가려진 탭 바 · 플로팅 버튼은
+      // 사용자가 누를 수 없는 자리라 피하지 않는다(안 그러면 시트 바닥 버튼 위 8 이 아니라 탭 바 위 8 에 선다)
+      if (el.closest('[aria-hidden="true"], [inert]')) continue;
       const r = el.getBoundingClientRect();
       if (r.width > 0 && r.height > 0) top = Math.min(top, r.top);
     }

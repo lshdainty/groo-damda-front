@@ -13,8 +13,6 @@ import { cn } from "@/shared/lib/index";
  *     <DetailField label="카테고리">…</DetailField>
  *   </DetailFieldGroup>
  *   <DetailSection title="…" trailing={…}>…</DetailSection>
- *   <DetailQuickAction icon={Split} label="내역 분할" active badge="2개" />
- *   <DetailStatSplit items={[{label, value}, …]} />
  *
  * - 카드 박스 없는 플랫 구성 — 구획은 border-top(subtle)로만.
  * - 편집은 별도 시트(detail→edit 분리, 기존 사용자 결정) — 인라인 편집 없음.
@@ -167,106 +165,6 @@ export function DetailSection({
         </div>
       )}
       {children}
-    </div>
-  );
-}
-
-/**
- * 원형 퀵 액션 — 44 원(sunken / active brand-subtle) + 라벨, 우상단 뱃지.
- *
- * `disabled` 는 button.md 의 비활성과 같다 — 통째로 opacity 0.5 · not-allowed, 눌러도 아무
- * 반응이 없다. 모양이 그대로면 눌러도 안 되는 버튼을 계속 누르게 된다.
- */
-export function DetailQuickAction({
-  icon: Icon,
-  label,
-  active = false,
-  badge,
-  className,
-  ...props
-}: React.ComponentProps<"button"> & {
-  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
-  label: string;
-  active?: boolean;
-  badge?: string | null;
-}) {
-  return (
-    <button
-      type="button"
-      className={cn(
-        "relative flex flex-col items-center gap-2 border-0 bg-transparent px-1 py-2 cursor-pointer disabled:cursor-not-allowed disabled:text-fg-disabled",
-        className,
-      )}
-      {...props}
-    >
-      <span
-        className={cn(
-          "relative inline-flex h-11 w-11 items-center justify-center rounded-full",
-          "transition-colors duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-easing)]",
-          active
-            ? "bg-[var(--bg-brand-subtle)] text-[var(--fg-brand)]"
-            : "bg-[var(--bg-sunken)] text-[var(--fg-secondary)]",
-        )}
-      >
-        <Icon size={19} strokeWidth={1.9} />
-        {badge != null && (
-          <span className="absolute -top-0.5 -right-1.5 rounded-full bg-[var(--bg-brand)] px-1.5 py-[3px] text-[length:var(--text-badge)] font-bold leading-none text-[var(--fg-on-brand)] shadow-[0_0_0_2px_var(--bg-surface)]">
-            {badge}
-          </span>
-        )}
-      </span>
-      <span
-        className={cn(
-          "text-[length:var(--text-caption)]",
-          active
-            ? "font-bold text-[var(--fg-brand-strong)]"
-            : "font-semibold text-[var(--fg-secondary)]",
-        )}
-      >
-        {label}
-      </span>
-    </button>
-  );
-}
-
-/** 중앙 스플릿 통계 — N열 균등, 사이 세로 구분선. */
-export function DetailStatSplit({
-  items,
-  className,
-}: {
-  items: {
-    label: React.ReactNode;
-    value: React.ReactNode;
-    valueClassName?: string;
-  }[];
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn("grid", className)}
-      style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}
-    >
-      {items.map((it, i) => (
-        <div
-          key={i}
-          className={cn(
-            "text-center",
-            i < items.length - 1 && "border-r border-[var(--border-subtle)]",
-          )}
-        >
-          <div className="text-[length:var(--text-caption)] text-[var(--fg-tertiary)]">
-            {it.label}
-          </div>
-          <div
-            className={cn(
-              "num mt-1 text-[length:var(--text-title-md)] font-extrabold tracking-[-0.02em] text-[var(--fg-primary)]",
-              it.valueClassName,
-            )}
-          >
-            {it.value}
-          </div>
-        </div>
-      ))}
     </div>
   );
 }

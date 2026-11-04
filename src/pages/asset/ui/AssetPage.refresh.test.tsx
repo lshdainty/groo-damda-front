@@ -73,9 +73,6 @@ vi.mock("@/features/savingGoal", () => ({
 vi.mock("@/features/stock/model/useStockMaster", () => ({
   useStockSymbolName: () => ({ data: undefined }),
 }));
-vi.mock("@/widgets/asset-full/ui/AssetDetailDialog", () => ({
-  AssetDetailDialog: () => null,
-}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k }),
   initReactI18next: { type: "3rdParty", init: () => {} },

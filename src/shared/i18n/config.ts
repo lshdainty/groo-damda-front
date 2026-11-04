@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
+import { dropDetectedLanguageIfSystem } from "./language-choice";
 
 // 각 언어별 네임스페이스 import
 import koCommon from "@/locales/ko/common.json";
@@ -156,6 +157,9 @@ const resources = {
     ds: enDs,
   },
 };
+
+// "시스템" 으로 고른 사람은 지난 방문의 감지 결과를 지우고 브라우저 언어를 다시 읽는다(language-choice.ts)
+dropDetectedLanguageIfSystem();
 
 i18n
   .use(LanguageDetector)

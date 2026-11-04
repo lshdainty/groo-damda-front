@@ -480,6 +480,7 @@ export function convertCalendarEventToIEvent(
     sourceType: "calendar",
     // 서버가 준 종류를 그대로 들고 다닌다 — 여기서 흘리면 수정 폼이 값을 지어낸다(QA #89).
     eventType: calendarEvent.eventType ?? null,
+    userRowId: calendarEvent.userRowId ?? null,
     calendarRowId: calendarEvent.calendarRowId ?? null,
     calendarName: calendarEvent.calendarName ?? null,
     calendarColor: calendarEvent.calendarColor ?? null,

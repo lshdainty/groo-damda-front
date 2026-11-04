@@ -43,9 +43,17 @@ export const FULLSCREEN_PATHS = [
 const under = (pathname: string, path: string) =>
   pathname === path || pathname.startsWith(`${path}/`);
 
+/**
+ * 자산 상세 페이지 주소(`/desk/asset/:assetId`, I-17 34) — 가계부 묶음(위 Line Tabs · 머리 제목 "가계부")이 아니다.
+ * 폰은 셸 머리 · 탭 바 없이 페이지가 제 상단 바를 그리고(풀스크린), 바탕은 흰 면 하나(white)다. `/desk/asset` 자체는 그대로 묶음이다.
+ */
+export const isAssetDetailPath = (pathname: string) =>
+  /^\/desk\/asset\/[^/]+\/?$/.test(pathname);
+
 export const isMoneyPath = (pathname: string) =>
-  MONEY_PATHS.some((p) => under(pathname, p));
+  !isAssetDetailPath(pathname) && MONEY_PATHS.some((p) => under(pathname, p));
 export const isFullscreenPath = (pathname: string) =>
+  isAssetDetailPath(pathname) ||
   FULLSCREEN_PATHS.some((p) => under(pathname, p));
 
 /**
@@ -57,6 +65,8 @@ export const isFullscreenPath = (pathname: string) =>
  */
 export type ScreenFloor = "bands" | "strip" | "white";
 export function screenFloor(pathname: string): ScreenFloor {
+  // 자산 상세는 흰 면 하나(I-17 4-A) — 아래 `/desk/asset` 띠 판정보다 먼저 가른다
+  if (isAssetDetailPath(pathname)) return "white";
   if (
     pathname === "/desk" ||
     under(pathname, "/desk/asset") ||
@@ -103,6 +113,8 @@ const TITLE_KEYS: Record<string, string> = {
 };
 
 export function screenTitleKey(pathname: string): string {
+  // 자산 상세 — 사이드바 지금 항목은 "자산" 그대로(under), 문서 제목만 "자산 상세"(I-17 34)
+  if (isAssetDetailPath(pathname)) return "assetDetail";
   // 가계부 묶음 넷은 머리 제목이 모두 "가계부" — 칸 이름은 위 Line Tabs 가 말한다(17-1)
   if (isMoneyPath(pathname)) return "expense";
   if (TITLE_KEYS[pathname]) return TITLE_KEYS[pathname];

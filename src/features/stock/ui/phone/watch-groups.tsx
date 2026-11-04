@@ -254,7 +254,9 @@ export function WatchGroupForm({
       <ResponsiveDialogContent
         title={group ? t("watch.groupRename") : t("watch.groupAdd")}
         // 열리면 이름 칸에 초점 — 폰에서 키보드가 바로 올라온다(옛 autoFocus. 검수 M11)
+        // 이름을 바꿀 때(group 있음)는 주지 않는다 — 표면이 받는다
         onOpenAutoFocus={(e) => {
+          if (group) return;
           e.preventDefault();
           nameRef.current?.focus({ preventScroll: true });
         }}
