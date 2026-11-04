@@ -3382,6 +3382,9 @@ expense,preset.noneValue,없음,None
 expense,preset.memoNone,메모 없음,No memo
 expense,preset.noAccount,계좌·카드 없음,No account or card
 expense,preset.noPayment,결제 수단 없음,No payment method
+expense,preset.fromAccountPick,보내는 계좌 선택,Select the sending account
+expense,preset.toAccountPick,받는 계좌 선택,Select the receiving account
+expense,preset.categoryPick,카테고리 선택,Select a category
 expense,preset.noCategoryOfKind,이 종류의 카테고리가 없어요.,There are no categories of this type.
 expense,addTx.presetShowAll,모두 보기,Show all
 expense,addTx.presetPickTitle,프리셋 고르기,Choose a preset
