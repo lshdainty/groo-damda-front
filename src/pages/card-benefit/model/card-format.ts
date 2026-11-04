@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { decodeHtml } from "@/shared/lib";
 import type { CardBenefitType, CardCatalogSummary } from "@/entities/card";
 
 /** 천 단위 쉼표 */
@@ -23,7 +24,7 @@ export function annualFeeRowText(s: CardCatalogSummary, t: TFunction) {
     });
   if (s.annualFee.label)
     return t("benefit.annualFeeLabel", {
-      label: commaDigits(s.annualFee.label),
+      label: commaDigits(decodeHtml(s.annualFee.label)),
     });
   return t("benefit.annualFeeNone");
 }
@@ -36,7 +37,7 @@ export function performanceRowText(s: CardCatalogSummary, t: TFunction) {
     });
   }
   if (s.performance.isRequired === "Y" && s.performance.requiredText) {
-    return s.performance.requiredText;
+    return decodeHtml(s.performance.requiredText);
   }
   return t("benefit.performanceNone");
 }
@@ -49,7 +50,7 @@ export function annualFeeDetailText(s: CardCatalogSummary, t: TFunction) {
       amount: formatKRW(s.annualFee.amount),
     });
   return s.annualFee.label
-    ? commaDigits(s.annualFee.label)
+    ? commaDigits(decodeHtml(s.annualFee.label))
     : t("benefit.feeFree");
 }
 
@@ -61,7 +62,10 @@ export function performanceDetailText(s: CardCatalogSummary, t: TFunction) {
         amount: formatKRW(s.performance.requiredAmount),
       });
     }
-    return s.performance.requiredText || t("benefit.performanceNone");
+    return (
+      (s.performance.requiredText && decodeHtml(s.performance.requiredText)) ||
+      t("benefit.performanceNone")
+    );
   }
   return t("benefit.performanceNone");
 }

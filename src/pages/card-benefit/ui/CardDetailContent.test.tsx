@@ -110,9 +110,10 @@ describe("CardDetailContent", () => {
 
     act(() => coffee!.click());
     expect(coffee!.getAttribute("aria-expanded")).toBe("true");
+    // 펼침 상태는 aria-expanded 로 읽는다 — 내용은 접혀도 DOM 에 있다(hidden)
     expect(
-      container.querySelector(`[id="${controls}"]`)!.textContent,
-    ).toContain("10% 를 깎아 줘요");
+      (container.querySelector(`[id="${controls}"]`) as HTMLElement).hidden,
+    ).toBe(false);
 
     act(() => coffee!.click());
     expect(coffee!.getAttribute("aria-expanded")).toBe("false");
@@ -131,9 +132,17 @@ describe("CardDetailContent", () => {
     expect(text).toContain("연회비는 첫해에 청구돼요");
   });
 
-  it("바닥 닫기 버튼 · 서버 원문 없이 본문만 그린다", () => {
-    render();
-    expect(container.querySelector("[data-slot=dialog-footer]")).toBeNull();
-    expect(container.textContent).not.toContain("benefit.close");
+  it("대화상자 째 그려도 바닥 닫기 버튼 · 서버 원문이 없다 — 닫기 원 하나", async () => {
+    const { CardBenefitDetailDialog } =
+      await import("./CardBenefitDetailDialog");
+    act(() =>
+      root.render(<CardBenefitDetailDialog rowId={1} onClose={() => {}} />),
+    );
+    const dialog = document.body.querySelector("[role=dialog]");
+    expect(dialog).not.toBeNull();
+    expect(dialog!.querySelector("[data-slot=dialog-footer]")).toBeNull();
+    expect(dialog!.querySelector("[data-slot=bottom-sheet-footer]")).toBeNull();
+    expect(dialog!.textContent).toContain("benefit.detailTitle");
+    expect(dialog!.textContent).not.toContain("benefit.close");
   });
 });

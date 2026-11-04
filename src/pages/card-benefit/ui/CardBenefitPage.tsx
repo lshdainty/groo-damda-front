@@ -131,6 +131,8 @@ export const CardBenefitPage = () => {
     ? (infQ.data?.pages[0]?.meta.totalElements ?? cards.length)
     : (pageQ.data?.meta.totalElements ?? cards.length);
   const isLoading = mobile ? infQ.isLoading : pageQ.isLoading;
+  // 조건 · 쪽을 바꾼 직후(앞 값이 비치는 placeholder)에는 앞 조건의 줄 · 개수 · 패널을 보이지 않는다 — 틀린 정보(이 화면에서만, 공용 질의는 그대로)
+  const waiting = isLoading || (!mobile && pageQ.isPlaceholderData);
   const failed = mobile
     ? infQ.isError && !infQ.data
     : pageQ.isError && !pageQ.data;
@@ -208,7 +210,7 @@ export const CardBenefitPage = () => {
         className="m-0 font-sans text-t4 font-medium text-fg-neutral-subtle tabular-nums"
         aria-live="polite"
       >
-        {isLoading || failed
+        {waiting || failed
           ? ""
           : t("benefit.resultCount", { count: formatKRW(total) })}
       </h2>
@@ -235,7 +237,7 @@ export const CardBenefitPage = () => {
         primaryAction={{ label: dsT("common.retry"), onClick: refetch }}
       />
     );
-  } else if (isLoading || outOfRange) {
+  } else if (waiting || outOfRange) {
     body = <RowsSkeleton count={6} />;
   } else if (cards.length === 0) {
     body = (
@@ -349,13 +351,13 @@ export const CardBenefitPage = () => {
           {wide ? (
             <div
               className={
-                panelId != null || isLoading
+                panelId != null || waiting
                   ? "grid grid-cols-[minmax(0,1fr)_400px] items-start gap-x6"
                   : undefined
               }
             >
               {listCard}
-              {(panelId != null || isLoading) && (
+              {(panelId != null || waiting) && (
                 <aside
                   aria-label={t("benefit.detailTitle")}
                   className="sticky top-x5"
@@ -366,7 +368,7 @@ export const CardBenefitPage = () => {
                       key={panelId}
                       className="px-x6 max-h-[calc(100dvh-var(--spacing-x14)-var(--spacing-x10))] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                     >
-                      {panelId != null ? (
+                      {panelId != null && !waiting ? (
                         <CardDetailContent rowId={panelId} />
                       ) : (
                         <DetailSkeleton />

@@ -1,8 +1,10 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/shared/ds/badge";
 import { CardArt } from "@/shared/ds/image-frame";
 import { ListButtonItem } from "@/shared/ds/list";
 import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
+import { withCommaBreaks } from "@/shared/ds/i18n";
 import { decodeHtml } from "@/shared/lib";
 import type { CardCatalogSummary } from "@/entities/card";
 import {
@@ -10,6 +12,47 @@ import {
   cardMetaParts,
   performanceRowText,
 } from "../model/card-format";
+
+/**
+ * 금액 줄(연회비 · 실적) — 금액이 든 항목은 줄이지 않고 항목째 다음 줄로 넘기고, 한 줄보다 길면 쉼표 뒤(<wbr>)에서만 끊는다(tag-group.md · DESIGN 03-D).
+ * 두 줄로 갈리면 첫 줄 끝에 구분점이 남지 않게 숨긴다(자리는 그대로 — 숨겼다 펴며 줄이 흔들리지 않게 visibility).
+ */
+function AmountLine({ fee, perf }: { fee: string; perf: string }) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  const [wrapped, setWrapped] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const [a, b] = [el.children[0], el.children[1]] as HTMLElement[];
+      setWrapped(!!a && !!b && b.offsetTop > a.offsetTop);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fee, perf]);
+  return (
+    <span
+      ref={ref}
+      className="flex flex-wrap font-sans text-t3 font-normal text-fg-neutral-subtle"
+    >
+      <span className="whitespace-nowrap">
+        {withCommaBreaks(fee)}
+        <span
+          aria-hidden
+          className={
+            wrapped ? "invisible text-fg-disabled" : "text-fg-disabled"
+          }
+        >
+          {" · "}
+        </span>
+        <span className="sr-only">, </span>
+      </span>
+      <span className="whitespace-nowrap">{withCommaBreaks(perf)}</span>
+    </span>
+  );
+}
 
 /**
  * 카드 줄 (I-20 E 32) — ds List 누르는 줄 + 앞 카드 그림 56, 위 맞춤. 제목은 카드 이름(줄바꿈, 말줄임 없음),
@@ -63,17 +106,10 @@ export function CardRow({
               ))}
             </TagGroup>
           </span>
-          {/* 금액 항목(연회비 · 실적)은 줄이지 않고 통째로 다음 줄로 넘긴다 — 말줄임으로 금액이 사라지지 않게 */}
-          <span className="block min-w-0">
-            <TagGroup size="t3">
-              <TagGroupItem className="whitespace-nowrap">
-                {annualFeeRowText(card, t)}
-              </TagGroupItem>
-              <TagGroupItem className="whitespace-nowrap">
-                {performanceRowText(card, t)}
-              </TagGroupItem>
-            </TagGroup>
-          </span>
+          <AmountLine
+            fee={annualFeeRowText(card, t)}
+            perf={performanceRowText(card, t)}
+          />
         </>
       }
       suffix={
