@@ -318,7 +318,7 @@ export const CardBenefitPage = () => {
       <Card body="list" data-slot="card-benefit-list">
         {body}
       </Card>
-      {!failed && !isLoading && totalPages > 1 && (
+      {!failed && !waiting && totalPages > 1 && (
         <Pagination
           aria-label={t("benefit.pageNav")}
           totalPages={totalPages}

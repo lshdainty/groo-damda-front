@@ -45,7 +45,7 @@ function AmountLine({ fee, perf }: { fee: string; perf: string }) {
             wrapped ? "invisible text-fg-disabled" : "text-fg-disabled"
           }
         >
-          {" · "}
+          {" ·\u00A0"}
         </span>
         <span className="sr-only">, </span>
       </span>
