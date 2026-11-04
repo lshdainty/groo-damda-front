@@ -9,11 +9,11 @@ import type { CardCatalogSearchParams } from "@/entities/card";
 
 export const useCardCatalogs = (
   params?: CardCatalogSearchParams,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; silent?: boolean },
 ) => {
   return useQuery({
     queryKey: cardKeys.catalogs(params),
-    queryFn: () => cardCatalogApi.search(params),
+    queryFn: () => cardCatalogApi.search(params, { silent: options?.silent }),
     placeholderData: keepPreviousData,
     enabled: options?.enabled ?? true,
   });
@@ -25,12 +25,15 @@ export const useCardCatalogs = (
  */
 export const useInfiniteCardCatalogs = (
   params?: Omit<CardCatalogSearchParams, "page">,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; silent?: boolean },
 ) => {
   return useInfiniteQuery({
     queryKey: cardKeys.catalogsInfinite(params),
     queryFn: ({ pageParam }) =>
-      cardCatalogApi.search({ ...params, page: pageParam }),
+      cardCatalogApi.search(
+        { ...params, page: pageParam },
+        { silent: options?.silent },
+      ),
     initialPageParam: 0,
     getNextPageParam: (last) =>
       last.meta.last ? undefined : last.meta.page + 1,
@@ -38,10 +41,13 @@ export const useInfiniteCardCatalogs = (
   });
 };
 
-export const useCardCatalogDetail = (id: number | null) => {
+export const useCardCatalogDetail = (
+  id: number | null,
+  options?: { silent?: boolean },
+) => {
   return useQuery({
     queryKey: cardKeys.catalogDetail(id ?? 0),
-    queryFn: () => cardCatalogApi.getDetail(id!),
+    queryFn: () => cardCatalogApi.getDetail(id!, { silent: options?.silent }),
     enabled: id != null && id > 0,
   });
 };

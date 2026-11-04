@@ -1,65 +1,50 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useOutletContext, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
+import { Search, SearchX } from "lucide-react";
+import { Card } from "@/shared/ds/card";
+import { Checkbox } from "@/shared/ds/checkbox";
+import { useDsText } from "@/shared/ds/i18n";
+import { InfiniteListEnd } from "@/shared/ds/infinite-list";
+import { Input } from "@/shared/ds/input";
+import { List, ListHeader } from "@/shared/ds/list";
+import { useWideSurface } from "@/shared/ds/overlay";
+import { Pagination } from "@/shared/ds/pagination";
+import { ResultSection } from "@/shared/ds/result-section";
+import { ScrollFog } from "@/shared/ds/scroll-fog";
+import { Skeleton } from "@/shared/ds/skeleton";
 import {
-  ChevronLeft,
-  ChevronRight,
-  CreditCard,
-  Search,
-  SearchX,
-  X,
-} from "lucide-react";
-import { Button } from "@/shared/ui/button";
-import { Card, CardContent } from "@/shared/ui/card";
-import { Input } from "@/shared/ui/input";
-import { Checkbox } from "@/shared/ui/checkbox";
-import { Skeleton } from "@/shared/ui/skeleton";
-import { Spinner } from "@/shared/ui/spinner";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { MobileBackHeader } from "@/shared/ui/groo/mobile-back-header";
-import { decodeHtml } from "@/shared/lib";
+  TopNavigation,
+  TopNavigationBackButton,
+  TopNavigationTitle,
+} from "@/shared/ds/top-navigation";
+import { PageHead } from "@/shared/ui/groo/page-head";
 import {
   useCardCatalogs,
   useInfiniteCardCatalogs,
 } from "@/features/card-catalog";
-import type {
-  CardBenefitType,
-  CardCatalogSummary,
-  CardType,
-} from "@/entities/card";
-import { getCardBrand } from "@/entities/card";
+import type { CardType } from "@/entities/card";
+import {
+  DESKTOP_PAGE_SIZE,
+  PHONE_PAGE_SIZE,
+  formatKRW,
+  type BenefitFilterKey,
+  type TypeFilterKey,
+} from "../model/card-format";
 import { CardBenefitDetailDialog } from "./CardBenefitDetailDialog";
-import { PageHead } from "@/shared/ui/groo/page-head";
+import { CardDetailContent, DetailSkeleton } from "./CardDetailContent";
+import { CardFilterBar } from "./CardFilterBar";
+import { CardRow } from "./CardRow";
 
 type OutletCtx = { onAddTx: () => void; mobile: boolean };
 
 /**
- * 카드 혜택 라이브러리 — groo-design `card-benefits.jsx` CardBenefitsScreen SoT 정합.
- *
- * - 데스크탑: 카드 아트워크 grid (auto-fill minmax(280px,1fr))
- * - 모바일: 가로형 리스트 타일
- * - 검색(디바운스) + 종류/혜택 필터 pill + 단종 포함 토글 → 서버 useCardCatalogs
- *
- * 신규 API 금지 — useCardCatalogs(params) 만 사용.
+ * 카드 혜택 (I-20 E 30 ~ 37) — 신규 API 없이 useCardCatalogs(params) 만 쓴다.
+ *  - 폰(768 미만): 상단 바 + 흰 면 하나 — 밑줄 검색칸 → 거르기 칩 → "총 n장" + 단종 포함 → 카드 줄 → 끝없이 불러오기. 줄을 누르면 조회 시트.
+ *  - 768 ~ 1279: 가운데 720 한 칸 — 제목 줄 · 조절 줄 · 개수 줄 · 목록 카드 + 쪽 넘김(`?page=N`). 줄을 누르면 시트.
+ *  - 1280 이상: 가운데 1040 — 목록 카드 | 오른쪽 상세 패널 400. 처음 고른 카드는 그 쪽의 첫 줄.
+ * 요청 실패는 전역 서버 원문 토스트 없이(silent) 그 자리 Result Section 으로 알린다.
  */
-
-const PAGE_SIZE = 60;
-
-type TypeKey = "all" | "CREDIT" | "CHECK";
-
-/** 혜택 필터 — UI 라벨 5개, benefitType 매핑. 적립·캐시백 둘 다 POINT 전송. */
-const BENEFIT_FILTERS: {
-  key: string;
-  labelKey: string;
-  type: CardBenefitType | undefined;
-}[] = [
-  { key: "all", labelKey: "benefitType.all", type: undefined },
-  { key: "discount", labelKey: "benefitType.discount", type: "DISCOUNT" },
-  { key: "point", labelKey: "benefitType.point", type: "POINT" },
-  { key: "cashback", labelKey: "benefitType.cashback", type: "POINT" },
-  { key: "mileage", labelKey: "benefitType.mileage", type: "MILEAGE" },
-];
 
 function useDebounced<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -70,531 +55,17 @@ function useDebounced<T>(value: T, delay: number): T {
   return debounced;
 }
 
-function formatKRW(n: number) {
-  return new Intl.NumberFormat("ko-KR").format(n);
-}
-
-/**
- * 연회비 표기 — "정보 없음"과 "무료"를 구분한다.
- *
- * annual_fee_amount 는 DB 에서 NOT NULL DEFAULT 0 이라 미수집분도 0 으로 내려왔고,
- * 예전에는 그걸 "없음"으로 찍어 연회비를 안 받는 카드처럼 보였다(9,466장 중 5,399장).
- * 지금은 백엔드가 amount=0 이고 label 도 없으면 annualFee 자체를 null 로 내린다.
- */
-function annualFeeText(s: CardCatalogSummary, t: TFunction) {
-  if (!s.annualFee)
-    return t("benefit.annualFeeLabel", { label: t("benefit.feeUnknown") });
-  if (s.annualFee.amount > 0)
-    return t("benefit.annualFeeAmount", {
-      amount: formatKRW(s.annualFee.amount),
-    });
-  return t("benefit.annualFeeLabel", {
-    label: s.annualFee.label ?? t("benefit.feeFree"),
-  });
-}
-
-/** 전월 실적 표기: isRequired==='Y' → "실적 N원/월", 아니면 "실적 무관". */
-function performanceText(s: CardCatalogSummary, t: TFunction) {
-  if (s.performance.isRequired === "Y" && s.performance.requiredAmount > 0) {
-    return t("benefit.performanceAmount", {
-      amount: formatKRW(s.performance.requiredAmount),
-    });
-  }
-  if (s.performance.isRequired === "Y" && s.performance.requiredText) {
-    return s.performance.requiredText;
-  }
-  return t("benefit.performanceNone");
-}
-
-/** 필터 pill 1행 — 단일 선택. Tabs(pills/sm) 사용. */
-function FilterPills<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: { key: T; label: string; count?: number }[];
-  value: T;
-  onChange: (k: T) => void;
-}) {
+/** 불러오는 동안의 줄 — 카드 그림 56 · 세 줄 */
+function RowsSkeleton({ count }: { count: number }) {
   return (
-    <Tabs
-      value={value}
-      onValueChange={(v) => v && onChange(v as T)}
-      style={{ maxWidth: "100%", overflowX: "auto", scrollbarWidth: "none" }}
-    >
-      <TabsList variant="pills" size="sm">
-        {options.map((o) => (
-          <TabsTrigger key={o.key} variant="pills" size="sm" value={o.key}>
-            {o.label}
-            {o.count != null && (
-              <span
-                style={{ fontVariantNumeric: "tabular-nums", opacity: 0.85 }}
-              >
-                {o.count}
-              </span>
-            )}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
-  );
-}
-
-/** 데스크탑 카드 아트워크 타일. */
-function CardArtworkTile({
-  card,
-  onClick,
-}: {
-  card: CardCatalogSummary;
-  onClick: () => void;
-}) {
-  const { t } = useTranslation("card");
-  const { t: tAsset } = useTranslation("asset");
-  const cardName = decodeHtml(card.cardName);
-  const companyName = decodeHtml(card.company?.name ?? "");
-  const discontinued = card.isDiscontinued === "Y";
-
-  // 3단계 fallback: imgUrl 로드 성공 → <img> / 실패·없음 → 브랜드 색 아트워크 / 미상 → 중립.
-  const [imgError, setImgError] = useState(false);
-  const showImg = !!card.imgUrl && !imgError;
-  const brand = getCardBrand(companyName);
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        background: "var(--bg-surface)",
-        border: 0,
-        borderRadius: "var(--radius-lg)",
-        boxShadow: "var(--shadow-sm)",
-        padding: 0,
-        display: "flex",
-        flexDirection: "column",
-        cursor: "pointer",
-        textAlign: "left",
-        opacity: discontinued ? 0.65 : 1,
-        overflow: "hidden",
-        fontFamily: "inherit",
-        transition:
-          "box-shadow var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-fast) var(--motion-ease-out)",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = "var(--shadow-md)";
-        e.currentTarget.style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "var(--shadow-sm)";
-        e.currentTarget.style.transform = "none";
-      }}
-    >
-      {/* 아트워크 — showImg 면 <img>, 아니면 브랜드 색(or 중립) 아트워크 */}
-      {showImg ? (
-        <div
-          style={{
-            width: "100%",
-            aspectRatio: "1.586 / 1",
-            position: "relative",
-            overflow: "hidden",
-            background: "var(--bg-sunken)",
-          }}
-        >
-          <img
-            src={card.imgUrl ?? undefined}
-            // 옆에 카드 이름이 글로 있다 — 그림 이름은 비운다(image-frame.md "이름 옆이면 alt=\"\"", 낭독기가 이름을 두 번 읽지 않게)
-            alt=""
-            onError={() => setImgError(true)}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-            }}
-          />
-          {discontinued && (
-            <span
-              style={{
-                position: "absolute",
-                top: 12,
-                right: 12,
-                fontSize: 9.5,
-                fontWeight: 700,
-                padding: "2px 6px",
-                borderRadius: "var(--radius-sm)",
-                background: "rgba(0,0,0,0.55)",
-                color: "var(--fg-on-brand)",
-              }}
-            >
-              {tAsset("editDialog.discontinued")}
-            </span>
-          )}
-        </div>
-      ) : (
-        <div
-          style={{
-            width: "100%",
-            aspectRatio: "1.586 / 1",
-            background: brand.bg,
-            color: brand.fg,
-            padding: "16px 18px",
-            position: "relative",
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <span
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%)",
-              pointerEvents: "none",
-            }}
-          />
-          <div
-            style={{
-              position: "relative",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                opacity: 0.85,
-                letterSpacing: "0.06em",
-              }}
-            >
-              {companyName}
-            </span>
-            {discontinued && (
-              <span
-                style={{
-                  fontSize: 9.5,
-                  fontWeight: 700,
-                  padding: "2px 6px",
-                  borderRadius: "var(--radius-sm)",
-                  background: "rgba(0,0,0,0.3)",
-                  color: "var(--fg-on-brand)",
-                }}
-              >
-                {tAsset("editDialog.discontinued")}
-              </span>
-            )}
-          </div>
-          <div style={{ position: "relative" }}>
-            <div
-              style={{
-                fontSize: 16,
-                fontWeight: 800,
-                letterSpacing: "-0.01em",
-                wordBreak: "keep-all",
-                lineHeight: 1.25,
-              }}
-            >
-              {cardName}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 메타 */}
-      <div
-        style={{
-          padding: "16px 18px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-          flex: 1,
-        }}
-      >
-        {showImg && (
-          <div
-            style={{
-              fontSize: 13.5,
-              fontWeight: 700,
-              color: "var(--fg-primary)",
-              letterSpacing: "-0.01em",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {cardName}
-          </div>
-        )}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            flexWrap: "wrap",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: "var(--fg-primary)",
-              padding: "2px 8px",
-              background: "var(--bg-sunken)",
-              borderRadius: "var(--radius-pill)",
-            }}
-          >
-            {card.cardType === "CREDIT"
-              ? tAsset("cardTypeShort.credit")
-              : tAsset("cardTypeShort.check")}
-          </span>
-          <span style={{ fontSize: 11.5, color: "var(--fg-tertiary)" }}>
-            {annualFeeText(card, t)}
-          </span>
-          <span
-            style={{
-              width: 2,
-              height: 2,
-              borderRadius: "var(--radius-pill)",
-              background: "var(--fg-tertiary)",
-            }}
-          />
-          <span
-            style={{
-              fontSize: 11.5,
-              color: "var(--fg-tertiary)",
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {performanceText(card, t)}
-          </span>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-/** 모바일 가로형 리스트 타일. */
-function CardListTile({
-  card,
-  onClick,
-}: {
-  card: CardCatalogSummary;
-  onClick: () => void;
-}) {
-  const { t } = useTranslation("card");
-  const { t: tAsset } = useTranslation("asset");
-  const cardName = decodeHtml(card.cardName);
-  const companyName = decodeHtml(card.company?.name ?? "");
-  const discontinued = card.isDiscontinued === "Y";
-
-  // 3단계 fallback: imgUrl 로드 성공 → <img> / 실패·없음 → 브랜드 색 / 미상 → 중립.
-  const [imgError, setImgError] = useState(false);
-  const showImg = !!card.imgUrl && !imgError;
-  const brand = getCardBrand(companyName);
-
-  return (
-    // 모바일 카드 다이어트 — 카드 시각(배경+그림자) 벗기고 플랫 행 (hover 면이 구분).
-    <button
-      type="button"
-      onClick={onClick}
-      className="hover:bg-[var(--bg-muted)] active:bg-[var(--bg-muted)] transition-colors"
-      style={{
-        background: "transparent",
-        border: 0,
-        borderRadius: 10,
-        padding: "12px 10px",
-        margin: "0 -2px",
-        display: "flex",
-        alignItems: "center",
-        gap: 14,
-        cursor: "pointer",
-        textAlign: "left",
-        opacity: discontinued ? 0.6 : 1,
-        fontFamily: "inherit",
-      }}
-    >
-      {/* 미니 카드 비주얼 — showImg 면 <img>, 아니면 브랜드 색(or 중립) 아트워크 */}
-      <span
-        style={{
-          width: 56,
-          height: 36,
-          borderRadius: 6,
-          flexShrink: 0,
-          position: "relative",
-          overflow: "hidden",
-          background: showImg ? "var(--bg-sunken)" : brand.bg,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {showImg ? (
-          <img
-            src={card.imgUrl ?? undefined}
-            // 옆에 카드 이름이 글로 있다 — 그림 이름은 비운다(image-frame.md "이름 옆이면 alt=\"\"", 낭독기가 이름을 두 번 읽지 않게)
-            alt=""
-            onError={() => setImgError(true)}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-            }}
-          />
-        ) : (
-          <>
-            <span
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%)",
-              }}
-            />
-            <span
-              style={{
-                position: "relative",
-                textAlign: "center",
-                padding: "0 4px",
-                lineHeight: 1.1,
-                fontSize: 9,
-                fontWeight: 700,
-                letterSpacing: "0.05em",
-                color: brand.fg,
-              }}
-            >
-              {companyName.replace("카드", "").slice(0, 4)}
-            </span>
-          </>
-        )}
-      </span>
-
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            marginBottom: 2,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 13.5,
-              fontWeight: 700,
-              color: "var(--fg-primary)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {cardName}
-          </span>
-          {discontinued && (
-            <span
-              style={{
-                fontSize: 9.5,
-                fontWeight: 700,
-                color: "var(--fg-tertiary)",
-                background: "var(--bg-sunken)",
-                padding: "1px 5px",
-                borderRadius: "var(--radius-sm)",
-                flexShrink: 0,
-              }}
-            >
-              {tAsset("editDialog.discontinued")}
-            </span>
-          )}
-        </div>
-        <div
-          style={{
-            fontSize: 11.5,
-            color: "var(--fg-tertiary)",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {companyName} ·{" "}
-          {card.cardType === "CREDIT"
-            ? tAsset("cardTypeShort.credit")
-            : tAsset("cardTypeShort.check")}{" "}
-          · {annualFeeText(card, t)}
-        </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: "var(--fg-tertiary)",
-            marginTop: 1,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {performanceText(card, t)}
-        </div>
-      </div>
-      <ChevronRight
-        size={14}
-        style={{ color: "var(--fg-tertiary)", flexShrink: 0 }}
-      />
-    </button>
-  );
-}
-
-function GridSkeleton({ mobile }: { mobile: boolean }) {
-  if (mobile) {
-    return (
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          // 카드 다이어트 — 실렌더 플랫 행과 동일.
-          <div
-            key={i}
-            style={{
-              padding: "12px 10px",
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
-            }}
-          >
-            <Skeleton className="h-9 w-14 rounded-md" />
-            <div style={{ flex: 1 }}>
-              <Skeleton className="h-4 w-2/3 mb-2" />
-              <Skeleton className="h-3 w-1/2" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-        gap: 16,
-      }}
-    >
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            background: "var(--bg-surface)",
-            borderRadius: "var(--radius-lg)",
-            boxShadow: "var(--shadow-sm)",
-            overflow: "hidden",
-          }}
-        >
-          <Skeleton
-            className="w-full rounded-none"
-            style={{ aspectRatio: "1.586 / 1" }}
-          />
-          <div style={{ padding: "16px 18px" }}>
-            <Skeleton className="h-4 w-3/4 mb-3" />
-            <Skeleton className="h-3 w-1/2" />
+    <div aria-busy="true">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="flex items-start gap-x4 px-global-gutter py-x3">
+          <Skeleton className="aspect-[1.586] w-14 shrink-0" radius="6" />
+          <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
+            <Skeleton text="t5" className="w-3/4" />
+            <Skeleton text="t3" className="w-1/2" />
+            <Skeleton text="t3" className="w-2/5" />
           </div>
         </div>
       ))}
@@ -602,83 +73,56 @@ function GridSkeleton({ mobile }: { mobile: boolean }) {
   );
 }
 
-function EmptyState() {
-  const { t } = useTranslation("card");
-  return (
-    <Card>
-      <CardContent style={{ padding: "60px 20px", textAlign: "center" }}>
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: "var(--radius-pill)",
-            background: "var(--bg-sunken)",
-            color: "var(--fg-tertiary)",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 12,
-          }}
-        >
-          <SearchX size={20} />
-        </div>
-        <div
-          style={{
-            fontSize: 14,
-            fontWeight: 700,
-            color: "var(--fg-primary)",
-            marginBottom: 4,
-          }}
-        >
-          {t("benefit.emptyTitle")}
-        </div>
-        <div style={{ fontSize: 12.5, color: "var(--fg-tertiary)" }}>
-          {t("benefit.emptyDesc")}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 export const CardBenefitPage = () => {
   const { t } = useTranslation("card");
-  const { t: tAsset } = useTranslation("asset");
-  const { t: tCommon } = useTranslation("common");
+  const dsT = useDsText();
   const { mobile } = useOutletContext<OutletCtx>();
+  const wide = useWideSurface();
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const [params, setParams] = useSearchParams();
 
   const [query, setQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<TypeKey>("all");
-  const [benefitKey, setBenefitKey] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilterKey>("all");
+  const [benefitKey, setBenefitKey] = useState<BenefitFilterKey>("all");
   const [includeDiscontinued, setIncludeDiscontinued] = useState(false);
-  const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-  const [page, setPage] = useState(0);
+  // 1280 미만 조회 시트 · 1280 이상 패널이 보여 주는 카드
+  const [sheetId, setSheetId] = useState<number | null>(null);
+  const [pickedId, setPickedId] = useState<number | null>(null);
+
+  // 쪽은 주소에 — ?page=N(1부터). 검색 · 조건을 바꾸면 1쪽(주소에서 page 를 지운다)
+  const rawPage = Number(params.get("page"));
+  const page =
+    Number.isInteger(rawPage) && rawPage >= 1 ? Math.min(rawPage, 100000) : 1;
+  const resetPage = () => {
+    if (!params.has("page")) return;
+    const next = new URLSearchParams(params);
+    next.delete("page");
+    setParams(next, { replace: true });
+  };
+  const goPage = (n: number) => {
+    const next = new URLSearchParams(params);
+    if (n <= 1) next.delete("page");
+    else next.set("page", String(n));
+    setParams(next);
+  };
 
   const debouncedQuery = useDebounced(query.trim(), 300);
-
-  const benefitType = useMemo(
-    () => BENEFIT_FILTERS.find((f) => f.key === benefitKey)?.type,
-    [benefitKey],
-  );
-
-  // 검색/필터 변경 시 데스크탑 페이지를 첫 페이지로 리셋 (render 중 상태 조정 — effect 불필요).
-  const filterSig = `${debouncedQuery}|${typeFilter}|${benefitType ?? ""}|${includeDiscontinued}`;
-  const [prevFilterSig, setPrevFilterSig] = useState(filterSig);
-  if (filterSig !== prevFilterSig) {
-    setPrevFilterSig(filterSig);
-    setPage(0);
-  }
-
   const baseParams = {
     keyword: debouncedQuery || undefined,
     cardType: typeFilter === "all" ? undefined : (typeFilter as CardType),
-    benefitType,
+    benefitType: benefitKey === "all" ? undefined : benefitKey,
     includeDiscontinued,
-    size: PAGE_SIZE,
   };
 
-  // 데스크탑/태블릿: 페이지네이션. 모바일: 인피니티 스크롤. 활성 쿼리만 enabled.
-  const pageQ = useCardCatalogs({ ...baseParams, page }, { enabled: !mobile });
-  const infQ = useInfiniteCardCatalogs(baseParams, { enabled: mobile });
+  // 폰: 끝없이 불러오기 / 768 이상: 쪽 넘김 — 쓰는 쪽 질의만 켠다
+  const pageQ = useCardCatalogs(
+    { ...baseParams, page: page - 1, size: DESKTOP_PAGE_SIZE },
+    { enabled: !mobile, silent: true },
+  );
+  const infQ = useInfiniteCardCatalogs(
+    { ...baseParams, size: PHONE_PAGE_SIZE },
+    { enabled: mobile, silent: true },
+  );
 
   const cards = mobile
     ? (infQ.data?.pages.flatMap((p) => p.content) ?? [])
@@ -687,311 +131,259 @@ export const CardBenefitPage = () => {
     ? (infQ.data?.pages[0]?.meta.totalElements ?? cards.length)
     : (pageQ.data?.meta.totalElements ?? cards.length);
   const isLoading = mobile ? infQ.isLoading : pageQ.isLoading;
-  const isFetching = mobile ? infQ.isFetching : pageQ.isFetching;
+  // 조건 · 쪽을 바꾼 직후(앞 값이 비치는 placeholder)에는 앞 조건의 줄 · 개수 · 패널을 보이지 않는다 — 틀린 정보(이 화면에서만, 공용 질의는 그대로)
+  const waiting = isLoading || (!mobile && pageQ.isPlaceholderData);
+  const failed = mobile
+    ? infQ.isError && !infQ.data
+    : pageQ.isError && !pageQ.data;
   const totalPages = pageQ.data?.meta.totalPages ?? 1;
+  const refetch = () => void (mobile ? infQ.refetch() : pageQ.refetch());
 
-  // 모바일 인피니티 스크롤 sentinel observer.
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = infQ;
+  // 주소의 쪽이 전체 쪽 수를 넘으면(저장한 주소 · 조건이 줄어든 뒤 뒤로 가기) 마지막 쪽으로 옮긴다 — 주소를 바꿔 쓴다(replace)
+  const outOfRange =
+    !mobile &&
+    !!pageQ.data &&
+    !pageQ.isPlaceholderData &&
+    totalPages > 0 &&
+    page > totalPages;
   useEffect(() => {
-    if (!mobile) return;
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [mobile, hasNextPage, isFetchingNextPage, fetchNextPage, cards.length]);
+    if (!outOfRange) return;
+    const next = new URLSearchParams(params);
+    if (totalPages <= 1) next.delete("page");
+    else next.set("page", String(totalPages));
+    setParams(next, { replace: true });
+  }, [outOfRange, totalPages, params, setParams]);
 
-  const benefitOptions = BENEFIT_FILTERS.map((f) => ({
-    key: f.key,
-    label: t(f.labelKey),
-  }));
-  const typeOptions: { key: TypeKey; label: string }[] = [
-    { key: "all", label: t("benefit.typeAll") },
-    { key: "CREDIT", label: tAsset("cardTypeShort.credit") },
-    { key: "CHECK", label: tAsset("cardTypeShort.check") },
-  ];
+  // 1280 으로 넓어지면 열린 시트는 닫히고 그 카드가 패널에 고른 채 보인다(상태는 여기)
+  if (wide && sheetId != null) {
+    setPickedId(sheetId);
+    setSheetId(null);
+  }
+  // 패널의 카드 — 지금 쪽에 없으면(쪽을 넘김 · 조건이 바뀜) 그 쪽의 첫 줄
+  const panelId =
+    cards.find((c) => c.rowId === pickedId)?.rowId ?? cards[0]?.rowId ?? null;
+  const openCard = (rowId: number) => {
+    if (wide) setPickedId(rowId);
+    else setSheetId(rowId);
+  };
 
-  const Body = isLoading ? (
-    <GridSkeleton mobile={mobile} />
-  ) : cards.length === 0 ? (
-    <EmptyState />
-  ) : mobile ? (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 2 }}>
-        {cards.map((c) => (
-          <CardListTile
-            key={c.rowId}
-            card={c}
-            onClick={() => setSelectedRowId(c.rowId)}
-          />
-        ))}
-      </div>
-      {/* 인피니티 스크롤 sentinel + 더보기 로딩 */}
-      <div ref={sentinelRef} style={{ height: 1 }} />
-      {infQ.isFetchingNextPage && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            padding: "8px 0 4px",
-          }}
-        >
-          <Spinner size="sm" />
-        </div>
-      )}
-    </div>
-  ) : (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-          gap: 16,
-        }}
+  const search = (
+    <Input
+      variant="underline"
+      size="responsive"
+      value={query}
+      onChange={(e) => {
+        setQuery(e.target.value);
+        resetPage();
+      }}
+      placeholder={t("benefit.searchPlaceholder")}
+      aria-label={t("benefit.searchPlaceholder")}
+      prefixIcon={<Search />}
+      clearable
+      autoComplete="off"
+      enterKeyHint="search"
+      rootClassName={mobile ? undefined : "min-w-0 max-w-[420px] flex-1"}
+    />
+  );
+  const filters = (
+    <CardFilterBar
+      type={typeFilter}
+      benefit={benefitKey}
+      onType={(v) => {
+        setTypeFilter(v);
+        resetPage();
+      }}
+      onBenefit={(v) => {
+        setBenefitKey(v);
+        resetPage();
+      }}
+      wide={wide}
+    />
+  );
+  const countRow = (
+    <ListHeader
+      as="div"
+      variant="mediumWeak"
+      className={mobile ? undefined : "px-0"}
+    >
+      <h2
+        className="m-0 font-sans text-t4 font-medium text-fg-neutral-subtle tabular-nums"
+        aria-live="polite"
       >
-        {cards.map((c) => (
-          <CardArtworkTile
-            key={c.rowId}
-            card={c}
-            onClick={() => setSelectedRowId(c.rowId)}
-          />
-        ))}
-      </div>
-
-      {/* 페이지네이션 컨트롤 — 2페이지 이상일 때만 노출 */}
-      {totalPages > 1 && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-          }}
-        >
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={page <= 0}
-            onClick={() => {
-              setPage((p) => Math.max(0, p - 1));
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          >
-            <ChevronLeft size={14} />
-            {tCommon("prev")}
-          </Button>
-          <span
-            style={{
-              fontSize: 12.5,
-              color: "var(--fg-tertiary)",
-              fontVariantNumeric: "tabular-nums",
-              minWidth: 56,
-              textAlign: "center",
-            }}
-          >
-            {page + 1} / {totalPages}
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={page >= totalPages - 1}
-            onClick={() => {
-              setPage((p) => Math.min(totalPages - 1, p + 1));
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          >
-            {tCommon("next")}
-            <ChevronRight size={14} />
-          </Button>
-        </div>
-      )}
-    </div>
+        {waiting || failed
+          ? ""
+          : t("benefit.resultCount", { count: formatKRW(total) })}
+      </h2>
+      <Checkbox
+        size="large"
+        checked={includeDiscontinued}
+        onCheckedChange={(v) => {
+          setIncludeDiscontinued(v === true);
+          resetPage();
+        }}
+        label={t("benefit.includeDiscontinued")}
+      />
+    </ListHeader>
   );
 
-  const Controls = (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* Hero 안내 — 데스크탑만 */}
-      {!mobile && (
-        <Card>
-          <CardContent
-            style={{
-              padding: 20,
-              display: "flex",
-              alignItems: "center",
-              gap: 14,
+  let body: ReactNode;
+  if (failed) {
+    body = (
+      <ResultSection
+        size={mobile ? "large" : "medium"}
+        kind="failure"
+        title={t("benefit.listFailTitle")}
+        description={t("benefit.failDesc")}
+        primaryAction={{ label: dsT("common.retry"), onClick: refetch }}
+      />
+    );
+  } else if (waiting || outOfRange) {
+    body = <RowsSkeleton count={6} />;
+  } else if (cards.length === 0) {
+    body = (
+      <ResultSection
+        size={mobile ? "large" : "medium"}
+        icon={<SearchX />}
+        title={t("benefit.emptyTitle")}
+        description={t("benefit.emptyDesc")}
+      />
+    );
+  } else {
+    body = (
+      <>
+        <List aria-label={t("benefit.headerTitle")}>
+          {cards.map((c) => (
+            <CardRow
+              key={c.rowId}
+              card={c}
+              picked={wide && !mobile && c.rowId === panelId}
+              onClick={() => openCard(c.rowId)}
+            />
+          ))}
+        </List>
+        {mobile && (
+          <InfiniteListEnd
+            status={
+              infQ.isFetchingNextPage
+                ? "loading"
+                : infQ.isFetchNextPageError
+                  ? "error"
+                  : infQ.hasNextPage
+                    ? "loading"
+                    : "end"
+            }
+            endText={t("benefit.endText")}
+            onReachEnd={() => {
+              if (infQ.hasNextPage && !infQ.isFetchingNextPage)
+                void infQ.fetchNextPage();
             }}
-          >
-            <span
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: "var(--radius-md)",
-                background: "var(--bg-brand-muted)",
-                color: "var(--fg-brand)",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <CreditCard size={20} />
-            </span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: "var(--fg-primary)",
-                }}
-              >
-                {t("benefit.heroTitle")}
-              </div>
-              <div
-                style={{
-                  fontSize: 12.5,
-                  color: "var(--fg-tertiary)",
-                  marginTop: 2,
-                }}
-              >
-                {t("benefit.heroDesc")}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* 검색 — 헤더(top__search) 스타일 정합: filled·radius-md·테두리 없음·compact */}
-      <div style={{ position: "relative" }}>
-        <Search
-          size={15}
-          style={{
-            position: "absolute",
-            left: 10,
-            top: "50%",
-            transform: "translateY(-50%)",
-            color: "var(--fg-tertiary)",
-            pointerEvents: "none",
-          }}
-        />
-        <Input
-          search
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t("benefit.searchPlaceholder")}
-          className="pl-9 pr-9"
-        />
-        {query && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={t("benefit.clearAria")}
-            onClick={() => setQuery("")}
-            className="absolute right-1.5 top-1/2 h-7 w-7 -translate-y-1/2"
-          >
-            <X size={14} />
-          </Button>
+            onRetry={() => void infQ.fetchNextPage()}
+            className={
+              !infQ.hasNextPage && (infQ.data?.pages.length ?? 0) < 2
+                ? "hidden"
+                : undefined
+            }
+          />
         )}
-      </div>
+      </>
+    );
+  }
 
-      {/* 필터 */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <FilterPills
-          options={typeOptions}
-          value={typeFilter}
-          onChange={setTypeFilter}
-        />
-        <FilterPills
-          options={benefitOptions}
-          value={benefitKey}
-          onChange={setBenefitKey}
-        />
-      </div>
-
-      {/* 결과 카운트 + 단종 포함 토글 — 한 줄(좌: 총 N건 / 우: 단종 체크박스) */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "0 4px",
-        }}
-      >
-        <span
-          style={{
-            fontSize: 12,
-            color: "var(--fg-tertiary)",
-            fontVariantNumeric: "tabular-nums",
-            opacity: isFetching ? 0.6 : 1,
-          }}
-        >
-          {t("benefit.resultCount", { count: formatKRW(total) })}
-        </span>
-        <label
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            fontSize: 13,
-            color: "var(--fg-secondary)",
-            cursor: "pointer",
-            marginLeft: "auto",
-          }}
-        >
-          <Checkbox
-            size="sm"
-            checked={includeDiscontinued}
-            onCheckedChange={(v) => setIncludeDiscontinued(v === true)}
-          />
-          {t("benefit.includeDiscontinued")}
-        </label>
-      </div>
-
-      {Body}
-    </div>
+  const sheet = !wide && sheetId != null && (
+    <CardBenefitDetailDialog rowId={sheetId} onClose={() => setSheetId(null)} />
   );
 
+  // ── 폰 — 흰 면 하나 ──────────────────────────────────────────────────────
+  if (mobile) {
+    return (
+      <>
+        <TopNavigation type="standard">
+          <TopNavigationBackButton fallbackHref="/desk/more" />
+          <TopNavigationTitle>{t("benefit.headerTitle")}</TopNavigationTitle>
+        </TopNavigation>
+        <div className="flex-1 bg-bg-layer-default pb-screen-bottom">
+          <div className="px-global-gutter pt-x2">{search}</div>
+          <div className="px-global-gutter pt-x3">{filters}</div>
+          {countRow}
+          {body}
+        </div>
+        {sheet}
+      </>
+    );
+  }
+
+  // ── 768 이상 — 제목 줄 · 조절 줄 · 개수 줄 · 목록 카드 (1280 이상은 오른쪽에 패널) ──
+  const listCard = (
+    <div ref={listRef}>
+      <Card body="list" data-slot="card-benefit-list">
+        {body}
+      </Card>
+      {!failed && !waiting && totalPages > 1 && (
+        <Pagination
+          aria-label={t("benefit.pageNav")}
+          totalPages={totalPages}
+          page={page}
+          getHref={(n) => (n <= 1 ? "?" : `?page=${n}`)}
+          onPageChange={goPage}
+          scrollTarget={listRef}
+          disabled={pageQ.isFetching}
+        />
+      )}
+    </div>
+  );
   return (
     <>
-      {mobile ? (
-        <>
-          <MobileBackHeader title={t("benefit.headerTitle")} />
-          <div style={{ padding: "16px 24px 24px" }}>{Controls}</div>
-        </>
-      ) : (
-        <div style={{ padding: 0 }}>
+      <div
+        data-slot="card-benefit-desktop"
+        className="px-[var(--layout-margin)] pb-screen-bottom pt-nav-to-title"
+      >
+        <div className="mx-auto w-full max-w-[var(--layout-max-low)] lg:max-w-[var(--layout-max-medium)]">
           <PageHead
             title={t("benefit.headerTitle")}
             description={t("benefit.headerSub")}
-            style={{ padding: "20px 32px 12px", margin: 0, maxWidth: 1320 }}
+            style={{ marginBottom: "var(--spacing-x6)" }}
           />
-          <div style={{ padding: "0 32px 24px", maxWidth: 1320 }}>
-            {Controls}
+          <div className="flex flex-wrap items-center gap-x4 pb-x2">
+            {search}
+            {filters}
           </div>
+          {countRow}
+          {wide ? (
+            <div
+              className={
+                panelId != null || waiting
+                  ? "grid grid-cols-[minmax(0,1fr)_400px] items-start gap-x6"
+                  : undefined
+              }
+            >
+              {listCard}
+              {(panelId != null || waiting) && (
+                <aside
+                  aria-label={t("benefit.detailTitle")}
+                  className="sticky top-x5"
+                >
+                  <Card className="p-0">
+                    {/* 스크롤바는 숨긴다 — 혜택을 펼쳐 내용이 길어질 때 스크롤바(약 14)가 생겨 본문이 왼쪽으로 밀리지 않게(흐림이 넘침을 알린다) */}
+                    <ScrollFog
+                      key={panelId}
+                      className="px-x6 max-h-[calc(100dvh-var(--spacing-x14)-var(--spacing-x10))] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
+                      {panelId != null && !waiting ? (
+                        <CardDetailContent rowId={panelId} />
+                      ) : (
+                        <DetailSkeleton />
+                      )}
+                    </ScrollFog>
+                  </Card>
+                </aside>
+              )}
+            </div>
+          ) : (
+            listCard
+          )}
         </div>
-      )}
-
-      {selectedRowId != null && (
-        <CardBenefitDetailDialog
-          rowId={selectedRowId}
-          onClose={() => setSelectedRowId(null)}
-          mobile={mobile}
-        />
-      )}
+      </div>
+      {sheet}
     </>
   );
 };
