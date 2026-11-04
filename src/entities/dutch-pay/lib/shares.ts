@@ -60,9 +60,14 @@ export function computeShares(
     perPerson = Math.floor(total / n);
     amounts = people.map(() => perPerson);
   } else {
-    const w = people.map((p) => (p.ratio > 0 ? p.ratio : 0));
-    const sumW = w.reduce((s, x) => s + x, 0);
-    amounts = w.map((x) => (sumW > 0 ? Math.floor((total * x) / sumW) : 0));
+    // 소수 몫(0.71 · 0.29)을 실수로 곱하면 28.999… 로 내림돼 1원이 어긋난다 — 소수 6자리를 정수로 올려 BigInt 로 센다
+    const w = people.map((p) =>
+      p.ratio > 0 ? BigInt(Math.round(p.ratio * 1_000_000)) : 0n,
+    );
+    const sumW = w.reduce((s, x) => s + x, 0n);
+    amounts = w.map((x) =>
+      sumW > 0n ? Number((BigInt(total) * x) / sumW) : 0,
+    );
   }
   const rest = total - amounts.reduce((s, a) => s + a, 0);
   let mine = 0;

@@ -3435,3 +3435,8 @@ dutchPay,fromTx.perPersonLineMine,{{amount}} · {{rest}}은 나,{{amount}} · {{
 dutchPay,fromTx.shortfallLine,몫을 합하면 {{amount}} 모자라요.,The shares are {{amount}} short.
 dutchPay,fromTx.excessLine,몫을 합하면 {{amount}} 넘쳐요.,The shares are {{amount}} over.
 dutchPay,fromTx.saveFailed,정산을 만들지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't create the settlement. Please try again in a moment.
+dutchPay,fromTx.nameDuplicate,이미 넣은 이름이에요.,That name is already added.
+dutchPay,fromTx.customRequired,모든 참여자의 금액을 넣어주세요.,Enter an amount for every participant.
+expense,splitStep.errCategory,카테고리를 골라주세요.,Select a category.
+expense,splitStep.errAmount,금액을 입력해주세요.,Enter an amount.
+expense,txDetail.recurringLoadFailed,반복 거래 목록을 불러오지 못했어요.,Couldn't load recurring transactions.

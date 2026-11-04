@@ -147,7 +147,7 @@ type FormState = {
   notifyDayBefore: boolean;
 };
 
-function initialState(
+export function recurringInitialState(
   recurring: RecurringTransaction | undefined,
   seed: RecurringFormProps["transferSeed"],
   expense: Expense | undefined,
@@ -229,10 +229,12 @@ export function useRecurringForm({
   onCreated,
   recurring,
   transferSeed,
-  expenseSeed,
+  expenseSeed: expenseSeedProp,
   resetKey = 0,
   onSaved,
 }: RecurringFormProps) {
+  // 거래 씨앗은 새로 만들 때만 — 연결된 반복을 고칠 때는 반복의 값 그대로(거래 값이 빈 칸을 채워 PUT 으로 덮지 않게)
+  const seed = recurring ? undefined : expenseSeedProp;
   const uid = useId();
   const { t } = useTranslation("recurring");
   const { t: te } = useTranslation("expense");
@@ -249,7 +251,7 @@ export function useRecurringForm({
   );
 
   const [initial, setInitial] = useState(() =>
-    initialState(recurring, transferSeed, expenseSeed),
+    recurringInitialState(recurring, transferSeed, seed),
   );
   const [f, setF] = useState<FormState>(initial);
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
@@ -282,7 +284,7 @@ export function useRecurringForm({
   // 호스트가 단계를 다시 열 때(resetKey) 처음 값으로 — 렌더 중에 한 번만 맞춘다
   const [seenKey, setSeenKey] = useState(resetKey);
   if (seenKey !== resetKey) {
-    const fresh = initialState(recurring, transferSeed, expenseSeed);
+    const fresh = recurringInitialState(recurring, transferSeed, seed);
     setSeenKey(resetKey);
     setInitial(fresh);
     setF(fresh);
@@ -484,7 +486,7 @@ export function useRecurringForm({
         interestOn && Number(f.interest) > 0 ? Number(f.interest) : undefined,
       // 거래 씨앗이면 원본 거래 · 이미 연결된 반복을 고치면 그 연결을 그대로(PUT 은 빠진 키를 지운다) — 처음부터 추가면 없음
       sourceExpenseRowId:
-        recurring?.sourceExpenseRowId ?? expenseSeed?.rowId ?? undefined,
+        recurring?.sourceExpenseRowId ?? seed?.rowId ?? undefined,
       expenseType: f.type,
       amount: amountNumber,
       // 공백만이면 없음(본문은 다듬지 않고 빈지만 본다)
@@ -670,7 +672,7 @@ export function useRecurringForm({
           >
             <ChipRadio
               value="EXPENSE"
-              disabled={expenseSeed != null && f.type !== "EXPENSE"}
+              disabled={seed != null && f.type !== "EXPENSE"}
               variant="outlineStrong"
               size="medium"
             >
@@ -678,14 +680,14 @@ export function useRecurringForm({
             </ChipRadio>
             <ChipRadio
               value="INCOME"
-              disabled={expenseSeed != null && f.type !== "INCOME"}
+              disabled={seed != null && f.type !== "INCOME"}
               variant="outlineStrong"
               size="medium"
             >
               {te("income")}
             </ChipRadio>
             <ChipRadio
-              disabled={expenseSeed != null && f.type !== "TRANSFER"}
+              disabled={seed != null && f.type !== "TRANSFER"}
               value="TRANSFER"
               variant="outlineStrong"
               size="medium"
@@ -1024,7 +1026,7 @@ export function useRecurringForm({
     confirmStep,
     exitStep,
     cancelStepErrors: () => setStepErrors({}),
-    lockType: expenseSeed != null,
+    lockType: seed != null,
     focusAmount: () => amountRef.current?.focus({ preventScroll: true }),
   };
 }

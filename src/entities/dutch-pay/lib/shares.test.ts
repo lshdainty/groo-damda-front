@@ -48,4 +48,38 @@ describe("computeShares", () => {
     const bad = computeShares("CUSTOM", 10000, [p(false, 1, 3000)], false);
     expect(bad.gap).toBe(7000);
   });
+
+  it("소수 몫도 정수로 센다 — 100원 0.71 : 0.29 는 71 / 29", () => {
+    const s = computeShares(
+      "RATIO",
+      100,
+      [p(true, 0.71), p(false, 0.29)],
+      true,
+    );
+    expect(s.amounts).toEqual([71, 29]);
+  });
+
+  it("큰 금액 — 1,234,567,890 ÷ 4 는 308,641,972 씩, 남는 2원은 결제자", () => {
+    const s = computeShares(
+      "EQUAL",
+      1_234_567_890,
+      [p(true), p(false), p(false), p(false)],
+      true,
+    );
+    expect(s.amounts).toEqual([
+      308_641_974, 308_641_972, 308_641_972, 308_641_972,
+    ]);
+  });
+
+  it("김가람 2몫 · 184,000 ÷ 3", () => {
+    const r = computeShares("RATIO", 30000, [p(true, 1), p(false, 2)], true);
+    expect(r.amounts).toEqual([10000, 20000]);
+    const e = computeShares(
+      "EQUAL",
+      184000,
+      [p(true), p(false), p(false)],
+      true,
+    );
+    expect(e.amounts).toEqual([61334, 61333, 61333]);
+  });
 });

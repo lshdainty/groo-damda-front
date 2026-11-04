@@ -1,5 +1,11 @@
 import { useRef, useState, type ReactNode } from "react";
-import { Check, ChevronRight, Plus, Tags } from "lucide-react";
+import {
+  ChevronRight,
+  CircleCheck,
+  Plus,
+  Tags,
+  TriangleAlert,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/shared/ds/button";
@@ -109,6 +115,8 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
   const [initialKey, setInitialKey] = useState("");
   const [item, setItem] = useState<ItemDraft | null>(null);
   const [itemOrigin, setItemOrigin] = useState("");
+  const [itemErrors, setItemErrors] = useState(false);
+  const removingRef = useRef(false);
   const [showErrors, setShowErrors] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -177,9 +185,15 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
         };
     setItem(d);
     setItemOrigin(draftKey(d));
+    setItemErrors(false);
   };
   const commitItem = () => {
     if (!item) return;
+    // 카테고리 · 금액이 비면 말없이 멈추지 않고 칸 아래 오류
+    if (item.categoryRowId == null || !(Number(item.amount) > 0)) {
+      setItemErrors(true);
+      return;
+    }
     const amount = String(Math.min(Number(item.amount) || 0, MAX_AMOUNT));
     if (item.uid == null) {
       setList([
@@ -220,10 +234,10 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
   };
   const errorText = !showErrors
     ? null
-    : errors.min
-      ? t("splitStep.errMin")
-      : errors.remain
-        ? t("splitStep.errRemain")
+    : errors.remain
+      ? t("splitStep.errRemain")
+      : errors.min
+        ? t("splitStep.errMin")
         : errors.row
           ? t("splitStep.errRow")
           : null;
@@ -262,6 +276,8 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
   const runRemove = () =>
     deleteAllMut.mutateAsync({ expenseId: expense?.rowId ?? 0, silent: true });
   const doRemove = async () => {
+    if (removingRef.current) return;
+    removingRef.current = true;
     try {
       await runRemove();
       setConfirmRemove(false);
@@ -273,6 +289,8 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
         retry: runRemove,
         onRetried: o.onSaved,
       });
+    } finally {
+      removingRef.current = false;
     }
   };
 
@@ -308,9 +326,11 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
       : []),
   ];
 
-  const dirty = item
-    ? draftKey(item) !== itemOrigin
-    : rows !== null && JSON.stringify(rowsToPayload(rows)) !== initialKey;
+  const listDirty =
+    rows !== null && JSON.stringify(rowsToPayload(rows)) !== initialKey;
+  const dirty = item ? draftKey(item) !== itemOrigin : listDirty;
+  // 닫기(X)는 안쪽 단계에서도 흐름 전체의 변경을 본다
+  const dirtyAll = listDirty || (item != null && draftKey(item) !== itemOrigin);
 
   // ── 본문 ──
   const loading =
@@ -356,6 +376,11 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
                   : null
               }
               placeholder={t("splitStep.categoryPick")}
+              errorMessage={
+                itemErrors && item.categoryRowId == null
+                  ? t("splitStep.errCategory")
+                  : null
+              }
             >
               {({ close }) => (
                 <LeafCategoryPick
@@ -387,6 +412,12 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
           </Field>
           <Field
             label={t("form.amount")}
+            invalid={itemErrors && !(Number(item.amount) > 0)}
+            errorMessage={
+              itemErrors && !(Number(item.amount) > 0)
+                ? t("splitStep.errAmount")
+                : undefined
+            }
             description={t("splitStep.amountHelp", {
               rest: fmt(others),
               total: fmt(targetTotal),
@@ -624,13 +655,16 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
           <span className="inline-flex items-center gap-x1 font-bold tabular-nums">
             {remainder === 0 ? (
               <>
-                <Check aria-hidden size={16} />
+                <CircleCheck aria-hidden size={16} />
                 <Won n={0} kind={kind} />
               </>
-            ) : remainder > 0 ? (
-              t("splitStep.short", { amount: fmt(remainder) })
             ) : (
-              t("splitStep.over", { amount: fmt(-remainder) })
+              <>
+                <TriangleAlert aria-hidden size={16} />
+                {remainder > 0
+                  ? t("splitStep.short", { amount: fmt(remainder) })
+                  : t("splitStep.over", { amount: fmt(-remainder) })}
+              </>
             )}
           </span>
         </p>
@@ -693,7 +727,7 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
         primary
       ),
     dirty,
-    dirtyAll: dirty,
+    dirtyAll,
     onBack: () => {
       if (saving) return;
       if (item) setItem(null);

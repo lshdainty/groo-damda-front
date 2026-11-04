@@ -118,7 +118,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
   const [others, setOthers] = useState<Person[]>([]);
   const [memo, setMemo] = useState("");
   const [name, setName] = useState("");
-  const [nameError, setNameError] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -138,7 +138,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
       setOthers([]);
       setMemo("");
       setName("");
-      setNameError(false);
+      setNameError(null);
       setShowErrors(false);
       setSaveFailed(false);
       setMemoStep(false);
@@ -166,15 +166,27 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
   );
   const ratioBad =
     method === "RATIO" && people.some((p) => !(Number(p.ratio) > 0));
+  // 개별 금액 — 다른 사람 칸이 비면 0원으로 나간다(서버가 결제자 아닌 0원을 거절)
+  const customBad =
+    method === "CUSTOM" && others.some((p) => !(Number(p.custom) > 0));
   const fmt = (n: number) => `${wonPre()}${KRW(n)}${isEn() ? "" : "원"}`;
 
   const addPerson = () => {
     const n = name.trim();
     if (!n) {
-      setNameError(true);
+      setNameError(t("fromTx.nameRequired"));
       return;
     }
-    setNameError(false);
+    // 같은 이름 · 내 이름과 같은 참여자는 막는다(서버는 이름을 소문자로 비교해 거절한다)
+    const key = n.toLowerCase();
+    if (
+      key === meName.trim().toLowerCase() ||
+      others.some((x) => x.name.trim().toLowerCase() === key)
+    ) {
+      setNameError(t("fromTx.nameDuplicate"));
+      return;
+    }
+    setNameError(null);
     setOthers([...others, { uid: newUid(), name: n, ratio: "1", custom: "" }]);
     setName("");
   };
@@ -195,7 +207,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
     setSaving(true);
     try {
       setShowErrors(true);
-      if (noPeople || gapText || ratioBad) return;
+      if (noPeople || gapText || ratioBad || customBad) return;
       const participants: ParticipantFormValues[] = people.map((p, i) => ({
         userRowId: p.uid === "me" ? meRowId : null,
         participantName: p.name.trim(),
@@ -235,14 +247,16 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
     }
   };
 
-  const dirty = memoStep
-    ? memoDraft !== memo
-    : method !== "EQUAL" ||
-      !includeMe ||
-      meRatio !== "1" ||
-      others.length > 0 ||
-      memo !== "" ||
-      name !== "";
+  const formDirty =
+    method !== "EQUAL" ||
+    !includeMe ||
+    meRatio !== "1" ||
+    others.length > 0 ||
+    memo !== "" ||
+    name !== "";
+  const dirty = memoStep ? memoDraft !== memo : formDirty;
+  // 닫기(X)는 안쪽(메모) 단계에서도 흐름 전체의 변경을 본다
+  const dirtyAll = formDirty || (memoStep && memoDraft !== memo);
 
   const pal = getPaletteByColor(category?.color ?? expense.categoryColor);
   const loading = categoriesQ.isPending || userQ.isPending;
@@ -356,13 +370,13 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
               <Input
                 size="large"
                 aria-label={t("fromTx.addNameLabel")}
-                aria-invalid={nameError || undefined}
+                aria-invalid={nameError != null ? true : undefined}
                 maxLength={PARTICIPANT_NAME_MAX}
                 value={name}
                 placeholder={t("fromTx.addNamePlaceholder")}
                 onChange={(e) => {
                   setName(e.target.value);
-                  setNameError(false);
+                  setNameError(null);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -376,12 +390,12 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
               {t("fromTx.add")}
             </Button>
           </div>
-          {nameError && (
+          {nameError != null && (
             <p
               role="alert"
               className="m-0 pt-x1 font-sans text-t3 text-fg-critical"
             >
-              {t("fromTx.nameRequired")}
+              {nameError}
             </p>
           )}
           {showErrors && noPeople && (
@@ -549,7 +563,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
           })
       : null;
   const above =
-    !memoStep && !loading && (perLine || gapText || ratioBad) ? (
+    !memoStep && !loading && (perLine || gapText || ratioBad || customBad) ? (
       <div data-slot="dutch-sum" className="px-global-gutter pb-x2 pt-x2">
         {perLine && !noPeople && (
           <p className="m-0 flex items-center justify-between font-sans text-t4">
@@ -564,6 +578,11 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
         {showErrors && gapText && (
           <p role="alert" className="m-0 font-sans text-t3 text-fg-critical">
             {gapText}
+          </p>
+        )}
+        {showErrors && customBad && (
+          <p role="alert" className="m-0 font-sans text-t3 text-fg-critical">
+            {t("fromTx.customRequired")}
           </p>
         )}
         {showErrors && ratioBad && (
@@ -606,7 +625,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
       ),
     above,
     dirty,
-    dirtyAll: dirty,
+    dirtyAll,
     onBack: () => {
       if (saving) return;
       if (memoStep) setMemoStep(false);
