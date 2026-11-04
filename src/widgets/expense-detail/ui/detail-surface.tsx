@@ -66,6 +66,8 @@ interface DetailSurfaceProps {
    * 주면 `footer` 는 쓰지 않는다
    */
   footerNode?: ReactNode | ((requestBack: () => void) => ReactNode);
+  /** 바닥 버튼 바로 위 한 줄(나누기 단계의 남은 금액) — 본문 스크롤 밖에 둔다 */
+  footerAbove?: ReactNode;
   /** 본문 스크롤 상자 ref — 저장 실패 알림을 맨 위로 올릴 때 쓴다(끼운 수정 폼) */
   bodyRef?: React.Ref<HTMLDivElement>;
   /** 값 하나를 치는 단계의 머리 오른쪽 "완료"(시트) — 있으면 닫기 원 자리를 대신한다(I-09 29) */
@@ -92,6 +94,7 @@ export function DetailSurface({
   onStepBack,
   footer,
   footerNode,
+  footerAbove,
   bodyRef,
   stepDone,
   bodyKey,
@@ -175,6 +178,7 @@ export function DetailSurface({
             >
               <div className="-mx-x6">{children}</div>
             </DialogBody>
+            {footerAbove}
             {customFooter ? (
               <DialogFooter>{customFooter}</DialogFooter>
             ) : footer && (del || footer.primary) ? (
@@ -232,6 +236,7 @@ export function DetailSurface({
           >
             <div className="-mx-x6">{children}</div>
           </BottomSheetBody>
+          {footerAbove}
           {customFooter ? (
             <BottomSheetFooter>{customFooter}</BottomSheetFooter>
           ) : footer && (del || footer.primary) ? (

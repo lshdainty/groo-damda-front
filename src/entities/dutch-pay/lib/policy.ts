@@ -5,7 +5,7 @@
  * `varchar(100)` 이라 서버는 받아 주지만, 그 이름이 목록·알림 문구에 들어가면
  * 줄이 넘친다. 막을 자리는 입력칸이다.
  *
- * 정산 만들기(DutchPayPage)와 거래에서 시작(DutchPayFromTxDialog) 두 화면이 같은
+ * 정산 만들기(DutchPayPage)와 거래에서 시작(거래 상세의 더치페이 단계) 두 화면이 같은
  * 값을 써야 해서 두 계층 아래인 여기에 둔다.
  */
 export const PARTICIPANT_NAME_MAX = 20;

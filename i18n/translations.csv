@@ -3394,3 +3394,44 @@ expense,preset.fromAccount,보내는 계좌,Sending account
 expense,preset.toAccount,받는 계좌,Receiving account
 expense,preset.categoryLoadFailed,카테고리를 불러오지 못했어요,Could not load categories
 expense,preset.interestTooBig,이자는 금액보다 클 수 없어요.,Interest cannot be greater than the amount.
+expense,splitStep.listTitle,나눈 내역 {{count}}개,Split into {{count}}
+expense,splitStep.nameLabel,이름,Name
+expense,splitStep.categoryPick,카테고리 선택,Select a category
+expense,splitStep.amountHelp,나머지 항목 합 {{rest}} · 총액 {{total}},Other items {{rest}} · Total {{total}}
+expense,splitStep.removeItem,이 항목 지우기,Remove this item
+expense,splitStep.remaining,남은 금액,Remaining
+expense,splitStep.short,{{amount}} 모자라요,{{amount}} short
+expense,splitStep.over,{{amount}} 넘쳐요,{{amount}} over
+expense,splitStep.errMin,항목을 둘 이상 넣어주세요.,Add at least two items.
+expense,splitStep.errRemain,남은 금액을 0원으로 맞춰주세요.,Make the remaining amount ₩0.
+expense,splitStep.errRow,모든 항목에 카테고리와 0원보다 큰 금액을 넣어주세요.,Give every item a category and an amount above ₩0.
+expense,splitStep.oldTotal,옛 총액 {{amount}},Previous total {{amount}}
+expense,splitStep.reconcileTitle,총액이 바뀌어 나눈 금액을 맞춰야 해요,"The total changed, so the split needs adjusting"
+expense,splitStep.reconcileBody,나눈 합계 {{sum}} · 새 총액 {{total}} — {{diffText}},Split total {{sum}} · New total {{total}} — {{diffText}}
+expense,splitStep.diffOver,{{diff}} 넘쳐요.,{{diff}} over.
+expense,splitStep.diffShort,{{diff}} 모자라요.,{{diff}} short.
+expense,splitStep.removeAll,내역 분할 풀기,Remove split
+expense,splitStep.removeConfirmTitle,내역 분할을 풀까요?,Remove the split?
+expense,splitStep.removeConfirmBody,나눈 항목이 모두 지워지고 거래 하나로 돌아가요.,All split items are removed and it goes back to one transaction.
+expense,splitStep.removeConfirm,풀기,Remove
+expense,splitStep.removeFailed,내역 분할을 풀지 못했어요.,Couldn't remove the split.
+dutchPay,fromTx.peopleLabel,참여자 {{count}}명,Participants: {{count}}
+dutchPay,fromTx.removePerson,{{name}} 빼기,Remove {{name}}
+dutchPay,fromTx.addNameLabel,참여자 이름,Participant name
+dutchPay,fromTx.nameRequired,이름을 입력해주세요.,Enter a name.
+dutchPay,fromTx.peopleRequired,함께 나눌 사람을 넣어주세요.,Add the people to split with.
+dutchPay,fromTx.sharesTitle,몫,Shares
+dutchPay,fromTx.sharesTotal,합계 {{amount}},Total {{amount}}
+dutchPay,fromTx.payerBadge,결제,Paid
+dutchPay,fromTx.restIncluded,남는 {{amount}} 포함,Includes {{amount}} left over
+dutchPay,fromTx.ratioLabel,{{name}} 몫,{{name}} share
+dutchPay,fromTx.ratioUnit,몫,share
+dutchPay,fromTx.ratioInvalid,몫은 0보다 큰 수로 넣어주세요.,Enter a share above 0.
+dutchPay,fromTx.customLabel,{{name}} 금액,{{name}} amount
+dutchPay,fromTx.memoNone,없음,None
+dutchPay,fromTx.memoPlaceholder,정산에 같이 남길 한마디,A note to keep with the settlement
+dutchPay,fromTx.perPersonLine,{{amount}},{{amount}}
+dutchPay,fromTx.perPersonLineMine,{{amount}} · {{rest}}은 나,{{amount}} · {{rest}} is mine
+dutchPay,fromTx.shortfallLine,몫을 합하면 {{amount}} 모자라요.,The shares are {{amount}} short.
+dutchPay,fromTx.excessLine,몫을 합하면 {{amount}} 넘쳐요.,The shares are {{amount}} over.
+dutchPay,fromTx.saveFailed,정산을 만들지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't create the settlement. Please try again in a moment.

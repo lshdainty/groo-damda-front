@@ -7,3 +7,4 @@ export {
   type TxFormProps,
 } from "./model/use-tx-form";
 export { useTxSheetParts, type TxEmbedParts } from "./ui/use-tx-sheet-parts";
+export { useSplitStep, type SplitStepOptions } from "./ui/use-split-step";

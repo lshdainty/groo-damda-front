@@ -18,11 +18,12 @@ export const useDutchPay = (id: number) => {
   });
 };
 
-export const useCreateDutchPay = () => {
+export const useCreateDutchPay = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: DutchPayFormValues) => dutchPayApi.createDutchPay(data),
+    mutationFn: (data: DutchPayFormValues) =>
+      dutchPayApi.createDutchPay(data, opts),
     onSuccess: () => invalidateFor(queryClient, "dutch-pay"),
   });
 };

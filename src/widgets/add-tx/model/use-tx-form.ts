@@ -655,6 +655,7 @@ export function useTxForm({
   const serverSplitForms: ExpenseSplitFormValue[] = useMemo(
     () =>
       (splitsQ.data ?? []).map((s) => ({
+        rowId: s.rowId,
         categoryRowId: s.categoryRowId,
         amount: s.amount,
         label: s.label,
