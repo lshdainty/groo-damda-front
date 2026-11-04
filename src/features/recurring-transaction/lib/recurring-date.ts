@@ -1,4 +1,3 @@
-import type { RecurringFrequency } from "@/entities/recurring-transaction";
 import {
   formatMonthDay,
   localDateKey,
@@ -28,45 +27,5 @@ export function formatKoreanMonthDay(iso: string): string {
   return formatMonthDay(d, { pad: true });
 }
 
-export function previewNextDates(
-  startIso: string,
-  freq: RecurringFrequency,
-  dayOfWeekUi: number, // 0=일~6=토
-  dayOfMonth: number,
-  count: number,
-): string[] {
-  const start = parseLocalDate(startIso);
-  if (!start) return [];
-  const out: string[] = [];
-  const cursor = new Date(start);
-
-  if (freq === "WEEKLY") {
-    // 시작일을 dayOfWeekUi 요일로 정규화
-    const diff = (dayOfWeekUi - cursor.getDay() + 7) % 7;
-    cursor.setDate(cursor.getDate() + diff);
-  } else if (freq === "MONTHLY") {
-    cursor.setDate(
-      Math.min(
-        dayOfMonth,
-        daysInMonth(cursor.getFullYear(), cursor.getMonth()),
-      ),
-    );
-  }
-
-  for (let i = 0; i < count; i++) {
-    out.push(localDateKey(cursor));
-    if (freq === "DAILY") cursor.setDate(cursor.getDate() + 1);
-    else if (freq === "WEEKLY") cursor.setDate(cursor.getDate() + 7);
-    else if (freq === "MONTHLY") {
-      const ny = cursor.getFullYear();
-      const nm = cursor.getMonth() + 1;
-      const nd = Math.min(dayOfMonth, daysInMonth(ny, nm));
-      cursor.setFullYear(ny, nm, nd);
-    } else if (freq === "YEARLY") cursor.setFullYear(cursor.getFullYear() + 1);
-  }
-  return out;
-}
-
-function daysInMonth(year: number, monthIdx: number): number {
-  return new Date(year, monthIdx + 1, 0).getDate();
-}
+// 다음 날짜 셈은 한 벌 — recurring-schedule.ts (I-20 D 29)
+export { previewNextDates } from "./recurring-schedule";
