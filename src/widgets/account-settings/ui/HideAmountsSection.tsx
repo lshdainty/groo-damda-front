@@ -155,7 +155,7 @@ export function HideAmountsSection({
   const kindSection = (
     <>
       <ListHeader as="div" variant="boldSolid">
-        <h3 id={kindId} className="m-0 text-inherit font-inherit">
+        <h3 id={kindId} className="m-0 [font:inherit]">
           {t("hideAmounts.kindLabel")}
         </h3>
         <HelpBubble>
@@ -204,7 +204,7 @@ export function HideAmountsSection({
   // 가릴 화면 · n / m + 모두 선택 · 해제 — 수는 지금 탭 기준
   const screensHeader = (
     <ListHeader as="div" className="pt-x4">
-      <h3 id={screensId} className="m-0 text-inherit font-inherit tabular-nums">
+      <h3 id={screensId} className="m-0 [font:inherit] tabular-nums">
         {t("hideAmounts.screensCount", {
           selected: onCount,
           total: tabCards.length,
@@ -231,10 +231,7 @@ export function HideAmountsSection({
             variant="boldSolid"
             className={i === 0 ? "pt-x1" : "pt-x3"}
           >
-            <h4
-              id={`${uid}-p-${page}`}
-              className="m-0 text-inherit font-inherit"
-            >
+            <h4 id={`${uid}-p-${page}`} className="m-0 [font:inherit]">
               {pageLabel(page)}
             </h4>
           </ListHeader>

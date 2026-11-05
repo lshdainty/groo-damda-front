@@ -201,7 +201,7 @@ export const SECTIONS: SectionDef[] = [
 /**
  * 제목 줄을 틀이 직접 그리는 섹션(I-16 27).
  *
- * 나머지 섹션은 위젯이 `ManagerHead` 를 그리고(틀이 둔 제목 줄 자리로 간다), 이 일곱은 위젯에 머리가 없어서 틀이
+ * 나머지 섹션은 위젯이 `ManagerHead` 를 그리고(틀이 둔 제목 줄 자리로 간다 — 구독 · 금액 가리기도 그렇다), 이 목록은 위젯에 머리가 없어서 틀이
  * 섹션 이름 · 설명으로 같은 제목 줄을 그린다 — 어느 섹션이든 본문 칸 맨 위가 같은 제목 줄로 시작한다.
  */
 export const NEEDS_DESKTOP_HEAD: SectionId[] = [
@@ -209,7 +209,6 @@ export const NEEDS_DESKTOP_HEAD: SectionId[] = [
   "data",
   "account",
   "devices",
-  "hide-amounts",
 ];
 
 /**
