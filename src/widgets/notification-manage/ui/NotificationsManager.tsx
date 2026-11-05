@@ -425,7 +425,8 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
   return wrap(
     <>
       {/* 푸시 알림 — 맨 위 줄(묶음 제목 없음) */}
-      <div className="pt-x2">
+      {/* 폰은 상단 바 바로 아래(T21 = 0), 카드 안은 위 8 */}
+      <div className={mobile ? undefined : "pt-x2"}>
         <List aria-label={t("prefs.title")}>
           <SwitchRow
             loading={isLoading}
