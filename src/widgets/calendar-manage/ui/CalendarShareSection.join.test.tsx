@@ -28,6 +28,9 @@ vi.mock("react-i18next", () => ({
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
+vi.mock("@/shared/lib/confirm-fail", () => ({
+  useConfirmFail: () => () => {},
+}));
 vi.mock("@/features/user", () => ({
   useCurrentUser: () => ({ data: { rowId: 1 }, isLoading: false }),
 }));

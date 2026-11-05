@@ -20,10 +20,17 @@ function fromApiCalendar(cal: Record<string, unknown>): UserCalendar {
   } as UserCalendar;
 }
 
+/** silent — 실패를 호출처가 화면 안에서 고정 글로 말한다(전역 서버 원문 토스트와 겹치지 않게, 호출처 단위) */
+type SilentOpts = { silent?: boolean };
+const silentConfig = (opts?: SilentOpts) =>
+  (opts?.silent
+    ? { silent: true }
+    : {}) as import("axios").AxiosRequestConfig & { silent?: boolean };
+
 export const userCalendarApi = {
-  getCalendars: async (): Promise<UserCalendar[]> => {
+  getCalendars: async (opts?: SilentOpts): Promise<UserCalendar[]> => {
     const resp: ApiResponse<{ calendars: UserCalendar[] }> =
-      await apiClient.get("/v1/calendar/calendars");
+      await apiClient.get("/v1/calendar/calendars", silentConfig(opts));
     return (resp.data.calendars as unknown as Record<string, unknown>[]).map(
       fromApiCalendar,
     );
@@ -57,9 +64,10 @@ export const userCalendarApi = {
     return resp.data;
   },
 
-  deleteCalendar: async (id: number): Promise<void> => {
+  deleteCalendar: async (id: number, opts?: SilentOpts): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/calendar/calendars/${id}`,
+      silentConfig(opts),
     );
     return resp.data;
   },

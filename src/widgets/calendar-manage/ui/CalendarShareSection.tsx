@@ -2,7 +2,6 @@ import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Calendar,
-  ChevronRight,
   Copy,
   Crown,
   Eye,
@@ -11,18 +10,21 @@ import {
   Plus,
   RefreshCw,
   Trash2,
-  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
-import { Card, CardContent } from "@/shared/ui/card";
-import { settingsRowPadding } from "@/shared/ui/groo/manage-row-tokens";
+import { Badge as DsBadge } from "@/shared/ds/badge";
+import { Button as DsButton } from "@/shared/ds/button";
+import { Card as DsCard } from "@/shared/ds/card";
+import { List, ListButtonItem, ListItem, ListTile } from "@/shared/ds/list";
+import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { ConfirmDialog, ModalShell } from "@/shared/ui/groo/dialogs";
 import { ModalFooter } from "@/shared/ui/groo/modal-footer";
 import { Field, FieldLabel } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
-import { ManagerHead, ManagerShell } from "@/shared/ui/groo/manager-layout";
 import {
   Select,
   SelectContent,
@@ -30,12 +32,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { Skeleton as SkeletonBase } from "@/shared/ui/skeleton";
 import {
   getPaletteByColor,
   CAT_PALETTE,
 } from "@/shared/lib/groo/chart-palette";
 import { ColorSwatchGroup } from "@/shared/ui/color-swatch";
+import { Skeleton as SkeletonBase } from "@/shared/ui/skeleton";
+import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 import { useCurrentUser } from "@/features/user";
 import {
   useCalendarMembers,
@@ -53,6 +56,12 @@ import type {
   CalendarRole,
   UserCalendar,
 } from "@/entities/user-calendar";
+import {
+  ManageEmpty,
+  ManageIntro,
+  ManageRowsSkeleton,
+  ManageSection,
+} from "./manage-list-parts";
 
 const ROLE_ICON: Record<CalendarRole, typeof Crown> = {
   OWNER: Crown,
@@ -83,31 +92,27 @@ const ROLE_AVATAR: Record<CalendarRole, { bg: string; fg: string }> = {
   READ: { bg: "var(--bg-sunken)", fg: "var(--fg-tertiary)" },
 };
 
-// 모바일 카드 다이어트 — 초대 코드 행 셸: 모바일은 플랫, 데스크톱은 Card (.m-subpage 정합).
-function JoinShell({
-  mobile,
-  children,
-}: {
-  mobile: boolean;
-  children: React.ReactNode;
-}) {
-  return mobile ? (
-    <div style={{ padding: "4px 0" }}>{children}</div>
-  ) : (
-    <Card>
-      <CardContent style={{ padding: "var(--spacing-lg)" }}>
-        {children}
-      </CardContent>
-    </Card>
-  );
-}
+// 캘린더 줄의 권한 배지(40) — badge.md 예시 그대로: outline + 앞 아이콘. 편집 가능 positive + pencil · 읽기 전용 informative + eye.
+const ROW_ROLE_BADGE: Record<
+  CalendarRole,
+  { tone: "informative" | "positive"; icon: typeof Pencil }
+> = {
+  OWNER: { tone: "informative", icon: Crown },
+  EDIT: { tone: "positive", icon: Pencil },
+  READ: { tone: "informative", icon: Eye },
+};
 
 export function CalendarShareSection({ mobile }: { mobile: boolean }) {
   const { t } = useTranslation("calendar");
-  const { data: calendars, isLoading } = useUserCalendars();
+  // 실패는 화면 안 Result Section 한 벌로 말한다 — 전역 서버 원문 토스트와 겹치지 않게 silent (42)
+  const calendarsQ = useUserCalendars({ silent: true });
+  const { data: calendars, isLoading } = calendarsQ;
+  const failed = calendarsQ.isError && !calendars;
   const createMut = useCreateUserCalendar();
   const deleteMut = useDeleteUserCalendar();
   const joinMut = useJoinCalendar();
+  const confirmFail = useConfirmFail();
+  const uid = useId();
 
   const [managingId, setManagingId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
@@ -118,13 +123,9 @@ export function CalendarShareSection({ mobile }: { mobile: boolean }) {
   const owned = useMemo(() => list.filter((c) => c.isOwner), [list]);
   const shared = useMemo(() => list.filter((c) => !c.isOwner), [list]);
 
-  const handleDelete = (cal: UserCalendar) => {
-    deleteMut.mutate(cal.rowId, {
-      onSuccess: () => {
-        setConfirmDelete(null);
-        if (managingId === cal.rowId) setManagingId(null);
-      },
-    });
+  const deleteCalendar = async (cal: UserCalendar) => {
+    await deleteMut.mutateAsync(cal.rowId);
+    if (managingId === cal.rowId) setManagingId(null);
   };
 
   const managing =
@@ -132,145 +133,120 @@ export function CalendarShareSection({ mobile }: { mobile: boolean }) {
       ? (list.find((c) => c.rowId === managingId) ?? null)
       : null;
 
-  return (
+  const addAction = (
+    // 목록 제목 오른쪽 글 버튼 — ghost small neutralMuted + 앞 plus (39)
+    <DsButton
+      type="button"
+      variant="ghost"
+      ghostColor="neutralMuted"
+      size="small"
+      onClick={() => setCreating(true)}
+    >
+      <Plus aria-hidden />
+      {t("newCalendar")}
+    </DsButton>
+  );
+
+  const rowsOf = (items: UserCalendar[], labelId: string, empty: string) => {
+    if (isLoading) return <ManageRowsSkeleton />;
+    if (items.length === 0) return <ManageEmpty title={empty} />;
+    return (
+      <List aria-labelledby={labelId}>
+        {items.map((cal) => (
+          <CalendarRow key={cal.rowId} cal={cal} onManage={setManagingId} />
+        ))}
+      </List>
+    );
+  };
+
+  const ownedId = `${uid}-owned`;
+  const sharedId = `${uid}-shared`;
+  const joinId = `${uid}-join`;
+
+  const lists = failed ? (
+    <BandFailure
+      title={t("shareSection.loadFailed")}
+      onRetry={() => void calendarsQ.refetch()}
+      band={mobile}
+      size="medium"
+    />
+  ) : (
     <>
-      {/* 설정 서브페이지 섹션 간격 spacing-2xl(32) 통일 — 기본 gap-4(16) override */}
-      <ManagerShell className="!gap-[var(--spacing-2xl)]">
-        {!mobile && (
-          <ManagerHead
-            title={t("shareSection.title")}
-            description={t("shareSection.description")}
-          />
-        )}
-
-        {/* 안내 카드 — 앱 정합: brand-subtle bg + brand 보더 */}
-        <Card
-          style={{
-            background: "var(--bg-brand-subtle)",
-            border: "1px solid var(--border-brand)",
-          }}
-        >
-          <CardContent style={{ padding: "var(--spacing-lg)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <span
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "var(--radius-md)",
-                  background: "var(--bg-brand)",
-                  color: "var(--fg-on-brand)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <Users size={18} strokeWidth={1.9} />
-              </span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: "var(--text-label-sm)",
-                    fontWeight: "700",
-                    color: "var(--fg-primary)",
-                  }}
-                >
-                  {t("shareSection.infoTitle")}
-                </div>
-                <div
-                  style={{
-                    fontSize: "var(--text-caption)",
-                    color: "var(--fg-secondary)",
-                    marginTop: 2,
-                    lineHeight: "1.5",
-                  }}
-                >
-                  {t("shareSection.infoDesc")}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <CalendarListSection
+      {wrap(
+        mobile,
+        <ManageSection
+          id={ownedId}
           title={`${t("shareSection.myCalendars")} · ${owned.length}`}
-          calendars={owned}
-          isLoading={isLoading}
-          emptyText={t("shareSection.emptyOwned")}
-          onManage={setManagingId}
+          action={addAction}
+          first
           mobile={mobile}
-          action={
-            // 라벨행 우측 텍스트(accent) 추가 버튼 — 프리셋 정합(사용자 결정, filled 헤더 버튼 폐기)
-            <Button
-              type="button"
-              variant="accent"
-              style={{ padding: "7px 12px", fontSize: "var(--text-label-sm)" }}
-              onClick={() => setCreating(true)}
-            >
-              <Plus size={14} /> {t("newCalendar")}
-            </Button>
-          }
-        />
-
-        <CalendarListSection
+        >
+          {rowsOf(owned, ownedId, t("shareSection.emptyOwned"))}
+        </ManageSection>,
+      )}
+      {wrap(
+        mobile,
+        <ManageSection
+          id={sharedId}
           title={`${t("shareSection.sharedCalendars")} · ${shared.length}`}
-          calendars={shared}
-          isLoading={false}
-          emptyText={t("shareSection.emptyShared")}
-          onManage={setManagingId}
+          first={false}
           mobile={mobile}
-        />
+        >
+          {rowsOf(shared, sharedId, t("shareSection.emptyShared"))}
+        </ManageSection>,
+      )}
+    </>
+  );
 
-        {/* 초대 코드로 참여 — 앱 정합: 컴팩트 카드 + 참여 버튼(다이얼로그).
-            모바일 카드 다이어트 — 셸 카드 벗기고 플랫 행. */}
-        <JoinShell mobile={mobile}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: "var(--radius-md)",
-                background: "var(--bg-muted)",
-                color: "var(--fg-secondary)",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
+  const join = wrap(
+    mobile,
+    <ManageSection
+      id={joinId}
+      title={t("joinByCode")}
+      first={false}
+      mobile={mobile}
+    >
+      {/* 초대 코드로 참여(41) — 보기만 하는 줄 + 오른쪽 작은 버튼 */}
+      <List aria-labelledby={joinId}>
+        <ListItem
+          prefix={
+            <ListTile
+              aria-hidden
+              className="bg-chart-gray-weak text-chart-gray"
             >
-              <Link size={18} strokeWidth={1.9} />
-            </span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: "var(--text-label-sm)",
-                  fontWeight: "700",
-                  color: "var(--fg-primary)",
-                }}
-              >
-                {t("joinByCode")}
-              </div>
-              <div
-                style={{
-                  fontSize: "var(--text-caption)",
-                  color: "var(--fg-secondary)",
-                  marginTop: 2,
-                  lineHeight: "1.5",
-                }}
-              >
-                {t("shareSection.joinDesc")}
-              </div>
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
+              <Link />
+            </ListTile>
+          }
+          title={t("joinByCode")}
+          detail={t("shareSection.joinDesc")}
+          suffix={
+            <DsButton
+              type="button"
+              variant="neutralWeak"
+              size="small"
               onClick={() => setJoining(true)}
             >
               {t("join")}
-            </Button>
-          </div>
-        </JoinShell>
-      </ManagerShell>
+            </DsButton>
+          }
+        />
+      </List>
+    </ManageSection>,
+  );
+
+  return (
+    <>
+      {!mobile && (
+        <ManagerHead
+          title={t("shareSection.title")}
+          description={t("shareSection.description")}
+        />
+      )}
+      <div className={mobile ? "flex flex-col pb-x6" : "flex flex-col gap-x2"}>
+        <ManageIntro mobile={mobile}>{t("shareSection.infoDesc")}</ManageIntro>
+        {lists}
+        {join}
+      </div>
 
       {managing && (
         <CalendarManageDialog
@@ -319,233 +295,77 @@ export function CalendarShareSection({ mobile }: { mobile: boolean }) {
       )}
 
       {confirmDelete && (
-        <ConfirmDialog
+        <AlertConfirm
           title={t("deleteCalendar")}
           message={t("shareSection.deleteMessage", {
             name: confirmDelete.calendarName,
           })}
           confirmLabel={t("shareSection.permanentDelete")}
-          danger
-          loading={deleteMut.isPending}
-          onCancel={() => setConfirmDelete(null)}
-          onConfirm={() => handleDelete(confirmDelete)}
+          onConfirm={() => deleteCalendar(confirmDelete)}
+          onError={() =>
+            confirmFail({
+              message: t("shareSection.deleteFailed"),
+              retry: () => deleteCalendar(confirmDelete),
+            })
+          }
+          onClose={() => setConfirmDelete(null)}
         />
       )}
     </>
   );
 }
 
-function CalendarListSection({
-  title,
-  calendars,
-  isLoading,
-  emptyText,
-  onManage,
-  mobile = false,
-  action,
-}: {
-  title: string;
-  calendars: UserCalendar[];
-  isLoading: boolean;
-  emptyText: string;
-  onManage: (id: number) => void;
-  /** 라벨행 우측 액션(텍스트 버튼 등) — 없으면 라벨만 */
-  action?: React.ReactNode;
-  /** 모바일 카드 다이어트 — 리스트 셸 카드 벗김 (.m-subpage) */
-  mobile?: boolean;
-}) {
-  const list = isLoading ? (
-    <ShareListSkeleton mobile={mobile} />
-  ) : calendars.length === 0 ? (
-    <div
-      style={{
-        padding: "28px 16px",
-        textAlign: "center",
-        color: "var(--fg-tertiary)",
-        fontSize: "var(--text-label-sm)",
-      }}
-    >
-      {emptyText}
-    </div>
-  ) : (
-    calendars.map((cal, i) => (
-      <CalendarRow
-        key={cal.rowId}
-        cal={cal}
-        first={i === 0}
-        onManage={onManage}
-        mobile={mobile}
-      />
-    ))
-  );
-  return (
-    // label + list = 한 묶음(사용자 결정). 사이 간격은 모바일 0(플랫 리스트라 밀착)
-    // / 데스크톱 8 — 아래가 카드라 라벨이 붙으면 답답함.
-    <div
-      style={{ display: "flex", flexDirection: "column", gap: mobile ? 0 : 12 }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div
-          style={{
-            fontSize: "var(--text-label-sm)",
-            fontWeight: "700",
-            color: "var(--fg-primary)",
-          }}
-        >
-          {title}
-        </div>
-        {action}
-      </div>
-      {mobile ? (
-        <div>{list}</div>
-      ) : (
-        // overflow hidden — 행 hover 배경이 카드 라운드 밖으로 새지 않게.
-        <Card style={{ overflow: "hidden" }}>
-          <CardContent style={{ padding: 0 }}>{list}</CardContent>
-        </Card>
-      )}
-    </div>
-  );
+// 폰은 흰 면 위에 묶음을 그대로, 데스크톱은 묶음마다 목록 카드(43)
+function wrap(mobile: boolean, node: React.ReactNode) {
+  return mobile ? node : <DsCard body="list">{node}</DsCard>;
 }
 
 function CalendarRow({
   cal,
-  first,
   onManage,
-  mobile,
 }: {
   cal: UserCalendar;
-  first: boolean;
   onManage: (id: number) => void;
-  mobile?: boolean;
 }) {
   const { t } = useTranslation("calendar");
   const pal = getPaletteByColor(cal.color);
+  const role = ROW_ROLE_BADGE[cal.myRole];
+  const RoleIcon = role.icon;
   return (
-    <div
+    // 누르면 지금의 관리 대화상자가 열린다 — 화면을 옮기지 않는 줄이라 꺾쇠는 없다(list.md:122). 관리 페이지로 바뀌면 09b-2 가 더한다
+    <ListButtonItem
       onClick={() => onManage(cal.rowId)}
-      className="hover:bg-[var(--bg-muted)]"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: settingsRowPadding(mobile),
-        borderTop: first ? "none" : "1px solid var(--border-subtle)",
-        cursor: "pointer",
-        transition:
-          "background var(--motion-duration-fast) var(--motion-ease-out)",
-      }}
-    >
-      <span
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: "var(--radius-md)",
-          background: pal.bg,
-          color: pal.color,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Calendar size={18} strokeWidth={2} />
-      </span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              fontSize: "var(--text-body-sm)",
-              fontWeight: "600",
-              lineHeight: 1.5,
-              color: "var(--fg-primary)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {cal.calendarName}
-          </span>
+      prefix={
+        <ListTile aria-hidden style={{ background: pal.bg, color: pal.color }}>
+          <Calendar />
+        </ListTile>
+      }
+      title={
+        <>
+          {cal.calendarName}
           {cal.isDefault && (
-            // 공용 Badge(secondary) — pill·secondary 회색·8/2 패딩으로 앱 PBadge 정합.
-            // font-bold(w700)로 앱 PBadge 굵기와 일치(badge.md SoT는 600 — 아래 노트 참고).
-            <Badge
-              variant="secondary"
-              className="font-bold"
-              style={{ flexShrink: 0 }}
-            >
+            <DsBadge tone="neutral" className="ml-x1 align-middle">
               {t("default")}
-            </Badge>
+            </DsBadge>
           )}
-        </div>
-        <div
-          style={{
-            fontSize: "var(--text-caption)",
-            color: "var(--fg-tertiary)",
-            marginTop: 2,
-          }}
-        >
-          {cal.memberCount <= 1
-            ? t("shareSection.onlyMe")
-            : t("shareSection.memberCount", { count: cal.memberCount })}
-        </div>
-      </div>
-      {!cal.isOwner && (
-        <Badge
-          variant={ROLE_BADGE_VARIANT[cal.myRole]}
-          style={{ flexShrink: 0 }}
-        >
-          {t(`role.${cal.myRole}`)}
-        </Badge>
-      )}
-      {/* 모바일은 chevron 을 두지 않는다 — 행 전체 탭으로 관리 화면에 들어간다
-          (사용자 결정, 다른 설정 목록과 같은 규칙). 데스크톱은 그대로.
-
-          이 행은 스와이프를 붙이지 않는다. 시스템 기본 캘린더라 삭제가 없고,
-          탭이 편집이 아니라 관리 화면(멤버·공유) 진입이라 '수정·삭제' 두 액션이
-          성립하지 않는다. */}
-      {!mobile && (
-        <ChevronRight
-          size={16}
-          style={{ color: "var(--fg-tertiary)", flexShrink: 0 }}
-        />
-      )}
-    </div>
-  );
-}
-
-function ShareListSkeleton({ mobile }: { mobile?: boolean }) {
-  return (
-    <>
-      {[0, 1].map((i) => (
-        <div
-          key={i}
-          // 실제 CalendarRow 와 같은 gap 12 · 아이콘 36.
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: settingsRowPadding(mobile),
-            borderTop: i === 0 ? "none" : "1px solid var(--border-subtle)",
-          }}
-        >
-          <SkeletonBase className="h-9 w-9 rounded-md shrink-0" />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <SkeletonBase className="h-4 w-32" />
-            {/* 멤버 수 — 실렌더 caption, marginTop 2 */}
-            <SkeletonBase className="h-3 w-16" style={{ marginTop: 2 }} />
-          </div>
-          {/* 진입 chevron */}
-          <SkeletonBase className="h-4 w-4 shrink-0" />
-        </div>
-      ))}
-    </>
+          {!cal.isOwner && (
+            <DsBadge
+              variant="outline"
+              tone={role.tone}
+              prefixIcon={<RoleIcon />}
+              className="ml-x1 align-middle"
+            >
+              {t(`role.${cal.myRole}`)}
+            </DsBadge>
+          )}
+        </>
+      }
+      detail={
+        cal.memberCount <= 1
+          ? t("shareSection.onlyMe")
+          : t("shareSection.memberCount", { count: cal.memberCount })
+      }
+    />
   );
 }
 
