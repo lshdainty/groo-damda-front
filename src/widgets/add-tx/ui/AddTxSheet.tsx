@@ -99,6 +99,7 @@ function AddTxSheetBody(props: TxFormProps) {
             )}
             <div className="-mx-x6">{body}</div>
           </ResponsiveDialogBody>
+          {p.above}
           {(footer || wide) && (
             <ResponsiveDialogFooter>
               {wide && sub ? (

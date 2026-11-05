@@ -204,14 +204,43 @@ vi.mock("@/features/dutch-pay", () => ({
 vi.mock("@/features/asset", () => ({
   useAssets: () => ({ data: { assets: api.assets }, isLoading: false }),
 }));
-vi.mock("@/features/expense-split/ui/SplitTxDialog", () => ({
-  SplitTxDialog: () => <div data-testid="old-split" />,
+// 나누기 · 반복 설정 · 더치페이 단계의 안쪽은 각자 시험이 있다 — 여기서는 상세 표면이 단계로 바뀌는 것만 본다
+const stepStub = (name: string) => ({
+  title: name,
+  body: <div data-testid={`step-${name}`} />,
+  footer: () => null,
+  dirty: false,
+  dirtyAll: false,
+  onBack: () => {},
+  inSub: false,
+  onDone: () => {},
+  overlays: null,
+  bodyRef: { current: null },
+});
+vi.mock("@/widgets/add-tx/ui/use-split-step", () => ({
+  useSplitStep: () => stepStub("split"),
 }));
-vi.mock("@/features/recurring-transaction/ui/RecurringFromTxDialog", () => ({
-  RecurringFromTxDialog: () => <div data-testid="old-recurring" />,
+vi.mock("./use-dutch-step", () => ({
+  useDutchStep: () => stepStub("dutch"),
 }));
-vi.mock("@/features/dutch-pay/ui/DutchPayFromTxDialog", () => ({
-  DutchPayFromTxDialog: () => <div data-testid="old-dutch" />,
+vi.mock("@/features/recurring-transaction/ui/use-recurring-form", () => ({
+  useRecurringForm: () => ({
+    body: <div data-testid="step-recurring" />,
+    heading: "recurring",
+    stepTitle: {},
+    step: "list",
+    inStep: false,
+    stepDirty: false,
+    dirty: false,
+    bodyFog: false,
+    isEdit: false,
+    submitting: false,
+    save: () => {},
+    confirmStep: () => {},
+    exitStep: () => {},
+    focusAmount: () => {},
+    lockType: false,
+  }),
 }));
 
 const { TxDetailDialog } = await import("./TxDetailDialog");
@@ -1050,10 +1079,27 @@ describe("7a — [수정] 은 상세 위에서 수정 폼을 열고 저장하면
   });
 });
 
-describe("옛 겹침 대화상자 — 나누기 · 반복 · 더치페이는 21-3 이 단계로 옮긴다", () => {
-  it("줄을 누르면 지금처럼 그 대화상자가 열린다", () => {
+describe("나누기 · 반복 설정 · 더치페이는 상세 안 한 단계다 (I-21 F · G · H)", () => {
+  it("나누기 줄을 누르면 같은 표면의 본문이 나누기 단계로 바뀐다", () => {
     render();
     click(moreRow("split")!);
-    expect(document.querySelector("[data-testid=old-split]")).not.toBeNull();
+    expect(document.querySelector("[data-testid=step-split]")).not.toBeNull();
+    expect(title()).toBe("split");
+    // 상세 본문은 사라진다 — 겹친 대화상자가 아니다
+    expect(document.querySelector("[data-slot=tx-detail-head]")).toBeNull();
+  });
+
+  it("반복 설정 줄과 더치페이 줄도 각자 단계로 바뀐다", () => {
+    render();
+    click(moreRow("recurring")!);
+    expect(
+      document.querySelector("[data-testid=step-recurring]"),
+    ).not.toBeNull();
+  });
+
+  it("더치페이 줄", () => {
+    render();
+    click(moreRow("dutch")!);
+    expect(document.querySelector("[data-testid=step-dutch]")).not.toBeNull();
   });
 });

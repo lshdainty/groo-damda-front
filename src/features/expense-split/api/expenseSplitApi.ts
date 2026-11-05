@@ -40,17 +40,25 @@ export const expenseSplitApi = {
   replaceSplits: async (
     expenseId: number,
     splits: ExpenseSplitFormValue[],
+    opts?: { silent?: boolean },
   ): Promise<{ splits: ExpenseSplit[] }> => {
+    const config: QuietRequestConfig = { silent: opts?.silent };
     const resp: ApiResponse<{ splits: ExpenseSplit[] }> = await apiClient.put(
       `/v1/expense/${expenseId}/splits`,
       { splits },
+      config,
     );
     return resp.data;
   },
 
-  deleteAllSplits: async (expenseId: number): Promise<void> => {
+  deleteAllSplits: async (
+    expenseId: number,
+    opts?: { silent?: boolean },
+  ): Promise<void> => {
+    const config: QuietRequestConfig = { silent: opts?.silent };
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/expense/${expenseId}/splits`,
+      config,
     );
     return resp.data;
   },

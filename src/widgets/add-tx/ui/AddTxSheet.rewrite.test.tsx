@@ -132,15 +132,20 @@ vi.mock("@/features/sms", () => ({
   useCommitSms: () => ({ mutate: () => {}, isPending: false, isError: false }),
 }));
 vi.mock("@/features/expense-split", () => ({
+  useReplaceExpenseSplits: () => ({
+    mutateAsync: async () => ({}),
+    isPending: false,
+  }),
+  useDeleteAllExpenseSplits: () => ({
+    mutateAsync: async () => ({}),
+    isPending: false,
+  }),
   useExpenseSplits: (id: number | null) =>
     id == null || st.splitsPending
       ? { data: undefined, isPending: true, isError: false }
       : st.splitsError
         ? { data: undefined, isPending: false, isError: true }
         : { data: st.splits, isPending: false, isError: false },
-}));
-vi.mock("@/features/expense-split/ui/SplitTxDialog", () => ({
-  SplitTxDialog: () => <div>split-reconcile</div>,
 }));
 vi.mock("@/features/user", () => ({ useDefaultCurrency: () => "KRW" }));
 
@@ -436,7 +441,8 @@ describe("[고쳐 쓰기](D13)", () => {
     expect(buttons("addTx.saveSplitAndSave")).toHaveLength(1);
     await click(buttons("addTx.saveSplitAndSave")[0]!);
 
-    expect(bodyText()).toContain("split-reconcile");
+    // 맞추기는 폼 위 대화상자가 아니라 같은 표면의 한 단계다
+    expect(bodyText()).toContain("splitStep.reconcileTitle");
     expect(st.replace).toBeNull();
   });
 

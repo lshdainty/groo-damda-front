@@ -30,10 +30,13 @@ export const useReplaceExpenseSplits = () => {
     mutationFn: ({
       expenseId,
       splits,
+      silent,
     }: {
       expenseId: number;
       splits: ExpenseSplitFormValue[];
-    }) => expenseSplitApi.replaceSplits(expenseId, splits),
+      /** 실패를 호출처(나누기 단계 맨 위 Callout)가 알리면 true */
+      silent?: boolean;
+    }) => expenseSplitApi.replaceSplits(expenseId, splits, { silent }),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };
@@ -42,8 +45,14 @@ export const useDeleteAllExpenseSplits = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (expenseId: number) =>
-      expenseSplitApi.deleteAllSplits(expenseId),
+    mutationFn: ({
+      expenseId,
+      silent,
+    }: {
+      expenseId: number;
+      /** 실패를 호출처(스낵바 + [다시 시도])가 알리면 true */
+      silent?: boolean;
+    }) => expenseSplitApi.deleteAllSplits(expenseId, { silent }),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };

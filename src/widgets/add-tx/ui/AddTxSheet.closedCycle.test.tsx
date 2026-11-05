@@ -140,10 +140,15 @@ vi.mock("@/features/sms", () => ({
   }),
 }));
 vi.mock("@/features/expense-split", () => ({
+  useReplaceExpenseSplits: () => ({
+    mutateAsync: async () => ({}),
+    isPending: false,
+  }),
+  useDeleteAllExpenseSplits: () => ({
+    mutateAsync: async () => ({}),
+    isPending: false,
+  }),
   useExpenseSplits: () => ({ data: [], isPending: false, isError: false }),
-}));
-vi.mock("@/features/expense-split/ui/SplitTxDialog", () => ({
-  SplitTxDialog: () => null,
 }));
 vi.mock("@/features/user", () => ({
   useDefaultCurrency: () => "KRW",

@@ -1,12 +1,17 @@
+import type { QuietRequestConfig } from "@/shared/api";
 import { apiClient } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type { DutchPay, DutchPayFormValues } from "@/entities/dutch-pay";
 
 export const dutchPayApi = {
-  createDutchPay: async (data: DutchPayFormValues): Promise<DutchPay> => {
+  createDutchPay: async (
+    data: DutchPayFormValues,
+    opts?: { silent?: boolean },
+  ): Promise<DutchPay> => {
     const resp: ApiResponse<DutchPay> = await apiClient.post(
       "/v1/dutch-pay",
       data,
+      { silent: opts?.silent } as QuietRequestConfig,
     );
     return resp.data;
   },

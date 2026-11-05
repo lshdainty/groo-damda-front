@@ -7,11 +7,11 @@ import { useWideSurface } from "@/shared/ds/overlay";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import { MaskAmount } from "@/shared/lib/groo/hide-amounts";
-import { SplitTxDialog } from "@/features/expense-split/ui/SplitTxDialog";
 import { useStepBack } from "@/widgets/calendar/model/use-step-back";
 import { type TxForm, type TxSub } from "../model/use-tx-form";
 import { TxStep1 } from "./TxStep1";
 import { TxStep2 } from "./TxStep2";
+import { useSplitStep } from "./use-split-step";
 import { amountText } from "../lib/amount-format";
 import {
   AmountSub,
@@ -59,6 +59,12 @@ export interface TxEmbedParts {
   /** 표면 밖에 그릴 것(저장 확인창 · 맞추기 대화상자) */
   overlays: React.ReactNode;
   bodyRef: React.RefObject<HTMLDivElement | null>;
+  /** 바닥 버튼 바로 위 한 줄(나누기 단계의 남은 금액) — 본문 밖, 바닥 위에 그린다 */
+  above?: React.ReactNode;
+  /** 저장 요청이 나가 있다 — 호스트가 시트를 닫지 못하게 한다 */
+  busy?: boolean;
+  /** 시트 바닥의 주 버튼 하나(나누기 단계) — 값 하나를 치는 안쪽 단계면 null */
+  primary?: React.ReactNode;
 }
 
 /** 거래 폼 표면의 조각 — 자기 표면(`AddTxSheet`)과 호스트 시트(`TxEmbedParts` 로 끼움)가 같이 쓴다 */
@@ -84,15 +90,31 @@ export function useTxSheetParts(
   const sub = f.sub;
   const twoOfTwo = isNew && f.main === "2" && !sub;
 
+  // 나눈 내역 맞추기 — 같은 표면 한 단계(F 34). 폼은 서버에 보내지 않고 맞춘 분할만 돌려받는다
+  const split = useSplitStep({
+    enabled: f.openReconcile && f.seed != null,
+    expense: f.seed,
+    overrideTotal: f.amountNumber,
+    recordedTotal: f.seed ? Math.abs(f.seed.amount) : undefined,
+    initialSplits: f.effectiveSplits.length > 0 ? f.effectiveSplits : undefined,
+    onReconciled: (splits) => {
+      f.setReconciledSplits(splits);
+      f.setOpenReconcile(false);
+    },
+    onExit: () => f.setOpenReconcile(false),
+  });
+  const inRecon = f.openReconcile && f.seed != null;
+
   // ← · 기기 뒤로 가기 — 단계 안에서는 들어올 때 값으로 되돌리고(바뀐 값이 있으면 먼저 묻는다), 새 거래 2단계는 1단계로
   const leave = useLeaveConfirm({
-    dirty: f.subDirty,
-    leave: () => f.leaveSub(true),
+    dirty: inRecon ? split.dirty : f.subDirty,
+    leave: () => (inRecon ? split.onBack() : f.leaveSub(true)),
     contentRef,
   });
   const back = (): boolean => {
     // 저장이 나가 있는 동안은 나가지 않는다 — 나가면 응답 뒤 콜백(onSaved · 알림)이 사라진다
     if (f.submitting) return false;
+    if (inRecon) return leave.request();
     if (sub) return leave.request();
     if (twoOfTwo) {
       f.setMain("1");
@@ -100,7 +122,7 @@ export function useTxSheetParts(
     }
     return true;
   };
-  useStepBack(!embedded && !wide && (sub != null || twoOfTwo), back);
+  useStepBack(!embedded && !wide && (sub != null || twoOfTwo || inRecon), back);
 
   // Esc — 새 거래 2단계는 1단계로(닫기 단추는 시트를 닫는다). 위에 고르기 시트 · 확인창이 떠 있으면 그쪽이 먼저 받는다
   useEffect(() => {
@@ -267,32 +289,17 @@ export function useTxSheetParts(
           onConfirm={f.confirmSave}
         />
       )}
-      {f.openReconcile && f.seed && (
-        <SplitTxDialog
-          expense={f.seed}
-          mobile={o.mobile}
-          overrideTotal={f.amountNumber}
-          recordedTotal={Math.abs(f.seed.amount)}
-          initialSplits={
-            f.effectiveSplits.length > 0 ? f.effectiveSplits : undefined
-          }
-          onReconciled={(splits) => {
-            f.setReconciledSplits(splits);
-            f.setOpenReconcile(false);
-          }}
-          onClose={() => f.setOpenReconcile(false)}
-        />
-      )}
     </>
   );
 
   const embedBack = () => {
     if (f.submitting) return;
-    if (sub) f.leaveSub(true);
+    if (inRecon) split.onBack();
+    else if (sub) f.leaveSub(true);
     else if (twoOfTwo) f.setMain("1");
     else o.onBack?.();
   };
-  const embedParts: TxEmbedParts = {
+  const formEmbedParts: TxEmbedParts = {
     title,
     body: (
       <>
@@ -329,18 +336,28 @@ export function useTxSheetParts(
     overlays: null,
     bodyRef,
   };
+  // 맞추기 단계가 열려 있으면 폼 조각 대신 그 단계의 조각 — 폼의 바뀐 값은 닫을 때 함께 묻는다
+  const embedParts: TxEmbedParts = inRecon
+    ? {
+        ...split,
+        dirtyAll: split.dirty || f.dirty || f.subDirty,
+        onBack: embedBack,
+        bodyRef: split.bodyRef,
+      }
+    : formEmbedParts;
   return {
     embedParts,
     overlays,
-    title,
-    body,
-    footer,
+    title: inRecon ? split.title : title,
+    body: inRecon ? split.body : body,
+    footer: inRecon ? (split.primary ?? null) : footer,
+    above: inRecon ? split.above : null,
     wide,
     isNew,
-    sub,
+    sub: inRecon ? ("reconcile" as const) : sub,
     twoOfTwo,
-    showSubDone,
-    subDone,
+    showSubDone: inRecon ? split.inSub : showSubDone,
+    subDone: inRecon ? split.onDone : subDone,
     back,
     leave,
     contentRef,
