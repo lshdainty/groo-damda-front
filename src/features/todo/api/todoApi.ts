@@ -1,4 +1,9 @@
-import { apiClient, type QuietRequestConfig } from "@/shared/api";
+import {
+  apiClient,
+  silentConfig,
+  type QuietRequestConfig,
+  type SilentOpts,
+} from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type { Todo, TodoFormValues, TodoStats } from "@/entities/todo";
 
@@ -18,8 +23,15 @@ const mapTodo = (todo: Todo): Todo => ({
 });
 
 export const todoApi = {
-  createTodo: async (data: TodoFormValues): Promise<Todo> => {
-    const resp: ApiResponse<Todo> = await apiClient.post("/v1/todo", data);
+  createTodo: async (
+    data: TodoFormValues,
+    opts?: SilentOpts,
+  ): Promise<Todo> => {
+    const resp: ApiResponse<Todo> = await apiClient.post(
+      "/v1/todo",
+      data,
+      silentConfig(opts),
+    );
     return mapTodo(resp.data);
   },
 
@@ -36,8 +48,16 @@ export const todoApi = {
     return mapTodo(resp.data);
   },
 
-  updateTodo: async (id: number, data: TodoFormValues): Promise<Todo> => {
-    const resp: ApiResponse<Todo> = await apiClient.put(`/v1/todo/${id}`, data);
+  updateTodo: async (
+    id: number,
+    data: TodoFormValues,
+    opts?: SilentOpts,
+  ): Promise<Todo> => {
+    const resp: ApiResponse<Todo> = await apiClient.put(
+      `/v1/todo/${id}`,
+      data,
+      silentConfig(opts),
+    );
     return mapTodo(resp.data);
   },
 
@@ -61,8 +81,11 @@ export const todoApi = {
     return resp.data;
   },
 
-  deleteTodo: async (id: number): Promise<void> => {
-    const resp: ApiResponse<void> = await apiClient.delete(`/v1/todo/${id}`);
+  deleteTodo: async (id: number, opts?: SilentOpts): Promise<void> => {
+    const resp: ApiResponse<void> = await apiClient.delete(
+      `/v1/todo/${id}`,
+      silentConfig(opts),
+    );
     return resp.data;
   },
 

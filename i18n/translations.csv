@@ -210,6 +210,8 @@ todo,count,건,
 todo,detail,자세히,Details
 todo,addTodoLabel,할 일 추가,Add to-do
 todo,toggleFailed,완료로 바꾸지 못했어요. 잠시 후 다시 시도해주세요.,Couldn't update the to-do. Please try again in a moment.
+todo,saveFailed,할 일을 저장하지 못했어요.,Couldn't save the to-do.
+todo,deleteFailed,할 일을 삭제하지 못했어요.,Couldn't delete the to-do.
 todo,noDueDate,마감일 없음,No due date
 todo,detailTitle,할 일 상세,Todo details
 todo,detail.status,상태,Status
@@ -1545,6 +1547,10 @@ category,moveTx.hint,같은 종류의 맨 아래 카테고리만 고를 수 있�
 category,moveTx.noTarget,옮길 수 있는 카테고리가 없어요. 먼저 하나 만들어주세요.,No category to move to. Please create one first.
 category,moveTx.action,옮기기,Move
 category,moveTx.done,{{count}}건을 옮겼어요,Moved {{count}} items
+category,moveTx.failed,거래를 옮기지 못했어요.,Couldn't move the transactions.
+category,saveFailed,카테고리를 저장하지 못했어요.,Couldn't save the category.
+category,deleteFailed,카테고리를 삭제하지 못했어요.,Couldn't delete the category.
+category,reorderFailed,순서를 바꾸지 못했어요.,Couldn't change the order.
 category,moveTx.modeNew,새 하위 만들기,Create subcategory
 category,moveTx.modeExisting,기존 카테고리로,Move to existing
 category,moveTx.childName,만들 하위 이름,New subcategory name

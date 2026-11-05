@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ds/button";
+import { Callout } from "@/shared/ds/callout";
+import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { ChipRadio, ChipRadioGroup } from "@/shared/ds/chip";
 import {
   DatePicker,
@@ -141,6 +143,8 @@ export function TodoFormDialog({
   onClose,
   onSave,
   submitting,
+  saveFailed,
+  saveError,
 }: {
   todo: Todo | null;
   today: string;
@@ -148,6 +152,10 @@ export function TodoFormDialog({
   onClose: () => void;
   onSave: (values: TodoFormValues, id?: number) => void;
   submitting?: boolean;
+  /** 저장 요청이 실패했다 — 폼 맨 위 critical Callout(고정 글), 폼은 열린 채 · 쓴 값 그대로 */
+  saveFailed?: boolean;
+  /** 실패마다 새 값 — 같은 실패가 이어져도 Callout 을 다시 보이게 올린다 */
+  saveError?: unknown;
 }) {
   const { t } = useTranslation("todo");
   const { t: tc } = useTranslation("common");
@@ -175,6 +183,7 @@ export function TodoFormDialog({
     note !== initial.note;
   const titleEmpty = !title.trim();
 
+  const errorRef = useScrollToError<HTMLDivElement>(!!saveFailed, saveError);
   const submit = () => {
     if (submitting) return;
     if (titleEmpty) {
@@ -220,6 +229,13 @@ export function TodoFormDialog({
         }}
       >
         <ResponsiveDialogBody>
+          {saveFailed && (
+            <div ref={errorRef}>
+              <Callout tone="critical" role="alert" className="mb-x4">
+                {t("saveFailed")}
+              </Callout>
+            </div>
+          )}
           <div className="flex flex-col gap-x4 pb-x2">
             <Field
               label={t("form.title")}

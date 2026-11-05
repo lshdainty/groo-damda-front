@@ -52,6 +52,9 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
+}));
 const { TodoFormDialog } = await import("./TodoFormDialog");
 const { TodoDetailDialog } = await import("./TodoDetailDialog");
 

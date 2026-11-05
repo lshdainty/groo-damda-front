@@ -36,8 +36,17 @@ vi.mock("@/features/todo", () => ({
       created.push(values);
     },
     isPending: false,
+    reset: () => {},
+    isError: false,
+    error: null,
   }),
-  useUpdateTodo: () => ({ mutate: () => {}, isPending: false }),
+  useUpdateTodo: () => ({
+    mutate: () => {},
+    isPending: false,
+    reset: () => {},
+    isError: false,
+    error: null,
+  }),
   useToggleTodoStatus: () => ({
     mutate: () => {},
     pendingIds: new Set<number>(),

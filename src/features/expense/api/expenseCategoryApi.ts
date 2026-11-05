@@ -1,4 +1,9 @@
-import { apiClient, type QuietRequestConfig } from "@/shared/api";
+import {
+  apiClient,
+  silentConfig,
+  type QuietRequestConfig,
+  type SilentOpts,
+} from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
   ExpenseCategory,
@@ -8,10 +13,12 @@ import type {
 export const expenseCategoryApi = {
   createCategory: async (
     data: ExpenseCategoryFormValues,
+    opts?: SilentOpts,
   ): Promise<ExpenseCategory> => {
     const resp: ApiResponse<ExpenseCategory> = await apiClient.post(
       "/v1/expense/category",
       data,
+      silentConfig(opts),
     );
     return resp.data;
   },
@@ -28,17 +35,20 @@ export const expenseCategoryApi = {
   updateCategory: async (
     id: number,
     data: ExpenseCategoryFormValues,
+    opts?: SilentOpts,
   ): Promise<ExpenseCategory> => {
     const resp: ApiResponse<ExpenseCategory> = await apiClient.put(
       `/v1/expense/category/${id}`,
       data,
+      silentConfig(opts),
     );
     return resp.data;
   },
 
-  deleteCategory: async (id: number): Promise<void> => {
+  deleteCategory: async (id: number, opts?: SilentOpts): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/expense/category/${id}`,
+      silentConfig(opts),
     );
     return resp.data;
   },
@@ -50,14 +60,17 @@ export const expenseCategoryApi = {
   moveTransactions: async (
     id: number,
     targetCategoryRowId: number,
+    opts?: SilentOpts,
   ): Promise<{ expenses: number; recurring: number; splits: number }> => {
     const resp: ApiResponse<{
       expenses: number;
       recurring: number;
       splits: number;
-    }> = await apiClient.post(`/v1/expense/category/${id}/move-transactions`, {
-      targetCategoryRowId,
-    });
+    }> = await apiClient.post(
+      `/v1/expense/category/${id}/move-transactions`,
+      { targetCategoryRowId },
+      silentConfig(opts),
+    );
     return resp.data;
   },
 
@@ -68,6 +81,7 @@ export const expenseCategoryApi = {
   splitIntoChild: async (
     id: number,
     body: { childName: string; icon: string; color: string },
+    opts?: SilentOpts,
   ): Promise<{ expenses: number; recurring: number; splits: number }> => {
     const resp: ApiResponse<{
       expenses: number;
@@ -76,6 +90,7 @@ export const expenseCategoryApi = {
     }> = await apiClient.post(
       `/v1/expense/category/${id}/split-into-child`,
       body,
+      silentConfig(opts),
     );
     return resp.data;
   },
@@ -86,10 +101,12 @@ export const expenseCategoryApi = {
       sortOrder: number;
       parentRowId: number | null;
     }[],
+    opts?: SilentOpts,
   ): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.patch(
       "/v1/expense/categories/reorder",
       { items },
+      silentConfig(opts),
     );
     return resp.data;
   },

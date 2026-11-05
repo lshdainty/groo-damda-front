@@ -26,10 +26,28 @@ const state: {
   categories: [],
   isLoading: false,
   recurrings: [],
-  deleteMutate: vi.fn(),
+  deleteMutate: vi.fn().mockResolvedValue(undefined),
   refetch: vi.fn(),
 };
-const mutation = () => ({ mutate: () => {}, isPending: false });
+const snack: Array<{
+  message: string;
+  tone?: string;
+  action?: { onClick: () => void };
+}> = [];
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: { message: string }) => snack.push(o),
+    dismiss: () => {},
+  }),
+}));
+const mutation = () => ({
+  mutate: () => {},
+  mutateAsync: () => Promise.resolve(),
+  reset: () => {},
+  isPending: false,
+  isError: false,
+  error: null,
+});
 vi.mock("@/features/expense", () => ({
   useExpenseCategories: () => ({
     data: state.categories,
@@ -39,7 +57,8 @@ vi.mock("@/features/expense", () => ({
   useCreateExpenseCategory: mutation,
   useUpdateExpenseCategory: mutation,
   useDeleteExpenseCategory: () => ({
-    mutate: state.deleteMutate,
+    mutateAsync: state.deleteMutate,
+    reset: () => {},
     isPending: false,
   }),
   useReorderExpenseCategories: mutation,
@@ -124,7 +143,8 @@ beforeEach(() => {
   state.categories = sample();
   state.isLoading = false;
   state.recurrings = [];
-  state.deleteMutate = vi.fn();
+  state.deleteMutate = vi.fn().mockResolvedValue(undefined);
+  snack.length = 0;
   state.refetch = vi.fn();
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -437,10 +457,31 @@ describe("동작 뒤 초점(K2)", () => {
       )!,
     );
     // 서버가 지웠다고 알린다 — 교통은 맨 아래 줄이라 앞 줄(점심)로
-    await act(async () => {
-      state.deleteMutate.mock.calls[0]![1].onSuccess();
-    });
+    await act(async () => {});
     await settle();
     expect(focusedRow()).toBe("3");
+  });
+
+  it("삭제가 실패하면 확인창을 닫고 critical 스낵바 + [다시 시도] 가 같은 삭제를 다시 한다", async () => {
+    state.deleteMutate = vi.fn().mockRejectedValue(new Error("x"));
+    render();
+    await viaSheet("교통", "delete");
+    await tick(300);
+    const dlg = () => document.querySelector("[role=alertdialog]");
+    await click(
+      Array.from(dlg()!.querySelectorAll<HTMLElement>("button")).find(
+        (b) => b.textContent === "delete",
+      )!,
+    );
+    await act(async () => {});
+    expect(snack).toHaveLength(1);
+    expect(snack[0]).toMatchObject({
+      message: "deleteFailed",
+      tone: "critical",
+    });
+    state.deleteMutate.mockResolvedValue(undefined);
+    await act(async () => snack[0]!.action!.onClick());
+    expect(state.deleteMutate).toHaveBeenCalledTimes(2);
+    expect(state.deleteMutate.mock.calls[1]![0]).toBe(2);
   });
 });
