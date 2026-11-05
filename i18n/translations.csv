@@ -1201,7 +1201,6 @@ group,deleteGroupType,그룹 유형 삭제,Delete Group Type
 group,groupTypeDeleteConfirm,이 그룹 유형을 삭제하시겠습니까?,Are you sure you want to delete this group type?
 group,groupTypeNamePlaceholder,그룹 유형 이름을 입력하세요,Enter group type name
 memo,folders,폴더,Folders
-memo,clearSearch,지우기,Clear
 memo,all,전체,All
 memo,noResults,결과가 없어요,No results
 memo,noMemos,메모가 없어요,No memos

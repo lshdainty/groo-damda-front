@@ -1,16 +1,22 @@
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Plus, Search, SearchX, StickyNote } from "lucide-react";
 import { Button } from "@/shared/ds/button";
 import { Card } from "@/shared/ds/card";
 import { Input } from "@/shared/ds/input";
-import { List, ListButtonItem, ListHeader } from "@/shared/ds/list";
+import {
+  List,
+  ListButtonItem,
+  ListHeader,
+  ListRadioGroup,
+} from "@/shared/ds/list";
+import { Skeleton } from "@/shared/ds/skeleton";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { ResultSection } from "@/shared/ds/result-section";
 import { cn } from "@/shared/lib/cn";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { PageHead } from "@/shared/ui/groo/page-head";
-import { useStickyFit } from "@/pages/todo/ui/desktop/use-sticky-fit";
+import { useStickyFit } from "@/shared/hooks/use-sticky-fit";
 import { NO_TAG_KEY } from "../lib/memo-tags";
 import type { MemoScreen } from "../model/use-memo-screen";
 import { MemoRow, MemoRowSkeleton } from "./MemoRow";
@@ -139,7 +145,26 @@ function TagRail({ screen }: { screen: MemoScreen }) {
     })),
   ];
   return (
-    <List role="radiogroup" aria-label={t("tagFilter")}>
+    <ListRadioGroup
+      aria-label={t("tagFilter")}
+      // 한 번의 Tab 으로 들어와 ↑ ↓ 로 옮기며 고른다(로빙 — 고른 줄만 Tab 멈춤)
+      onKeyDown={(e) => {
+        if (
+          !["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft"].includes(e.key)
+        )
+          return;
+        const items = Array.from(
+          e.currentTarget.querySelectorAll<HTMLElement>("[role=radio]"),
+        );
+        const at = items.indexOf(document.activeElement as HTMLElement);
+        if (at < 0) return;
+        e.preventDefault();
+        const step = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : -1;
+        const next = items[(at + step + items.length) % items.length]!;
+        next.focus();
+        next.click();
+      }}
+    >
       {rows.map((r) => {
         const on = tagFilter === r.key;
         return (
@@ -148,6 +173,7 @@ function TagRail({ screen }: { screen: MemoScreen }) {
             role="radio"
             aria-checked={on}
             highlighted={on}
+            tabIndex={on ? 0 : -1}
             onClick={() => setTagFilter(r.key)}
             prefix={
               r.dot ? (
@@ -167,7 +193,7 @@ function TagRail({ screen }: { screen: MemoScreen }) {
           />
         );
       })}
-    </List>
+    </ListRadioGroup>
   );
 }
 
@@ -180,7 +206,6 @@ function TagRail({ screen }: { screen: MemoScreen }) {
 export function MemoDesktop({ screen }: { screen: MemoScreen }) {
   const { t } = useTranslation("memo");
   const wide = useWideSurface();
-  const navigate = useNavigate();
   const { ref: leftRef, sticky } = useStickyFit(wide);
   const showFilters =
     !screen.failed && !screen.loading && screen.memos.length > 0;
@@ -214,26 +239,37 @@ export function MemoDesktop({ screen }: { screen: MemoScreen }) {
               className={cn("min-w-0", sticky && "sticky top-x5")}
             >
               <Card body="list">
-                <div className="px-global-gutter pb-x2 pt-x1">
+                <div className="px-global-gutter pb-x2">
                   <SearchField screen={screen} />
                 </div>
-                {showFilters && (
-                  <>
-                    <ListHeader as="div">
-                      <h2 className="m-0 font-[inherit] text-[length:inherit]">
-                        {t("tagsHeading")}
-                      </h2>
-                      <Button
-                        variant="ghost"
-                        ghostColor="neutralMuted"
-                        size="small"
-                        onClick={() => navigate(MEMO_TAGS_PATH)}
+                {/* 틀(검색칸 · "태그" 제목 · 관리)은 불러오는 동안에도 그리고 태그 줄 자리만 Skeleton — 메모 0건이어도 관리는 닿는다 */}
+                <ListHeader as="div">
+                  <h2 className="m-0 font-[inherit] text-[length:inherit]">
+                    {t("tagsHeading")}
+                  </h2>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    ghostColor="neutralMuted"
+                    size="small"
+                  >
+                    <Link to={MEMO_TAGS_PATH}>{t("tagsManage")}</Link>
+                  </Button>
+                </ListHeader>
+                {screen.loading ? (
+                  <div aria-busy="true">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between px-global-gutter py-x3"
                       >
-                        {t("tagsManage")}
-                      </Button>
-                    </ListHeader>
-                    <TagRail screen={screen} />
-                  </>
+                        <Skeleton text="t5" className="w-24" />
+                        <Skeleton text="t4" className="w-x4" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  showFilters && <TagRail screen={screen} />
                 )}
               </Card>
             </div>
@@ -243,7 +279,7 @@ export function MemoDesktop({ screen }: { screen: MemoScreen }) {
           </div>
         ) : (
           <Card body="list">
-            <div className="px-global-gutter pb-x1 pt-x3">
+            <div className="px-global-gutter pb-x1">
               <SearchField screen={screen} />
             </div>
             {showFilters && (

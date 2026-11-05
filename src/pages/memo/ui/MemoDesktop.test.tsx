@@ -226,4 +226,81 @@ describe("MemoDesktop (I-15 15 ~ 19)", () => {
         .openEditor,
     ).toHaveBeenCalledWith({ _new: true });
   });
+
+  it("태그 줄은 로빙 — 고른 줄만 Tab 멈춤이고 ↓ 로 옮기며 고른다", () => {
+    setWide(true);
+    const screen = fakeScreen();
+    render(screen);
+    const radios = Array.from(
+      container.querySelectorAll<HTMLElement>("[role=radio]"),
+    );
+    expect(radios.map((r) => r.tabIndex)).toEqual([0, -1, -1]);
+    radios[0]!.focus();
+    act(() => {
+      radios[0]!.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }),
+      );
+    });
+    expect(
+      (screen as unknown as { setTagFilter: ReturnType<typeof vi.fn> })
+        .setTagFilter,
+    ).toHaveBeenCalledWith("독서");
+    expect(container.querySelector("[data-slot=list]")?.tagName).not.toBe("UL");
+  });
+
+  it("불러오는 동안에도 틀(검색칸 · 태그 제목 · 관리 링크)은 그리고 태그 줄 자리만 Skeleton", () => {
+    setWide(true);
+    render(
+      fakeScreen({
+        loading: true,
+        memos: [],
+        filtered: [],
+        pinned: [],
+        others: [],
+      }),
+    );
+    expect(container.querySelector("input")).toBeTruthy();
+    expect(
+      Array.from(container.querySelectorAll("h2")).map((h) => h.textContent),
+    ).toContain("태그");
+    expect(container.querySelector("[aria-busy=true]")).toBeTruthy();
+    expect(container.querySelector("[role=radio]")).toBeNull();
+  });
+
+  it("메모가 0건이어도 '관리' 는 링크로 보인다(태그 관리는 메모가 없어도 한다)", () => {
+    setWide(true);
+    render(fakeScreen({ memos: [], filtered: [], pinned: [], others: [] }));
+    const link = container.querySelector<HTMLAnchorElement>(
+      "a[href='/desk/settings?section=memo-tags']",
+    );
+    expect(link?.textContent).toBe("관리");
+    expect(container.textContent).toContain("메모가 없어요");
+  });
+
+  it("검색 0건은 '결과가 없어요' 안내", () => {
+    setWide(true);
+    render(
+      fakeScreen({ query: "없는글", filtered: [], pinned: [], others: [] }),
+    );
+    expect(container.textContent).toContain("결과가 없어요");
+  });
+
+  it("[메모 추가] 는 small 36 이고 파랑 채움이 아니다(neutralOutline)", () => {
+    setWide(true);
+    render(fakeScreen());
+    const add = Array.from(container.querySelectorAll("button")).find(
+      (b) => b.textContent === "메모 추가",
+    )!;
+    expect(add.className).toContain("min-h-[36px]");
+    expect(add.className).not.toContain("bg-bg-brand-solid");
+  });
+
+  it("768 ~ 1279 카드 위 검색칸은 따로 위 여백이 없다 — Card 본문 위 12 만(14 → 12)", () => {
+    setWide(false);
+    render(fakeScreen());
+    expect(
+      container.querySelector("input")?.closest("div.px-global-gutter")
+        ?.className,
+    ).not.toContain("pt-");
+  });
 });
