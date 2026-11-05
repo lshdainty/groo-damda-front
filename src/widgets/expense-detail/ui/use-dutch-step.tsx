@@ -1,3 +1,4 @@
+import { refetchMissingRefs } from "@/shared/api";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronRight, StickyNote } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -121,6 +122,8 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
   const [nameError, setNameError] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  // 카테고리 목록을 저장 때 다시 받다 또 실패했다 — 요청은 보내지 않고 폼 Callout 으로 알린다
+  const [refFailed, setRefFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [memoStep, setMemoStep] = useState(false);
   const [memoDraft, setMemoDraft] = useState("");
@@ -210,6 +213,12 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
     try {
       setShowErrors(true);
       if (noPeople || gapText || ratioBad || customBad) return;
+      setRefFailed(false);
+      if (!(await refetchMissingRefs([categoriesQ]))) {
+        setRefFailed(true);
+        bodyRef.current?.scrollTo({ top: 0 });
+        return;
+      }
       const participants: ParticipantFormValues[] = people.map((p, i) => ({
         userRowId: p.uid === "me" ? meRowId : null,
         participantName: p.name.trim(),
@@ -291,10 +300,12 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
   } else {
     body = (
       <>
-        {saveFailed && (
+        {(saveFailed || refFailed) && (
           <div className="px-global-gutter pb-x3 pt-x1">
             <Callout tone="critical" role="alert">
-              {t("fromTx.saveFailed")}
+              {saveFailed
+                ? t("fromTx.saveFailed")
+                : tc("query.referenceSaveFailed")}
             </Callout>
           </div>
         )}

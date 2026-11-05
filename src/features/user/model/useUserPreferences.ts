@@ -38,7 +38,7 @@ export const useUpdateUserPreferences = () => {
  * 매 렌더 읽는 쪽(`pick ?? item ?? 기본값`)으로 짜야 늦게 온 값이 반영된다.
  */
 export const useDefaultCurrency = (): string => {
-  const { data } = useUserPreferences();
+  const { data } = useUserPreferences({ reference: true });
   return data?.defaultCurrency ?? DEFAULT_CURRENCY;
 };
 

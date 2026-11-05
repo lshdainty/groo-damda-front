@@ -1,3 +1,4 @@
+import { refetchMissingRefs } from "@/shared/api";
 import { useRef, useState, type ReactNode } from "react";
 import {
   ChevronRight,
@@ -198,14 +199,16 @@ export function PresetEditDialog({
 
   const [attempted, setAttempted] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  // 계좌 · 프리셋 목록(이름 중복 검사)을 저장 때 다시 받다 또 실패했다 — 요청은 보내지 않고 폼 Callout 으로 알린다
+  const [refFailed, setRefFailed] = useState(false);
   const [step, setStep] = useState<Step | null>(null);
   const [draft, setDraft] = useState("");
   const [stepOrigin, setStepOrigin] = useState("");
   const nameRef = useRef<HTMLInputElement>(null);
   // 저장 실패 Callout 은 맨 위라 아래까지 내린 채 저장하면 화면 밖이다 — 실패하면 올려 보인다
   const errorRef = useScrollToError<HTMLDivElement>(
-    saveError,
-    createMut.error ?? updateMut.error,
+    saveError || refFailed,
+    createMut.error ?? updateMut.error ?? refFailed,
   );
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -333,6 +336,7 @@ export function PresetEditDialog({
     if (submitting) return;
     setAttempted(true);
     setSaveError(false);
+    setRefFailed(false);
     const bad =
       issue != null ||
       (isTransfer
@@ -375,8 +379,15 @@ export function PresetEditDialog({
       isFixed: isTransfer ? undefined : isFixed,
     };
     const opts = { onSuccess: onClose, onError: () => setSaveError(true) };
-    if (preset) updateMut.mutate({ id: preset.rowId, data: payload }, opts);
-    else createMut.mutate(payload, opts);
+    const send = () => {
+      if (preset) updateMut.mutate({ id: preset.rowId, data: payload }, opts);
+      else createMut.mutate(payload, opts);
+    };
+    // 폼 안 참조 목록은 불러 둔 값을 유지하고, 저장할 때 못 받은 것만 다시 받는다 — 또 실패하면 요청 없이 알린다
+    void refetchMissingRefs([assetsQ, templatesQ]).then((ok) => {
+      if (ok) send();
+      else setRefFailed(true);
+    });
   };
 
   // ── 한 단계 들어가기 ─────────────────────────────────────────
@@ -587,10 +598,12 @@ export function PresetEditDialog({
               stepBody
             ) : (
               <>
-                {saveError && (
+                {(saveError || refFailed) && (
                   <div ref={errorRef}>
                     <Callout tone="critical" role="alert" className="mb-x4">
-                      {t("preset.saveFailed")}
+                      {saveError
+                        ? t("preset.saveFailed")
+                        : tc("query.referenceSaveFailed")}
                     </Callout>
                   </div>
                 )}

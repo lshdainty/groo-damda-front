@@ -18,6 +18,8 @@ export {
   isReferenceNoticeHeld,
   onReferenceNoticeRelease,
   isReferenceQuery,
+  refetchMissingRefs,
+  type RefQueryLike,
   useHoldReferenceNotice,
   referenceMeta,
   referenceSilent,

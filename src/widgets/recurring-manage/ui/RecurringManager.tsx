@@ -76,7 +76,7 @@ export function RecurringManager({
   const { t: tc } = useTranslation("common");
   const { t: ts } = useTranslation("settings");
   const recurringsQ = useRecurringTransactions(undefined, { silent: true });
-  const categoriesQ = useExpenseCategories({ silent: true });
+  const categoriesQ = useExpenseCategories({ reference: true });
   // 일시정지 · 삭제의 실패는 아래 스낵바가 고정 글로 알린다(서버 원문 전역 토스트는 끈다)
   const toggleMut = useToggleRecurringTransaction({ silent: true });
   const deleteMut = useDeleteRecurringTransaction({ silent: true });

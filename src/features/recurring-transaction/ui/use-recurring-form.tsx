@@ -651,7 +651,7 @@ export function useRecurringForm({
     <>
       {step === "list" && assetsFailed && (
         <Callout tone="critical" role="alert" className="mb-x4">
-          {t("assetsLoadFailed")}
+          {tc("query.referenceSaveFailed")}
         </Callout>
       )}
       {step === "list" && saveError && (

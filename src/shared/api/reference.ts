@@ -57,3 +57,23 @@ export function useHoldReferenceNotice(active: boolean): void {
     };
   }, [active]);
 }
+
+/** 폼 안 참조 목록 하나 — useQuery 결과에서 이 셋만 본다 */
+export interface RefQueryLike {
+  isError: boolean;
+  data: unknown;
+  refetch: () => Promise<{ isError: boolean }>;
+}
+
+/**
+ * 저장할 때 호출한다 — 값 없이 실패해 있는 참조 목록만 한 번 다시 받는다.
+ * 모두 받았거나 처음부터 문제없으면 true, 하나라도 또 실패하면 false(호출한 폼이 요청을 보내지 않고 Callout 으로 알린다).
+ */
+export async function refetchMissingRefs(
+  queries: RefQueryLike[],
+): Promise<boolean> {
+  const missing = queries.filter((q) => q.isError && q.data === undefined);
+  if (missing.length === 0) return true;
+  const results = await Promise.all(missing.map((q) => q.refetch()));
+  return results.every((r) => !r.isError);
+}
