@@ -522,6 +522,7 @@ asset,editDialog.firstTitle,무엇을 추가할까요?,What would you like to ad
 asset,editDialog.pickKindError,추가할 종류를 골라주세요.,Choose what to add.
 asset,editDialog.titleAddKind,{{kind}} 추가,Add {{kind}}
 asset,editDialog.titleEditKind,{{kind}} 수정,Edit {{kind}}
+asset,editDialog.saveFailed,자산을 저장하지 못했어요.,Couldn't save the asset.
 asset,editDialog.kindLabel,종류,Type
 asset,editDialog.optional,선택,Optional
 asset,editDialog.rulesGroup,표시 설정,Display settings
@@ -773,6 +774,7 @@ asset,assetDetail.valueCard,이번 달 결제 예정,Due this month
 asset,assetDetail.valueCheckCard,이번 달 사용액,Spent this month
 asset,assetDetail.monthTx,이번 달 내역,This month
 asset,assetDetail.hideAmounts,금액 가리기,Hide amounts
+asset,assetDetail.hideFailed,금액 가리기를 바꾸지 못했어요.,Couldn't change the amount hiding.
 asset,assetDetail.trendUsage,사용 추이,Usage trend
 asset,assetDetail.trendValuation,평가액 추이,Valuation trend
 asset,assetDetail.trendBalance,잔액 추이,Balance trend

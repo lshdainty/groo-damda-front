@@ -25,6 +25,7 @@ import {
 } from "@/shared/ds/menu";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
+import { useSnackbar } from "@/shared/ds/snackbar";
 import { Toggle } from "@/shared/ds/toggle";
 import {
   TopNavigation,
@@ -45,7 +46,7 @@ import {
 } from "@/widgets/asset-full";
 import { AssetEditDialog } from "@/widgets/asset-full/ui/AssetEditDialog";
 import { HideAmountsUnlockSurface } from "@/widgets/account-settings/ui/HideAmountsUnlockSurface";
-import type { Asset } from "@/entities/asset";
+import type { Asset, AssetUpdateFormValues } from "@/entities/asset";
 
 const ASSET_LIST = "/desk/asset";
 const MANAGER = "/desk/settings?section=accounts";
@@ -163,7 +164,13 @@ function Loaded({
 }) {
   const { t } = useTranslation("asset");
   const { t: tc } = useTranslation("common");
-  const updateAsset = useUpdateAsset();
+  // 수정 폼 저장 실패는 폼 맨 위 Callout(고정 글)이, 숨김 토글 실패는 critical 스낵바가 알린다 — 둘 다 silent(서버 원문 토스트 없음).
+  // 요청 상태가 섞이지 않게 훅 인스턴스를 나눈다(토글 실패가 폼 Callout 으로 새지 않게)
+  const updateAsset = useUpdateAsset({ silent: true });
+  const hideAsset = useUpdateAsset({ silent: true });
+  const snackbar = useSnackbar();
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면(성공 · 실패) 끈다
+  const savingRef = useRef(false);
   const deleteAsset = useDeleteAsset();
   const confirmFail = useConfirmFail();
   const mounted = useRef(true);
@@ -193,16 +200,39 @@ function Loaded({
       : t("assetDetail.titleAccount");
 
   // 이 자산만 가렸는지를 켜고 끈다 — 켜는 건 바로, 푸는 건 본인 확인을 거친다(카드 가리기와 같은 규칙)
+  // 실패하면 값은 서버 것 그대로(Toggle 은 asset 에서 읽는다 = 되돌림) + critical 스낵바 한 문장, [다시 시도] 없음
   const applyHidden = (next: "Y" | "N") =>
-    updateAsset.mutate({
-      id: asset.rowId,
-      // 이름 · 종류를 함께 싣는 건 폼 타입이 필수로 요구해서다. 서버 PUT 은 "키가 없으면 유지" 라 지금 값 그대로다
-      data: {
-        assetName: asset.assetName,
-        assetType: asset.assetType,
-        isAmountHidden: next,
+    hideAsset.mutate(
+      {
+        id: asset.rowId,
+        // 이름 · 종류를 함께 싣는 건 폼 타입이 필수로 요구해서다. 서버 PUT 은 "키가 없으면 유지" 라 지금 값 그대로다
+        data: {
+          assetName: asset.assetName,
+          assetType: asset.assetType,
+          isAmountHidden: next,
+        },
       },
-    });
+      {
+        onError: () =>
+          snackbar.show({
+            message: t("assetDetail.hideFailed"),
+            tone: "critical",
+          }),
+      },
+    );
+
+  const saveEdit = (values: AssetUpdateFormValues) => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    updateAsset.reset();
+    updateAsset.mutate(
+      { id: asset.rowId, data: values },
+      {
+        onSettled: () => (savingRef.current = false),
+        onSuccess: () => setEditing(false),
+      },
+    );
+  };
 
   const moreName = t("assetDetail.moreOf", { name: asset.assetName });
   const menu = (trigger: ReactNode) => (
@@ -306,15 +336,15 @@ function Loaded({
       {editing && (
         <AssetEditDialog
           item={asset}
-          onClose={() => setEditing(false)}
+          onClose={() => {
+            updateAsset.reset();
+            setEditing(false);
+          }}
           onCreate={() => undefined}
-          onUpdate={(values) =>
-            updateAsset.mutate(
-              { id: asset.rowId, data: values },
-              { onSuccess: () => setEditing(false) },
-            )
-          }
+          onUpdate={saveEdit}
           isSubmitting={updateAsset.isPending}
+          saveFailed={updateAsset.isError}
+          saveError={updateAsset.error}
         />
       )}
       {confirmDelete && (

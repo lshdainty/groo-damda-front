@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -65,8 +65,9 @@ export function AccountManager({
   const assetsQ = useAssets({ silent: true });
   const { data: assetsData, isLoading } = assetsQ;
   const failed = assetsQ.isError && !assetsData;
-  const createAsset = useCreateAsset();
-  const updateAsset = useUpdateAsset();
+  // 폼 저장 실패는 전역 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글)이 알린다 — 요청은 silent, 폼은 열린 채 · 쓴 값 그대로
+  const createAsset = useCreateAsset({ silent: true });
+  const updateAsset = useUpdateAsset({ silent: true });
   const deleteAsset = useDeleteAsset();
   const confirmFail = useConfirmFail();
 
@@ -127,17 +128,35 @@ export function AccountManager({
   const { list: liveAssets } = useLiveAssets(assets);
   const groups = useMemo(() => groupAssets(liveAssets), [liveAssets]);
 
+  const saveFailed = createAsset.isError || updateAsset.isError;
+  const saveError = createAsset.error ?? updateAsset.error;
+  const clearSaveError = () => {
+    createAsset.reset();
+    updateAsset.reset();
+  };
+
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면(성공 · 실패) 끈다
+  const savingRef = useRef(false);
+  const settle = { onSettled: () => (savingRef.current = false) };
+
   const handleCreate = (values: AssetFormValues) => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    clearSaveError();
     createAsset.mutate(values, {
+      ...settle,
       onSuccess: () => setEditing(null),
     });
   };
 
   const handleUpdate = (values: AssetUpdateFormValues) => {
     if (!editing || editing.mode !== "edit") return;
+    if (savingRef.current) return;
+    savingRef.current = true;
+    clearSaveError();
     updateAsset.mutate(
       { id: editing.asset.rowId, data: values },
-      { onSuccess: () => setEditing(null) },
+      { ...settle, onSuccess: () => setEditing(null) },
     );
   };
 
@@ -341,10 +360,15 @@ export function AccountManager({
       {editing && (
         <AssetEditDialog
           item={editing.mode === "edit" ? editing.asset : null}
-          onClose={() => setEditing(null)}
+          onClose={() => {
+            clearSaveError();
+            setEditing(null);
+          }}
           onCreate={handleCreate}
           onUpdate={handleUpdate}
           isSubmitting={isSubmitting}
+          saveFailed={saveFailed}
+          saveError={saveError}
         />
       )}
 
