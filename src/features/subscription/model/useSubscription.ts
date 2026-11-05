@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { referenceMeta } from "@/shared/api";
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { invalidateFor, subscriptionKeys } from "@/shared/config";
 import { subscriptionApi } from "../api/subscriptionApi";
 
@@ -20,18 +24,20 @@ export const useHasSecurities = (): boolean => {
   return data?.features?.includes(SECURITIES) ?? false;
 };
 
-export const useSubscriptionPlans = () =>
+export const useSubscriptionPlans = (opts?: { reference?: boolean }) =>
   useQuery({
     queryKey: [...subscriptionKeys.all, "plans"],
     queryFn: () => subscriptionApi.getPlans(),
     staleTime: 5 * 60_000,
+    ...referenceMeta(opts),
   });
 
-export const useMySubscription = () =>
+export const useMySubscription = (opts?: { reference?: boolean }) =>
   useQuery({
     queryKey: subscriptionKeys.mySubscription(),
     queryFn: () => subscriptionApi.getMySubscription(),
     staleTime: 60_000,
+    ...referenceMeta(opts),
   });
 
 export const useSubscribe = () => {
@@ -63,10 +69,11 @@ export const useHasBrokerConnection = (): boolean => {
  * `enabled` 는 사이드바 때문에 있다 — 사이드바는 모든 페이지에 떠 있으므로 증권 구독이
  * 없는 사용자에게까지 이 조회를 걸면 아무도 안 보는 요청이 매 세션 나간다.
  */
-export const useBrokerConnections = (enabled = true) =>
+export const useBrokerConnections = (enabled = true, opts?: ReferenceOpts) =>
   useQuery({
     queryKey: subscriptionKeys.brokerConnections(),
-    queryFn: () => subscriptionApi.getBrokerConnections(),
+    queryFn: () => subscriptionApi.getBrokerConnections(referenceSilent(opts)),
+    ...referenceMeta(opts),
     staleTime: 60_000,
     enabled,
   });

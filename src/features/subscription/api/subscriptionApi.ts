@@ -128,9 +128,12 @@ export const subscriptionApi = {
   },
 
   /** 전 증권사 연결 상태 — 미연결 증권사도 포함해 화면이 목록을 그린다. */
-  getBrokerConnections: async (): Promise<BrokerConnection[]> => {
+  getBrokerConnections: async (opts?: {
+    silent?: boolean;
+  }): Promise<BrokerConnection[]> => {
     const resp: ApiResponse<BrokerConnection[]> = await apiClient.get(
       "/v1/users/me/securities-credentials",
+      opts?.silent ? QUIET : undefined,
     );
     return resp.data ?? [];
   },

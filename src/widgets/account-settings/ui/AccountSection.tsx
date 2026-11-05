@@ -86,9 +86,9 @@ export function AccountSection({
 
   const hiddenCount = useHiddenCards().size;
 
-  const featuresQ = useMyFeatures();
-  const subQ = useMySubscription();
-  const plansQ = useSubscriptionPlans();
+  const featuresQ = useMyFeatures({ reference: true });
+  const subQ = useMySubscription({ reference: true });
+  const plansQ = useSubscriptionPlans({ reference: true });
   const isPro = featuresQ.data?.features?.includes("SECURITIES") ?? false;
   // 기능 조회가 대기 · 실패면 Free 인지 Pro 인지 모른다 — Free 배지 · 권유 글을 그리지 않는다(대기는 Skeleton, 실패는 값 없이)
   const planKnown: "loading" | "error" | "ready" =

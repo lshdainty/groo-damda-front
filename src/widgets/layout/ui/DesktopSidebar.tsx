@@ -30,7 +30,7 @@ export function DesktopSidebar() {
   const { pathname } = useLocation();
   const link = useLinkClick();
   const hasSecurities = useHasSecurities();
-  const { data: features } = useMyFeatures();
+  const { data: features } = useMyFeatures({ reference: true });
   const brokerLabelOf = useBrokerLabel(hasSecurities);
 
   // **연결한 증권사만 하위에 둔다.** 미연결 증권사를 넣으면 누를 때마다 "연결해 주세요" 로 되돌아오는 막다른 길이 된다.

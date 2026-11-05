@@ -334,11 +334,13 @@ export const stockApi = {
       page?: number;
       size?: number;
     },
+    req?: { silent?: boolean },
   ): Promise<StockSearchPage> => {
     const resp: ApiResponse<StockSearchPage> = await apiClient.get(
       "/v1/stocks",
       {
         params: { keyword: keyword || undefined, ...opts },
+        ...(req?.silent ? { silent: true } : {}),
       },
     );
     return resp.data;

@@ -56,7 +56,7 @@ export function NotificationsMenu({
   const { data, isLoading, isError, refetch, isRefetching } =
     useNotifications();
   // 서버 수 — 오기 전에는 설명 줄을 비우고 받아 온 줄로 세지 않는다
-  const { data: serverUnread } = useUnreadCount();
+  const { data: serverUnread } = useUnreadCount({ reference: true });
   const unreadCount = serverUnread ?? 0;
   const markRead = useMarkRead();
   const markAllRead = useMarkAllRead();

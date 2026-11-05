@@ -1,3 +1,8 @@
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
@@ -12,10 +17,11 @@ export const useNotifications = () => {
   });
 };
 
-export const useUnreadCount = () => {
+export const useUnreadCount = (opts?: ReferenceOpts) => {
   return useQuery({
     queryKey: notificationKeys.unreadCount(),
-    queryFn: () => notificationApi.getUnreadCount(),
+    queryFn: () => notificationApi.getUnreadCount(referenceSilent(opts)),
+    ...referenceMeta(opts),
   });
 };
 

@@ -80,7 +80,7 @@ export function NotificationsPage() {
   const { data, isLoading, isError, refetch, isRefetching } =
     useNotifications();
   // 수가 오기 전에는 머리 줄을 숨긴다(받아 온 줄로 세지 않는다)
-  const { data: unreadCount = 0 } = useUnreadCount();
+  const { data: unreadCount = 0 } = useUnreadCount({ reference: true });
   const notifications = data ?? [];
   const listRef = useRef<HTMLDivElement>(null);
   const markRead = useMarkRead();

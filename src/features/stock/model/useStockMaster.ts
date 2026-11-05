@@ -5,6 +5,11 @@
  * 미국·중국·일본·홍콩·베트남 종목까지 한글명·영문명·심볼로 검색된다.
  * 검색은 구독 게이트 없음(로그인만) — 시세·연결은 기존 토스 게이트가 지킨다.
  */
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { useQuery } from "@tanstack/react-query";
 import { stockKeys } from "@/shared/config";
 import { stockApi, type StockMasterItem } from "../api/stockApi";
@@ -27,12 +32,19 @@ export function useStockSearch(keyword: string, limit = 8) {
  * 심볼 → 종목 마스터 1건 (상세 헤더·관심 추가용). 심볼 정확 일치만 취하고 없으면 null.
  * 국내 005930 과 상해 600519 처럼 시장 간 심볼이 겹칠 수 있어 토스 시세 대상(KR/US) 시장을 우선한다.
  */
-export function useStockBySymbol(symbol: string | null | undefined) {
+export function useStockBySymbol(
+  symbol: string | null | undefined,
+  opts?: ReferenceOpts,
+) {
   const sym = (symbol ?? "").trim();
   return useQuery({
     queryKey: stockKeys.symbolName(sym),
     queryFn: async (): Promise<StockMasterItem | null> => {
-      const page = await stockApi.searchStocks(sym, { size: 20 });
+      const page = await stockApi.searchStocks(
+        sym,
+        { size: 20 },
+        referenceSilent(opts),
+      );
       const exact = page.content.filter(
         (s) => s.symbol.toUpperCase() === sym.toUpperCase(),
       );
@@ -43,6 +55,7 @@ export function useStockBySymbol(symbol: string | null | undefined) {
       return tossPriority ?? exact[0]!;
     },
     enabled: sym.length > 0,
+    ...referenceMeta(opts),
     retry: false,
     staleTime: 60 * 60_000,
   });
@@ -50,7 +63,7 @@ export function useStockBySymbol(symbol: string | null | undefined) {
 
 /** 심볼 → 한글 종목명 (연결된 종목 표시용). */
 export function useStockSymbolName(symbol: string | null | undefined) {
-  const query = useStockBySymbol(symbol);
+  const query = useStockBySymbol(symbol, { reference: true });
   return {
     ...query,
     data: query.data?.nameKr ?? (query.data === null ? null : undefined),
