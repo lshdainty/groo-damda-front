@@ -131,8 +131,8 @@ export function ExpenseDesktop() {
   const focusTxId = Number(searchParams.get("txId")) || null;
   const [filterValue, setFilterValue] = useState<FilterValue | null>(null);
   const { assetId, asset, clear: clearAsset } = useAssetFilter();
-  const categoriesQ = useExpenseCategories();
-  const assetsQ = useAssets();
+  const categoriesQ = useExpenseCategories({ reference: true });
+  const assetsQ = useAssets({ reference: true });
 
   // 기간이 걸렸으면 달력은 그 기간 안의 달만 본다
   const bounds = periodMonthBounds(filterValue);
@@ -355,6 +355,8 @@ export function ExpenseDesktop() {
     monthOut: data.monthTotalOut,
     summaryLoading: data.isLoadingSummary,
     onPickDay: scrollToDay,
+    failed: data.monthExpensesFailed && !data.isError,
+    onRetry: data.retryMonthExpenses,
   };
   const filterBar = (
     <FilterBar

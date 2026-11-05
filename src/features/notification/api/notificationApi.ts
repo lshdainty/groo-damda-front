@@ -13,9 +13,10 @@ export const notificationApi = {
     return resp.data.notifications;
   },
 
-  getUnreadCount: async (): Promise<number> => {
+  getUnreadCount: async (opts?: { silent?: boolean }): Promise<number> => {
     const resp: ApiResponse<{ count: number }> = await apiClient.get(
       "/v1/notifications/unread-count",
+      opts?.silent ? SILENT : undefined,
     );
     return resp.data.count;
   },

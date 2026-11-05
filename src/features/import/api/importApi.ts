@@ -82,9 +82,13 @@ export async function analyzeImport(
   const fd = new FormData();
   fd.append("file", file);
   fd.append("source", source);
+  // 실패는 화면이 고정 글로 말한다 — 전역 서버 원문 토스트는 끈다
   const resp: ApiResponse<ImportAnalyzeResult> = await apiClient.post(
     "/v1/import/analyze",
     fd,
+    { silent: true } as import("axios").AxiosRequestConfig & {
+      silent?: boolean;
+    },
   );
   return resp.data;
 }
@@ -108,6 +112,9 @@ export async function executeImport(
   const resp: ApiResponse<ImportExecuteResult> = await apiClient.post(
     "/v1/import/execute",
     fd,
+    { silent: true } as import("axios").AxiosRequestConfig & {
+      silent?: boolean;
+    },
   );
   return resp.data;
 }

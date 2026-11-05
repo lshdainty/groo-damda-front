@@ -14,8 +14,12 @@ const h = vi.hoisted(() => ({
   toasts: [] as string[],
   config: undefined as unknown,
 }));
-vi.mock("sonner", () => ({
-  toast: { error: (m: string) => h.toasts.push(m) },
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: { message: string; tone?: string; action?: unknown }) =>
+      h.toasts.push(`${o.tone}:${o.message}${o.action ? " +다시 시도" : ""}`),
+    dismiss: () => {},
+  }),
 }));
 vi.mock("../api/todoApi", () => ({
   todoApi: {
@@ -75,9 +79,7 @@ describe("useToggleTodoStatus", () => {
     });
     const list = qc.getQueryData<Todo[]>(todoKeys.list(undefined))!;
     expect(list[0]!.status).toBe("PENDING");
-    expect(h.toasts).toEqual([
-      "완료로 바꾸지 못했어요. 잠시 후 다시 시도해주세요.",
-    ]);
+    expect(h.toasts).toEqual(["critical:할 일 상태를 바꾸지 못했어요."]);
   });
 
   it("성공하면 알리지 않는다", async () => {

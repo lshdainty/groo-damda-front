@@ -189,6 +189,11 @@ export interface SwipeConfirm {
    * 두 거동이 되고 연타 시 DELETE 가 중복 발사된다.
    */
   loading?: boolean;
+  /**
+   * 확인한 일(`onSelect`)이 실패했을 때 — **필수**. 확인창을 닫은 뒤 부른다(호출부가 critical 스낵바 + [다시 시도]).
+   * 전역 서버 원문 알림은 없으므로 이걸 빠뜨린 새 호출처는 실패가 아무 말 없이 지나간다.
+   */
+  onError: () => void;
 }
 
 interface SwipeActionBase extends VariantProps<typeof swipeActionVariants> {
@@ -376,6 +381,10 @@ export const SwipeActions = React.forwardRef<HTMLDivElement, SwipeActionsProps>(
       try {
         await action.onSelect();
         setPending(null);
+      } catch {
+        // 확인창을 닫고 호출부가 알리게 한다(onError 는 confirm 이 있는 액션에서 필수다)
+        setPending(null);
+        if (action.confirm) action.confirm.onError();
       } finally {
         setRunning(false);
       }

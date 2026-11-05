@@ -55,6 +55,8 @@ export const useBrokerLabel = (
   enabled = true,
 ): ((broker: string) => string) => {
   const { t } = useTranslation("stocks");
-  const { data: connections } = useBrokerConnections(enabled);
+  const { data: connections } = useBrokerConnections(enabled, {
+    reference: true,
+  });
   return (broker: string) => brokerLabel(t, broker, connections);
 };

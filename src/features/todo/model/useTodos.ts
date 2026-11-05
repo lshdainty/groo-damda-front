@@ -1,5 +1,11 @@
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import type { SilentOpts } from "@/shared/api";
+import { useSnackbar } from "@/shared/ds/snackbar";
 import { i18n } from "@/shared/i18n/config";
 import { usePendingIds } from "@/shared/lib/groo/use-pending-ids";
 import { useHoldIds } from "@/shared/lib/groo/use-hold-ids";
@@ -8,10 +14,11 @@ import { todoApi } from "../api/todoApi";
 import type { TodoListParams } from "../api/todoApi";
 import type { Todo, TodoFormValues } from "@/entities/todo";
 
-export const useTodos = (filters?: TodoListParams) => {
+export const useTodos = (filters?: TodoListParams, opts?: ReferenceOpts) => {
   return useQuery({
     queryKey: todoKeys.list(filters),
-    queryFn: () => todoApi.getTodos(filters),
+    queryFn: () => todoApi.getTodos(filters, referenceSilent(opts)),
+    ...referenceMeta(opts),
   });
 };
 
@@ -23,27 +30,28 @@ export const useTodo = (id: number) => {
   });
 };
 
-export const useCreateTodo = () => {
+export const useCreateTodo = (opts?: SilentOpts) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: TodoFormValues) => todoApi.createTodo(data),
+    mutationFn: (data: TodoFormValues) => todoApi.createTodo(data, opts),
     onSuccess: () => invalidateFor(queryClient, "todo"),
   });
 };
 
-export const useUpdateTodo = () => {
+export const useUpdateTodo = (opts?: SilentOpts) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: TodoFormValues }) =>
-      todoApi.updateTodo(id, data),
+      todoApi.updateTodo(id, data, opts),
     onSuccess: () => invalidateFor(queryClient, "todo"),
   });
 };
 
 export const useToggleTodoStatus = () => {
   const queryClient = useQueryClient();
+  const snackbar = useSnackbar();
   const { pendingIds, begin, end } = usePendingIds();
   // 낙관 갱신이 행을 목록에서 빼도 잠깐은 자리를 지킨다 — 자리 유지를 시작하는 자리는
   // 낙관 갱신을 하는 여기여야 화면마다 배선이 복제되지 않는다(QA #29).
@@ -83,8 +91,8 @@ export const useToggleTodoStatus = () => {
       return { previousQueries };
     },
     onError: (_err, _id, context) => {
-      // 요청이 silent 라 서버 원문 토스트가 없다 — 되돌린 자리에서 우리 글로 알린다
-      toast.error(i18n.t("todo:toggleFailed"), { id: "todo-toggle-failed" });
+      // 요청이 silent 라 서버 원문 토스트가 없다 — 되돌린 자리에서 우리 글로 알린다(바로 바뀌는 값이라 다시 시도 없음)
+      snackbar.show({ message: i18n.t("todo:toggleFailed"), tone: "critical" });
       // 에러 시 이전 상태로 롤백
       if (context?.previousQueries) {
         for (const [queryKey, data] of context.previousQueries) {
@@ -113,11 +121,11 @@ export const useReorderTodos = () => {
   });
 };
 
-export const useDeleteTodo = () => {
+export const useDeleteTodo = (opts?: SilentOpts) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => todoApi.deleteTodo(id),
+    mutationFn: (id: number) => todoApi.deleteTodo(id, opts),
     onSuccess: () => invalidateFor(queryClient, "todo"),
   });
 };

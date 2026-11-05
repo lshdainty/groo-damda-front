@@ -17,7 +17,8 @@ vi.mock("react-i18next", () => ({
 }));
 
 const { ExpenseRow } = await import("./expense-row");
-const { setHiddenCards } = await import("@/shared/lib/groo/hide-amounts-core");
+const { setHiddenCardsLocal } =
+  await import("@/shared/lib/groo/hide-amounts-core");
 
 const base: Expense = {
   rowId: 1,
@@ -55,7 +56,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  act(() => setHiddenCards([]));
+  act(() => setHiddenCardsLocal([]));
   act(() => root.unmount());
   container.remove();
 });
@@ -136,7 +137,7 @@ describe("고정 배지 — 번역 키는 expense 네임스페이스에 있다(7
 
 describe("가림 카드(I-06 29)", () => {
   it("home.todaySpend 만 켜면 홈 줄은 가려지고 가계부 줄은 그대로다", () => {
-    act(() => setHiddenCards(["home.todaySpend"]));
+    act(() => setHiddenCardsLocal(["home.todaySpend"]));
     render(base, { maskCard: "home.todaySpend" });
     expect(container.textContent).toContain("••••");
     render(base);
@@ -144,7 +145,7 @@ describe("가림 카드(I-06 29)", () => {
   });
 
   it("ledger.txList 만 켜면 가계부 줄은 가려지고 홈 줄은 보인다", () => {
-    act(() => setHiddenCards(["ledger.txList"]));
+    act(() => setHiddenCardsLocal(["ledger.txList"]));
     render(base);
     expect(container.textContent).toContain("••••");
     render(base, { maskCard: "home.todaySpend" });

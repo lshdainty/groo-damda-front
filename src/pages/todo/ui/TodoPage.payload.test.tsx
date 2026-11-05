@@ -34,13 +34,22 @@ vi.mock("react-router-dom", () => ({
 }));
 vi.mock("@/features/todo", () => ({
   useTodos: () => ({ data: state.todos, isLoading: false }),
-  useCreateTodo: () => ({ mutate: () => {}, isPending: false }),
+  useCreateTodo: () => ({
+    mutate: () => {},
+    isPending: false,
+    reset: () => {},
+    isError: false,
+    error: null,
+  }),
   useUpdateTodo: () => ({
     mutate: ({ id, data }: { id: number; data: Record<string, unknown> }) => {
       sent.id = id;
       sent.values = data;
     },
     isPending: false,
+    reset: () => {},
+    isError: false,
+    error: null,
   }),
   useToggleTodoStatus: () => ({
     mutate: () => {},

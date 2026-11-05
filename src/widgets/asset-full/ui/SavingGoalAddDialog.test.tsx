@@ -21,15 +21,50 @@ const state = {
   create: vi.fn(),
   update: vi.fn(),
   contribute: vi.fn(),
+  opts: [] as unknown[],
+  failed: false,
+  snack: [] as Array<{ message: string; action?: { onClick: () => void } }>,
 };
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: { message: string; action?: { onClick: () => void } }) =>
+      state.snack.push(o),
+    dismiss: () => {},
+  }),
+}));
 vi.mock("@/features/savingGoal", () => ({
   useSavingGoals: () => ({ data: { goals: state.goals } }),
-  useCreateSavingGoal: () => ({ mutate: state.create, isPending: false }),
-  useUpdateSavingGoal: () => ({ mutate: state.update, isPending: false }),
-  useContributeSavingGoal: () => ({
-    mutate: state.contribute,
-    isPending: false,
-  }),
+  useCreateSavingGoal: (o?: unknown) => {
+    state.opts.push(o);
+    return {
+      mutate: state.create,
+      reset: () => {},
+      isPending: false,
+      isError: state.failed,
+      error: state.failed ? new Error("서버 원문 오류") : null,
+    };
+  },
+  useUpdateSavingGoal: (o?: unknown) => {
+    state.opts.push(o);
+    return {
+      mutate: state.update,
+      reset: () => {},
+      isPending: false,
+      isError: false,
+      error: null,
+    };
+  },
+  useContributeSavingGoal: (o?: unknown) => {
+    state.opts.push(o);
+    return {
+      mutate: state.contribute,
+      mutateAsync: state.contribute,
+      reset: () => {},
+      isPending: false,
+      isError: false,
+      error: null,
+    };
+  },
 }));
 
 const { SavingGoalAddDialog } = await import("./SavingGoalAddDialog");
@@ -58,6 +93,9 @@ beforeEach(async () => {
   state.create = vi.fn();
   state.update = vi.fn();
   state.contribute = vi.fn();
+  state.opts = [];
+  state.snack = [];
+  state.failed = false;
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -249,5 +287,70 @@ describe("고르기", () => {
     expect(contents[1]!.className).toContain("+2)]");
     expect(overlays[0]!.className).not.toContain("+1)]");
     expect(contents[1]!.className).toContain("rounded-t-r6");
+  });
+});
+
+describe("저장 실패(I-28-5 3b)", () => {
+  it("요청은 silent — 서버 원문 토스트가 안 뜬다", () => {
+    mount();
+    expect(state.opts.length).toBeGreaterThan(0);
+    for (const o of state.opts) expect(o).toEqual({ silent: true });
+  });
+
+  it("실패하면 폼 맨 위 Callout 고정 글 · 값은 그대로 · 서버 글 없음", () => {
+    state.failed = true;
+    mount();
+    type(inputs()[0]!, "유럽 여행");
+    type(inputs()[1]!, "5000000");
+    const callout = document.querySelector('[role="alert"]');
+    expect(callout?.textContent).toBe("savingGoal.saveFailed");
+    expect(document.body.textContent).not.toContain("서버 원문 오류");
+    expect(inputs()[0]!.value).toBe("유럽 여행");
+    expect(inputs()[1]!.value).toBe("5,000,000");
+  });
+
+  it("실패가 없으면 Callout 도 없다", () => {
+    mount();
+    expect(document.querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it("같은 틱에 두 번 눌러도 요청은 한 번 — onError 로 끝나면 다시 된다", () => {
+    mount();
+    type(inputs()[0]!, "유럽 여행");
+    type(inputs()[1]!, "5000000");
+    act(() => {
+      byText("add").click();
+      byText("add").click();
+    });
+    expect(state.create).toHaveBeenCalledTimes(1);
+    const cbs = state.create.mock.calls[0]![1] as { onError: () => void };
+    act(() => cbs.onError());
+    click(byText("add"));
+    expect(state.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("만들기 성공 · 첫 납입 실패 — 만들기 1회 · 폼 닫힘 · 스낵바, [다시 시도] 는 납입만 1회 더", async () => {
+    state.contribute = vi.fn().mockRejectedValue(new Error("x"));
+    const { onClose } = mount();
+    type(inputs()[0]!, "유럽 여행");
+    type(inputs()[1]!, "5000000");
+    type(inputs()[2]!, "100000");
+    click(byText("add"));
+    const cbs = state.create.mock.calls[0]![1] as {
+      onSuccess: (c: { rowId: number }) => void;
+    };
+    await act(async () => cbs.onSuccess({ rowId: 9 }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(state.create).toHaveBeenCalledTimes(1);
+    expect(state.contribute).toHaveBeenCalledTimes(1);
+    expect(state.snack).toHaveLength(1);
+    expect(state.snack[0]!.message).toBe("savingGoal.firstContributeFailed");
+    await act(async () => state.snack[0]!.action!.onClick());
+    expect(state.contribute).toHaveBeenCalledTimes(2);
+    expect(state.contribute.mock.calls[1]![0]).toEqual({
+      id: 9,
+      data: { amount: 100000 },
+    });
+    expect(state.create).toHaveBeenCalledTimes(1);
   });
 });

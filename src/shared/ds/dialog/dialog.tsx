@@ -3,6 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ArrowLeft, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
+import { useHoldReferenceNotice } from "@/shared/api";
 import { Button, type ButtonProps } from "@/shared/ds/button";
 import { useLeaveConfirm } from "@/shared/ds/alert-dialog";
 import {
@@ -438,6 +439,8 @@ function ResponsiveDialog({
 }: DialogProps) {
   const wide = useWideSurface();
   const [open, setOpen] = useOpenState(openProp, defaultOpen, onOpenChange);
+  // 열려 있는 동안 공용 참조 실패 스낵바는 쉰다 — 안의 폼이 맡는다
+  useHoldReferenceNotice(open);
   return (
     <ResponsiveContext.Provider value={{ wide, form }}>
       {wide ? (

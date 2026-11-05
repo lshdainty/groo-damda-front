@@ -1,4 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+  type SilentOpts,
+} from "@/shared/api";
 import { assetKeys, invalidateFor } from "@/shared/config";
 import { assetApi } from "../api/assetApi";
 import type { TransferListParams } from "../api/assetApi";
@@ -10,18 +16,21 @@ import type {
   ReorderItem,
 } from "@/entities/asset";
 
-export const useAssets = (opts?: { silent?: boolean }) => {
+/** `reference` — 계좌 이름 · 후보를 채우려는 참조 조회: 요청은 silent, 실패는 앱 공용 스낵바 한 자리가 알린다 */
+export const useAssets = (opts?: ReferenceOpts) => {
   return useQuery({
     queryKey: assetKeys.list(),
-    queryFn: () => assetApi.getAssets(opts),
+    queryFn: () => assetApi.getAssets(referenceSilent(opts)),
+    ...referenceMeta(opts),
   });
 };
 
-export const useAsset = (id: number) => {
+export const useAsset = (id: number, opts?: ReferenceOpts) => {
   return useQuery({
     queryKey: assetKeys.detail(id),
-    queryFn: () => assetApi.getAsset(id),
+    queryFn: () => assetApi.getAsset(id, referenceSilent(opts)),
     enabled: id > 0,
+    ...referenceMeta(opts),
   });
 };
 
@@ -191,11 +200,12 @@ export const useUpdateTransfer = (opts?: { silent?: boolean }) => {
  * 매수·매도 등록 — 예수금·보유 수량·원가·실현손익이 함께 움직인다.
  * 실현손익이 거래로 잡히므로 가계부까지 늙는다.
  */
-export const useCreateTrade = () => {
+export const useCreateTrade = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: AssetTradeFormValues) => assetApi.createTrade(data),
+    mutationFn: (data: AssetTradeFormValues) =>
+      assetApi.createTrade(data, opts),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };
@@ -208,10 +218,13 @@ export const useCreateTrade = () => {
  *
  * <p>입력할 때마다 부르지 않도록 호출부에서 값을 늦춰(debounce) 넘긴다.
  */
-export const useTradePreview = (data: AssetTradeFormValues | null) =>
+export const useTradePreview = (
+  data: AssetTradeFormValues | null,
+  opts?: SilentOpts,
+) =>
   useQuery({
     queryKey: [...assetKeys.all, "trade-preview", data],
-    queryFn: () => assetApi.previewTrade(data as AssetTradeFormValues),
+    queryFn: () => assetApi.previewTrade(data as AssetTradeFormValues, opts),
     enabled: data != null,
     // 같은 입력이면 다시 묻지 않는다 — 저장 전이라 서버 상태가 바뀔 일이 없다.
     staleTime: 30_000,
@@ -219,10 +232,10 @@ export const useTradePreview = (data: AssetTradeFormValues | null) =>
     retry: false,
   });
 
-export const useAssetTrades = (assetRowId?: number) =>
+export const useAssetTrades = (assetRowId?: number, opts?: SilentOpts) =>
   useQuery({
     queryKey: [...assetKeys.all, "trades", assetRowId],
-    queryFn: () => assetApi.getTrades(assetRowId as number),
+    queryFn: () => assetApi.getTrades(assetRowId as number, opts),
     enabled: assetRowId != null,
   });
 

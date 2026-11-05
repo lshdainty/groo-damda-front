@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Check, X } from "lucide-react";
-import { toast } from "sonner";
+import { useSnackbar } from "@/shared/ds/snackbar";
 import { useTranslation } from "react-i18next";
 import {
   passwordChangeErrorKey,
@@ -38,6 +38,7 @@ export const PasswordChangeDialog = ({
   const { t } = useTranslation("user");
   const { t: tc } = useTranslation("common");
   const changePasswordMutation = useChangePasswordMutation();
+  const snackbar = useSnackbar();
 
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -71,10 +72,12 @@ export const PasswordChangeDialog = ({
       { currentPassword: current, newPassword: next, confirmPassword: confirm },
       {
         onSuccess: () => {
-          toast.success(t("passwordChangeSuccess"), {
-            id: "password-change-success",
-          });
+          // 대화상자를 닫은 뒤 neutral 스낵바 한 문장
           onOpenChange(false);
+          snackbar.show({
+            message: t("passwordChangeSuccess"),
+            tone: "neutral",
+          });
         },
         // 실패 문구는 여기서 정한다 — 요청이 `silent` 라 전역 토스트를 안 탄다(QA #128). 서버 글은 어디에도 내지 않는다.
         onError: (e) => {

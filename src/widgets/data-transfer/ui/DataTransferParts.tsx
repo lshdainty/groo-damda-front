@@ -1,3 +1,4 @@
+import { SnackbarAvoidOverlap } from "@/shared/ds/snackbar";
 import { useId, type ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ds/card";
 import { ResponsivePair } from "@/shared/ds/button";
@@ -118,13 +119,16 @@ export function ActionBar({
   if (mobile) {
     // 바닥에 붙는 띠(sticky)라 본문 끝에서 자기 높이만큼 자리를 차지한다 — 글자 200% · 버튼이 쌓여 바가 커져도 본문을 가리지 않는다.
     // 스크롤 상자의 좌우 · 아래 여백 24 를 음수로 되돌려 화면 끝까지 흰 면이다.
+    // 스낵바는 이 띠 위 8 에 선다(SnackbarAvoidOverlap — 구독 바닥 띠와 같은 방식)
     return (
-      <div
-        data-slot="data-action-bar"
-        className="sticky bottom-0 z-(--z-sticky) -mx-global-gutter -mb-global-gutter bg-bg-layer-default px-x6 pt-x3 pb-[calc(var(--spacing-x6)+env(safe-area-inset-bottom))]"
-      >
-        <ResponsivePair>{children}</ResponsivePair>
-      </div>
+      <SnackbarAvoidOverlap>
+        <div
+          data-slot="data-action-bar"
+          className="sticky bottom-0 z-(--z-sticky) -mx-global-gutter -mb-global-gutter bg-bg-layer-default px-x6 pt-x3 pb-[calc(var(--spacing-x6)+env(safe-area-inset-bottom))]"
+        >
+          <ResponsivePair>{children}</ResponsivePair>
+        </div>
+      </SnackbarAvoidOverlap>
     );
   }
   return (

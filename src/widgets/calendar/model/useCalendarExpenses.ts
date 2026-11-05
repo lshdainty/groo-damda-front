@@ -1,3 +1,8 @@
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { useQuery } from "@tanstack/react-query";
 import { expenseKeys } from "@/shared/config";
 import { expenseApi } from "@/features/expense";
@@ -10,6 +15,7 @@ import type { ExpenseListParams } from "@/features/expense";
 export const useCalendarExpenses = (
   params: { startDate: string; endDate: string },
   enabled: boolean,
+  opts?: ReferenceOpts,
 ) => {
   const filters: ExpenseListParams = {
     startDate: params.startDate,
@@ -21,7 +27,8 @@ export const useCalendarExpenses = (
       ...expenseKeys.list(filters as unknown as Record<string, unknown>),
       "calendar",
     ],
-    queryFn: () => expenseApi.getExpenses(filters),
+    queryFn: () => expenseApi.getExpenses(filters, referenceSilent(opts)),
     enabled,
+    ...referenceMeta(opts),
   });
 };

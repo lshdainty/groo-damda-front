@@ -39,6 +39,9 @@ function koCopy(): Record<string, string> {
 }
 const COPY = koCopy();
 
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
+}));
 vi.mock(
   "@/shared/ui/groo/month-title",
   async () => import("@/shared/ui/groo/month-title.test-double"),

@@ -1,7 +1,9 @@
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { Button } from "@/shared/ds/button";
+import { Callout } from "@/shared/ds/callout";
+import { useSnackbar } from "@/shared/ds/snackbar";
+import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -53,8 +55,22 @@ export function CategoryMoveTxDialog({
   const [show, setShow] = useState({ name: false, target: false });
   const nameRef = useRef<HTMLInputElement>(null);
   const targetRef = useRef<HTMLButtonElement>(null);
-  const moveMut = useMoveCategoryTransactions();
-  const splitMut = useSplitCategoryIntoChild();
+  // 실패는 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글) — 요청은 silent, 폼은 열린 채 · 고른 값 그대로
+  const moveMut = useMoveCategoryTransactions({ silent: true });
+  const splitMut = useSplitCategoryIntoChild({ silent: true });
+  const snackbar = useSnackbar();
+  const moveFailed = moveMut.isError || splitMut.isError;
+  const errorRef = useScrollToError<HTMLDivElement>(
+    moveFailed,
+    moveMut.error ?? splitMut.error,
+  );
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면 끈다
+  const submittingRef = useRef(false);
+  const settle = {
+    onSettled: () => {
+      submittingRef.current = false;
+    },
+  };
 
   // 하위가 없는 최상위만 "새 하위 만들기" 대상 — 거래가 있어 하위를 못 만드는 교착이
   // 생기는 자리가 정확히 여기다. 하위 카테고리엔 또 하위를 만들 수 없다(최대 2단계).
@@ -87,9 +103,10 @@ export function CategoryMoveTxDialog({
   const target = options.find((c) => c.rowId === targetRowId);
 
   const done = (r: { expenses: number; recurring: number; splits: number }) => {
-    toast.success(
-      t("moveTx.done", { count: r.expenses + r.recurring + r.splits }),
-    );
+    snackbar.show({
+      message: t("moveTx.done", { count: r.expenses + r.recurring + r.splits }),
+      tone: "neutral",
+    });
     onClose();
   };
 
@@ -98,13 +115,16 @@ export function CategoryMoveTxDialog({
   const dirty = nameTrim.length > 0 || targetRowId != null;
 
   const submit = () => {
-    if (submitting) return;
+    if (submitting || submittingRef.current) return;
     if (mode === "new") {
       if (nameTrim.length === 0) {
         setShow((s) => ({ ...s, name: true }));
         nameRef.current?.focus();
         return;
       }
+      submittingRef.current = true;
+      moveMut.reset();
+      splitMut.reset();
       splitMut.mutate(
         {
           id: source.rowId,
@@ -112,7 +132,7 @@ export function CategoryMoveTxDialog({
           icon: source.icon ?? "tag",
           color: source.color ?? "#9E9E9E",
         },
-        { onSuccess: done },
+        { ...settle, onSuccess: done },
       );
       return;
     }
@@ -121,11 +141,13 @@ export function CategoryMoveTxDialog({
       targetRef.current?.focus();
       return;
     }
+    submittingRef.current = true;
+    moveMut.reset();
+    splitMut.reset();
     moveMut.mutate(
       { id: source.rowId, targetCategoryRowId: targetRowId },
-      { onSuccess: done },
+      { ...settle, onSuccess: done },
     );
-    // onError: 전역 인터셉터가 서버 메시지를 토스트로 노출
   };
 
   return (
@@ -147,6 +169,13 @@ export function CategoryMoveTxDialog({
         }}
       >
         <ResponsiveDialogBody>
+          {moveFailed && (
+            <div ref={errorRef}>
+              <Callout tone="critical" role="alert" className="mb-x4">
+                {t("moveTx.failed")}
+              </Callout>
+            </div>
+          )}
           {canSplit && (
             <SegmentedControl
               aria-label={t("moveTx.mode")}

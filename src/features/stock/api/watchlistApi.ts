@@ -3,6 +3,7 @@
  * 관심목록은 그룹(탭) + 소속 종목 구조. 종목 마스터 정보(이름·시장·통화)는 서버가 조인해 내려준다.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { SilentOpts } from "@/shared/api";
 import { invalidateFor, stockKeys } from "@/shared/config";
 import { stockApi, type WatchGroup } from "./stockApi";
 
@@ -16,15 +17,16 @@ export function useWatchGroups(enabled = true) {
   });
 }
 
-export function useCreateWatchGroup() {
+export function useCreateWatchGroup(opts?: SilentOpts) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (groupName: string) => stockApi.createWatchGroup(groupName),
+    mutationFn: (groupName: string) =>
+      stockApi.createWatchGroup(groupName, opts),
     onSuccess: () => invalidateFor(queryClient, "stock-watchlist"),
   });
 }
 
-export function useRenameWatchGroup() {
+export function useRenameWatchGroup(opts?: SilentOpts) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -33,20 +35,20 @@ export function useRenameWatchGroup() {
     }: {
       groupId: number;
       groupName: string;
-    }) => stockApi.renameWatchGroup(groupId, groupName),
+    }) => stockApi.renameWatchGroup(groupId, groupName, opts),
     onSuccess: () => invalidateFor(queryClient, "stock-watchlist"),
   });
 }
 
-export function useDeleteWatchGroup() {
+export function useDeleteWatchGroup(opts?: SilentOpts) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (groupId: number) => stockApi.deleteWatchGroup(groupId),
+    mutationFn: (groupId: number) => stockApi.deleteWatchGroup(groupId, opts),
     onSuccess: () => invalidateFor(queryClient, "stock-watchlist"),
   });
 }
 
-export function useAddWatchItem() {
+export function useAddWatchItem(opts?: SilentOpts) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -57,15 +59,15 @@ export function useAddWatchItem() {
       groupId: number;
       symbol: string;
       marketCode?: string;
-    }) => stockApi.addWatchItem(groupId, symbol, marketCode),
+    }) => stockApi.addWatchItem(groupId, symbol, marketCode, opts),
     onSuccess: () => invalidateFor(queryClient, "stock-watchlist"),
   });
 }
 
-export function useRemoveWatchItem() {
+export function useRemoveWatchItem(opts?: SilentOpts) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (itemId: number) => stockApi.removeWatchItem(itemId),
+    mutationFn: (itemId: number) => stockApi.removeWatchItem(itemId, opts),
     onSuccess: () => invalidateFor(queryClient, "stock-watchlist"),
   });
 }

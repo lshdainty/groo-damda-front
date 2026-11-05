@@ -131,7 +131,7 @@ export function useEventForm({
     data: userCalendars = [],
     isLoading: calendarsLoading,
     refetch: refetchCalendars,
-  } = useUserCalendars();
+  } = useUserCalendars({ silent: true });
 
   const defaultDate = selectedDate
     ? format(selectedDate, "yyyy-MM-dd")

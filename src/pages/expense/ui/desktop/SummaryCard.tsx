@@ -19,6 +19,7 @@ import {
 } from "@/pages/expense/model/calendar-model";
 import { IntensityBar } from "./MiniCalendar";
 import { useDayLabel } from "./use-day-label";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { MonthHead } from "@/shared/ui/groo/month-head";
 
 function Metric({
@@ -69,6 +70,8 @@ export function SummaryCard({
   monthOut,
   summaryLoading,
   onPickDay,
+  failed = false,
+  onRetry,
 }: {
   month: string;
   onPickMonth: (month: string) => void;
@@ -79,8 +82,12 @@ export function SummaryCard({
   monthOut: number;
   summaryLoading: boolean;
   onPickDay: (ds: string) => void;
+  /** 날마다 막대를 못 받았다 — 주 달력 아래에서 말한다 */
+  failed?: boolean;
+  onRetry?: () => void;
 }) {
   const { t } = useTranslation("expense");
+  const { t: tc } = useTranslation("common");
   const dayLabel = useDayLabel();
   const [expanded, setExpanded] = useState(false);
   const weeks = monthGrid(month);
@@ -160,6 +167,12 @@ export function SummaryCard({
           </div>
         ))}
       </div>
+      {failed && onRetry && (
+        <BandFailure
+          title={tc("query.failedNamed", { name: t("calendar.failedName") })}
+          onRetry={onRetry}
+        />
+      )}
       <div className="-mb-x3 mt-x1 flex justify-center">
         <Button
           variant="ghost"

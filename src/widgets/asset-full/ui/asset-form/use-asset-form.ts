@@ -1,7 +1,7 @@
 import { useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAssets } from "@/features/asset";
-import { useDefaultCurrency } from "@/features/user";
+import { useDefaultCurrencyState } from "@/features/user";
 import { todayLocalKey } from "@/shared/lib/date";
 import { pendingBillWindow } from "@/entities/expense";
 import { parseAmount } from "@/shared/lib/groo/amount";
@@ -163,7 +163,11 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
   const editingGroup: AssetGroup = kind ? groupOfKind(kind) : "account";
 
   // 설정의 기본 통화 — 새 자산이 먼저 골라 두는 값이다(D7).
-  const defaultCurrency = useDefaultCurrency();
+  const {
+    currency: defaultCurrency,
+    ready: defaultCurrencyReady,
+    ensure: ensureDefaultCurrency,
+  } = useDefaultCurrencyState();
 
   // 공통
   // 처음 값은 이 자산의 기관, 없으면 묶음의 첫 기관이다(지금 그대로). 묶음은 1단계가 정하므로 고른 값만 들고 나머지는 읽을 때 정한다.
@@ -233,7 +237,7 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
   // 투자 — 보유 종목 다건 편집 (design AssetEditDialog invest 분기 미러).
   // 기존 holdings 우선, 구버전 단일 연동(tossSymbol)은 linked 1건으로 합성(하위호환).
   const [holdings, setHoldings] = useState<EditHolding[]>(init.holdings);
-  const { data: features } = useMyFeatures();
+  const { data: features } = useMyFeatures({ reference: true });
   const liveEnabled =
     (features?.features?.includes("SECURITIES") ?? false) &&
     (features?.connectedBrokers?.length ?? 0) > 0;
@@ -290,7 +294,9 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
   );
   const [paymentNone, setPaymentNone] = useState(init.paymentNone);
 
-  const { data: assetsData } = useAssets();
+  // 결제 계좌 후보 — 폼 안의 참조 목록이라 실패해도 폼은 그대로 두고, 저장할 때 다시 받는다(AssetEditDialog.attemptSubmit)
+  const assetsQ = useAssets({ silent: true });
+  const { data: assetsData } = assetsQ;
   const bankAccounts = useMemo(
     () =>
       (assetsData?.assets ?? []).filter(
@@ -507,6 +513,8 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
     isNew,
     editingGroup,
     defaultCurrency,
+    defaultCurrencyReady,
+    ensureDefaultCurrency,
     brand,
     setBrand,
     name,
@@ -555,6 +563,7 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
     paymentNone,
     setPaymentNone,
     assetsData,
+    assetsQ,
     bankAccounts,
     cardCompanyName,
     cardBrandColor,

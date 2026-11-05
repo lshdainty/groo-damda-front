@@ -22,13 +22,13 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("sonner", () => ({
-  toast: {
-    success: () => {},
-    error: (m: string) => {
-      toasts.error.push(m);
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: { message: string; tone?: string }) => {
+      if (o.tone === "critical") toasts.error.push(o.message);
     },
-  },
+    dismiss: () => {},
+  }),
 }));
 vi.mock("@/features/user", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/user")>()),

@@ -21,6 +21,8 @@ import {
 import { Button } from "@/shared/ds/button";
 import { Card } from "@/shared/ds/card";
 import { Input } from "@/shared/ds/input";
+import { useSnackbar } from "@/shared/ds/snackbar";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { ListHeader } from "@/shared/ds/list";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ds/tabs";
 import { BandEmpty, BandFailure } from "@/shared/ui/groo/band-parts";
@@ -66,12 +68,17 @@ export function CategoryManager({
   const titleId = useId();
   const categoriesQ = useExpenseCategories();
   const { data: categories, isLoading } = categoriesQ;
-  const createMut = useCreateExpenseCategory();
-  const updateMut = useUpdateExpenseCategory();
-  const deleteMut = useDeleteExpenseCategory();
-  const reorderMut = useReorderExpenseCategories();
+  // 저장 실패는 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글), 삭제는 확인창을 닫고 스낵바 + [다시 시도], 순서는 되돌리고 스낵바
+  const createMut = useCreateExpenseCategory({ silent: true });
+  const updateMut = useUpdateExpenseCategory({ silent: true });
+  const deleteMut = useDeleteExpenseCategory({ silent: true });
+  const reorderMut = useReorderExpenseCategories({ silent: true });
+  const snackbar = useSnackbar();
+  const confirmFail = useConfirmFail();
   // 삭제 확인이 "이 카테고리를 쓰는 반복 거래" 개수를 말한다 — 못 받으면 개수 문장만 뺀다(확인창을 막지 않는다)
-  const { data: recurrings } = useRecurringTransactions();
+  const { data: recurrings } = useRecurringTransactions(undefined, {
+    reference: true,
+  });
 
   // 목록 제목의 "순서 바꾸기" ↔ "완료" — 켜면 순서 모드(폰 · 데스크톱 같다)
   const [reorder, setReorder] = useState(false);
@@ -104,6 +111,8 @@ export function CategoryManager({
     return ids[i + 1] ?? ids[i - 1] ?? null;
   };
   const closeEdit = () => {
+    createMut.reset();
+    updateMut.reset();
     setEditing(null);
     focusRow(lastRowRef.current);
   };
@@ -120,8 +129,12 @@ export function CategoryManager({
   const cmYM = { year: cmNow.getFullYear(), month: cmNow.getMonth() + 1 };
   const cmStart = `${cmYM.year}-${String(cmYM.month).padStart(2, "0")}-01`;
   const cmEnd = `${cmYM.year}-${String(cmYM.month).padStart(2, "0")}-${String(new Date(cmYM.year, cmYM.month, 0).getDate()).padStart(2, "0")}`;
-  const { data: budgets } = useExpenseBudgets(cmYM);
-  const { data: rangeSummary } = useRangeSummary(cmStart, cmEnd);
+  const { data: budgets } = useExpenseBudgets(cmYM, {
+    reference: true,
+  });
+  const { data: rangeSummary } = useRangeSummary(cmStart, cmEnd, undefined, {
+    reference: true,
+  });
 
   const budgetOf = (categoryRowId: number): number | null =>
     budgets?.find((b) => b.categoryRowId === categoryRowId)?.budgetAmount ??
@@ -199,8 +212,25 @@ export function CategoryManager({
     if (on) setQuery("");
   };
 
+  const saveFailed = createMut.isError || updateMut.isError;
+  const saveError = createMut.error ?? updateMut.error ?? undefined;
+  const clearSaveError = () => {
+    createMut.reset();
+    updateMut.reset();
+  };
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면(성공 · 실패) 끈다
+  const savingRef = useRef(false);
+  const settle = {
+    onSettled: () => {
+      savingRef.current = false;
+    },
+  };
+
   const doUpdate = (id: number, values: ExpenseCategoryFormValues) => {
-    updateMut.mutate({ id, data: values }, { onSuccess: closeEdit });
+    if (savingRef.current) return;
+    savingRef.current = true;
+    clearSaveError();
+    updateMut.mutate({ id, data: values }, { ...settle, onSuccess: closeEdit });
   };
 
   const onSave = (values: ExpenseCategoryFormValues) => {
@@ -228,7 +258,10 @@ export function CategoryManager({
       }
       doUpdate(editing.rowId, values);
     } else {
-      createMut.mutate(values, { onSuccess: closeEdit });
+      if (savingRef.current) return;
+      savingRef.current = true;
+      clearSaveError();
+      createMut.mutate(values, { ...settle, onSuccess: closeEdit });
     }
   };
 
@@ -255,7 +288,11 @@ export function CategoryManager({
         parentRowId: cat.parentRowId,
       };
     });
-    reorderMut.mutate(items);
+    // 훅이 이전 순서로 되돌린다 — 되돌린 자리에서 고정 글로 알린다(다시 시도 없음)
+    reorderMut.mutate(items, {
+      onError: () =>
+        snackbar.show({ message: t("reorderFailed"), tone: "critical" }),
+    });
   };
 
   const recurringUsing = (c: ExpenseCategory) =>
@@ -424,6 +461,8 @@ export function CategoryManager({
           }}
           existing={list}
           submitting={submitting}
+          saveFailed={saveFailed}
+          saveError={saveError}
         />
       )}
 
@@ -478,12 +517,23 @@ export function CategoryManager({
                 onClick={(e) => {
                   e.preventDefault();
                   const next = neighborOf(confirmDelete.rowId);
-                  deleteMut.mutate(confirmDelete.rowId, {
-                    onSuccess: () => {
+                  const target = confirmDelete;
+                  const remove = () => deleteMut.mutateAsync(target.rowId);
+                  remove().then(
+                    () => {
                       setConfirmDelete(null);
                       focusRow(next);
                     },
-                  });
+                    () => {
+                      // 확인창을 닫고 critical 스낵바 + [다시 시도](묻지 않고 같은 삭제)
+                      setConfirmDelete(null);
+                      confirmFail({
+                        message: t("deleteFailed"),
+                        retry: remove,
+                        onRetried: () => focusRow(next),
+                      });
+                    },
+                  );
                 }}
               >
                 {tc("delete")}

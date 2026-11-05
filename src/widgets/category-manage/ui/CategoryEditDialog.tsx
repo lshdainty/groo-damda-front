@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { useLeaveConfirm } from "@/shared/ds/alert-dialog";
 import { Button } from "@/shared/ds/button";
+import { Callout } from "@/shared/ds/callout";
+import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { firstUnusedColor } from "@/shared/ds/color-swatch";
 import {
   ResponsiveDialog,
@@ -97,6 +99,8 @@ export function CategoryEditDialog({
   onDelete,
   existing,
   submitting,
+  saveFailed,
+  saveError,
 }: {
   cat: ExpenseCategory | null;
   defaultKind: ExpenseType;
@@ -109,6 +113,10 @@ export function CategoryEditDialog({
   onDelete?: (cat: ExpenseCategory) => void;
   existing: ExpenseCategory[];
   submitting?: boolean;
+  /** 저장 요청이 실패했다 — 폼 맨 위 critical Callout(고정 글), 폼은 열린 채 · 쓴 값 그대로 */
+  saveFailed?: boolean;
+  /** 실패마다 새 값 — 같은 실패가 이어져도 Callout 을 다시 보이게 올린다 */
+  saveError?: unknown;
 }) {
   const { t } = useTranslation("category");
   const { t: tc } = useTranslation("common");
@@ -174,6 +182,7 @@ export function CategoryEditDialog({
     leave.request();
   };
 
+  const errorRef = useScrollToError<HTMLDivElement>(!!saveFailed, saveError);
   const submit = () => {
     if (submitting) return;
     // 같은 상위 · 같은 종류 안에서만 이름이 겹치면 안 된다(서버 규칙과 같다)
@@ -285,6 +294,13 @@ export function CategoryEditDialog({
         }}
       >
         <ResponsiveDialogBody>
+          {saveFailed && (
+            <div ref={errorRef}>
+              <Callout tone="critical" role="alert" className="mb-x4">
+                {t("saveFailed")}
+              </Callout>
+            </div>
+          )}
           <div className="mb-x2 flex items-start gap-x3">
             <span
               aria-hidden

@@ -18,6 +18,7 @@ export {
   useUpdateUserPreferences,
   usePreferenceEditor,
   useDefaultCurrency,
+  useDefaultCurrencyState,
 } from "./model/useUserPreferences";
 export { WITHDRAW_BLOCK_SUBSCRIPTION } from "./api/userApi";
 export type {

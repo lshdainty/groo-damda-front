@@ -15,7 +15,7 @@ export function useNightSkyModel() {
   const todayQ = useConstellationToday();
   const skyQ = useConstellationSky(14);
   const collectionQ = useConstellationCollection();
-  const todosQ = useTodos();
+  const todosQ = useTodos(undefined, { reference: true });
   // completedAt 은 서버가 주는 `[UTC]` 라 로컬 날짜로 바꿔 비교한다(문자열을 자르면 KST 새벽에 전날로 빠진다)
   const doneToday = useMemo(() => {
     const today = todayLocalKey();

@@ -73,7 +73,8 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 
 const { AssetPage } = await import("./AssetPage");
-const { setHiddenCards } = await import("@/shared/lib/groo/hide-amounts-core");
+const { setHiddenCardsLocal } =
+  await import("@/shared/lib/groo/hide-amounts-core");
 
 const asset = (
   rowId: number,
@@ -188,7 +189,7 @@ beforeEach(() => {
   root = createRoot(container);
 });
 afterEach(() => {
-  act(() => setHiddenCards([]));
+  act(() => setHiddenCardsLocal([]));
   act(() => root.unmount());
   container.remove();
 });
@@ -481,7 +482,7 @@ describe("투자 등락 가림(I-05 56)", () => {
   });
 
   it("투자 카드를 가리면 줄은 두고 값만 '•••' 로 가린다", () => {
-    act(() => setHiddenCards(["asset.investments"]));
+    act(() => setHiddenCardsLocal(["asset.investments"]));
     render();
     const d = Array.from(container.querySelectorAll("[data-slot=delta]"));
     const invest = d.find((n) => n.textContent?.includes("•••"));

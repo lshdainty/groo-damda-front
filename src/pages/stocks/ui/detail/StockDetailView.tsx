@@ -83,7 +83,7 @@ export function StockDetailView({
   layout?: "phone" | "desk";
 }) {
   const { t } = useTranslation("stocks");
-  const master = useStockBySymbol(symbol).data ?? null;
+  const master = useStockBySymbol(symbol, { reference: true }).data ?? null;
   const desk = layout === "desk";
   const toss =
     broker === "TOSS" ? <TossBody symbol={symbol} desk={desk} /> : null;
@@ -130,7 +130,7 @@ const flush = (name: string, node: React.ReactNode) =>
 function TossBody({ symbol, desk }: { symbol: string; desk: boolean }) {
   const { t } = useTranslation("stocks");
   const mask = useMasked("stocks.detail");
-  const master = useStockBySymbol(symbol).data ?? null;
+  const master = useStockBySymbol(symbol, { reference: true }).data ?? null;
   const infoQ = useTossStockInfo([symbol]);
   const info = infoQ.data?.[0];
   const pricesQ = useTossPrices([symbol]);
@@ -557,7 +557,7 @@ const dateText = (v: string): string =>
 function NamuBody({ symbol, desk }: { symbol: string; desk: boolean }) {
   const { t } = useTranslation("stocks");
   const mask = useMasked("stocks.detail");
-  const masterQ = useStockBySymbol(symbol);
+  const masterQ = useStockBySymbol(symbol, { reference: true });
   const master = masterQ.data ?? null;
   const krwQ = useNamuHoldings("KRW");
   const usdQ = useNamuHoldings("USD");

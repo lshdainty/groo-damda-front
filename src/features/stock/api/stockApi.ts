@@ -5,7 +5,7 @@
  *
  * 키 미설정 시 백엔드가 503(TOSS_NOT_CONFIGURED)을 반환 → 호출부에서 mock 폴백.
  */
-import { apiClient } from "@/shared/api";
+import { apiClient, silentConfig, type SilentOpts } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 
 // ---- 응답 타입 (백엔드 toss DTO 미러) -------------------------------------
@@ -334,11 +334,13 @@ export const stockApi = {
       page?: number;
       size?: number;
     },
+    req?: { silent?: boolean },
   ): Promise<StockSearchPage> => {
     const resp: ApiResponse<StockSearchPage> = await apiClient.get(
       "/v1/stocks",
       {
         params: { keyword: keyword || undefined, ...opts },
+        ...(req?.silent ? { silent: true } : {}),
       },
     );
     return resp.data;
@@ -556,10 +558,14 @@ export const stockApi = {
     return resp.data;
   },
 
-  createWatchGroup: async (groupName: string): Promise<WatchGroup> => {
+  createWatchGroup: async (
+    groupName: string,
+    opts?: SilentOpts,
+  ): Promise<WatchGroup> => {
     const resp: ApiResponse<WatchGroup> = await apiClient.post(
       "/v1/stock-watch/groups",
       { groupName },
+      silentConfig(opts),
     );
     return resp.data;
   },
@@ -567,32 +573,45 @@ export const stockApi = {
   renameWatchGroup: async (
     groupId: number,
     groupName: string,
+    opts?: SilentOpts,
   ): Promise<WatchGroup> => {
     const resp: ApiResponse<WatchGroup> = await apiClient.put(
       `/v1/stock-watch/groups/${groupId}`,
       { groupName },
+      silentConfig(opts),
     );
     return resp.data;
   },
 
-  deleteWatchGroup: async (groupId: number): Promise<void> => {
-    await apiClient.delete(`/v1/stock-watch/groups/${groupId}`);
+  deleteWatchGroup: async (
+    groupId: number,
+    opts?: SilentOpts,
+  ): Promise<void> => {
+    await apiClient.delete(
+      `/v1/stock-watch/groups/${groupId}`,
+      silentConfig(opts),
+    );
   },
 
   addWatchItem: async (
     groupId: number,
     symbol: string,
     marketCode?: string,
+    opts?: SilentOpts,
   ): Promise<WatchItem> => {
     const resp: ApiResponse<WatchItem> = await apiClient.post(
       `/v1/stock-watch/groups/${groupId}/items`,
       { symbol, marketCode },
+      silentConfig(opts),
     );
     return resp.data;
   },
 
-  removeWatchItem: async (itemId: number): Promise<void> => {
-    await apiClient.delete(`/v1/stock-watch/items/${itemId}`);
+  removeWatchItem: async (itemId: number, opts?: SilentOpts): Promise<void> => {
+    await apiClient.delete(
+      `/v1/stock-watch/items/${itemId}`,
+      silentConfig(opts),
+    );
   },
 
   // 계좌 / 보유자산

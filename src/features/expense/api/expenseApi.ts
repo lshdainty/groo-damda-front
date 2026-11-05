@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, silentConfig, type SilentOpts } from "@/shared/api";
 import type { QuietRequestConfig } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
@@ -49,10 +49,13 @@ export const expenseApi = {
     return resp.data;
   },
 
-  getExpenses: async (params?: ExpenseListParams): Promise<Expense[]> => {
+  getExpenses: async (
+    params?: ExpenseListParams,
+    opts?: SilentOpts,
+  ): Promise<Expense[]> => {
     const resp: ApiResponse<{ expenses: Expense[] }> = await apiClient.get(
       "/v1/expenses",
-      { params },
+      { params, ...silentConfig(opts) },
     );
     return resp.data.expenses;
   },
@@ -174,10 +177,11 @@ export const expenseApi = {
     startDate: string,
     endDate: string,
     assetId?: number | null,
+    opts?: SilentOpts,
   ): Promise<RangeSummary> => {
     const resp: ApiResponse<RangeSummary> = await apiClient.get(
       "/v1/expenses/summary/range",
-      { params: { startDate, endDate, assetId } },
+      { params: { startDate, endDate, assetId }, ...silentConfig(opts) },
     );
     return resp.data;
   },

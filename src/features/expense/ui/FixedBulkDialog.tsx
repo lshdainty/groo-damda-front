@@ -6,6 +6,7 @@ import { ModalShell } from "@/shared/ui/groo/dialogs";
 import { ModalFooter } from "@/shared/ui/groo/modal-footer";
 import { useScrollToError } from "../model/useScrollToError";
 import { Callout } from "@/shared/ds/callout";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Skeleton } from "@/shared/ui/skeleton";
 import {
@@ -227,6 +228,12 @@ function FixedBulkModal({
             <Skeleton key={i} className="h-[52px] w-full rounded-md" />
           ))}
         </div>
+      ) : q.isError && !q.data ? (
+        // 조회 실패를 "거래 없음" 으로 보이지 않는다 — 폰 FixedBulkPage 와 같이 실패 + 다시 시도
+        <BandFailure
+          title={t("fixed.bulk.loadFailed")}
+          onRetry={() => void q.refetch()}
+        />
       ) : groups.length === 0 ? (
         <div
           style={{

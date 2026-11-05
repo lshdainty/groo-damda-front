@@ -89,7 +89,16 @@ export function EventFormSheetBody({
   onStep: (step: "location" | "description") => void;
 }) {
   const { t } = useTranslation("calendar");
-  const { ctrl, labels, showErrors, titleEmpty, rangeError, endRef } = view;
+  const {
+    ctrl,
+    labels,
+    labelsFailed,
+    onRetryLabels,
+    showErrors,
+    titleEmpty,
+    rangeError,
+    endRef,
+  } = view;
   const {
     form,
     selectableCalendars,
@@ -234,39 +243,51 @@ export function EventFormSheetBody({
             />
           )}
 
-          <ChoiceSheet
-            title={t("form.label")}
-            selected={(selectedLabelRowId ?? NO_LABEL) as string | number}
-            items={[
-              { value: NO_LABEL as string | number, label: t("form.noLabel") },
-              ...labels.map((l) => ({
-                value: l.rowId as string | number,
-                label: l.labelName,
-                dot: getPaletteByColor(l.color).color,
-              })),
-            ]}
-            footnote={labels.length === 0 ? t("form.labelHint") : undefined}
-            onPick={(v) =>
-              ctrl.handleLabelChange(v === NO_LABEL ? undefined : Number(v))
-            }
-            trigger={({ onClick }) => (
-              <ListButtonItem
-                prefix={<Tag className={ROW_ICON} />}
-                title={t("form.label")}
-                suffixText
-                suffix={
-                  label ? (
-                    <DotValue color={getPaletteByColor(label.color).color}>
-                      {label.labelName}
-                    </DotValue>
-                  ) : (
-                    t("form.noLabel")
-                  )
-                }
-                onClick={onClick}
-              />
-            )}
-          />
+          {labelsFailed ? (
+            <ListButtonItem
+              prefix={<Tag className={ROW_ICON} />}
+              title={t("form.label")}
+              suffix={t("form.labelLoadFailed")}
+              onClick={onRetryLabels}
+            />
+          ) : (
+            <ChoiceSheet
+              title={t("form.label")}
+              selected={(selectedLabelRowId ?? NO_LABEL) as string | number}
+              items={[
+                {
+                  value: NO_LABEL as string | number,
+                  label: t("form.noLabel"),
+                },
+                ...labels.map((l) => ({
+                  value: l.rowId as string | number,
+                  label: l.labelName,
+                  dot: getPaletteByColor(l.color).color,
+                })),
+              ]}
+              footnote={labels.length === 0 ? t("form.labelHint") : undefined}
+              onPick={(v) =>
+                ctrl.handleLabelChange(v === NO_LABEL ? undefined : Number(v))
+              }
+              trigger={({ onClick }) => (
+                <ListButtonItem
+                  prefix={<Tag className={ROW_ICON} />}
+                  title={t("form.label")}
+                  suffixText
+                  suffix={
+                    label ? (
+                      <DotValue color={getPaletteByColor(label.color).color}>
+                        {label.labelName}
+                      </DotValue>
+                    ) : (
+                      t("form.noLabel")
+                    )
+                  }
+                  onClick={onClick}
+                />
+              )}
+            />
+          )}
 
           <ListSwitchItem
             prefix={<Sun className={ROW_ICON} />}

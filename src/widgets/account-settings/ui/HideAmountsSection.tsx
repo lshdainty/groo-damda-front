@@ -9,7 +9,9 @@ import {
   HelpBubbleTrigger,
 } from "@/shared/ds/help-bubble";
 import { ListCheckGroup, ListCheckItem, ListHeader } from "@/shared/ds/list";
-import { SnackbarAvoidOverlap } from "@/shared/ds/snackbar";
+import { Callout } from "@/shared/ds/callout";
+import { SnackbarAvoidOverlap, useSnackbar } from "@/shared/ds/snackbar";
+import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ds/tabs";
 import {
   TopNavigation,
@@ -101,9 +103,25 @@ export function HideAmountsSection({
       return next;
     });
 
-  const commit = () => {
-    setHiddenCards(draft);
-    onBack();
+  // 저장은 서버에 올려 성공했을 때만 반영된다 — 실패하면 화면을 닫지 않고 고른 값 그대로 둔다
+  const snackbar = useSnackbar();
+  const [saveFailTick, setSaveFailTick] = useState(0);
+  const saveFailed = saveFailTick > 0;
+  const errorRef = useScrollToError<HTMLDivElement>(saveFailed, saveFailTick);
+  const commit = async (viaUnlock = false) => {
+    setSaveFailTick(0);
+    if (await setHiddenCards(draft)) {
+      onBack();
+      return;
+    }
+    if (viaUnlock) {
+      // 본인 확인 창이 이미 닫힌 뒤라 맨 위 Callout 이 안 보일 수 있다 — 스낵바 + [다시 시도](확인은 이미 끝났다)
+      snackbar.show({
+        message: t("hideAmounts.saveFailed"),
+        tone: "critical",
+        action: { label: tc("retry"), onClick: () => void commit(true) },
+      });
+    } else setSaveFailTick((n) => n + 1);
   };
 
   const save = () => {
@@ -114,7 +132,7 @@ export function HideAmountsSection({
     // 인증은 그대로 받는다 — 카드를 끄는 건 어느 경우든 '푸는' 의도다.
     const revealing = [...saved].some((c) => !draft.has(c));
     if (revealing) setAwaitingUnlock(true);
-    else commit();
+    else void commit();
   };
 
   // 저장하지 않고 나가려 할 때 — 고른 내용이 날아가는 걸 알리고, 확인하면 화면을 닫는다.
@@ -258,6 +276,15 @@ export function HideAmountsSection({
       </ListCheckGroup>
     );
 
+  // 폼 실패 Callout — 본문 맨 위(모바일은 소개 글보다 위). 앱과 같은 자리
+  const failure = saveFailed && (
+    <div ref={errorRef} className="px-global-gutter pt-x3">
+      <Callout tone="critical" role="alert">
+        {t("hideAmounts.saveFailed")}
+      </Callout>
+    </div>
+  );
+
   const body = (
     <>
       {kindSection}
@@ -272,7 +299,7 @@ export function HideAmountsSection({
       <HideAmountsUnlockSurface
         open={awaitingUnlock}
         onOpenChange={setAwaitingUnlock}
-        onVerified={commit}
+        onVerified={() => void commit(true)}
       />
       {confirmDiscard && (
         <AlertConfirm
@@ -284,6 +311,8 @@ export function HideAmountsSection({
             leaveTo.current = null;
             go();
           }}
+          // 요청이 아니라 화면을 나가는 확인이다 — 던지지 않는다
+          onError={() => {}}
           onClose={() => {
             leaveTo.current = null;
             setConfirmDiscard(false);
@@ -310,6 +339,7 @@ export function HideAmountsSection({
         </TopNavigation>
         {/* 본문 아래 여백 = 띠 높이는 flex 가 맡는다 — 마지막 줄이 띠 위로 끝까지 스크롤된다 */}
         <div className="min-h-0 flex-1 overflow-y-auto pb-x6">
+          {failure}
           <p className="m-0 px-global-gutter pt-x4 pb-x2 font-sans text-t4 text-fg-neutral-subtle">
             {t("hideAmounts.sectionDesc")}
           </p>
@@ -342,6 +372,7 @@ export function HideAmountsSection({
         description={t("hideAmounts.sectionDesc")}
       />
       <Card body="list" className="pb-0">
+        {failure}
         {body}
         {/* 카드 바닥 줄 — 위 끝까지 선 · 채운 단추라 오른쪽 24 · 위아래 12 */}
         <div className="mt-x3 flex justify-end border-t border-stroke-neutral-subtle px-x6 py-x3">

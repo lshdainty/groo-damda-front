@@ -1,4 +1,9 @@
-import { apiClient, type QuietRequestConfig } from "@/shared/api";
+import {
+  apiClient,
+  silentConfig,
+  type QuietRequestConfig,
+  type SilentOpts,
+} from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
   SavingGoal,
@@ -9,17 +14,25 @@ import type {
 } from "@/entities/savingGoal";
 
 export const savingGoalApi = {
-  createSavingGoal: async (data: SavingGoalFormValues): Promise<SavingGoal> => {
+  createSavingGoal: async (
+    data: SavingGoalFormValues,
+    opts?: SilentOpts,
+  ): Promise<SavingGoal> => {
     const resp: ApiResponse<SavingGoal> = await apiClient.post(
       "/v1/saving-goal",
       data,
+      silentConfig(opts),
     );
     return resp.data;
   },
 
-  getSavingGoals: async (): Promise<{ goals: SavingGoal[] }> => {
-    const resp: ApiResponse<{ goals: SavingGoal[] }> =
-      await apiClient.get("/v1/saving-goals");
+  getSavingGoals: async (
+    opts?: SilentOpts,
+  ): Promise<{ goals: SavingGoal[] }> => {
+    const resp: ApiResponse<{ goals: SavingGoal[] }> = await apiClient.get(
+      "/v1/saving-goals",
+      silentConfig(opts),
+    );
     return resp.data;
   },
 
@@ -33,10 +46,12 @@ export const savingGoalApi = {
   updateSavingGoal: async (
     id: number,
     data: SavingGoalUpdateFormValues,
+    opts?: SilentOpts,
   ): Promise<SavingGoal> => {
     const resp: ApiResponse<SavingGoal> = await apiClient.put(
       `/v1/saving-goal/${id}`,
       data,
+      silentConfig(opts),
     );
     return resp.data;
   },
@@ -44,10 +59,12 @@ export const savingGoalApi = {
   contributeSavingGoal: async (
     id: number,
     data: SavingGoalContributeValues,
+    opts?: SilentOpts,
   ): Promise<SavingGoal> => {
     const resp: ApiResponse<SavingGoal> = await apiClient.patch(
       `/v1/saving-goal/${id}/contribute`,
       data,
+      silentConfig(opts),
     );
     return resp.data;
   },

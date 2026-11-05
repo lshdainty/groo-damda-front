@@ -24,7 +24,7 @@ export const RANGE_LABEL_KEY: Record<Range, string> = {
 type CandleAvailability = "yes" | "no" | "unknown";
 
 export function useCandleAvailability(): CandleAvailability {
-  const { data: features, isLoading } = useMyFeatures();
+  const { data: features, isLoading } = useMyFeatures({ reference: true });
   if (isLoading || !features) return "unknown";
   return (features.connectedBrokers ?? []).length > 0 ? "yes" : "no";
 }

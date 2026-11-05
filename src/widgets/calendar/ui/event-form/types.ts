@@ -7,6 +7,9 @@ import type { useEventForm } from "@/widgets/calendar/model/use-event-form";
 export interface EventFormView {
   ctrl: ReturnType<typeof useEventForm>;
   labels: EventLabel[];
+  /** 라벨 목록을 값 없이 못 받았다 — 라벨 칸 자리에서 말하고 눌러 다시 받는다(시트 안이라 공용 스낵바가 쉰다) */
+  labelsFailed: boolean;
+  onRetryLabels: () => void;
   /** [저장] 을 한 번 눌렀다 — 비거나 틀린 칸에 오류를 보인다 */
   showErrors: boolean;
   titleEmpty: boolean;

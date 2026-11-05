@@ -28,7 +28,7 @@ export function useBudgetModel() {
   const summaryQ = useRangeSummary(monthStart, monthEnd);
   const categoriesQ = useExpenseCategories();
   const complianceQ = useBudgetCompliance(6);
-  const preferencesQ = useUserPreferences();
+  const preferencesQ = useUserPreferences({ reference: true });
 
   const warnThreshold = preferencesQ.data?.budgetAlertThreshold ?? 85;
   const warnRatio = warnThreshold / 100;

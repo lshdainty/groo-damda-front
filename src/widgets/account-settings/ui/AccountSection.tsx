@@ -1,4 +1,4 @@
-import { lazy, Suspense, useId, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ChevronRight,
@@ -11,7 +11,6 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Avatar } from "@/shared/ds/avatar";
 import { Badge } from "@/shared/ds/badge";
@@ -20,6 +19,7 @@ import { Callout } from "@/shared/ds/callout";
 import { Card, CardHeader, CardTitle } from "@/shared/ds/card";
 import { List, ListButtonItem, ListHeader, ListItem } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
+import { useSnackbar } from "@/shared/ds/snackbar";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import { isEn, money } from "@/shared/lib/groo/format";
 import {
@@ -86,9 +86,9 @@ export function AccountSection({
 
   const hiddenCount = useHiddenCards().size;
 
-  const featuresQ = useMyFeatures();
-  const subQ = useMySubscription();
-  const plansQ = useSubscriptionPlans();
+  const featuresQ = useMyFeatures({ reference: true });
+  const subQ = useMySubscription({ reference: true });
+  const plansQ = useSubscriptionPlans({ reference: true });
   const isPro = featuresQ.data?.features?.includes("SECURITIES") ?? false;
   // 기능 조회가 대기 · 실패면 Free 인지 Pro 인지 모른다 — Free 배지 · 권유 글을 그리지 않는다(대기는 Skeleton, 실패는 값 없이)
   const planKnown: "loading" | "error" | "ready" =
@@ -386,8 +386,11 @@ function GoogleRow() {
   const { t: tDs } = useTranslation("ds");
   const providersQ = useOAuthProviders();
   const unlinkGoogle = useUnlinkOAuth();
+  const snackbar = useSnackbar();
   const [linking, setLinking] = useState(false);
   const linkingRef = useRef(false);
+  // [다시 시도] 가 부르는 연결 시작 — 스낵바 액션이 자기 함수를 직접 가리키지 않게 ref 로 건넨다
+  const retryLinkRef = useRef<(() => Promise<void>) | null>(null);
   const google = providersQ.data?.find((p) => p.type === "GOOGLE");
   const linked = google?.linked ?? false;
 
@@ -403,20 +406,37 @@ function GoogleRow() {
       );
       window.location.href = startUrl;
     } catch {
-      toast.error(t("account.toast.linkError"), { id: "oauth-link-error" });
+      // 다시 하면 되는 가벼운 실패 — critical 스낵바 + [다시 시도](연결을 처음부터 다시 시작)
+      snackbar.show({
+        message: t("account.toast.linkError"),
+        tone: "critical",
+        action: {
+          label: tDs("common.retry"),
+          onClick: () => void retryLinkRef.current?.(),
+        },
+      });
       linkingRef.current = false;
       setLinking(false);
     }
   };
 
+  useEffect(() => {
+    retryLinkRef.current = onLink;
+  });
+
   const onUnlink = () => {
     unlinkGoogle.mutate("google", {
       // onSuccess 에서 provider 목록 재조회(invalidate) → 상태 자동 갱신.
-      onSuccess: () => toast.success(t("account.toast.unlinked")),
+      onSuccess: () =>
+        snackbar.show({
+          message: t("account.toast.unlinked"),
+          tone: "neutral",
+        }),
       // 다시 하면 되는 가벼운 실패라 "다시 시도" 를 붙인다(snackbar.md)
       onError: () =>
-        toast.error(t("account.toast.unlinkError"), {
-          id: "oauth-unlink-error",
+        snackbar.show({
+          message: t("account.toast.unlinkError"),
+          tone: "critical",
           action: { label: tDs("common.retry"), onClick: onUnlink },
         }),
     });

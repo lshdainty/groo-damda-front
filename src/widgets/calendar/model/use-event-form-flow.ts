@@ -27,6 +27,9 @@ export interface EventFormFlowArgs {
   selectedEndDate?: Date;
   initial?: EventFormInitial;
   labels?: EventLabel[];
+  /** 라벨 목록 조회가 값 없이 실패했다 */
+  labelsFailed?: boolean;
+  onRetryLabels?: () => void;
   isLoading?: boolean;
   /** 빠른 추가에서 쓴 값을 들고 왔다 — 그 값도 "바뀐 값" 으로 쳐서 닫을 때 묻는다(RHF 기본값이 되어 isDirty 가 false 이므로) */
   initialDirty?: boolean;
@@ -48,6 +51,8 @@ export function useEventFormFlow({
   selectedEndDate,
   initial,
   labels = [],
+  labelsFailed = false,
+  onRetryLabels = () => {},
   initialDirty = false,
   isLoading,
   saveError = false,
@@ -80,6 +85,8 @@ export function useEventFormFlow({
   const view: EventFormView = {
     ctrl,
     labels,
+    labelsFailed,
+    onRetryLabels,
     showErrors,
     titleEmpty,
     rangeError,

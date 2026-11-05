@@ -43,7 +43,8 @@ vi.mock("@/features/expense", () => ({
 }));
 
 const { HomeMobile } = await import("./HomeMobile");
-const { setHiddenCards } = await import("@/shared/lib/groo/hide-amounts-core");
+const { setHiddenCardsLocal } =
+  await import("@/shared/lib/groo/hide-amounts-core");
 
 const summary = (events: number, todos: number) => ({
   todoSummary: { overDueCount: 0 },
@@ -88,7 +89,7 @@ beforeEach(() => {
   state.cats = q([]);
 });
 afterEach(() => {
-  act(() => setHiddenCards([]));
+  act(() => setHiddenCardsLocal([]));
   act(() => root.unmount());
   container.remove();
 });
@@ -238,7 +239,7 @@ describe("폰 홈 띠 — 구역마다 따로(사용자 10-23)", () => {
     expect(meter.getAttribute("aria-label")).toContain("budgetName");
     expect(meter.getAttribute("aria-label")).toContain("800");
     expect(meter.getAttribute("aria-valuetext")).toMatch(/200/);
-    act(() => setHiddenCards(["home.budget"]));
+    act(() => setHiddenCardsLocal(["home.budget"]));
     const hidden = container.querySelector(
       "[data-section=budget] [role=meter]",
     )!;
@@ -270,11 +271,11 @@ describe("폰 홈 띠 — 구역마다 따로(사용자 10-23)", () => {
     const head = () =>
       container.querySelector("[data-section=today] [data-slot=card-header]")!;
     expect(head().textContent).toContain("12,345");
-    act(() => setHiddenCards(["home.todaySpend"]));
+    act(() => setHiddenCardsLocal(["home.todaySpend"]));
     expect(head().textContent).not.toContain("12,345");
     expect(head().textContent).toContain("••••");
     // 다른 카드만 가리면 머리 합계는 보인다
-    act(() => setHiddenCards(["ledger.txList"]));
+    act(() => setHiddenCardsLocal(["ledger.txList"]));
     expect(head().textContent).toContain("12,345");
   });
 });

@@ -6,7 +6,7 @@ import { List, ListButtonItem, ListItem } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
-import { ListTitle } from "@/shared/ui/groo/band-parts";
+import { BandFailure, ListTitle } from "@/shared/ui/groo/band-parts";
 import { MINUS, KRW, money, formatChangeRate } from "@/shared/lib/groo/format";
 import { won } from "@/shared/lib/groo/money-text";
 import {
@@ -158,10 +158,22 @@ export function HoldingRow({
 export function TradeHistory({ asset }: { asset: Asset }) {
   const { t } = useTranslation("asset");
   const m = useAssetMask("asset.detail", asset.isAmountHidden === "Y");
-  const { data: trades } = useAssetTrades(asset.rowId);
+  // 실패는 이 구역 자리에서 말한다 — 서버 원문 토스트는 끄고, 없는 것처럼 사라지지 않게
+  const tradesQ = useAssetTrades(asset.rowId, { silent: true });
+  const trades = tradesQ.data;
+  const { t: tc } = useTranslation("common");
   // 줄을 누르면 거래 기록 상세(조회), 거기 바닥 왼쪽 [거래 취소] 가 확인창을 연다 — 한 번에 표면 하나
   const [openId, setOpenId] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  if (tradesQ.isError && !trades)
+    return (
+      <section data-slot="asset-detail-trades">
+        <BandFailure
+          title={tc("query.failedNamed", { name: t("trade.recordName") })}
+          onRetry={() => void tradesQ.refetch()}
+        />
+      </section>
+    );
   if (!trades || trades.length === 0) return null;
   const target = trades.find((tr) => tr.rowId === confirmDelete) ?? null;
   const opened = trades.find((tr) => tr.rowId === openId) ?? null;
@@ -301,7 +313,7 @@ export function HoldingsSection({ asset }: { asset: Asset }) {
     type: TradeType;
     holding: AssetHolding;
   } | null>(null);
-  const { data: features } = useMyFeatures();
+  const { data: features } = useMyFeatures({ reference: true });
   const live =
     (features?.features?.includes("SECURITIES") ?? false) &&
     (features?.connectedBrokers?.length ?? 0) > 0;

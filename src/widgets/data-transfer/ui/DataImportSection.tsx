@@ -147,6 +147,8 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
   const [source, setSource] = useState<ImportSource>("POREST");
   const [file, setFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // 가져오기 실행이 실패했다 — 매핑 단계 맨 위 안내, 값은 그대로 두고 다시 누르면 된다
+  const [runFailed, setRunFailed] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ImportAnalyzeResult | null>(null);
   const [mapping, setMapping] = useState<ImportMapping>({});
@@ -165,8 +167,9 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
       setMapping(res.suggestedMapping);
       setStep("mapping");
     } catch {
-      /* 전역 토스트가 처리 — 고른 파일은 거두고 다시 고르게 한다 */
+      // 고른 파일은 거두고 칸 아래 고정 글로 알린다 — 다시 고르면 된다
       setFile(null);
+      setUploadError(t("import.analyzeFailed"));
     } finally {
       setAnalyzing(false);
     }
@@ -200,6 +203,7 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
 
   const runImport = async () => {
     if (!file || !canExecute) return;
+    setRunFailed(false);
     setExecuting(true);
     try {
       const res = await executeImport(file, {
@@ -220,7 +224,7 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
       setResult(res);
       setStep("done");
     } catch {
-      /* 전역 토스트가 처리 */
+      setRunFailed(true);
     } finally {
       setExecuting(false);
     }
@@ -381,6 +385,11 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
 
       {step === "mapping" && analysis && (
         <>
+          {runFailed && (
+            <Callout tone="critical" role="alert">
+              {t("import.runFailed")}
+            </Callout>
+          )}
           {/* 실행하면 반드시 실패할 행을 미리 알린다 — 넣고 나서 실패 숫자만 보면 원인을 알 수 없다. */}
           {analysis.blockedParents.length > 0 && (
             <Callout

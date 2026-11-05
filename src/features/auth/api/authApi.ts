@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, silentConfig, type SilentOpts } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
   TokenExchangeResponse,
@@ -17,9 +17,11 @@ export const authApi = {
     );
     return resp.data;
   },
-  loginCheck: async (): Promise<LoginCheckResponse> => {
-    const resp: ApiResponse<LoginCheckResponse> =
-      await apiClient.get("/v1/auth/check");
+  loginCheck: async (opts?: SilentOpts): Promise<LoginCheckResponse> => {
+    const resp: ApiResponse<LoginCheckResponse> = await apiClient.get(
+      "/v1/auth/check",
+      silentConfig(opts),
+    );
     return resp.data;
   },
   logout: async (): Promise<void> => {

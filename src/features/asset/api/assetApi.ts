@@ -55,8 +55,11 @@ export const assetApi = {
     return resp.data;
   },
 
-  getAsset: async (id: number): Promise<Asset> => {
-    const resp: ApiResponse<Asset> = await apiClient.get(`/v1/asset/${id}`);
+  getAsset: async (id: number, opts?: SilentOpts): Promise<Asset> => {
+    const resp: ApiResponse<Asset> = await apiClient.get(
+      `/v1/asset/${id}`,
+      silentConfig(opts),
+    );
     return resp.data;
   },
 
@@ -243,27 +246,37 @@ export const assetApi = {
   /** 저장하기 전에 결과를 물어본다 — 저장에 쓰는 계산 경로를 그대로 탄다. */
   previewTrade: async (
     data: AssetTradeFormValues,
+    opts?: SilentOpts,
   ): Promise<AssetTradePreview> => {
     const resp: ApiResponse<AssetTradePreview> = await apiClient.post(
       "/v1/asset-trade/preview",
       data,
+      silentConfig(opts),
     );
     return resp.data;
   },
 
-  createTrade: async (data: AssetTradeFormValues): Promise<AssetTrade> => {
+  createTrade: async (
+    data: AssetTradeFormValues,
+    opts?: SilentOpts,
+  ): Promise<AssetTrade> => {
     const resp: ApiResponse<AssetTrade> = await apiClient.post(
       "/v1/asset-trade",
       data,
+      silentConfig(opts),
     );
     return resp.data;
   },
 
-  getTrades: async (assetRowId: number): Promise<AssetTrade[]> => {
+  getTrades: async (
+    assetRowId: number,
+    opts?: SilentOpts,
+  ): Promise<AssetTrade[]> => {
     const resp: ApiResponse<AssetTrade[]> = await apiClient.get(
       "/v1/asset-trades",
       {
         params: { assetRowId },
+        ...silentConfig(opts),
       },
     );
     return resp.data;

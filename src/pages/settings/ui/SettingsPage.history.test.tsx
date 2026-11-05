@@ -23,7 +23,9 @@ vi.mock("react-i18next", () => ({
 const stub = (name: string) => (props: { addRequest?: number }) => (
   <div data-stub={name} data-add={props.addRequest ?? 0} />
 );
-vi.mock("sonner", () => ({ toast: { success: () => {}, error: () => {} } }));
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
+}));
 vi.mock("@/widgets/category-manage", () => ({
   CategoryManager: stub("categories"),
 }));

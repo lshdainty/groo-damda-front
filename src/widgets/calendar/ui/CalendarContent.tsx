@@ -73,7 +73,9 @@ const CalendarContent = () => {
   );
 
   const { data: expenseData, isLoading: isExpensesLoading } =
-    useCalendarExpenses(expenseDateRange, isExpenseEnabled);
+    useCalendarExpenses(expenseDateRange, isExpenseEnabled, {
+      reference: true,
+    });
 
   // holiday 캘린더가 ON일 때만 공휴일 데이터 조회 (성능 최적화)
   const holidayDateRange = useMemo(
@@ -89,6 +91,7 @@ const CalendarContent = () => {
       holidayDateRange.startDate,
       holidayDateRange.endDate,
       isHolidayEnabled,
+      { reference: true },
     );
 
   const events = useMemo(() => {

@@ -255,8 +255,8 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
     null,
   );
 
-  const categoriesQ = useExpenseCategories();
-  const assetsQ = useAssets();
+  const categoriesQ = useExpenseCategories({ reference: true });
+  const assetsQ = useAssets({ reference: true });
   // 밀면 [수정, 삭제] — 상세를 닫고 수정으로 가는 것은 상세 footer 의 수정과 같은 목적지.
   const swipeActionsFor = useExpenseSwipeActions({
     assets: assetsQ.data?.assets ?? [],
@@ -286,9 +286,19 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
 
   // 인사이트 — 지난달 지출 대비 / 없으면 이번 달 최다 지출 카테고리.
   const prevRange = monthRange(shiftMonthKey(month, -1));
-  const prevQ = useRangeSummary(prevRange.startDate, prevRange.endDate);
+  const prevQ = useRangeSummary(
+    prevRange.startDate,
+    prevRange.endDate,
+    undefined,
+    { reference: true },
+  );
   const curRange = monthRange(month);
-  const curSummaryQ = useRangeSummary(curRange.startDate, curRange.endDate);
+  const curSummaryQ = useRangeSummary(
+    curRange.startDate,
+    curRange.endDate,
+    undefined,
+    { reference: true },
+  );
 
   const insightHidden = useHideAmounts(INSIGHT_CARDS, "expense");
   const insight = useMemo(() => {

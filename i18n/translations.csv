@@ -5,6 +5,9 @@ common,newTab,새 탭,new tab
 common,cancel,취소,Cancel
 common,delete,삭제,Delete
 common,retry,다시 시도,Try again
+common,query.referenceFailed,일부 정보를 불러오지 못했어요.,Some information couldn't be loaded.
+common,query.referenceSaveFailed,필요한 정보를 불러오지 못해 저장하지 못했어요.,Couldn't save because some information couldn't be loaded.
+common,query.failedNamed,{{name}} 정보를 불러오지 못했어요,Couldn't load the {{name}} info
 common,edit,수정,Edit
 common,create,생성,Create
 common,search,검색,Search
@@ -209,7 +212,9 @@ todo,editTodoTitle,할 일 수정,Edit todo
 todo,count,건,
 todo,detail,자세히,Details
 todo,addTodoLabel,할 일 추가,Add to-do
-todo,toggleFailed,완료로 바꾸지 못했어요. 잠시 후 다시 시도해주세요.,Couldn't update the to-do. Please try again in a moment.
+todo,toggleFailed,할 일 상태를 바꾸지 못했어요.,Couldn't update the to-do.
+todo,saveFailed,할 일을 저장하지 못했어요.,Couldn't save the to-do.
+todo,deleteFailed,할 일을 삭제하지 못했어요.,Couldn't delete the to-do.
 todo,noDueDate,마감일 없음,No due date
 todo,detailTitle,할 일 상세,Todo details
 todo,detail.status,상태,Status
@@ -657,6 +662,8 @@ asset,savingGoal.editNamed,{{name}} 목표 수정,Edit {{name}} goal
 asset,savingGoal.deleteNamed,{{name}} 목표 삭제,Delete {{name}} goal
 asset,savingGoal.remaining,남은 금액,Remaining
 asset,savingGoal.achievedAt,달성일,Achieved on
+asset,savingGoal.saveFailed,저축 목표를 저장하지 못했어요.,Couldn't save the saving goal.
+asset,savingGoal.firstContributeFailed,목표는 만들었지만 첫 납입을 기록하지 못했어요.,Created the goal, but couldn't record the first deposit.
 asset,savingGoal.errName,목표 이름을 입력해주세요.,Enter a goal name.
 asset,savingGoal.errAmount,목표 금액을 입력해주세요.,Enter a goal amount.
 asset,savingGoal.errCurrentExceeds,현재 모은 금액이 목표 금액보다 클 수 없어요.,The amount saved can't exceed the target amount.
@@ -804,12 +811,15 @@ asset,assetDetail.usagePeriodLabel,카드 이용 기간,Card usage period
 asset,assetDetail.billingInfo,결제 정보,Billing info
 asset,assetDetail.cycleMix,이번 회차 구성,This cycle
 asset,assetDetail.perfTitle,{{month}}월 실적,Month {{month}} target
+asset,assetDetail.perfName,카드 실적,card performance
 asset,assetDetail.perfAchieved,실적 달성,Target met
 asset,assetDetail.yearLabel,{{year}}년,{{year}}
 asset,assetDetail.payAmountEmpty,결제 금액을 넣어주세요.,Enter the payment amount.
 asset,assetDetail.payAmountOver,결제 금액은 {{amount}}까지예요.,The payment can be up to {{amount}}.
 asset,assetDetail.payFailed,결제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't process the payment. Please try again in a moment.
 asset,trade.recordTitle,거래 기록,Trade log
+asset,trade.recordName,거래 기록,trade history
+asset,trade.previewName,거래 후 미리보기,trade preview
 asset,trade.detailTitle,거래 기록,Trade record
 asset,trade.kind,종류,Type
 asset,trade.unitPrice,단가,Unit price
@@ -1161,6 +1171,7 @@ calendar,shareSection.namePlaceholder,캘린더 이름,Calendar name
 calendar,shareSection.saveChanges,변경 저장,Save Changes
 calendar,shareSection.copyCode,복사,Copy
 calendar,shareSection.regenCode,새로 만들기,Generate new
+calendar,filter.visibilityFailed,캘린더 표시를 바꾸지 못했어요.,Couldn't change the calendar visibility.
 calendar,shareSection.codeHint,이 코드를 공유하면 다른 사람이 캘린더에 참여할 수 있어요.,Share this code to let others join the calendar.
 calendar,shareSection.codeNone,초대 코드 없음,No invite code
 calendar,shareSection.regenFailed,초대 코드를 새로 만들지 못했어요.,Couldn't create a new invite code.
@@ -1334,7 +1345,7 @@ user,passwordRuleLength,8자 이상,At least 8 characters
 user,passwordRuleSpecial,특수문자 1자 이상,At least 1 special character
 user,passwordPolicyUnmet,비밀번호 조건을 모두 충족해주세요,Password does not meet the requirements
 user,passwordSameAsCurrent,현재 비밀번호와 다른 비밀번호를 입력해주세요,New password must be different from the current one
-user,passwordChangeSuccess,비밀번호를 바꿨어요,Password changed successfully
+user,passwordChangeSuccess,비밀번호를 바꿨어요.,Changed your password.
 user,passwordChangeError,비밀번호를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change your password. Please try again shortly.
 user,withdraw.title,그루 담다 이용 해지,Stop using 그루 담다
 user,withdraw.intro,이용을 해지하면 바로 로그인이 막히고 되돌릴 수 없어요.,Stopping 그루 담다 signs you out immediately and cannot be undone.
@@ -1543,6 +1554,10 @@ category,moveTx.hint,같은 종류의 맨 아래 카테고리만 고를 수 있�
 category,moveTx.noTarget,옮길 수 있는 카테고리가 없어요. 먼저 하나 만들어주세요.,No category to move to. Please create one first.
 category,moveTx.action,옮기기,Move
 category,moveTx.done,{{count}}건을 옮겼어요,Moved {{count}} items
+category,moveTx.failed,거래를 옮기지 못했어요.,Couldn't move the transactions.
+category,saveFailed,카테고리를 저장하지 못했어요.,Couldn't save the category.
+category,deleteFailed,카테고리를 삭제하지 못했어요.,Couldn't delete the category.
+category,reorderFailed,순서를 바꾸지 못했어요.,Couldn't change the order.
 category,moveTx.modeNew,새 하위 만들기,Create subcategory
 category,moveTx.modeExisting,기존 카테고리로,Move to existing
 category,moveTx.childName,만들 하위 이름,New subcategory name
@@ -1759,6 +1774,9 @@ expense,txDetail.splitHeader,내역 분할 {{count}}개,Split into {{count}}
 expense,txDetail.splitSum,합계,Total
 expense,txDetail.merchantTitle,이 가맹점 이번 달,This month at this merchant
 expense,txDetail.recentOnly,최근 5건만 보여요,Showing the latest 5 only
+expense,txDetail.historyName,이전 거래,previous transactions
+expense,txDetail.relatedName,연결,links
+expense,txDetail.accountName,계좌 이름,account name
 expense,txDetail.splitLoadFailed,나눈 내역을 불러오지 못했어요,Could not load the split items
 expense,txDetail.refundDateToday,{{date}} · 오늘,{{date}} · Today
 expense,txDetail.refundDateHint,거래한 날({{date}})부터 오늘까지 고를 수 있어요.,You can pick a day from the transaction day ({{date}}) to today.
@@ -1842,7 +1860,8 @@ export,export,내보내기,Export
 export,fileFormat,파일 형식,File format
 export,preview,미리보기,Preview
 export,section.exportDone,내보냈어요.,Exported.
-export,section.exportFailed,내보내지 못했어요.,Could not export.
+export,section.exportFailed,내보내지 못했어요.,Couldn't export.
+export,section.previewFailed,미리보기를 불러오지 못했어요.,Couldn't load the preview.
 export,section.exportStalled,파일을 받는 중에 멈췄어요.,The download stopped.
 export,section.tabsLabel,데이터 내보내기 · 가져오기,Export and import data
 export,section.periodSelect,기간 선택,Select period
@@ -1899,6 +1918,7 @@ settings,hideAmounts.tabAll,전체,All
 settings,hideAmounts.selectAll,모두 선택,Select all
 settings,hideAmounts.clearAll,모두 해제,Clear all
 settings,hideAmounts.discardTitle,저장하지 않고 나가기,Leave without saving
+settings,hideAmounts.saveFailed,금액 가리기를 저장하지 못했어요.,Couldn't save the amount hiding.
 settings,hideAmounts.discardBody,고른 내용이 사라져요.,Your selection will be discarded.
 settings,hideAmounts.discardConfirm,나가기,Leave
 settings,hideAmounts.kindLabel,거래 종류,Transaction type
@@ -2031,7 +2051,7 @@ settings,devices.logoutAllTitle,모든 기기에서 로그아웃할까요?,Log o
 settings,devices.logoutAllConfirm,지금 쓰는 기기도 로그아웃돼요. 다시 로그인해야 해요.,This device will be logged out too. You'll need to sign in again.
 settings,devices.logoutLabel,{{device}} 로그아웃,Log out {{device}}
 settings,devices.loadErrorHint,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
-settings,devices.logoutFailed,로그아웃하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't log out. Please try again in a moment.
+settings,devices.logoutFailed,로그아웃하지 못했어요.,Couldn't log out.
 settings,account.linked,연결됨,Connected
 settings,account.notLinked,연결 안 됨,Not connected
 settings,account.link,연결,Connect
@@ -2049,9 +2069,9 @@ settings,account.sub.proPromo,증권 투자는 Pro 전용 · 지금 시작하기
 settings,account.sub.proStart,Pro 시작,Start Pro
 settings,account.sub.perMonth,/ 월,/ mo
 settings,account.sub.perYear,/ 년,/ yr
-settings,account.toast.linked,{{name}} 계정이 연결되었어요,{{name}} account connected
+settings,account.toast.linked,{{name}} 계정이 연결됐어요.,Connected the {{name}} account.
 settings,account.toast.linkError,계정을 연결하지 못했어요.,Couldn't connect the account.
-settings,account.toast.unlinked,Google 연결을 해제했어요,Google account disconnected
+settings,account.toast.unlinked,Google 연결을 해제했어요.,Disconnected the Google account.
 settings,account.toast.unlinkError,연결을 해제하지 못했어요.,Couldn't disconnect the account.
 settings,account.providersError,연결 상태를 불러오지 못했어요,Couldn't load the connection status
 settings,prefs.regionLoadError,기준 지역을 불러오지 못했어요,Couldn't load the region
@@ -2214,8 +2234,10 @@ stocks,watch.groupDelete,그룹 삭제,Delete group
 stocks,watch.groupNamePlaceholder,그룹 이름,Group name
 stocks,watch.groupDeleteConfirm,"""{{name}}"" 그룹과 담긴 종목 {{count}}개가 함께 삭제돼요. 삭제한 그룹은 되돌릴 수 없어요.","The ""{{name}}"" group and its {{count}} stocks will be deleted."
 stocks,watch.groupDeleteConfirmEmpty,"""{{name}}"" 그룹을 삭제해요. 삭제한 그룹은 되돌릴 수 없어요.","The ""{{name}}"" group will be deleted."
-stocks,watch.groupSaveFail,관심 그룹을 저장하지 못했어요.,Couldn't save the watchlist group.
-stocks,watch.addFail,관심 등록에 실패했어요,Failed to add to watchlist
+stocks,watch.groupSaveFail,그룹을 저장하지 못했어요.,Couldn't save the group.
+stocks,watch.groupDeleteFail,그룹을 삭제하지 못했어요.,Couldn't delete the group.
+stocks,watch.removeFail,관심 종목에서 빼지 못했어요.,Couldn't remove it from your watchlist.
+stocks,watch.addFail,관심 종목에 넣지 못했어요.,Couldn't add it to your watchlist.
 stocks,warning.LIQUIDATION_TRADING,정리매매,Liquidation trading
 stocks,warning.OVERHEATED,단기과열,Overheated
 stocks,warning.SHORT_TERM_OVERHEAT,단기과열,Short-term overheat
@@ -2446,10 +2468,10 @@ subscription,colFeature,기능,Feature
 subscription,feature.core,가계부 · 자산 관리,Budget and asset management
 subscription,feature.budget,예산 · 저축 목표 · 캘린더,Budget · savings goals · calendar
 subscription,feature.securities,증권사 연동 · 실시간 시세 · 자산 실시간 금액,Securities link · real-time quotes · real-time asset value
-subscription,toast.subscribed,담다 Pro 구독이 시작되었어요,담다 Pro subscription started
-subscription,toast.subscribeFailed,구독하지 못했어요.,Couldn't subscribe.
-subscription,toast.canceled,구독을 해지했어요,Subscription canceled
-subscription,toast.cancelFailed,구독을 해지하지 못했어요.,Couldn't cancel your subscription.
+subscription,toast.subscribed,담다 Pro 구독이 시작됐어요.,Your Pro subscription has started.
+subscription,toast.subscribeFailed,구독을 시작하지 못했어요.,Couldn't start the subscription.
+subscription,toast.canceled,구독을 해지했어요.,Canceled the subscription.
+subscription,toast.cancelFailed,구독을 해지하지 못했어요.,Couldn't cancel the subscription.
 subscription,cancelConfirmTitle,구독 해지,Cancel subscription
 subscription,cancelConfirmDesc,해지하면 {{date}}부터 Free 플랜으로 전환되고 증권 탭이 잠겨요. 그 전까지는 Pro 기능을 계속 쓸 수 있어요.,After canceling you switch to the Free plan on {{date}} and the Securities tab locks. You keep Pro features until then.
 subscription,expiryDate,만료일,expiry date
@@ -2475,12 +2497,13 @@ subscription,broker.useAsPrimary,이 증권사 시세로 자산 평가하기,Val
 subscription,broker.primaryHint,가계부 자산은 여기서 고른 증권사 시세로 계산해요.,Your assets are valued using the provider selected here.
 subscription,broker.keyHint,키는 서버에 암호화되어 저장되며 본인만 사용합니다. 발급은 {{broker}} 개발자센터에서 받을 수 있어요.,Your key is stored encrypted on the server and used only by you. Get yours from the {{broker}} developer center.
 subscription,broker.loadFailed,증권사 목록을 불러오지 못했어요,Couldn't load the securities list
-subscription,broker.toastConnected,{{broker}} 계정을 연결했어요,Connected your {{broker}} account
-subscription,broker.toastInvalid,인증정보가 올바르지 않아요,Invalid credentials
-subscription,broker.toastDisconnected,{{broker}} 연결을 해제했어요,Disconnected from {{broker}}
-subscription,broker.toastDisconnectFailed,해제에 실패했어요,Disconnect failed
-subscription,broker.toastPrimaryChanged,이제 {{broker}} 시세로 자산을 평가해요,Assets are now valued with {{broker}}
-subscription,broker.toastPrimaryFailed,기본 증권사를 바꾸지 못했어요,Couldn't change the primary provider
+subscription,broker.toastConnected,{{broker}} 계정을 연결했어요.,Connected your {{broker}} account.
+subscription,broker.toastInvalid,인증정보가 올바르지 않아요.,The credentials are not valid.
+subscription,broker.connectFailed,증권사를 연결하지 못했어요.,Couldn't connect to the broker.
+subscription,broker.toastDisconnected,{{broker}} 연결을 해제했어요.,Disconnected from {{broker}}.
+subscription,broker.toastDisconnectFailed,연결을 해제하지 못했어요.,Couldn't disconnect.
+subscription,broker.toastPrimaryChanged,이제 {{broker}} 시세로 자산을 평가해요.,Assets are now valued with {{broker}}.
+subscription,broker.toastPrimaryFailed,기본 증권사를 바꾸지 못했어요.,Couldn't change the primary broker.
 subscription,apiToken.title,API 토큰,API tokens
 subscription,apiToken.desc,내 증권사 키로 시세·차트를 내 프로그램에서 불러올 수 있어요,Read prices and charts from your own programs with your securities key
 subscription,apiToken.scopeHint,"토큰으로는 시세·차트·환율 조회만 할 수 있어요. 잔고와 가계부는 열리지 않고, 구독이 끝나면 토큰도 함께 멈춰요.","Tokens can only read prices, candles and exchange rates. Holdings and your ledger stay closed, and tokens stop working when your subscription ends."
@@ -2499,8 +2522,10 @@ subscription,apiToken.tokenLabel,토큰,Token
 subscription,apiToken.copy,토큰 복사,Copy token
 subscription,apiToken.exampleLabel,호출 예시,Example request
 subscription,apiToken.done,확인,Done
-subscription,apiToken.toastCopied,복사했어요,Copied
-subscription,apiToken.toastRevoked,토큰을 폐기했어요,Token revoked
+subscription,apiToken.toastCopied,복사했어요.,Copied.
+subscription,apiToken.toastRevoked,토큰을 폐기했어요.,Revoked the token.
+subscription,apiToken.revokeFailed,토큰을 폐기하지 못했어요.,Couldn't revoke the token.
+subscription,apiToken.issueFailed,토큰을 만들지 못했어요.,Couldn't create the token.
 subscription,apiToken.loadFailed,토큰 목록을 불러오지 못했어요,Couldn't load your tokens
 subscription,gate.title,증권 구독이 필요해요,Securities needs a subscription
 subscription,gate.desc,"실시간 시세·종목 검색·관심종목은 Pro 구독에 들어 있어요. 구독하면 이 화면이 바로 열려요.","Real-time quotes, search and watchlists are part of Pro. Subscribe and this screen opens right away."
@@ -2572,6 +2597,8 @@ export,import.uploadTitle,파일 업로드,Upload file
 export,import.uploadDesc,"CSV 또는 Excel(.xlsx, .xls) 파일을 올려주세요. 최대 10MB.","Upload a CSV or Excel (.xlsx, .xls) file. Up to 10MB."
 export,import.errorType,CSV 또는 Excel 파일만 올릴 수 있어요.,Only CSV or Excel files can be uploaded.
 export,import.errorSize,파일은 10MB까지 올릴 수 있어요.,Files up to 10MB can be uploaded.
+export,import.analyzeFailed,파일을 읽지 못했어요.,Couldn't read the file.
+export,import.runFailed,거래를 가져오지 못했어요.,Couldn't import the transactions.
 export,import.notice,가져온 데이터는 기존 거래에 추가되며 덮어쓰지 않아요. 미리보기에서 중복 · 오류를 확인할 수 있어요.,Imported data is added to existing transactions without overwriting. Check duplicates and errors in the preview.
 export,import.fileTitle,가져올 파일,File to import
 export,import.rowsDetected,{{total}}개 행 · 유효 {{valid}}건,{{total}} rows · {{valid}} valid
@@ -2836,6 +2863,8 @@ asset,trade.realizedPreview,실현손익,Realized P/L
 asset,trade.fundingNotice,예수금이 모자라 결제 계좌에서 {{amount}}원을 옮겨요,{{amount}} moves from the settlement account to cover the shortfall
 asset,trade.insufficientCash,예수금이 마이너스가 돼요. 그대로 기록됩니다.,Cash will go negative. It is recorded as is.
 asset,trade.insufficientQty,보유 수량보다 많이 팔 수 없어요.,Cannot sell more than you hold.
+asset,trade.saveFailed,매매를 처리하지 못했어요.,Couldn't process the trade.
+asset,trade.saveInsufficientQty,보유 수량이 부족해요.,Not enough shares held.
 asset,trade.entryBuy,매수,Buy
 asset,trade.entrySell,매도,Sell
 asset,trade.history,거래 내역,Trade history
@@ -3039,7 +3068,6 @@ recurring,saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주�
 recurring,errInterestOver,이자는 금액보다 클 수 없어요.,Interest can't be more than the amount.
 recurring,pickValue,{{name}} 선택,Select {{name}}
 recurring,noValue,{{name}} 없음,No {{name}}
-recurring,assetsLoadFailed,계좌 목록을 불러오지 못해 저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,"Couldn't load your accounts, so it wasn't saved. Please try again in a moment."
 recurring,nextDatesLine,다음 예정일 — {{dates}},Next dates — {{dates}}
 recurring,memoPlaceholder,메모를 적어 주세요,Write a note
 recurring,clearValue,값 지우기,Clear value
@@ -3306,6 +3334,7 @@ expense,calendar.miniLabel,작은 달력,Month calendar
 expense,calendar.dayLabel,"{{date}}, 지출 {{amount}}","{{date}}, spent {{amount}}"
 expense,calendar.dayLabelNone,{{date}},{{date}}
 expense,calendar.legend,막대가 진할수록 많이 쓴 날 · 누르면 그 날로 옮겨요,Darker bars mean more spent · Tap a day to jump to it
+expense,calendar.failedName,달력 지출,calendar spending
 expense,list.count,거래 {{count}}건,{{count}} transactions
 expense,list.select,고르기,Select
 expense,list.selectDone,완료,Done
@@ -3349,6 +3378,7 @@ calendar,loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again i
 calendar,form.none,없음,None
 calendar,form.noLabel,라벨 없음,No label
 calendar,form.noReminder,알림 없음,No reminder
+calendar,form.labelLoadFailed,라벨을 불러오지 못했어요,Could not load labels
 calendar,form.calendarLoadFailed,불러오지 못했어요,Could not load
 calendar,form.labelHint,라벨은 설정의 캘린더 라벨에서 만들어요,Create labels in Settings under Calendar labels
 calendar,form.start,시작,Start

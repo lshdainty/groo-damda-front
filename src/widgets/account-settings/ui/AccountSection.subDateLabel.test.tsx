@@ -19,6 +19,9 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
+}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (k: string, p?: { date?: string }) => (p?.date ? `${k}:${p.date}` : k),

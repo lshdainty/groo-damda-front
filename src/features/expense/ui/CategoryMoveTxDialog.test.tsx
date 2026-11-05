@@ -15,13 +15,38 @@ vi.mock("react-i18next", () => ({
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("sonner", () => ({ toast: { success: vi.fn() } }));
+const snack: Array<{ message: string; tone?: string }> = [];
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: { message: string; tone?: string }) => snack.push(o),
+    dismiss: () => {},
+  }),
+}));
+const hook = { failed: false, opts: [] as unknown[] };
 
 const move = vi.fn();
 const split = vi.fn();
 vi.mock("@/features/expense", () => ({
-  useMoveCategoryTransactions: () => ({ mutate: move, isPending: false }),
-  useSplitCategoryIntoChild: () => ({ mutate: split, isPending: false }),
+  useMoveCategoryTransactions: (o?: unknown) => {
+    hook.opts.push(o);
+    return {
+      mutate: move,
+      reset: () => {},
+      isPending: false,
+      isError: hook.failed,
+      error: hook.failed ? new Error("서버 원문 오류") : null,
+    };
+  },
+  useSplitCategoryIntoChild: (o?: unknown) => {
+    hook.opts.push(o);
+    return {
+      mutate: split,
+      reset: () => {},
+      isPending: false,
+      isError: false,
+      error: null,
+    };
+  },
 }));
 
 const { CategoryMoveTxDialog } = await import("./CategoryMoveTxDialog");
@@ -59,6 +84,9 @@ beforeEach(() => {
     removeEventListener() {},
   })) as unknown as typeof window.matchMedia;
   move.mockClear();
+  snack.length = 0;
+  hook.failed = false;
+  hook.opts = [];
   split.mockClear();
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -175,5 +203,48 @@ describe("거래 옮기기", () => {
       id: 1,
       targetCategoryRowId: 2,
     });
+  });
+});
+
+describe("거래 옮기기 실패(I-28-5 5)", () => {
+  const food = cat(1, "식비");
+  const child = cat(3, "점심", 1);
+  const traffic = cat(2, "교통");
+
+  it("요청은 silent — 서버 원문 토스트가 안 뜬다", () => {
+    mount(food, [food, child, traffic]);
+    expect(hook.opts.length).toBeGreaterThan(0);
+    for (const o of hook.opts) expect(o).toEqual({ silent: true });
+  });
+
+  it("실패하면 폼 맨 위 Callout 고정 글 · 서버 글 없음", () => {
+    hook.failed = true;
+    mount(food, [food, child, traffic]);
+    expect(document.querySelector('[role="alert"]')?.textContent).toBe(
+      "moveTx.failed",
+    );
+    expect(document.body.textContent).not.toContain("서버 원문 오류");
+  });
+
+  it("성공하면 neutral 스낵바 한 문장 · 같은 틱 두 번 눌러도 요청은 한 번", () => {
+    mount(food, [food, traffic]);
+    type(input(), "점심");
+    act(() => {
+      byText("moveTx.action").click();
+      byText("moveTx.action").click();
+    });
+    expect(split).toHaveBeenCalledTimes(1);
+    const cbs = split.mock.calls[0]![1] as {
+      onSuccess: (r: {
+        expenses: number;
+        recurring: number;
+        splits: number;
+      }) => void;
+      onSettled: () => void;
+    };
+    act(() => cbs.onSuccess({ expenses: 2, recurring: 1, splits: 0 }));
+    expect(snack).toEqual([
+      { message: 'moveTx.done{"count":3}', tone: "neutral" },
+    ]);
   });
 });

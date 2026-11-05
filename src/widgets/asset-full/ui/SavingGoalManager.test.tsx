@@ -42,7 +42,8 @@ vi.mock("@/features/savingGoal", () => ({
 }));
 
 const { SavingGoalManager } = await import("./SavingGoalManager");
-const { setHiddenCards } = await import("@/shared/lib/groo/hide-amounts-core");
+const { setHiddenCardsLocal } =
+  await import("@/shared/lib/groo/hide-amounts-core");
 
 const goal = (rowId: number, color: string, extra: object = {}) => ({
   rowId,
@@ -72,7 +73,7 @@ beforeEach(() => {
   };
 });
 afterEach(() => {
-  act(() => setHiddenCards([]));
+  act(() => setHiddenCardsLocal([]));
   act(() => root.unmount());
   container.remove();
 });
@@ -123,7 +124,7 @@ describe("저축 목표 금액 가림(asset.savingGoals) — 웹도 앱처럼(I-
   it("켜면 요약 · 줄 금액이 ••••, 막대 · % 는 보인다", () => {
     render();
     expect(container.textContent).toContain("250,000");
-    act(() => setHiddenCards(["asset.savingGoals"]));
+    act(() => setHiddenCardsLocal(["asset.savingGoals"]));
     expect(container.textContent).not.toContain("250,000");
     expect(container.textContent).not.toContain("1,000,000");
     expect(container.textContent).toContain("••••");

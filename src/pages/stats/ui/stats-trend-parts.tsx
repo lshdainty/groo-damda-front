@@ -95,14 +95,14 @@ export function TrendSection({
     />
   );
   const height = chartHeight(place, 200, 260);
-  if (m.rangeQ.isError && !m.rangeQ.data) {
+  if (m.trendFailed) {
     return (
       <>
         {head}
         <Fail
           place={place}
           title={t("loadFailed.trend")}
-          onRetry={() => void m.rangeQ.refetch()}
+          onRetry={() => m.retryTrend()}
         />
       </>
     );
@@ -445,7 +445,7 @@ export function SavingsBarsSection({
     />
   );
   const height = chartHeight(place, 180, 220);
-  if (m.rangeQ.isError && !m.rangeQ.data) {
+  if (m.trendFailed) {
     // 폰은 질의 하나 = 상자 하나 — 같은 질의를 먹는 뒤 띠는 상자를 또 그리지 않는다(앞 띠가 말한다). 데스크톱은 카드마다 그대로
     if (place === "band") return null;
     return (
@@ -454,7 +454,7 @@ export function SavingsBarsSection({
         <Fail
           place={place}
           title={t("loadFailed.trend")}
-          onRetry={() => void m.rangeQ.refetch()}
+          onRetry={() => m.retryTrend()}
         />
       </>
     );

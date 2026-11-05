@@ -42,7 +42,8 @@ vi.mock("@/features/expense", () => ({
 vi.mock("@/features/user", () => ({ useUserPreferences: () => state.prefs }));
 
 const { BudgetMobile } = await import("./BudgetMobile");
-const { setHiddenCards } = await import("@/shared/lib/groo/hide-amounts-core");
+const { setHiddenCardsLocal } =
+  await import("@/shared/lib/groo/hide-amounts-core");
 
 const now = new Date();
 const budget = (
@@ -102,7 +103,7 @@ beforeEach(() => {
   state.prefs = q({ budgetAlertThreshold: 85 });
 });
 afterEach(() => {
-  act(() => setHiddenCards([]));
+  act(() => setHiddenCardsLocal([]));
   act(() => root.unmount());
   container.remove();
 });
@@ -295,11 +296,11 @@ describe("불러오는 중 · 실패 · 예산 없음(I-08 15 · 17)", () => {
 describe("금액 가리기 — 카드별(I-08 8 · 12)", () => {
   it("budget.header 만 가리면 총 예산 구역만 ••••, 목록 줄은 보인다", () => {
     render();
-    act(() => setHiddenCards(["budget.header"]));
+    act(() => setHiddenCardsLocal(["budget.header"]));
     expect(section("total").textContent).not.toContain("12,345,678,901");
     expect(section("total").textContent).toContain("••••");
     expect(section("list").textContent).toContain("700,000");
-    act(() => setHiddenCards(["budget.categories"]));
+    act(() => setHiddenCardsLocal(["budget.categories"]));
     expect(section("total").textContent).toContain("12,345,678,901");
     expect(section("list").textContent).not.toContain("700,000");
   });

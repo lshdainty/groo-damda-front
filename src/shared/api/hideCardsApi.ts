@@ -19,9 +19,14 @@ export const hideCardsApi = {
 
   /** 통째로 교체. 부분 갱신이 아니다. */
   put: async (hideCards: string[]): Promise<void> => {
-    const resp: ApiResponse = await apiClient.put("/v1/users/me/hide-cards", {
-      hideCards,
-    });
+    // 실패는 호출한 쪽이 성공 여부로 받아 자기 자리에서 알린다
+    const resp: ApiResponse = await apiClient.put(
+      "/v1/users/me/hide-cards",
+      { hideCards },
+      { silent: true } as import("axios").AxiosRequestConfig & {
+        silent?: boolean;
+      },
+    );
     if (!resp.success) throw new Error(resp.message);
   },
 };

@@ -1,6 +1,5 @@
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { Check, Minus, Sparkles, TrendingUp } from "lucide-react";
 
 import { Badge } from "@/shared/ds/badge";
@@ -31,7 +30,7 @@ import {
   TopNavigationTitle,
 } from "@/shared/ds/top-navigation";
 import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
-import { SnackbarAvoidOverlap } from "@/shared/ds/snackbar";
+import { SnackbarAvoidOverlap, useSnackbar } from "@/shared/ds/snackbar";
 import { useCoverBottomNav } from "@/shared/ui/groo/use-cover-bottom-nav";
 import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 import { formatDateSmart, toLocalDateKey } from "@/shared/lib/date";
@@ -86,6 +85,7 @@ export function SubscriptionSection({
   const subscribe = useSubscribe();
   const cancel = useCancelSubscription();
   const confirmFail = useConfirmFail();
+  const snackbar = useSnackbar();
   const compareId = useId();
   // 폰 껍데기가 탭 바를 덮는 동안 탭 바는 inert — 스낵바가 바닥 버튼 위 8 에 서게(J5)
   useCoverBottomNav(mobile);
@@ -152,12 +152,20 @@ export function SubscriptionSection({
 
   const onSubscribe = () => {
     if (!selected) return;
-    subscribe.mutate(selected.planCode, {
-      onSuccess: () => toast.success(t("toast.subscribed")),
-      onError: () => toast.error(t("toast.subscribeFailed")),
-    });
+    // 구독 시작은 드문 이정표라 positive. 실패는 critical 스낵바 + [다시 시도](같은 요청)
+    const started = () =>
+      snackbar.show({ message: t("toast.subscribed"), tone: "positive" });
+    const run = () => subscribe.mutateAsync(selected.planCode);
+    run().then(started, () =>
+      confirmFail({
+        message: t("toast.subscribeFailed"),
+        retry: run,
+        onRetried: started,
+      }),
+    );
   };
-  const canceled = () => toast.success(t("toast.canceled"));
+  const canceled = () =>
+    snackbar.show({ message: t("toast.canceled"), tone: "neutral" });
   const doCancel = () => cancel.mutateAsync(undefined);
 
   const planBadge = (

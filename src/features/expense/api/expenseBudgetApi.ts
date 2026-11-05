@@ -30,10 +30,15 @@ export const expenseBudgetApi = {
     return resp.data;
   },
 
-  getBudgets: async (params: BudgetListParams): Promise<ExpenseBudget[]> => {
+  getBudgets: async (
+    params: BudgetListParams,
+    opts?: QuietOpts,
+  ): Promise<ExpenseBudget[]> => {
     const resp: ApiResponse<{ budgets: ExpenseBudget[] }> = await apiClient.get(
       "/v1/expense/budgets",
-      { params },
+      { params, silent: opts?.silent } as import("axios").AxiosRequestConfig & {
+        silent?: boolean;
+      },
     );
     return resp.data.budgets;
   },

@@ -60,19 +60,20 @@ const TodoPageInner = ({
 }) => {
   const { t } = useTranslation("todo");
   const todosQ = useTodos();
-  const createTodo = useCreateTodo();
-  const updateTodo = useUpdateTodo();
+  // 저장 실패는 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글), 삭제는 확인창을 닫고 스낵바 + [다시 시도]
+  const createTodo = useCreateTodo({ silent: true });
+  const updateTodo = useUpdateTodo({ silent: true });
   const toggleStatus = useToggleTodoStatus();
-  const deleteTodo = useDeleteTodo();
-  const todoTagsQ = useTodoTags();
+  const deleteTodo = useDeleteTodo({ silent: true });
+  const todoTagsQ = useTodoTags({ reference: true });
 
   const todos: Todo[] = useMemo(() => todosQ.data ?? [], [todosQ.data]);
   const today = useMemo(() => todayLocalKey(), []);
 
   // ── 별자리 게이미피케이션 — 할일 화면엔 스트립/토글 진입점만, 상세는 밤하늘 화면 ──
-  const constellationTodayQ = useConstellationToday();
+  const constellationTodayQ = useConstellationToday({ reference: true });
   // 모바일 원장 캘린더 마크(수집★/구름)용 — 이번 달 커버 확보(45일)
-  const skyQ = useConstellationSky(45);
+  const skyQ = useConstellationSky(45, { reference: true });
   // 오늘 완료 건수 — 완료 이벤트(completedAt) 기준 (히어로 캡션용)
   // completedAt 은 서버가 주는 `[UTC]` 라 로컬 날짜로 바꿔서 비교한다. 문자열을 자르면
   // UTC 날짜라, KST 새벽 0~9시에 끝낸 할일이 전날로 빠진다(today 는 로컬 날짜다).
@@ -134,13 +135,26 @@ const TodoPageInner = ({
     });
   };
 
+  const saveFailed = createTodo.isError || updateTodo.isError;
+  const saveError = createTodo.error ?? updateTodo.error ?? undefined;
+  const clearSaveError = () => {
+    createTodo.reset();
+    updateTodo.reset();
+  };
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면(성공 · 실패) 끈다
+  const savingRef = useRef(false);
+  const settle = {
+    onSettled: () => {
+      savingRef.current = false;
+    },
+    onSuccess: () => setEditing(null),
+  };
   const onSave = (values: TodoFormValues, id?: number) => {
-    if (id != null)
-      updateTodo.mutate(
-        { id, data: values },
-        { onSuccess: () => setEditing(null) },
-      );
-    else createTodo.mutate(values, { onSuccess: () => setEditing(null) });
+    if (savingRef.current) return;
+    savingRef.current = true;
+    clearSaveError();
+    if (id != null) updateTodo.mutate({ id, data: values }, settle);
+    else createTodo.mutate(values, settle);
   };
 
   const overlays = (
@@ -174,9 +188,14 @@ const TodoPageInner = ({
           todo={"_new" in editing ? null : editing}
           today={today}
           tags={tagNames}
-          onClose={() => setEditing(null)}
+          onClose={() => {
+            clearSaveError();
+            setEditing(null);
+          }}
           onSave={onSave}
           submitting={createTodo.isPending || updateTodo.isPending}
+          saveFailed={saveFailed}
+          saveError={saveError}
         />
       )}
     </>

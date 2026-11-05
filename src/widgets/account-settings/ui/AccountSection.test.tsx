@@ -45,17 +45,19 @@ vi.mock("react-i18next", () => ({
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("sonner", () => ({
-  toast: {
-    success: () => {},
-    error: (
-      m: string,
-      o?: { action?: { label: string; onClick: () => void } },
-    ) => {
-      toasts.error.push(m);
-      toasts.opts.push(o ?? {});
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: {
+      message: string;
+      tone?: string;
+      action?: { label: string; onClick: () => void };
+    }) => {
+      if (o.tone !== "critical") return;
+      toasts.error.push(o.message);
+      toasts.opts.push(o);
     },
-  },
+    dismiss: () => {},
+  }),
 }));
 vi.mock("@/features/user", () => ({
   useCurrentUser: () => ({

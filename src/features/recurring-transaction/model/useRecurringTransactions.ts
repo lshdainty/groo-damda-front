@@ -1,3 +1,8 @@
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { invalidateFor, recurringTransactionKeys } from "@/shared/config";
 import { recurringTransactionApi } from "../api/recurringTransactionApi";
@@ -8,14 +13,15 @@ export const useRecurringTransactions = (
     upcoming?: boolean;
     limit?: number;
   },
-  options?: { silent?: boolean },
+  options?: ReferenceOpts,
 ) => {
   return useQuery({
+    ...referenceMeta(options),
     queryKey: recurringTransactionKeys.list(params),
     queryFn: async () => {
       const response = await recurringTransactionApi.getRecurrings(
         params,
-        options,
+        referenceSilent(options),
       );
       return response.recurringTransactions;
     },

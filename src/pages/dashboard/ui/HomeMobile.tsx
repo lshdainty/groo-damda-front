@@ -60,7 +60,7 @@ export function HomeMobile() {
   const monthlyQ = useRangeSummary(monthStart, monthEnd);
   const recentQ = useExpenses({ startDate: monthStart, endDate: monthEnd });
   const budgetsQ = useExpenseBudgets({ year, month });
-  const categoriesQ = useExpenseCategories();
+  const categoriesQ = useExpenseCategories({ reference: true });
   const { t: tc } = useTranslation("common");
 
   const summary = dashboardQ.data;

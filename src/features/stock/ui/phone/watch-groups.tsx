@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EllipsisVertical, Pencil, Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/shared/ds/button";
+import { Callout } from "@/shared/ds/callout";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -21,7 +21,9 @@ import {
   ResponsiveMenuTrigger,
 } from "@/shared/ds/menu";
 import { ResultSection } from "@/shared/ds/result-section";
+import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { cn } from "@/shared/lib/cn";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import type { WatchGroup } from "../../api/stockApi";
@@ -223,23 +225,35 @@ export function WatchGroupForm({
   const initial = group?.groupName ?? "";
   const [name, setName] = useState(initial);
   const nameRef = useRef<HTMLInputElement>(null);
-  const createMut = useCreateWatchGroup();
-  const renameMut = useRenameWatchGroup();
+  // 저장 실패는 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글) — 요청은 silent, 폼은 열린 채 · 쓴 이름 그대로
+  const createMut = useCreateWatchGroup({ silent: true });
+  const renameMut = useRenameWatchGroup({ silent: true });
   const busy = createMut.isPending || renameMut.isPending;
   const canSave = name.trim().length > 0 && !busy;
+  const saveFailed = createMut.isError || renameMut.isError;
+  const errorRef = useScrollToError<HTMLDivElement>(
+    saveFailed,
+    createMut.error ?? renameMut.error,
+  );
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면 끈다
+  const savingRef = useRef(false);
 
   const save = () => {
     // Enter 연타 · 따닥 — 요청이 나가 있으면 다시 안 보낸다
-    if (busy) return;
+    if (busy || savingRef.current) return;
     const groupName = name.trim();
     if (!groupName) return;
-    const fail = () => toast.error(t("watch.groupSaveFail"));
-    if (group)
-      renameMut.mutate(
-        { groupId: group.rowId, groupName },
-        { onSuccess: onClose, onError: fail },
-      );
-    else createMut.mutate(groupName, { onSuccess: onClose, onError: fail });
+    savingRef.current = true;
+    createMut.reset();
+    renameMut.reset();
+    const settle = {
+      onSuccess: onClose,
+      onSettled: () => {
+        savingRef.current = false;
+      },
+    };
+    if (group) renameMut.mutate({ groupId: group.rowId, groupName }, settle);
+    else createMut.mutate(groupName, settle);
   };
 
   return (
@@ -262,6 +276,13 @@ export function WatchGroupForm({
         }}
       >
         <ResponsiveDialogBody>
+          {saveFailed && (
+            <div ref={errorRef}>
+              <Callout tone="critical" role="alert" className="mb-x4">
+                {t("watch.groupSaveFail")}
+              </Callout>
+            </div>
+          )}
           <Field label={t("watch.groupNameLabel")}>
             <Input
               ref={nameRef}
@@ -288,7 +309,7 @@ export function WatchGroupForm({
   );
 }
 
-/** 그룹 삭제 확인 — ds Alert Dialog. 삭제 요청 · 실패 길은 지금 그대로(토스트) */
+/** 그룹 삭제 확인 — ds Alert Dialog. 실패하면 확인창을 닫고 critical 스낵바 + [다시 시도] */
 export function WatchGroupDeleteConfirm({
   group,
   onClose,
@@ -297,7 +318,8 @@ export function WatchGroupDeleteConfirm({
   onClose: () => void;
 }) {
   const { t } = useTranslation("stocks");
-  const deleteMut = useDeleteWatchGroup();
+  const deleteMut = useDeleteWatchGroup({ silent: true });
+  const confirmFail = useConfirmFail();
   const count = group.items.length;
   return (
     <AlertConfirm
@@ -309,7 +331,12 @@ export function WatchGroupDeleteConfirm({
       }
       confirmLabel={t("watch.groupDelete")}
       onConfirm={() => deleteMut.mutateAsync(group.rowId)}
-      onError={() => toast.error(t("watch.groupSaveFail"))}
+      onError={() =>
+        confirmFail({
+          message: t("watch.groupDeleteFail"),
+          retry: () => deleteMut.mutateAsync(group.rowId),
+        })
+      }
       onClose={onClose}
     />
   );

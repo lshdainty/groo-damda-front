@@ -70,7 +70,10 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
 
   const budgetsQ = useExpenseBudgets({ year, month });
   const { data: budgets, isLoading: loadingBudgets } = budgetsQ;
-  const prevBudgetsQ = useExpenseBudgets({ year: prevY, month: prevM });
+  const prevBudgetsQ = useExpenseBudgets(
+    { year: prevY, month: prevM },
+    { reference: true },
+  );
   const categoriesQ = useExpenseCategories();
   const { data: categories, isLoading: loadingCategories } = categoriesQ;
   const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
@@ -507,6 +510,8 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
           confirmLabel={t("copy")}
           tone="criticalSolid"
           onConfirm={() => startCopy(false)}
+          // startCopy 는 실패를 스스로 잡아 스낵바(+ 다시 시도)로 알린다 — 여기까지 던지지 않는다
+          onError={() => {}}
           onClose={() => setConfirmCopy(false)}
         />
       )}

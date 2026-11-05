@@ -27,7 +27,7 @@ export function useMemoScreen() {
   const { t: tc } = useTranslation("common");
   const snackbar = useSnackbar();
   const memosQ = useMemos(undefined, { silent: true });
-  const memoTagsQ = useMemoTags({ silent: true });
+  const memoTagsQ = useMemoTags({ reference: true });
   const createMemo = useCreateMemo({ silent: true });
   const updateMemo = useUpdateMemo({ silent: true });
   const togglePin = useToggleMemoPin({ silent: true });

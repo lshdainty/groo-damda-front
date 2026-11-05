@@ -16,7 +16,9 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 const toastError = vi.hoisted(() => vi.fn());
-vi.mock("sonner", () => ({ toast: { error: toastError, success: vi.fn() } }));
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: toastError, dismiss: () => {} }),
+}));
 const logout = vi.hoisted(() => vi.fn());
 vi.mock("@/features/auth/model/useAuth", () => ({
   useAuth: () => ({ logout }),
@@ -181,7 +183,16 @@ describe("DevicesSection", () => {
       confirm.click();
     });
     expect(toastError).toHaveBeenCalledTimes(1);
-    expect(toastError.mock.calls[0]![0]).toBe("devices.logoutFailed");
+    expect(toastError.mock.calls[0]![0]).toMatchObject({
+      message: "devices.logoutFailed",
+      tone: "critical",
+    });
     expect(dialog()).toBeNull();
+    // [다시 시도] 는 묻지 않고 같은 끊기를 한 번 더 한다
+    sessions.revoke.mockResolvedValue(undefined);
+    await act(async () => {
+      toastError.mock.calls[0]![0].action.onClick();
+    });
+    expect(sessions.revoke).toHaveBeenCalledTimes(2);
   });
 });

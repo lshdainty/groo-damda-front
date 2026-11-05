@@ -58,9 +58,14 @@ export const expenseTemplateApi = {
    * 프리셋을 칩으로 적용한 뒤 폼을 수정해 일반 거래로 저장한 경우,
    * 거래 저장 성공 후 이 호출로 useCount/lastUsedAt 만 갱신한다.
    */
+  // 사용 기록만 올리는 뒷일이다 — 실패해도 사용자가 할 일이 없어 알림 없이 둔다(silent)
   touchTemplate: async (id: number): Promise<ExpenseTemplate> => {
     const resp: ApiResponse<ExpenseTemplate> = await apiClient.post(
       `/v1/expense-template/${id}/touch`,
+      undefined,
+      { silent: true } as import("axios").AxiosRequestConfig & {
+        silent?: boolean;
+      },
     );
     return resp.data;
   },

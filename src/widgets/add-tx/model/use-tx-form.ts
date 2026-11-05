@@ -18,7 +18,7 @@ import {
   useCreateTransfer,
   useUpdateTransfer,
 } from "@/features/asset";
-import { useDefaultCurrency } from "@/features/user";
+import { useDefaultCurrencyState } from "@/features/user";
 import { useCommitSms, type SmsParseResult } from "@/features/sms";
 import { useExpenseSplits } from "@/features/expense-split";
 import type {
@@ -313,7 +313,11 @@ export function useTxForm({
   //
   // `useState` 초기값으로 굳히지도 않는다 — `/me/preferences` 는 설정 화면을 안 들른
   // 세션에서 이 시트보다 늦게 도착해서, 초기값으로 받으면 첫 렌더의 `KRW` 에 잠긴다.
-  const defaultCurrency = useDefaultCurrency();
+  const {
+    currency: defaultCurrency,
+    ready: defaultCurrencyReady,
+    ensure: ensureDefaultCurrency,
+  } = useDefaultCurrencyState();
   const [origCurrencyPick, setOrigCurrency] = useState<string | null>(null);
   const origCurrency =
     origCurrencyPick ??
@@ -945,6 +949,17 @@ export function useTxForm({
       loadListsThenSave();
       return;
     }
+    // 새 거래의 통화는 설정의 기본 통화에서 온다 — 못 받은 채 저장하면 KRW 로 조용히 저장된다. 다시 받고, 또 실패하면 요청 없이 알린다
+    if (!seed && !defaultCurrencyReady) {
+      savingRef.current = true;
+      setListsFailed(false);
+      void ensureDefaultCurrency().then((ok) => {
+        savingRef.current = false;
+        if (ok) setSaveRetry((n) => n + 1);
+        else setListsFailed(true);
+      });
+      return;
+    }
     setShowErrors(true);
     const bad = firstError();
     if (bad) {
@@ -1498,6 +1513,7 @@ export function useTxForm({
     confirmSave,
     submitting,
     saveFailed,
+    listsFailed,
     subDirty,
     leaveSub,
     expense,

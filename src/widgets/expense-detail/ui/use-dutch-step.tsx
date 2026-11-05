@@ -1,3 +1,4 @@
+import { refetchMissingRefs } from "@/shared/api";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronRight, StickyNote } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -109,7 +110,6 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
     (c) => c.rowId === expense.categoryRowId,
   );
   const meName = userQ.data?.userName ?? t("fromTx.me");
-  const meRowId = userQ.data?.rowId ?? null;
   const title = expense.merchant || expense.description || t("title");
 
   const [method, setMethod] = useState<SplitMethod>("EQUAL");
@@ -121,6 +121,8 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
   const [nameError, setNameError] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  // 카테고리 목록을 저장 때 다시 받다 또 실패했다 — 요청은 보내지 않고 폼 Callout 으로 알린다
+  const [refFailed, setRefFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [memoStep, setMemoStep] = useState(false);
   const [memoDraft, setMemoDraft] = useState("");
@@ -210,17 +212,34 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
     try {
       setShowErrors(true);
       if (noPeople || gapText || ratioBad || customBad) return;
+      setRefFailed(false);
+      // 결제자(나)의 user id · 이름은 서버로 가는 값이다 — "나" 폴백은 화면 표시에만 쓰고 저장에는 쓰지 않는다.
+      // 현재 사용자를 못 받았으면 저장 때 다시 받고, 또 실패하면 요청 없이 폼 Callout 으로 알린다
+      let me = userQ.data;
+      let ok = await refetchMissingRefs([categoriesQ]);
+      if (ok && !me) {
+        const r = await userQ.refetch();
+        me = r.data;
+        ok = !r.isError && !!me;
+      }
+      if (!ok || !me) {
+        setRefFailed(true);
+        bodyRef.current?.scrollTo({ top: 0 });
+        return;
+      }
+      const savedMeRowId = me.rowId;
+      const savedMeName = me.userName;
       const participants: ParticipantFormValues[] = people.map((p, i) => ({
-        userRowId: p.uid === "me" ? meRowId : null,
-        participantName: p.name.trim(),
+        userRowId: p.uid === "me" ? savedMeRowId : null,
+        participantName: p.uid === "me" ? savedMeName : p.name.trim(),
         amount: shares.amounts[i] ?? 0,
         isPayer: p.uid === "me",
       }));
       // 나 포함을 끄면 나는 목록에 없지만 결제자로 싣는다 — 남는 원이 내 몫이다(서버는 결제자의 0 · 양수 모두 받는다)
       if (!includeMe)
         participants.unshift({
-          userRowId: meRowId,
-          participantName: meName,
+          userRowId: savedMeRowId,
+          participantName: savedMeName,
           amount: shares.mine,
           isPayer: true,
         });
@@ -291,10 +310,12 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
   } else {
     body = (
       <>
-        {saveFailed && (
+        {(saveFailed || refFailed) && (
           <div className="px-global-gutter pb-x3 pt-x1">
             <Callout tone="critical" role="alert">
-              {t("fromTx.saveFailed")}
+              {saveFailed
+                ? t("fromTx.saveFailed")
+                : tc("query.referenceSaveFailed")}
             </Callout>
           </div>
         )}

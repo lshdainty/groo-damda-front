@@ -28,7 +28,7 @@ import { AccountManager, SavingGoalManager } from "@/widgets/asset-full";
 import { Card, CardContent } from "@/shared/ui/card";
 import { oauthKeys } from "@/shared/config";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useSnackbar } from "@/shared/ds/snackbar";
 import {
   SECTION_IDS,
   SECTIONS,
@@ -105,6 +105,7 @@ export const SettingsPage = () => {
   //
   // 딱 한 번만 돈다. 예전엔 의존성을 `[]` 로 비워 그걸 표현했는데, 몸통이 실제로 읽는
   // 값들과 어긋나 규칙을 꺼야 했다 — 의존성은 정직하게 적고 "한 번" 은 플래그로 적는다.
+  const snackbar = useSnackbar();
   const oauthReturnHandled = useRef(false);
   useEffect(() => {
     if (oauthReturnHandled.current) return;
@@ -116,11 +117,18 @@ export const SettingsPage = () => {
     if (linked) {
       // 표에 있는 값(지금 연결할 수 있는 소셜 = Google)만 알린다 — 주소에 실린 임의 글 · 프로토타입 키(constructor)로는 알림이 없다(앱과 같다)
       const name = linkedProviderName(linked);
-      if (name) toast.success(t("account.toast.linked", { name }));
+      if (name)
+        snackbar.show({
+          message: t("account.toast.linked", { name }),
+          tone: "neutral",
+        });
       queryClient.invalidateQueries({ queryKey: oauthKeys.all });
     } else if (linkError) {
       // 그루 계정이 쓴 글(linkError)은 화면에 내지 않는다 — 고정 글만(I-14 10)
-      toast.error(t("account.toast.linkError"));
+      snackbar.show({
+        message: t("account.toast.linkError"),
+        tone: "critical",
+      });
     }
 
     // 새로고침·뒤로가기 시 알림이 재노출되지 않도록 쿼리스트링 제거 (section 등 나머지는 보존).
@@ -128,7 +136,7 @@ export const SettingsPage = () => {
     url.searchParams.delete("linked");
     url.searchParams.delete("linkError");
     window.history.replaceState(window.history.state, "", url.toString());
-  }, [searchParams, queryClient, t]);
+  }, [searchParams, queryClient, t, snackbar]);
 
   // 섹션 바꾸기 = 기록을 남긴다(push) — 브라우저 뒤로 가기가 설정 안을 거슬러 간다.
   // 같은 섹션을 다시 누르면 아무것도 하지 않는다.
@@ -271,7 +279,7 @@ export const SettingsPage = () => {
 
 /** 캘린더 관리의 제목 = 그 캘린더의 이름. 이름을 받기 전(불러오는 중 · 못 찾음)은 빈 글 — 그 구역일 때만 목록을 받는다 */
 function useCalendarManageName(active: boolean, id: number | null): string {
-  const q = useUserCalendars({ silent: true, enabled: active });
+  const q = useUserCalendars({ reference: true, enabled: active });
   if (!active || id == null) return "";
   return q.data?.find((c) => c.rowId === id)?.calendarName ?? "";
 }

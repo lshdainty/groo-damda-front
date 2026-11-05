@@ -9,7 +9,7 @@ import {
   Moon,
   Sun,
 } from "lucide-react";
-import { toast } from "sonner";
+import { useSnackbar } from "@/shared/ds/snackbar";
 
 import {
   BottomSheet,
@@ -105,8 +105,10 @@ export function AppearanceSection({ mobile }: { mobile: boolean }) {
   };
 
   // 바꾸기 실패는 전역 알림이 아니라(요청이 silent) 여기서 고정 글 하나로 알린다. 값 글은 서버 값에서 읽으므로 이전 값으로 남는다.
+  // 바로 바뀌는 값 — 실패하면 이전 값 그대로 + critical 스낵바(다시 시도 없음)
+  const snackbar = useSnackbar();
   const saveFailed = () =>
-    toast.error(t("prefs.saveFailed"), { id: "prefs-save-failed" });
+    snackbar.show({ message: t("prefs.saveFailed"), tone: "critical" });
   const savePref = (patch: Record<string, string>) =>
     updatePrefs.mutate(patch, { onError: saveFailed });
 

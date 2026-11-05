@@ -192,7 +192,11 @@ vi.mock("@/features/expense-split", () => ({
 }));
 const prefs = vi.hoisted(() => ({ defaultCurrency: "KRW" }));
 vi.mock("@/features/user", () => ({
-  useDefaultCurrency: () => prefs.defaultCurrency,
+  useDefaultCurrencyState: () => ({
+    currency: prefs.defaultCurrency,
+    ready: true,
+    ensure: async () => true,
+  }),
 }));
 
 const category: ExpenseCategory = {

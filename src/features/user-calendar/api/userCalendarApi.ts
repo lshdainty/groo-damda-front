@@ -55,9 +55,11 @@ export const userCalendarApi = {
     return fromApiCalendar(resp.data as unknown as Record<string, unknown>);
   },
 
-  toggleVisibility: async (id: number): Promise<void> => {
+  toggleVisibility: async (id: number, opts?: SilentOpts): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.patch(
       `/v1/calendar/calendars/${id}/visibility`,
+      undefined,
+      silentConfig(opts),
     );
     return resp.data;
   },

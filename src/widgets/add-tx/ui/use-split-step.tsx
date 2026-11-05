@@ -106,7 +106,7 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
   const splitsQ = useExpenseSplits(
     open && !o.initialSplits ? expense.rowId : null,
   );
-  const categoriesQ = useExpenseCategories({ silent: true });
+  const categoriesQ = useExpenseCategories({ reference: true });
   const replaceMut = useReplaceExpenseSplits();
   const deleteAllMut = useDeleteAllExpenseSplits();
   const categories: ExpenseCategory[] = categoriesQ.data ?? [];

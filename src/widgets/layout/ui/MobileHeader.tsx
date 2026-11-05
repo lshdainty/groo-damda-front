@@ -58,7 +58,7 @@ function RootHeader() {
   const { t } = useTranslation("layout");
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { data: unreadCount = 0 } = useUnreadCount();
+  const { data: unreadCount = 0 } = useUnreadCount({ reference: true });
   const actions = rootActionsFor(pathname);
   const hasUnread = unreadCount > 0;
   const notificationLabel = useNotificationLabel(hasUnread);

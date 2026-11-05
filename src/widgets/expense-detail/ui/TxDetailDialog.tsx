@@ -49,6 +49,7 @@ import {
   dateTimeLabel,
   toDayKey,
 } from "@/widgets/expense-detail/lib/detail-format";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { DetailSurface } from "./detail-surface";
 import { useDutchStep } from "./use-dutch-step";
 import { RefundStep } from "./RefundStep";
@@ -137,7 +138,7 @@ export function TxDetailDialog({
   const assetsQ = useAssets({ silent: true });
   const splitsQ = useExpenseSplits(expense.rowId);
   const recurringsQ = useRecurringTransactions(undefined, { silent: true });
-  const dutchPaysQ = useDutchPays();
+  const dutchPaysQ = useDutchPays({ silent: true });
   const loading = categoriesQ.isLoading || assetsQ.isLoading;
 
   const categories: ExpenseCategory[] = categoriesQ.data ?? [];
@@ -261,7 +262,17 @@ export function TxDetailDialog({
       : undefined;
   const historyQ = useSearchExpenses(
     merchantKey ? { merchant: merchantKey, startDate, endDate } : {},
+    { silent: true },
   );
+  // 카테고리 · 계좌 · 연결 반복 · 더치페이 목록은 이름 · 연결 표시를 채운다 — 값 없이 실패하면 한 자리에서 말한다
+  // (상세는 시트라 공용 참조 스낵바가 쉰다 — useHoldReferenceNotice)
+  const relatedFailed = [categoriesQ, assetsQ, recurringsQ, dutchPaysQ].some(
+    (q) => q.isError && !q.data,
+  );
+  const retryRelated = () => {
+    for (const q of [categoriesQ, assetsQ, recurringsQ, dutchPaysQ])
+      if (q.isError) void q.refetch();
+  };
   const others = (historyQ.data ?? [])
     .filter((tx) => tx.rowId !== expense.rowId)
     .sort((a, b) => b.expenseDate.localeCompare(a.expenseDate));
@@ -684,6 +695,22 @@ export function TxDetailDialog({
               />
             )}
 
+            {merchantKey && historyQ.isError && !historyQ.data && (
+              <BandFailure
+                title={tc("query.failedNamed", {
+                  name: t("txDetail.historyName"),
+                })}
+                onRetry={() => void historyQ.refetch()}
+              />
+            )}
+            {relatedFailed && (
+              <BandFailure
+                title={tc("query.failedNamed", {
+                  name: t("txDetail.relatedName"),
+                })}
+                onRetry={retryRelated}
+              />
+            )}
             {merchantKey && history.length > 0 && (
               <HistorySection
                 merchantMonthCount={merchantMonthCount}

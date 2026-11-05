@@ -1,12 +1,18 @@
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { eventLabelKeys, invalidateFor } from "@/shared/config";
 import { eventLabelApi } from "../api/eventLabelApi";
 import type { EventLabelFormValues } from "@/entities/event-label";
 
-export const useEventLabels = (opts?: { silent?: boolean }) => {
+export const useEventLabels = (opts?: ReferenceOpts) => {
   return useQuery({
     queryKey: eventLabelKeys.list(),
-    queryFn: () => eventLabelApi.getLabels(opts),
+    queryFn: () => eventLabelApi.getLabels(referenceSilent(opts)),
+    ...referenceMeta(opts),
   });
 };
 

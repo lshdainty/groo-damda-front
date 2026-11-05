@@ -78,6 +78,9 @@ export function AssetEditDialog({
     memo,
     isIncludedInTotal,
     isAmountHidden,
+    assetsQ,
+    defaultCurrencyReady,
+    ensureDefaultCurrency,
     needsUnlock,
     unlockedRef,
     balanceStr,
@@ -122,11 +125,27 @@ export function AssetEditDialog({
   });
 
   // [추가] · [저장] 은 늘 켜 둔다 — 필수가 비었으면 칸마다 오류를 세우고 첫 오류 칸에 초점을 보낸다
+  // 폼 안 참조 목록(결제 계좌 후보)을 못 받아 둔 채면 저장할 때 한 번 다시 받는다 — 또 실패하면 요청 없이 폼 Callout 으로 알린다
+  const [refFailed, setRefFailed] = useState(false);
   const attemptSubmit = () => {
     if (isSubmitting) return;
     if (!canSubmit) {
       setShowErrors(true);
       setSubmitTick((n) => n + 1);
+      return;
+    }
+    setRefFailed(false);
+    // 새 자산의 통화는 설정의 기본 통화에서 온다 — 못 받은 채면 KRW 로 조용히 저장하지 않고 다시 받는다
+    const needAssets = assetsQ.isError && !assetsQ.data;
+    const needCurrency = !item && !defaultCurrencyReady;
+    if (needAssets || needCurrency) {
+      void Promise.all([
+        needAssets ? assetsQ.refetch().then((r) => !r.isError) : true,
+        needCurrency ? ensureDefaultCurrency() : true,
+      ]).then((rs) => {
+        if (rs.every(Boolean)) handleSubmit();
+        else setRefFailed(true);
+      });
       return;
     }
     handleSubmit();
@@ -439,6 +458,7 @@ export function AssetEditDialog({
               isSubmitting={isSubmitting}
               saveFailed={saveFailed}
               saveError={saveError}
+              refFailed={refFailed}
             />
           )}
         </ResponsiveDialogContent>

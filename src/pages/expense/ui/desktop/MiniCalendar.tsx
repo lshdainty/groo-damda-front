@@ -14,6 +14,7 @@ import {
   monthGrid,
   type CalendarDay,
 } from "@/pages/expense/model/calendar-model";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { MonthHead } from "@/shared/ui/groo/month-head";
 import { MonthKv } from "./MonthKv";
 import { useDayLabel } from "./use-day-label";
@@ -62,6 +63,8 @@ export function MiniCalendar({
   monthOut,
   summaryLoading,
   onPickDay,
+  failed = false,
+  onRetry,
 }: {
   month: string;
   onPickMonth: (month: string) => void;
@@ -72,7 +75,11 @@ export function MiniCalendar({
   monthOut: number;
   summaryLoading: boolean;
   onPickDay: (ds: string) => void;
+  /** 날마다 막대를 못 받았다 — 범례 자리에서 말한다(빈 달력으로 보이지 않게) */
+  failed?: boolean;
+  onRetry?: () => void;
 }) {
+  const { t: tc } = useTranslation("common");
   const { t } = useTranslation("expense");
   const dayLabel = useDayLabel();
   const weeks = monthGrid(month);
@@ -115,7 +122,13 @@ export function MiniCalendar({
           />
         ))}
       </div>
-      {!hidden && (
+      {failed && onRetry && (
+        <BandFailure
+          title={tc("query.failedNamed", { name: t("calendar.failedName") })}
+          onRetry={onRetry}
+        />
+      )}
+      {!hidden && !failed && (
         <p className="mb-x1 mt-x2 flex flex-wrap items-center gap-x1 text-t2 text-fg-neutral-subtle">
           <IntensityBar step={1} hidden={false} className="w-3" />
           <IntensityBar step={4} hidden={false} className="w-3" />

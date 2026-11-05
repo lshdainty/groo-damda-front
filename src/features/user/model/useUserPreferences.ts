@@ -1,3 +1,4 @@
+import { referenceMeta } from "@/shared/api";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_CURRENCY } from "@/shared/lib/groo/currency";
@@ -5,10 +6,11 @@ import { userApi, type UserPreferences } from "../api/userApi";
 
 const PREF_KEY = ["user", "preferences"] as const;
 
-export const useUserPreferences = () => {
+export const useUserPreferences = (opts?: { reference?: boolean }) => {
   return useQuery({
     queryKey: PREF_KEY,
     queryFn: () => userApi.getPreferences(),
+    ...referenceMeta(opts),
     // preferences 는 자주 안 바뀜 — 5분 신선도로 마운트/리마운트마다 재요청되던 폭주를 억제.
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
@@ -36,8 +38,27 @@ export const useUpdateUserPreferences = () => {
  * 매 렌더 읽는 쪽(`pick ?? item ?? 기본값`)으로 짜야 늦게 온 값이 반영된다.
  */
 export const useDefaultCurrency = (): string => {
-  const { data } = useUserPreferences();
-  return data?.defaultCurrency ?? DEFAULT_CURRENCY;
+  return useDefaultCurrencyState().currency;
+};
+
+/**
+ * 기본 통화 + 받았는지(`ready`) + 못 받았을 때 다시 받는 `ensure`.
+ *
+ * 값이 안 왔을 때의 KRW 는 **화면 표시용 폴백**이다 — 새 자산 · 거래를 저장할 때는 `ready` 가 아니면
+ * `ensure()` 로 다시 받고, 또 실패하면 폼이 요청을 보내지 않고 Callout 으로 알린다(조용히 KRW 로 저장되지 않게).
+ */
+export const useDefaultCurrencyState = () => {
+  const q = useUserPreferences({ reference: true });
+  const ensure = async (): Promise<boolean> => {
+    if (q.data) return true;
+    const r = await q.refetch();
+    return !r.isError && !!r.data;
+  };
+  return {
+    currency: q.data?.defaultCurrency ?? DEFAULT_CURRENCY,
+    ready: q.data != null,
+    ensure,
+  };
 };
 
 /**

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
 import {
@@ -216,8 +215,7 @@ export function WithdrawDialog({
       onSuccess: () => {
         setSentAt(Date.now());
         setReauthError(null);
-        // 알림 띠는 셸 PR 까지 옛 길(sonner) — 문구만 Writing 대로(Q7 7A)
-        toast.success(t("withdraw.codeSent"), { id: "withdraw-code-sent" });
+        // 대화상자가 열린 채라 스낵바가 아니라 코드 칸 아래 안내 글(아래 role=status)이 말한다
       },
     });
   };
@@ -349,9 +347,14 @@ export function WithdrawDialog({
               {/* 스팸함 안내 — input-otp.md 해부에 없는 줄이지만 사용자 결정(10-24) 05-2 Q1 A 로 남긴다. 코드를 보낸 뒤에만 보인다
                   (보내기 전에는 확인할 메일이 없다). 오류 때도 남는다 */}
               {sentAt != null && (
-                <p className="m-0 text-t4 text-fg-neutral-subtle">
-                  {t("withdraw.codeHint")}
-                </p>
+                <>
+                  <p role="status" className="m-0 text-t4 text-fg-neutral">
+                    {t("withdraw.codeSent")}
+                  </p>
+                  <p className="m-0 text-t4 text-fg-neutral-subtle">
+                    {t("withdraw.codeHint")}
+                  </p>
+                </>
               )}
             </div>
             <div className="flex justify-end">
