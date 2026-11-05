@@ -106,7 +106,9 @@ describe("SecuritiesGate", () => {
     state.features = [];
     renderGate(<div data-stocks />);
     const link = container.querySelector("a");
-    expect(link?.getAttribute("href")).toBe("/desk/settings?section=account");
+    expect(link?.getAttribute("href")).toBe(
+      "/desk/settings?section=subscription",
+    );
   });
 
   it("모바일은 뒤로 헤더를 붙인다 — 풀스크린이라 없으면 갇힌다", () => {

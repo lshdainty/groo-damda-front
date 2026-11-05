@@ -21,13 +21,12 @@ import { Card, CardHeader, CardTitle } from "@/shared/ds/card";
 import { List, ListButtonItem, ListHeader, ListItem } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
-import { isEn } from "@/shared/lib/groo/format";
+import { isEn, money } from "@/shared/lib/groo/format";
 import { parseServerUtc, toLocalDateKey } from "@/shared/lib/date";
 import { ALL_HIDE_CARDS } from "@/shared/lib/groo/hide-amounts-cards";
 import { useHiddenCards } from "@/shared/lib/groo/hide-amounts-core";
 import { useCurrentUser, WithdrawDialog } from "@/features/user";
 import { useAuth } from "@/features/auth";
-import { SubscriptionDialog } from "@/features/subscription/ui/SubscriptionDialog";
 import { SecuritiesLinkDialog } from "@/features/subscription/ui/SecuritiesLinkDialog";
 import {
   useMyFeatures,
@@ -60,11 +59,14 @@ export function AccountSection({
   mobile,
   onOpenHideAmounts,
   onOpenDevices,
+  onOpenSubscription,
 }: {
   mobile: boolean;
   /** 보안 > 금액 가리기 — 카드 37장을 훑는 목록이라 자기 화면으로 보낸다. */
   onOpenHideAmounts: () => void;
   onOpenDevices: () => void;
+  /** 구독·결제 > 구독 관리 — 페이지(`?section=subscription`)로 보낸다. */
+  onOpenSubscription: () => void;
 }) {
   const { t } = useTranslation("settings");
   const { t: tu } = useTranslation("user");
@@ -74,7 +76,6 @@ export function AccountSection({
   // 다시 로그인해야 돌아올 수 있다 — 앱은 이미 한 번 더 묻는다.
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
-  const [subOpen, setSubOpen] = useState(false);
   const [securitiesOpen, setSecuritiesOpen] = useState(false);
 
   const hiddenCount = useHiddenCards().size;
@@ -241,7 +242,10 @@ export function AccountSection({
           isPro={isPro}
           nextBill={nextBill}
           autoRenew={subQ.data?.autoRenew}
-          onClick={() => setSubOpen(true)}
+          price={subQ.data?.price}
+          durationMonths={subQ.data?.durationMonths}
+          priceLoading={isPro && subQ.isLoading}
+          onClick={onOpenSubscription}
         />
       </AccountGroup>
 
@@ -306,10 +310,6 @@ export function AccountSection({
         </Suspense>
       )}
 
-      {/* 구독 관리 — 14-2 가 페이지로 바꾼다 */}
-      {subOpen && (
-        <SubscriptionDialog onClose={() => setSubOpen(false)} mobile={mobile} />
-      )}
       {securitiesOpen && (
         <SecuritiesLinkDialog
           onClose={() => setSecuritiesOpen(false)}
@@ -469,13 +469,17 @@ function GoogleRow() {
 }
 
 /**
- * 구독·결제 줄 — 담다 Pro. 14-1 은 지금 구독 대화상자를 연다(꺾쇠 없음 · 가격은 지금 값, 14-2 가 서버 값 · 꺾쇠로).
- * 설명이 두 줄을 넘을 수 있어 맞춤 위.
+ * 구독·결제 줄 — 담다 Pro. 누르면 구독 관리 페이지로 간다(꺾쇠 18). 설명이 두 줄을 넘을 수 있어 맞춤 위.
+ * 값은 서버가 준 구독 가격이다 — "{가격}원 / 월" · "/ 년"(`durationMonths` 12). 불러오는 중이면 값 자리 Skeleton,
+ * 가격이 없으면(실패 · 서버가 안 줌) 값 없이 설명만 그린다.
  */
 export function SubscriptionRow({
   isPro,
   nextBill,
   autoRenew,
+  price,
+  durationMonths,
+  priceLoading,
   onClick,
 }: {
   isPro: boolean;
@@ -484,6 +488,12 @@ export function SubscriptionRow({
    * 구독의 자동갱신 여부. 조회가 아직 안 왔으면 `undefined` — 그땐 종전대로 말한다.
    */
   autoRenew?: boolean;
+  /** 구독 플랜 가격(원) — 서버 값. Pro 일 때만 그린다 */
+  price?: number | null;
+  /** 구독 플랜 기간(개월) — 12 면 "/ 년", 아니면 "/ 월" */
+  durationMonths?: number | null;
+  /** 구독을 아직 받는 중 — 값 자리에 Skeleton */
+  priceLoading?: boolean;
   onClick: () => void;
   /** 예전 호출처 호환 — 줄 부품이 같아져 쓰지 않는다 */
   mobile?: boolean;
@@ -497,13 +507,28 @@ export function SubscriptionRow({
       ? t("account.sub.proActiveUntil", { date: nextBill })
       : t("account.sub.proActiveBill", { date: nextBill })
     : t("account.sub.proActive");
+  // 값 + 꺾쇠는 Fragment — 좁은 줄에서 값만 본문 아래로 내려가고 꺾쇠는 줄 끝에 남는다
+  let value: React.ReactNode = null;
+  if (isPro && priceLoading)
+    value = <Skeleton radius="4" text="t3" className="w-20" />;
+  else if (isPro && price != null)
+    value = `${money(price)} ${
+      durationMonths === 12
+        ? t("account.sub.perYear")
+        : t("account.sub.perMonth")
+    }`;
   return (
     <ListButtonItem
       align="top"
       prefix={<Sparkles aria-hidden />}
       title="담다 Pro"
       detail={isPro ? periodLabel : t("account.sub.proPromo")}
-      suffix={isPro ? `9,900원 ${t("account.sub.perMonth")}` : undefined}
+      suffix={
+        <>
+          {value}
+          <ChevronRight aria-hidden />
+        </>
+      }
       onClick={onClick}
     />
   );

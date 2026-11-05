@@ -16,6 +16,7 @@ import {
   CreditCard,
   FilePen,
   NotebookTabs,
+  Sparkles,
 } from "lucide-react";
 import { config } from "@/shared/config";
 
@@ -37,7 +38,8 @@ export type SectionId =
   | "privacy"
   | "guide"
   | "hide-amounts"
-  | "devices";
+  | "devices"
+  | "subscription";
 
 export interface SectionDef {
   id: SectionId;
@@ -181,6 +183,15 @@ export const SECTIONS: SectionDef[] = [
     labelKey: "sections.devices.label",
     icon: Monitor,
     descKey: "sections.devices.desc",
+    hidden: true,
+    parent: "account",
+  },
+  // 계정 > 구독·결제에서 들어온다. 목록에는 안 나온다. 제목 줄(ManagerHead)은 구독 구역이 그린다(NEEDS_DESKTOP_HEAD 에 없다)
+  {
+    id: "subscription",
+    labelKey: "sections.subscription.label",
+    icon: Sparkles,
+    descKey: "sections.subscription.desc",
     hidden: true,
     parent: "account",
   },

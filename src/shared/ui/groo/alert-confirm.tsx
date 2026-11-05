@@ -19,6 +19,7 @@ export function AlertConfirm({
   title,
   message,
   confirmLabel,
+  cancelLabel,
   tone = "criticalSolid",
   onConfirm,
   onError,
@@ -27,6 +28,8 @@ export function AlertConfirm({
   title: ReactNode;
   message: ReactNode;
   confirmLabel?: string;
+  /** 취소 단추 글 — 기본 "취소". 해지처럼 "유지하기" 가 더 정확한 자리에 준다 */
+  cancelLabel?: string;
   /** 확정의 무게 — 지우기 · 잃기는 criticalSolid(기본), 그 밖은 neutralSolid */
   tone?: "criticalSolid" | "neutralSolid";
   /** 지운다 — 끝날 때까지 로딩. 실패하면 던진다 */
@@ -51,7 +54,7 @@ export function AlertConfirm({
         <AlertDialogTitle>{title}</AlertDialogTitle>
         <AlertDialogDescription>{message}</AlertDialogDescription>
         <AlertDialogFooter>
-          <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+          <AlertDialogCancel>{cancelLabel ?? tc("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             variant={tone}
             loading={running}

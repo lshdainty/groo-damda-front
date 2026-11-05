@@ -20,6 +20,11 @@ const state = vi.hoisted(() => ({
   },
   unlinkError: false,
   features: ["SECURITIES"] as string[],
+  // 구독 조회 — 가격은 서버가 준다(I-14 34)
+  sub: {
+    data: undefined as unknown,
+    isLoading: false,
+  },
 }));
 const toasts = vi.hoisted(() => ({
   error: [] as string[],
@@ -56,15 +61,12 @@ vi.mock("@/features/user", () => ({
   WithdrawDialog: () => null,
 }));
 vi.mock("@/features/auth", () => ({ useAuth: () => ({ logout: () => {} }) }));
-vi.mock("@/features/subscription/ui/SubscriptionDialog", () => ({
-  SubscriptionDialog: () => null,
-}));
 vi.mock("@/features/subscription/ui/SecuritiesLinkDialog", () => ({
   SecuritiesLinkDialog: () => null,
 }));
 vi.mock("@/features/subscription/model/useSubscription", () => ({
   useMyFeatures: () => ({ data: { features: state.features } }),
-  useMySubscription: () => ({ data: undefined }),
+  useMySubscription: () => state.sub,
 }));
 vi.mock("@/features/oauth-link", () => ({
   oauthLinkApi: { startLink: async () => ({ startUrl: "#" }) },
@@ -98,6 +100,7 @@ beforeEach(() => {
   toasts.opts.length = 0;
   state.unlinkError = false;
   state.features = ["SECURITIES"];
+  state.sub = { data: undefined, isLoading: false };
   state.providers = {
     data: [
       { type: "GOOGLE", name: "Google", authUrl: "", linked: true },
@@ -126,13 +129,14 @@ afterEach(() => {
   container.remove();
 });
 
-const render = (mobile: boolean) =>
+const render = (mobile: boolean, onOpenSubscription: () => void = () => {}) =>
   act(() =>
     root.render(
       <AccountSection
         mobile={mobile}
         onOpenHideAmounts={() => {}}
         onOpenDevices={() => {}}
+        onOpenSubscription={onOpenSubscription}
       />,
     ),
   );
@@ -194,6 +198,71 @@ describe("계정 구역 줄", () => {
       d.textContent?.startsWith("namgung"),
     )!;
     expect(email.className).toContain("[overflow-wrap:anywhere]");
+  });
+});
+
+describe("구독 줄 (I-14 34)", () => {
+  const sub = (price: number | null, durationMonths: number | null) => ({
+    data: {
+      planCode: "SECURITIES",
+      planName: "담다 Pro",
+      status: "ACTIVE",
+      startedAt: "2026-09-11T12:00:00",
+      currentPeriodEnd: "2026-10-11T12:00:00",
+      autoRenew: true,
+      price,
+      durationMonths,
+    },
+    isLoading: false,
+  });
+  const row = () =>
+    [...container.querySelectorAll("button[data-list-action]")].find((b) =>
+      b.textContent?.includes("담다 Pro"),
+    ) as HTMLButtonElement;
+
+  it("값이 서버 가격이다 — 월간 12000 이면 '12,000원 / 월', 연간이면 '/ 년'(박힌 9,900 이 아니다)", () => {
+    state.sub = sub(12_000, 1);
+    render(true);
+    expect(row().textContent).toContain("12,000");
+    expect(row().textContent).toContain("account.sub.perMonth");
+    expect(row().textContent).not.toContain("9,900");
+    act(() => root.unmount());
+    root = createRoot(container);
+    state.sub = sub(120_000, 12);
+    render(true);
+    expect(row().textContent).toContain("120,000");
+    expect(row().textContent).toContain("account.sub.perYear");
+  });
+
+  it("꺾쇠가 붙고, 누르면 구독 관리 페이지로 보낸다(대화상자를 열지 않는다)", () => {
+    state.sub = sub(9_900, 1);
+    const open = vi.fn();
+    render(true, open);
+    expect(row().querySelector("svg.lucide-chevron-right")).not.toBeNull();
+    act(() => row().click());
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(container.querySelector("[role=dialog]")).toBeNull();
+  });
+
+  it("구독을 받는 중이면 값 자리가 Skeleton 이고, 가격이 없으면 값 없이 설명만 그린다", () => {
+    state.sub = { data: undefined, isLoading: true };
+    render(true);
+    expect(row().querySelector("[data-slot=skeleton]")).not.toBeNull();
+    act(() => root.unmount());
+    root = createRoot(container);
+    state.sub = sub(null, null);
+    render(true);
+    expect(row().querySelector("[data-slot=skeleton]")).toBeNull();
+    expect(row().textContent).not.toContain("account.sub.per");
+  });
+
+  it("Pro 가 아니면 값 없이 권유 문구 + 꺾쇠", () => {
+    state.features = [];
+    state.sub = sub(9_900, 1);
+    render(true);
+    expect(row().textContent).toContain("account.sub.proPromo");
+    expect(row().textContent).not.toContain("account.sub.per");
+    expect(row().querySelector("svg.lucide-chevron-right")).not.toBeNull();
   });
 });
 

@@ -69,7 +69,7 @@ function SecuritiesUpsell() {
         {t("gate.desc")}
       </div>
       <Button variant="outline" size="sm" style={{ marginTop: 8 }} asChild>
-        <Link to="/desk/settings?section=account">{t("gate.action")}</Link>
+        <Link to="/desk/settings?section=subscription">{t("gate.action")}</Link>
       </Button>
     </div>
   );

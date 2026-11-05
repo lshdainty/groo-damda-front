@@ -47,6 +47,7 @@ vi.mock("@/widgets/account-settings", () => ({
   AppearanceSection: stub("appearance"),
   DevicesSection: stub("devices"),
   HideAmountsSection: stub("hide-amounts"),
+  SubscriptionSection: stub("subscription"),
 }));
 vi.mock("@/widgets/asset-full", () => ({
   AccountManager: stub("accounts"),
@@ -57,9 +58,6 @@ vi.mock("@/features/user", () => ({
   WithdrawDialog: () => null,
 }));
 vi.mock("@/features/auth", () => ({ useAuth: () => ({ logout: () => {} }) }));
-vi.mock("@/features/subscription/ui/SubscriptionDialog", () => ({
-  SubscriptionDialog: () => null,
-}));
 vi.mock("@/features/subscription/ui/SecuritiesLinkDialog", () => ({
   SecuritiesLinkDialog: () => null,
 }));

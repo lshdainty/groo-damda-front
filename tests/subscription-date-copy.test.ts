@@ -8,13 +8,13 @@ import { describe, expect, it } from "vitest";
  * 두 가지로 말해야 한다 — 자동갱신이 켜졌으면 `nextBill`(다음 결제), 꺼졌으면
  * `activeUntil`(종료일). **한쪽만 남기면 반대쪽 구독이 거짓말을 한다.**
  *
- * 화면 테스트(SubscriptionDialog.grace.test.tsx)는 t() 를 키 그대로 흘려보내므로
+ * 화면 테스트(SubscriptionSection.test.tsx)는 t() 를 키 그대로 흘려보내므로
  * CSV 행이 사라져도 안 깨진다 — 행의 존재는 여기서 잠근다.
  *
  * 번역 원본은 CSV 하나다(`src/locales/**` 는 생성물). 그래서 여기만 본다.
  */
 const CSV = "i18n/translations.csv";
-const DIALOG = "src/features/subscription/ui/SubscriptionDialog.tsx";
+const SECTION = "src/widgets/account-settings/ui/SubscriptionSection.tsx";
 const SETTINGS = "src/widgets/account-settings/ui/AccountSection.tsx";
 
 /** CSV 한 줄 → [ko, en]. 없으면 undefined. */
@@ -25,7 +25,7 @@ function row(ns: string, key: string): string[] | undefined {
   return line?.split(",").slice(2);
 }
 
-describe("구독 배너의 날짜 문구", () => {
+describe("구독 관리 화면의 날짜 문구", () => {
   it("자동갱신이 켜진 구독은 종전대로 '다음 결제'로 말한다", () => {
     const cells = row("subscription", "nextBill");
     expect(cells, `${CSV} 에 subscription,nextBill 행이 없다`).toBeDefined();
@@ -49,8 +49,8 @@ describe("구독 배너의 날짜 문구", () => {
     expect(en.toLowerCase()).not.toContain("billing");
   });
 
-  it("다이얼로그가 두 키를 다 쓴다", () => {
-    const src = readFileSync(DIALOG, "utf-8");
+  it("구독 관리 화면이 두 키를 다 쓴다", () => {
+    const src = readFileSync(SECTION, "utf-8");
 
     expect(src).toContain('t("nextBill"');
     expect(src).toContain('t("activeUntil"');
