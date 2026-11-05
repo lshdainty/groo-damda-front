@@ -279,7 +279,10 @@ function LabelEditDialog({
       saveLabel={isNew ? t("add") : tCommon("save")}
       saving={submitting}
       saveDisabled={touched && !valid}
-      onCancel={onClose}
+      // 시트(폰)는 입력 폼도 위 닫기 X + 바닥 [저장] — [취소] 를 두지 않고 [저장] 이 남은 폭을 채운다(bottom-sheet.md:126 · :128).
+      // 대화상자(768 이상)는 바닥 [취소][저장] 오른쪽 묶음, [삭제] 는 왼쪽(dialog.md:41 · :84)
+      fullWidth={mobile}
+      onCancel={mobile ? undefined : onClose}
       leftSlot={
         label && onRequestDelete ? (
           <DsButton
