@@ -151,7 +151,11 @@ vi.mock("@/features/expense-split", () => ({
   useExpenseSplits: () => ({ data: [], isPending: false, isError: false }),
 }));
 vi.mock("@/features/user", () => ({
-  useDefaultCurrency: () => "KRW",
+  useDefaultCurrencyState: () => ({
+    currency: "KRW",
+    ready: true,
+    ensure: async () => true,
+  }),
 }));
 
 const category: ExpenseCategory = {

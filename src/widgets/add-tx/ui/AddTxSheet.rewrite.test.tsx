@@ -147,7 +147,13 @@ vi.mock("@/features/expense-split", () => ({
         ? { data: undefined, isPending: false, isError: true }
         : { data: st.splits, isPending: false, isError: false },
 }));
-vi.mock("@/features/user", () => ({ useDefaultCurrency: () => "KRW" }));
+vi.mock("@/features/user", () => ({
+  useDefaultCurrencyState: () => ({
+    currency: "KRW",
+    ready: true,
+    ensure: async () => true,
+  }),
+}));
 
 const category: ExpenseCategory = {
   rowId: 11,

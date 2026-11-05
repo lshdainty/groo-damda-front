@@ -93,7 +93,9 @@ function AddTxSheetBody(props: TxFormProps) {
             {f.saveFailed && !sub && f.main === "2" && (
               <div className="pb-x3">
                 <Callout tone="critical" role="alert">
-                  {t("addTx.saveFailed")}
+                  {f.listsFailed
+                    ? tc("query.referenceSaveFailed")
+                    : t("addTx.saveFailed")}
                 </Callout>
               </div>
             )}

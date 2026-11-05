@@ -104,7 +104,13 @@ vi.mock("@/features/stock/model/useLivePrices", () => ({
 vi.mock("@/features/subscription/model/useSubscription", () => ({
   useMyFeatures: () => ({ data: undefined }),
 }));
-vi.mock("@/features/user", () => ({ useDefaultCurrency: () => "KRW" }));
+vi.mock("@/features/user", () => ({
+  useDefaultCurrencyState: () => ({
+    currency: "KRW",
+    ready: true,
+    ensure: async () => true,
+  }),
+}));
 
 const { AssetEditDialog } = await import("./AssetEditDialog");
 

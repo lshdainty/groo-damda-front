@@ -63,7 +63,11 @@ vi.mock("@/features/subscription/model/useSubscription", () => ({
   useMyFeatures: () => ({ data: undefined }),
 }));
 vi.mock("@/features/user", () => ({
-  useDefaultCurrency: () => state.defaultCurrency,
+  useDefaultCurrencyState: () => ({
+    currency: state.defaultCurrency,
+    ready: true,
+    ensure: async () => true,
+  }),
 }));
 
 const { AssetEditDialog } = await import("./AssetEditDialog");

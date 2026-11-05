@@ -306,7 +306,9 @@ export function useTxSheetParts(
         {f.saveFailed && !sub && f.main === "2" && (
           <div className="px-global-gutter pb-x5">
             <Callout tone="critical" role="alert">
-              {t("addTx.saveFailed")}
+              {f.listsFailed
+                ? tc("query.referenceSaveFailed")
+                : t("addTx.saveFailed")}
             </Callout>
           </div>
         )}

@@ -79,6 +79,8 @@ export function AssetEditDialog({
     isIncludedInTotal,
     isAmountHidden,
     assetsQ,
+    defaultCurrencyReady,
+    ensureDefaultCurrency,
     needsUnlock,
     unlockedRef,
     balanceStr,
@@ -133,10 +135,16 @@ export function AssetEditDialog({
       return;
     }
     setRefFailed(false);
-    if (assetsQ.isError && !assetsQ.data) {
-      void assetsQ.refetch().then((r) => {
-        if (r.isError) setRefFailed(true);
-        else handleSubmit();
+    // 새 자산의 통화는 설정의 기본 통화에서 온다 — 못 받은 채면 KRW 로 조용히 저장하지 않고 다시 받는다
+    const needAssets = assetsQ.isError && !assetsQ.data;
+    const needCurrency = !item && !defaultCurrencyReady;
+    if (needAssets || needCurrency) {
+      void Promise.all([
+        needAssets ? assetsQ.refetch().then((r) => !r.isError) : true,
+        needCurrency ? ensureDefaultCurrency() : true,
+      ]).then((rs) => {
+        if (rs.every(Boolean)) handleSubmit();
+        else setRefFailed(true);
       });
       return;
     }

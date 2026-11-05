@@ -42,7 +42,13 @@ vi.mock("@/features/stock/model/useLivePrices", () => ({
 vi.mock("@/features/subscription/model/useSubscription", () => ({
   useMyFeatures: () => ({ data: undefined }),
 }));
-vi.mock("@/features/user", () => ({ useDefaultCurrency: () => "KRW" }));
+vi.mock("@/features/user", () => ({
+  useDefaultCurrencyState: () => ({
+    currency: "KRW",
+    ready: true,
+    ensure: async () => true,
+  }),
+}));
 
 // 본인 확인 본문은 껍데기로 바꾼다 — 비밀번호 입력·검증은 이 테스트의 주장이 아니다(그 부품의 테스트다).
 // 껍데기의 `submit` 은 확인이 끝난 것으로 친다.

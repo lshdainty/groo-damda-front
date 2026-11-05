@@ -1,7 +1,7 @@
 import { useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAssets } from "@/features/asset";
-import { useDefaultCurrency } from "@/features/user";
+import { useDefaultCurrencyState } from "@/features/user";
 import { todayLocalKey } from "@/shared/lib/date";
 import { pendingBillWindow } from "@/entities/expense";
 import { parseAmount } from "@/shared/lib/groo/amount";
@@ -163,7 +163,11 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
   const editingGroup: AssetGroup = kind ? groupOfKind(kind) : "account";
 
   // 설정의 기본 통화 — 새 자산이 먼저 골라 두는 값이다(D7).
-  const defaultCurrency = useDefaultCurrency();
+  const {
+    currency: defaultCurrency,
+    ready: defaultCurrencyReady,
+    ensure: ensureDefaultCurrency,
+  } = useDefaultCurrencyState();
 
   // 공통
   // 처음 값은 이 자산의 기관, 없으면 묶음의 첫 기관이다(지금 그대로). 묶음은 1단계가 정하므로 고른 값만 들고 나머지는 읽을 때 정한다.
@@ -509,6 +513,8 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
     isNew,
     editingGroup,
     defaultCurrency,
+    defaultCurrencyReady,
+    ensureDefaultCurrency,
     brand,
     setBrand,
     name,
