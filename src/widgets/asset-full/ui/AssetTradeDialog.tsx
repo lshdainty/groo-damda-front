@@ -178,20 +178,40 @@ export function AssetTradeDialog({
       : undefined;
   const fundingCurrency =
     preview?.fundingCurrency ?? settlementAsset?.currency ?? "KRW";
-  const inCurrency = (
+  // 금액 한 개 → 그 통화 글 + (외화면) "약 …원". 원화 환산은 그 계좌 환율 · HALF_UP
+  const moneyParts = (
     n: number,
     code: string | null | undefined,
     rateOf: { currency?: string | null; exchangeRate?: number | null },
     signed = false,
   ) => {
     const sign = n < 0 ? MINUS : signed ? "+" : "";
-    if (!isForeignCurrency(code)) return sign + money(Math.abs(n));
+    if (!isForeignCurrency(code))
+      return { main: sign + money(Math.abs(n)), approx: null };
     const krw = toKrw(Math.abs(n), {
       currency: code,
       exchangeRate: rateOf.exchangeRate,
     });
-    return `${sign}${formatOriginalAmount(Math.abs(n), code!, dsLocale())} (${t("fx.approxKrw", { amount: sign + money(krw) })})`;
+    return {
+      main: sign + formatOriginalAmount(Math.abs(n), code!, dsLocale()),
+      approx: t("fx.approxKrw", { amount: sign + money(krw) }),
+    };
   };
+  /** 줄 값 — 외화면 아래 작게 "약 …원"(상세 예수금 줄과 같은 모양) */
+  const moneyNode = (parts: ReturnType<typeof moneyParts>) =>
+    parts.approx == null ? (
+      parts.main
+    ) : (
+      <span className="flex flex-col items-end">
+        <span>{parts.main}</span>
+        <span className="text-t3 font-medium text-fg-neutral-subtle">
+          {parts.approx}
+        </span>
+      </span>
+    );
+  /** 문장 안 — "$900.00(약 1,170,000원)" */
+  const moneyInline = (parts: ReturnType<typeof moneyParts>) =>
+    parts.approx == null ? parts.main : `${parts.main}(${parts.approx})`;
 
   // 예수금으로 살 때만 잔액을 본다 — 결제 계좌는 마이너스를 막지 않는다(서버도 같은 규칙).
   const viaCash = settlementAssetRowId == null;
@@ -453,8 +473,19 @@ export function AssetTradeDialog({
                       {cashAfter == null || cashDelta == null
                         ? "—"
                         : viaCash
-                          ? inCurrency(cashAfter, cashCurrency, asset)
-                          : inCurrency(cashDelta, cashCurrency, asset, true)}
+                          ? moneyNode(
+                              moneyParts(cashAfter, cashCurrency, asset),
+                            )
+                          : // 결제 계좌에서 나가는 금액 = 충당액(결제 계좌 통화, I-13 L6). 예수금이 넉넉하면 0
+                            moneyNode(
+                              moneyParts(
+                                -fundingAmount,
+                                fundingCurrency,
+                                settlementAsset ?? {
+                                  currency: fundingCurrency,
+                                },
+                              ),
+                            )}
                     </span>
                   }
                 />
@@ -475,10 +506,12 @@ export function AssetTradeDialog({
             {fundingAmount > 0 && (
               <p className="m-0 text-t3 text-fg-neutral-subtle">
                 {t("trade.fundingNotice", {
-                  amount: inCurrency(
-                    fundingAmount,
-                    fundingCurrency,
-                    settlementAsset ?? { currency: fundingCurrency },
+                  amount: moneyInline(
+                    moneyParts(
+                      fundingAmount,
+                      fundingCurrency,
+                      settlementAsset ?? { currency: fundingCurrency },
+                    ),
                   ),
                 })}
               </p>
