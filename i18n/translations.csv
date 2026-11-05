@@ -2039,7 +2039,7 @@ settings,devices.logoutAllTitle,모든 기기에서 로그아웃할까요?,Log o
 settings,devices.logoutAllConfirm,지금 쓰는 기기도 로그아웃돼요. 다시 로그인해야 해요.,This device will be logged out too. You'll need to sign in again.
 settings,devices.logoutLabel,{{device}} 로그아웃,Log out {{device}}
 settings,devices.loadErrorHint,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
-settings,devices.logoutFailed,로그아웃하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't log out. Please try again in a moment.
+settings,devices.logoutFailed,로그아웃하지 못했어요.,Couldn't log out.
 settings,account.linked,연결됨,Connected
 settings,account.notLinked,연결 안 됨,Not connected
 settings,account.link,연결,Connect
@@ -2057,9 +2057,9 @@ settings,account.sub.proPromo,증권 투자는 Pro 전용 · 지금 시작하기
 settings,account.sub.proStart,Pro 시작,Start Pro
 settings,account.sub.perMonth,/ 월,/ mo
 settings,account.sub.perYear,/ 년,/ yr
-settings,account.toast.linked,{{name}} 계정이 연결되었어요,{{name}} account connected
+settings,account.toast.linked,{{name}} 계정이 연결됐어요.,Connected the {{name}} account.
 settings,account.toast.linkError,계정을 연결하지 못했어요.,Couldn't connect the account.
-settings,account.toast.unlinked,Google 연결을 해제했어요,Google account disconnected
+settings,account.toast.unlinked,Google 연결을 해제했어요.,Disconnected the Google account.
 settings,account.toast.unlinkError,연결을 해제하지 못했어요.,Couldn't disconnect the account.
 settings,account.providersError,연결 상태를 불러오지 못했어요,Couldn't load the connection status
 settings,prefs.regionLoadError,기준 지역을 불러오지 못했어요,Couldn't load the region

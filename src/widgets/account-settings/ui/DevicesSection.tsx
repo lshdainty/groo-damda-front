@@ -7,7 +7,6 @@ import {
   Tablet,
   CircleHelp,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import {
   AlertDialog,
@@ -25,6 +24,7 @@ import { List, ListItem } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useNow } from "@/shared/hooks";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { useAuth } from "@/features/auth/model/useAuth";
 import {
   useDeviceSessions,
@@ -74,16 +74,23 @@ export function DevicesSection({ mobile }: { mobile: boolean }) {
   const [confirming, setConfirming] = useState<DeviceSession | null>(null);
   const [confirmingAll, setConfirmingAll] = useState(false);
 
-  // 끊기 실패는 전역 알림이 아니라(요청이 silent) 여기서 한 번만 알린다 — 확인창은 닫는다.
-  const failed = () =>
-    toast.error(t("devices.logoutFailed"), { id: "devices-logout-failed" });
+  // 끊기 실패는 전역 알림이 아니라(요청이 silent) 여기서 한 번만 알린다 — 확인창은 닫고 critical 스낵바 + [다시 시도](묻지 않고 같은 요청).
+  const confirmFail = useConfirmFail();
+  const failed = (retry: () => Promise<unknown>, onRetried: () => void) =>
+    confirmFail({ message: t("devices.logoutFailed"), retry, onRetried });
 
   const onRevoke = async (device: DeviceSession) => {
     try {
       await revoke.mutateAsync(device.sessionId);
     } catch {
       setConfirming(null);
-      failed();
+      failed(
+        () => revoke.mutateAsync(device.sessionId),
+        () => {
+          // 다시 시도가 성공했을 때도 지금 이 브라우저를 끊었으면 로그아웃한다
+          if (device.current) void logout();
+        },
+      );
       return;
     }
     setConfirming(null);
@@ -96,7 +103,10 @@ export function DevicesSection({ mobile }: { mobile: boolean }) {
       await revokeAll.mutateAsync();
     } catch {
       setConfirmingAll(false);
-      failed();
+      failed(
+        () => revokeAll.mutateAsync(),
+        () => void logout(),
+      );
       return;
     }
     setConfirmingAll(false);
