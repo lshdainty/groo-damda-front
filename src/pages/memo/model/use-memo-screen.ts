@@ -50,6 +50,10 @@ export function useMemoScreen() {
   const session = useRef(0);
   const pinning = useRef(new Set<number>());
 
+  // 설정 태그 이름 → 색(넓은 화면 왼쪽 태그 칸의 색 점)
+  const tagColors = new Map(
+    (memoTagsQ.data ?? []).map((tag) => [tag.tagName, tag.color]),
+  );
   const chips = memoTagChips(memos, memoTagsQ.data);
   // 거르던 태그의 마지막 메모가 사라지면 전체로 돌아간다(앱과 같다 — M4). 불러오는 중에는 그대로 둔다
   const tagFilter =
@@ -182,11 +186,11 @@ export function useMemoScreen() {
     saveError,
     saveErrorSeq,
     tagsReady,
+    tagColors,
     saving: createMemo.isPending || updateMemo.isPending,
     save,
     remove,
     pinOf,
-    pinPending: togglePin.pendingIds,
     loading: memosQ.isLoading,
     failed: memosQ.isError && !memosQ.data,
   };

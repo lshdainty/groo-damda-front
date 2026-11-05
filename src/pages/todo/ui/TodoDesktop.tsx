@@ -28,7 +28,7 @@ import { TodoLedgerCard } from "./desktop/TodoLedgerCard";
 import { TodoListCard } from "./desktop/TodoListCard";
 import { TodoMiniCalendar } from "./desktop/TodoMiniCalendar";
 import { TodoRemainCard } from "./desktop/TodoRemainCard";
-import { useStickyFit } from "./desktop/use-sticky-fit";
+import { useStickyFit } from "@/shared/hooks/use-sticky-fit";
 import { useTodoCellMarks } from "./todo-cell-marks";
 
 /** 화면 틀 — 제목 줄(h1 "할 일" + 설명 + [할 일 추가]) 아래 24, 좌우 여백 32, 본문 폭은 768 ~ 1279 최대 720 · 1280 이상 최대 1040 가운데(medium 밀도) */

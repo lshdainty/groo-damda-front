@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Skeleton } from "@/shared/ds/skeleton";
 import { ListButtonItem } from "@/shared/ds/list";
 import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
 import { cn } from "@/shared/lib/cn";
@@ -15,9 +16,12 @@ import { formatMemoStamp, memoSwatch } from "../lib/memo-view";
 export function MemoRow({
   memo,
   onOpen,
+  bodyLines = 1,
 }: {
   memo: Memo;
   onOpen: (memo: Memo) => void;
+  /** 본문 줄 수 — 폰은 한 줄, 넓은 화면 목록 카드는 두 줄(폭이 넓어 한 줄이면 앞 몇 낱말만 보인다 — I-15 18) */
+  bodyLines?: 1 | 2;
 }) {
   const { t } = useTranslation("memo");
   const stamp = formatMemoStamp(memo.modifyAt);
@@ -43,7 +47,10 @@ export function MemoRow({
           {memo.content?.trim() ? (
             <span
               data-slot="memo-body"
-              className="block truncate text-t4 text-fg-neutral-muted"
+              className={cn(
+                "block text-t4 text-fg-neutral-muted",
+                bodyLines === 2 ? "line-clamp-2" : "truncate",
+              )}
             >
               {memo.content}
             </span>
@@ -55,5 +62,19 @@ export function MemoRow({
         </>
       }
     />
+  );
+}
+
+/** 첫 진입 — 점 8 · 제목 · 본문 · 메타 세 줄 높이의 줄 자리(실제 줄과 같은 좌우 24 · 위아래 12) */
+export function MemoRowSkeleton() {
+  return (
+    <div className="flex items-start gap-x3 px-global-gutter py-x3">
+      <Skeleton className="mt-[7px] size-[8px] shrink-0" radius="full" />
+      <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
+        <Skeleton text="t5" className="w-3/5" />
+        <Skeleton text="t4" className="w-4/5" />
+        <Skeleton text="t3" className="w-2/5" />
+      </div>
+    </div>
   );
 }
