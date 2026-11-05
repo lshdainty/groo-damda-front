@@ -29,7 +29,7 @@ function SummaryRow({
   loading: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-x3">
+    <div className="flex flex-wrap items-center justify-between gap-x-x3">
       <div className="min-w-0">
         <div className="text-t4 text-fg-neutral-subtle">{label}</div>
         <div className="text-t3 text-fg-neutral-subtle">

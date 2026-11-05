@@ -107,9 +107,13 @@ export function DutchDetailDialog({
     <Button
       variant="ghost"
       ghostColor="critical"
-      flush={wide ? undefined : "left"}
+      flush="left"
       size={wide ? undefined : "large"}
-      className={wide ? "mr-auto" : "shrink-0"}
+      className={
+        wide
+          ? "mr-auto text-fg-critical hover:text-fg-critical active:text-fg-critical"
+          : "shrink-0 text-fg-critical hover:text-fg-critical active:text-fg-critical"
+      }
       onClick={() => setAskDelete(true)}
     >
       {tc("delete")}

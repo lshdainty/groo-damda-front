@@ -36,10 +36,10 @@ export function DutchSessionRow({
       title={d.title}
       detail={
         <>
-          <span className="mt-[2px] block text-t5 font-bold text-fg-neutral">
+          <span className="mt-[4px] block text-t5 font-bold text-fg-neutral">
             <Won amount={d.totalAmount} />
           </span>
-          <TagGroup size="t3" truncate>
+          <TagGroup size="t3" truncate className="mt-[4px]">
             <TagGroupItem>{dutchDate(d.dutchPayDate)}</TagGroupItem>
             <TagGroupItem>{t("memberCount", { count: total })}</TagGroupItem>
             {perPersonOfSession(d).kind !== "none" && (
