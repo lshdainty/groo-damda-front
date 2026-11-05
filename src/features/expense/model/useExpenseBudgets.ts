@@ -1,14 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { expenseKeys, invalidateFor } from "@/shared/config";
 import { expenseBudgetApi } from "../api/expenseBudgetApi";
 import type { BudgetListParams, QuietOpts } from "../api/expenseBudgetApi";
 import type { ExpenseBudgetFormValues } from "@/entities/expense";
 
-export const useExpenseBudgets = (params: BudgetListParams) => {
+export const useExpenseBudgets = (
+  params: BudgetListParams,
+  opts?: ReferenceOpts,
+) => {
   return useQuery({
     queryKey: expenseKeys.budgets(params),
-    queryFn: () => expenseBudgetApi.getBudgets(params),
+    queryFn: () => expenseBudgetApi.getBudgets(params, referenceSilent(opts)),
     enabled: params.year > 0 && params.month > 0,
+    ...referenceMeta(opts),
   });
 };
 

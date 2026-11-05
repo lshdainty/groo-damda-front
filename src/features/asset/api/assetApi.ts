@@ -55,8 +55,11 @@ export const assetApi = {
     return resp.data;
   },
 
-  getAsset: async (id: number): Promise<Asset> => {
-    const resp: ApiResponse<Asset> = await apiClient.get(`/v1/asset/${id}`);
+  getAsset: async (id: number, opts?: SilentOpts): Promise<Asset> => {
+    const resp: ApiResponse<Asset> = await apiClient.get(
+      `/v1/asset/${id}`,
+      silentConfig(opts),
+    );
     return resp.data;
   },
 

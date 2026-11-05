@@ -65,7 +65,7 @@ describe("ReferenceFailureNotice", () => {
       vi.advanceTimersByTime(400);
     });
     expect(show).toHaveBeenCalledTimes(1);
-    expect(show.mock.calls[0][0]).toMatchObject({
+    expect(show.mock.calls[0]?.[0]).toMatchObject({
       message: "query.referenceFailed",
       tone: "critical",
     });

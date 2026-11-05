@@ -6,7 +6,7 @@ common,cancel,취소,Cancel
 common,delete,삭제,Delete
 common,retry,다시 시도,Try again
 common,query.referenceFailed,일부 정보를 불러오지 못했어요.,Some information couldn't be loaded.
-common,query.failedNamed,{{name}} 정보를 불러오지 못했어요.,Couldn't load the {{name}} info.
+common,query.failedNamed,{{name}} 정보를 불러오지 못했어요,Couldn't load the {{name}} info
 common,edit,수정,Edit
 common,create,생성,Create
 common,search,검색,Search
@@ -3325,6 +3325,7 @@ expense,calendar.miniLabel,작은 달력,Month calendar
 expense,calendar.dayLabel,"{{date}}, 지출 {{amount}}","{{date}}, spent {{amount}}"
 expense,calendar.dayLabelNone,{{date}},{{date}}
 expense,calendar.legend,막대가 진할수록 많이 쓴 날 · 누르면 그 날로 옮겨요,Darker bars mean more spent · Tap a day to jump to it
+expense,calendar.failedName,달력 지출,calendar spending
 expense,list.count,거래 {{count}}건,{{count}} transactions
 expense,list.select,고르기,Select
 expense,list.selectDone,완료,Done

@@ -18,8 +18,8 @@ function useExpensePageData(month: string) {
   const { startDate, endDate } = monthRange(month);
   const expensesQ = useExpenses({ startDate, endDate });
   const summaryQ = useRangeSummary(startDate, endDate);
-  const categoriesQ = useExpenseCategories();
-  const assetsQ = useAssets();
+  const categoriesQ = useExpenseCategories({ reference: true });
+  const assetsQ = useAssets({ reference: true });
   return {
     isLoading:
       expensesQ.isLoading ||

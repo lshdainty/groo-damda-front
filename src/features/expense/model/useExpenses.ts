@@ -1,14 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { expenseKeys, invalidateFor } from "@/shared/config";
-import { isHttpStatus } from "@/shared/api";
+import {
+  isHttpStatus,
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { expenseApi } from "../api/expenseApi";
 import type { ExpenseListParams, ExpenseSearchParams } from "../api/expenseApi";
 import type { ExpenseFormValues } from "@/entities/expense";
 
-export const useExpenses = (filters?: ExpenseListParams) => {
+/** `silent` — 실패를 호출처 화면이 자기 자리에서 말할 때 서버 원문 토스트를 끈다 */
+export const useExpenses = (
+  filters?: ExpenseListParams,
+  opts?: ReferenceOpts,
+) => {
   return useQuery({
     queryKey: expenseKeys.list(filters),
-    queryFn: () => expenseApi.getExpenses(filters),
+    queryFn: () => expenseApi.getExpenses(filters, referenceSilent(opts)),
+    ...referenceMeta(opts),
   });
 };
 
@@ -143,11 +153,19 @@ export const useRangeSummary = (
   startDate: string,
   endDate: string,
   assetId?: number | null,
+  opts?: ReferenceOpts,
 ) => {
   return useQuery({
     queryKey: expenseKeys.rangeSummary(startDate, endDate, assetId),
-    queryFn: () => expenseApi.getRangeSummary(startDate, endDate, assetId),
+    queryFn: () =>
+      expenseApi.getRangeSummary(
+        startDate,
+        endDate,
+        assetId,
+        referenceSilent(opts),
+      ),
     enabled: !!startDate && !!endDate,
+    ...referenceMeta(opts),
   });
 };
 

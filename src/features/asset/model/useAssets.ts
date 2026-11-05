@@ -24,11 +24,12 @@ export const useAssets = (opts?: ReferenceOpts) => {
   });
 };
 
-export const useAsset = (id: number) => {
+export const useAsset = (id: number, opts?: ReferenceOpts) => {
   return useQuery({
     queryKey: assetKeys.detail(id),
-    queryFn: () => assetApi.getAsset(id),
+    queryFn: () => assetApi.getAsset(id, referenceSilent(opts)),
     enabled: id > 0,
+    ...referenceMeta(opts),
   });
 };
 

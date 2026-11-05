@@ -134,11 +134,15 @@ export function useExpenseData(
   const monthlyQ = useRangeSummary(monthStart, monthEnd, assetId ?? null);
   // 그 달 거래 전체(필터와 무관) — 데스크톱 · 태블릿 작은 달력의 날마다 세기 막대와 주 달력이 센다.
   // 필터가 없으면 위 목록과 같은 요청이라 한 번만 받는다(같은 질의 키)
-  const monthExpensesQ = useExpenses({
-    startDate: monthStart,
-    endDate: monthEnd,
-    assetId,
-  });
+  // 실패는 달력 카드 자리에서 말한다(monthExpensesFailed) — 서버 원문 토스트는 끈다
+  const monthExpensesQ = useExpenses(
+    {
+      startDate: monthStart,
+      endDate: monthEnd,
+      assetId,
+    },
+    { silent: true },
+  );
 
   // 부모 카테고리를 고르면 자식 rowId 까지 함께 본다 — **빼고(exclude)에도 같이** 건다.
   // 한쪽만 펼치면 "식비 빼고" 가 하위 '카페' 를 못 걸러 낸다.
@@ -245,6 +249,12 @@ export function useExpenseData(
     /** 그 달 거래 전체(필터와 무관) — 달력 막대가 센다 */
     monthExpenses: monthExpensesQ.data ?? [],
     isLoadingMonthExpenses: monthExpensesQ.isLoading,
+    /** 달력 막대를 못 받았다 — 값이 하나도 없을 때만. 목록과 같은 질의면 `isError` 가 이미 화면 전체를 대신한다 */
+    monthExpensesFailed:
+      monthExpensesQ.isError && monthExpensesQ.data === undefined,
+    retryMonthExpenses: () => {
+      void monthExpensesQ.refetch();
+    },
     filterActive,
     isLoadingList: expensesQ.isLoading || transfersQ.isLoading,
     isLoadingSummary: monthlyQ.isLoading,
@@ -267,7 +277,9 @@ export function useAssetFilter() {
   const raw = searchParams.get("assetId");
   const assetId = raw ? Number(raw) : undefined;
   const enabled = !!assetId && !Number.isNaN(assetId);
-  const { data: asset } = useAsset(enabled ? assetId! : 0);
+  const { data: asset } = useAsset(enabled ? assetId! : 0, {
+    reference: true,
+  });
   const clear = () => {
     const next = new URLSearchParams(searchParams);
     next.delete("assetId");
