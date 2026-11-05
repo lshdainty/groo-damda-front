@@ -1548,9 +1548,9 @@ dutchPay,fromTx.me,나,Me
 dutchPay,fromTx.perPerson,1인당,Per person
 dutchPay,fromTx.createSettlement,정산 만들기,Create settlement
 dutchPay,stepTitle,{{title}} ({{step}}/{{total}}),{{title}} ({{step}}/{{total}})
-dutchPay,fromTx.splitSection,분배 방식,Split method
+dutchPay,fromTx.splitSection,나누는 법,How to split
 dutchPay,fromTx.split.equal.title,N분의 1,Even split
-dutchPay,fromTx.split.equal.sub,균등 분배,Distribute evenly
+dutchPay,fromTx.split.equal.sub,똑같이,Equally
 dutchPay,fromTx.split.ratio.title,비율,Ratio
 dutchPay,fromTx.split.ratio.sub,사람마다 몫 수,Shares per person
 dutchPay,fromTx.split.custom.title,개별 금액,Custom amounts

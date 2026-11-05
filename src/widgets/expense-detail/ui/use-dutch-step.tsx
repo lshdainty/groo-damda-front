@@ -169,6 +169,8 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
   // 개별 금액 — 다른 사람 칸이 비면 0원으로 나간다(서버가 결제자 아닌 0원을 거절)
   const customBad =
     method === "CUSTOM" && others.some((p) => !(Number(p.custom) > 0));
+  // 나 칩 · 줄은 "나" 로 쓴다(앱과 같게) — 저장 본문의 이름은 내 이름 그대로
+  const shown = (p: Person) => (p.uid === "me" ? t("fromTx.me") : p.name);
   const fmt = (n: number) => `${wonPre()}${KRW(n)}${isEn() ? "" : "원"}`;
 
   const addPerson = () => {
@@ -348,8 +350,8 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
                     "pointer-events-none gap-x1_5",
                   )}
                 >
-                  <Avatar name={p.name} size={24} />
-                  {p.name}
+                  <Avatar name={shown(p)} size={24} />
+                  {shown(p)}
                 </span>
               ) : (
                 <InputChip
@@ -415,7 +417,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
           <RadioSelectBoxGroup
             aria-label={t("fromTx.splitSection")}
             columns={3}
-            className="max-[420px]:grid-cols-1"
+            className="max-[559px]:grid-cols-1"
             value={method}
             onValueChange={(v) => setMethod(v as SplitMethod)}
           >
@@ -453,10 +455,10 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
                 return (
                   <ListItem
                     key={p.uid}
-                    prefix={<Avatar name={p.name} size={42} />}
+                    prefix={<Avatar name={shown(p)} size={42} />}
                     title={
                       <span className="[overflow-wrap:anywhere] [word-break:break-all]">
-                        {p.name}
+                        {shown(p)}
                         {isMe && (
                           <>
                             {" "}
@@ -485,7 +487,9 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
                           rootClassName="w-24"
                           className="text-right"
                           inputMode="decimal"
-                          aria-label={t("fromTx.ratioLabel", { name: p.name })}
+                          aria-label={t("fromTx.ratioLabel", {
+                            name: shown(p),
+                          })}
                           aria-invalid={
                             showErrors && invalidRatio ? true : undefined
                           }
@@ -502,7 +506,9 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
                           size="large"
                           rootClassName="w-32"
                           className="text-right"
-                          aria-label={t("fromTx.customLabel", { name: p.name })}
+                          aria-label={t("fromTx.customLabel", {
+                            name: shown(p),
+                          })}
                           unit={isEn() ? undefined : "원"}
                           value={p.custom}
                           max={MAX_AMOUNT}
