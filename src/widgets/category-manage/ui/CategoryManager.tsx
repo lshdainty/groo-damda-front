@@ -76,7 +76,9 @@ export function CategoryManager({
   const snackbar = useSnackbar();
   const confirmFail = useConfirmFail();
   // 삭제 확인이 "이 카테고리를 쓰는 반복 거래" 개수를 말한다 — 못 받으면 개수 문장만 뺀다(확인창을 막지 않는다)
-  const { data: recurrings } = useRecurringTransactions();
+  const { data: recurrings } = useRecurringTransactions(undefined, {
+    reference: true,
+  });
 
   // 목록 제목의 "순서 바꾸기" ↔ "완료" — 켜면 순서 모드(폰 · 데스크톱 같다)
   const [reorder, setReorder] = useState(false);
@@ -127,8 +129,12 @@ export function CategoryManager({
   const cmYM = { year: cmNow.getFullYear(), month: cmNow.getMonth() + 1 };
   const cmStart = `${cmYM.year}-${String(cmYM.month).padStart(2, "0")}-01`;
   const cmEnd = `${cmYM.year}-${String(cmYM.month).padStart(2, "0")}-${String(new Date(cmYM.year, cmYM.month, 0).getDate()).padStart(2, "0")}`;
-  const { data: budgets } = useExpenseBudgets(cmYM);
-  const { data: rangeSummary } = useRangeSummary(cmStart, cmEnd);
+  const { data: budgets } = useExpenseBudgets(cmYM, {
+    reference: true,
+  });
+  const { data: rangeSummary } = useRangeSummary(cmStart, cmEnd, undefined, {
+    reference: true,
+  });
 
   const budgetOf = (categoryRowId: number): number | null =>
     budgets?.find((b) => b.categoryRowId === categoryRowId)?.budgetAmount ??

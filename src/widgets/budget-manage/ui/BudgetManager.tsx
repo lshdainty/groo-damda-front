@@ -70,7 +70,10 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
 
   const budgetsQ = useExpenseBudgets({ year, month });
   const { data: budgets, isLoading: loadingBudgets } = budgetsQ;
-  const prevBudgetsQ = useExpenseBudgets({ year: prevY, month: prevM });
+  const prevBudgetsQ = useExpenseBudgets(
+    { year: prevY, month: prevM },
+    { reference: true },
+  );
   const categoriesQ = useExpenseCategories();
   const { data: categories, isLoading: loadingCategories } = categoriesQ;
   const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
