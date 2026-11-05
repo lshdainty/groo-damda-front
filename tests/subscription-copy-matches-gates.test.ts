@@ -13,7 +13,9 @@ import { describe, expect, it } from "vitest";
  * 번역 원본은 CSV 하나다(`src/locales/**` 는 생성물). 그래서 여기만 본다.
  */
 const CSV = "i18n/translations.csv";
-const DIALOG = "src/features/subscription/ui/SubscriptionDialog.tsx";
+// 비교 줄의 키는 lib/features.ts 에 있고, 구독 관리 화면(SubscriptionSection)이 그 줄을 그린다
+const FEATURES = "src/features/subscription/lib/features.ts";
+const SECTION = "src/widgets/account-settings/ui/SubscriptionSection.tsx";
 
 /** 게이트가 없어서 걷어낸 키들. 되살아나면 표가 다시 없는 제한을 판다. */
 const REMOVED = [
@@ -71,8 +73,10 @@ describe("구독 문구는 실제 게이트만 말한다", () => {
   });
 
   it("비교표가 안 쓰는 `feature.*` 키가 CSV 에 남지 않는다", () => {
-    const used = readFileSync(DIALOG, "utf-8");
+    const used = readFileSync(FEATURES, "utf-8");
     const orphans = featureKeys().filter((k) => !used.includes(`"${k}"`));
+    // 그리고 화면이 그 줄을 실제로 그린다
+    expect(readFileSync(SECTION, "utf-8")).toContain("SUB_FEATURES.map");
 
     expect(orphans).toEqual([]);
   });

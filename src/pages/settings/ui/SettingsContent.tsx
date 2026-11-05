@@ -49,7 +49,9 @@ export const SettingsContent = ({ activeSection, back, renderBody }: Props) => {
         {ownHead && (
           <PageHead
             title={t(activeSection.labelKey)}
-            description={t(activeSection.descKey)}
+            description={
+              activeSection.descKey ? t(activeSection.descKey) : undefined
+            }
           />
         )}
       </div>

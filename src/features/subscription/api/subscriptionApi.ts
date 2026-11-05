@@ -1,7 +1,7 @@
 /**
  * 구독·기능권한·증권사 크리덴셜 API. 증권 기능 게이트(메뉴 노출)와 설정(증권사 연결)의 백엔드 연동.
  */
-import { apiClient } from "@/shared/api";
+import { apiClient, type QuietRequestConfig } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 
 export interface MyFeatures {
@@ -22,6 +22,10 @@ export interface SubscriptionInfo {
   startedAt: string;
   currentPeriodEnd: string | null;
   autoRenew: boolean;
+  /** 이 구독 플랜의 가격(원). 서버가 안 주면 null — 화면이 값 없이 그린다 */
+  price: number | null;
+  /** 이 구독 플랜의 기간(개월) — 1 월간 · 12 연간. 안 주면 null */
+  durationMonths: number | null;
 }
 
 /**
@@ -45,7 +49,10 @@ export interface BrokerConnection {
 export interface SubscriptionPlan {
   planCode: string;
   planName: string;
+  /** 1 월간 · 12 연간 */
   durationMonths: number | null;
+  /** 가격(원) — 화면에 박지 않고 서버 값을 그린다. 없으면 null */
+  price: number | null;
 }
 
 /**
@@ -73,10 +80,15 @@ export interface IssuedApiToken {
   createAt: string;
 }
 
+// 이 화면은 실패를 제 자리에서 고정 글로 알린다 — 서버 원문 알림은 끈다
+const QUIET: QuietRequestConfig = { silent: true };
+
 export const subscriptionApi = {
   getMyFeatures: async (): Promise<MyFeatures> => {
+    // 실패는 호출처가 그린다(구독 페이지 Result Section · 게이트는 닫힘) — 서버 글 알림을 끈다
     const resp: ApiResponse<MyFeatures> = await apiClient.get(
       "/v1/users/me/features",
+      QUIET,
     );
     return resp.data;
   },
@@ -84,6 +96,7 @@ export const subscriptionApi = {
   getPlans: async (): Promise<SubscriptionPlan[]> => {
     const resp: ApiResponse<SubscriptionPlan[]> = await apiClient.get(
       "/v1/subscriptions/plans",
+      QUIET,
     );
     return resp.data;
   },
@@ -91,20 +104,27 @@ export const subscriptionApi = {
   getMySubscription: async (): Promise<SubscriptionInfo | null> => {
     const resp: ApiResponse<SubscriptionInfo | null> = await apiClient.get(
       "/v1/subscriptions/me",
+      QUIET,
     );
     return resp.data;
   },
 
   subscribe: async (planCode: string): Promise<SubscriptionInfo> => {
+    // 실패 글은 화면이 정한 고정 글로 알린다 — 서버 원문 알림을 끈다(I-14 32)
     const resp: ApiResponse<SubscriptionInfo> = await apiClient.post(
       "/v1/subscriptions",
       { planCode },
+      QUIET,
     );
     return resp.data;
   },
 
   cancelSubscription: async (reason?: string): Promise<void> => {
-    await apiClient.delete("/v1/subscriptions/me", { data: { reason } });
+    // 확인창 뒤 요청 — 실패는 useConfirmFail 의 Snackbar 가 말한다(서버 원문 알림을 끈다)
+    await apiClient.delete("/v1/subscriptions/me", {
+      data: { reason },
+      ...QUIET,
+    });
   },
 
   /** 전 증권사 연결 상태 — 미연결 증권사도 포함해 화면이 목록을 그린다. */

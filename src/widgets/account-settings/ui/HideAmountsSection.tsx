@@ -4,6 +4,8 @@ import { Button } from "@/shared/ui/button";
 import { Chip } from "@/shared/ui/chip";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
+import { SnackbarAvoidOverlap } from "@/shared/ds/snackbar";
+import { useCoverBottomNav } from "@/shared/ui/groo/use-cover-bottom-nav";
 import { MobileBackHeader } from "@/shared/ui/groo/mobile-back-header";
 import { useSettingsLeaveGuard } from "@/shared/ui/groo/settings-frame-context";
 import { HideAmountsUnlockDialog } from "./HideAmountsUnlockDialog";
@@ -42,6 +44,8 @@ export function HideAmountsSection({
 }) {
   const { t } = useTranslation("settings");
   const { t: tc } = useTranslation("common");
+  // 폰 껍데기가 탭 바를 덮는 동안 탭 바는 inert — 스낵바가 바닥 [저장] 위 8 에 선다
+  useCoverBottomNav(mobile);
   const saved = useHiddenCards();
 
   /** 고르는 중인 선택 — 저장 전까지 어디에도 반영되지 않는다. */
@@ -316,17 +320,24 @@ export function HideAmountsSection({
           {grid}
         </div>
         {/* 저장 — 화면 아래 고정. 고르는 동안에는 아무것도 반영되지 않으므로 여기까지 와야 끝난다. */}
-        <div
-          style={{
-            padding: "12px 24px",
-            paddingBottom: "calc(12px + env(safe-area-inset-bottom))",
-            flexShrink: 0,
-          }}
-        >
-          <Button size="lg" className="w-full" disabled={!dirty} onClick={save}>
-            {tc("save")}
-          </Button>
-        </div>
+        <SnackbarAvoidOverlap>
+          <div
+            style={{
+              padding: "12px 24px",
+              paddingBottom: "calc(12px + env(safe-area-inset-bottom))",
+              flexShrink: 0,
+            }}
+          >
+            <Button
+              size="lg"
+              className="w-full"
+              disabled={!dirty}
+              onClick={save}
+            >
+              {tc("save")}
+            </Button>
+          </div>
+        </SnackbarAvoidOverlap>
         {dialogs}
       </div>
     );

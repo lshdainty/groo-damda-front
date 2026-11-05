@@ -16,6 +16,7 @@ import {
   CreditCard,
   FilePen,
   NotebookTabs,
+  Sparkles,
 } from "lucide-react";
 import { config } from "@/shared/config";
 
@@ -37,7 +38,8 @@ export type SectionId =
   | "privacy"
   | "guide"
   | "hide-amounts"
-  | "devices";
+  | "devices"
+  | "subscription";
 
 export interface SectionDef {
   id: SectionId;
@@ -47,7 +49,8 @@ export interface SectionDef {
     strokeWidth?: number;
     color?: string;
   }>;
-  descKey: string;
+  /** 목록 · 제목 줄 설명 — 목록에 안 나오고 제목 줄도 제 구역이 그리는 숨은 구역은 없다 */
+  descKey?: string;
   /**
    * 값이 있으면 내부 섹션을 여는 대신 이 주소를 새 탭으로 연다.
    * 처리방침은 계정 단위 문서라 SSO 에 한 벌만 두고 여기서는 가리키기만 한다.
@@ -181,6 +184,15 @@ export const SECTIONS: SectionDef[] = [
     labelKey: "sections.devices.label",
     icon: Monitor,
     descKey: "sections.devices.desc",
+    hidden: true,
+    parent: "account",
+  },
+  // 계정 > 구독·결제에서 들어온다. 목록에는 안 나온다. 제목 줄(ManagerHead)은 구독 구역이 그린다(NEEDS_DESKTOP_HEAD 에 없다)
+  {
+    id: "subscription",
+    // 라벨은 화면 제목과 같은 키 하나(`subscription:title` — 다른 네임스페이스) — 문서 제목과 화면 제목이 갈리지 않는다
+    labelKey: "subscription:title",
+    icon: Sparkles,
     hidden: true,
     parent: "account",
   },

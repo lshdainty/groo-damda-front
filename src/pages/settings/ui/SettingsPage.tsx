@@ -20,6 +20,7 @@ import {
   AppearanceSection,
   DevicesSection,
   HideAmountsSection,
+  SubscriptionSection,
 } from "@/widgets/account-settings";
 import { AccountManager, SavingGoalManager } from "@/widgets/asset-full";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -171,6 +172,7 @@ export const SettingsPage = () => {
             mobile={m}
             onOpenHideAmounts={() => changeSection("hide-amounts")}
             onOpenDevices={() => changeSection("devices")}
+            onOpenSubscription={() => changeSection("subscription")}
           />
         );
       case "hide-amounts":
@@ -182,6 +184,8 @@ export const SettingsPage = () => {
         );
       case "devices":
         return <DevicesSection mobile={m} />;
+      case "subscription":
+        return <SubscriptionSection mobile={m} />;
       default:
         return <PlaceholderSection section={activeSection} />;
     }
@@ -202,6 +206,11 @@ export const SettingsPage = () => {
     // 쓰지 않는다 — 앱 화면처럼 자기 셸을 직접 그린다.
     if (section === "hide-amounts") {
       return <HideAmountsSection mobile onBack={goBack} />;
+    }
+
+    // 구독 관리도 바닥 고정 버튼이 있어 제 껍데기(Top Navigation + 흰 면 스크롤 + 바닥 띠)를 그린다(I-14 27)
+    if (section === "subscription") {
+      return <SubscriptionSection mobile onBack={goBack} />;
     }
 
     return (
@@ -279,7 +288,7 @@ function PlaceholderSection({ section }: { section: SectionDef }) {
             color: "var(--fg-tertiary)",
           }}
         >
-          {t(section.descKey)}
+          {section.descKey ? t(section.descKey) : null}
         </div>
         <div
           style={{
