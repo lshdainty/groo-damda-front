@@ -191,11 +191,12 @@ export const useUpdateTransfer = (opts?: { silent?: boolean }) => {
  * 매수·매도 등록 — 예수금·보유 수량·원가·실현손익이 함께 움직인다.
  * 실현손익이 거래로 잡히므로 가계부까지 늙는다.
  */
-export const useCreateTrade = () => {
+export const useCreateTrade = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: AssetTradeFormValues) => assetApi.createTrade(data),
+    mutationFn: (data: AssetTradeFormValues) =>
+      assetApi.createTrade(data, opts),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };

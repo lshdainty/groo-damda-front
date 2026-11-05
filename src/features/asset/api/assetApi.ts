@@ -251,10 +251,14 @@ export const assetApi = {
     return resp.data;
   },
 
-  createTrade: async (data: AssetTradeFormValues): Promise<AssetTrade> => {
+  createTrade: async (
+    data: AssetTradeFormValues,
+    opts?: SilentOpts,
+  ): Promise<AssetTrade> => {
     const resp: ApiResponse<AssetTrade> = await apiClient.post(
       "/v1/asset-trade",
       data,
+      silentConfig(opts),
     );
     return resp.data;
   },

@@ -657,6 +657,7 @@ asset,savingGoal.editNamed,{{name}} 목표 수정,Edit {{name}} goal
 asset,savingGoal.deleteNamed,{{name}} 목표 삭제,Delete {{name}} goal
 asset,savingGoal.remaining,남은 금액,Remaining
 asset,savingGoal.achievedAt,달성일,Achieved on
+asset,savingGoal.saveFailed,저축 목표를 저장하지 못했어요.,Couldn't save the saving goal.
 asset,savingGoal.errName,목표 이름을 입력해주세요.,Enter a goal name.
 asset,savingGoal.errAmount,목표 금액을 입력해주세요.,Enter a goal amount.
 asset,savingGoal.errCurrentExceeds,현재 모은 금액이 목표 금액보다 클 수 없어요.,The amount saved can't exceed the target amount.
@@ -2836,6 +2837,8 @@ asset,trade.realizedPreview,실현손익,Realized P/L
 asset,trade.fundingNotice,예수금이 모자라 결제 계좌에서 {{amount}}원을 옮겨요,{{amount}} moves from the settlement account to cover the shortfall
 asset,trade.insufficientCash,예수금이 마이너스가 돼요. 그대로 기록됩니다.,Cash will go negative. It is recorded as is.
 asset,trade.insufficientQty,보유 수량보다 많이 팔 수 없어요.,Cannot sell more than you hold.
+asset,trade.saveFailed,매매를 처리하지 못했어요.,Couldn't process the trade.
+asset,trade.saveInsufficientQty,보유 수량이 부족해요.,Not enough shares held.
 asset,trade.entryBuy,매수,Buy
 asset,trade.entrySell,매도,Sell
 asset,trade.history,거래 내역,Trade history

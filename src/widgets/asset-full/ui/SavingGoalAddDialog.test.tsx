@@ -21,15 +21,41 @@ const state = {
   create: vi.fn(),
   update: vi.fn(),
   contribute: vi.fn(),
+  opts: [] as unknown[],
+  failed: false,
 };
 vi.mock("@/features/savingGoal", () => ({
   useSavingGoals: () => ({ data: { goals: state.goals } }),
-  useCreateSavingGoal: () => ({ mutate: state.create, isPending: false }),
-  useUpdateSavingGoal: () => ({ mutate: state.update, isPending: false }),
-  useContributeSavingGoal: () => ({
-    mutate: state.contribute,
-    isPending: false,
-  }),
+  useCreateSavingGoal: (o?: unknown) => {
+    state.opts.push(o);
+    return {
+      mutate: state.create,
+      reset: () => {},
+      isPending: false,
+      isError: state.failed,
+      error: state.failed ? new Error("서버 원문 오류") : null,
+    };
+  },
+  useUpdateSavingGoal: (o?: unknown) => {
+    state.opts.push(o);
+    return {
+      mutate: state.update,
+      reset: () => {},
+      isPending: false,
+      isError: false,
+      error: null,
+    };
+  },
+  useContributeSavingGoal: (o?: unknown) => {
+    state.opts.push(o);
+    return {
+      mutate: state.contribute,
+      reset: () => {},
+      isPending: false,
+      isError: false,
+      error: null,
+    };
+  },
 }));
 
 const { SavingGoalAddDialog } = await import("./SavingGoalAddDialog");
@@ -58,6 +84,8 @@ beforeEach(async () => {
   state.create = vi.fn();
   state.update = vi.fn();
   state.contribute = vi.fn();
+  state.opts = [];
+  state.failed = false;
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -249,5 +277,45 @@ describe("고르기", () => {
     expect(contents[1]!.className).toContain("+2)]");
     expect(overlays[0]!.className).not.toContain("+1)]");
     expect(contents[1]!.className).toContain("rounded-t-r6");
+  });
+});
+
+describe("저장 실패(I-28-5 3b)", () => {
+  it("요청은 silent — 서버 원문 토스트가 안 뜬다", () => {
+    mount();
+    expect(state.opts.length).toBeGreaterThan(0);
+    for (const o of state.opts) expect(o).toEqual({ silent: true });
+  });
+
+  it("실패하면 폼 맨 위 Callout 고정 글 · 값은 그대로 · 서버 글 없음", () => {
+    state.failed = true;
+    mount();
+    type(inputs()[0]!, "유럽 여행");
+    type(inputs()[1]!, "5000000");
+    const callout = document.querySelector('[role="alert"]');
+    expect(callout?.textContent).toBe("savingGoal.saveFailed");
+    expect(document.body.textContent).not.toContain("서버 원문 오류");
+    expect(inputs()[0]!.value).toBe("유럽 여행");
+    expect(inputs()[1]!.value).toBe("5,000,000");
+  });
+
+  it("실패가 없으면 Callout 도 없다", () => {
+    mount();
+    expect(document.querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it("같은 틱에 두 번 눌러도 요청은 한 번 — onError 로 끝나면 다시 된다", () => {
+    mount();
+    type(inputs()[0]!, "유럽 여행");
+    type(inputs()[1]!, "5000000");
+    act(() => {
+      byText("add").click();
+      byText("add").click();
+    });
+    expect(state.create).toHaveBeenCalledTimes(1);
+    const cbs = state.create.mock.calls[0]![1] as { onError: () => void };
+    act(() => cbs.onError());
+    click(byText("add"));
+    expect(state.create).toHaveBeenCalledTimes(2);
   });
 });

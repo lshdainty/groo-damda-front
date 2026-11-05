@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ds/button";
+import { Callout } from "@/shared/ds/callout";
+import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { ChipRadio, ChipRadioGroup } from "@/shared/ds/chip";
 import { DatePicker, dayKey, parseDayKey } from "@/shared/ds/date-picker";
 import {
@@ -54,7 +56,8 @@ export function AssetTradeDialog({
   const { t } = useTranslation("asset");
   const { t: tc } = useTranslation("common");
   const wide = useWideSurface();
-  const createMut = useCreateTrade();
+  // 저장 실패는 전역 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글)이 알린다 — 요청은 silent, 폼은 열린 채 · 쓴 값 그대로
+  const createMut = useCreateTrade({ silent: true });
   const { data: assetsData } = useAssets();
   // 결제 계좌 후보 — 이 증권계좌 자신은 뺀다(예수금 경로와 같아진다).
   const settlementOptions = useMemo(
@@ -177,15 +180,34 @@ export function AssetTradeDialog({
         : undefined;
   const amountError =
     tried && amountNum <= 0 ? t("trade.amountRequired") : undefined;
+  const errorRef = useScrollToError<HTMLDivElement>(
+    createMut.isError,
+    createMut.error,
+  );
+  // 서버 글은 내지 않는다 — 고쳐 다시 할 수 있는 보유 수량 부족만 오류 코드(ASSET_012)로 가려 고정 글을 준다
+  const failCode = (
+    createMut.error as { response?: { data?: { code?: unknown } } } | null
+  )?.response?.data?.code;
+  const saveFailedText =
+    failCode === "ASSET_012"
+      ? t("trade.saveInsufficientQty")
+      : t("trade.saveFailed");
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면(성공 · 실패) 끈다
+  const savingRef = useRef(false);
   const submit = () => {
     setTried(true);
     if (!canSubmit || payload == null) return;
+    if (savingRef.current) return;
+    savingRef.current = true;
+    createMut.reset();
     // 미리보기에 보낸 것과 같은 몸통을 보낸다 — 보여 준 값과 저장될 값이 다를 수 없다.
     createMut.mutate(payload, {
       onSuccess: () => {
         onClose();
       },
-      // onError: 전역 인터셉터가 서버 메시지를 토스트로 노출(예수금 부족·수량 부족 등)
+      onSettled: () => {
+        savingRef.current = false;
+      },
     });
   };
 
@@ -201,6 +223,13 @@ export function AssetTradeDialog({
     >
       <ResponsiveDialogContent title={t("trade.title")}>
         <ResponsiveDialogBody>
+          {createMut.isError && (
+            <div ref={errorRef}>
+              <Callout tone="critical" role="alert" className="mb-x4">
+                {saveFailedText}
+              </Callout>
+            </div>
+          )}
           <div className="flex flex-col gap-x4 pb-x2">
             {/* 매수 · 매도 — 2 ~ 4개 폼 값은 칩 하나 고르기(DESIGN.desk 칩) */}
             <ChipRadioGroup

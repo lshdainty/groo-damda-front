@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { MAX_AMOUNT, parseAmount } from "@/shared/lib/groo/amount";
 import { nameIssue } from "@/shared/lib/groo/name-policy";
 import { Button } from "@/shared/ds/button";
+import { Callout } from "@/shared/ds/callout";
+import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -57,9 +59,10 @@ export function SavingGoalAddDialog({
   const { t: tc } = useTranslation("common");
   const isEdit = !!goal;
 
-  const createMut = useCreateSavingGoal();
-  const updateMut = useUpdateSavingGoal();
-  const contributeMut = useContributeSavingGoal();
+  // 저장 실패는 전역 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글)이 알린다 — 요청은 silent, 폼은 열린 채 · 쓴 값 그대로
+  const createMut = useCreateSavingGoal({ silent: true });
+  const updateMut = useUpdateSavingGoal({ silent: true });
+  const contributeMut = useContributeSavingGoal({ silent: true });
   // 목록 화면에서만 열리므로 캐시 재사용 — 추가 요청이 나가지 않는다.
   const goalsQ = useSavingGoals();
   const goals = goalsQ.data?.goals ?? [];
@@ -101,6 +104,23 @@ export function SavingGoalAddDialog({
   const saving =
     createMut.isPending || updateMut.isPending || contributeMut.isPending;
 
+  const saveFailed =
+    createMut.isError || updateMut.isError || contributeMut.isError;
+  const saveError =
+    createMut.error ?? updateMut.error ?? contributeMut.error ?? undefined;
+  const errorRef = useScrollToError<HTMLDivElement>(saveFailed, saveError);
+  const clearSaveError = () => {
+    createMut.reset();
+    updateMut.reset();
+    contributeMut.reset();
+  };
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다.
+  // 누르는 순간 켜고, 요청이 끝나는 갈래(성공 · 실패 · 납입까지 이어지는 뒤 요청)마다 끈다
+  const savingRef = useRef(false);
+  const release = () => {
+    savingRef.current = false;
+  };
+
   const validate = (): Errors => {
     const out: Errors = {};
     const takenTitles = goals
@@ -121,13 +141,15 @@ export function SavingGoalAddDialog({
   };
 
   const handleSubmit = () => {
-    if (saving) return;
+    if (saving || savingRef.current) return;
     const found = validate();
     setErrors(found);
     if (found.name) return nameRef.current?.focus();
     if (found.target) return targetRef.current?.focus();
     if (found.current) return currentRef.current?.focus();
 
+    savingRef.current = true;
+    clearSaveError();
     const trimmed = title.trim();
     const targetNum = parseAmount(target);
     const currentNum = parseAmount(current);
@@ -145,14 +167,16 @@ export function SavingGoalAddDialog({
           },
         },
         {
+          onError: release,
           onSuccess: () => {
             const diff = currentNum - goal.currentAmount;
             if (diff !== 0) {
               contributeMut.mutate(
                 { id: goal.rowId, data: { amount: diff } },
-                { onSuccess: () => onClose() },
+                { onSuccess: () => onClose(), onSettled: release },
               );
             } else {
+              release();
               onClose();
             }
           },
@@ -169,13 +193,15 @@ export function SavingGoalAddDialog({
           currency: "KRW",
         },
         {
+          onError: release,
           onSuccess: (created) => {
             if (currentNum > 0) {
               contributeMut.mutate(
                 { id: created.rowId, data: { amount: currentNum } },
-                { onSuccess: () => onClose() },
+                { onSuccess: () => onClose(), onSettled: release },
               );
             } else {
+              release();
               onClose();
             }
           },
@@ -203,6 +229,13 @@ export function SavingGoalAddDialog({
         }}
       >
         <ResponsiveDialogBody>
+          {saveFailed && (
+            <div ref={errorRef}>
+              <Callout tone="critical" role="alert" className="mb-x4">
+                {t("savingGoal.saveFailed")}
+              </Callout>
+            </div>
+          )}
           <div className="flex flex-col gap-x6">
             <Field
               label={t("savingGoal.name")}

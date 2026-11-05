@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { invalidateFor, savingGoalKeys } from "@/shared/config";
+import type { SilentOpts } from "@/shared/api";
 import { savingGoalApi } from "../api/savingGoalApi";
 import type {
   SavingGoalFormValues,
@@ -23,17 +24,17 @@ export const useSavingGoal = (id: number) => {
   });
 };
 
-export const useCreateSavingGoal = () => {
+export const useCreateSavingGoal = (opts?: SilentOpts) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: SavingGoalFormValues) =>
-      savingGoalApi.createSavingGoal(data),
+      savingGoalApi.createSavingGoal(data, opts),
     onSuccess: () => invalidateFor(queryClient, "saving-goal"),
   });
 };
 
-export const useUpdateSavingGoal = () => {
+export const useUpdateSavingGoal = (opts?: SilentOpts) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -43,12 +44,12 @@ export const useUpdateSavingGoal = () => {
     }: {
       id: number;
       data: SavingGoalUpdateFormValues;
-    }) => savingGoalApi.updateSavingGoal(id, data),
+    }) => savingGoalApi.updateSavingGoal(id, data, opts),
     onSuccess: () => invalidateFor(queryClient, "saving-goal"),
   });
 };
 
-export const useContributeSavingGoal = () => {
+export const useContributeSavingGoal = (opts?: SilentOpts) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -58,7 +59,7 @@ export const useContributeSavingGoal = () => {
     }: {
       id: number;
       data: SavingGoalContributeValues;
-    }) => savingGoalApi.contributeSavingGoal(id, data),
+    }) => savingGoalApi.contributeSavingGoal(id, data, opts),
     onSuccess: () => invalidateFor(queryClient, "saving-goal"),
   });
 };
