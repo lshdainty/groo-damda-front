@@ -133,7 +133,7 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
 
   let body: React.ReactNode;
   if (failed) {
-    body = (
+    const failure = (
       <BandFailure
         title={t("labelsSection.loadFailed")}
         onRetry={() => void labelsQ.refetch()}
@@ -141,6 +141,7 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
         size="medium"
       />
     );
+    body = mobile ? failure : <DsCard body="list">{failure}</DsCard>;
   } else {
     const rows = isLoading ? (
       <ManageRowsSkeleton rows={3} />

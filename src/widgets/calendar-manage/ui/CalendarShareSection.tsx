@@ -164,12 +164,15 @@ export function CalendarShareSection({ mobile }: { mobile: boolean }) {
   const joinId = `${uid}-join`;
 
   const lists = failed ? (
-    <BandFailure
-      title={t("shareSection.loadFailed")}
-      onRetry={() => void calendarsQ.refetch()}
-      band={mobile}
-      size="medium"
-    />
+    wrap(
+      mobile,
+      <BandFailure
+        title={t("shareSection.loadFailed")}
+        onRetry={() => void calendarsQ.refetch()}
+        band={mobile}
+        size="medium"
+      />,
+    )
   ) : (
     <>
       {wrap(
