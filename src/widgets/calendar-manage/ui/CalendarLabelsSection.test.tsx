@@ -223,12 +223,12 @@ describe("라벨 화면", () => {
       setter?.call(input, "열세 글자짜리 아주 긴 옛 라벨" + "!");
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    // 옛 17자에 한 글자 더해도 잘리지 않는다 — "18/12" 오류 색, [저장] 은 막힌다
-    expect(input.value.length).toBe(18);
+    // 옛 17자는 17 에서 멈춘다(더 쓰게 하지 않는다) — "17/12" 오류 색, [저장] 은 막힌다
+    expect(input.value.length).toBe(17);
     const count = [...document.body.querySelectorAll("p")].find((p) =>
       /^\d+\/\d+$/.test(p.textContent ?? ""),
     ) as HTMLElement;
-    expect(count.textContent).toBe("18/12");
+    expect(count.textContent).toBe("17/12");
     expect(count.querySelector(".text-fg-critical")).not.toBeNull();
     expect(state.saveCalls.length).toBe(1);
   });

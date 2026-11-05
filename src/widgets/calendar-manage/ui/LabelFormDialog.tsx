@@ -65,10 +65,9 @@ export function LabelFormDialog({
   const errorRef = useScrollToError<HTMLDivElement>(saveError, saveErrorSeq);
 
   const nameTrim = name.trim();
-  // 칸은 12자에서 멈추지만, 12자보다 긴 저장된 옛 이름은 고쳐도 잘리지 않는다(입력 상한 = 14 와 저장된 길이 + 1 중 큰 값, 세는 줄 분모는 늘 12 — `counterMax`) — 12 초과는 칸 오류로 [저장] 을 막는다
+  // 칸은 12자에서 멈추지만, 12자보다 긴 저장된 옛 이름은 고쳐도 잘리지 않는다(입력 상한 = max(저장된 길이, 12) — 이미 넘친 이름에 더 쓰게 하지 않는다, 세는 줄 분모는 늘 12 — `counterMax`) — 12 초과는 칸 오류로 [저장] 을 막는다
   const initialLen = countGraphemes(initial.name);
-  const nameCap =
-    initialLen > LABEL_NAME_MAX ? Math.max(14, initialLen + 1) : LABEL_NAME_MAX;
+  const nameCap = Math.max(LABEL_NAME_MAX, initialLen);
   const dirty = name !== initial.name || color !== initial.color;
 
   // 중복은 서버가 409 로 막지만 폼에 아무 표시도 없으면 '버튼이 안 먹는' 것처럼 보였다(QA #55) — 보내기 전에 이 자리에서 알린다
