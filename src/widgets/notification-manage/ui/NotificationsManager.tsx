@@ -476,9 +476,11 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
               <SliderValue>{shownThreshold}%</SliderValue>
             )}
           </div>
-          <div className="py-x3">
+          <div className="pt-x2">
             <Slider
               aria-labelledby={thresholdLabelId}
+              // 값 말풍선 자리(위 24)는 쓰지 않는다 — 머리 줄이 값을 보인다
+              className="!pt-0"
               min={50}
               max={100}
               step={5}

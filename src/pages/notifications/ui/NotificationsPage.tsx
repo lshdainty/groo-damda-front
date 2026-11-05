@@ -178,7 +178,7 @@ export function NotificationsPage() {
             </TopNavigationIconButton>
           </TopNavigationActions>
         </TopNavigation>
-        <div className="min-h-0 flex-1 bg-bg-layer-default pb-x6">{body}</div>
+        <div className="flex-1 shrink-0 bg-bg-layer-default pb-x6">{body}</div>
       </>
     );
   }
