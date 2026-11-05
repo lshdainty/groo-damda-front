@@ -10,38 +10,21 @@ import {
   StickyNote,
   Trash2,
 } from "lucide-react";
-import { ChipRadio, ChipRadioGroup } from "@/shared/ds/chip";
 import { FloatingActionButton } from "@/shared/ds/floating-action-button";
 import { Input } from "@/shared/ds/input";
 import { List, ListHeader } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
-import { Skeleton } from "@/shared/ds/skeleton";
 import { SwipeActions } from "@/shared/ds/swipe-actions";
 import {
   TopNavigation,
   TopNavigationBackButton,
   TopNavigationTitle,
 } from "@/shared/ds/top-navigation";
-import { cn } from "@/shared/lib/cn";
 import type { Memo } from "@/entities/memo";
-import { NO_TAG_KEY } from "../lib/memo-tags";
 import type { MemoScreen } from "../model/use-memo-screen";
 import { MemoDeleteConfirm } from "./MemoDeleteConfirm";
-import { MemoRow } from "./MemoRow";
-
-/** 첫 진입 — 점 8 · 제목 · 본문 · 메타 세 줄 높이의 줄 자리(실제 줄과 같은 좌우 24 · 위아래 12) */
-function MemoRowSkeleton() {
-  return (
-    <div className="flex items-start gap-x3 px-global-gutter py-x3">
-      <Skeleton className="mt-[7px] size-[8px] shrink-0" radius="full" />
-      <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
-        <Skeleton text="t5" className="w-3/5" />
-        <Skeleton text="t4" className="w-4/5" />
-        <Skeleton text="t3" className="w-2/5" />
-      </div>
-    </div>
-  );
-}
+import { MemoRow, MemoRowSkeleton } from "./MemoRow";
+import { MemoTagChips } from "./MemoTagChips";
 
 /**
  * 메모 폰 화면(I-15 5 ~ 12) — 흰 면 하나: 상단 바(← "메모") → 밑줄형 검색칸 → 태그 칩 줄(가로로 밀림) →
@@ -52,30 +35,8 @@ export function MemoMobile({ screen }: { screen: MemoScreen }) {
   const { t } = useTranslation("memo");
   const { t: tc } = useTranslation("common");
   const [askDelete, setAskDelete] = useState<Memo | null>(null);
-  const {
-    memos,
-    query,
-    setQuery,
-    tagFilter,
-    setTagFilter,
-    chips,
-    pinned,
-    others,
-    filtered,
-    loading,
-    failed,
-  } = screen;
-
-  const count = (n: number, on: boolean) => (
-    <span
-      className={cn(
-        "ml-x1 tabular-nums",
-        on ? "text-fg-neutral-inverted" : "text-fg-neutral-subtle",
-      )}
-    >
-      {n}
-    </span>
-  );
+  const { memos, query, setQuery, pinned, others, filtered, loading, failed } =
+    screen;
 
   const rows = (items: Memo[]) =>
     items.map((m) => (
@@ -192,28 +153,7 @@ export function MemoMobile({ screen }: { screen: MemoScreen }) {
         </div>
         {!failed && !loading && memos.length > 0 && (
           <div className="mb-x1 mt-x3">
-            <ChipRadioGroup
-              layout="scroll"
-              aria-label={t("tagFilter")}
-              value={tagFilter}
-              onValueChange={setTagFilter}
-            >
-              <ChipRadio value="all" variant="outlineStrong" size="small">
-                {t("all")}
-                {count(memos.length, tagFilter === "all")}
-              </ChipRadio>
-              {chips.map((c) => (
-                <ChipRadio
-                  key={c.key}
-                  value={c.key}
-                  variant="outlineStrong"
-                  size="small"
-                >
-                  {c.key === NO_TAG_KEY ? t("noTag") : c.key}
-                  {count(c.count, tagFilter === c.key)}
-                </ChipRadio>
-              ))}
-            </ChipRadioGroup>
+            <MemoTagChips screen={screen} />
           </div>
         )}
         {body}

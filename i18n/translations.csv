@@ -1241,6 +1241,8 @@ memo,saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.
 memo,deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
 memo,pinFailed,고정을 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not change the pin. Please try again in a moment.
 memo,contentLabel,내용,Content
+memo,tagsHeading,태그,Tags
+memo,tagsManage,관리,Manage
 memo,moreOf,{{name}} 더보기,More for {{name}}
 memo,modifiedAt,{{time}} 수정,Edited {{time}}
 memo,tags.loadFailed,태그를 불러오지 못했어요,Could not load tags
