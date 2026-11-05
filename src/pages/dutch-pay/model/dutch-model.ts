@@ -27,31 +27,35 @@ export function paidCountOf(d: DutchPay): number {
 /** 모두 냈다 = 서버 `isSettled` */
 export const isActiveSession = (d: DutchPay): boolean => !d.isSettled;
 
+export type PerPerson =
+  /** 몫이 모두 같다 — "1인당 m" */
+  | { kind: "equal"; amount: number }
+  /** 딱 한 사람만 m + r(r < 인원) — "1인당 m · r원은 {그 사람}" (저장된 몫에서 찾는다 — 결제자로 짐작하지 않는다) */
+  | { kind: "rest"; amount: number; extra: number; name: string }
+  /** 그 밖(비율 · 직접 입력 …) — "1인당" 조각을 빼고 날짜 · 인원만 */
+  | { kind: "none" };
+
 /**
- * "1인당" 글 — 몫이 모두 같으면 그 값, 나눠 떨어지지 않으면 가장 많은 몫이 아니라 가장 흔한(=보낼 사람의) 몫과
- * 그와 다른 사람(남는 원을 진 사람)을 함께 돌려준다. 화면이 "1인당 61,333원 · 1원은 나" 로 적는다(I-15 40).
+ * "1인당" 규칙(I-15 40 일반화) — 가장 작은 몫을 m 으로 두고 판정한다. 목록 메타 · 만들기 · 상세가 같은 함수를 쓴다.
  */
-export function perPersonInfo(d: DutchPay): {
-  amount: number;
-  /** 다른 몫을 가진 사람(없으면 null) — 남는 원을 진 사람 */
-  restName: string | null;
-  /** 그 사람 몫이 1인당보다 더 낸 원 수 */
-  restExtra: number;
-} {
-  const ps = d.participants;
-  if (ps.length === 0) return { amount: 0, restName: null, restExtra: 0 };
-  const payer = payerOf(d);
-  // 보낼 사람(결제자가 아닌 사람)의 몫이 "1인당" 이다 — 모두 같다는 것이 규칙이다
-  const sender = ps.find((p) => p.rowId !== payer?.rowId) ?? ps[0]!;
-  const amount = sender.amount;
-  const other = ps.find((p) => p.amount !== amount);
-  if (!other) return { amount, restName: null, restExtra: 0 };
-  return {
-    amount,
-    restName: other.participantName,
-    restExtra: Math.abs(other.amount - amount),
-  };
+export function perPersonOf(
+  shares: readonly { name: string; amount: number }[],
+): PerPerson {
+  if (shares.length === 0) return { kind: "none" };
+  const m = Math.min(...shares.map((x) => x.amount));
+  const above = shares.filter((x) => x.amount !== m);
+  if (above.length === 0) return { kind: "equal", amount: m };
+  const only = above[0]!;
+  const r = only.amount - m;
+  if (above.length === 1 && r > 0 && r < shares.length)
+    return { kind: "rest", amount: m, extra: r, name: only.name };
+  return { kind: "none" };
 }
+
+export const perPersonOfSession = (d: DutchPay): PerPerson =>
+  perPersonOf(
+    d.participants.map((p) => ({ name: p.participantName, amount: p.amount })),
+  );
 
 /** 정산 날짜 내림(같으면 만든 차례 내림) — 진행 중 · 완료 모두 */
 export function sortByDateDesc(list: readonly DutchPay[]): DutchPay[] {

@@ -9,6 +9,7 @@ import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
 import type { DutchPay } from "@/entities/dutch-pay";
 import { dutchDate, friendsOf, paidCountOf } from "../model/dutch-model";
 import { PerPersonText, Won } from "./dutch-parts";
+import { perPersonOfSession } from "../model/dutch-model";
 
 export type TabKey = "active" | "past" | "friends";
 
@@ -41,9 +42,11 @@ export function DutchSessionRow({
           <TagGroup size="t3" truncate>
             <TagGroupItem>{dutchDate(d.dutchPayDate)}</TagGroupItem>
             <TagGroupItem>{t("memberCount", { count: total })}</TagGroupItem>
-            <TagGroupItem>
-              <PerPersonText d={d} />
-            </TagGroupItem>
+            {perPersonOfSession(d).kind !== "none" && (
+              <TagGroupItem>
+                <PerPersonText info={perPersonOfSession(d)} />
+              </TagGroupItem>
+            )}
           </TagGroup>
           <span className="mt-[6px] flex items-center gap-x2_5">
             <AvatarStack size={24} aria-hidden>
@@ -56,6 +59,7 @@ export function DutchSessionRow({
               value={paid}
               max={Math.max(total, 1)}
               aria-label={t("paidProgress", { paid, total })}
+              aria-valuetext={t("paidProgress", { paid, total })}
               className="min-w-[24px] flex-1"
             />
             <span className="shrink-0 whitespace-nowrap text-t3 text-fg-neutral-subtle">

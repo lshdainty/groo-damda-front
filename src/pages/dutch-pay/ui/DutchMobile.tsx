@@ -10,6 +10,7 @@ import {
   TopNavigationBackButton,
   TopNavigationTitle,
 } from "@/shared/ds/top-navigation";
+import { Skeleton } from "@/shared/ds/skeleton";
 import { friendsOf } from "../model/dutch-model";
 import { Won } from "./dutch-parts";
 import { DutchTabContent, type TabKey } from "./DutchLists";
@@ -20,19 +21,27 @@ function SummaryRow({
   label,
   sub,
   amount,
+  loading,
 }: {
   label: string;
   sub: string;
   amount: number;
+  loading: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-baseline justify-between gap-x-x3">
       <div className="min-w-0">
         <div className="text-t4 text-fg-neutral-subtle">{label}</div>
-        <div className="text-t3 text-fg-neutral-subtle">{sub}</div>
+        <div className="text-t3 text-fg-neutral-subtle">
+          {loading ? <Skeleton text="t3" className="w-20" /> : sub}
+        </div>
       </div>
       <div className="ml-auto text-t9 font-bold text-fg-neutral">
-        <Won amount={amount} card="dutchpay.summary" />
+        {loading ? (
+          <Skeleton text="t9" className="w-32" />
+        ) : (
+          <Won amount={amount} card="dutchpay.summary" />
+        )}
       </div>
     </div>
   );
@@ -59,12 +68,14 @@ export function DutchMobile({ v }: { v: DutchView }) {
                 ? t("receivableFrom", { count: v.receivable.people })
                 : t("receivableNone")
             }
-            amount={v.loading ? 0 : v.receivable.amount}
+            amount={v.receivable.amount}
+            loading={v.loading}
           />
           <SummaryRow
             label={t("payable")}
             sub={t("payableTo", { count: 0 })}
             amount={0}
+            loading={v.loading}
           />
         </section>
         <section className="flex-1 bg-bg-layer-default pb-[96px]">

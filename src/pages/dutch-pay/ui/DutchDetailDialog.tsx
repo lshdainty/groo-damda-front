@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Avatar } from "@/shared/ds/avatar";
 import { Badge } from "@/shared/ds/badge";
 import { Button } from "@/shared/ds/button";
+import { Callout } from "@/shared/ds/callout";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -12,19 +13,16 @@ import {
 import { List, ListHeader, ListItem } from "@/shared/ds/list";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
-import { KRW, isEn } from "@/shared/lib/groo/format";
-import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import type { DutchPay } from "@/entities/dutch-pay";
 import {
   dutchDateDow,
   isActiveSession,
   isPayer,
-  perPersonInfo,
+  perPersonOfSession,
 } from "../model/dutch-model";
-import { PerPersonText, Won } from "./dutch-parts";
-
-const wonText = (n: number) => `${wonPre()}${KRW(n)}${isEn() ? "" : "원"}`;
+import { wonText } from "../model/dutch-format";
+import { MaskedText, PerPersonText, Won } from "./dutch-parts";
 
 /**
  * 정산 상세(I-15 38 · 39, 7-2B) — 읽기 시트 · 1280 이상 Dialog 480. 머리 제목 = 정산 이름. 본문: "{날짜 (요일)} · {장소}" → 총액(t9 700) →
@@ -54,7 +52,24 @@ export function DutchDetailDialog({
   const active = isActiveSession(d);
   const place = d.description?.trim();
   const date = dutchDateDow(d.dutchPayDate);
-  const info = perPersonInfo(d);
+  const info = perPersonOfSession(d);
+  const minShare = Math.min(...d.participants.map((p) => p.amount));
+  const reasonId = useId();
+  // 받음 · 모두 받음은 누르는 동안 그 단추만 진행 중이고 다시 눌리지 않는다
+  const [pending, setPending] = useState<Set<number | "all">>(new Set());
+  const guard = async (key: number | "all", run: () => Promise<void>) => {
+    if (pending.has(key)) return;
+    setPending((s) => new Set(s).add(key));
+    try {
+      await run();
+    } finally {
+      setPending((s) => {
+        const n = new Set(s);
+        n.delete(key);
+        return n;
+      });
+    }
+  };
 
   const runDelete = async () => {
     setRunning(true);
@@ -92,6 +107,7 @@ export function DutchDetailDialog({
     <Button
       variant="ghost"
       ghostColor="critical"
+      flush={wide ? undefined : "left"}
       size={wide ? undefined : "large"}
       className={wide ? "mr-auto" : "shrink-0"}
       onClick={() => setAskDelete(true)}
@@ -99,12 +115,23 @@ export function DutchDetailDialog({
       {tc("delete")}
     </Button>
   );
+  const requestAll = active ? (
+    <Button
+      variant="neutralWeak"
+      size={wide ? undefined : "large"}
+      disabled
+      aria-describedby={reasonId}
+    >
+      {t("requestAll")}
+    </Button>
+  ) : null;
   const all = active ? (
     <Button
       variant="neutralSolid"
       size={wide ? undefined : "large"}
       className={wide ? undefined : "flex-1"}
-      onClick={() => void receiveAll()}
+      loading={pending.has("all")}
+      onClick={() => void guard("all", receiveAll)}
     >
       {t("receiveAll")}
     </Button>
@@ -126,8 +153,8 @@ export function DutchDetailDialog({
             <p className="m-0 pt-x1 text-t9 font-bold text-fg-neutral [overflow-wrap:anywhere]">
               <Won amount={d.totalAmount} />
             </p>
-            <p className="m-0 pb-x4 pt-x1 text-t4 text-fg-neutral-subtle">
-              <PerPersonText d={d} /> ·{" "}
+            <p className="m-0 pt-x1 text-t4 text-fg-neutral-subtle">
+              <PerPersonText info={info} /> ·{" "}
               {t("memberCount", { count: d.participants.length })}
             </p>
             <hr
@@ -138,17 +165,30 @@ export function DutchDetailDialog({
               <ListHeader as="h3">
                 {t("participantsHeading", { count: d.participants.length })}
               </ListHeader>
+              {active && (
+                <div className="px-global-gutter pb-x2">
+                  <Callout tone="informative" id={reasonId}>
+                    {t("requestSoon")}
+                  </Callout>
+                </div>
+              )}
               <List>
                 {d.participants.map((p) => {
                   const payer = isPayer(d, p);
-                  const share = wonText(p.amount);
-                  const detail = payer
-                    ? p.amount !== info.amount
-                      ? t("payerPaidShare", { amount: share })
-                      : t("payerPaid")
-                    : p.isPaid
-                      ? t("paidShare", { amount: share })
-                      : t("owesShare", { amount: share });
+                  const make = (amount: string) =>
+                    payer
+                      ? p.amount !== minShare
+                        ? t("payerPaidShare", { amount })
+                        : t("payerPaid")
+                      : p.isPaid
+                        ? t("paidShare", { amount })
+                        : t("owesShare", { amount });
+                  const detail = (
+                    <MaskedText
+                      text={make(wonText(p.amount))}
+                      masked={make("••••")}
+                    />
+                  );
                   return (
                     <ListItem
                       key={p.rowId}
@@ -165,16 +205,29 @@ export function DutchDetailDialog({
                             {t("paidBadge")}
                           </Badge>
                         ) : active ? (
-                          <Button
-                            variant="neutralWeak"
-                            size="small"
-                            aria-label={t("receiveName", {
-                              name: p.participantName,
-                            })}
-                            onClick={() => void receive(p.rowId)}
-                          >
-                            {t("receive")}
-                          </Button>
+                          <span className="flex items-center gap-x2">
+                            <Button
+                              variant="neutralWeak"
+                              size="small"
+                              disabled
+                              aria-describedby={reasonId}
+                            >
+                              {t("request")}
+                            </Button>
+                            <Button
+                              variant="neutralWeak"
+                              size="small"
+                              aria-label={t("receiveName", {
+                                name: p.participantName,
+                              })}
+                              loading={pending.has(p.rowId)}
+                              onClick={() =>
+                                void guard(p.rowId, () => receive(p.rowId))
+                              }
+                            >
+                              {t("receive")}
+                            </Button>
+                          </span>
                         ) : undefined
                       }
                     />
@@ -187,11 +240,13 @@ export function DutchDetailDialog({
             {wide ? (
               <>
                 {del}
+                {requestAll}
                 {all}
               </>
             ) : (
               <div className="flex w-full items-center gap-x2">
                 {del}
+                {requestAll}
                 {all}
               </div>
             )}

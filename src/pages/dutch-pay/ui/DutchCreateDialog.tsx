@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { CalendarDays, Plus } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Avatar } from "@/shared/ds/avatar";
 import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
@@ -20,6 +20,7 @@ import {
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
+  ResponsiveDialogCancel,
   ResponsiveDialogContent,
   ResponsiveDialogFooter,
 } from "@/shared/ds/dialog";
@@ -45,6 +46,9 @@ import {
   type DutchPayFormValues,
 } from "@/entities/dutch-pay";
 import { resolveAddParticipant } from "../lib/participants";
+import { perPersonOf } from "../model/dutch-model";
+import { wonText } from "../model/dutch-format";
+import { MaskedText } from "./dutch-parts";
 
 const MY_NAME = "나";
 
@@ -142,6 +146,7 @@ export function DutchCreateDialog({
   onCreate: (values: DutchPayFormValues) => Promise<void>;
 }) {
   const { t } = useTranslation("dutchPay");
+  const { t: tc } = useTranslation("common");
   const wide = useWideSurface();
   const [step, setStep] = useState<1 | 2>(1);
   const [title, setTitle] = useState("");
@@ -180,18 +185,38 @@ export function DutchCreateDialog({
     names.map((n) => ({ isPayer: n === payerName, ratio: 1, custom: 0 })),
     true,
   );
-  const per = shares.perPerson;
-  const restIdx = shares.amounts.findIndex((a) => a !== per);
-  const restName = restIdx >= 0 ? names[restIdx] : null;
-  const summary =
-    restName != null
-      ? t("peopleSummaryRest", {
-          count: names.length,
-          amount: `${KRW(per)}원`,
-          extra: KRW(Math.abs(shares.amounts[restIdx]! - per)),
-          name: restName,
-        })
-      : t("peopleSummary", { count: names.length, amount: `${KRW(per)}원` });
+  const info = perPersonOf(
+    names.map((n, i) => ({ name: n, amount: shares.amounts[i] ?? 0 })),
+  );
+  const summaryOf = (money: (n: number) => string) => {
+    const base = { count: names.length };
+    if (info.kind === "rest")
+      return {
+        key: "peopleSummaryRest",
+        v: {
+          ...base,
+          amount: money(info.amount),
+          extra: KRW(info.extra),
+          name: info.name,
+        },
+      };
+    if (info.kind === "equal")
+      return {
+        key: "peopleSummary",
+        v: { ...base, amount: money(info.amount) },
+      };
+    return { key: "peopleOnly", v: base };
+  };
+  const summary = (money: (n: number) => string) => {
+    const x = summaryOf(money);
+    return (
+      <Trans
+        i18nKey={`dutchPay:${x.key}`}
+        values={x.v}
+        components={{ b: <b className="font-bold" /> }}
+      />
+    );
+  };
 
   const goNext = () => {
     setShowErrors(true);
@@ -263,11 +288,11 @@ export function DutchCreateDialog({
       <span className="text-t3 font-normal text-fg-neutral-subtle">
         {t("stepOf", { step, total: 2 })}
       </span>
+      <span className="sr-only">. </span>
       <span>{step === 1 ? t("step1Title") : t("step2Title")}</span>
     </span>
   );
 
-  const size = wide ? undefined : "large";
   return (
     <ResponsiveDialog
       open
@@ -330,7 +355,12 @@ export function DutchCreateDialog({
             </div>
           ) : (
             <div className="flex flex-col gap-x5 pb-x2">
-              <p className="m-0 text-t5 text-fg-neutral">{summary}</p>
+              <p className="m-0 text-t5 text-fg-neutral">
+                <MaskedText
+                  text={summary(wonText)}
+                  masked={summary(() => "••••")}
+                />
+              </p>
               <Field
                 label={t("participantsLabel")}
                 invalid={peopleError}
@@ -338,14 +368,13 @@ export function DutchCreateDialog({
               >
                 <ChipGroup aria-label={t("participantsLabel")} layout="wrap">
                   <Chip
+                    asChild
                     size="small"
                     variant="outlineWeak"
                     selected
-                    tabIndex={-1}
-                    aria-label={MY_NAME}
                     prefixIcon={<Avatar name={MY_NAME} size={20} />}
                   >
-                    {MY_NAME}
+                    <span>{MY_NAME}</span>
                   </Chip>
                   {picked.map((n) => (
                     <InputChip
@@ -361,28 +390,29 @@ export function DutchCreateDialog({
                 </ChipGroup>
                 <div className="mt-x2 flex items-start gap-x2">
                   <div className="min-w-0 flex-1">
-                    <Input
-                      size="large"
-                      value={newName}
-                      maxLength={PARTICIPANT_NAME_MAX}
-                      placeholder={t("fromTx.addNamePlaceholder")}
-                      aria-label={t("participantsLabel")}
-                      onChange={(e) => {
-                        setNewName(e.target.value);
-                        setAddHint(null);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-                          e.preventDefault();
-                          addName();
-                        }
-                      }}
-                    />
-                    {addHint && (
-                      <p className="m-0 pt-x1 text-t4 text-fg-neutral-subtle">
-                        {addHint}
-                      </p>
-                    )}
+                    <Field
+                      label={t("addNameLabel")}
+                      labelHidden
+                      maxGraphemeCount={PARTICIPANT_NAME_MAX}
+                      invalid={addHint != null}
+                      errorMessage={addHint}
+                    >
+                      <Input
+                        size="large"
+                        value={newName}
+                        placeholder={t("fromTx.addNamePlaceholder")}
+                        onChange={(e) => {
+                          setNewName(e.target.value);
+                          setAddHint(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                            e.preventDefault();
+                            addName();
+                          }
+                        }}
+                      />
+                    </Field>
                   </div>
                   <Button variant="neutralWeak" size="large" onClick={addName}>
                     {t("addButton")}
@@ -418,38 +448,30 @@ export function DutchCreateDialog({
         </ResponsiveDialogBody>
         <ResponsiveDialogFooter>
           {step === 1 ? (
-            <Button
-              size={size}
-              className={wide ? undefined : "w-full"}
-              variant="neutralSolid"
-              onClick={goNext}
-            >
-              {t("next")}
-            </Button>
+            <>
+              <ResponsiveDialogCancel>{tc("cancel")}</ResponsiveDialogCancel>
+              <Button variant="neutralSolid" onClick={goNext}>
+                {t("next")}
+              </Button>
+            </>
           ) : (
-            <div
-              className={
-                wide ? "flex w-full items-center" : "flex w-full gap-x2"
-              }
-            >
+            <>
               <Button
-                size={size}
                 variant="neutralWeak"
-                className={wide ? "mr-auto" : "flex-1"}
+                className={wide ? "mr-auto" : undefined}
                 onClick={() => setStep(1)}
               >
                 {t("prev")}
               </Button>
+              <ResponsiveDialogCancel>{tc("cancel")}</ResponsiveDialogCancel>
               <Button
-                size={size}
                 variant="neutralSolid"
-                className={wide ? undefined : "flex-1"}
                 loading={busy}
                 onClick={() => void submit()}
               >
                 {t("createLabel")}
               </Button>
-            </div>
+            </>
           )}
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>

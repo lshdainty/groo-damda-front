@@ -1,12 +1,14 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { KRW, isEn } from "@/shared/lib/groo/format";
+import { withCommaBreaks } from "@/shared/ds/i18n";
+import { KRW } from "@/shared/lib/groo/format";
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
 import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
 import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
-import type { DutchPay } from "@/entities/dutch-pay";
-import { perPersonInfo } from "../model/dutch-model";
+import type { PerPerson } from "../model/dutch-model";
+import { wonText } from "../model/dutch-format";
 
-/** 금액 + 원 — 원까지 · 줄바꿈 없음 · 고정폭. 가린 금액이면 점으로(원도 함께 숨는다) */
+/** 금액 + 원 — 원까지 보인다. 넘치면 쉼표 뒤에서만 줄을 바꾼다(고정폭). 가린 금액이면 점으로(원도 함께 숨는다) */
 export function Won({
   amount,
   card = "dutchpay.sessions",
@@ -15,45 +17,55 @@ export function Won({
   card?: HideCardKey;
 }) {
   return (
-    <span className="whitespace-nowrap tabular-nums">
+    <span className="tabular-nums">
       <MaskAmount card={card} mask="••••">
-        {wonPre()}
-        {KRW(amount)}
+        {withCommaBreaks(`${wonPre()}${KRW(amount)}`)}
       </MaskAmount>
       <WonUnit card={card} />
     </span>
   );
 }
 
-const wonText = (n: number) => `${wonPre()}${KRW(n)}${isEn() ? "" : "원"}`;
-
-/** "1인당 61,333원" — 나눠 떨어지지 않으면 "· 1원은 나" 까지(저장 몫에서 읽는다 — I-15 40) */
-export function PerPersonText({
-  d,
+/** 가린 금액이 든 글 — 가리면 금액 자리만 점으로 바꾼 글을 그린다 */
+export function MaskedText({
+  text,
+  masked,
   card = "dutchpay.sessions",
 }: {
-  d: DutchPay;
+  text: ReactNode;
+  masked: ReactNode;
   card?: HideCardKey;
 }) {
-  const { t } = useTranslation("dutchPay");
-  const info = perPersonInfo(d);
-  const text = info.restName
-    ? t("perPersonRest", {
-        amount: wonText(info.amount),
-        extra: KRW(info.restExtra),
-        name: info.restName,
-      })
-    : t("perPersonText", { amount: wonText(info.amount) });
-  const masked = info.restName
-    ? t("perPersonRest", {
-        amount: "••••",
-        extra: KRW(info.restExtra),
-        name: info.restName,
-      })
-    : t("perPersonText", { amount: "••••" });
   return (
     <MaskAmount card={card} mask={masked}>
       {text}
     </MaskAmount>
+  );
+}
+
+/** "1인당 61,333원" · "1인당 61,333원 · 1원은 나" — 몫 규칙은 `perPersonOf`. 해당 없으면(비율 · 직접 입력) 아무것도 그리지 않는다 */
+export function PerPersonText({
+  info,
+  card = "dutchpay.sessions",
+}: {
+  info: PerPerson;
+  card?: HideCardKey;
+}) {
+  const { t } = useTranslation("dutchPay");
+  if (info.kind === "none") return null;
+  const make = (amount: string) =>
+    info.kind === "rest"
+      ? t("perPersonRest", {
+          amount,
+          extra: KRW(info.extra),
+          name: info.name,
+        })
+      : t("perPersonText", { amount });
+  return (
+    <MaskedText
+      card={card}
+      text={make(wonText(info.amount))}
+      masked={make("••••")}
+    />
   );
 }

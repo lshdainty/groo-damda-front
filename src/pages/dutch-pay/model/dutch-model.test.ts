@@ -3,7 +3,7 @@ import type { DutchPay, DutchPayParticipant } from "@/entities/dutch-pay";
 import {
   dutchDate,
   paidCountOf,
-  perPersonInfo,
+  perPersonOf,
   receivableOf,
   sortByDateDesc,
 } from "./dutch-model";
@@ -55,26 +55,29 @@ describe("dutch-model (I-15 28 · 40)", () => {
     expect(paidCountOf(d)).toBe(2);
   });
 
-  it("몫이 모두 같으면 1인당만, 나눠 떨어지지 않으면 남는 원을 진 사람이 함께 나온다", () => {
-    const even = dp(1, "2026-10-14", [
-      p(1, "나", 100, { isPayer: true }),
-      p(2, "가", 100),
-    ]);
-    expect(perPersonInfo(even)).toEqual({
-      amount: 100,
-      restName: null,
-      restExtra: 0,
-    });
-    const odd = dp(2, "2026-10-14", [
-      p(1, "나", 61334, { isPayer: true }),
-      p(2, "가", 61333),
-      p(3, "나다", 61333),
-    ]);
-    expect(perPersonInfo(odd)).toEqual({
-      amount: 61333,
-      restName: "나",
-      restExtra: 1,
-    });
+  it("1인당 — 균등 · 옛 데이터(나에게 +1 · 결제자 친구) · 2:1:1", () => {
+    expect(
+      perPersonOf([
+        { name: "나", amount: 100 },
+        { name: "가", amount: 100 },
+      ]),
+    ).toEqual({ kind: "equal", amount: 100 });
+    // 옛 데이터 — 남는 원이 "나" 에게(결제자는 친구 "가")
+    expect(
+      perPersonOf([
+        { name: "나", amount: 61334 },
+        { name: "가", amount: 61333 },
+        { name: "다", amount: 61333 },
+      ]),
+    ).toEqual({ kind: "rest", amount: 61333, extra: 1, name: "나" });
+    // 비율 2:1:1 — "1인당" 조각을 뺀다
+    expect(
+      perPersonOf([
+        { name: "나", amount: 200 },
+        { name: "가", amount: 100 },
+        { name: "다", amount: 100 },
+      ]),
+    ).toEqual({ kind: "none" });
   });
 
   it("정산 날짜 내림 · 같으면 나중에 만든 것 먼저", () => {

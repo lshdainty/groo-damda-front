@@ -1581,7 +1581,7 @@ dutchPay,emptyPast.title,완료된 정산이 없어요,No completed settlements
 dutchPay,emptyPast.desc,정산을 마치면 여기에 모여요.,Completed settlements appear here.
 dutchPay,emptyFriends.title,함께 정산한 친구가 없어요,No friends yet
 dutchPay,emptyFriends.desc,정산에 친구를 더하면 여기에 모여요.,Friends you settle with appear here.
-dutchPay,settledTogether,{{count}}회 정산 함께,Settled together {{count}} times
+dutchPay,settledTogether,{{count}}회 함께 정산,Settled together {{count}} times
 dutchPay,nameLabel,정산 이름,Settlement name
 dutchPay,namePlaceholder,예: 팀 저녁 회식,e.g. Team dinner
 dutchPay,nameRequired,정산 이름을 입력해주세요.,Please enter a settlement name.
@@ -3437,8 +3437,9 @@ dutchPay,optional,선택,Optional
 dutchPay,dateLabel,날짜,Date
 dutchPay,totalRequired,총 금액을 입력해주세요.,Please enter the total amount.
 dutchPay,peopleNeeded,함께 정산할 사람을 한 명 이상 더해주세요.,Add at least one person to settle with.
-dutchPay,peopleSummary,{{count}}명 · 1인당 {{amount}},{{count}} people · {{amount}} each
-dutchPay,peopleSummaryRest,{{count}}명 · 1인당 {{amount}} · {{extra}}원은 {{name}},"{{count}} people · {{amount}} each · {{extra}} won extra on {{name}}"
+dutchPay,peopleSummary,{{count}}명 · 1인당 <b>{{amount}}</b>,{{count}} people · <b>{{amount}}</b> each
+dutchPay,peopleSummaryRest,{{count}}명 · 1인당 <b>{{amount}}</b> · {{extra}}원은 {{name}},"{{count}} people · <b>{{amount}}</b> each · {{extra}} won extra on {{name}}"
+dutchPay,peopleOnly,{{count}}명,{{count}} people
 dutchPay,participantsLabel,참여자,Participants
 dutchPay,removeName,{{name}} 빼기,Remove {{name}}
 dutchPay,addButton,추가,Add
@@ -3459,6 +3460,9 @@ dutchPay,receive,받음,Received
 dutchPay,receiveName,{{name}} 받음 처리,Mark {{name}} as received
 dutchPay,receiveAll,모두 받음,Receive all
 dutchPay,participantsHeading,참여자 · {{count}},Participants · {{count}}
+dutchPay,requestAll,일괄 요청,Request all
+dutchPay,requestSoon,송금 요청은 곧 열려요.,Payment requests are coming soon.
+dutchPay,addNameLabel,참여자 이름,Participant name
 dutchPay,monthKpi.created,이번 달 만든 정산,Settlements this month
 dutchPay,monthKpi.count,{{count}}건,{{count}}
 dutchPay,monthKpi.avg,평균 {{n}}명,Avg. {{n}} people

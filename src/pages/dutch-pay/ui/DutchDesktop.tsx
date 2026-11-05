@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import { Button } from "@/shared/ds/button";
-import { Card } from "@/shared/ds/card";
+import { Card, CardStat } from "@/shared/ds/card";
+import { Skeleton } from "@/shared/ds/skeleton";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -12,22 +13,27 @@ import { Won } from "./dutch-parts";
 import { DutchTabContent, type TabKey } from "./DutchLists";
 import type { DutchView } from "./dutch-view";
 
-/** 지표 카드 하나 — 이름 t4 · 값 t7 20/27 · 700(원까지 · 줄바꿈 없음) · 아래 글 t3 */
+/** 지표 카드 하나 — ds CardStat small(이름 · 값 t7 700 고정폭) + 아래 글 t3. 불러오는 동안 값 · 글 자리 Skeleton */
 function Kpi({
   label,
   value,
   sub,
+  loading,
 }: {
   label: string;
   value: React.ReactNode;
   sub: string;
+  loading: boolean;
 }) {
   return (
     <Card className="min-w-0">
-      <div className="flex flex-col gap-[2px]">
-        <div className="text-t4 text-fg-neutral-subtle">{label}</div>
-        <div className="text-t7 font-bold text-fg-neutral">{value}</div>
-        <div className="text-t3 text-fg-neutral-subtle">{sub}</div>
+      <CardStat
+        size="small"
+        label={label}
+        value={loading ? <Skeleton text="t7" className="w-24" /> : value}
+      />
+      <div className="mt-[2px] text-t3 text-fg-neutral-subtle">
+        {loading ? <Skeleton text="t3" className="w-16" /> : sub}
       </div>
     </Card>
   );
@@ -59,6 +65,7 @@ export function DutchDesktop({ v }: { v: DutchView }) {
         />
         <div className="grid grid-cols-2 gap-x2 lg:grid-cols-4">
           <Kpi
+            loading={v.loading}
             label={t("receivable")}
             value={<Won amount={v.receivable.amount} card="dutchpay.summary" />}
             sub={
@@ -68,16 +75,19 @@ export function DutchDesktop({ v }: { v: DutchView }) {
             }
           />
           <Kpi
+            loading={v.loading}
             label={t("payable")}
             value={<Won amount={0} card="dutchpay.summary" />}
             sub={t("payableTo", { count: 0 })}
           />
           <Kpi
+            loading={v.loading}
             label={t("monthKpi.created")}
             value={t("monthKpi.count", { count: v.month.count })}
             sub={t("monthKpi.avg", { n: v.month.avg.toFixed(1) })}
           />
           <Kpi
+            loading={v.loading}
             label={t("monthKpi.total")}
             value={<Won amount={v.month.totalAmount} />}
             sub={t("monthKpi.sum", { count: v.month.count })}
