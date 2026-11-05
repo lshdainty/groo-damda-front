@@ -10,7 +10,6 @@ import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { ColorSwatchGroup } from "@/shared/ui/color-swatch";
 import { ModalShell } from "@/shared/ui/groo/dialogs";
-import { ModalFooter } from "@/shared/ui/groo/modal-footer";
 import { Field, FieldLabel } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
 import { NameCounter } from "@/shared/ui/groo/name-counter";
@@ -311,14 +310,28 @@ function LabelEditDialog({
       </DsButton>
     </>
   ) : (
-    <ModalFooter
-      onSave={save}
-      saveLabel={saveLabel}
-      saving={submitting}
-      saveDisabled={touched && !valid}
-      onCancel={onClose}
-      leftSlot={deleteBtn}
-    />
+    <>
+      {deleteBtn && <div className="mr-auto">{deleteBtn}</div>}
+      <DsButton
+        type="button"
+        variant="neutralWeak"
+        size="small"
+        disabled={submitting}
+        onClick={onClose}
+      >
+        {tCommon("cancel")}
+      </DsButton>
+      <DsButton
+        type="button"
+        variant="neutralSolid"
+        size="small"
+        loading={submitting}
+        disabled={(touched && !valid) || submitting}
+        onClick={save}
+      >
+        {saveLabel}
+      </DsButton>
+    </>
   );
 
   return (
