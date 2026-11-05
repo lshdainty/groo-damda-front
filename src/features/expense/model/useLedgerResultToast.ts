@@ -1,14 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { editAssetPath } from "@/entities/asset";
+import { useSnackbar } from "@/shared/ds/snackbar";
 import { money } from "@/shared/lib/groo/format";
-
-/**
- * 버튼이 달린 토스트는 기본(4초)보다 오래 둔다 — 누를지 정할 시간이 필요하다
- * (groo-design sonner.md: action 동반 toast 는 6000ms+).
- */
-const ACTION_TOAST_MS = 6000;
 
 /** 거래를 바꾼 요청 하나의 응답 — 선결제 환급액만 본다. */
 type ChangeResult = { refundedAmount?: number | null } | null | undefined;
@@ -39,6 +33,7 @@ type ChangeContext = {
 export function useLedgerResultToast() {
   const { t } = useTranslation("expense");
   const navigate = useNavigate();
+  const snackbar = useSnackbar();
   return (result: ChangeResult, context: ChangeContext = {}) => {
     const refunded = result?.refundedAmount ?? 0;
     const fixTarget = context.closed
@@ -55,12 +50,11 @@ export function useLedgerResultToast() {
       refunded > 0
         ? t("closedCycle.prepaidRefunded", { amount: money(refunded) })
         : action
-          ? t("closedCycle.note")
+          ? t("closedCycle.noteToast")
           : null;
     if (!message) return;
-    // 돈이 돌아왔으면 성공, 통장이 그대로라는 안내면 안내(sonner.md Kinds — info 는
-    // "정보/안내"). 예전엔 둘 다 success 라 안내에 초록 체크가 붙었다 — 앱은 info 였다.
-    const show = refunded > 0 ? toast.success : toast.info;
-    show(message, action ? { action, duration: ACTION_TOAST_MS } : undefined);
+    // 둘 다 neutral(D1 · D2) — 돈이 돌아온 것도, 통장이 그대로라는 안내도 이정표가 아니다.
+    // 액션이 있으면 스낵바가 6초 동안 둔다(시간은 ds 가 정한다).
+    snackbar.show({ message, action });
   };
 }

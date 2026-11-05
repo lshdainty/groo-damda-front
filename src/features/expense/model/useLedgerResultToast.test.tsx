@@ -6,7 +6,8 @@
 //      "8,000이" 로 나가던 게 23·24차에 두 번 집혔다.
 //   2) 결제가 끝난 회차의 거래였고 결제계좌가 있으면 [잔액 고치기]를 달고, 누르면 그
 //      결제계좌의 수정 폼 주소로 간다. 결제계좌가 없으면 고칠 통장이 없어 버튼도 없다.
-//   3) 둘 다 아니면 아무 말도 안 한다 — 평범한 저장·삭제마다 토스트가 뜨면 소음이다.
+//   3) 둘 다 아니면 아무 말도 안 한다 — 평범한 저장·삭제마다 스낵바가 뜨면 소음이다.
+// 띄우는 곳은 ds 스낵바다(28-5 가계부 A) — 톤은 늘 neutral(기본), 액션이 있으면 시간은 ds 가 6초로 잡는다.
 import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -17,12 +18,9 @@ declare global {
 
 const st = vi.hoisted(() => ({
   toasts: [] as {
-    kind: "success" | "info";
     message: string;
-    opts?: {
-      action?: { label: string; onClick: () => void };
-      duration?: number;
-    };
+    tone?: string;
+    action?: { label: string; onClick: () => void };
   }[],
   navigated: [] as string[],
 }));
@@ -38,13 +36,11 @@ vi.mock("react-i18next", () => ({
 vi.mock("react-router-dom", () => ({
   useNavigate: () => (to: string) => st.navigated.push(to),
 }));
-vi.mock("sonner", () => ({
-  toast: {
-    success: (message: string, opts?: (typeof st.toasts)[number]["opts"]) =>
-      st.toasts.push({ kind: "success", message, opts }),
-    info: (message: string, opts?: (typeof st.toasts)[number]["opts"]) =>
-      st.toasts.push({ kind: "info", message, opts }),
-  },
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: (typeof st.toasts)[number]) => st.toasts.push(o),
+    dismiss: () => {},
+  }),
 }));
 
 const { useLedgerResultToast } = await import("./useLedgerResultToast");
@@ -88,10 +84,9 @@ describe("미리 낸 돈이 돌아왔을 때(D4)", () => {
       `closedCycle.prepaidRefunded|${money(30_000)}`,
     );
     expect(money(30_000)).toMatch(/원|₩/);
-    // 돈이 돌아왔다 — 성공(초록 체크).
-    expect(st.toasts[0]!.kind).toBe("success");
-    // 열린 회차의 환급이라 고칠 잔액이 없다 — 버튼 없이 기본 시간이다.
-    expect(st.toasts[0]!.opts).toBeUndefined();
+    // neutral(톤 생략) — 이정표가 아니다. 열린 회차의 환급이라 고칠 잔액이 없다 — 버튼 없음.
+    expect(st.toasts[0]!.tone).toBeUndefined();
+    expect(st.toasts[0]!.action).toBeUndefined();
   });
 
   it("0 이나 없음이면 말하지 않는다", () => {
@@ -109,15 +104,13 @@ describe("결제가 끝난 회차의 거래였을 때(D9)", () => {
     notify!({ refundedAmount: null }, { closed: true, paymentAssetRowId: 3 });
 
     expect(st.toasts).toHaveLength(1);
-    const { message, opts } = st.toasts[0]!;
-    expect(message).toBe("closedCycle.note");
-    // 통장이 그대로라는 안내다 — 성공이 아니라 안내(파란 i). 앱과 같다.
-    expect(st.toasts[0]!.kind).toBe("info");
-    expect(opts?.action?.label).toBe("closedCycle.fixBalance");
-    // 누를지 정할 시간 — 버튼이 달린 토스트는 기본(4초)보다 오래 둔다.
-    expect(opts?.duration).toBeGreaterThanOrEqual(6000);
+    const { message, action } = st.toasts[0]!;
+    expect(message).toBe("closedCycle.noteToast");
+    // 통장이 그대로라는 안내다 — neutral. 액션이 있으면 ds 가 6초 둔다.
+    expect(st.toasts[0]!.tone).toBeUndefined();
+    expect(action?.label).toBe("closedCycle.fixBalance");
 
-    opts!.action!.onClick();
+    action!.onClick();
     expect(st.navigated).toEqual(["/desk/settings?section=accounts&edit=3"]);
   });
 
@@ -143,8 +136,7 @@ describe("결제가 끝난 회차의 거래였을 때(D9)", () => {
     expect(st.toasts[0]!.message).toBe(
       `closedCycle.prepaidRefunded|${money(20_000)}`,
     );
-    expect(st.toasts[0]!.opts?.action?.label).toBe("closedCycle.fixBalance");
-    // 금액이 있으면 성공이 먼저다.
-    expect(st.toasts[0]!.kind).toBe("success");
+    expect(st.toasts[0]!.action?.label).toBe("closedCycle.fixBalance");
+    expect(st.toasts[0]!.tone).toBeUndefined();
   });
 });
