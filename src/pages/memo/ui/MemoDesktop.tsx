@@ -252,6 +252,8 @@ export function MemoDesktop({ screen }: { screen: MemoScreen }) {
                     variant="ghost"
                     ghostColor="neutralMuted"
                     size="small"
+                    // 링크(<a>)라 ds 머리의 `>button` 블리드가 안 닿는다 — 같은 값(오른쪽 −14 · 위아래 −8)을 직접 준다. 글 끝이 숫자 끝선에 선다
+                    className="-my-x2 -mr-x3_5"
                   >
                     <Link to={MEMO_TAGS_PATH}>{t("tagsManage")}</Link>
                   </Button>
