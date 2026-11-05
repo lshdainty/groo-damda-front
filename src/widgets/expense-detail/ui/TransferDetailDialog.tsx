@@ -19,6 +19,7 @@ import { SheetStepDone } from "@/widgets/calendar/ui/event-form/step-header";
 import type { Asset, AssetTransfer } from "@/entities/asset";
 
 import { dateTimeLabel } from "@/widgets/expense-detail/lib/detail-format";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { DetailSurface } from "./detail-surface";
 import {
   AmountText,
@@ -191,6 +192,15 @@ export function TransferDetailDialog({
               }
               dateTime={dateTimeLabel(transfer.transferDate)}
             />
+
+            {assetsQ.isError && !assetsQ.data && (
+              <BandFailure
+                title={tc("query.failedNamed", {
+                  name: t("txDetail.accountName"),
+                })}
+                onRetry={() => void assetsQ.refetch()}
+              />
+            )}
 
             {/* 왜 고칠 수 없는지 알려 준다 — 버튼만 없으면 고장으로 보인다. */}
             {locked && (

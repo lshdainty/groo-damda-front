@@ -1774,6 +1774,9 @@ expense,txDetail.splitHeader,내역 분할 {{count}}개,Split into {{count}}
 expense,txDetail.splitSum,합계,Total
 expense,txDetail.merchantTitle,이 가맹점 이번 달,This month at this merchant
 expense,txDetail.recentOnly,최근 5건만 보여요,Showing the latest 5 only
+expense,txDetail.historyName,이전 거래,previous transactions
+expense,txDetail.relatedName,연결된 정보,linked info
+expense,txDetail.accountName,계좌 이름,account name
 expense,txDetail.splitLoadFailed,나눈 내역을 불러오지 못했어요,Could not load the split items
 expense,txDetail.refundDateToday,{{date}} · 오늘,{{date}} · Today
 expense,txDetail.refundDateHint,거래한 날({{date}})부터 오늘까지 고를 수 있어요.,You can pick a day from the transaction day ({{date}}) to today.
