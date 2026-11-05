@@ -32,7 +32,7 @@ import type { AssetTransfer } from "../model/types";
  * - `perspectiveAssetRowId` 있음(자산 상세): 그 자산 기준으로 출금이면 -(금액+수수료), 입금이면 +금액.
  *   수수료는 보내는 쪽에서만 빠진다(백엔드 recordTransfer 와 동일 규칙).
  * - 금액 · 수수료는 보내는 계좌 통화, 받는 쪽 관점은 받은 금액(`toAmount`, 없으면 amount)을 받는 계좌 통화로(I-13).
- *   통화가 다른 이체는 설명에 "받는 금액 $1,000.00" 이 붙는다. 통화를 모르면(`currencyOf` 없음) 원화로 찍는다.
+ *   통화가 다른 이체는 금액 아래 작게 "받는 금액 $1,000.00" 이 붙는다. 통화를 모르면(`currencyOf` 없음) 원화로 찍는다.
  */
 export function TransferRow({
   transfer,
@@ -113,17 +113,6 @@ export function TransferRow({
           </MaskAmount>
         </TagGroupItem>
       )}
-      {transfer.toAmount != null && !isIn && (
-        <TagGroupItem shrink={0}>
-          <MaskAmount card="ledger.txList" kind="transfer" mask="•••">
-            {t("transferReceivedTag", {
-              amount: isForeignCurrency(toCurrency)
-                ? foreignText(transfer.toAmount, toCurrency)
-                : `${isEn() ? "₩" : ""}${KRW(transfer.toAmount, { abs: true })}${isEn() ? "" : "원"}`,
-            })}
-          </MaskAmount>
-        </TagGroupItem>
-      )}
       {showDate ? (
         <TagGroupItem shrink={0}>
           {txDateFull(transfer.transferDate)}
@@ -161,7 +150,28 @@ export function TransferRow({
     </span>
   );
 
-  const suffix = amountEl;
+  // 통화가 다른 이체의 받는 금액 — 설명 줄(계좌 이름 · 시각)을 밀지 않게 금액 아래 작은 글로(AssetRow 의 외화 작은 글과 같은 자리)
+  const receivedText =
+    transfer.toAmount != null && !isIn
+      ? t("transferReceivedTag", {
+          amount: isForeignCurrency(toCurrency)
+            ? foreignText(transfer.toAmount, toCurrency)
+            : `${isEn() ? "₩" : ""}${KRW(transfer.toAmount, { abs: true })}${isEn() ? "" : "원"}`,
+        })
+      : null;
+  const suffix =
+    receivedText == null ? (
+      amountEl
+    ) : (
+      <span className="flex flex-col items-end gap-x0_5">
+        {amountEl}
+        <span className="whitespace-nowrap text-t3 font-medium tabular-nums text-fg-neutral-subtle">
+          <MaskAmount card="ledger.txList" kind="transfer" mask="•••">
+            {receivedText}
+          </MaskAmount>
+        </span>
+      </span>
+    );
 
   // 이체는 회색 타일(list.md Prefix "이체 줄은 회색") — chart-gray-weak 바탕 + chart-gray 아이콘 20
   const prefix = (
