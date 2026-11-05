@@ -7,10 +7,10 @@ import type {
   CalendarRole,
 } from "@/entities/user-calendar";
 
-export const useUserCalendars = () => {
+export const useUserCalendars = (opts?: { silent?: boolean }) => {
   return useQuery({
     queryKey: userCalendarKeys.list(),
-    queryFn: () => userCalendarApi.getCalendars(),
+    queryFn: () => userCalendarApi.getCalendars(opts),
   });
 };
 
@@ -53,7 +53,9 @@ export const useDeleteUserCalendar = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => userCalendarApi.deleteCalendar(id),
+    // silent — 실패는 호출처가 확인창 뒤 스낵바(useConfirmFail)로 말한다
+    mutationFn: (id: number) =>
+      userCalendarApi.deleteCalendar(id, { silent: true }),
     // 서버가 이 캘린더의 일정을 기본 캘린더로 옮긴다 — 일정 캐시도 늙는다.
     onSuccess: () => invalidateFor(queryClient, "user-calendar-scope"),
   });

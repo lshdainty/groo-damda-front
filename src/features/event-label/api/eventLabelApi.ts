@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, silentConfig, type SilentOpts } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type { EventLabel, EventLabelFormValues } from "@/entities/event-label";
 
@@ -11,9 +11,10 @@ export const eventLabelApi = {
     return resp.data;
   },
 
-  getLabels: async (): Promise<EventLabel[]> => {
+  getLabels: async (opts?: SilentOpts): Promise<EventLabel[]> => {
     const resp: ApiResponse<{ labels: EventLabel[] }> = await apiClient.get(
       "/v1/calendar/labels",
+      silentConfig(opts),
     );
     return resp.data.labels;
   },
@@ -29,9 +30,10 @@ export const eventLabelApi = {
     return resp.data;
   },
 
-  deleteLabel: async (id: number): Promise<void> => {
+  deleteLabel: async (id: number, opts?: SilentOpts): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/calendar/label/${id}`,
+      silentConfig(opts),
     );
     return resp.data;
   },

@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, silentConfig, type SilentOpts } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
   UserCalendar,
@@ -21,9 +21,9 @@ function fromApiCalendar(cal: Record<string, unknown>): UserCalendar {
 }
 
 export const userCalendarApi = {
-  getCalendars: async (): Promise<UserCalendar[]> => {
+  getCalendars: async (opts?: SilentOpts): Promise<UserCalendar[]> => {
     const resp: ApiResponse<{ calendars: UserCalendar[] }> =
-      await apiClient.get("/v1/calendar/calendars");
+      await apiClient.get("/v1/calendar/calendars", silentConfig(opts));
     return (resp.data.calendars as unknown as Record<string, unknown>[]).map(
       fromApiCalendar,
     );
@@ -57,9 +57,10 @@ export const userCalendarApi = {
     return resp.data;
   },
 
-  deleteCalendar: async (id: number): Promise<void> => {
+  deleteCalendar: async (id: number, opts?: SilentOpts): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/calendar/calendars/${id}`,
+      silentConfig(opts),
     );
     return resp.data;
   },

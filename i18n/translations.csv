@@ -102,7 +102,7 @@ more,item.budget,예산,Budget
 more,item.savingGoal,저축 목표,Saving Goals
 more,item.stats,통계,Stats
 more,item.recurring,반복 거래,Recurring
-more,item.accounts,계좌·카드 관리,Account & Card Management
+more,item.accounts,계좌 · 카드 관리,Account & Card Management
 more,item.calendar,캘린더,Calendar
 more,item.todo,할 일,To-do
 more,item.memo,메모,Memo
@@ -256,7 +256,7 @@ calendar,label,라벨,Label
 calendar,labels,캘린더 라벨,Calendar labels
 calendar,addLabel,라벨 추가,Add label
 calendar,editLabel,라벨 수정,Edit label
-calendar,noLabels,라벨이 없습니다,No labels yet
+calendar,noLabels,라벨이 없어요.,No labels yet
 calendar,form.labelName,라벨 이름,Label Name
 calendar,form.labelNamePlaceholder,라벨 이름을 입력하세요,Enter label name
 calendar,form.label,라벨,Label
@@ -509,7 +509,7 @@ asset,group.invest,투자,Investment
 asset,addAction,추가,Add
 asset,editAction,수정,Edit
 asset,tab.accountDeposit,계좌·예금,Accounts & Deposits
-asset,manager.title,계좌·카드 관리,Manage accounts & cards
+asset,manager.title,계좌 · 카드 관리,Manage accounts & cards
 asset,manager.description,계좌 · 카드 · 투자를 추가하거나 고칠 수 있어요.,"Add or edit your accounts, cards, and investments."
 asset,manager.loadFailed,계좌·카드를 불러오지 못했어요,"Couldn't load your accounts and cards"
 asset,manager.emptyHint,[추가]를 눌러 첫 계좌나 카드를 등록해 보세요.,Tap [Add] to register your first account or card.
@@ -1141,19 +1141,20 @@ calendar,join,참여,Join
 calendar,role.OWNER,소유자,Owner
 calendar,role.EDIT,편집 가능,Can edit
 calendar,role.READ,읽기 전용,Read only
-calendar,shareSection.title,캘린더 관리·공유,Manage & share calendars
-calendar,shareSection.description,캘린더를 만들고 가족·친구를 초대해 일정을 함께 관리할 수 있어요.,Create calendars and invite family and friends to manage schedules together.
-calendar,shareSection.infoTitle,가족·친구와 일정 공유,Share schedules with family and friends
-calendar,shareSection.infoDesc,캘린더를 만들고 멤버를 초대해 함께 일정을 관리해요.,Create a calendar and invite members to manage schedules together.
+calendar,shareSection.title,캘린더 관리 · 공유,Manage & share calendars
+calendar,shareSection.description,캘린더를 만들고 가족 · 친구를 초대해 일정을 함께 관리할 수 있어요.,Create calendars and invite family and friends to manage schedules together.
+calendar,shareSection.infoDesc,캘린더를 만들고 멤버를 초대해 가족 · 친구와 함께 일정을 관리해요.,Create a calendar and invite members to manage schedules together.
 calendar,shareSection.myCalendars,내 캘린더,My Calendars
-calendar,shareSection.emptyOwned,소유한 캘린더가 없어요,You don't own any calendars
+calendar,shareSection.emptyOwned,소유한 캘린더가 없어요.,You don't own any calendars
 calendar,shareSection.sharedCalendars,공유받은 캘린더,Shared with Me
-calendar,shareSection.emptyShared,공유받은 캘린더가 없어요,No calendars shared with you
-calendar,shareSection.joinDesc,공유받은 초대 코드를 입력해 캘린더에 참여하세요.,Enter an invite code to join a calendar.
+calendar,shareSection.emptyShared,공유받은 캘린더가 없어요.,No calendars shared with you
+calendar,shareSection.loadFailed,캘린더를 불러오지 못했어요,Couldn't load calendars
+calendar,shareSection.joinDesc,공유받은 초대 코드를 넣으면 그 캘린더에 들어가요.,Enter an invite code to join a calendar.
 calendar,shareSection.onlyMe,나만 사용,Only me
 calendar,shareSection.memberCount,멤버 {{count}}명,{{count}} members
 calendar,shareSection.deleteMessage,"""{{name}}"" 캘린더를 삭제할까요? 일정은 기본 캘린더로 이동하고 모든 멤버의 접근 권한이 사라져요. 삭제한 캘린더는 되돌릴 수 없어요.","Delete the ""{{name}}"" calendar? Events move to the default calendar and all members lose access."
 calendar,shareSection.permanentDelete,영구 삭제,Permanently Delete
+calendar,shareSection.deleteFailed,캘린더를 삭제하지 못했어요.,Couldn't delete the calendar.
 calendar,shareSection.manageSuffix,관리,Manage
 calendar,shareSection.namePlaceholder,캘린더 이름,Calendar name
 calendar,shareSection.saveChanges,변경 저장,Save Changes
@@ -1180,11 +1181,13 @@ calendar,shareSection.toast.memberRemoved,멤버를 제거했어요,Member remov
 calendar,shareSection.toast.roleChanged,권한을 변경했어요,Permission changed
 calendar,labelsSection.title,캘린더 라벨,Calendar labels
 calendar,labelsSection.description,모든 캘린더에서 공용으로 사용되는 라벨이에요. 일정 등록 시 선택할 수 있어요.,These labels are shared across all calendars. You can select them when creating an event.
-calendar,labelsSection.infoDesc,일정에 라벨을 붙여 한눈에 분류할 수 있어요.,Attach labels to events to organize them at a glance.
+calendar,labelsSection.infoDesc,모든 캘린더에서 같이 쓰는 라벨이에요. 일정을 만들 때 골라요.,Labels are shared across all calendars. Pick one when you create an event.
 calendar,labelsSection.allLabels,전체 라벨,All Labels
-calendar,labelsSection.emptyHint,{{label}} 버튼으로 만들어보세요,Use the {{label}} button to create one
+calendar,labelsSection.emptyHint,위 '{{label}}' 로 만들어요.,Use '{{label}}' above to create one
+calendar,labelsSection.loadFailed,라벨을 불러오지 못했어요,Couldn't load labels
 calendar,labelsSection.deleteTitle,라벨 삭제,Delete label
 calendar,labelsSection.deleteMessage,"""{{name}}"" 라벨을 삭제할까요? 이 라벨이 지정된 일정은 라벨 없음 상태가 돼요. 삭제한 라벨은 되돌릴 수 없어요.","Delete the ""{{name}}"" label? Events with this label will become unlabeled."
+calendar,labelsSection.deleteFailed,라벨을 삭제하지 못했어요.,Couldn't delete the label.
 calendar,labelsSection.namePlaceholder,"예: 중요, 마감일, 회의","e.g. Important, Deadline, Meeting"
 calendar,labelsSection.nameRequired,라벨 이름을 입력해주세요.,Please enter a label name.
 calendar,labelsSection.nameTooLong,이름은 12자 이내로 입력해주세요.,Name must be 12 characters or fewer.
@@ -1913,7 +1916,7 @@ settings,hideAmounts.card.asset.loans,대출,Loans
 settings,hideAmounts.card.asset.savingGoals,저축목표,Saving goals
 settings,hideAmounts.card.asset.upcoming,예정 결제,Upcoming payments
 settings,hideAmounts.card.asset.detail,자산 상세,Asset detail
-settings,hideAmounts.card.asset.manage,계좌·카드 관리,Manage accounts & cards
+settings,hideAmounts.card.asset.manage,계좌 · 카드 관리,Manage accounts & cards
 settings,hideAmounts.card.ledger.monthSummary,월 합계,Monthly total
 settings,hideAmounts.card.ledger.calendar,캘린더 금액,Calendar amounts
 settings,hideAmounts.card.ledger.txList,거래 목록,Transaction list
@@ -1945,7 +1948,7 @@ settings,page.title,설정,Settings
 settings,page.subtitle,카테고리·계좌·알림 등,Categories · accounts · alerts
 settings,sections.categories.label,카테고리 관리,Manage categories
 settings,sections.categories.desc,지출·수입 카테고리 추가·수정·삭제,Add · edit · delete expense and income categories
-settings,sections.accounts.label,계좌·카드 관리,Manage accounts & cards
+settings,sections.accounts.label,계좌 · 카드 관리,Manage accounts & cards
 settings,sections.accounts.desc,연결된 계좌와 카드 관리,Manage linked accounts and cards
 settings,sections.budget.label,예산 설정,Budget settings
 settings,sections.budget.desc,월간 예산 및 카테고리별 한도,Monthly budget and per-category limits
@@ -1956,7 +1959,7 @@ settings,sections.recurring.label,반복 거래 관리,Manage recurring
 settings,sections.recurring.desc,구독 · 고정 결제 · 정기 수입을 한곳에서,Subscriptions · fixed payments · regular income in one place
 settings,sections.presets.label,프리셋 관리,Manage presets
 settings,sections.presets.desc,자주 쓰는 내역을 한 번 탭으로 채우기,Fill frequent entries with a single tap
-settings,sections.calendarShare.label,캘린더 관리·공유,Manage & share calendars
+settings,sections.calendarShare.label,캘린더 관리 · 공유,Manage & share calendars
 settings,sections.calendarShare.desc,다중 캘린더 생성과 멤버 공유 설정,Create multiple calendars and share with members
 settings,sections.calendarLabels.label,캘린더 라벨,Calendar labels
 settings,sections.calendarLabels.desc,전 캘린더 공용 라벨 관리,Manage labels shared across all calendars
