@@ -289,7 +289,10 @@ function LabelEditDialog({
             type="button"
             variant="ghost"
             ghostColor="critical"
-            size="small"
+            // 시트 바닥은 Button large(48, [저장] 과 같다) + 글이 24 에 서도록 안쪽 여백(px-x5 20)만큼 왼쪽으로 뺀다.
+            // 대화상자는 바닥 Button small 36(dialog.md:41) 그대로
+            size={mobile ? "large" : "small"}
+            className={mobile ? "-ml-x5" : undefined}
             onClick={() => onRequestDelete(label)}
           >
             {tCommon("delete")}
