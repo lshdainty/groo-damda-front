@@ -25,35 +25,28 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: "ko" } }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("sonner", () => ({
-  toast: { success: vi.fn(), error: vi.fn() },
-}));
-vi.mock("@/shared/lib/confirm-fail", () => ({
-  useConfirmFail: () => () => {},
-}));
-vi.mock("@/features/user", () => ({
-  useCurrentUser: () => ({ data: { rowId: 1 }, isLoading: false }),
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
 }));
 vi.mock("@/features/user-calendar", async () => {
   const { useState } = await import("react");
-  const idleMut = () => ({ mutate: () => {}, isPending: false });
+  const idleMut = () => ({
+    mutate: () => {},
+    mutateAsync: async () => ({}),
+    isPending: false,
+  });
   return {
     useUserCalendars: () => ({ data: [], isLoading: false }),
     useCreateUserCalendar: idleMut,
-    useDeleteUserCalendar: idleMut,
-    useUpdateUserCalendar: idleMut,
-    useCalendarMembers: () => ({ data: [], isLoading: false }),
-    useChangeCalendarMemberRole: idleMut,
-    useRegenerateCalendarInviteCode: idleMut,
-    useRemoveCalendarMember: idleMut,
-    // react-query 뮤테이션과 같은 모양 — 요청이 나가면 `isPending` 이 서고, 그 값이
-    // 다시 그려져 다이얼로그의 `submitting` 으로 내려간다. 가드가 볼 값이 이것이다.
+    // react-query 뮤테이션과 같은 모양 — 요청이 나가면 `isPending` 이 서고, 끝나지 않는 약속을 돌려줘
+    // "이미 나가 있는" 상태를 만든다. 가드가 볼 값이 이것이다.
     useJoinCalendar: () => {
       const [pending, setPending] = useState(false);
       return {
-        mutate: (code: string) => {
+        mutateAsync: (code: string) => {
           state.joinCalls.push(code);
           setPending(true);
+          return new Promise(() => {});
         },
         isPending: pending,
       };
@@ -62,6 +55,7 @@ vi.mock("@/features/user-calendar", async () => {
 });
 
 const { CalendarShareSection } = await import("./CalendarShareSection");
+const { MemoryRouter } = await import("react-router-dom");
 
 let container: HTMLDivElement;
 let root: Root;
@@ -88,7 +82,13 @@ afterEach(() => {
 
 /** 다이얼로그는 포털로 body 에 붙는다 — 컨테이너가 아니라 body 에서 찾는다. */
 function openJoinDialog(): HTMLInputElement {
-  act(() => root.render(<CalendarShareSection mobile={false} />));
+  act(() =>
+    root.render(
+      <MemoryRouter>
+        <CalendarShareSection mobile={false} />
+      </MemoryRouter>,
+    ),
+  );
   const opener = [...document.body.querySelectorAll("button")].find(
     (b) => b.textContent?.trim() === "join",
   );
@@ -128,6 +128,10 @@ describe("초대 코드 참여", () => {
     // ① 아직 아무것도 안 쳤다 — 눌러도 나갈 게 없다.
     pressEnter(input, 3);
     expect(state.joinCalls, "빈 코드").toEqual([]);
+
+    // ①-2 칸 규칙 한 벌 — 영문 · 숫자만, 최대 8, 대문자로 보인다
+    type(input, "a b-1!2cd34567x");
+    expect(input.value, "영문 · 숫자 8 · 대문자").toBe("AB12CD34");
 
     // ② 코드를 넣고 연타 — 서버로는 한 번만 간다(대문자로 정규화해서).
     type(input, "ab12cd");

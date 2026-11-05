@@ -10,21 +10,23 @@ export const useEventLabels = (opts?: { silent?: boolean }) => {
   });
 };
 
-export const useCreateEventLabel = () => {
+/** `silent` — 실패를 폼 맨 위 Callout 이 고정 글로 말한다(서버 원문 알림을 끈다) */
+export const useCreateEventLabel = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: EventLabelFormValues) => eventLabelApi.createLabel(data),
+    mutationFn: (data: EventLabelFormValues) =>
+      eventLabelApi.createLabel(data, opts),
     onSuccess: () => invalidateFor(queryClient, "event-label"),
   });
 };
 
-export const useUpdateEventLabel = () => {
+export const useUpdateEventLabel = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: EventLabelFormValues }) =>
-      eventLabelApi.updateLabel(id, data),
+      eventLabelApi.updateLabel(id, data, opts),
     onSuccess: () => invalidateFor(queryClient, "event-label-usage"),
   });
 };

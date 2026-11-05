@@ -1131,7 +1131,6 @@ calendar,agenda.noEvents,일정이 없습니다,No events
 calendar,close,닫기,Close
 calendar,eventDetail,일정 상세,Event details
 calendar,sourceCount,{{count}}개,{{count}}
-calendar,preview,미리보기,Preview
 calendar,newCalendar,캘린더 추가,Add calendar
 calendar,newLabel,라벨 추가,Add label
 calendar,deleteCalendar,캘린더 삭제,Delete calendar
@@ -1145,35 +1144,41 @@ calendar,shareSection.title,캘린더 관리 · 공유,Manage & share calendars
 calendar,shareSection.description,캘린더를 만들고 가족 · 친구를 초대해 일정을 함께 관리할 수 있어요.,Create calendars and invite family and friends to manage schedules together.
 calendar,shareSection.infoDesc,캘린더를 만들고 멤버를 초대해 가족 · 친구와 함께 일정을 관리해요.,Create a calendar and invite members to manage schedules together.
 calendar,shareSection.myCalendars,내 캘린더,My Calendars
+calendar,shareSection.calendarGroup,캘린더,Calendar
 calendar,shareSection.emptyOwned,소유한 캘린더가 없어요.,You don't own any calendars
 calendar,shareSection.sharedCalendars,공유받은 캘린더,Shared with Me
 calendar,shareSection.emptyShared,공유받은 캘린더가 없어요.,No calendars shared with you
 calendar,shareSection.loadFailed,캘린더를 불러오지 못했어요,Couldn't load calendars
+calendar,shareSection.membersLoadFailed,멤버를 불러오지 못했어요,Couldn't load members
 calendar,shareSection.joinDesc,공유받은 초대 코드를 넣으면 그 캘린더에 들어가요.,Enter an invite code to join a calendar.
 calendar,shareSection.onlyMe,나만 사용,Only me
 calendar,shareSection.memberCount,멤버 {{count}}명,{{count}} members
-calendar,shareSection.deleteMessage,"""{{name}}"" 캘린더를 삭제할까요? 일정은 기본 캘린더로 이동하고 모든 멤버의 접근 권한이 사라져요. 삭제한 캘린더는 되돌릴 수 없어요.","Delete the ""{{name}}"" calendar? Events move to the default calendar and all members lose access."
-calendar,shareSection.permanentDelete,영구 삭제,Permanently Delete
+calendar,shareSection.deleteMessage,"""{{name}}"" 캘린더를 삭제할까요? 일정은 기본 캘린더로 옮겨지고, 멤버는 이 캘린더를 더 볼 수 없어요. 삭제한 캘린더는 되돌릴 수 없어요.","Delete the ""{{name}}"" calendar? Events move to the default calendar and members can no longer see it. This action cannot be undone."
 calendar,shareSection.deleteFailed,캘린더를 삭제하지 못했어요.,Couldn't delete the calendar.
-calendar,shareSection.manageSuffix,관리,Manage
 calendar,shareSection.namePlaceholder,캘린더 이름,Calendar name
 calendar,shareSection.saveChanges,변경 저장,Save Changes
-calendar,shareSection.copyCode,초대 코드 복사,Copy invite code
-calendar,shareSection.regenCode,초대 코드 재생성,Regenerate invite code
+calendar,shareSection.copyCode,복사,Copy
+calendar,shareSection.regenCode,새로 만들기,Generate new
 calendar,shareSection.codeHint,이 코드를 공유하면 다른 사람이 캘린더에 참여할 수 있어요.,Share this code to let others join the calendar.
 calendar,shareSection.members,멤버,Members
 calendar,shareSection.you,(나),(me)
 calendar,shareSection.removeMember,멤버 내보내기,Remove member
-calendar,shareSection.removeMemberConfirm,"""{{name}}"" 님을 캘린더에서 내보내시겠어요?","Remove ""{{name}}"" from this calendar?"
+calendar,shareSection.removeMemberConfirm,"""{{name}}"" 님을 캘린더에서 내보낼까요?","Remove ""{{name}}"" from this calendar?"
 calendar,shareSection.removeMemberAction,내보내기,Remove
+calendar,shareSection.removeMemberFailed,멤버를 내보내지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not remove the member. Please try again in a moment.
+calendar,shareSection.moreOf,{{name}} 더보기,More actions for {{name}}
+calendar,shareSection.changeTo.EDIT,편집 가능으로,Make editor
+calendar,shareSection.changeTo.READ,읽기 전용으로,Make read only
 calendar,shareSection.nameRequired,캘린더 이름을 입력해주세요.,Please enter a calendar name.
+calendar,shareSection.renameTitle,캘린더 이름,Calendar name
+calendar,shareSection.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
 calendar,shareSection.create,만들기,Create
 calendar,shareSection.createNamePlaceholder,"예: 가족, 업무, 운동 일정","e.g. Family, Work, Workout"
-calendar,shareSection.joinCodePlaceholder,공유받은 초대 코드를 입력하세요,Enter the invite code you received
+calendar,shareSection.joinCodePlaceholder,예: 3F9A1C2B,e.g. 3F9A1C2B
+calendar,shareSection.codeInvalid,초대 코드를 확인해주세요.,Please check the invite code.
+calendar,shareSection.joinedNamed,"""{{name}}"" 캘린더에 참여했어요","Joined the ""{{name}}"" calendar"
 calendar,shareSection.toast.deleted,캘린더를 삭제했어요,Calendar deleted
 calendar,shareSection.toast.created,캘린더를 만들었어요,Calendar created
-calendar,shareSection.toast.joined,캘린더에 참여했어요,Joined the calendar
-calendar,shareSection.toast.joinError,초대 코드를 확인해주세요,Please check the invite code
 calendar,shareSection.toast.updated,캘린더를 수정했어요,Calendar updated
 calendar,shareSection.toast.codeCopied,초대 코드를 복사했어요,Invite code copied
 calendar,shareSection.toast.codeRegenerated,초대 코드를 새로 만들었어요,New invite code created
@@ -1186,13 +1191,13 @@ calendar,labelsSection.allLabels,전체 라벨,All Labels
 calendar,labelsSection.emptyHint,위 '{{label}}' 로 만들어요.,Use '{{label}}' above to create one
 calendar,labelsSection.loadFailed,라벨을 불러오지 못했어요,Couldn't load labels
 calendar,labelsSection.deleteTitle,라벨 삭제,Delete label
-calendar,labelsSection.deleteMessage,"""{{name}}"" 라벨을 삭제할까요? 이 라벨이 지정된 일정은 라벨 없음 상태가 돼요. 삭제한 라벨은 되돌릴 수 없어요.","Delete the ""{{name}}"" label? Events with this label will become unlabeled."
+calendar,labelsSection.deleteMessage,"""{{name}}"" 라벨을 삭제할까요? 이 라벨이 붙은 일정은 라벨 없이 남아요. 삭제한 라벨은 되돌릴 수 없어요.","Delete the ""{{name}}"" label? Events with this label stay, without a label. This action cannot be undone."
 calendar,labelsSection.deleteFailed,라벨을 삭제하지 못했어요.,Couldn't delete the label.
+calendar,labelsSection.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
 calendar,labelsSection.namePlaceholder,"예: 중요, 마감일, 회의","e.g. Important, Deadline, Meeting"
 calendar,labelsSection.nameRequired,라벨 이름을 입력해주세요.,Please enter a label name.
 calendar,labelsSection.nameTooLong,이름은 12자 이내로 입력해주세요.,Name must be 12 characters or fewer.
 calendar,labelsSection.nameDuplicate,같은 이름의 라벨이 이미 있어요.,A label with that name already exists.
-calendar,labelsSection.colorN,색상 {{n}},Color {{n}}
 dashboard,allDay,종일,All Day
 dashboard,total,합계,Total
 group,addGroupType,그룹 유형 추가,Add Group Type

@@ -1,3 +1,4 @@
+import { cn } from "@/shared/lib/cn";
 import { Button } from "@/shared/ds/button";
 import {
   ResponsiveDialogCancel,
@@ -19,6 +20,7 @@ export function FormFooter({
   submitDisabled,
   deleteLabel,
   onDelete,
+  flushDelete = false,
 }: {
   cancelLabel: string;
   submitLabel: string;
@@ -28,6 +30,11 @@ export function FormFooter({
   /** 있으면 바닥 왼쪽에 [삭제] — 수정일 때만 준다 */
   deleteLabel?: string;
   onDelete?: () => void;
+  /**
+   * 시트 바닥 [삭제] 의 글 시작을 시트 좌우 여백(24)에 세운다 — large 의 안쪽 가로 여백(px-x5 20)만큼 왼쪽으로 뺀다.
+   * 대화상자(small 36)는 그대로다(바닥 규칙에 블리드 값이 없다)
+   */
+  flushDelete?: boolean;
 }) {
   const wide = useWideSurface();
   const size = wide ? "small" : "large";
@@ -40,7 +47,7 @@ export function FormFooter({
             ghostColor="critical"
             // 시트는 large 48(글자만큼 폭), 대화상자는 small 36 — 주 버튼과 같은 크기(bottom-sheet.md 바닥 · button.md 모달 footer)
             size={size}
-            className="shrink-0"
+            className={cn("shrink-0", flushDelete && !wide && "-ml-x5")}
             onClick={onDelete}
           >
             {deleteLabel}

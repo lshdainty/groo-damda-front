@@ -10,6 +10,7 @@ declare global {
 const state = vi.hoisted(() => ({
   fail: undefined as unknown as (o: { message: string }) => void,
   deleteCalls: [] as number[],
+  saveCalls: [] as { kind: "create" | "update"; id?: number; data: unknown }[],
   q: {
     data: undefined as unknown,
     isLoading: false,
@@ -34,8 +35,19 @@ vi.mock("@/features/event-label", () => {
   });
   return {
     useEventLabels: () => state.q,
-    useCreateEventLabel: idle,
-    useUpdateEventLabel: idle,
+    // 저장 요청을 남긴다 — 폼이 자기 뮤테이션을 부른다(silent: 실패는 폼 맨 위 Callout)
+    useCreateEventLabel: () => ({
+      ...idle(),
+      mutateAsync: async (data: unknown) => {
+        state.saveCalls.push({ kind: "create", data });
+      },
+    }),
+    useUpdateEventLabel: () => ({
+      ...idle(),
+      mutateAsync: async (v: { id: number; data: unknown }) => {
+        state.saveCalls.push({ kind: "update", id: v.id, data: v.data });
+      },
+    }),
     // 삭제는 늘 실패한다 — 확인창 뒤 실패 길(스낵바 + 다시 시도)을 본다
     useDeleteEventLabel: () => ({
       mutate: () => {},
@@ -57,6 +69,7 @@ beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   state.fail = vi.fn();
   state.deleteCalls = [];
+  state.saveCalls = [];
   state.q = {
     data: undefined,
     isLoading: false,
@@ -152,7 +165,7 @@ describe("라벨 화면", () => {
     );
   });
 
-  it("옛 13자 이름 그대로 색만 바꿔 저장할 수 있고, 이름을 고치기 시작하면 12자 검사가 걸린다", async () => {
+  it("라벨 폼 — 이름 칸은 12자에서 멈추고 미리보기가 없고, 옛 13자 이름은 그대로 저장할 수 있다", async () => {
     state.q.data = [
       {
         rowId: 9,
@@ -173,9 +186,22 @@ describe("라벨 화면", () => {
       [...document.body.querySelectorAll("button")].find(
         (b) => b.textContent?.trim() === "save",
       ) as HTMLButtonElement;
-    // 이름을 안 건드렸다 — 길이 때문에 막히지 않는다
+    // 미리보기 면은 없다(5-B) — 이름 칸 · "색상" 줄 · 글자 수만
+    expect(document.body.textContent).not.toContain("preview");
+    expect(document.body.textContent).toContain("form.color");
+    // [저장] 은 늘 켜 둔다(field.md:86) — 이름을 안 건드렸으면 길이 때문에 막히지 않고 요청이 나간다
     expect(save().disabled).toBe(false);
-    // 이름을 고치기 시작(여전히 12자 초과) — 그때부터 12자 검사
+    await act(async () => {
+      save().click();
+    });
+    expect(state.saveCalls).toEqual([
+      {
+        kind: "update",
+        id: 9,
+        data: { labelName: "열세 글자짜리 아주 긴 옛 라벨", color: "#3b82f6" },
+      },
+    ]);
+    // 이름을 고치면 칸은 12자에서 멈춘다(13번째 글자는 들어가지 않는다)
     const input = document.body.querySelector("input") as HTMLInputElement;
     const setter = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
@@ -185,6 +211,6 @@ describe("라벨 화면", () => {
       setter?.call(input, "열세 글자짜리 아주 긴 옛 라벨!");
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    expect(save().disabled).toBe(true);
+    expect([...input.value].length).toBeLessThanOrEqual(12);
   });
 });

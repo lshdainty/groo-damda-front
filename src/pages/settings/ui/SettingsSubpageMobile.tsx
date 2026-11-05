@@ -20,6 +20,8 @@ interface Props {
   goBack: () => void;
   /** 머리 오른쪽 글 버튼 "추가" 를 눌렀다 */
   onHeadAction: (id: SectionId) => void;
+  /** 섹션 이름 대신 쓰는 제목 — 제목이 데이터인 숨은 구역(캘린더 관리 = 캘린더 이름). 빈 글이면 제목 자리를 비운다 */
+  title?: string;
   body: React.ReactNode;
 }
 
@@ -56,6 +58,7 @@ export const SettingsSubpageMobile = ({
   activeSection,
   goBack,
   onHeadAction,
+  title,
   body,
 }: Props) => {
   const { t } = useTranslation("settings");
@@ -77,7 +80,7 @@ export const SettingsSubpageMobile = ({
           onClick={goBack}
         />
         <TopNavigationTitle>
-          {activeSection ? t(activeSection.labelKey) : ""}
+          {title ?? (activeSection ? t(activeSection.labelKey) : "")}
         </TopNavigationTitle>
         {id === "recurring" ? (
           <RecurringGate>{button}</RecurringGate>
