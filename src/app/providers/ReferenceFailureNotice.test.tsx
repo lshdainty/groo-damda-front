@@ -79,3 +79,26 @@ describe("ReferenceFailureNotice", () => {
     expect(show).not.toHaveBeenCalled();
   });
 });
+
+describe("hold", () => {
+  it("폼이 열려 있는 동안(useHoldReferenceNotice)에는 알리지 않는다", async () => {
+    const { useHoldReferenceNotice } = await import("@/shared/api");
+    function Holder() {
+      useHoldReferenceNotice(true);
+      return null;
+    }
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={client}>
+          <ReferenceFailureNotice />
+          <Holder />
+        </QueryClientProvider>,
+      );
+    });
+    await act(async () => {
+      await fail("held", REFERENCE_META);
+      vi.advanceTimersByTime(400);
+    });
+    expect(show).not.toHaveBeenCalled();
+  });
+});

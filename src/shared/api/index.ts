@@ -15,7 +15,9 @@ export { silentConfig, type SilentOpts } from "./silent-config";
 export { hideCardsApi } from "./hideCardsApi";
 export {
   REFERENCE_META,
+  isReferenceNoticeHeld,
   isReferenceQuery,
+  useHoldReferenceNotice,
   referenceMeta,
   referenceSilent,
   type ReferenceOpts,

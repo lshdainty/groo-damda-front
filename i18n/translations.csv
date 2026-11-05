@@ -6,7 +6,7 @@ common,cancel,취소,Cancel
 common,delete,삭제,Delete
 common,retry,다시 시도,Try again
 common,query.referenceFailed,일부 정보를 불러오지 못했어요.,Some information couldn't be loaded.
-common,query.referenceSaveFailed,필요한 정보를 불러오지 못해 저장하지 못했어요. 다시 시도해주세요.,Couldn't save because some information couldn't be loaded. Please try again.
+common,query.referenceSaveFailed,필요한 정보를 불러오지 못해 저장하지 못했어요.,Couldn't save because some information couldn't be loaded.
 common,query.failedNamed,{{name}} 정보를 불러오지 못했어요,Couldn't load the {{name}} info
 common,edit,수정,Edit
 common,create,생성,Create

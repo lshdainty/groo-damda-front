@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { isReferenceQuery } from "@/shared/api";
+import { isReferenceNoticeHeld, isReferenceQuery } from "@/shared/api";
 import { useSnackbar } from "@/shared/ds/snackbar";
 
 // 같은 순간 여러 훅이 함께 실패해도 한 번만 알리려고 모으는 시간
@@ -53,7 +53,8 @@ export const ReferenceFailureNotice = () => {
       const stillFailed = queryClient
         .getQueryCache()
         .findAll({ type: "active", predicate: isFailedReference }).length;
-      if (stillFailed === 0 || shown) return;
+      // 폼 · 시트가 열려 있으면 그 안이 맡는다(useHoldReferenceNotice)
+      if (stillFailed === 0 || shown || isReferenceNoticeHeld()) return;
       shown = true;
       shownTimer = setTimeout(() => {
         shown = false;

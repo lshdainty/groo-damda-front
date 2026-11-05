@@ -1,3 +1,4 @@
+import * as React from "react";
 import type { SilentOpts } from "./silent-config";
 
 /*
@@ -27,3 +28,22 @@ export const isReferenceQuery = (meta: unknown): boolean =>
   typeof meta === "object" &&
   meta !== null &&
   (meta as { reference?: unknown }).reference === true;
+
+/*
+ * 폼 · 시트가 열려 있는 동안은 공용 참조 실패 스낵바를 띄우지 않는다 — 그 안의 참조 목록 실패는 폼이 맡는다
+ * (불러 둔 값 유지 · 저장 때 다시 받기 · 또 실패하면 폼 Callout). 열려 있는 수를 세는 전역 카운터 하나.
+ * ResponsiveDialog 가 열림에 맞춰 부른다. 닫힌 뒤에 알리지는 않는다(그 사이 실패는 폼 · 화면 자리가 말했다).
+ */
+let heldCount = 0;
+
+export const isReferenceNoticeHeld = (): boolean => heldCount > 0;
+
+export function useHoldReferenceNotice(active: boolean): void {
+  React.useEffect(() => {
+    if (!active) return;
+    heldCount += 1;
+    return () => {
+      heldCount -= 1;
+    };
+  }, [active]);
+}
