@@ -18,6 +18,7 @@ import {
   PopoverFooter,
   PopoverTrigger,
 } from "@/shared/ds/popover";
+import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { TopNavigationIconButton } from "@/shared/ds/top-navigation";
 import {
@@ -31,6 +32,7 @@ import { useNow } from "@/shared/hooks";
 import {
   NotificationDayGroups,
   NotificationRow,
+  formatCount,
 } from "@/entities/notification";
 import type { Notification } from "@/entities/notification";
 
@@ -47,11 +49,15 @@ export function NotificationsMenu({
 }) {
   const { t } = useTranslation("notification");
   const { t: tl } = useTranslation("layout");
+  const { t: tc } = useTranslation("common");
   const wide = useWideSurface();
   const [open, setOpen] = useState(false);
   const now = useNow();
-  const { data, isLoading } = useNotifications();
-  const { data: unreadCount = 0 } = useUnreadCount();
+  const { data, isLoading, isError, refetch, isRefetching } =
+    useNotifications();
+  // 서버 수 — 오기 전에는 설명 줄을 비우고 받아 온 줄로 세지 않는다
+  const { data: serverUnread } = useUnreadCount();
+  const unreadCount = serverUnread ?? 0;
   const markRead = useMarkRead();
   const markAllRead = useMarkAllRead();
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -60,9 +66,11 @@ export function NotificationsMenu({
   // 안 읽은 수는 서버 수(useUnreadCount) — 받아 온 줄(최대 100개)만 세면 벨 · 화면과 수가 갈린다
   const unread = unreadCount;
   const description =
-    unread > 0
-      ? t("popover.unreadPlain", { count: unread.toLocaleString() })
-      : t("popover.noNew");
+    serverUnread === undefined
+      ? undefined
+      : unread > 0
+        ? t("popover.unreadPlain", { count: formatCount(unread) })
+        : t("popover.noNew");
 
   // 누르면 읽음이 되고 초점이 다음 안 읽은 줄로 간다(9-2 A) — 눌린 줄은 버튼이 아니게 되므로 미리 옮긴다
   const readAndAdvance = (n: Notification) => {
@@ -101,6 +109,18 @@ export function NotificationsMenu({
         </li>
       ))}
     </List>
+  ) : isError && data === undefined ? (
+    <ResultSection
+      kind="failure"
+      size="medium"
+      title={t("loadFailed.title")}
+      description={t("loadFailed.desc")}
+      primaryAction={{
+        label: tc("retry"),
+        loading: isRefetching,
+        onClick: () => void refetch(),
+      }}
+    />
   ) : items.length === 0 ? (
     <p className="m-0 py-x10 text-center text-t3 text-fg-neutral-subtle">
       {t("empty")}

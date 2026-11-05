@@ -16,6 +16,7 @@ export { WithdrawDialog } from "./ui/WithdrawDialog";
 export {
   useUserPreferences,
   useUpdateUserPreferences,
+  usePreferenceEditor,
   useDefaultCurrency,
 } from "./model/useUserPreferences";
 export { WITHDRAW_BLOCK_SUBSCRIPTION } from "./api/userApi";

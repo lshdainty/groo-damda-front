@@ -908,10 +908,6 @@ dutchPay,deleteConfirm.message,"""{{name}}"" 더치페이를 삭제할까요? �
 notification,title,알림,Notifications
 notification,empty,아직 알림이 없어요,No notifications yet
 notification,markAllRead,모두 읽음,Read all
-notification,type.EVENT_REMINDER,일정 알림,Event Reminder
-notification,type.BUDGET_ALERT,예산 알림,Budget Alert
-notification,type.TODO_REMINDER,할 일 알림,Todo Reminder
-notification,type.SYSTEM,시스템 알림,System
 group,title,그룹,Groups
 group,addGroup,그룹 추가,Add Group
 group,editGroup,그룹 수정,Edit Group
@@ -1276,15 +1272,16 @@ notification,rows.monthlyReport.title,월간 리포트,Monthly Report
 notification,rows.monthlyReport.desc,매월 1일 오전 9시,On the 1st of each month at 9 AM
 notification,threshold.title,예산 알림 기준,Budget alert threshold
 notification,threshold.label,경고로 표시할 사용률,Usage that shows as a warning
+notification,thresholdRange.min,50%,50%
+notification,thresholdRange.max,100%,100%
 notification,threshold.desc,이 값을 넘으면 경고로 표시되고 알림을 받아요. 100%를 넘으면 초과 알림이 따로 와요.,Over this value it shows as a warning and you get a notification. Over 100% you get a separate alert.
 notification,quiet.title,방해 금지 시간,Do Not Disturb
 notification,quiet.use.title,방해 금지 사용,Enable Do Not Disturb
 notification,quiet.use.desc,시간대를 지정해 자동 무음,Auto-mute during a set time range
 notification,quiet.start,시작,Start
 notification,quiet.end,종료,End
-notification,sound.title,소리·진동,Sound & Vibration
+notification,sound.title,소리 · 진동,Sound & Vibration
 notification,sound.notif.title,알림음,Notification Sound
-notification,sound.notif.desc,앱 알림 사운드,App notification sound
 notification,sound.options.CHIME,차임,Chime
 notification,sound.options.DEFAULT,기본,Default
 notification,sound.options.NONE,무음,Silent
@@ -1297,11 +1294,13 @@ notification,email.frequency.label,발송 주기,Frequency
 notification,email.frequency.DAILY,매일,Daily
 notification,email.frequency.WEEKLY,매주,Weekly
 notification,email.frequency.MONTHLY,매월,Monthly
-notification,saveError,저장에 실패했어요. 잠시 뒤 다시 시도해주세요.,Failed to save. Please try again shortly.
 notification,loadFailed.title,알림을 불러오지 못했어요,Could not load notifications
 notification,loadFailed.desc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
 notification,prefsLoadFailed.title,알림 설정을 불러오지 못했어요,Could not load notification settings
 notification,settingsSaveFailed,알림 설정을 저장하지 못했어요.,Could not save the notification settings.
+notification,deleteFailed,알림을 삭제하지 못했어요.,Could not delete the notification.
+notification,markAllFailed,알림을 모두 읽음으로 바꾸지 못했어요.,Could not mark all notifications as read.
+notification,markReadFailed,알림을 읽음으로 바꾸지 못했어요.,Could not mark the notification as read.
 notification,popover.noNew,새 알림이 없어요,No new notifications
 user,passwordChange,비밀번호 변경,Change password
 user,passwordChangeDescription,현재 비밀번호를 확인한 뒤 새 비밀번호로 바꿔요,Verify your current password and set a new one

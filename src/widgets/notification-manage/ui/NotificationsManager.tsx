@@ -4,7 +4,6 @@ import {
   BarChart3,
   Bell,
   CalendarClock,
-  CircleAlert,
   CreditCard,
   FileBarChart,
   Mail,
@@ -17,11 +16,9 @@ import {
 } from "lucide-react";
 import {
   useCurrentUser,
-  useUpdateUserPreferences,
-  useUserPreferences,
+  usePreferenceEditor,
   type EmailFrequency,
   type NotificationSound,
-  type UserPreferences,
 } from "@/features/user";
 import {
   BottomSheet,
@@ -50,15 +47,14 @@ import {
 } from "@/shared/ds/popover";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
+import { Slider, SliderValue } from "@/shared/ds/slider";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import {
   TimePicker,
   formatTimeValue,
-  roundToStep,
   type TimeValue,
 } from "@/shared/ds/time-picker";
 import { ManagerHead } from "@/shared/ui/groo/manager-layout";
-import { ThresholdSlider } from "./ThresholdSlider";
 
 const ICON = { "aria-hidden": true } as const;
 
@@ -146,6 +142,7 @@ function SwitchRow({
   icon,
   title,
   detail,
+  detailLoading,
   checked,
   disabled,
   onChange,
@@ -154,6 +151,8 @@ function SwitchRow({
   icon: ReactNode;
   title: string;
   detail?: ReactNode;
+  /** 설명이 값에 따라 바뀌는 줄 — 불러오는 동안은 글 대신 Skeleton(사실처럼 보이지 않게) */
+  detailLoading?: boolean;
   checked: boolean;
   disabled?: boolean;
   onChange: (next: boolean) => void;
@@ -163,13 +162,18 @@ function SwitchRow({
       <ListItem
         prefix={icon}
         title={title}
-        detail={detail}
-        suffix={<Skeleton radius="full" className="h-6 w-[38px]" />}
+        detail={
+          detailLoading ? (
+            <Skeleton radius="4" text="t3" className="w-40" />
+          ) : (
+            detail
+          )
+        }
+        suffix={<Skeleton radius="full" className="h-8 w-[52px]" />}
       />
     );
   return (
     <ListSwitchItem
-      markSize="24"
       prefix={icon}
       title={title}
       detail={detail}
@@ -189,6 +193,7 @@ function PickRow({
   loading,
   disabled,
   done,
+  onOpen,
   children,
 }: {
   indent?: boolean;
@@ -199,12 +204,18 @@ function PickRow({
   disabled?: boolean;
   /** 바닥 "완료" — 시각 고르기만(고르는 동안 값은 그대로, 완료에 들어간다). 목록 고르기는 누르면 바로 넣고 닫힌다 */
   done?: { label: string; onDone: () => void };
+  /** 열 때 — 고르는 값(draft)을 지금 서버 값으로 다시 잡는다 */
+  onOpen?: () => void;
   /** 고르는 면 안 — close 로 닫는다 */
   children: (close: () => void) => ReactNode;
 }) {
   const wide = useInputButtonSurface() === "popover";
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+  const change = (next: boolean) => {
+    if (next) onOpen?.();
+    setOpen(next);
+  };
   const prefix = indent ? INDENT : icon;
   if (loading)
     return (
@@ -228,16 +239,21 @@ function PickRow({
     <ListButtonItem
       prefix={prefix}
       title={title}
-      suffix={<span className="text-fg-neutral-muted">{value}</span>}
+      suffix={
+        // 막히면 값도 막힘 색(뒤 붙이개 색을 덮지 않는다)
+        <span className={disabled ? undefined : "text-fg-neutral-muted"}>
+          {value}
+        </span>
+      }
       suffixText
       disabled={disabled}
       aria-haspopup="dialog"
       aria-expanded={open}
-      onClick={wide ? undefined : () => setOpen(true)}
+      onClick={wide ? undefined : () => change(true)}
     />
   );
   return wide ? (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={change}>
       <PopoverTrigger asChild>{row}</PopoverTrigger>
       <PopoverContent aria-label={title} align="end">
         <PopoverBody>{children(close)}</PopoverBody>
@@ -247,7 +263,7 @@ function PickRow({
   ) : (
     <>
       {row}
-      <BottomSheet open={open} onOpenChange={setOpen}>
+      <BottomSheet open={open} onOpenChange={change}>
         <BottomSheetContent title={title}>
           <BottomSheetBody>{children(close)}</BottomSheetBody>
           {doneButton && <BottomSheetFooter>{doneButton}</BottomSheetFooter>}
@@ -282,25 +298,24 @@ function TimeRow({
       value={formatTimeValue(current)}
       loading={loading}
       disabled={disabled}
+      // 열 때마다 지금 서버 값에서 시작 — 완료 없이 닫은 값은 버린다
+      onOpen={() => setDraft(current)}
       done={{
         label: doneLabel,
         onDone: () => {
-          const v = draft ?? roundToStep(current ?? { hour: 22, minute: 0 }, 5);
+          const v = draft ?? current ?? { hour: 22, minute: 0 };
           const pad = (n: number) => String(n).padStart(2, "0");
           onPick(`${pad(v.hour)}:${pad(v.minute)}`);
         },
       }}
     >
       {() => (
-        <div
-          className="flex justify-center"
-          onPointerDownCapture={() => setDraft((d) => d ?? current)}
-        >
+        <div className="flex justify-center">
           <TimePicker
             aria-label={title}
-            value={draft ?? current}
+            value={draft}
             onValueChange={setDraft}
-            minuteStep={5}
+            minuteStep={1}
             autoFocus
           />
         </div>
@@ -341,11 +356,17 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
   const { t } = useTranslation("notification");
   const { t: tc } = useTranslation("common");
   const snackbar = useSnackbar();
-  const preferencesQ = useUserPreferences();
-  const updateMut = useUpdateUserPreferences();
-  const { data: currentUser } = useCurrentUser();
+  // 누르는 순간 화면이 바뀌고(낙관적) 키 하나씩 저장한다. 실패하면 서버 값으로 되돌리고 critical 스낵바 고정 글 —
+  // 요청은 silent · [다시 시도] 없음(스위치를 다시 누르는 것이 재시도, I-15 덧붙임 14-1 M1). 값 줄 · 슬라이더도 같다.
+  const {
+    pref,
+    query: preferencesQ,
+    save,
+  } = usePreferenceEditor(() =>
+    snackbar.show({ message: t("settingsSaveFailed"), tone: "critical" }),
+  );
+  const { data: currentUser, isLoading: userLoading } = useCurrentUser();
 
-  const pref = preferencesQ.data;
   const isLoading = preferencesQ.isLoading;
 
   const pushEnabled = pref?.pushEnabled ?? true;
@@ -359,21 +380,10 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
   const emailEnabled = pref?.emailEnabled ?? false;
   const emailFrequency: EmailFrequency = pref?.emailFrequency ?? "WEEKLY";
 
-  // 예산 경고 기준을 끄는 동안의 값 — 머리 값 · 슬라이더가 따라가고, 저장이 끝나면 서버 값으로 돌아온다
+  // 예산 경고 기준을 끄는 동안의 값 — 머리 값 · 손잡이가 따라가고, 놓으면 저장한다
   const [drag, setDrag] = useState<number | null>(null);
-  // 기준 저장이 실패하면 값은 서버 값으로 되돌아가고(onSettled) 슬라이더 아래 오류 글로 알린다(slider.yaml commit)
-  const [thresholdFailed, setThresholdFailed] = useState(false);
-  const thresholdErrorId = useId();
   const thresholdLabelId = useId();
   const shownThreshold = drag ?? warnThreshold;
-
-  // 스위치 · 값 줄 저장 — 누르는 순간 적용. 실패하면 값은 서버 값 그대로(되돌림)이고 critical 스낵바 고정 글을 띄운다.
-  // 요청은 silent(전역 서버 글 없음), [다시 시도] 는 두지 않는다 — 스위치를 다시 누르는 것이 재시도다(I-15 덧붙임 14-1 M1).
-  const save = (patch: Partial<UserPreferences>) =>
-    updateMut.mutate(patch, {
-      onError: () =>
-        snackbar.show({ message: t("settingsSaveFailed"), tone: "critical" }),
-    });
 
   const headingAs = mobile ? "h2" : "h3";
   const head = !mobile && (
@@ -422,6 +432,7 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
             icon={<Bell {...ICON} />}
             title={t("push.title")}
             detail={pushEnabled ? t("push.on") : t("push.off")}
+            detailLoading
             checked={pushEnabled}
             onChange={(v) => save({ pushEnabled: v })}
           />
@@ -441,6 +452,7 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
                 ? t("rows.budget.desc", { threshold: warnThreshold })
                 : t(row.descKey)
             }
+            detailLoading={row.field === "notifyBudget"}
             checked={pref?.[row.field] ?? true}
             disabled={off}
             onChange={(v) => save({ [row.field]: v })}
@@ -452,37 +464,33 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
       <Group title={t("threshold.title")} headingAs={headingAs}>
         <li className="list-none px-global-gutter pb-x4 pt-x1">
           <div className="flex items-baseline justify-between gap-x2">
-            <span id={thresholdLabelId} className="text-t4 text-fg-neutral">
+            <span
+              id={thresholdLabelId}
+              className="font-medium text-t4 text-fg-neutral"
+            >
               {t("threshold.label")}
             </span>
-            <span className="font-bold text-t5 text-fg-neutral [font-variant-numeric:tabular-nums]">
-              {shownThreshold}%
-            </span>
+            {isLoading ? (
+              <Skeleton radius="4" text="t5" className="w-10" />
+            ) : (
+              <SliderValue>{shownThreshold}%</SliderValue>
+            )}
           </div>
           <div className="py-x3">
-            {isLoading ? (
-              <Skeleton radius="full" className="h-1 w-full" />
-            ) : (
-              <ThresholdSlider
-                value={shownThreshold}
-                labelledBy={thresholdLabelId}
-                onDrag={(v) => {
-                  setThresholdFailed(false);
-                  setDrag(v);
-                }}
-                describedBy={thresholdFailed ? thresholdErrorId : undefined}
-                onCommit={(v) =>
-                  updateMut.mutate(
-                    { budgetAlertThreshold: v },
-                    {
-                      onSuccess: () => setThresholdFailed(false),
-                      onError: () => setThresholdFailed(true),
-                      onSettled: () => setDrag(null),
-                    },
-                  )
-                }
-              />
-            )}
+            <Slider
+              aria-labelledby={thresholdLabelId}
+              min={50}
+              max={100}
+              step={5}
+              value={shownThreshold}
+              formatValue={(v) => `${v}%`}
+              disabled={isLoading}
+              onValueChange={setDrag}
+              onValueCommit={(v) => {
+                setDrag(null);
+                save({ budgetAlertThreshold: v });
+              }}
+            />
           </div>
           <div className="flex justify-between text-t3 text-fg-neutral-subtle">
             <span>{t("thresholdRange.min")}</span>
@@ -491,20 +499,6 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
           <p className="m-0 mt-x2 text-t3 text-fg-neutral-subtle">
             {t("threshold.desc")}
           </p>
-          {thresholdFailed && (
-            <p
-              id={thresholdErrorId}
-              data-slot="field-error"
-              className="m-0 mt-x2 flex text-t4 text-fg-critical"
-            >
-              <CircleAlert
-                aria-hidden
-                size={16}
-                className="mr-x1_5 mt-0.5 shrink-0"
-              />
-              <span className="min-w-0">{t("saveError")}</span>
-            </p>
-          )}
         </li>
       </Group>
 
@@ -514,14 +508,17 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
           icon={<Moon {...ICON} />}
           title={t("quiet.use.title")}
           detail={t("quiet.use.desc")}
+          disabled={off}
           checked={quietHoursEnabled}
           onChange={(v) => save({ quietHoursEnabled: v })}
         />
-        {(quietHoursEnabled || isLoading) && (
+        {/* 방해 금지를 끄면(또는 푸시를 끄면) 시작 · 종료 줄은 숨기지 않고 막힘 색으로 값을 보여 준다 */}
+        {
           <>
             <TimeRow
               title={t("quiet.start")}
               value={quietHoursStart}
+              disabled={off || !quietHoursEnabled}
               loading={isLoading}
               doneLabel={tc("done")}
               onPick={(v) => save({ quietHoursStart: v })}
@@ -529,12 +526,13 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
             <TimeRow
               title={t("quiet.end")}
               value={quietHoursEnd}
+              disabled={off || !quietHoursEnabled}
               loading={isLoading}
               doneLabel={tc("done")}
               onPick={(v) => save({ quietHoursEnd: v })}
             />
           </>
-        )}
+        }
       </Group>
 
       <Group title={t("sound.title")} headingAs={headingAs}>
@@ -542,6 +540,7 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
           icon={<Volume2 {...ICON} />}
           title={t("sound.notif.title")}
           value={t(`sound.options.${notificationSound}`)}
+          disabled={off}
           loading={isLoading}
         >
           {(close) => (
@@ -568,6 +567,7 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
           icon={<Vibrate {...ICON} />}
           title={t("sound.vibration.title")}
           detail={t("sound.vibration.desc")}
+          disabled={off}
           checked={vibrationEnabled}
           onChange={(v) => save({ vibrationEnabled: v })}
         />
@@ -579,6 +579,7 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
           icon={<Mail {...ICON} />}
           title={t("email.receive.title")}
           detail={currentUser?.userEmail ?? t("email.empty")}
+          detailLoading={userLoading}
           checked={emailEnabled}
           onChange={(v) => save({ emailEnabled: v })}
         />

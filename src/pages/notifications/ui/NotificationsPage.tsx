@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { Bell, Settings } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -27,6 +27,7 @@ import { useNow } from "@/shared/hooks";
 import {
   NotificationDayGroups,
   NotificationRow,
+  formatCount,
 } from "@/entities/notification";
 import type { Notification } from "@/entities/notification";
 
@@ -76,14 +77,12 @@ export function NotificationsPage() {
   useScreenTitle(t("title"));
   // 상대시각 기준점 — 벨과 같은 훅(기준이 갈리면 같은 알림이 서로 다른 문구로 보인다)
   const now = useNow();
-  const {
-    data: notifications = [],
-    isLoading,
-    isError,
-    refetch,
-    isRefetching,
-  } = useNotifications();
+  const { data, isLoading, isError, refetch, isRefetching } =
+    useNotifications();
+  // 수가 오기 전에는 머리 줄을 숨긴다(받아 온 줄로 세지 않는다)
   const { data: unreadCount = 0 } = useUnreadCount();
+  const notifications = data ?? [];
+  const listRef = useRef<HTMLDivElement>(null);
   const markRead = useMarkRead();
   const markAllRead = useMarkAllRead();
 
@@ -96,14 +95,19 @@ export function NotificationsPage() {
     !isLoading && !isError && unreadCount > 0 ? (
       <ListHeader as="div" className="pt-x2">
         <span>
-          {t("popover.unreadPlain", { count: unreadCount.toLocaleString() })}
+          {t("popover.unreadPlain", { count: formatCount(unreadCount) })}
         </span>
         <Button
           variant="ghost"
           ghostColor="neutralMuted"
           size="small"
           loading={markAllRead.isPending}
-          onClick={() => markAllRead.mutate()}
+          onClick={() =>
+            markAllRead.mutate(undefined, {
+              // 머리 줄이 걷히면 누른 버튼이 사라진다 — 초점을 목록으로 옮긴다
+              onSuccess: () => listRef.current?.focus(),
+            })
+          }
         >
           {t("markAllRead")}
         </Button>
@@ -113,7 +117,7 @@ export function NotificationsPage() {
   let body: ReactNode;
   if (isLoading) {
     body = <NotificationsPageSkeleton />;
-  } else if (isError) {
+  } else if (isError && data === undefined) {
     body = (
       <ResultSection
         kind="failure"
@@ -138,7 +142,7 @@ export function NotificationsPage() {
     );
   } else {
     body = (
-      <>
+      <div ref={listRef} tabIndex={-1} className="outline-none">
         {head}
         <NotificationDayGroups
           items={notifications}
@@ -154,7 +158,7 @@ export function NotificationsPage() {
             />
           )}
         />
-      </>
+      </div>
     );
   }
 

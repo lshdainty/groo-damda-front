@@ -10,7 +10,8 @@ import {
   ResponsiveMenuItem,
   ResponsiveMenuTrigger,
 } from "@/shared/ds/menu";
-import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
+import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import type { Notification } from "@/entities/notification";
 
 import { useDeleteNotification } from "../model/useNotifications";
@@ -31,6 +32,7 @@ export function NotificationMoreMenu({
   const { t } = useTranslation("notification");
   const { t: tc } = useTranslation("common");
   const del = useDeleteNotification();
+  const confirmFail = useConfirmFail();
   const [confirming, setConfirming] = useState(false);
 
   return (
@@ -60,18 +62,18 @@ export function NotificationMoreMenu({
         </ResponsiveMenuContent>
       </ResponsiveMenu>
       {confirming && (
-        <ConfirmDialog
+        <AlertConfirm
           title={t("deleteTitle")}
           message={t("deleteDescription")}
           confirmLabel={tc("delete")}
-          danger
-          loading={del.isPending}
-          onCancel={() => setConfirming(false)}
-          onConfirm={() =>
-            del.mutate(notification.rowId, {
-              onSuccess: () => setConfirming(false),
+          onConfirm={() => del.mutateAsync(notification.rowId)}
+          onError={() =>
+            confirmFail({
+              message: t("deleteFailed"),
+              retry: () => del.mutateAsync(notification.rowId),
             })
           }
+          onClose={() => setConfirming(false)}
         />
       )}
     </>

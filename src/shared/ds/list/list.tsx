@@ -690,10 +690,7 @@ const markProps = { "data-slot": "list-mark", "data-list-action": "" };
 export interface ListSwitchItemProps
   extends
     Omit<SwitchmarkProps, "title" | "prefix" | "size" | "children">,
-    Omit<ControlRowProps, "suffix"> {
-  /** 스위치 크기 — 기본 "32"(제목 16 줄). 설정 줄 묶음은 "24"(트랙 38 × 24, I-15 49 · switch.yaml 기본) */
-  markSize?: "24" | "32";
-}
+    Omit<ControlRowProps, "suffix"> {}
 
 // 스위치 줄 — 스위치는 뒤에, 제목 16 줄이라 32(Switch 스펙). 바로 적용되는 설정에만 쓴다
 const ListSwitchItem = React.forwardRef<
@@ -711,7 +708,6 @@ const ListSwitchItem = React.forwardRef<
       className,
       id,
       disabled,
-      markSize = "32",
       ...props
     },
     ref,
@@ -732,7 +728,7 @@ const ListSwitchItem = React.forwardRef<
           <Switchmark
             ref={ref}
             id={sid}
-            size={markSize}
+            size="32"
             disabled={disabled}
             className={cn(LIST_MARK_NO_SCALE, className)}
             {...markProps}

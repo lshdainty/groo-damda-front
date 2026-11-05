@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_CURRENCY } from "@/shared/lib/groo/currency";
 import { userApi, type UserPreferences } from "../api/userApi";
@@ -38,3 +39,61 @@ export const useDefaultCurrency = (): string => {
   const { data } = useUserPreferences();
   return data?.defaultCurrency ?? DEFAULT_CURRENCY;
 };
+
+/**
+ * 알림 설정처럼 "누르는 순간 적용" 인 설정 편집 — 낙관적 값 + 키별 저장 (I-15 49 · switch.md "누르면 스위치가 바로 바뀐다").
+ *
+ * - `save` 는 키 하나씩 따로 보낸다(설정 전체를 덮어쓰지 않는다). 누르는 순간 화면 값(`pref`)이 바뀐다.
+ * - 같은 키를 또 누르면 앞 요청의 응답은 버린다(늦게 온 응답이 나중 값을 되돌리지 않게). 응답은 그 키만 캐시에 병합한다.
+ * - 실패하면 그 키의 화면 값을 서버 값으로 되돌리고 `onFail` 을 **요청마다** 부른다(앞 요청에 덮인 것은 부르지 않는다).
+ * - 요청은 silent 다(전역 서버 글 없음) — 알림은 부르는 쪽이 한다.
+ */
+export function usePreferenceEditor(onFail: () => void) {
+  const qc = useQueryClient();
+  const query = useUserPreferences();
+  const [overlay, setOverlay] = useState<Partial<UserPreferences>>({});
+  const seq = useRef<Partial<Record<keyof UserPreferences, number>>>({});
+  const failRef = useRef(onFail);
+  useEffect(() => {
+    failRef.current = onFail;
+  });
+
+  const pref = useMemo(
+    () => (query.data ? { ...query.data, ...overlay } : undefined),
+    [query.data, overlay],
+  );
+
+  const save = useCallback(
+    (patch: Partial<UserPreferences>) => {
+      for (const key of Object.keys(patch) as (keyof UserPreferences)[]) {
+        const value = patch[key];
+        const mine = (seq.current[key] ?? 0) + 1;
+        seq.current[key] = mine;
+        setOverlay((o) => ({ ...o, [key]: value }));
+        const settle = () =>
+          setOverlay((o) => {
+            const next = { ...o };
+            delete next[key];
+            return next;
+          });
+        userApi.updatePreferences({ [key]: value }).then(
+          (resp) => {
+            if (seq.current[key] !== mine) return;
+            qc.setQueryData<UserPreferences>(PREF_KEY, (prev) =>
+              prev ? { ...prev, [key]: resp[key] } : resp,
+            );
+            settle();
+          },
+          () => {
+            if (seq.current[key] !== mine) return;
+            settle();
+            failRef.current();
+          },
+        );
+      }
+    },
+    [qc],
+  );
+
+  return { pref, query, save };
+}

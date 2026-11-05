@@ -23,6 +23,7 @@ export function NotificationDayGroups({
   headingAs?: "h2" | "h3";
 }) {
   const { t } = useTranslation("date");
+  const { t: tn } = useTranslation("notification");
   const uid = useId();
   const today = new Date(now);
   const yesterday = new Date(now);
@@ -35,6 +36,12 @@ export function NotificationDayGroups({
   return (
     <>
       {groupByDay(items).map((g, i) => {
+        if (!g.date)
+          return (
+            <section key="unknown">
+              <List aria-label={tn("title")}>{g.items.map(renderRow)}</List>
+            </section>
+          );
         const day = formatMonthDayDow(g.date);
         const label =
           g.key === todayKey
