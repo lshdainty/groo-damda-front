@@ -20,7 +20,7 @@ export const useMyFeatures = (opts?: { reference?: boolean }) =>
 
 /** 증권 기능권한 보유 여부 (로딩 중엔 false → 게이트 기본 닫힘). */
 export const useHasSecurities = (): boolean => {
-  const { data } = useMyFeatures();
+  const { data } = useMyFeatures({ reference: true });
   return data?.features?.includes(SECURITIES) ?? false;
 };
 
@@ -58,7 +58,7 @@ export const useCancelSubscription = () => {
 
 /** 증권사를 하나라도 연결했는지 — 자산 연동·증권 화면 노출 판정. */
 export const useHasBrokerConnection = (): boolean => {
-  const { data } = useMyFeatures();
+  const { data } = useMyFeatures({ reference: true });
   return (data?.connectedBrokers?.length ?? 0) > 0;
 };
 

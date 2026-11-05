@@ -279,7 +279,7 @@ export const SettingsPage = () => {
 
 /** 캘린더 관리의 제목 = 그 캘린더의 이름. 이름을 받기 전(불러오는 중 · 못 찾음)은 빈 글 — 그 구역일 때만 목록을 받는다 */
 function useCalendarManageName(active: boolean, id: number | null): string {
-  const q = useUserCalendars({ silent: true, enabled: active });
+  const q = useUserCalendars({ reference: true, enabled: active });
   if (!active || id == null) return "";
   return q.data?.find((c) => c.rowId === id)?.calendarName ?? "";
 }
