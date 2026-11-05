@@ -3447,9 +3447,9 @@ dutchPay,addButton,추가,Add
 dutchPay,pastFriendsLabel,함께 정산했던 사람,People you settled with
 dutchPay,payerLabel,결제한 사람,Paid by
 dutchPay,createFailed,정산을 만들지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not create the settlement. Please try again in a moment.
-dutchPay,deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
-dutchPay,markFailed,받음 처리하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not mark as received. Please try again in a moment.
-dutchPay,settleFailed,모두 받음 처리하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not mark all as received. Please try again in a moment.
+dutchPay,deleteFailed,정산을 삭제하지 못했어요.,Couldn't delete the settlement.
+dutchPay,markFailed,받음 처리를 하지 못했어요.,Couldn't mark as received.
+dutchPay,settleFailed,모두 받음 처리를 하지 못했어요.,Couldn't mark all as received.
 dutchPay,detailDate,{{date}} · {{place}},{{date}} · {{place}}
 dutchPay,payerPaid,결제했어요,Paid
 dutchPay,payerPaidShare,결제했어요 · 몫 {{amount}},Paid · share {{amount}}
