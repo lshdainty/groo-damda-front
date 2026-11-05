@@ -25,6 +25,17 @@ export const useAssets = (opts?: ReferenceOpts) => {
   });
 };
 
+/**
+ * 계좌 rowId → 통화 — 이체 줄이 보내는 · 받는 계좌 통화로 금액을 찍는다(I-13). 목록 쿼리(같은 키)를 그대로 읽어 요청이 늘지 않고,
+ * 실패는 조용히(silent) — 통화를 모르면 줄은 원화로 찍힌다(지금 그대로).
+ */
+export const useAssetCurrencyOf = () => {
+  const { data } = useAssets({ silent: true });
+  const list = data?.assets ?? [];
+  return (assetRowId: number): string | null =>
+    list.find((a) => a.rowId === assetRowId)?.currency ?? null;
+};
+
 export const useAsset = (id: number, opts?: ReferenceOpts) => {
   return useQuery({
     queryKey: assetKeys.detail(id),

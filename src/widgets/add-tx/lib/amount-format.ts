@@ -30,5 +30,7 @@ export function amountText(f: TxForm): string {
       : "";
   }
   // 0 이면 빈 글 — 줄 값이 "0원" 대신 "없음" 으로 보인다(금액을 지우고 완료한 때)
-  return f.amountNumber > 0 ? money(f.amountNumber) : "";
+  if (f.amountNumber <= 0) return "";
+  // 이체는 보내는 계좌 통화(I-13) — 외화 계좌에서 보내면 "$1,000.00"
+  return f.isTransfer ? f.transferMoney(f.amountNumber) : money(f.amountNumber);
 }

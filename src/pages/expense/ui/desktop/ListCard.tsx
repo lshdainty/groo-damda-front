@@ -12,6 +12,7 @@ import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
 import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
 import { ExpenseRow } from "@/entities/expense";
 import { TransferRow } from "@/entities/asset";
+import { useAssetCurrencyOf } from "@/features/asset";
 import type { Expense } from "@/entities/expense";
 import type { AssetTransfer } from "@/entities/asset";
 import { ledgerKey, type LedgerItem } from "@/pages/expense/model/ledger-data";
@@ -108,6 +109,8 @@ export function ListCard({
 }) {
   const { t } = useTranslation("expense");
   const dsT = useDsText();
+  // 이체 줄은 보내는 · 받는 계좌 통화로 찍는다(I-13)
+  const currencyOf = useAssetCurrencyOf();
   const yest = new Date();
   yest.setDate(yest.getDate() - 1);
   const yesterday = `${yest.getFullYear()}-${String(yest.getMonth() + 1).padStart(2, "0")}-${String(yest.getDate()).padStart(2, "0")}`;
@@ -183,6 +186,7 @@ export function ListCard({
                 <TransferRow
                   gutter
                   transfer={item.transfer}
+                  currencyOf={currencyOf}
                   onClick={selecting ? undefined : onOpenTransfer}
                   selectSpace={selecting}
                 />
