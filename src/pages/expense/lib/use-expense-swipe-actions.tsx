@@ -93,7 +93,10 @@ export function useExpenseSwipeActions({
         // 지운 뒤는 상세 삭제와 같다 — 미리 낸 돈이 돌아왔으면 그 금액, 닫힌 회차였으면
         // [잔액 고치기](D4·D9).
         onSelect: async () => {
-          const result = await deleteExpense.mutateAsync(e.rowId);
+          const result = await deleteExpense.mutateAsync({
+            id: e.rowId,
+            silent: true,
+          });
           notifyResult(result, {
             closed: closedSpan != null,
             paymentAssetRowId: card?.paymentAssetRowId ?? null,

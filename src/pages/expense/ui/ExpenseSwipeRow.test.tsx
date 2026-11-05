@@ -14,6 +14,11 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 
+const confirmFailMock = vi.hoisted(() => vi.fn());
+vi.mock("@/shared/lib/confirm-fail", () => ({
+  useConfirmFail: () => confirmFailMock,
+}));
+
 const { ExpenseSwipeRow, SwipeConfirmDialog } =
   await import("./ExpenseSwipeRow");
 const { SwipeActionsProvider } = await import("@/shared/ds/swipe-actions");
@@ -207,7 +212,8 @@ describe("삭제 확인창 — ds Alert Dialog", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("실패하면 닫지 않는다 — 지워진 것은 없다", async () => {
+  it("실패하면 확인창을 닫고 스낵바 한 문장 + [다시 시도] 를 띄운다(confirmFail)", async () => {
+    confirmFailMock.mockClear();
     const onSelect = vi.fn().mockRejectedValue(new Error("boom"));
     const onClose = vi.fn();
     await render(
@@ -223,10 +229,13 @@ describe("삭제 확인창 — ds Alert Dialog", () => {
     });
 
     expect(onSelect).toHaveBeenCalledTimes(1);
-    expect(onClose).not.toHaveBeenCalled();
-    expect(
-      document.querySelector("[data-slot=alert-dialog-content]"),
-    ).not.toBeNull();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(confirmFailMock).toHaveBeenCalledTimes(1);
+    const arg = confirmFailMock.mock.calls[0]![0];
+    expect(arg.message).toBe("txDetail.deleteFailed");
+    // 다시 시도는 묻지 않고 같은 요청을 바로 한다
+    await arg.retry().catch(() => {});
+    expect(onSelect).toHaveBeenCalledTimes(2);
   });
 
   it("동작이 없으면 아무것도 그리지 않는다", async () => {

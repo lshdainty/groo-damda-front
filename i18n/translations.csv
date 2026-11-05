@@ -2910,8 +2910,9 @@ expense,txDetail.recordOnlyNote,결제가 끝난 회차에 적은 거래라 기�
 expense,txDetail.recordOnlyPartNote,이 중 <amt>{{amount}}</amt>은 결제가 끝난 회차분이라 기록만 남았어요. 남은 회차는 정상 청구돼요,"<amt>{{amount}}</amt> of this belongs to cycles that were already paid, so it is kept as a record only. The remaining installments are billed as usual"
 expense,closedCycle.note,이미 결제가 끝난 회차예요. 기록만 바뀌고 계좌 잔액은 그대로예요.,"This cycle has already been paid. Only the record changes, and your account balance stays the same."
 expense,closedCycle.partialNote,지난 회차분은 기록만 남아요.,Installments from cycles already paid stay as records only.
+expense,closedCycle.noteToast,결제가 끝난 회차라 기록만 바뀌고 계좌 잔액은 그대로예요.,"This cycle is already paid, so only the record changes and your balance stays the same."
 expense,closedCycle.fixBalance,잔액 고치기,Fix balance
-expense,closedCycle.prepaidRefunded,미리 낸 돈 중 {{amount}}이 계좌로 돌아왔어요,{{amount}} of what you paid early went back to your account
+expense,closedCycle.prepaidRefunded,미리 낸 돈 중 {{amount}}이 계좌로 돌아왔어요.,{{amount}} of what you paid early went back to your account.
 expense,addTx.saveConfirmTitle,저장할까요?,Save this?
 expense,addTx.moneyLockedNote,결제가 끝난 거래예요. 금액·날짜를 바꾸려면 고쳐 쓰기를 눌러주세요,"This transaction has already been paid. To change the amount or date, tap Rewrite"
 expense,addTx.moneyLockedPaidOffNote,결제가 끝난 거래예요. 중도 정리한 할부라 금액·날짜를 바꿀 수 없어요.,"This transaction has already been paid. It is a paid-off installment, so the amount and date can't be changed."

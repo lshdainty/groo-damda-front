@@ -29,7 +29,9 @@ vi.mock("react-i18next", () => ({
 }));
 vi.mock("@/features/expense", () => ({
   useDeleteExpense: () => ({
-    mutateAsync: async (id: number) => {
+    // 확인창 뒤 실패는 호출처가 알린다 — 요청은 silent 로 보낸다(전역 서버 글 토스트 없음)
+    mutateAsync: async ({ id, silent }: { id: number; silent?: boolean }) => {
+      expect(silent).toBe(true);
       st.deleted.push(id);
       return st.deleteReply;
     },

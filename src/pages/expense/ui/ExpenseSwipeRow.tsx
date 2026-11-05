@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from "@/shared/ds/alert-dialog";
 import { SwipeActions, type SwipeAction } from "@/shared/ds/swipe-actions";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { ExpenseRow, type Expense } from "@/entities/expense";
 import type { ExpenseSwipeAction } from "@/pages/expense/lib/use-expense-swipe-actions";
 
@@ -68,7 +69,7 @@ export function ExpenseSwipeRow({
 
 /**
  * 밀기 · ⋮ 로 삭제를 누르면 뜨는 확인창 — ds Alert Dialog. 글은 상세 삭제와 같다(제목 · 설명은 hook 이 넘긴다),
- * 확인 버튼은 누른 동작의 라벨 그대로("삭제"). 요청 중에는 열린 채 로딩, 실패하면 열린 채 둔다(전역 오류 알림이 말한다).
+ * 확인 버튼은 누른 동작의 라벨 그대로("삭제"). 요청 중에는 열린 채 로딩, 실패하면 닫고 스낵바 + [다시 시도](confirmFail).
  */
 export function SwipeConfirmDialog({
   action,
@@ -77,7 +78,9 @@ export function SwipeConfirmDialog({
   action: ExpenseSwipeAction | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation("expense");
   const { t: tc } = useTranslation("common");
+  const confirmFail = useConfirmFail();
   const [running, setRunning] = useState(false);
   return (
     <AlertDialog
@@ -104,7 +107,12 @@ export function SwipeConfirmDialog({
                   await action.onSelect();
                   onClose();
                 } catch {
-                  // 실패하면 확인창은 열린 채 둔다 — 지워진 것은 없고 오류는 전역 알림이 말한다
+                  // 실패하면 확인창을 닫고 스낵바 한 문장 + [다시 시도](같은 요청을 바로) — 요청은 silent 라 서버 글은 안 뜬다
+                  onClose();
+                  confirmFail({
+                    message: t("txDetail.deleteFailed"),
+                    retry: () => action.onSelect() as Promise<unknown>,
+                  });
                 } finally {
                   setRunning(false);
                 }
