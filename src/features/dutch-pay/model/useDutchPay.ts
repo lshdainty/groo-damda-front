@@ -3,10 +3,10 @@ import { dutchPayKeys, invalidateFor } from "@/shared/config";
 import { dutchPayApi } from "../api/dutchPayApi";
 import type { DutchPayFormValues } from "@/entities/dutch-pay";
 
-export const useDutchPays = () => {
+export const useDutchPays = (opts?: { silent?: boolean }) => {
   return useQuery({
     queryKey: dutchPayKeys.list(),
-    queryFn: () => dutchPayApi.getDutchPays(),
+    queryFn: () => dutchPayApi.getDutchPays(opts),
   });
 };
 
@@ -24,7 +24,7 @@ export const useCreateDutchPay = (opts?: { silent?: boolean }) => {
   return useMutation({
     mutationFn: (data: DutchPayFormValues) =>
       dutchPayApi.createDutchPay(data, opts),
-    onSuccess: () => invalidateFor(queryClient, "dutch-pay"),
+    onSuccess: () => invalidateFor(queryClient, "dutch-pay", { wait: true }),
   });
 };
 
@@ -34,20 +34,20 @@ export const useUpdateDutchPay = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: DutchPayFormValues }) =>
       dutchPayApi.updateDutchPay(id, data),
-    onSuccess: () => invalidateFor(queryClient, "dutch-pay"),
+    onSuccess: () => invalidateFor(queryClient, "dutch-pay", { wait: true }),
   });
 };
 
-export const useDeleteDutchPay = () => {
+export const useDeleteDutchPay = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => dutchPayApi.deleteDutchPay(id),
-    onSuccess: () => invalidateFor(queryClient, "dutch-pay"),
+    mutationFn: (id: number) => dutchPayApi.deleteDutchPay(id, opts),
+    onSuccess: () => invalidateFor(queryClient, "dutch-pay", { wait: true }),
   });
 };
 
-export const useMarkParticipantPaid = () => {
+export const useMarkParticipantPaid = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -57,16 +57,16 @@ export const useMarkParticipantPaid = () => {
     }: {
       dutchPayId: number;
       participantId: number;
-    }) => dutchPayApi.markParticipantPaid(dutchPayId, participantId),
-    onSuccess: () => invalidateFor(queryClient, "dutch-pay"),
+    }) => dutchPayApi.markParticipantPaid(dutchPayId, participantId, opts),
+    onSuccess: () => invalidateFor(queryClient, "dutch-pay", { wait: true }),
   });
 };
 
-export const useSettleAll = () => {
+export const useSettleAll = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => dutchPayApi.settleAll(id),
-    onSuccess: () => invalidateFor(queryClient, "dutch-pay"),
+    mutationFn: (id: number) => dutchPayApi.settleAll(id, opts),
+    onSuccess: () => invalidateFor(queryClient, "dutch-pay", { wait: true }),
   });
 };

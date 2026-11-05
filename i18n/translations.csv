@@ -1548,7 +1548,6 @@ dutchPay,fromTx.description,"이 거래를 기준으로 더치페이 정산을 �
 dutchPay,fromTx.me,나,Me
 dutchPay,fromTx.perPerson,1인당,Per person
 dutchPay,fromTx.createSettlement,정산 만들기,Create settlement
-dutchPay,stepTitle,{{title}} ({{step}}/{{total}}),{{title}} ({{step}}/{{total}})
 dutchPay,fromTx.splitSection,나누는 법,How to split
 dutchPay,fromTx.split.equal.title,N분의 1,Even split
 dutchPay,fromTx.split.equal.sub,똑같이,Equally
@@ -1577,38 +1576,18 @@ dutchPay,payableTo,{{count}}명에게,To {{count}} people
 dutchPay,done,완료,Done
 dutchPay,friends,친구,Friends
 dutchPay,emptyActive.title,진행 중인 정산이 없어요,No active settlements
-dutchPay,emptyActive.desc,새 정산을 만들어 함께 쓴 돈을 나눠보세요.,Create a settlement to split shared expenses.
+dutchPay,emptyActive.desc,오른쪽 아래 + 버튼으로 새 정산을 만들어보세요.,Tap the + button at the bottom right to create a settlement.
 dutchPay,emptyPast.title,완료된 정산이 없어요,No completed settlements
-dutchPay,emptyPast.desc,정산을 마치면 여기에 모입니다.,Completed settlements appear here.
+dutchPay,emptyPast.desc,정산을 마치면 여기에 모여요.,Completed settlements appear here.
 dutchPay,emptyFriends.title,함께 정산한 친구가 없어요,No friends yet
-dutchPay,emptyFriends.desc,정산에 친구를 추가하면 여기에 모입니다.,Friends you settle with appear here.
-dutchPay,topFriends.title,자주 정산하는 친구,Frequent friends
-dutchPay,topFriends.empty,아직 정산 함께한 친구가 없어요.,No friends you've settled with yet.
-dutchPay,sessionsCount,{{count}}회,{{count}} times
+dutchPay,emptyFriends.desc,정산에 친구를 더하면 여기에 모여요.,Friends you settle with appear here.
 dutchPay,settledTogether,{{count}}회 정산 함께,Settled together {{count}} times
-dutchPay,monthStats.title,이번 달 정산 통계,This month's stats
-dutchPay,monthStats.created,만든 정산,Settlements created
-dutchPay,monthStats.totalAmount,총 정산 금액,Total amount
-dutchPay,monthStats.avgPeople,평균 인원,Avg. people
-dutchPay,perOne,1인,Per person
 dutchPay,nameLabel,정산 이름,Settlement name
 dutchPay,namePlaceholder,예: 팀 저녁 회식,e.g. Team dinner
-dutchPay,nameRequired,정산 이름을 입력해주세요,Please enter a settlement name
+dutchPay,nameRequired,정산 이름을 입력해주세요.,Please enter a settlement name.
 dutchPay,placeLabel,장소,Place
 dutchPay,placePlaceholder,장소 또는 상호명 (선택),Place or venue (optional)
-dutchPay,selectedCount,{{count}}명 선택,{{count}} selected
-dutchPay,payer,결제자,Payer
-dutchPay,setPayer,결제자로,Set as payer
-dutchPay,recommended,추천,Suggested
-dutchPay,pickParticipants,참여자 선택,Select participants
-dutchPay,requestAll,일괄 요청,Request all
-dutchPay,settleAllDone,전체 정산 완료,Mark all as settled
-dutchPay,transferNeeded,송금 필요,Transfer needed
 dutchPay,request,요청,Request
-dutchPay,markPaidLabel,송금 완료 처리,Mark as paid
-dutchPay,toast.requestSent,{{name}}님에게 송금 요청을 보냈어요,Payment request sent to {{name}}
-dutchPay,toast.requestSentBulk,{{count}}명에게 송금 요청을 보냈어요,Payment request sent to {{count}} people
-dutchPay,toast.requestSentDesc,추후 카카오톡·문자 연동 예정,KakaoTalk / SMS integration coming soon
 dutchPay,alreadyAdded,"{{name}} 님은 이미 참여자예요","{{name}} is already a participant"
 dutchPay,addMeAlready,나는 항상 참여자예요,You're always a participant
 expense,accountCard,계좌·카드,Account · Card
@@ -3438,6 +3417,53 @@ dutchPay,fromTx.excessLine,몫을 합하면 {{amount}} 넘쳐요.,The shares are
 dutchPay,fromTx.saveFailed,정산을 만들지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't create the settlement. Please try again in a moment.
 dutchPay,fromTx.nameDuplicate,이미 넣은 이름이에요.,That name is already added.
 dutchPay,fromTx.customRequired,모든 참여자의 금액을 넣어주세요.,Enter an amount for every participant.
+dutchPay,tab.active,진행 중 {{count}},Active {{count}}
+dutchPay,tab.past,완료 {{count}},Done {{count}}
+dutchPay,tab.friends,친구 {{count}},Friends {{count}}
+dutchPay,loadFailed,더치페이를 불러오지 못했어요,Could not load Dutch Pay
+dutchPay,loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
+dutchPay,createLabel,정산 만들기,Create settlement
+dutchPay,memberCount,{{count}}명,{{count}} people
+dutchPay,perPersonText,1인당 {{amount}},{{amount}} per person
+dutchPay,perPersonRest,1인당 {{amount}} · {{extra}}원은 {{name}},"{{amount}} per person · {{extra}} won extra on {{name}}"
+dutchPay,paidProgress,{{paid}}/{{total}}명 냈어요,{{paid}}/{{total}} paid
+dutchPay,allPaid,모두 냈어요,Everyone paid
+dutchPay,stepOf,{{step}} / {{total}}단계,Step {{step}} of {{total}}
+dutchPay,step1Title,정산 정보,Settlement info
+dutchPay,step2Title,참여자,Participants
+dutchPay,next,다음,Next
+dutchPay,prev,이전,Back
+dutchPay,optional,선택,Optional
+dutchPay,dateLabel,날짜,Date
+dutchPay,totalRequired,총 금액을 입력해주세요.,Please enter the total amount.
+dutchPay,peopleNeeded,함께 정산할 사람을 한 명 이상 더해주세요.,Add at least one person to settle with.
+dutchPay,peopleSummary,{{count}}명 · 1인당 {{amount}},{{count}} people · {{amount}} each
+dutchPay,peopleSummaryRest,{{count}}명 · 1인당 {{amount}} · {{extra}}원은 {{name}},"{{count}} people · {{amount}} each · {{extra}} won extra on {{name}}"
+dutchPay,participantsLabel,참여자,Participants
+dutchPay,removeName,{{name}} 빼기,Remove {{name}}
+dutchPay,addButton,추가,Add
+dutchPay,pastFriendsLabel,함께 정산했던 사람,People you settled with
+dutchPay,payerLabel,결제한 사람,Paid by
+dutchPay,createFailed,정산을 만들지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not create the settlement. Please try again in a moment.
+dutchPay,deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
+dutchPay,markFailed,받음 처리하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not mark as received. Please try again in a moment.
+dutchPay,settleFailed,모두 받음 처리하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not mark all as received. Please try again in a moment.
+dutchPay,detailDate,{{date}} · {{place}},{{date}} · {{place}}
+dutchPay,payerPaid,결제했어요,Paid
+dutchPay,payerPaidShare,결제했어요 · 몫 {{amount}},Paid · share {{amount}}
+dutchPay,payerBadge,결제자,Payer
+dutchPay,paidShare,{{amount}} 냈어요,{{amount}} paid
+dutchPay,paidBadge,냈어요,Paid
+dutchPay,owesShare,{{amount}} 보낼 차례,{{amount}} to send
+dutchPay,receive,받음,Received
+dutchPay,receiveName,{{name}} 받음 처리,Mark {{name}} as received
+dutchPay,receiveAll,모두 받음,Receive all
+dutchPay,participantsHeading,참여자 · {{count}},Participants · {{count}}
+dutchPay,monthKpi.created,이번 달 만든 정산,Settlements this month
+dutchPay,monthKpi.count,{{count}}건,{{count}}
+dutchPay,monthKpi.avg,평균 {{n}}명,Avg. {{n}} people
+dutchPay,monthKpi.total,이번 달 정산 금액,Total this month
+dutchPay,monthKpi.sum,{{count}}건 합계,Total of {{count}}
 expense,splitStep.errCategory,카테고리를 골라주세요.,Select a category.
 expense,splitStep.errAmount,금액을 입력해주세요.,Enter an amount.
 expense,txDetail.recurringLoadFailed,반복 설정을 열지 못했어요.,Couldn't open the repeat settings.

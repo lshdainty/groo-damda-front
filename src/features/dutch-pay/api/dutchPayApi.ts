@@ -3,6 +3,11 @@ import { apiClient } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type { DutchPay, DutchPayFormValues } from "@/entities/dutch-pay";
 
+/** `silent` 는 호출처가 고른다 — 실패를 화면 안 고정 글(스낵바 · Callout · Result Section)로 알리는 곳만 true */
+type Opts = { silent?: boolean };
+const quiet = (o?: Opts): QuietRequestConfig | undefined =>
+  o?.silent ? ({ silent: true } as QuietRequestConfig) : undefined;
+
 export const dutchPayApi = {
   createDutchPay: async (
     data: DutchPayFormValues,
@@ -16,9 +21,11 @@ export const dutchPayApi = {
     return resp.data;
   },
 
-  getDutchPays: async (): Promise<DutchPay[]> => {
-    const resp: ApiResponse<{ dutchPays: DutchPay[] }> =
-      await apiClient.get("/v1/dutch-pays");
+  getDutchPays: async (opts?: Opts): Promise<DutchPay[]> => {
+    const resp: ApiResponse<{ dutchPays: DutchPay[] }> = await apiClient.get(
+      "/v1/dutch-pays",
+      quiet(opts),
+    );
     return resp.data.dutchPays;
   },
 
@@ -40,9 +47,10 @@ export const dutchPayApi = {
     return resp.data;
   },
 
-  deleteDutchPay: async (id: number): Promise<void> => {
+  deleteDutchPay: async (id: number, opts?: Opts): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/dutch-pay/${id}`,
+      quiet(opts),
     );
     return resp.data;
   },
@@ -50,16 +58,21 @@ export const dutchPayApi = {
   markParticipantPaid: async (
     dutchPayId: number,
     participantId: number,
+    opts?: Opts,
   ): Promise<DutchPay> => {
     const resp: ApiResponse<DutchPay> = await apiClient.patch(
       `/v1/dutch-pay/${dutchPayId}/participant/${participantId}/paid`,
+      undefined,
+      quiet(opts),
     );
     return resp.data;
   },
 
-  settleAll: async (id: number): Promise<DutchPay> => {
+  settleAll: async (id: number, opts?: Opts): Promise<DutchPay> => {
     const resp: ApiResponse<DutchPay> = await apiClient.patch(
       `/v1/dutch-pay/${id}/settle`,
+      undefined,
+      quiet(opts),
     );
     return resp.data;
   },
