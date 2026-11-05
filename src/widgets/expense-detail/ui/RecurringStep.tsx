@@ -30,7 +30,8 @@ export function useRecurringStepParts(
     title: inStep
       ? form.stepTitle[form.step as Exclude<typeof form.step, "list">]
       : form.heading,
-    body: form.body,
+    // DetailSurface 가 본문을 -mx-x6 로 감싸므로 이 폼의 좌우 24 를 돌려준다
+    body: <div className="px-x6">{form.body}</div>,
     primary,
     footer: (requestBack) =>
       wide ? (

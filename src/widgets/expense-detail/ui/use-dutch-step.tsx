@@ -415,6 +415,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
           <RadioSelectBoxGroup
             aria-label={t("fromTx.splitSection")}
             columns={3}
+            className="max-[380px]:grid-cols-1"
             value={method}
             onValueChange={(v) => setMethod(v as SplitMethod)}
           >

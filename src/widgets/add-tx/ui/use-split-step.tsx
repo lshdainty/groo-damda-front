@@ -399,7 +399,7 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
           </List>
           <Field
             label={t("splitStep.nameLabel")}
-            indicator={tc("optional")}
+            indicator={t("splitStep.optional")}
             maxGraphemeCount={NAME_MAX}
             className="px-global-gutter pt-x3"
           >
@@ -577,10 +577,8 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
                   }
                   detail={
                     <TagGroup size="t3" truncate>
-                      {p && (
-                        <TagGroupItem shrink={0}>{p.categoryName}</TagGroupItem>
-                      )}
-                      <TagGroupItem shrink={0}>
+                      {p && <TagGroupItem>{p.categoryName}</TagGroupItem>}
+                      <TagGroupItem>
                         {c?.categoryName ?? t("splitTx.unselected")}
                       </TagGroupItem>
                       <TagGroupItem shrink={0}>{`${pct}%`}</TagGroupItem>

@@ -1549,14 +1549,14 @@ dutchPay,fromTx.perPerson,1인당,Per person
 dutchPay,fromTx.createSettlement,정산 만들기,Create settlement
 dutchPay,stepTitle,{{title}} ({{step}}/{{total}}),{{title}} ({{step}}/{{total}})
 dutchPay,fromTx.splitSection,분배 방식,Split method
-dutchPay,fromTx.split.equal.title,N분의 1,Even split
+dutchPay,fromTx.split.equal.title,N분의 1,Even split
 dutchPay,fromTx.split.equal.sub,균등 분배,Distribute evenly
 dutchPay,fromTx.split.ratio.title,비율,Ratio
-dutchPay,fromTx.split.ratio.sub,인원수·기준,By count or weight
-dutchPay,fromTx.split.custom.title,개별 금액,Custom amounts
+dutchPay,fromTx.split.ratio.sub,사람마다 몫 수,Shares per person
+dutchPay,fromTx.split.custom.title,개별 금액,Custom amounts
 dutchPay,fromTx.split.custom.sub,각자 다르게,Set individually
-dutchPay,fromTx.includeMe,나도 포함해서 분배,Include me in the split
-dutchPay,fromTx.includeMeHint,내 몫도 계산됩니다,Your share is included
+dutchPay,fromTx.includeMe,나도 포함해서 나누기,Include me in the split
+dutchPay,fromTx.includeMeHint,내 몫도 계산돼요,Your share is included
 dutchPay,fromTx.includeMeHintOff,"내가 전액 결제, 다른 사람 몫만 받아요","You paid in full, collect only others' shares"
 dutchPay,fromTx.sourceSub,참여자에게 송금 요청,Request payments from participants
 dutchPay,fromTx.participants,참여자,Participants
@@ -3439,4 +3439,5 @@ dutchPay,fromTx.nameDuplicate,이미 넣은 이름이에요.,That name is alread
 dutchPay,fromTx.customRequired,모든 참여자의 금액을 넣어주세요.,Enter an amount for every participant.
 expense,splitStep.errCategory,카테고리를 골라주세요.,Select a category.
 expense,splitStep.errAmount,금액을 입력해주세요.,Enter an amount.
-expense,txDetail.recurringLoadFailed,반복 거래 목록을 불러오지 못했어요.,Couldn't load recurring transactions.
+expense,txDetail.recurringLoadFailed,반복 설정을 열지 못했어요.,Couldn't open the repeat settings.
+expense,splitStep.optional,선택,Optional
