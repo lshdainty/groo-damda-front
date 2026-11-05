@@ -91,10 +91,12 @@ describe("예산 경고 기준 슬라이더", () => {
     expect(thumb().hasAttribute("data-disabled")).toBe(false);
   });
 
-  it("눈금 숫자 대신 양 끝 표식 둘만 있다", () => {
+  it("양 끝 표식은 ds Slider 가 한 번만 그린다 — 50% · 100%", () => {
     act(() => root.render(<NotificationsManager mobile={false} />));
-    expect(container.textContent).toContain("thresholdRange.min");
-    expect(container.textContent).toContain("thresholdRange.max");
+    const marks = Array.from(
+      container.querySelectorAll("[data-slot=slider-marker]"),
+    ).map((e) => e.textContent);
+    expect(marks).toEqual(["50%", "100%"]);
   });
 });
 

@@ -1272,8 +1272,6 @@ notification,rows.monthlyReport.title,월간 리포트,Monthly Report
 notification,rows.monthlyReport.desc,매월 1일 오전 9시,On the 1st of each month at 9 AM
 notification,threshold.title,예산 알림 기준,Budget alert threshold
 notification,threshold.label,경고로 표시할 사용률,Usage that shows as a warning
-notification,thresholdRange.min,50%,50%
-notification,thresholdRange.max,100%,100%
 notification,threshold.desc,이 값을 넘으면 경고로 표시되고 알림을 받아요. 100%를 넘으면 초과 알림이 따로 와요.,Over this value it shows as a warning and you get a notification. Over 100% you get a separate alert.
 notification,quiet.title,방해 금지 시간,Do Not Disturb
 notification,quiet.use.title,방해 금지 사용,Enable Do Not Disturb

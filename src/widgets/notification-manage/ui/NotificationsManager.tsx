@@ -492,10 +492,6 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
               }}
             />
           </div>
-          <div className="flex justify-between text-t3 text-fg-neutral-subtle">
-            <span>{t("thresholdRange.min")}</span>
-            <span>{t("thresholdRange.max")}</span>
-          </div>
           <p className="m-0 mt-x2 text-t3 text-fg-neutral-subtle">
             {t("threshold.desc")}
           </p>
