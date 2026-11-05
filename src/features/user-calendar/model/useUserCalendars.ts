@@ -7,29 +7,41 @@ import type {
   CalendarRole,
 } from "@/entities/user-calendar";
 
-export const useUserCalendars = (opts?: { silent?: boolean }) => {
+export const useUserCalendars = (opts?: {
+  silent?: boolean;
+  /** false 면 요청하지 않는다 — 쓰는 구역이 아닐 때 목록을 받지 않게 */
+  enabled?: boolean;
+}) => {
   return useQuery({
     queryKey: userCalendarKeys.list(),
     queryFn: () => userCalendarApi.getCalendars(opts),
+    enabled: opts?.enabled,
   });
 };
 
-export const useCreateUserCalendar = () => {
+/** `silent` — 실패를 폼 맨 위 Callout 이 고정 글로 말한다(서버 원문 알림을 끈다) */
+export const useCreateUserCalendar = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: UserCalendarFormValues) =>
-      userCalendarApi.createCalendar(data),
+      userCalendarApi.createCalendar(data, opts),
     onSuccess: () => invalidateFor(queryClient, "user-calendar"),
   });
 };
 
-export const useUpdateUserCalendar = () => {
+/** 보낸 칸만 바뀐다(이름만 · 색만). `silent` — 이름 폼처럼 실패를 폼 안 Callout 이 말하는 자리 */
+export const useUpdateUserCalendar = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UserCalendarFormValues }) =>
-      userCalendarApi.updateCalendar(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: Partial<UserCalendarFormValues>;
+    }) => userCalendarApi.updateCalendar(id, data, opts),
     onSuccess: () => invalidateFor(queryClient, "user-calendar"),
   });
 };
@@ -63,18 +75,24 @@ export const useDeleteUserCalendar = () => {
 
 // ── 공유 ──
 
-export const useCalendarMembers = (id: number | null) => {
+export const useCalendarMembers = (
+  id: number | null,
+  opts?: { silent?: boolean },
+) => {
   return useQuery({
     queryKey: [...userCalendarKeys.all, "members", id],
-    queryFn: () => userCalendarApi.getMembers(id as number),
+    queryFn: () => userCalendarApi.getMembers(id as number, opts),
     enabled: id != null,
   });
 };
 
-export const useRegenerateCalendarInviteCode = () => {
+/** `silent` — 실패를 호출처가 고정 한 문장 스낵바로 말한다 */
+export const useRegenerateCalendarInviteCode = (opts?: {
+  silent?: boolean;
+}) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => userCalendarApi.regenerateInviteCode(id),
+    mutationFn: (id: number) => userCalendarApi.regenerateInviteCode(id, opts),
     onSuccess: () => invalidateFor(queryClient, "user-calendar"),
   });
 };
@@ -91,13 +109,14 @@ export const useJoinCalendar = () => {
 export const useRemoveCalendarMember = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    // silent — 실패는 호출처가 확인창 뒤 스낵바(useConfirmFail)로 말한다
     mutationFn: ({ id, memberId }: { id: number; memberId: number }) =>
-      userCalendarApi.removeMember(id, memberId),
+      userCalendarApi.removeMember(id, memberId, { silent: true }),
     onSuccess: () => invalidateFor(queryClient, "user-calendar"),
   });
 };
 
-export const useChangeCalendarMemberRole = () => {
+export const useChangeCalendarMemberRole = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -108,7 +127,7 @@ export const useChangeCalendarMemberRole = () => {
       id: number;
       memberId: number;
       permission: CalendarRole;
-    }) => userCalendarApi.changeMemberRole(id, memberId, permission),
+    }) => userCalendarApi.changeMemberRole(id, memberId, permission, opts),
     onSuccess: () => invalidateFor(queryClient, "user-calendar"),
   });
 };

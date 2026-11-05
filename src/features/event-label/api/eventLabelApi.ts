@@ -3,10 +3,14 @@ import type { ApiResponse } from "@/shared/types";
 import type { EventLabel, EventLabelFormValues } from "@/entities/event-label";
 
 export const eventLabelApi = {
-  createLabel: async (data: EventLabelFormValues): Promise<EventLabel> => {
+  createLabel: async (
+    data: EventLabelFormValues,
+    opts?: SilentOpts,
+  ): Promise<EventLabel> => {
     const resp: ApiResponse<EventLabel> = await apiClient.post(
       "/v1/calendar/label",
       data,
+      silentConfig(opts),
     );
     return resp.data;
   },
@@ -22,10 +26,12 @@ export const eventLabelApi = {
   updateLabel: async (
     id: number,
     data: EventLabelFormValues,
+    opts?: SilentOpts,
   ): Promise<EventLabel> => {
     const resp: ApiResponse<EventLabel> = await apiClient.put(
       `/v1/calendar/label/${id}`,
       data,
+      silentConfig(opts),
     );
     return resp.data;
   },

@@ -9,9 +9,11 @@ import { PresetManager } from "@/widgets/preset-manage";
 import { RecurringManager } from "@/widgets/recurring-manage";
 import {
   CalendarLabelsSection,
+  CalendarManagePage,
   CalendarShareSection,
   TodoTagManager,
 } from "@/widgets/calendar-manage";
+import { useUserCalendars } from "@/features/user-calendar";
 import { MemoTagManager } from "@/widgets/memo-manage";
 import { NotificationsManager } from "@/widgets/notification-manage";
 import { DataExportSection } from "@/widgets/data-transfer";
@@ -70,8 +72,25 @@ export const SettingsPage = () => {
 
   const goBack = useSettingsBack(activeSection);
 
+  // 캘린더 관리(I-09b 21)는 제목이 섹션 이름이 아니라 그 캘린더의 이름이다 — 주소의 `calendar` 로 목록에서 찾는다
+  const manageCalendarId = (() => {
+    const n = Number(searchParams.get("calendar"));
+    return Number.isInteger(n) && n > 0 ? n : null;
+  })();
+  const manageName = useCalendarManageName(
+    section === "calendar-manage",
+    manageCalendarId,
+  );
+
   // 문서 제목 "{섹션 이름} - 그루 담다"(메뉴는 "설정") — 셸 ScreenEffects 는 경로만 봐서 ?section= 은 여기서 쓴다.
-  useScreenTitle(activeSection ? t(activeSection.labelKey) : t("page.title"));
+  // 캘린더 관리는 "{캘린더 이름} - 그루 담다"(이름을 받기 전에는 섹션 이름)
+  useScreenTitle(
+    activeSection
+      ? section === "calendar-manage" && manageName
+        ? manageName
+        : t(activeSection.labelKey)
+      : t("page.title"),
+  );
   // 섹션이 바뀌면(앞으로 · 뒤로 모두) 본문 맨 위 · 새 제목에 초점 — 처음 열 때는 훔치지 않는다.
   const lastFocused = useRef(section);
   useEffect(() => {
@@ -118,6 +137,8 @@ export const SettingsPage = () => {
     const p = new URLSearchParams(searchParams);
     if (next === "menu") p.delete("section");
     else p.set("section", next);
+    // 캘린더 관리의 주소 값은 그 구역 것이다 — 다른 구역으로 가면 남기지 않는다
+    p.delete("calendar");
     setSearchParams(p);
   };
 
@@ -154,6 +175,8 @@ export const SettingsPage = () => {
         return <PresetManager mobile={m} addRequest={addRequests.presets} />;
       case "calendar-share":
         return <CalendarShareSection mobile={m} />;
+      case "calendar-manage":
+        return <CalendarManagePage mobile={m} calendarId={manageCalendarId} />;
       case "calendar-labels":
         return <CalendarLabelsSection mobile={m} />;
       case "todo-tags":
@@ -220,6 +243,7 @@ export const SettingsPage = () => {
         onHeadAction={(id) =>
           setAddRequests((r) => ({ ...r, [id]: (r[id] ?? 0) + 1 }))
         }
+        title={section === "calendar-manage" ? manageName : undefined}
         body={renderBody(true)}
       />
     );
@@ -244,6 +268,13 @@ export const SettingsPage = () => {
     />
   );
 };
+
+/** 캘린더 관리의 제목 = 그 캘린더의 이름. 이름을 받기 전(불러오는 중 · 못 찾음)은 빈 글 — 그 구역일 때만 목록을 받는다 */
+function useCalendarManageName(active: boolean, id: number | null): string {
+  const q = useUserCalendars({ silent: true, enabled: active });
+  if (!active || id == null) return "";
+  return q.data?.find((c) => c.rowId === id)?.calendarName ?? "";
+}
 
 // ─── PlaceholderSection ────────────────────────────────────────
 function PlaceholderSection({ section }: { section: SectionDef }) {

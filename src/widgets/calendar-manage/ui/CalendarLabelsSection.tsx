@@ -8,30 +8,17 @@ import { SwipeActions } from "@/shared/ds/swipe-actions";
 import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
-import { ColorSwatchGroup } from "@/shared/ui/color-swatch";
-import { ModalShell } from "@/shared/ui/groo/dialogs";
-import { Field, FieldLabel } from "@/shared/ui/field";
-import { Input } from "@/shared/ui/input";
-import { NameCounter } from "@/shared/ui/groo/name-counter";
-import { nameIssue } from "@/shared/lib/groo/name-policy";
 import { ManagerHead } from "@/shared/ui/groo/manager-layout";
-import {
-  CAT_PALETTE,
-  getPaletteByColor,
-} from "@/shared/lib/groo/chart-palette";
+import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import type { EventLabel } from "@/entities/event-label";
-import {
-  useCreateEventLabel,
-  useDeleteEventLabel,
-  useEventLabels,
-  useUpdateEventLabel,
-} from "@/features/event-label";
+import { useDeleteEventLabel, useEventLabels } from "@/features/event-label";
 import {
   ManageEmpty,
   ManageIntro,
   ManageRowsSkeleton,
   ManageSection,
 } from "./manage-list-parts";
+import { LabelFormDialog } from "./LabelFormDialog";
 
 type EditingState = EventLabel | { kind: "new" } | null;
 
@@ -42,8 +29,6 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
   const labelsQ = useEventLabels({ silent: true });
   const { data: labels, isLoading } = labelsQ;
   const failed = labelsQ.isError && !labels;
-  const createMut = useCreateEventLabel();
-  const updateMut = useUpdateEventLabel();
   const deleteMut = useDeleteEventLabel();
   const confirmFail = useConfirmFail();
   const uid = useId();
@@ -52,25 +37,13 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
   const [confirmDelete, setConfirmDelete] = useState<EventLabel | null>(null);
 
   const list = useMemo(() => labels ?? [], [labels]);
-  const submitting = createMut.isPending || updateMut.isPending;
-
-  const onSave = (values: { labelName: string; color: string }) => {
-    if (editing && "rowId" in editing) {
-      updateMut.mutate(
-        { id: editing.rowId, data: values },
-        { onSuccess: () => setEditing(null) },
-      );
-    } else {
-      createMut.mutate(values, { onSuccess: () => setEditing(null) });
-    }
-  };
 
   const listId = `${uid}-labels`;
 
   const rowFor = (label: EventLabel) => {
     const palette = getPaletteByColor(label.color);
     const row = (
-      // 누르면 지금의 라벨 편집 대화상자 — 화면을 옮기지 않는 줄이라 꺾쇠 없음(list.md:122)
+      // 누르면 라벨 수정 폼(I-09b 39) — 화면을 옮기지 않는 줄이라 꺾쇠 없음(list.md:122)
       <ListButtonItem
         key={label.rowId}
         onClick={() => setEditing(label)}
@@ -184,13 +157,10 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
       </div>
 
       {editing && (
-        <LabelEditDialog
+        <LabelFormDialog
           label={editing && "rowId" in editing ? editing : null}
           existing={list}
           onClose={() => setEditing(null)}
-          onSave={onSave}
-          mobile={mobile}
-          submitting={submitting}
           onRequestDelete={(l) => {
             // 편집 대화상자는 닫고 확인창부터 — 지우기는 확인창 한 벌(밀기와 같다)
             setEditing(null);
@@ -215,214 +185,5 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
         />
       )}
     </>
-  );
-}
-
-function LabelEditDialog({
-  label,
-  existing,
-  onClose,
-  onSave,
-  mobile,
-  submitting,
-  onRequestDelete,
-}: {
-  label: EventLabel | null;
-  /** 수정 폼일 때만 바닥 왼쪽 [삭제] — 이 길이 데스크톱 · 폰 모두의 지우기다(09b-2 가 폼을 새로 짤 때 옮긴다) */
-  onRequestDelete?: (label: EventLabel) => void;
-  existing: EventLabel[];
-  onClose: () => void;
-  onSave: (values: { labelName: string; color: string }) => void;
-  mobile: boolean;
-  submitting?: boolean;
-}) {
-  const { t } = useTranslation("calendar");
-  const { t: tCommon } = useTranslation("common");
-  const isNew = !label;
-  const [name, setName] = useState(label?.labelName ?? "");
-  const [paletteIdx, setPaletteIdx] = useState(() => {
-    if (!label?.color) return 0;
-    const idx = CAT_PALETTE.findIndex((p) => p.baseHex === label.color);
-    return idx >= 0 ? idx : 0;
-  });
-  const [touched, setTouched] = useState(false);
-
-  const palette = CAT_PALETTE[paletteIdx]!;
-  const nameTrim = name.trim();
-  // 중복은 서버가 409 로 막지만 다이얼로그엔 아무 표시도 없어 '버튼이 안 먹는' 것처럼
-  // 보였다(QA #55). 카테고리와 같이 보내기 전에 이 자리에서 알려 준다.
-  const rawIssue = nameIssue(
-    name,
-    12,
-    existing.filter((l) => l.rowId !== label?.rowId).map((l) => l.labelName),
-  );
-  // 12자보다 긴 옛 이름은 이름을 고치기 전까지 길이 검사에서 뺀다 — 색만 바꾸려는 사람에게 이름을 줄이라고 강요하지 않는다
-  // (고치기 시작하면 그때부터 12자 검사. 추가 폼은 label 이 없어 해당 없음)
-  const unchangedName = !!label && nameTrim === label.labelName.trim();
-  const issue = unchangedName && rawIssue === "tooLong" ? null : rawIssue;
-  const valid = issue == null;
-  const err =
-    touched && issue
-      ? issue === "required"
-        ? t("labelsSection.nameRequired")
-        : issue === "tooLong"
-          ? t("labelsSection.nameTooLong")
-          : t("labelsSection.nameDuplicate")
-      : null;
-
-  const save = () => {
-    setTouched(true);
-    if (!valid) return;
-    onSave({ labelName: nameTrim, color: palette.baseHex });
-  };
-
-  const saveLabel = isNew ? t("add") : tCommon("save");
-  const deleteBtn =
-    label && onRequestDelete ? (
-      <DsButton
-        type="button"
-        variant="ghost"
-        ghostColor="critical"
-        // 시트 바닥은 Button large(48) + 글이 24 에 서도록 안쪽 여백(px-x5 20)만큼 왼쪽으로 뺀다.
-        // 대화상자는 바닥 Button small 36(dialog.md:41) 그대로
-        size={mobile ? "large" : "small"}
-        className={mobile ? "-ml-x5" : undefined}
-        onClick={() => onRequestDelete(label)}
-      >
-        {tCommon("delete")}
-      </DsButton>
-    ) : undefined;
-  // 시트(폰)는 입력 폼도 위 닫기 X + 바닥 [삭제] · [저장](ds Button large, 남은 폭) — [취소] 없음(bottom-sheet.md:126 · :128).
-  // 대화상자(768 이상)는 바닥 [취소][저장] 오른쪽 묶음, [삭제] 는 왼쪽(dialog.md:41 · :84)
-  const Footer = mobile ? (
-    <>
-      {deleteBtn && <div className="mr-auto">{deleteBtn}</div>}
-      <DsButton
-        type="button"
-        variant="neutralSolid"
-        size="large"
-        className="flex-1"
-        loading={submitting}
-        disabled={(touched && !valid) || submitting}
-        onClick={save}
-      >
-        {saveLabel}
-      </DsButton>
-    </>
-  ) : (
-    <>
-      {deleteBtn && <div className="mr-auto">{deleteBtn}</div>}
-      <DsButton
-        type="button"
-        variant="neutralWeak"
-        size="small"
-        disabled={submitting}
-        onClick={onClose}
-      >
-        {tCommon("cancel")}
-      </DsButton>
-      <DsButton
-        type="button"
-        variant="neutralSolid"
-        size="small"
-        loading={submitting}
-        disabled={(touched && !valid) || submitting}
-        onClick={save}
-      >
-        {saveLabel}
-      </DsButton>
-    </>
-  );
-
-  return (
-    <ModalShell
-      title={isNew ? t("newLabel") : t("editLabel")}
-      onClose={onClose}
-      size="md"
-      footer={Footer}
-      mobile={mobile}
-    >
-      {/* 미리보기 */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: 14,
-          background: palette.bg,
-          borderRadius: "var(--radius-tile)",
-          marginBottom: 20,
-        }}
-      >
-        <span
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: "var(--radius-md)",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            background: palette.color,
-            color: "var(--fg-on-brand)",
-          }}
-        >
-          <Tag size={18} strokeWidth={2} />
-        </span>
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: "var(--text-badge)",
-              color: "var(--fg-tertiary)",
-              fontWeight: "600",
-              letterSpacing: "0.02em",
-            }}
-          >
-            {t("preview")}
-          </div>
-          <div
-            style={{
-              fontSize: "var(--text-body-lg)",
-              fontWeight: "700",
-              color: "var(--fg-primary)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {nameTrim || t("newLabel")}
-          </div>
-        </div>
-      </div>
-
-      <Field style={{ marginBottom: 14 }}>
-        <FieldLabel>{t("name")}</FieldLabel>
-        <Input
-          aria-invalid={!!err}
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            setTouched(true);
-          }}
-          placeholder={t("labelsSection.namePlaceholder")}
-          maxLength={14}
-          autoFocus={!label}
-        />
-        <NameCounter len={nameTrim.length} max={12} err={err} />
-      </Field>
-
-      <Field>
-        <FieldLabel>{t("form.color")}</FieldLabel>
-        <ColorSwatchGroup
-          columns={5}
-          value={String(paletteIdx)}
-          onValueChange={(v) => setPaletteIdx(Number(v))}
-          options={CAT_PALETTE.map((p, i) => ({
-            value: String(i),
-            bg: p.bg,
-            fg: p.color,
-            label: t("labelsSection.colorN", { n: i + 1 }),
-          }))}
-        />
-      </Field>
-    </ModalShell>
   );
 }

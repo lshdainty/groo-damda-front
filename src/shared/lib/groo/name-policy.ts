@@ -1,3 +1,5 @@
+import { countGraphemes } from "@/shared/ds/field";
+
 /**
  * 이름 칸 공통 정책 — 길이 상한과 중복.
  *
@@ -25,7 +27,7 @@ export function nameIssue(
 ): NameIssue {
   const name = raw.trim();
   if (name.length === 0) return "required";
-  if (name.length > max) return "tooLong";
+  if (countGraphemes(name) > max) return "tooLong";
   if (taken.some((t) => (t ?? "").trim() === name)) return "duplicate";
   return null;
 }

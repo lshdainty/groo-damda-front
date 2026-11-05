@@ -31,21 +31,26 @@ export const userCalendarApi = {
 
   createCalendar: async (
     data: UserCalendarFormValues,
+    opts?: SilentOpts,
   ): Promise<UserCalendar> => {
     const resp: ApiResponse<UserCalendar> = await apiClient.post(
       "/v1/calendar/calendars",
       data,
+      silentConfig(opts),
     );
     return fromApiCalendar(resp.data as unknown as Record<string, unknown>);
   },
 
+  // 서버는 보낸 칸만 바꾼다(UpdateRequest) — 이름만 · 색만 보내도 된다
   updateCalendar: async (
     id: number,
-    data: UserCalendarFormValues,
+    data: Partial<UserCalendarFormValues>,
+    opts?: SilentOpts,
   ): Promise<UserCalendar> => {
     const resp: ApiResponse<UserCalendar> = await apiClient.put(
       `/v1/calendar/calendars/${id}`,
       data,
+      silentConfig(opts),
     );
     return fromApiCalendar(resp.data as unknown as Record<string, unknown>);
   },
@@ -66,15 +71,26 @@ export const userCalendarApi = {
   },
 
   // ── 공유 ──
-  getMembers: async (id: number): Promise<CalendarMember[]> => {
+  getMembers: async (
+    id: number,
+    opts?: SilentOpts,
+  ): Promise<CalendarMember[]> => {
     const resp: ApiResponse<{ members: CalendarMember[] }> =
-      await apiClient.get(`/v1/calendar/calendars/${id}/members`);
+      await apiClient.get(
+        `/v1/calendar/calendars/${id}/members`,
+        silentConfig(opts),
+      );
     return resp.data.members;
   },
 
-  regenerateInviteCode: async (id: number): Promise<string> => {
+  regenerateInviteCode: async (
+    id: number,
+    opts?: SilentOpts,
+  ): Promise<string> => {
     const resp: ApiResponse<{ inviteCode: string }> = await apiClient.patch(
       `/v1/calendar/calendars/${id}/regenerate-invite-code`,
+      undefined,
+      silentConfig(opts),
     );
     return resp.data.inviteCode;
   },
@@ -92,9 +108,14 @@ export const userCalendarApi = {
     return fromApiCalendar(resp.data as unknown as Record<string, unknown>);
   },
 
-  removeMember: async (id: number, memberId: number): Promise<void> => {
+  removeMember: async (
+    id: number,
+    memberId: number,
+    opts?: SilentOpts,
+  ): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.delete(
       `/v1/calendar/calendars/${id}/member/${memberId}`,
+      silentConfig(opts),
     );
     return resp.data;
   },
@@ -103,10 +124,12 @@ export const userCalendarApi = {
     id: number,
     memberId: number,
     permission: CalendarRole,
+    opts?: SilentOpts,
   ): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.patch(
       `/v1/calendar/calendars/${id}/member/${memberId}/role`,
       { permission },
+      silentConfig(opts),
     );
     return resp.data;
   },

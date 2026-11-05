@@ -129,6 +129,27 @@ describe("Field", () => {
     expect(count().textContent).toBe("0/10,000");
   });
 
+  it("counterMax — 분모는 counterMax, 입력 상한은 maxGraphemeCount 따로, 넘으면 오류 색(기본 null 은 그대로)", () => {
+    render(
+      <Field label="이름" maxGraphemeCount={18} counterMax={12}>
+        <TestInput />
+      </Field>,
+    );
+    const el = input();
+    act(() => {
+      setNativeValue(el, "열세 글자짜리 아주 긴 옛 라벨!!");
+    });
+    // 입력은 18 까지 — 17자 + 2 = 19 → 18 에서 멈춘다
+    expect(countGraphemes(el.value)).toBe(18);
+    expect(count().textContent).toBe("18/12");
+    expect(count().querySelector(".text-fg-critical")).not.toBeNull();
+    act(() => {
+      setNativeValue(el, "열두 글자");
+    });
+    expect(count().textContent).toBe("4/12");
+    expect(count().querySelector(".text-fg-critical")).toBeNull();
+  });
+
   it("글자 수는 자소 단위다 — 국기 이모지 한 글자는 1(Intl.Segmenter, field-context.ts)", () => {
     render(
       <Field label="이름" maxGraphemeCount={3}>

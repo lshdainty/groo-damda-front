@@ -28,6 +28,7 @@ export type SectionId =
   | "recurring"
   | "presets"
   | "calendar-share"
+  | "calendar-manage"
   | "calendar-labels"
   | "todo-tags"
   | "memo-tags"
@@ -185,6 +186,16 @@ export const SECTIONS: SectionDef[] = [
     descKey: "sections.devices.desc",
     hidden: true,
     parent: "account",
+  },
+  // 캘린더 관리·공유 목록의 줄에서 들어온다(`?section=calendar-manage&calendar={id}`, I-09b 21). 목록에는 안 나온다.
+  // 제목은 섹션 이름이 아니라 그 캘린더의 이름이다 — 폰 상단 바 · 문서 제목은 SettingsPage 가, 데스크톱 · 태블릿 h1 은 본문이 넘긴다.
+  // labelKey 는 이름을 아직 못 받았을 때(불러오는 중)의 문서 제목이다
+  {
+    id: "calendar-manage",
+    labelKey: "calendar:shareSection.title",
+    icon: CalendarCog,
+    hidden: true,
+    parent: "calendar-share",
   },
   // 계정 > 구독·결제에서 들어온다. 목록에는 안 나온다. 제목 줄(ManagerHead)은 구독 구역이 그린다(NEEDS_DESKTOP_HEAD 에 없다)
   {

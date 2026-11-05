@@ -58,6 +58,11 @@ export interface FieldProps extends Omit<
   readOnly?: boolean;
   /** 최대 글자 수(자소 단위) — 있으면 꼬리 오른쪽에 "n/최대" 를 보이고 입력은 최대에서 멈춘다 */
   maxGraphemeCount?: number;
+  /**
+   * 글자 수의 분모 — 기본 null(분모 = maxGraphemeCount, 지금처럼). 값이 있으면 분모는 이 값이고 넘으면 오류 색이다.
+   * 입력 상한(maxGraphemeCount)은 그대로 따로 — 규칙 값보다 긴 저장된 옛 값을 자르지 않고 "16/12" 로 보이는 칸이 쓴다
+   */
+  counterMax?: number | null;
   /** 입력의 id — 라벨이 이 id 로 간다(없으면 만든다) */
   id?: string;
   children: React.ReactNode;
@@ -83,6 +88,7 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
       disabled = false,
       readOnly = false,
       maxGraphemeCount,
+      counterMax = null,
       id,
       className,
       children,
@@ -246,7 +252,7 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
                 >
                   <span
                     className={
-                      invalid
+                      invalid || (counterMax != null && count > counterMax)
                         ? "text-fg-critical"
                         : count === 0
                           ? "text-fg-neutral-subtle"
@@ -257,10 +263,12 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
                   </span>
                   <span
                     className={
-                      invalid ? "text-fg-critical" : "text-fg-neutral-subtle"
+                      invalid || (counterMax != null && count > counterMax)
+                        ? "text-fg-critical"
+                        : "text-fg-neutral-subtle"
                     }
                   >
-                    /{formatCount(maxGraphemeCount)}
+                    /{formatCount(counterMax ?? maxGraphemeCount)}
                   </span>
                 </p>
               )}
