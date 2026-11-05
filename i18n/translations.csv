@@ -1867,7 +1867,6 @@ settings,theme.darkDesc,어두운 배경,Dark background
 settings,theme.system,시스템,System
 settings,theme.systemDesc,OS 설정 따라가기,Follow OS setting
 settings,hideAmounts.label,금액 가리기,Hide amounts
-settings,hideAmounts.desc,화면·카드별로 골라서 가려요,Pick screens and cards to hide
 settings,hideAmounts.unlockTitle,금액 보기 인증,Verify to view amounts
 settings,hideAmounts.unlockDesc,금액을 다시 보려면 비밀번호로 본인 확인이 필요해요.,Verify your identity with your password to view amounts again.
 settings,hideAmounts.password,비밀번호,Password
@@ -1880,14 +1879,13 @@ settings,hideAmounts.sectionDesc,가릴 카드를 골라 두세요. 저장할 �
 settings,hideAmounts.tabAll,전체,All
 settings,hideAmounts.selectAll,모두 선택,Select all
 settings,hideAmounts.clearAll,모두 해제,Clear all
-settings,hideAmounts.saved,저장했어요,Saved
 settings,hideAmounts.discardTitle,저장하지 않고 나가기,Leave without saving
 settings,hideAmounts.discardBody,고른 내용이 사라져요.,Your selection will be discarded.
 settings,hideAmounts.discardConfirm,나가기,Leave
 settings,hideAmounts.kindLabel,거래 종류,Transaction type
 settings,hideAmounts.kindNote,"화면과 상관없이 그 종류의 거래 금액을 가려요. 수입이나 지출을 가리면 합계 · 잔액도 함께 가려져요.",Hides amounts of that transaction type on every screen. Hiding income or expense also hides totals and balances.
-settings,hideAmounts.kindHelp,거래 종류 도움말,Transaction type help
-settings,hideAmounts.screensCount,가릴 화면 · {{selected}} / {{total}},Screens to hide · {{selected}} / {{total}}
+settings,hideAmounts.kindHelp,거래 종류 안내,About transaction type
+settings,hideAmounts.screensCount,가릴 화면 · {{selected}} / {{total}},Screens to hide · {{selected}} / {{total}}
 settings,hideAmounts.tabsAria,화면 고르기,Choose a screen
 settings,hideAmounts.card.kind.expense,지출 거래,Expense
 settings,hideAmounts.card.kind.income,수입 거래,Income

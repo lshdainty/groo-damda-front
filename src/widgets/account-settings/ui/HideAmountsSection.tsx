@@ -61,6 +61,8 @@ export function HideAmountsSection({
   const { t } = useTranslation("settings");
   const { t: tc } = useTranslation("common");
   const uid = useId();
+  // 말풍선은 위로 연다 — 폰은 스크롤 칸 윗변이 아니라 화면(껍데기) 안에서 자리를 본다
+  const [boundary, setBoundary] = useState<HTMLElement | null>(null);
   // 폰 껍데기가 탭 바를 덮는 동안 탭 바는 inert — 스낵바가 바닥 [저장] 위 8 에 선다
   useCoverBottomNav(mobile);
   const saved = useHiddenCards();
@@ -155,9 +157,9 @@ export function HideAmountsSection({
   const kindSection = (
     <>
       <ListHeader as="div" variant="boldSolid">
-        <h3 id={kindId} className="m-0 [font:inherit]">
+        <h2 id={kindId} className="m-0 [font:inherit]">
           {t("hideAmounts.kindLabel")}
-        </h3>
+        </h2>
         <HelpBubble>
           <HelpBubbleTrigger asChild>
             <Button
@@ -165,12 +167,16 @@ export function HideAmountsSection({
               ghostColor="neutralSubtle"
               size="small"
               layout="iconOnly"
+              // 보이는 아이콘 끝이 체크 끝선에 서도록 오른쪽 −10, 머리 높이는 44(HelpBubble 의 알림 자리 형제 때문에 머리 블리드가 안 걸려 직접)
+              className="-my-x2 -mr-x2_5"
               aria-label={t("hideAmounts.kindHelp")}
             >
               <Info aria-hidden />
             </Button>
           </HelpBubbleTrigger>
           <HelpBubbleContent
+            side="top"
+            collisionBoundary={boundary}
             title={t("hideAmounts.kindLabel")}
             description={t("hideAmounts.kindNote")}
           />
@@ -204,12 +210,12 @@ export function HideAmountsSection({
   // 가릴 화면 · n / m + 모두 선택 · 해제 — 수는 지금 탭 기준
   const screensHeader = (
     <ListHeader as="div" className="pt-x4">
-      <h3 id={screensId} className="m-0 [font:inherit] tabular-nums">
+      <h2 id={screensId} className="m-0 [font:inherit] tabular-nums">
         {t("hideAmounts.screensCount", {
           selected: onCount,
           total: tabCards.length,
         })}
-      </h3>
+      </h2>
       <Button
         variant="ghost"
         ghostColor="neutralMuted"
@@ -231,9 +237,9 @@ export function HideAmountsSection({
             variant="boldSolid"
             className={i === 0 ? "pt-x1" : "pt-x3"}
           >
-            <h4 id={`${uid}-p-${page}`} className="m-0 [font:inherit]">
+            <h3 id={`${uid}-p-${page}`} className="m-0 [font:inherit]">
               {pageLabel(page)}
-            </h4>
+            </h3>
           </ListHeader>
           <ListCheckGroup aria-labelledby={`${uid}-p-${page}`}>
             {checkRows(cardsOfPage(page))}
@@ -286,6 +292,7 @@ export function HideAmountsSection({
     return (
       <div
         data-slot="hide-amounts-page"
+        ref={setBoundary}
         className="fixed inset-0 z-(--z-modal) flex flex-col bg-bg-layer-default"
       >
         <TopNavigation type="standard">

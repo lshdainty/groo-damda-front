@@ -35,7 +35,7 @@ const DialogOverlay = React.forwardRef<
   // 닫힌 직후 그 자리 밑의 요소가 두 번째 클릭을 받는 걸 막는다 — QA #14 #36 #57.
   // 등록을 여기 두는 이유: overlay 는 `DialogPortal` 의 자식이라 Radix `Presence` 가
   // `open` 일 때만 마운트한다. 바깥의 `DialogContent` 래퍼는 `open={false}` 여도 계속
-  // 살아 있어(HideAmountsUnlockDialog·CalendarContainer 처럼 controlled 로 쓰는 곳),
+  // 살아 있어(CalendarContainer 처럼 controlled 로 쓰는 곳),
   // 거기에 걸면 "열린 오버레이 수" 가 영원히 0 으로 안 떨어져 차단이 아예 안 걸린다.
   React.useEffect(registerOverlay, []);
   return (

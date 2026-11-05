@@ -173,7 +173,6 @@ export const SECTIONS: SectionDef[] = [
     id: "hide-amounts",
     labelKey: "hideAmounts.label",
     icon: Eye,
-    descKey: "hideAmounts.desc",
     hidden: true,
     // 데스크톱 목록의 "계정" 이 켜지고 "‹ 계정" 이 이 화면의 돌아가는 길이다(I-16 26 · S6)
     parent: "account",

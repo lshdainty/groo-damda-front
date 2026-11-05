@@ -45,15 +45,22 @@ vi.mock("@/shared/lib/groo/hide-amounts-core", () => ({
 vi.mock("./HideAmountsUnlockSurface", () => ({
   HideAmountsUnlockSurface: ({
     open,
+    onOpenChange,
     onVerified,
   }: {
     open: boolean;
+    onOpenChange: (open: boolean) => void;
     onVerified: () => void;
   }) =>
     open ? (
-      <button type="button" data-verify onClick={onVerified}>
-        unlock
-      </button>
+      <>
+        <button type="button" data-verify onClick={onVerified}>
+          unlock
+        </button>
+        <button type="button" data-cancel onClick={() => onOpenChange(false)}>
+          cancel
+        </button>
+      </>
     ) : null,
 }));
 
@@ -164,14 +171,31 @@ describe("HideAmountsSection", () => {
   });
 
   it("푸는 카드가 있는 저장은 본인 확인을 먼저 열고, 맞으면 그때 반영한다", () => {
-    store.saved = new Set(["kind.expense"]);
+    store.saved = new Set(["kind.expense", "home.netWorth"]);
     render(true);
     click(checks()[0]); // kind.expense 해제
     click(btn("save"));
     expect(store.set).not.toHaveBeenCalled();
     click(q("[data-verify]") ?? undefined);
     expect(store.set).toHaveBeenCalledTimes(1);
+    // 저장에 넘긴 값 = 고른 집합(지출 거래만 빠진 나머지)
+    expect([...(store.set.mock.calls[0]![0] as Set<string>)]).toEqual([
+      "home.netWorth",
+    ]);
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("본인 확인을 취소하면 저장하지 않고 화면에 남고 고른 것이 그대로다", () => {
+    store.saved = new Set(["kind.expense"]);
+    render(true);
+    click(checks()[0]);
+    click(btn("save"));
+    click(q("[data-cancel]") ?? undefined);
+    expect(store.set).not.toHaveBeenCalled();
+    expect(onBack).not.toHaveBeenCalled();
+    expect(q("[data-verify]")).toBeNull();
+    expect(checks()[0]!.getAttribute("aria-checked")).toBe("false");
+    expect(btn("save")?.disabled).toBe(false);
   });
 
   it("바뀐 채 ← 를 누르면 나가기 확인이 뜨고, 안 바뀌었으면 바로 나간다", () => {
