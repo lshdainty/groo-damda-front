@@ -252,11 +252,15 @@ function LabelEditDialog({
   const nameTrim = name.trim();
   // 중복은 서버가 409 로 막지만 다이얼로그엔 아무 표시도 없어 '버튼이 안 먹는' 것처럼
   // 보였다(QA #55). 카테고리와 같이 보내기 전에 이 자리에서 알려 준다.
-  const issue = nameIssue(
+  const rawIssue = nameIssue(
     name,
     12,
     existing.filter((l) => l.rowId !== label?.rowId).map((l) => l.labelName),
   );
+  // 12자보다 긴 옛 이름은 이름을 고치기 전까지 길이 검사에서 뺀다 — 색만 바꾸려는 사람에게 이름을 줄이라고 강요하지 않는다
+  // (고치기 시작하면 그때부터 12자 검사. 추가 폼은 label 이 없어 해당 없음)
+  const unchangedName = !!label && nameTrim === label.labelName.trim();
+  const issue = unchangedName && rawIssue === "tooLong" ? null : rawIssue;
   const valid = issue == null;
   const err =
     touched && issue
@@ -273,32 +277,47 @@ function LabelEditDialog({
     onSave({ labelName: nameTrim, color: palette.baseHex });
   };
 
-  const Footer = (
+  const saveLabel = isNew ? t("add") : tCommon("save");
+  const deleteBtn =
+    label && onRequestDelete ? (
+      <DsButton
+        type="button"
+        variant="ghost"
+        ghostColor="critical"
+        // 시트 바닥은 Button large(48) + 글이 24 에 서도록 안쪽 여백(px-x5 20)만큼 왼쪽으로 뺀다.
+        // 대화상자는 바닥 Button small 36(dialog.md:41) 그대로
+        size={mobile ? "large" : "small"}
+        className={mobile ? "-ml-x5" : undefined}
+        onClick={() => onRequestDelete(label)}
+      >
+        {tCommon("delete")}
+      </DsButton>
+    ) : undefined;
+  // 시트(폰)는 입력 폼도 위 닫기 X + 바닥 [삭제] · [저장](ds Button large, 남은 폭) — [취소] 없음(bottom-sheet.md:126 · :128).
+  // 대화상자(768 이상)는 바닥 [취소][저장] 오른쪽 묶음, [삭제] 는 왼쪽(dialog.md:41 · :84)
+  const Footer = mobile ? (
+    <>
+      {deleteBtn && <div className="mr-auto">{deleteBtn}</div>}
+      <DsButton
+        type="button"
+        variant="neutralSolid"
+        size="large"
+        className="flex-1"
+        loading={submitting}
+        disabled={(touched && !valid) || submitting}
+        onClick={save}
+      >
+        {saveLabel}
+      </DsButton>
+    </>
+  ) : (
     <ModalFooter
       onSave={save}
-      saveLabel={isNew ? t("add") : tCommon("save")}
+      saveLabel={saveLabel}
       saving={submitting}
       saveDisabled={touched && !valid}
-      // 시트(폰)는 입력 폼도 위 닫기 X + 바닥 [저장] — [취소] 를 두지 않고 [저장] 이 남은 폭을 채운다(bottom-sheet.md:126 · :128).
-      // 대화상자(768 이상)는 바닥 [취소][저장] 오른쪽 묶음, [삭제] 는 왼쪽(dialog.md:41 · :84)
-      fullWidth={mobile}
-      onCancel={mobile ? undefined : onClose}
-      leftSlot={
-        label && onRequestDelete ? (
-          <DsButton
-            type="button"
-            variant="ghost"
-            ghostColor="critical"
-            // 시트 바닥은 Button large(48, [저장] 과 같다) + 글이 24 에 서도록 안쪽 여백(px-x5 20)만큼 왼쪽으로 뺀다.
-            // 대화상자는 바닥 Button small 36(dialog.md:41) 그대로
-            size={mobile ? "large" : "small"}
-            className={mobile ? "-ml-x5" : undefined}
-            onClick={() => onRequestDelete(label)}
-          >
-            {tCommon("delete")}
-          </DsButton>
-        ) : undefined
-      }
+      onCancel={onClose}
+      leftSlot={deleteBtn}
     />
   );
 

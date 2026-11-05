@@ -151,4 +151,40 @@ describe("라벨 화면", () => {
       expect.objectContaining({ message: "labelsSection.deleteFailed" }),
     );
   });
+
+  it("옛 13자 이름 그대로 색만 바꿔 저장할 수 있고, 이름을 고치기 시작하면 12자 검사가 걸린다", async () => {
+    state.q.data = [
+      {
+        rowId: 9,
+        labelName: "열세 글자짜리 아주 긴 옛 라벨",
+        color: "#3b82f6",
+        usageCount: 0,
+      },
+    ];
+    act(() => root.render(<CalendarLabelsSection mobile={false} />));
+    act(() =>
+      (
+        container.querySelector(
+          "[data-slot=list-item] button",
+        ) as HTMLButtonElement
+      ).click(),
+    );
+    const save = () =>
+      [...document.body.querySelectorAll("button")].find(
+        (b) => b.textContent?.trim() === "save",
+      ) as HTMLButtonElement;
+    // 이름을 안 건드렸다 — 길이 때문에 막히지 않는다
+    expect(save().disabled).toBe(false);
+    // 이름을 고치기 시작(여전히 12자 초과) — 그때부터 12자 검사
+    const input = document.body.querySelector("input") as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )?.set;
+    act(() => {
+      setter?.call(input, "열세 글자짜리 아주 긴 옛 라벨!");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    expect(save().disabled).toBe(true);
+  });
 });
