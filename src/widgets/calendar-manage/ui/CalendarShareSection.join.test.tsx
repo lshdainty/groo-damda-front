@@ -128,6 +128,8 @@ describe("초대 코드 참여", () => {
     // ① 아직 아무것도 안 쳤다 — 눌러도 나갈 게 없다.
     pressEnter(input, 3);
     expect(state.joinCalls, "빈 코드").toEqual([]);
+    // 빈 칸으로 눌렀다 — 칸 아래 오류(무반응이 아니다)
+    expect(document.body.textContent).toContain("shareSection.codeRequired");
 
     // ①-2 칸 규칙 한 벌 — 영문 · 숫자만, 최대 8, 대문자로 보인다
     type(input, "a b-1!2cd34567x");

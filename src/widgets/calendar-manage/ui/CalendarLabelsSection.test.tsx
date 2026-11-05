@@ -201,16 +201,22 @@ describe("라벨 화면", () => {
         data: { labelName: "열세 글자짜리 아주 긴 옛 라벨", color: "#3b82f6" },
       },
     ]);
-    // 이름을 고치면 칸은 12자에서 멈춘다(13번째 글자는 들어가지 않는다)
+    // 옛 긴 이름은 고치기 시작해도 잘리지 않는다 — 한 글자만 지우면 그만큼만 줄고, 12 초과면 칸 오류로 [저장] 이 나가지 않는다
     const input = document.body.querySelector("input") as HTMLInputElement;
     const setter = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
       "value",
     )?.set;
+    const edited = "열세 글자짜리 아주 긴 옛 라벨".slice(0, -1);
     act(() => {
-      setter?.call(input, "열세 글자짜리 아주 긴 옛 라벨!");
+      setter?.call(input, edited);
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    expect([...input.value].length).toBeLessThanOrEqual(12);
+    expect(input.value).toBe(edited);
+    await act(async () => {
+      save().click();
+    });
+    expect(state.saveCalls.length).toBe(1);
+    expect(document.body.textContent).toContain("labelsSection.nameTooLong");
   });
 });

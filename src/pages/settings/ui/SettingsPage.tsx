@@ -137,6 +137,8 @@ export const SettingsPage = () => {
     const p = new URLSearchParams(searchParams);
     if (next === "menu") p.delete("section");
     else p.set("section", next);
+    // 캘린더 관리의 주소 값은 그 구역 것이다 — 다른 구역으로 가면 남기지 않는다
+    p.delete("calendar");
     setSearchParams(p);
   };
 

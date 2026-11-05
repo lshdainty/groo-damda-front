@@ -8,7 +8,7 @@ import {
   ResponsiveDialogBody,
   ResponsiveDialogContent,
 } from "@/shared/ds/dialog";
-import { Field } from "@/shared/ds/field";
+import { Field, countGraphemes } from "@/shared/ds/field";
 import { Input } from "@/shared/ds/input";
 import { isEnterSave } from "@/shared/lib/groo/enter-save";
 import { nameIssue } from "@/shared/lib/groo/name-policy";
@@ -65,6 +65,8 @@ export function LabelFormDialog({
   const errorRef = useScrollToError<HTMLDivElement>(saveError, saveErrorSeq);
 
   const nameTrim = name.trim();
+  // 칸은 12자에서 멈추지만, 12자보다 긴 저장된 옛 이름은 고쳐도 잘리지 않는다(상한 = 저장된 길이) — 12 초과는 칸 오류로 [저장] 을 막는다
+  const nameCap = Math.max(LABEL_NAME_MAX, countGraphemes(initial.name));
   const dirty = name !== initial.name || color !== initial.color;
 
   // 중복은 서버가 409 로 막지만 폼에 아무 표시도 없으면 '버튼이 안 먹는' 것처럼 보였다(QA #55) — 보내기 전에 이 자리에서 알린다
@@ -140,7 +142,7 @@ export function LabelFormDialog({
           <Field
             label={t("name")}
             labelHidden
-            maxGraphemeCount={LABEL_NAME_MAX}
+            maxGraphemeCount={nameCap}
             invalid={errorText != null}
             errorMessage={errorText}
             className="pb-x2"

@@ -1,9 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Crown, EllipsisVertical, Eye, Pencil } from "lucide-react";
+import { Crown, Eye, Pencil } from "lucide-react";
 import { Avatar } from "@/shared/ds/avatar";
 import { Badge } from "@/shared/ds/badge";
-import { Button } from "@/shared/ds/button";
-import { ListItem } from "@/shared/ds/list";
+import { ListButtonItem, ListItem } from "@/shared/ds/list";
 import {
   ResponsiveMenu,
   ResponsiveMenuContent,
@@ -24,9 +23,10 @@ const ROLE_BADGE: Record<
 };
 
 /**
- * 멤버 줄(I-09b 26 · 27) — ds List 보기 줄: 앞 Avatar 36(이니셜 + 이름 색) · 이름(나이면 뒤 " (나)") · 메일(아무 자리에서 줄바꿈) ·
- * 오른쪽 권한 Badge outline(늘) + 내보낼 수 있는 줄에만 ⋮ 아이콘 버튼. ⋮ 는 폰 Menu Sheet · 1280 이상 Menu — 항목은 지금 권한이 아닌 쪽
- * 하나 + "내보내기"(critical, 맨 아래) 한 묶음이다. 권한 바꾸기는 누르면 바로 서버로 간다.
+ * 멤버 줄(I-09b 26 · 27, 검수 P1) — ds List 줄: 앞 Avatar 36(이니셜 + 이름 색) · 이름(나이면 뒤 " (나)") · 메일(아무 자리에서 줄바꿈) ·
+ * 오른쪽 권한 Badge outline(늘). 줄 끝 ⋮ 는 두지 않는다(10-25 "좁은 목록 줄엔 ⋮ 없음", list.md:244) —
+ * **내보낼 수 있는 줄(소유자가 보는 소유자 · 나 아닌 줄)은 누르는 줄**이고 누르면 폰 Menu Sheet · 1280 이상 Menu 가 열린다(줄 이름 "{이름} 관리").
+ * 항목은 지금 권한 반대쪽 하나 + "내보내기"(critical) 한 묶음. 그 밖의 줄은 누르지 않는 보기 줄이다.
  */
 export function CalendarMemberRow({
   member,
@@ -46,69 +46,59 @@ export function CalendarMemberRow({
   const role = ROLE_BADGE[member.permission];
   const RoleIcon = role.icon;
   const other = member.permission === "EDIT" ? "READ" : "EDIT";
+  const common = {
+    prefix: <Avatar name={member.userName} size={36} />,
+    title: (
+      <>
+        <span className="[overflow-wrap:anywhere]">{member.userName}</span>
+        {isSelf && (
+          <span className="text-fg-neutral-subtle">
+            {" "}
+            {t("shareSection.you")}
+          </span>
+        )}
+      </>
+    ),
+    detail: (
+      <span className="[overflow-wrap:anywhere]">{member.userEmail}</span>
+    ),
+    suffix: (
+      <Badge
+        variant="outline"
+        tone={role.tone}
+        prefixIcon={<RoleIcon />}
+        className="shrink-0"
+      >
+        {t(`role.${member.permission}`)}
+      </Badge>
+    ),
+  };
+  if (!canManage) return <ListItem {...common} />;
   return (
-    <ListItem
-      prefix={<Avatar name={member.userName} size={36} />}
-      title={
-        <>
-          <span className="[overflow-wrap:anywhere]">{member.userName}</span>
-          {isSelf && (
-            <span className="text-fg-neutral-subtle">
-              {" "}
-              {t("shareSection.you")}
-            </span>
-          )}
-        </>
-      }
-      detail={
-        <span className="[overflow-wrap:anywhere]">{member.userEmail}</span>
-      }
-      suffix={
-        <span className="inline-flex items-center gap-x1">
-          <Badge
-            variant="outline"
-            tone={role.tone}
-            prefixIcon={<RoleIcon />}
-            className="shrink-0"
-          >
-            {t(`role.${member.permission}`)}
-          </Badge>
-          {canManage && (
-            <ResponsiveMenu>
-              <ResponsiveMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  ghostColor="neutralSubtle"
-                  layout="iconOnly"
-                  size="small"
-                  aria-label={t("shareSection.moreOf", {
-                    name: member.userName,
-                  })}
-                >
-                  <EllipsisVertical aria-hidden />
-                </Button>
-              </ResponsiveMenuTrigger>
-              <ResponsiveMenuContent
-                title={member.userName}
-                layout="textOnly"
-                align="end"
-              >
-                <ResponsiveMenuGroup>
-                  <ResponsiveMenuItem
-                    label={t(`shareSection.changeTo.${other}`)}
-                    onSelect={() => onChangeRole(other)}
-                  />
-                  <ResponsiveMenuItem
-                    label={t("shareSection.removeMemberAction")}
-                    tone="critical"
-                    onSelect={onRemove}
-                  />
-                </ResponsiveMenuGroup>
-              </ResponsiveMenuContent>
-            </ResponsiveMenu>
-          )}
-        </span>
-      }
-    />
+    <ResponsiveMenu>
+      <ResponsiveMenuTrigger asChild>
+        <ListButtonItem
+          {...common}
+          aria-label={t("shareSection.manageOf", { name: member.userName })}
+        />
+      </ResponsiveMenuTrigger>
+      <ResponsiveMenuContent
+        title={member.userName}
+        layout="textOnly"
+        align="end"
+      >
+        <ResponsiveMenuGroup>
+          <ResponsiveMenuItem
+            label={t(`shareSection.changeTo.${other}`)}
+            onSelect={() => onChangeRole(other)}
+          />
+          <ResponsiveMenuItem
+            label={t("shareSection.removeMemberAction")}
+            tone="critical"
+            onSelect={onRemove}
+          />
+        </ResponsiveMenuGroup>
+      </ResponsiveMenuContent>
+    </ResponsiveMenu>
   );
 }

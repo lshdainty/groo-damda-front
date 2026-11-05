@@ -83,9 +83,14 @@ export const userCalendarApi = {
     return resp.data.members;
   },
 
-  regenerateInviteCode: async (id: number): Promise<string> => {
+  regenerateInviteCode: async (
+    id: number,
+    opts?: SilentOpts,
+  ): Promise<string> => {
     const resp: ApiResponse<{ inviteCode: string }> = await apiClient.patch(
       `/v1/calendar/calendars/${id}/regenerate-invite-code`,
+      undefined,
+      silentConfig(opts),
     );
     return resp.data.inviteCode;
   },
@@ -119,10 +124,12 @@ export const userCalendarApi = {
     id: number,
     memberId: number,
     permission: CalendarRole,
+    opts?: SilentOpts,
   ): Promise<void> => {
     const resp: ApiResponse<void> = await apiClient.patch(
       `/v1/calendar/calendars/${id}/member/${memberId}/role`,
       { permission },
+      silentConfig(opts),
     );
     return resp.data;
   },

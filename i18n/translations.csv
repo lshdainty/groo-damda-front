@@ -1160,22 +1160,30 @@ calendar,shareSection.saveChanges,변경 저장,Save Changes
 calendar,shareSection.copyCode,복사,Copy
 calendar,shareSection.regenCode,새로 만들기,Generate new
 calendar,shareSection.codeHint,이 코드를 공유하면 다른 사람이 캘린더에 참여할 수 있어요.,Share this code to let others join the calendar.
+calendar,shareSection.codeNone,초대 코드 없음,No invite code
+calendar,shareSection.regenFailed,초대 코드를 새로 만들지 못했어요.,Couldn't create a new invite code.
+calendar,shareSection.roleFailed,권한을 바꾸지 못했어요.,Couldn't change the permission.
+calendar,shareSection.colorFailed,색을 바꾸지 못했어요.,Couldn't change the color.
 calendar,shareSection.members,멤버,Members
 calendar,shareSection.you,(나),(me)
 calendar,shareSection.removeMember,멤버 내보내기,Remove member
 calendar,shareSection.removeMemberConfirm,"""{{name}}"" 님을 캘린더에서 내보낼까요?","Remove ""{{name}}"" from this calendar?"
 calendar,shareSection.removeMemberAction,내보내기,Remove
-calendar,shareSection.removeMemberFailed,멤버를 내보내지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not remove the member. Please try again in a moment.
-calendar,shareSection.moreOf,{{name}} 더보기,More actions for {{name}}
+calendar,shareSection.removeMemberFailed,멤버를 내보내지 못했어요.,Couldn't remove the member.
+calendar,shareSection.manageOf,{{name}} 관리,Manage {{name}}
 calendar,shareSection.changeTo.EDIT,편집 가능으로,Make editor
 calendar,shareSection.changeTo.READ,읽기 전용으로,Make read only
 calendar,shareSection.nameRequired,캘린더 이름을 입력해주세요.,Please enter a calendar name.
 calendar,shareSection.renameTitle,캘린더 이름,Calendar name
 calendar,shareSection.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
+calendar,shareSection.createFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
 calendar,shareSection.create,만들기,Create
 calendar,shareSection.createNamePlaceholder,"예: 가족, 업무, 운동 일정","e.g. Family, Work, Workout"
 calendar,shareSection.joinCodePlaceholder,예: 3F9A1C2B,e.g. 3F9A1C2B
 calendar,shareSection.codeInvalid,초대 코드를 확인해주세요.,Please check the invite code.
+calendar,shareSection.codeRequired,초대 코드를 입력해주세요.,Please enter the invite code.
+calendar,shareSection.codeAlreadyJoined,이미 참여한 캘린더예요.,You have already joined this calendar.
+calendar,shareSection.joinFailed,참여하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not join. Please try again in a moment.
 calendar,shareSection.joinedNamed,"""{{name}}"" 캘린더에 참여했어요","Joined the ""{{name}}"" calendar"
 calendar,shareSection.toast.deleted,캘린더를 삭제했어요,Calendar deleted
 calendar,shareSection.toast.created,캘린더를 만들었어요,Calendar created

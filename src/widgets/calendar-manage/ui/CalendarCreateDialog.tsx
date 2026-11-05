@@ -92,7 +92,7 @@ export function CalendarCreateDialog({
           {saveError && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("shareSection.saveFailed")}
+                {t("shareSection.createFailed")}
               </Callout>
             </div>
           )}

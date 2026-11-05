@@ -1,13 +1,14 @@
 import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Palette, Trash2, Type } from "lucide-react";
+import { Palette, Type } from "lucide-react";
 import { Button } from "@/shared/ds/button";
 import { Card } from "@/shared/ds/card";
 import { List, ListButtonItem } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
+import { hasPreviousEntry } from "@/shared/ds/top-navigation/top-navigation-context";
 import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { ColorPickerRow } from "@/shared/ui/groo/icon-color-rows";
@@ -137,9 +138,10 @@ function ManageBody({
   const confirmFail = useConfirmFail();
   const { data: currentUser } = useCurrentUser();
   const membersQ = useCalendarMembers(calendar.rowId, { silent: true });
-  const colorMut = useUpdateUserCalendar();
-  const regenMut = useRegenerateCalendarInviteCode();
-  const roleMut = useChangeCalendarMemberRole();
+  // 바로 나가는 셋(색 · 권한 · 코드 새로 만들기)은 서버 글을 내지 않는다 — 고정 한 문장 critical 스낵바(P4)
+  const colorMut = useUpdateUserCalendar({ silent: true });
+  const regenMut = useRegenerateCalendarInviteCode({ silent: true });
+  const roleMut = useChangeCalendarMemberRole({ silent: true });
   const removeMut = useRemoveCalendarMember();
   const deleteMut = useDeleteUserCalendar();
 
@@ -170,29 +172,60 @@ function ManageBody({
     snackbar.show({ message: t("shareSection.toast.codeCopied") });
   };
 
-  const regenerate = () =>
-    regenMut.mutate(calendar.rowId, {
-      onSuccess: () =>
-        snackbar.show({ message: t("shareSection.toast.codeRegenerated") }),
-    });
+  const regenerate = async () => {
+    await regenMut.mutateAsync(calendar.rowId);
+    snackbar.show({ message: t("shareSection.toast.codeRegenerated") });
+  };
+  const regenerateWithFail = () =>
+    regenerate().catch(() =>
+      confirmFail({
+        message: t("shareSection.regenFailed"),
+        retry: regenerate,
+      }),
+    );
 
-  const changeRole = (
+  const roleChange = (
     member: CalendarMember,
     permission: Exclude<CalendarRole, "OWNER">,
   ) =>
-    roleMut.mutate({
+    roleMut.mutateAsync({
       id: calendar.rowId,
       memberId: member.rowId,
       permission,
     });
+  const changeRole = (
+    member: CalendarMember,
+    permission: Exclude<CalendarRole, "OWNER">,
+  ) =>
+    roleChange(member, permission).catch(() =>
+      confirmFail({
+        message: t("shareSection.roleFailed"),
+        retry: () => roleChange(member, permission),
+      }),
+    );
+
+  // 색은 바로 반영하는 값 — 실패하면 줄 값은 옛 색 그대로이고 [다시 시도] 는 두지 않는다(스위치와 같다). 요청 중에는 다음 고름을 받지 않는다
+  const changeColor = (hex: string) => {
+    if (hex === calendar.color || colorMut.isPending) return;
+    colorMut
+      .mutateAsync({ id: calendar.rowId, data: { color: hex } })
+      .catch(() =>
+        snackbar.show({
+          message: t("shareSection.colorFailed"),
+          tone: "critical",
+        }),
+      );
+  };
 
   const removeMember = (member: CalendarMember) =>
     removeMut.mutateAsync({ id: calendar.rowId, memberId: member.rowId });
 
-  // 지운 뒤 부모 목록으로 replace — 지운 캘린더 주소가 기록에 남지 않게. 다시 시도가 성공해도 같은 길을 지난다
+  // 지운 뒤 history 뒤로 — 앱 pop 과 같게(기록에 [목록, 목록] 이 남지 않는다). 기록이 없을 때(주소로 바로 들어옴)만 부모로 replace.
+  // 다시 시도가 성공해도 같은 길을 지난다
   const deleteCalendar = async () => {
     await deleteMut.mutateAsync(calendar.rowId);
-    navigate(CALENDAR_SHARE_HREF, { replace: true });
+    if (hasPreviousEntry()) navigate(-1);
+    else navigate(CALENDAR_SHARE_HREF, { replace: true });
   };
 
   const calId = `${uid}-cal`;
@@ -217,10 +250,7 @@ function ManageBody({
         title={t("form.color")}
         prefix={<Palette />}
         value={calendar.color}
-        onChange={(hex) => {
-          if (hex === calendar.color) return;
-          colorMut.mutate({ id: calendar.rowId, data: { color: hex } });
-        }}
+        onChange={changeColor}
       />
     </List>
   );
@@ -228,25 +258,37 @@ function ManageBody({
   const code = (
     <div className="px-x6 pb-x3 pt-x1">
       <div className="flex flex-wrap items-center justify-between gap-x3">
-        <span
-          data-slot="invite-code"
-          className="min-w-0 break-all text-t8 font-bold tabular-nums text-fg-neutral"
-        >
-          {calendar.inviteCode}
-        </span>
-        <span className="ml-auto flex shrink-0 items-center gap-x2">
-          <Button
-            variant="neutralWeak"
-            size="small"
-            onClick={() => void copyCode()}
+        {/* 코드가 없는 캘린더(백필 없이 칸이 생기기 전에 만든 것 — 옛 기본 캘린더 포함)는 값 자리에 "초대 코드 없음", [복사] 는 숨기고 [새로 만들기] 만 */}
+        {calendar.inviteCode ? (
+          <span
+            data-slot="invite-code"
+            className="min-w-0 break-all text-t8 font-bold tabular-nums text-fg-neutral"
           >
-            {t("shareSection.copyCode")}
-          </Button>
+            {calendar.inviteCode}
+          </span>
+        ) : (
+          <span
+            data-slot="invite-code-none"
+            className="min-w-0 text-t5 text-fg-neutral-subtle"
+          >
+            {t("shareSection.codeNone")}
+          </span>
+        )}
+        <span className="ml-auto flex shrink-0 items-center gap-x2">
+          {calendar.inviteCode && (
+            <Button
+              variant="neutralWeak"
+              size="small"
+              onClick={() => void copyCode()}
+            >
+              {t("shareSection.copyCode")}
+            </Button>
+          )}
           <Button
             variant="neutralWeak"
             size="small"
             loading={regenMut.isPending}
-            onClick={regenerate}
+            onClick={() => void regenerateWithFail()}
           >
             {t("shareSection.regenCode")}
           </Button>
@@ -316,7 +358,6 @@ function ManageBody({
             id={codeId}
             title={t("inviteCode")}
             first={false}
-            flush
             mobile={mobile}
           >
             {code}
@@ -332,7 +373,6 @@ function ManageBody({
               : t("shareSection.members")
           }
           first={!isOwner}
-          flush
           mobile={mobile}
         >
           {memberRows}
@@ -353,9 +393,8 @@ function ManageBody({
             // 되돌릴 수 없는 동작을 멤버 줄과 떼어 놓는 흰 여백 8
             <List className="mt-x2">
               <ListButtonItem
-                prefix={<Trash2 aria-hidden className="text-fg-critical" />}
                 title={
-                  <span className="text-fg-critical">
+                  <span className="text-fg-critical group-has-[[data-list-action]:active]/list-item:text-fg-critical-contrast group-has-[[data-list-action]:hover]/list-item:text-fg-critical-contrast">
                     {t("deleteCalendar")}
                   </span>
                 }

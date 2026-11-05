@@ -15,9 +15,25 @@ import { useJoinCalendar } from "@/features/user-calendar";
 /** 초대 코드 = 대문자 16진 8자(서버 `UserCalendar` 가 만든다). 칸은 영문 · 숫자만 받고 8자에서 멈춘다 */
 export const INVITE_CODE_MAX = 8;
 
+type JoinErrorKey =
+  "codeRequired" | "codeInvalid" | "codeAlreadyJoined" | "joinFailed";
+
+/** 서버 오류 코드(`CAL_012` 틀린 코드 · `CAL_011` 이미 참여)만 읽는다 — 글이 아니라 코드로 가른다. 그 밖은 일반 한 문장 */
+function joinErrorKey(err: unknown): JoinErrorKey {
+  const data = (
+    err as { response?: { data?: { code?: unknown; message?: unknown } } }
+  )?.response?.data;
+  const hit = [data?.code, data?.message].find(
+    (v) => v === "CAL_012" || v === "CAL_011",
+  );
+  if (hit === "CAL_012") return "codeInvalid";
+  if (hit === "CAL_011") return "codeAlreadyJoined";
+  return "joinFailed";
+}
+
 /**
  * 초대 코드로 참여(I-09b 36) — Responsive Dialog 입력 폼, 칸 하나. 보이는 이름 "초대 코드"(칸이 하나뿐) + 예시 "예: 3F9A1C2B".
- * 틀린 코드 · 이미 참여한 캘린더는 칸 아래 고정 글 한 줄(서버가 보낸 글은 화면에 내지 않는다 — 이 요청은 전역 오류 알림도 끈다).
+ * 비운 채 누르면 · 틀린 코드 · 이미 참여한 캘린더 · 그 밖의 실패는 칸 아래 고정 글 한 줄(서버가 보낸 글은 화면에 내지 않는다 — 이 요청은 전역 오류 알림도 끈다).
  * 성공하면 닫고 스낵바 "'{이름}' 캘린더에 참여했어요".
  *
  * **연타 가드는 문이 아니라 나가는 함수가 든다** — 버튼 · Enter 둘이 모두 `submit` 을 지나고, `submit` 이 이미 나가 있으면 무시한다
@@ -29,7 +45,8 @@ export function CalendarJoinDialog({ onClose }: { onClose: () => void }) {
   const snackbar = useSnackbar();
   const joinMut = useJoinCalendar();
   const [code, setCode] = useState("");
-  const [failed, setFailed] = useState(false);
+  // 칸 아래 오류 글의 키 — 비운 채 · 틀린 코드(CAL_012) · 이미 참여(CAL_011) · 그 밖(5xx · 네트워크). 서버가 보낸 글은 내지 않는다
+  const [errorKey, setErrorKey] = useState<JoinErrorKey | null>(null);
   const inFlight = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -37,19 +54,20 @@ export function CalendarJoinDialog({ onClose }: { onClose: () => void }) {
     if (inFlight.current) return;
     const value = code.trim();
     if (!value) {
+      setErrorKey("codeRequired");
       inputRef.current?.focus();
       return;
     }
     inFlight.current = true;
-    setFailed(false);
+    setErrorKey(null);
     try {
       const joined = await joinMut.mutateAsync(value.toUpperCase());
       snackbar.show({
         message: t("shareSection.joinedNamed", { name: joined.calendarName }),
       });
       onClose();
-    } catch {
-      setFailed(true);
+    } catch (e) {
+      setErrorKey(joinErrorKey(e));
       inputRef.current?.focus();
     } finally {
       inFlight.current = false;
@@ -76,8 +94,8 @@ export function CalendarJoinDialog({ onClose }: { onClose: () => void }) {
         <ResponsiveDialogBody>
           <Field
             label={t("inviteCode")}
-            invalid={failed}
-            errorMessage={t("shareSection.codeInvalid")}
+            invalid={errorKey != null}
+            errorMessage={errorKey ? t(`shareSection.${errorKey}`) : null}
           >
             <Input
               ref={inputRef}
@@ -94,7 +112,7 @@ export function CalendarJoinDialog({ onClose }: { onClose: () => void }) {
                     .slice(0, INVITE_CODE_MAX)
                     .toUpperCase(),
                 );
-                if (failed) setFailed(false);
+                if (errorKey) setErrorKey(null);
               }}
               // Enter 로 참여 — 한글 조합 중 Enter · 포털 안의 칸은 거른다(isEnterSave)
               onKeyDown={(e) => {

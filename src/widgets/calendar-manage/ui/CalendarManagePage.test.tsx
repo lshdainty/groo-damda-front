@@ -2,7 +2,7 @@
 // 이름은 줄에서 열리는 폼이고 저장은 이름만 보낸다, 멤버 ⋮ 는 내보낼 수 있는 줄에만.
 import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { MemoryRouter, useLocation, useNavigationType } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 declare global {
@@ -15,6 +15,10 @@ const state = vi.hoisted(() => ({
   updateCalls: [] as unknown[],
   deleted: [] as number[],
   where: "",
+  navType: "",
+  hasPrev: false,
+  roleCalls: [] as unknown[],
+  failList: false,
 }));
 
 vi.mock("react-i18next", () => ({
@@ -27,6 +31,9 @@ vi.mock("react-i18next", () => ({
 }));
 vi.mock("@/shared/ds/snackbar", () => ({
   useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
+}));
+vi.mock("@/shared/ds/top-navigation/top-navigation-context", () => ({
+  hasPreviousEntry: () => state.hasPrev,
 }));
 vi.mock("@/shared/lib/confirm-fail", () => ({
   useConfirmFail: () => () => {},
@@ -42,10 +49,10 @@ vi.mock("@/features/user-calendar", () => {
   });
   return {
     useUserCalendars: () => ({
-      data: state.cals,
-      isSuccess: true,
+      data: state.failList ? undefined : state.cals,
+      isSuccess: !state.failList,
       isFetching: false,
-      isError: false,
+      isError: state.failList,
       isLoading: false,
       refetch: () => {},
     }),
@@ -68,7 +75,12 @@ vi.mock("@/features/user-calendar", () => {
       isPending: false,
     }),
     useRegenerateCalendarInviteCode: idle,
-    useChangeCalendarMemberRole: idle,
+    useChangeCalendarMemberRole: () => ({
+      mutateAsync: async (v: unknown) => {
+        state.roleCalls.push(v);
+      },
+      isPending: false,
+    }),
     useRemoveCalendarMember: idle,
   };
 });
@@ -80,8 +92,10 @@ let root: Root;
 
 function Probe() {
   const loc = useLocation();
+  const navType = useNavigationType();
   useEffect(() => {
     state.where = loc.pathname + loc.search;
+    state.navType = navType;
   });
   return null;
 }
@@ -92,6 +106,10 @@ beforeEach(() => {
   state.members = [];
   state.updateCalls = [];
   state.deleted = [];
+  state.roleCalls = [];
+  state.hasPrev = false;
+  state.failList = false;
+  state.navType = "";
   if (!globalThis.ResizeObserver) {
     globalThis.ResizeObserver = class {
       observe() {}
@@ -128,13 +146,14 @@ const member = (rowId: number, userRowId: number, permission: string) => ({
   permission,
 });
 
-function render(id: number | null, mobile = true) {
+const LIST = "/desk/settings?section=calendar-share";
+function render(id: number | null, mobile = true, withList = false) {
+  const manage = `/desk/settings?section=calendar-manage&calendar=${id}`;
   act(() =>
     root.render(
       <MemoryRouter
-        initialEntries={[
-          `/desk/settings?section=calendar-manage&calendar=${id}`,
-        ]}
+        initialEntries={withList ? [LIST, manage] : [manage]}
+        initialIndex={withList ? 1 : 0}
       >
         <Probe />
         <CalendarManagePage mobile={mobile} calendarId={id} />
@@ -164,7 +183,7 @@ describe("캘린더 관리 페이지", () => {
     );
   });
 
-  it("멤버 줄의 ⋮ 는 내보낼 수 있는 줄(소유자도 나도 아닌 줄)에만 있고 권한 배지는 모두 있다", () => {
+  it('멤버 줄 끝에는 ⋮ 가 없고 내보낼 수 있는 줄만 누르는 줄(이름 "{이름} 관리")이다', () => {
     state.cals = [cal(2)];
     state.members = [
       member(1, 1, "OWNER"),
@@ -173,10 +192,95 @@ describe("캘린더 관리 페이지", () => {
     ];
     render(2);
     expect(container.querySelectorAll("[data-slot=badge]").length).toBe(3);
-    const more = [...container.querySelectorAll("button")].filter((b) =>
-      b.getAttribute("aria-label")?.startsWith("shareSection.moreOf"),
+    expect(
+      container.querySelectorAll("svg.lucide-ellipsis-vertical").length,
+    ).toBe(0);
+    const manage = [...container.querySelectorAll("button")].filter((b) =>
+      b.getAttribute("aria-label")?.startsWith("shareSection.manageOf"),
     );
-    expect(more.length).toBe(2);
+    expect(manage.length).toBe(2);
+  });
+
+  it("멤버 줄을 누르면 메뉴가 열리고 권한 바꾸기는 반대 권한을 보낸다", async () => {
+    state.cals = [cal(2)];
+    state.members = [member(1, 1, "OWNER"), member(2, 7, "EDIT")];
+    render(2);
+    const row = [...container.querySelectorAll("button")].find((b) =>
+      b.getAttribute("aria-label")?.startsWith("shareSection.manageOf"),
+    ) as HTMLButtonElement;
+    act(() => row.click());
+    const item = [
+      ...document.body.querySelectorAll("button, [role=menuitem]"),
+    ].find(
+      (b) => b.textContent?.trim() === "shareSection.changeTo.READ",
+    ) as HTMLElement;
+    await act(async () => {
+      item.click();
+    });
+    expect(state.roleCalls).toEqual([
+      { id: 2, memberId: 2, permission: "READ" },
+    ]);
+  });
+
+  it('초대 코드가 없는 캘린더 — "코드 없음" 과 [새로 만들기] 만, [복사] 는 없다', () => {
+    state.cals = [cal(1, { isDefault: true, inviteCode: null })];
+    state.members = [member(1, 1, "OWNER")];
+    render(1);
+    expect(container.textContent).toContain("shareSection.codeNone");
+    const labels = [...container.querySelectorAll("button")].map((b) =>
+      b.textContent?.trim(),
+    );
+    expect(labels).toContain("shareSection.regenCode");
+    expect(labels).not.toContain("shareSection.copyCode");
+  });
+
+  it("캘린더 목록을 못 받으면 Result Section 과 [다시 시도] — 서버 글은 없다", () => {
+    state.failList = true;
+    render(2);
+    expect(
+      container.querySelector("[data-slot=result-section]"),
+    ).not.toBeNull();
+    expect(container.textContent).toContain("shareSection.loadFailed");
+    expect(container.textContent).toContain("retry");
+  });
+
+  it("캘린더 삭제 — 앞 화면(목록)이 있으면 history 뒤로(목록이 두 번 남지 않는다)", async () => {
+    state.cals = [cal(2)];
+    state.members = [member(1, 1, "OWNER")];
+    state.hasPrev = true;
+    render(2, true, true);
+    const del = [...container.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("deleteCalendar"),
+    ) as HTMLButtonElement;
+    act(() => del.click());
+    const ok = [...document.body.querySelectorAll("button")]
+      .filter((b) => b.textContent?.trim() === "delete")
+      .pop() as HTMLButtonElement;
+    await act(async () => {
+      ok.click();
+    });
+    expect(state.deleted).toEqual([2]);
+    expect(state.where).toBe(LIST);
+    expect(state.navType).toBe("POP");
+  });
+
+  it("캘린더 삭제 — 기록이 없을 때(바로 들어옴)만 부모로 replace", async () => {
+    state.cals = [cal(2)];
+    state.members = [member(1, 1, "OWNER")];
+    state.hasPrev = false;
+    render(2);
+    const del = [...container.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("deleteCalendar"),
+    ) as HTMLButtonElement;
+    act(() => del.click());
+    const ok = [...document.body.querySelectorAll("button")]
+      .filter((b) => b.textContent?.trim() === "delete")
+      .pop() as HTMLButtonElement;
+    await act(async () => {
+      ok.click();
+    });
+    expect(state.where).toBe(LIST);
+    expect(state.navType).toBe("REPLACE");
   });
 
   it("공유받은 캘린더 — 멤버만 있다(이름 · 색 · 초대 코드 · 삭제 · 나가기 없음)", () => {
@@ -190,7 +294,7 @@ describe("캘린더 관리 페이지", () => {
     expect(container.textContent).not.toContain("deleteCalendar");
     expect(
       [...container.querySelectorAll("button")].some((b) =>
-        b.getAttribute("aria-label")?.startsWith("shareSection.moreOf"),
+        b.getAttribute("aria-label")?.startsWith("shareSection.manageOf"),
       ),
     ).toBe(false);
   });
@@ -206,6 +310,7 @@ describe("캘린더 관리 페이지", () => {
     state.cals = [cal(2)];
     render(99999);
     expect(state.where).toBe("/desk/settings?section=calendar-share");
+    expect(state.navType).toBe("REPLACE");
   });
 
   it("이름 줄 → 이름 폼이 열리고 저장은 이름만 보낸다", async () => {

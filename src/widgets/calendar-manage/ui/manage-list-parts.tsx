@@ -42,7 +42,6 @@ export function ManageSection({
   action,
   first,
   mobile,
-  flush = false,
   children,
 }: {
   id: string;
@@ -50,15 +49,13 @@ export function ManageSection({
   action?: ReactNode;
   first: boolean;
   mobile: boolean;
-  /** 앞 묶음과 붙인다(위 0) — 한 캘린더의 이야기를 한 면에서 목록 제목이 가르는 관리 페이지(I-09b 틈 자리 표) */
-  flush?: boolean;
   children: ReactNode;
 }) {
   const head = (
     <ListHeader
       as="div"
       variant="boldSolid"
-      className={cn(mobile && !first && !flush && "mt-x4")}
+      className={cn(mobile && !first && "mt-x4")}
     >
       <h2 id={id} className="m-0 font-[inherit] text-[length:inherit]">
         {title}

@@ -86,10 +86,13 @@ export const useCalendarMembers = (
   });
 };
 
-export const useRegenerateCalendarInviteCode = () => {
+/** `silent` — 실패를 호출처가 고정 한 문장 스낵바로 말한다 */
+export const useRegenerateCalendarInviteCode = (opts?: {
+  silent?: boolean;
+}) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => userCalendarApi.regenerateInviteCode(id),
+    mutationFn: (id: number) => userCalendarApi.regenerateInviteCode(id, opts),
     onSuccess: () => invalidateFor(queryClient, "user-calendar"),
   });
 };
@@ -113,7 +116,7 @@ export const useRemoveCalendarMember = () => {
   });
 };
 
-export const useChangeCalendarMemberRole = () => {
+export const useChangeCalendarMemberRole = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -124,7 +127,7 @@ export const useChangeCalendarMemberRole = () => {
       id: number;
       memberId: number;
       permission: CalendarRole;
-    }) => userCalendarApi.changeMemberRole(id, memberId, permission),
+    }) => userCalendarApi.changeMemberRole(id, memberId, permission, opts),
     onSuccess: () => invalidateFor(queryClient, "user-calendar"),
   });
 };
