@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   countsFail: false,
   download: null as null | (() => Promise<Blob>),
   preview: [] as unknown[],
+  previewFail: false,
   toastError: [] as { msg: string; opts: { action?: { label: string } } }[],
   toastSuccess: [] as string[],
 }));
@@ -28,7 +29,10 @@ vi.mock("@/features/export/api/exportApi", () => {
             { type: "expense", displayName: "거래", count: 123456 },
             { type: "asset", displayName: "자산", count: 3 },
           ]),
-    fetchExportPreview: () => Promise.resolve(state.preview),
+    fetchExportPreview: () =>
+      state.previewFail
+        ? Promise.reject(new Error("서버 원문"))
+        : Promise.resolve(state.preview),
     downloadExport: () => state.download!(),
   };
 });
@@ -36,7 +40,8 @@ vi.mock("@/features/import/api/importApi", () => ({
   analyzeImport: () => Promise.resolve(null),
   executeImport: () => Promise.resolve(null),
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: {
       message: string;
@@ -67,6 +72,7 @@ let root: Root;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   state.countsFail = false;
+  state.previewFail = false;
   state.toastError = [];
   state.toastSuccess = [];
   window.matchMedia = (() => ({
@@ -250,6 +256,18 @@ describe("내보내기 결과 알림 (I-05 47)", () => {
     expect(state.toastError).toHaveLength(1);
     expect(state.toastError[0]!.msg).toBe("section.exportStalled");
     expect(state.toastError[0]!.opts.action?.label).toBeTruthy();
+  });
+
+  it("미리보기가 실패하면 그 자리에 고정 글 + 다시 시도(서버 글 없음)", async () => {
+    state.previewFail = true;
+    await render(false);
+    await click(btnExact("preview"));
+    expect(container.textContent).toContain("section.previewFailed");
+    expect(container.textContent).not.toContain("서버 원문");
+    const retry = [...container.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("common.retry"),
+    );
+    expect(retry).toBeTruthy();
   });
 
   it("서버가 거절하면 서버 글이 아니라 고정 글 + 다시 시도", async () => {

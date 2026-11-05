@@ -1339,7 +1339,7 @@ user,passwordRuleLength,8자 이상,At least 8 characters
 user,passwordRuleSpecial,특수문자 1자 이상,At least 1 special character
 user,passwordPolicyUnmet,비밀번호 조건을 모두 충족해주세요,Password does not meet the requirements
 user,passwordSameAsCurrent,현재 비밀번호와 다른 비밀번호를 입력해주세요,New password must be different from the current one
-user,passwordChangeSuccess,비밀번호를 바꿨어요,Password changed successfully
+user,passwordChangeSuccess,비밀번호를 바꿨어요.,Changed your password.
 user,passwordChangeError,비밀번호를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change your password. Please try again shortly.
 user,withdraw.title,그루 담다 이용 해지,Stop using 그루 담다
 user,withdraw.intro,이용을 해지하면 바로 로그인이 막히고 되돌릴 수 없어요.,Stopping 그루 담다 signs you out immediately and cannot be undone.
@@ -1852,6 +1852,7 @@ export,fileFormat,파일 형식,File format
 export,preview,미리보기,Preview
 export,section.exportDone,내보냈어요.,Exported.
 export,section.exportFailed,내보내지 못했어요.,Couldn't export.
+export,section.previewFailed,미리보기를 불러오지 못했어요.,Couldn't load the preview.
 export,section.exportStalled,파일을 받는 중에 멈췄어요.,The download stopped.
 export,section.tabsLabel,데이터 내보내기 · 가져오기,Export and import data
 export,section.periodSelect,기간 선택,Select period

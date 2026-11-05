@@ -220,6 +220,7 @@ function ExportPane({ mobile }: { mobile: boolean }) {
   const [downloading, setDownloading] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   const [preview, setPreview] = useState<ExportPreviewTable[] | null>(null);
+  const [previewFailed, setPreviewFailed] = useState(false);
   const [previewTab, setPreviewTab] = useState<string | null>(null);
 
   const range = useMemo(
@@ -282,10 +283,15 @@ function ExportPane({ mobile }: { mobile: boolean }) {
   const handlePreview = async () => {
     if (!selected.length || customInvalid) return;
     setPreviewing(true);
+    setPreviewFailed(false);
     try {
       const tables = await fetchExportPreview(queryBody(selected));
       setPreview(tables);
       setPreviewTab(tables[0]?.type ?? null);
+    } catch {
+      // 요청은 silent — 서버 글 대신 미리보기 자리의 고정 글 + [다시 시도]
+      setPreview(null);
+      setPreviewFailed(true);
     } finally {
       setPreviewing(false);
     }
@@ -504,6 +510,23 @@ function ExportPane({ mobile }: { mobile: boolean }) {
 
       {/* 민감 정보 가리기 + 액션 — 데스크톱은 마지막 카드 안 바닥 오른쪽, 폰은 화면 바닥 고정 */}
       {mobile && maskCheckbox}
+
+      {previewFailed && !preview && (
+        <DataSection mobile={mobile} title={t("preview")}>
+          {() => (
+            <ResultSection
+              kind="failure"
+              size="medium"
+              title={t("section.previewFailed")}
+              primaryAction={{
+                label: dsT("common.retry"),
+                onClick: () => void handlePreview(),
+                loading: previewing,
+              }}
+            />
+          )}
+        </DataSection>
+      )}
 
       {/* 미리보기 결과 — 모든 폭에서 표(0 ~ 767 은 표와 함께 가로 스크롤) */}
       {preview && activeTab && (

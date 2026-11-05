@@ -52,7 +52,9 @@ export async function fetchExportPreview(
   body: ExportQueryBody,
 ): Promise<ExportPreviewTable[]> {
   const resp: ApiResponse<{ tables: ExportPreviewTable[] }> =
-    await apiClient.post("/v1/export/preview", body);
+    await apiClient.post("/v1/export/preview", body, {
+      silent: true,
+    } as QuietRequestConfig);
   return resp.data.tables;
 }
 
