@@ -605,8 +605,11 @@ export const stockApi = {
     return resp.data;
   },
 
-  removeWatchItem: async (itemId: number): Promise<void> => {
-    await apiClient.delete(`/v1/stock-watch/items/${itemId}`);
+  removeWatchItem: async (itemId: number, opts?: SilentOpts): Promise<void> => {
+    await apiClient.delete(
+      `/v1/stock-watch/items/${itemId}`,
+      silentConfig(opts),
+    );
   },
 
   // 계좌 / 보유자산

@@ -24,6 +24,8 @@ const state = vi.hoisted(() => ({
     action?: { onClick: () => void };
   }>,
   opts: [] as unknown[],
+  entries: [] as Array<{ item: { rowId: number } }>,
+  failIds: [] as number[],
   addResult: "ok" as "ok" | "fail",
   createResult: "ok" as "ok" | "fail",
 }));
@@ -59,8 +61,19 @@ vi.mock("../api/watchlistApi", () => ({
       },
     };
   },
-  useRemoveWatchItem: () => ({ mutate: state.removeItem }),
-  findWatchEntries: () => [],
+  useRemoveWatchItem: (o?: unknown) => {
+    state.opts.push(o);
+    return {
+      mutate: state.removeItem,
+      mutateAsync: (id: number) => {
+        state.removeItem(id);
+        return state.failIds.includes(id)
+          ? Promise.reject(new Error("x"))
+          : Promise.resolve();
+      },
+    };
+  },
+  findWatchEntries: () => state.entries,
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k }),
@@ -125,6 +138,8 @@ afterEach(() => {
   state.refetch.mockClear();
   state.snack = [];
   state.opts = [];
+  state.entries = [];
+  state.failIds = [];
   state.addResult = "ok";
   state.createResult = "ok";
 });
@@ -245,5 +260,26 @@ describe("그룹 질의가 아직이거나 실패했을 때 별 — 기본 그�
     act(() => seen.toggleWatch("005930", "KOSPI"));
     expect(state.createGroup).not.toHaveBeenCalled();
     expect(state.addItem).toHaveBeenCalledTimes(1);
+  });
+
+  it("별 해제가 일부 그룹만 실패하면 스낵바 하나 + [다시 시도] 가 남은 것만 다시 지운다", async () => {
+    state.groups = [
+      group(1, "관심", ["005930"]),
+      group(2, "반도체", ["005930"]),
+    ];
+    state.entries = [{ item: { rowId: 100 } }, { item: { rowId: 200 } }];
+    state.failIds = [200];
+    render(<Probe />);
+    await act(async () => seen.toggleWatch("005930", "KOSPI"));
+    expect(state.removeItem).toHaveBeenCalledTimes(2);
+    expect(state.snack).toHaveLength(1);
+    expect(state.snack[0]).toMatchObject({
+      message: "watch.removeFail",
+      tone: "critical",
+    });
+    state.failIds = [];
+    await act(async () => state.snack[0]!.action!.onClick());
+    expect(state.removeItem).toHaveBeenCalledTimes(3);
+    expect(state.removeItem.mock.calls[2]![0]).toBe(200);
   });
 });

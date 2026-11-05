@@ -64,10 +64,10 @@ export function useAddWatchItem(opts?: SilentOpts) {
   });
 }
 
-export function useRemoveWatchItem() {
+export function useRemoveWatchItem(opts?: SilentOpts) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (itemId: number) => stockApi.removeWatchItem(itemId),
+    mutationFn: (itemId: number) => stockApi.removeWatchItem(itemId, opts),
     onSuccess: () => invalidateFor(queryClient, "stock-watchlist"),
   });
 }
