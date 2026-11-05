@@ -18,7 +18,14 @@ const state = vi.hoisted(() => ({
   addItem: vi.fn(),
   removeItem: vi.fn(),
   refetch: vi.fn(),
-  toastError: vi.fn(),
+  snack: [] as Array<{
+    message: string;
+    tone?: string;
+    action?: { onClick: () => void };
+  }>,
+  opts: [] as unknown[],
+  addResult: "ok" as "ok" | "fail",
+  createResult: "ok" as "ok" | "fail",
 }));
 
 vi.mock("../api/watchlistApi", () => ({
@@ -28,15 +35,42 @@ vi.mock("../api/watchlistApi", () => ({
     isError: state.q === "error",
     refetch: state.refetch,
   }),
-  useCreateWatchGroup: () => ({ mutate: state.createGroup }),
-  useAddWatchItem: () => ({ mutate: state.addItem }),
+  useCreateWatchGroup: (o?: unknown) => {
+    state.opts.push(o);
+    return {
+      mutate: state.createGroup,
+      mutateAsync: (...a: unknown[]) => {
+        state.createGroup(...a);
+        return state.createResult === "ok"
+          ? Promise.resolve({ rowId: 77 })
+          : Promise.reject(new Error("x"));
+      },
+    };
+  },
+  useAddWatchItem: (o?: unknown) => {
+    state.opts.push(o);
+    return {
+      mutate: state.addItem,
+      mutateAsync: (...a: unknown[]) => {
+        state.addItem(...a);
+        return state.addResult === "ok"
+          ? Promise.resolve({})
+          : Promise.reject(new Error("x"));
+      },
+    };
+  },
   useRemoveWatchItem: () => ({ mutate: state.removeItem }),
   findWatchEntries: () => [],
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
-vi.mock("sonner", () => ({ toast: { error: state.toastError } }));
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: { message: string; tone?: string }) => state.snack.push(o),
+    dismiss: () => {},
+  }),
+}));
 
 const { useWatchlist } = await import("./useWatchlist");
 
@@ -89,7 +123,10 @@ afterEach(() => {
   state.addItem.mockClear();
   state.removeItem.mockClear();
   state.refetch.mockClear();
-  state.toastError.mockClear();
+  state.snack = [];
+  state.opts = [];
+  state.addResult = "ok";
+  state.createResult = "ok";
 });
 
 describe("useWatchlist 의 열린 그룹", () => {
@@ -142,7 +179,7 @@ describe("그룹 질의가 아직이거나 실패했을 때 별 — 기본 그�
     act(() => seen.toggleWatch("005930", "KOSPI"));
     expect(state.createGroup).not.toHaveBeenCalled();
     expect(state.addItem).not.toHaveBeenCalled();
-    expect(state.toastError).not.toHaveBeenCalled();
+    expect(state.snack).toHaveLength(0);
   });
 
   it("실패했으면 아무것도 만들지 않고 실패를 알리며 다시 받는다", () => {
@@ -152,7 +189,10 @@ describe("그룹 질의가 아직이거나 실패했을 때 별 — 기본 그�
     act(() => seen.toggleWatch("005930", "KOSPI"));
     expect(state.createGroup).not.toHaveBeenCalled();
     expect(state.addItem).not.toHaveBeenCalled();
-    expect(state.toastError).toHaveBeenCalledWith("watch.addFail");
+    expect(state.snack[0]).toMatchObject({
+      message: "watch.addFail",
+      tone: "critical",
+    });
     expect(state.refetch).toHaveBeenCalledTimes(1);
   });
 
@@ -162,6 +202,41 @@ describe("그룹 질의가 아직이거나 실패했을 때 별 — 기본 그�
     expect(seen.ready).toBe(true);
     act(() => seen.toggleWatch("005930", "KOSPI"));
     expect(state.createGroup).toHaveBeenCalledTimes(1);
+  });
+
+  it("요청은 silent — 서버 원문 토스트가 안 뜬다", () => {
+    render(<Probe />);
+    expect(state.opts.length).toBeGreaterThan(0);
+    for (const o of state.opts) expect(o).toEqual({ silent: true });
+  });
+
+  it("넣기가 실패하면 스낵바 + [다시 시도] 가 같은 그룹에 넣기만 다시 한다", async () => {
+    state.groups = [group(1, "관심", [])];
+    state.addResult = "fail";
+    render(<Probe />);
+    await act(async () => seen.toggleWatch("005930", "KOSPI"));
+    expect(state.snack).toHaveLength(1);
+    expect(state.snack[0]).toMatchObject({
+      message: "watch.addFail",
+      tone: "critical",
+    });
+    state.addResult = "ok";
+    await act(async () => state.snack[0]!.action!.onClick());
+    expect(state.addItem).toHaveBeenCalledTimes(2);
+    expect(state.createGroup).not.toHaveBeenCalled();
+  });
+
+  it("첫 등록에서 그룹은 만들어졌는데 넣기가 실패하면 다시 시도는 넣기만 다시 한다", async () => {
+    state.groups = [];
+    state.addResult = "fail";
+    render(<Probe />);
+    await act(async () => seen.toggleWatch("005930", "KOSPI"));
+    expect(state.snack).toHaveLength(1);
+    state.addResult = "ok";
+    await act(async () => state.snack[0]!.action!.onClick());
+    expect(state.createGroup).toHaveBeenCalledTimes(1);
+    expect(state.addItem).toHaveBeenCalledTimes(2);
+    expect(state.addItem.mock.calls[1]![0]).toMatchObject({ groupId: 77 });
   });
 
   it("그룹이 있으면 새로 만들지 않고 그 그룹에 넣는다", () => {

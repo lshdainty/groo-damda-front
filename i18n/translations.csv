@@ -2216,8 +2216,9 @@ stocks,watch.groupDelete,그룹 삭제,Delete group
 stocks,watch.groupNamePlaceholder,그룹 이름,Group name
 stocks,watch.groupDeleteConfirm,"""{{name}}"" 그룹과 담긴 종목 {{count}}개가 함께 삭제돼요. 삭제한 그룹은 되돌릴 수 없어요.","The ""{{name}}"" group and its {{count}} stocks will be deleted."
 stocks,watch.groupDeleteConfirmEmpty,"""{{name}}"" 그룹을 삭제해요. 삭제한 그룹은 되돌릴 수 없어요.","The ""{{name}}"" group will be deleted."
-stocks,watch.groupSaveFail,관심 그룹을 저장하지 못했어요.,Couldn't save the watchlist group.
-stocks,watch.addFail,관심 등록에 실패했어요,Failed to add to watchlist
+stocks,watch.groupSaveFail,그룹을 저장하지 못했어요.,Couldn't save the group.
+stocks,watch.groupDeleteFail,그룹을 지우지 못했어요.,Couldn't delete the group.
+stocks,watch.addFail,관심 종목에 넣지 못했어요.,Couldn't add it to your watchlist.
 stocks,warning.LIQUIDATION_TRADING,정리매매,Liquidation trading
 stocks,warning.OVERHEATED,단기과열,Overheated
 stocks,warning.SHORT_TERM_OVERHEAT,단기과열,Short-term overheat

@@ -18,6 +18,17 @@ const mocks = vi.hoisted(() => ({
   seen: [] as string[],
   create: vi.fn(),
   rename: vi.fn(),
+  opts: [] as unknown[],
+  failed: false,
+  snack: [] as Array<{ message: string; action?: { onClick: () => void } }>,
+  del: vi.fn(),
+}));
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: { message: string; action?: { onClick: () => void } }) =>
+      mocks.snack.push(o),
+    dismiss: () => {},
+  }),
 }));
 
 vi.mock("react-i18next", () => ({
@@ -43,9 +54,30 @@ vi.mock("../../model/useStockMaster", () => ({
   },
 }));
 vi.mock("../../api/watchlistApi", () => ({
-  useCreateWatchGroup: () => ({ isPending: false, mutate: mocks.create }),
-  useRenameWatchGroup: () => ({ isPending: false, mutate: mocks.rename }),
-  useDeleteWatchGroup: () => ({ isPending: false, mutateAsync: vi.fn() }),
+  useCreateWatchGroup: (o?: unknown) => {
+    mocks.opts.push(o);
+    return {
+      isPending: false,
+      isError: mocks.failed,
+      error: mocks.failed ? new Error("서버 원문 오류") : null,
+      reset: () => {},
+      mutate: mocks.create,
+    };
+  },
+  useRenameWatchGroup: (o?: unknown) => {
+    mocks.opts.push(o);
+    return {
+      isPending: false,
+      isError: false,
+      error: null,
+      reset: () => {},
+      mutate: mocks.rename,
+    };
+  },
+  useDeleteWatchGroup: (o?: unknown) => {
+    mocks.opts.push(o);
+    return { isPending: false, mutateAsync: mocks.del };
+  },
 }));
 
 const { StockSearchEntry } = await import("./stock-search");
@@ -76,6 +108,10 @@ beforeEach(() => {
   mocks.seen = [];
   mocks.create.mockClear();
   mocks.rename.mockClear();
+  mocks.del = vi.fn();
+  mocks.opts = [];
+  mocks.failed = false;
+  mocks.snack = [];
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -508,5 +544,80 @@ describe("그룹 삭제 확인 · 폼 닫기 · ⋮ 메뉴 (P 절 15 · 16 · �
       ...document.querySelectorAll('[role="menuitem"], [role="menu"] button'),
     ].map((e) => e.textContent);
     expect(items).toEqual(["watch.groupRename", "watch.groupDelete"]);
+  });
+});
+
+describe("그룹 저장 · 삭제 실패(I-28-5 4)", () => {
+  it("요청은 모두 silent — 서버 원문 토스트가 안 뜬다", async () => {
+    render(<WatchGroupForm group={null} onClose={() => {}} />);
+    render(
+      <WatchGroupDeleteConfirm
+        group={group(1, "반도체", 2)}
+        onClose={() => {}}
+      />,
+    );
+    await act(async () => {});
+    expect(mocks.opts.length).toBeGreaterThan(0);
+    for (const o of mocks.opts) expect(o).toEqual({ silent: true });
+  });
+
+  it("저장이 실패하면 폼 맨 위 Callout 고정 글 · 쓴 이름 그대로 · 서버 글 없음", async () => {
+    mocks.failed = true;
+    render(<WatchGroupForm group={null} onClose={() => {}} />);
+    await act(async () => {});
+    expect(dlg()!.querySelector('[role="alert"]')?.textContent).toBe(
+      "watch.groupSaveFail",
+    );
+    expect(dlg()!.textContent).not.toContain("서버 원문 오류");
+  });
+
+  it("같은 틱에 두 번 눌러도 요청은 한 번 — 끝나면(onSettled) 다시 된다", async () => {
+    render(<WatchGroupForm group={null} onClose={() => {}} />);
+    await act(async () => {});
+    const input = dlg()!.querySelector<HTMLInputElement>("input")!;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )!.set!.call(input, "새 그룹");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const save = [...dlg()!.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("save"),
+    )!;
+    await act(async () => {
+      save.click();
+      save.click();
+    });
+    expect(mocks.create).toHaveBeenCalledTimes(1);
+    const cbs = mocks.create.mock.calls[0]![1] as { onSettled: () => void };
+    await act(async () => cbs.onSettled());
+    await act(async () => save.click());
+    expect(mocks.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("삭제가 실패하면 확인창을 닫고 critical 스낵바 + [다시 시도] 가 같은 삭제를 다시 한다", async () => {
+    mocks.del = vi.fn().mockRejectedValue(new Error("x"));
+    const onClose = vi.fn();
+    render(
+      <WatchGroupDeleteConfirm
+        group={group(1, "반도체", 2)}
+        onClose={onClose}
+      />,
+    );
+    await act(async () => {});
+    const confirm = [
+      ...document.querySelectorAll<HTMLButtonElement>(
+        '[role="alertdialog"] button',
+      ),
+    ].find((b) => b.textContent === "watch.groupDelete")!;
+    await act(async () => confirm.click());
+    await act(async () => {});
+    expect(mocks.snack).toHaveLength(1);
+    expect(mocks.snack[0]!.message).toBe("watch.groupDeleteFail");
+    mocks.del.mockResolvedValue(undefined);
+    await act(async () => mocks.snack[0]!.action!.onClick());
+    expect(mocks.del).toHaveBeenCalledTimes(2);
+    expect(mocks.del.mock.calls[1]![0]).toBe(1);
   });
 });
