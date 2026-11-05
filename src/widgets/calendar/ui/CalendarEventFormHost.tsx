@@ -42,7 +42,8 @@ export function CalendarEventFormHost({
   onDelete?: () => void;
 }) {
   const wide = useWideSurface();
-  const { data: labels = [] } = useEventLabels({ reference: true });
+  const labelsQ = useEventLabels({ reference: true });
+  const labels = labelsQ.data ?? [];
   const createEvent = useCreateEvent();
   const updateEvent = useUpdateEvent();
   // "자세히" 를 눌렀으면 그 값을 들고 있다 — 없으면 빠른 추가 단계
@@ -85,6 +86,8 @@ export function CalendarEventFormHost({
           : undefined
       }
       labels={labels}
+      labelsFailed={labelsQ.isError && !labelsQ.data}
+      onRetryLabels={() => void labelsQ.refetch()}
       isLoading={event ? updateEvent.isPending : createEvent.isPending}
       saveError={event ? updateEvent.isError : createEvent.isError}
       onClose={onClose}

@@ -35,10 +35,11 @@ export function AlertConfirm({
   /** 지운다 — 끝날 때까지 로딩. 실패하면 던진다 */
   onConfirm: () => Promise<unknown> | void;
   /**
-   * 확정이 실패했을 때 — 주면 확인창을 닫은 뒤 부른다(호출처가 Snackbar critical + "다시 시도" 를 띄운다. 창 위에는 겹치지 않는다 —
-   * snackbar.md 오류 · alert-dialog.md). 안 주면 예전처럼 열린 채 둔다
+   * 확정이 실패했을 때 — **필수**. 확인창을 닫은 뒤 부른다(호출처가 Snackbar critical + "다시 시도" 를 띄운다. 창 위에는
+   * 겹치지 않는다 — snackbar.md 오류 · alert-dialog.md). 전역 서버 원문 알림이 없으므로 이걸 빠뜨린 새 호출처는 실패가
+   * 아무 말 없이 지나간다 — 던지지 않는 확인(요청이 아닌 것)도 다 이 자리를 채운다
    */
-  onError?: () => void;
+  onError: () => void;
   onClose: () => void;
 }) {
   const { t: tc } = useTranslation("common");
@@ -65,11 +66,8 @@ export function AlertConfirm({
                 await onConfirm();
                 onClose();
               } catch {
-                if (onError) {
-                  onClose();
-                  onError();
-                }
-                // onError 가 없으면 열린 채 둔다 — 지워진 것은 없고 오류는 전역 알림이 말한다
+                onClose();
+                onError();
               } finally {
                 setRunning(false);
               }

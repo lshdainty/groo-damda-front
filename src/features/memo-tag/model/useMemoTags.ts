@@ -1,3 +1,8 @@
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { invalidateFor, memoTagKeys } from "@/shared/config";
 import { memoTagApi } from "../api/memoTagApi";
@@ -5,10 +10,13 @@ import type { MemoTagRequestOptions } from "../api/memoTagApi";
 import type { MemoTagFormValues } from "@/entities/memo-tag";
 
 /** `options.silent` — 불러오기 실패를 화면 안 Result Section 이 말한다(전역 서버 원문 토스트를 띄우지 않는다) */
-export const useMemoTags = (options?: MemoTagRequestOptions) => {
+export const useMemoTags = (
+  options?: MemoTagRequestOptions & ReferenceOpts,
+) => {
   return useQuery({
     queryKey: memoTagKeys.list(),
-    queryFn: () => memoTagApi.getTags(options),
+    queryFn: () => memoTagApi.getTags(referenceSilent(options)),
+    ...referenceMeta(options),
   });
 };
 

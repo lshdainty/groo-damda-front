@@ -35,6 +35,8 @@ export const ReferenceFailureNotice = () => {
     let gatherTimer: ReturnType<typeof setTimeout> | undefined;
     let shownTimer: ReturnType<typeof setTimeout> | undefined;
     let shown = false;
+    // 알린 뒤 창 안에서 새 참조 실패가 있었다
+    let missed = false;
 
     const isFailedReference = (q: {
       meta: unknown;
@@ -63,6 +65,12 @@ export const ReferenceFailureNotice = () => {
       shownTimer = setTimeout(() => {
         shown = false;
         shownTimer = undefined;
+        // 창 안에서 새 참조 실패가 있었다면(missed) 창이 닫힐 때 한 번 다시 판단한다 — 아직 값 없이 실패한 채면 알린다.
+        // 새 실패가 없었다면 같은 실패를 6초마다 되풀이하지 않는다
+        if (missed && gatherTimer === undefined) {
+          missed = false;
+          gatherTimer = setTimeout(show, GATHER_MS);
+        }
       }, SHOWN_MS);
       snackbar.show({
         message: tRef.current("query.referenceFailed"),
@@ -74,7 +82,11 @@ export const ReferenceFailureNotice = () => {
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
       if (event.type !== "updated" || event.action.type !== "error") return;
       if (!isFailedReference(event.query)) return;
-      if (gatherTimer !== undefined || shown) return;
+      if (shown) {
+        missed = true;
+        return;
+      }
+      if (gatherTimer !== undefined) return;
       gatherTimer = setTimeout(show, GATHER_MS);
     });
 

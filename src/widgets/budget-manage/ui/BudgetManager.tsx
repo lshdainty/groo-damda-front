@@ -510,6 +510,8 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
           confirmLabel={t("copy")}
           tone="criticalSolid"
           onConfirm={() => startCopy(false)}
+          // startCopy 는 실패를 스스로 잡아 스낵바(+ 다시 시도)로 알린다 — 여기까지 던지지 않는다
+          onError={() => {}}
           onClose={() => setConfirmCopy(false)}
         />
       )}

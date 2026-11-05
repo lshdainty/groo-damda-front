@@ -3,6 +3,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SnackbarProvider } from "@/shared/ds/snackbar";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -35,7 +36,7 @@ vi.mock("@/shared/ui/groo/manager-layout", () => ({
 
 const store = vi.hoisted(() => ({
   saved: new Set<string>(),
-  set: vi.fn(),
+  set: vi.fn(async (_cards?: Set<string>) => true),
 }));
 vi.mock("@/shared/lib/groo/hide-amounts-core", () => ({
   useHiddenCards: () => store.saved,
@@ -83,6 +84,7 @@ beforeEach(() => {
   }
   store.saved = new Set();
   store.set.mockClear();
+  store.set.mockImplementation(async () => true);
   onBack.mockClear();
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -95,7 +97,11 @@ afterEach(() => {
 
 function render(mobile: boolean) {
   act(() =>
-    root.render(<HideAmountsSection mobile={mobile} onBack={onBack} />),
+    root.render(
+      <SnackbarProvider>
+        <HideAmountsSection mobile={mobile} onBack={onBack} />
+      </SnackbarProvider>,
+    ),
   );
 }
 const q = (sel: string) => container.querySelector<HTMLElement>(sel);
@@ -161,28 +167,53 @@ describe("HideAmountsSection", () => {
     );
   });
 
-  it("가리기만 늘리는 저장은 본인 확인 없이 반영하고 나간다", () => {
+  it("가리기만 늘리는 저장은 본인 확인 없이 반영하고 나간다", async () => {
     render(true);
     click(checks()[0]);
     click(btn("save"));
+    await act(async () => {});
     expect(q("[data-verify]")).toBeNull();
     expect(store.set).toHaveBeenCalledTimes(1);
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
-  it("푸는 카드가 있는 저장은 본인 확인을 먼저 열고, 맞으면 그때 반영한다", () => {
+  it("푸는 카드가 있는 저장은 본인 확인을 먼저 열고, 맞으면 그때 반영한다", async () => {
     store.saved = new Set(["kind.expense", "home.netWorth"]);
     render(true);
     click(checks()[0]); // kind.expense 해제
     click(btn("save"));
     expect(store.set).not.toHaveBeenCalled();
     click(q("[data-verify]") ?? undefined);
+    await act(async () => {});
     expect(store.set).toHaveBeenCalledTimes(1);
     // 저장에 넘긴 값 = 고른 집합(지출 거래만 빠진 나머지)
     expect([...(store.set.mock.calls[0]![0] as Set<string>)]).toEqual([
       "home.netWorth",
     ]);
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("서버 저장이 실패하면 화면을 닫지 않고 고른 값을 둔 채 맨 위 안내를 띄운다", async () => {
+    store.set.mockImplementation(async () => false);
+    render(true);
+    click(checks()[0]);
+    click(btn("save"));
+    await act(async () => {});
+    expect(onBack).not.toHaveBeenCalled();
+    expect(container.textContent).toContain("hideAmounts.saveFailed");
+    expect(checks()[0]!.getAttribute("aria-checked")).toBe("true");
+    expect(btn("save")?.disabled).toBe(false);
+  });
+
+  it("본인 확인 뒤 저장이 실패해도 닫지 않는다(반영 안 됨)", async () => {
+    store.saved = new Set(["kind.expense", "home.netWorth"]);
+    store.set.mockImplementation(async () => false);
+    render(true);
+    click(checks()[0]);
+    click(btn("save"));
+    click(q("[data-verify]") ?? undefined);
+    await act(async () => {});
+    expect(onBack).not.toHaveBeenCalled();
   });
 
   it("본인 확인을 취소하면 저장하지 않고 화면에 남고 고른 것이 그대로다", () => {

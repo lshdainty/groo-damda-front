@@ -1918,6 +1918,7 @@ settings,hideAmounts.tabAll,전체,All
 settings,hideAmounts.selectAll,모두 선택,Select all
 settings,hideAmounts.clearAll,모두 해제,Clear all
 settings,hideAmounts.discardTitle,저장하지 않고 나가기,Leave without saving
+settings,hideAmounts.saveFailed,금액 가리기를 저장하지 못했어요.,Couldn't save the amount hiding.
 settings,hideAmounts.discardBody,고른 내용이 사라져요.,Your selection will be discarded.
 settings,hideAmounts.discardConfirm,나가기,Leave
 settings,hideAmounts.kindLabel,거래 종류,Transaction type
@@ -3377,6 +3378,7 @@ calendar,loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again i
 calendar,form.none,없음,None
 calendar,form.noLabel,라벨 없음,No label
 calendar,form.noReminder,알림 없음,No reminder
+calendar,form.labelLoadFailed,라벨을 불러오지 못했어요,Could not load labels
 calendar,form.calendarLoadFailed,불러오지 못했어요,Could not load
 calendar,form.labelHint,라벨은 설정의 캘린더 라벨에서 만들어요,Create labels in Settings under Calendar labels
 calendar,form.start,시작,Start

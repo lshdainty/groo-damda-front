@@ -138,3 +138,18 @@ describe("hold 해제", () => {
     expect(show).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("6초 창", () => {
+  it("창 안에서 새 참조 실패가 났으면 창이 닫힐 때 한 번 다시 판단해 알린다", async () => {
+    await act(async () => {
+      await fail("first", REFERENCE_META);
+      vi.advanceTimersByTime(400);
+    });
+    expect(show).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await fail("second", REFERENCE_META);
+      vi.advanceTimersByTime(7000);
+    });
+    expect(show).toHaveBeenCalledTimes(2);
+  });
+});

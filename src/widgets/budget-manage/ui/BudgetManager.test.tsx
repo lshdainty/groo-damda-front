@@ -82,7 +82,8 @@ vi.mock("@/features/expense", () => ({
 }));
 
 const { BudgetManager } = await import("./BudgetManager");
-const { setHiddenCards } = await import("@/shared/lib/groo/hide-amounts-core");
+const { setHiddenCardsLocal } =
+  await import("@/shared/lib/groo/hide-amounts-core");
 
 const now = new Date();
 const b = (rowId: number, categoryRowId: number | null, amount: number) => ({
@@ -129,7 +130,7 @@ beforeEach(() => {
   state.cats = q([cat(1), cat(2)]);
 });
 afterEach(() => {
-  act(() => setHiddenCards([]));
+  act(() => setHiddenCardsLocal([]));
   act(() => root.unmount());
   container.remove();
 });
@@ -190,7 +191,7 @@ describe("예산 설정 폰 — 흰 면 하나(I-08 18 · 21)", () => {
 
   it("가림(budget.manage) — 금액이 ••••", () => {
     render();
-    act(() => setHiddenCards(["budget.manage"]));
+    act(() => setHiddenCardsLocal(["budget.manage"]));
     expect(container.textContent).not.toContain("1,234,567");
     expect(container.textContent).toContain("••••");
   });

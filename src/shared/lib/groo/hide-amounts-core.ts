@@ -100,21 +100,26 @@ function commitLocal(next: Set<HideCardKey>) {
 }
 
 /**
- * 서버로 올린다 — 실패해도 로컬은 되돌리지 않는다.
+ * 서버로 올리고 성공했는지 돌려준다.
  *
- * 사용자는 이미 [저장]을 눌러 화면이 바뀐 걸 봤다. 거기서 되돌리면 "저장했는데 안 됐다"
- * 가 아니라 "저장했는데 원래대로 튀었다" 가 되어 더 헷갈린다. 실패는 전역 인터셉터가
- * 서버 메시지로 띄우고(비-GET), 다음 저장이 서버를 따라잡는다.
+ * 실패를 삼키지 않는다 — 가린 금액은 계정에 붙어서, 서버 저장이 실패한 채 이 기기에만 반영하면 다음 동기화가
+ * 서버의 옛 값으로 덮어 가려 둔 금액이 사용자도 모르게 다시 드러난다. 그래서 **성공했을 때만 로컬에 반영**하고
+ * (`commit`), 실패는 호출한 화면이 자기 자리에서 알린다(Callout · 스낵바 + [다시 시도]).
  */
-function push(next: Set<HideCardKey>) {
-  void hideCardsApi.put([...next]).catch(() => {
-    /* 전역 인터셉터가 이미 사용자에게 알린다 */
-  });
+async function push(next: Set<HideCardKey>): Promise<boolean> {
+  try {
+    await hideCardsApi.put([...next]);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-function commit(next: Set<HideCardKey>) {
+/** 서버에 올려 성공하면 로컬에 반영한다. 실패하면 로컬은 그대로다(false). */
+async function commit(next: Set<HideCardKey>): Promise<boolean> {
+  if (!(await push(next))) return false;
   commitLocal(next);
-  push(next);
+  return true;
 }
 
 /** 이 브라우저 캐시의 주인. 다르면 남의 설정이므로 올려서는 안 된다. */
@@ -160,7 +165,9 @@ export async function syncHideCardsFromServer(userId: string): Promise<void> {
     const local = mine ? current() : new Set<HideCardKey>();
     setCacheOwner(userId);
     if (!mine) commitLocal(local);
-    push(local);
+    // **의도된 무음**: 로그인 직후 뒤에서 도는 첫 업로드다. 사용자가 누른 일이 아니라 알릴 자리가 없고, 실패해도
+    // 로컬은 그대로이며 서버는 여전히 `null` 이라 다음 부팅의 동기화가 다시 올린다(덮어 드러내는 일이 없다).
+    void push(local);
     return;
   }
 
@@ -248,17 +255,28 @@ export function useHiddenCards(): Set<HideCardKey> {
  * 가려진 카드 전체를 이 목록으로 교체 — 설정 화면이 [저장] 으로 한 번에 반영할 때.
  *
  * <p>지금 가려진 것 중 빠지는 카드는 곧 '푸는' 것이다 — 호출 전에 인증을 거칠 것(UI 책임).
+ *
+ * <p>서버 저장이 성공했을 때만 로컬에 반영하고 성공 여부를 돌려준다 — 실패(false)면 아무것도 바뀌지 않았으니
+ * 호출한 화면이 알린다.
  */
-export function setHiddenCards(cards: Iterable<HideCardKey>) {
-  commit(new Set(cards));
+/**
+ * 서버를 거치지 않고 이 기기에만 반영한다 — 서버에서 받은 값을 되쏘지 않으려는 길과 시험 준비용.
+ * 사용자가 고른 저장은 `setHiddenCards` 를 쓴다.
+ */
+export function setHiddenCardsLocal(cards: Iterable<HideCardKey>) {
+  commitLocal(new Set(cards));
 }
 
-export function hideAllCards() {
-  setHiddenCards(ALL_HIDE_CARDS);
+export function setHiddenCards(cards: Iterable<HideCardKey>): Promise<boolean> {
+  return commit(new Set(cards));
 }
 
-export function revealAllCards() {
-  commit(new Set());
+export function hideAllCards(): Promise<boolean> {
+  return setHiddenCards(ALL_HIDE_CARDS);
+}
+
+export function revealAllCards(): Promise<boolean> {
+  return commit(new Set());
 }
 
 export function isCardHidden(card: HideCardKey): boolean {

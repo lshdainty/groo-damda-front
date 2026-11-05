@@ -90,7 +90,8 @@ export function EventDetailSurface({
   const wide = useWideSurface();
   const hasList = listDate != null;
   const canEdit = useCanEditEvent();
-  const { data: labels = [] } = useEventLabels({ reference: true });
+  const labelsQ = useEventLabels({ reference: true });
+  const labels = labelsQ.data ?? [];
   const updateEvent = useUpdateEvent();
 
   const [step, setStep] = useState<Step>(
@@ -117,6 +118,8 @@ export function EventDetailSurface({
   const flow = useEventFormFlow({
     event: snapshot,
     labels,
+    labelsFailed: labelsQ.isError && !labelsQ.data,
+    onRetryLabels: () => void labelsQ.refetch(),
     isLoading: updateEvent.isPending,
     saveError: updateEvent.isError,
     onSubmit: (data) => {

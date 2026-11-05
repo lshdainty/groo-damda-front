@@ -58,7 +58,8 @@ vi.mock("@/features/expense", () => ({
 
 const { i18n } = await import("@/shared/i18n/config");
 const { StatsMobile } = await import("./StatsMobile");
-const { setHiddenCards } = await import("@/shared/lib/groo/hide-amounts-core");
+const { setHiddenCardsLocal } =
+  await import("@/shared/lib/groo/hide-amounts-core");
 
 const LONG = "카페·간식·디저트 모임 지출 항목";
 const now = new Date();
@@ -154,7 +155,7 @@ beforeEach(async () => {
 });
 afterEach(() => {
   vi.restoreAllMocks();
-  act(() => setHiddenCards([]));
+  act(() => setHiddenCardsLocal([]));
   act(() => root.unmount());
   container.remove();
 });
@@ -227,7 +228,7 @@ describe("금액은 원까지(I-08 32 · 39)", () => {
   });
 
   it("가리면 도넛 합계 · 범례 금액이 ••••", () => {
-    act(() => setHiddenCards(["stats.category"]));
+    act(() => setHiddenCardsLocal(["stats.category"]));
     render();
     const total = container.querySelector("[data-slot=stats-donut-total]")!;
     expect(total.textContent).toContain("••••");

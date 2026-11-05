@@ -28,7 +28,16 @@ import { NO_LABEL, reminderKey, type EventFormView } from "./types";
  */
 export function EventFormDialogBody({ view }: { view: EventFormView }) {
   const { t } = useTranslation("calendar");
-  const { ctrl, labels, showErrors, titleEmpty, rangeError, endRef } = view;
+  const {
+    ctrl,
+    labels,
+    labelsFailed,
+    onRetryLabels,
+    showErrors,
+    titleEmpty,
+    rangeError,
+    endRef,
+  } = view;
   const {
     form,
     selectableCalendars,
@@ -156,30 +165,40 @@ export function EventFormDialogBody({ view }: { view: EventFormView }) {
 
       <Field
         label={t("form.label")}
-        description={labels.length === 0 ? t("form.labelHint") : undefined}
+        description={
+          labels.length === 0 && !labelsFailed ? t("form.labelHint") : undefined
+        }
       >
-        <Select
-          value={selectedLabelRowId ? String(selectedLabelRowId) : NO_LABEL}
-          onValueChange={(v) =>
-            ctrl.handleLabelChange(v === NO_LABEL ? undefined : Number(v))
-          }
-        >
-          <SelectItem value={NO_LABEL} label={t("form.noLabel")} />
-          {labels.map((l) => (
-            <SelectItem
-              key={l.rowId}
-              value={String(l.rowId)}
-              label={l.labelName}
-              prefixIcon={
-                <span
-                  aria-hidden
-                  className="size-[10px] rounded-full"
-                  style={{ background: getPaletteByColor(l.color).color }}
-                />
-              }
-            />
-          ))}
-        </Select>
+        {labelsFailed ? (
+          <InputButton
+            value=""
+            placeholder={t("form.labelLoadFailed")}
+            onClick={onRetryLabels}
+          />
+        ) : (
+          <Select
+            value={selectedLabelRowId ? String(selectedLabelRowId) : NO_LABEL}
+            onValueChange={(v) =>
+              ctrl.handleLabelChange(v === NO_LABEL ? undefined : Number(v))
+            }
+          >
+            <SelectItem value={NO_LABEL} label={t("form.noLabel")} />
+            {labels.map((l) => (
+              <SelectItem
+                key={l.rowId}
+                value={String(l.rowId)}
+                label={l.labelName}
+                prefixIcon={
+                  <span
+                    aria-hidden
+                    className="size-[10px] rounded-full"
+                    style={{ background: getPaletteByColor(l.color).color }}
+                  />
+                }
+              />
+            ))}
+          </Select>
+        )}
       </Field>
 
       <Switch
