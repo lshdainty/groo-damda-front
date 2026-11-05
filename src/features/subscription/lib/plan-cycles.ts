@@ -36,3 +36,26 @@ export function yearlySavePct(monthlyPrice: number, yearlyPrice: number) {
 export function cycleOfDuration(durationMonths: number | null | undefined) {
   return durationMonths === YEARLY_MONTHS ? "yearly" : "monthly";
 }
+
+/**
+ * 내 구독의 가격 · 기간 — `/me` 응답 값이 정상 경로다. 옛 서버(칸 없음) · 값이 안 온 경우에는 구독의 `planCode` 로
+ * 요금제 목록에서 같은 행을 찾아 쓴다. 둘 다 없으면 null.
+ */
+export function resolveSubPlan(
+  sub:
+    | {
+        planCode: string;
+        price?: number | null;
+        durationMonths?: number | null;
+      }
+    | null
+    | undefined,
+  plans: readonly SubscriptionPlan[] | undefined,
+): { price: number | null; durationMonths: number | null } {
+  if (!sub) return { price: null, durationMonths: null };
+  const plan = plans?.find((p) => p.planCode === sub.planCode);
+  return {
+    price: sub.price ?? plan?.price ?? null,
+    durationMonths: sub.durationMonths ?? plan?.durationMonths ?? null,
+  };
+}

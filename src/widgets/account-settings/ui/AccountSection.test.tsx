@@ -25,6 +25,13 @@ const state = vi.hoisted(() => ({
     data: undefined as unknown,
     isLoading: false,
   },
+  // 기능 조회를 통째로 바꿔 끼우는 자리 — 대기 · 실패(null 이면 features 로)
+  featuresQ: null as null | {
+    data: unknown;
+    isLoading?: boolean;
+    isError?: boolean;
+  },
+  plans: { data: undefined as unknown, isLoading: false },
 }));
 const toasts = vi.hoisted(() => ({
   error: [] as string[],
@@ -65,7 +72,9 @@ vi.mock("@/features/subscription/ui/SecuritiesLinkDialog", () => ({
   SecuritiesLinkDialog: () => null,
 }));
 vi.mock("@/features/subscription/model/useSubscription", () => ({
-  useMyFeatures: () => ({ data: { features: state.features } }),
+  useMyFeatures: () =>
+    state.featuresQ ?? { data: { features: state.features } },
+  useSubscriptionPlans: () => state.plans,
   useMySubscription: () => state.sub,
 }));
 vi.mock("@/features/oauth-link", () => ({
@@ -101,6 +110,8 @@ beforeEach(() => {
   state.unlinkError = false;
   state.features = ["SECURITIES"];
   state.sub = { data: undefined, isLoading: false };
+  state.featuresQ = null;
+  state.plans = { data: undefined, isLoading: false };
   state.providers = {
     data: [
       { type: "GOOGLE", name: "Google", authUrl: "", linked: true },
@@ -254,6 +265,41 @@ describe("구독 줄 (I-14 34)", () => {
     render(true);
     expect(row().querySelector("[data-slot=skeleton]")).toBeNull();
     expect(row().textContent).not.toContain("account.sub.per");
+  });
+
+  it("/me 에 가격이 없으면(옛 서버) planCode 로 요금제 목록에서 가격 · 주기를 찾아 쓴다", () => {
+    state.sub = sub(null, null);
+    state.plans = {
+      data: [
+        { planCode: "OTHER", planName: "x", durationMonths: 1, price: 1 },
+        {
+          planCode: "SECURITIES",
+          planName: "담다 Pro",
+          durationMonths: 12,
+          price: 99_000,
+        },
+      ],
+      isLoading: false,
+    };
+    render(true);
+    expect(row().textContent).toContain("99,000");
+    expect(row().textContent).toContain("account.sub.perYear");
+  });
+
+  it("기능 조회가 대기 중이면 Free 배지 · 권유 글을 그리지 않고 Skeleton 이다", () => {
+    state.featuresQ = { data: undefined, isLoading: true };
+    render(true);
+    expect(text()).not.toContain("account.sub.proPromo");
+    expect(text()).not.toContain("Free");
+    expect(row().querySelector("[data-slot=skeleton]")).not.toBeNull();
+  });
+
+  it("기능 조회가 실패하면 Free 배지 · 권유 글 없이 '담다 Pro' 줄만 선다", () => {
+    state.featuresQ = { data: undefined, isError: true };
+    render(true);
+    expect(text()).not.toContain("account.sub.proPromo");
+    expect(text()).not.toContain("Free");
+    expect(row().textContent).toContain("담다 Pro");
   });
 
   it("Pro 가 아니면 값 없이 권유 문구 + 꺾쇠", () => {

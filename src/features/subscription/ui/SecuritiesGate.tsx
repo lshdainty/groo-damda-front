@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import { Link, Navigate, useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ResultSection } from "@/shared/ds/result-section";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { MobileBackHeader } from "@/shared/ui/groo/mobile-back-header";
@@ -16,19 +17,57 @@ import { useMyFeatures } from "../model/useSubscription";
  * 서버 차단(403)은 그대로다 — 이건 화면 안내일 뿐이다.
  */
 export function SecuritiesGate({ children }: { children: ReactNode }) {
-  const { data, isLoading, isError } = useMyFeatures();
+  const { data, isLoading, isError, refetch, isRefetching } = useMyFeatures();
   if (isLoading) {
     return null;
   }
-  // 조회 자체가 실패한 건 '구독이 없다'가 아니다 — 팔 게 아닌데 파는 화면을 띄우느니
-  // 종전처럼 홈으로 보낸다.
-  if (isError) {
-    return <Navigate to="/desk" replace />;
+  // 조회 자체가 실패한 건 '구독이 없다'가 아니다 — 팔 게 아닌데 파는 화면을 띄우지도, 말없이 홈으로 튕기지도 않는다.
+  // 그 자리에서 실패를 말하고 다시 시도하게 한다. 이미 받아 둔 값이 있으면(재조회만 실패) 그 값으로 간다 —
+  // Pro 사용자가 창 초점 재조회 하나 실패했다고 내쫓기지 않는다.
+  if (isError && data === undefined) {
+    return (
+      <GateLoadFailed onRetry={() => void refetch()} loading={isRefetching} />
+    );
   }
   if (!data?.features?.includes("SECURITIES")) {
     return <SecuritiesUpsell />;
   }
   return <>{children}</>;
+}
+
+/** 기능 조회 실패 — 그 자리 Result Section + [다시 시도](서버 글을 내지 않는다) */
+function GateLoadFailed({
+  onRetry,
+  loading,
+}: {
+  onRetry: () => void;
+  loading: boolean;
+}) {
+  const { t } = useTranslation("subscription");
+  const { t: tDs } = useTranslation("ds");
+  const { mobile } = useOutletContext<{ mobile: boolean }>();
+  const result = (
+    <ResultSection
+      kind="failure"
+      size="medium"
+      title={t("gate.loadError")}
+      description={t("loadErrorHint")}
+      primaryAction={{
+        label: tDs("common.retry"),
+        onClick: onRetry,
+        loading,
+      }}
+    />
+  );
+  // 전체 화면 라우트라 폰에는 전역 헤더가 없다 — 나갈 길(뒤로)을 붙인다(미구독 안내와 같다)
+  return mobile ? (
+    <>
+      <MobileBackHeader title={t("gate.title")} />
+      {result}
+    </>
+  ) : (
+    <div style={{ padding: 24 }}>{result}</div>
+  );
 }
 
 /**

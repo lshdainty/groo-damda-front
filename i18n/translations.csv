@@ -1999,8 +1999,6 @@ settings,account.devices.label,로그인된 기기,Signed-in Devices
 settings,account.devices.desc,현재 기기,Current device
 settings,sections.devices.label,로그인된 기기,Signed-in devices
 settings,sections.devices.desc,이 계정으로 로그인된 기기예요. 낯선 기기가 있으면 로그아웃해주세요.,These devices are signed in to your account. Log out any you don't recognize.
-settings,sections.subscription.label,구독 관리,Manage subscription
-settings,sections.subscription.desc,Pro 요금과 기능을 비교해요,Compare Pro pricing and features
 settings,devices.current,현재 기기,Current device
 settings,devices.unknown,알 수 없는 기기,Unknown device
 settings,devices.lastUsed,마지막 사용 {{when}},Last used {{when}}
@@ -2413,16 +2411,17 @@ subscription,freeInUse,Free 플랜 이용 중,On the Free plan
 subscription,nextBill,다음 결제 {{date}},Next billing {{date}}
 subscription,activeUntil,{{date}}까지 이용,Access until {{date}}
 subscription,freeLocked,증권 연동 · 실시간 시세가 잠겨 있어요,Securities link and real-time quotes are locked
-subscription,spotlightTitle,증권 투자는 Pro 전용이에요,Securities investing is Pro-only
-subscription,spotlightDesc,"실시간 시세·호가, 국내외 종목 검색, 관심종목, 보유 손익까지 — Pro를 구독하면 증권 탭이 바로 열려요.","Real-time quotes and order book, domestic and overseas search, watchlist, holdings P&L — subscribe to Pro and the Securities tab opens right away."
+subscription,spotlight,"증권 투자는 Pro 전용이에요. 실시간 시세·호가, 국내외 종목 검색, 관심종목, 보유 손익까지 — Pro를 구독하면 증권 탭이 바로 열려요.","Securities investing is Pro-only. Real-time quotes and order book, domestic and overseas search, watchlist, holdings P&L — subscribe to Pro and the Securities tab opens right away."
 subscription,cycleMonthly,월간,Monthly
 subscription,cycleYearly,연간 {{pct}}%↓,Yearly {{pct}}%↓
+subscription,cycleYearlyPlain,연간,Yearly
 subscription,currentPlan,현재 플랜,Current plan
 subscription,freeDesc,기본 가계부 기능,Basic budget features
 subscription,perMonth,월,mo
 subscription,perYear,년,yr
 subscription,pricePerMonthNote,월 {{price}}원 꼴 · {{pct}}% 절약,≈ {{price}}/mo · Save {{pct}}%
 subscription,monthlyBilling,월 단위 결제,Billed monthly
+subscription,yearlyBilling,연 단위 결제,Billed yearly
 subscription,comparisonTitle,기능 비교,Feature comparison
 subscription,colFeature,기능,Feature
 subscription,feature.core,가계부 · 자산 관리,Budget and asset management
@@ -2438,6 +2437,7 @@ subscription,expiryDate,만료일,expiry date
 subscription,keepSub,유지하기,Keep
 subscription,loadError,구독 정보를 불러오지 못했어요,Couldn't load subscription info
 subscription,loadErrorHint,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
+subscription,noPlans,요금제를 불러오지 못했어요,Couldn't load the plans
 subscription,featureYes,있음,Included
 subscription,featureNo,없음,Not included
 subscription,cycleAria,결제 주기,Billing cycle
@@ -2486,6 +2486,7 @@ subscription,apiToken.loadFailed,토큰 목록을 불러오지 못했어요,Coul
 subscription,gate.title,증권 구독이 필요해요,Securities needs a subscription
 subscription,gate.desc,"실시간 시세·종목 검색·관심종목은 Pro 구독에 들어 있어요. 구독하면 이 화면이 바로 열려요.","Real-time quotes, search and watchlists are part of Pro. Subscribe and this screen opens right away."
 subscription,gate.action,구독 보기,See plans
+subscription,gate.loadError,증권 화면을 열지 못했어요,Couldn't open Securities
 date,justNow,방금 전,Just now
 date,minutesAgo,{{count}}분 전,{{count}} min ago
 date,hoursAgo,{{count}}시간 전,{{count}} hr ago

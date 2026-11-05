@@ -31,6 +31,8 @@ import {
   TopNavigationTitle,
 } from "@/shared/ds/top-navigation";
 import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
+import { SnackbarAvoidOverlap } from "@/shared/ds/snackbar";
+import { useCoverBottomNav } from "@/shared/ui/groo/use-cover-bottom-nav";
 import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 import { toLocalDateKey } from "@/shared/lib/date";
 import { KRW, money, wonPrefix } from "@/shared/lib/groo/format";
@@ -45,6 +47,7 @@ import {
 import {
   cycleOfDuration,
   pickCyclePlans,
+  resolveSubPlan,
   yearlySavePct,
   type Cycle,
 } from "@/features/subscription/lib/plan-cycles";
@@ -84,6 +87,8 @@ export function SubscriptionSection({
   const cancel = useCancelSubscription();
   const confirmFail = useConfirmFail();
   const compareId = useId();
+  // 폰 껍데기가 탭 바를 덮는 동안 탭 바는 inert — 스낵바가 바닥 버튼 위 8 에 서게(J5)
+  useCoverBottomNav(mobile);
 
   const [chosen, setChosen] = useState<Cycle | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -121,12 +126,19 @@ export function SubscriptionSection({
   const { monthly, yearly } = pickCyclePlans(plansQ.data);
   const hasBoth = monthly != null && yearly != null;
   const pct = hasBoth ? yearlySavePct(monthly.price!, yearly.price!) : 0;
+  // 할인 표시("%↓" · "n% 절약")는 셈할 월간 행이 있고 정말 싸질 때만 — 0 이하면 없다
+  const showPct = hasBoth && pct > 0;
+  // 내 구독의 가격 · 기간 — /me 값이 정상 경로, 없으면 planCode 로 요금제 목록에서(옛 서버 · 값이 안 온 경우)
+  const own = resolveSubPlan(sub, plansQ.data);
+  const ownCycle = cycleOfDuration(own.durationMonths);
   const cycle: Cycle = hasBoth
-    ? (chosen ?? cycleOfDuration(sub?.durationMonths))
+    ? (chosen ?? ownCycle)
     : monthly
       ? "monthly"
       : "yearly";
   const selected = cycle === "yearly" ? yearly : monthly;
+  // 요금제가 하나도 없다 — 팔 것이 없다(서버가 목록을 비워 줌). 실패로 말하고 시작 단추는 그리지 않는다
+  const plansEmpty = !loading && !failed && !monthly && !yearly;
 
   const unit = (months: number | null | undefined) =>
     months === 12 ? t("perYear") : t("perMonth");
@@ -155,7 +167,7 @@ export function SubscriptionSection({
   );
 
   // ── 지금 플랜 · 요금 ──────────────────────────────────────────
-  const currentPrice = priceText(sub?.price, sub?.durationMonths);
+  const currentPrice = priceText(own.price, own.durationMonths);
   const currentPlan = loading ? (
     <SkeletonRows count={1} />
   ) : (
@@ -181,9 +193,22 @@ export function SubscriptionSection({
 
   const prices = loading ? (
     <SkeletonRows count={2} />
+  ) : plansEmpty ? (
+    <ResultSection
+      kind="failure"
+      size="medium"
+      title={t("noPlans")}
+      description={t("loadErrorHint")}
+      primaryAction={{
+        label: tDs("common.retry"),
+        onClick: retry,
+        loading: refetching,
+      }}
+    />
   ) : (
     <List>
       <ListItem
+        className="tabular-nums"
         title={
           <>
             {FREE}
@@ -194,18 +219,22 @@ export function SubscriptionSection({
         suffix={money(0)}
       />
       <ListItem
+        className="tabular-nums"
         title={
           <>
             {PRO}
-            {isPro && planBadge}
+            {/* 고른 주기가 지금 구독 주기와 같을 때만 — 다른 주기를 보는 동안은 그 가격만 */}
+            {isPro && cycle === ownCycle && planBadge}
           </>
         }
         detail={
           cycle === "yearly" && selected?.price != null
-            ? t("pricePerMonthNote", {
-                price: `${wonPrefix()}${KRW(Math.round(selected.price / 12))}`,
-                pct,
-              })
+            ? showPct
+              ? t("pricePerMonthNote", {
+                  price: `${wonPrefix()}${KRW(Math.round(selected.price / 12))}`,
+                  pct,
+                })
+              : t("yearlyBilling")
             : t("monthlyBilling")
         }
         suffix={
@@ -274,12 +303,9 @@ export function SubscriptionSection({
 
       {/* 안내 — 서버 값이 아니라 늘 보인다. 흰 면 위 Callout */}
       <div className="px-global-gutter pt-x2 pb-x4">
-        <Callout
-          tone="informative"
-          icon={<TrendingUp aria-hidden />}
-          title={t("spotlightTitle")}
-        >
-          {t("spotlightDesc")}
+        {/* 제목은 짧은 말만 — 문장은 본문 한 문단(callout.md) */}
+        <Callout tone="informative" icon={<TrendingUp aria-hidden />}>
+          {t("spotlight")}
         </Callout>
       </div>
 
@@ -296,7 +322,7 @@ export function SubscriptionSection({
                   {t("cycleMonthly")}
                 </SegmentedControlItem>
                 <SegmentedControlItem value="yearly">
-                  {t("cycleYearly", { pct })}
+                  {showPct ? t("cycleYearly", { pct }) : t("cycleYearlyPlain")}
                 </SegmentedControlItem>
               </SegmentedControl>
             </div>
@@ -312,7 +338,8 @@ export function SubscriptionSection({
     </>
   );
 
-  const ready = !loading && !failed;
+  // 바닥 단추 — 불러오는 중 · 실패 · (Free 인데 팔 요금제가 없음)에는 누를 것이 없다
+  const ready = !loading && !failed && !(plansEmpty && !isPro);
   const action = isPro ? (
     <Button
       variant="ghost"
@@ -373,9 +400,12 @@ export function SubscriptionSection({
         {/* 본문 아래 여백 = 띠 높이는 flex 가 맡는다 — 본문이 띠 위에서 끝까지 스크롤된다 */}
         <div className="min-h-0 flex-1 overflow-y-auto pb-x6">{body}</div>
         {ready && (
-          <div className="shrink-0 border-t border-stroke-neutral-subtle px-global-gutter pt-x3 pb-[max(var(--spacing-x4),env(safe-area-inset-bottom))]">
-            {action}
-          </div>
+          // 바닥 띠 — 스낵바는 이 띠 위 8 에 선다(SnackbarAvoidOverlap). 아래 16 + 안전 영역
+          <SnackbarAvoidOverlap>
+            <div className="shrink-0 border-t border-stroke-neutral-subtle px-global-gutter pt-x3 pb-[calc(var(--spacing-x4)+env(safe-area-inset-bottom))]">
+              {action}
+            </div>
+          </SnackbarAvoidOverlap>
         )}
         {confirm}
       </div>
@@ -388,8 +418,13 @@ export function SubscriptionSection({
       <Card body="list" className={ready ? "pb-0" : undefined}>
         {body}
         {ready && (
-          // 카드 바닥 줄 — 위 끝까지 선(표의 마지막 줄 선) · 좌우 24 · 위아래 8 · 오른쪽 맞춤. 버튼 좌우 14 + 오른쪽 10 = 글 끝이 카드 안 24
-          <div className="flex justify-end py-x2 pl-x6 pr-x2_5">{action}</div>
+          // 카드 바닥 줄 — 위 끝까지 선(표의 마지막 줄 선) · 좌우 24 · 위아래 12 · 오른쪽 맞춤.
+          // 글 단추(해지)는 버튼 좌우 14 + 오른쪽 10 = 글 끝이 카드 안 24, 채운 단추(시작)는 상자 끝이 보이므로 블리드 없이 24
+          <div
+            className={`flex justify-end py-x3 pl-x6 ${isPro ? "pr-x2_5" : "pr-x6"}`}
+          >
+            {action}
+          </div>
         )}
       </Card>
       {confirm}

@@ -19,13 +19,18 @@ const state = vi.hoisted(() => ({
   features: [] as string[],
   isLoading: false,
   isError: false,
+  /** 받아 둔 값이 없는 채로 실패했는가(처음 조회 실패) */
+  noData: false,
+  refetch: vi.fn(),
 }));
 
 vi.mock("../model/useSubscription", () => ({
   useMyFeatures: () => ({
-    data: { features: state.features },
+    data: state.noData ? undefined : { features: state.features },
     isLoading: state.isLoading,
     isError: state.isError,
+    isRefetching: false,
+    refetch: state.refetch,
   }),
 }));
 vi.mock("react-i18next", () => ({
@@ -43,6 +48,8 @@ beforeEach(() => {
   state.features = [];
   state.isLoading = false;
   state.isError = false;
+  state.noData = false;
+  state.refetch = vi.fn();
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -132,10 +139,31 @@ describe("SecuritiesGate", () => {
     expect(container.textContent).not.toContain("gate.title");
   });
 
-  it("조회 자체가 실패하면 종전처럼 홈으로 — 없는 구독을 팔지 않는다", () => {
+  it("처음 조회가 실패하면 홈으로 튕기지 않고 그 자리에서 실패를 말한다 — 없는 구독을 팔지도 않는다", () => {
+    state.isError = true;
+    state.noData = true;
+    renderGate(<div data-stocks />);
+    expect(path()).toBe("/desk/stocks");
+    expect(container.querySelector("[data-stocks]")).toBeNull();
+    expect(container.textContent).toContain("gate.loadError");
+    expect(container.textContent).not.toContain("gate.action");
+  });
+
+  it("실패 화면의 [다시 시도] 가 기능 조회를 다시 부른다", () => {
+    state.isError = true;
+    state.noData = true;
+    renderGate(<div data-stocks />);
+    const retry = [...container.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("common.retry"),
+    )!;
+    act(() => retry.click());
+    expect(state.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("받아 둔 값이 있는데 재조회만 실패하면 Pro 사용자를 내보내지 않는다", () => {
+    state.features = ["SECURITIES"];
     state.isError = true;
     renderGate(<div data-stocks />);
-    expect(path()).toBe("/desk");
-    expect(container.textContent).not.toContain("gate.title");
+    expect(container.querySelector("[data-stocks]")).not.toBeNull();
   });
 });

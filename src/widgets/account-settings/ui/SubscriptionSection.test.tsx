@@ -351,7 +351,7 @@ describe("불러오기 · 실패 (33)", () => {
     expect(container.querySelector("[role=radiogroup]")).toBeNull();
     expect(buttonLabels()).not.toContain("startPro");
     expect(buttonLabels()).not.toContain("cancelSub");
-    expect(text()).toContain("spotlightTitle");
+    expect(text()).toContain("spotlight");
     expect(text()).toContain("feature.securities");
   });
 
@@ -406,7 +406,14 @@ describe("해지 확인 (46)", () => {
     const ok = [...dialog.querySelectorAll("button")].find(
       (b) => b.textContent === "cancelSub",
     )!;
+    // 확인창이 먼저 닫힌 뒤에 알린다(창 위에 스낵바를 겹치지 않는다)
+    let dialogOpenWhenAnnounced: boolean | null = null;
+    confirmFail.mockImplementation(() => {
+      dialogOpenWhenAnnounced =
+        document.body.querySelector("[role=alertdialog]") !== null;
+    });
     await act(async () => ok.click());
+    expect(dialogOpenWhenAnnounced).toBe(false);
     expect(confirmFail).toHaveBeenCalledTimes(1);
     const arg = confirmFail.mock.calls[0]![0] as {
       message: string;
@@ -439,5 +446,135 @@ describe("껍데기 (27)", () => {
     expect(container.querySelector("[data-slot=subscription-page]")).toBeNull();
     const card = container.querySelector("[data-slot=card]")!;
     expect(card.textContent).toContain("startPro");
+  });
+});
+
+describe("검수 반영 (J1 ~ J5)", () => {
+  const badgeCount = () =>
+    container.querySelectorAll("[data-slot=badge]").length;
+  const radio = (key: string) =>
+    [...container.querySelectorAll<HTMLElement>("[role=radio]")].find((r) =>
+      r.textContent?.includes(key),
+    )!;
+
+  it("J1 안내 Callout 은 제목 없이 본문 한 문단이다", () => {
+    mount(true);
+    const callout = container.querySelector("[data-slot=callout]")!;
+    expect(callout.textContent).toContain("spotlight");
+    expect(callout.textContent).not.toContain("spotlightTitle");
+    expect(callout.textContent).not.toContain("spotlightDesc");
+  });
+
+  it("J2 현재 플랜 배지는 고른 주기가 구독 주기와 같을 때만 — 다른 주기를 보면 그 가격만", () => {
+    asPro(subscription());
+    mount(true);
+    expect(badgeCount()).toBe(1);
+    act(() => radio("cycleYearly").click());
+    expect(text()).toContain("99,000");
+    expect(badgeCount()).toBe(0);
+    act(() => radio("cycleMonthly").click());
+    expect(badgeCount()).toBe(1);
+  });
+
+  it("J2 Free 는 어느 주기에서도 Free 줄에 배지(현재 플랜)", () => {
+    mount(true);
+    expect(badgeCount()).toBe(1);
+    act(() => radio("cycleYearly").click());
+    expect(badgeCount()).toBe(1);
+  });
+
+  it("J3 할인이 없으면(연간이 월간 × 12 이상) 주기 글에 %↓ 도, 절약 글도 없다", () => {
+    server.plans = {
+      data: [
+        { ...MONTHLY, price: 10_000 },
+        { ...YEARLY, price: 120_000 },
+      ],
+      refetch: () => {},
+    };
+    mount(true);
+    expect(text()).toContain("cycleYearlyPlain");
+    expect(text()).not.toContain("cycleYearly{");
+    act(() => radio("cycleYearlyPlain").click());
+    expect(text()).toContain("yearlyBilling");
+    expect(text()).not.toContain("pricePerMonthNote");
+  });
+
+  it("J3 월간 행이 없으면(연간만) 절약 표시 없이 연간 하나로 보인다", () => {
+    server.plans = { data: [YEARLY], refetch: () => {} };
+    mount(true);
+    expect(container.querySelector("[role=radiogroup]")).toBeNull();
+    expect(text()).toContain("99,000");
+    expect(text()).toContain("yearlyBilling");
+    expect(text()).not.toContain("pricePerMonthNote");
+  });
+
+  it("J3 요금제가 하나도 없으면 시작 단추 대신 Result Section 실패", () => {
+    server.plans = { data: [], refetch: () => {} };
+    mount(true);
+    expect(text()).toContain("noPlans");
+    expect(buttonLabels()).not.toContain("startPro");
+  });
+
+  it("/me 에 가격 · 기간이 없으면(옛 서버) planCode 로 요금제 목록에서 찾는다", () => {
+    asPro(
+      subscription({
+        planCode: "SECURITIES_YEARLY",
+        price: null,
+        durationMonths: null,
+      }),
+    );
+    mount(true);
+    expect(text()).toContain("99,000");
+    expect(
+      container.querySelector("[role=radio][aria-checked=true]")?.textContent,
+    ).toContain("cycleYearly");
+  });
+
+  it("카드 바닥 줄: 채운 단추(Free 시작)는 블리드 없이 24, 글 단추(해지)만 −14 들임", () => {
+    setWide(true);
+    mount(false);
+    const footerOf = (label: string) =>
+      [...container.querySelectorAll("button")].find(
+        (b) => b.textContent === label,
+      )!.parentElement!;
+    expect(footerOf("startPro").className).toContain("pr-x6");
+    expect(footerOf("startPro").className).toContain("py-x3");
+    act(() => root.unmount());
+    root = createRoot(container);
+    asPro();
+    act(() => root.render(<SubscriptionSection mobile={false} />));
+    expect(footerOf("cancelSub").className).toContain("pr-x2_5");
+  });
+
+  it("폰 바닥 띠 아래는 16 + 안전 영역(더하기)", () => {
+    mount(true);
+    const bar = [...container.querySelectorAll("button")].find(
+      (b) => b.textContent === "startPro",
+    )!.parentElement!;
+    expect(bar.className).toContain(
+      "calc(var(--spacing-x4)+env(safe-area-inset-bottom))",
+    );
+  });
+
+  it("J5 폰 껍데기가 떠 있는 동안 아래 탭 바는 inert, 닫히면 원래대로(스낵바가 바닥 버튼 위 8 에 서게)", () => {
+    const nav = document.createElement("nav");
+    nav.setAttribute("data-slot", "bottom-navigation");
+    document.body.appendChild(nav);
+    mount(true);
+    expect(nav.hasAttribute("inert")).toBe(true);
+    act(() => root.unmount());
+    expect(nav.hasAttribute("inert")).toBe(false);
+    nav.remove();
+    root = createRoot(container);
+  });
+
+  it("금액은 고정폭 숫자(tabular-nums)", () => {
+    mount(true);
+    const rows = [
+      ...container.querySelectorAll("[data-slot=list-item]"),
+    ].filter(
+      (r) => r.textContent?.includes("0원") || r.textContent?.includes("/"),
+    );
+    expect(rows.some((r) => r.className.includes("tabular-nums"))).toBe(true);
   });
 });

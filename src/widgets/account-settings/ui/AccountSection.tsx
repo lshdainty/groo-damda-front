@@ -31,7 +31,9 @@ import { SecuritiesLinkDialog } from "@/features/subscription/ui/SecuritiesLinkD
 import {
   useMyFeatures,
   useMySubscription,
+  useSubscriptionPlans,
 } from "@/features/subscription/model/useSubscription";
+import { resolveSubPlan } from "@/features/subscription/lib/plan-cycles";
 import {
   oauthLinkApi,
   useOAuthProviders,
@@ -82,7 +84,17 @@ export function AccountSection({
 
   const featuresQ = useMyFeatures();
   const subQ = useMySubscription();
+  const plansQ = useSubscriptionPlans();
   const isPro = featuresQ.data?.features?.includes("SECURITIES") ?? false;
+  // 기능 조회가 대기 · 실패면 Free 인지 Pro 인지 모른다 — Free 배지 · 권유 글을 그리지 않는다(대기는 Skeleton, 실패는 값 없이)
+  const planKnown: "loading" | "error" | "ready" =
+    featuresQ.data !== undefined
+      ? "ready"
+      : featuresQ.isError
+        ? "error"
+        : "loading";
+  // 구독 가격 · 기간 — /me 값이 정상 경로, 없으면 planCode 로 요금제 목록에서
+  const own = resolveSubPlan(subQ.data, plansQ.data);
   // currentPeriodEnd 는 서버가 시간대 없이 주는 `[UTC]` (백엔드 UserSubscription 의
   // LocalDateTime). 문자열을 자르면 UTC 날짜가 그대로 나와, UTC 15:00 이후에 갱신된
   // 구독은 KST(+9)에서 다음 결제일이 **항상 하루 이르게** 보인다. 로컬 날짜로 옮긴다.
@@ -109,11 +121,14 @@ export function AccountSection({
   const name = user?.userName ?? t("account.defaultName");
   const email = user?.userEmail ?? "";
 
-  const badge = (
-    <Badge variant="weak" tone={isPro ? "brand" : "neutral"}>
-      {isPro ? "Pro" : "Free"}
-    </Badge>
-  );
+  const badge =
+    planKnown === "loading" ? (
+      <Skeleton radius="4" text="t3" className="w-10" />
+    ) : planKnown === "error" ? null : (
+      <Badge variant="weak" tone={isPro ? "brand" : "neutral"}>
+        {isPro ? "Pro" : "Free"}
+      </Badge>
+    );
   // [수정] 은 개인정보 변경 자리라 아직 열리지 않는다 — 누르는 동작이 있는 척하지 않고 막은 단추 + 이유 Callout 이다
   // (D3 B). 단추의 설명(aria-describedby)이 Callout 이라 읽는 이름과 이유가 이어진다.
   const editReasonId = useId();
@@ -242,9 +257,12 @@ export function AccountSection({
           isPro={isPro}
           nextBill={nextBill}
           autoRenew={subQ.data?.autoRenew}
-          price={subQ.data?.price}
-          durationMonths={subQ.data?.durationMonths}
-          priceLoading={isPro && subQ.isLoading}
+          price={own.price}
+          durationMonths={own.durationMonths}
+          priceLoading={
+            isPro && own.price == null && (subQ.isLoading || plansQ.isLoading)
+          }
+          planKnown={planKnown}
           onClick={onOpenSubscription}
         />
       </AccountGroup>
@@ -480,6 +498,7 @@ export function SubscriptionRow({
   price,
   durationMonths,
   priceLoading,
+  planKnown = "ready",
   onClick,
 }: {
   isPro: boolean;
@@ -494,6 +513,8 @@ export function SubscriptionRow({
   durationMonths?: number | null;
   /** 구독을 아직 받는 중 — 값 자리에 Skeleton */
   priceLoading?: boolean;
+  /** 기능 조회 상태 — 대기 · 실패면 Pro 인지 모르므로 권유 글을 그리지 않는다(대기는 설명 자리 Skeleton) */
+  planKnown?: "loading" | "error" | "ready";
   onClick: () => void;
   /** 예전 호출처 호환 — 줄 부품이 같아져 쓰지 않는다 */
   mobile?: boolean;
@@ -522,7 +543,16 @@ export function SubscriptionRow({
       align="top"
       prefix={<Sparkles aria-hidden />}
       title="담다 Pro"
-      detail={isPro ? periodLabel : t("account.sub.proPromo")}
+      rootProps={{ className: "tabular-nums" }}
+      detail={
+        planKnown === "loading" ? (
+          <Skeleton radius="4" text="t3" className="w-40" />
+        ) : planKnown === "error" ? undefined : isPro ? (
+          periodLabel
+        ) : (
+          t("account.sub.proPromo")
+        )
+      }
       suffix={
         <>
           {value}

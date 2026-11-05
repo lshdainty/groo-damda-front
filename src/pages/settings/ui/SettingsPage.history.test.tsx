@@ -202,3 +202,22 @@ describe("설정 섹션 이동 기록", () => {
     router.dispose();
   });
 });
+
+describe("구독 관리 구역 (I-14 27)", () => {
+  it("?section=subscription 으로 바로 들어오면 폰도 데스크톱도 구독 구역이 열린다(Pro 여부와 상관없이)", () => {
+    mount("/desk/settings?section=subscription", true);
+    expect(container.querySelector("[data-stub=subscription]")).not.toBeNull();
+    act(() => root.unmount());
+    root = createRoot(container);
+    mount("/desk/settings?section=subscription", false);
+    expect(container.querySelector("[data-stub=subscription]")).not.toBeNull();
+  });
+
+  it("문서 제목 라벨은 화면 제목과 같은 키(subscription:title) 하나다", async () => {
+    const { SECTIONS } = await import("../model/sections");
+    const s = SECTIONS.find((x) => x.id === "subscription")!;
+    expect(s.labelKey).toBe("subscription:title");
+    expect(s.hidden).toBe(true);
+    expect(s.parent).toBe("account");
+  });
+});

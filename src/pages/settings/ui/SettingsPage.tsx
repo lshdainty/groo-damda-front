@@ -288,7 +288,7 @@ function PlaceholderSection({ section }: { section: SectionDef }) {
             color: "var(--fg-tertiary)",
           }}
         >
-          {t(section.descKey)}
+          {section.descKey ? t(section.descKey) : null}
         </div>
         <div
           style={{
