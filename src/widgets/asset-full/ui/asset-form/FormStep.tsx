@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
+import { Callout } from "@/shared/ds/callout";
 import { ResponsiveDialogBody } from "@/shared/ds/dialog";
+import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { FormFooter } from "@/shared/ui/groo/form-footer";
 import type { AssetForm } from "./use-asset-form";
 import { KindField } from "./KindField";
@@ -17,13 +19,21 @@ export function FormStep({
   f,
   onSubmit,
   isSubmitting,
+  saveFailed,
+  saveError,
 }: {
   f: AssetForm;
   onSubmit: () => void;
   isSubmitting?: boolean;
+  /** 저장 요청이 실패했다 — 폼 맨 위 critical Callout(고정 글), 폼은 열린 채 · 쓴 값 그대로 */
+  saveFailed?: boolean;
+  /** 실패마다 새 값 — 같은 실패가 이어져도 Callout 을 다시 보이게 올린다 */
+  saveError?: unknown;
 }) {
   const { t, tCommon, isNew, editingGroup, submitTick } = f;
   const bodyRef = useRef<HTMLDivElement>(null);
+  // 본문은 스크롤되고 [저장] 은 바닥이라 내린 채 실패하면 맨 위 Callout 이 가려진다 — 실패하면 올려 보인다
+  const errorRef = useScrollToError<HTMLDivElement>(!!saveFailed, saveError);
   // 새 자산은 2단계에 들어가면 이름 칸에 초점 — 수정은 표면이 받는다(폰에서 키보드가 가리지 않게)
   useEffect(() => {
     if (isNew) focusNameField(bodyRef.current);
@@ -38,6 +48,13 @@ export function FormStep({
   return (
     <>
       <ResponsiveDialogBody ref={bodyRef} scrollFog>
+        {saveFailed && (
+          <div ref={errorRef}>
+            <Callout tone="critical" role="alert" className="mb-x4">
+              {t("editDialog.saveFailed")}
+            </Callout>
+          </div>
+        )}
         <div className="flex flex-col gap-x6 pb-x2">
           <KindField f={f} />
           {editingGroup === "card" ? (

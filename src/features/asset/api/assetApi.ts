@@ -30,8 +30,15 @@ const silentConfig = (opts?: SilentOpts) =>
     : {}) as import("axios").AxiosRequestConfig & { silent?: boolean };
 
 export const assetApi = {
-  createAsset: async (data: AssetFormValues): Promise<Asset> => {
-    const resp: ApiResponse<Asset> = await apiClient.post("/v1/asset", data);
+  createAsset: async (
+    data: AssetFormValues,
+    opts?: SilentOpts,
+  ): Promise<Asset> => {
+    const resp: ApiResponse<Asset> = await apiClient.post(
+      "/v1/asset",
+      data,
+      silentConfig(opts),
+    );
     return resp.data;
   },
 
@@ -56,10 +63,12 @@ export const assetApi = {
   updateAsset: async (
     id: number,
     data: AssetUpdateFormValues,
+    opts?: SilentOpts,
   ): Promise<Asset> => {
     const resp: ApiResponse<Asset> = await apiClient.put(
       `/v1/asset/${id}`,
       data,
+      silentConfig(opts),
     );
     return resp.data;
   },

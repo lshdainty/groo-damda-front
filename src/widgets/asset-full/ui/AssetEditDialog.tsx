@@ -42,6 +42,10 @@ export interface AssetEditDialogProps {
   onCreate: (values: AssetFormValues) => void;
   onUpdate: (values: AssetUpdateFormValues) => void;
   isSubmitting?: boolean;
+  /** 저장 요청이 실패했다 — 2단계 폼 맨 위 critical Callout(고정 글) */
+  saveFailed?: boolean;
+  /** 실패마다 새 값 — 같은 실패가 이어져도 Callout 을 다시 올린다 */
+  saveError?: unknown;
 }
 
 type Step = "kind" | "form" | "unlock";
@@ -59,6 +63,8 @@ export function AssetEditDialog({
   onCreate,
   onUpdate,
   isSubmitting,
+  saveFailed,
+  saveError,
 }: AssetEditDialogProps) {
   const f = useAssetForm({ item, kind: kindArg });
   const {
@@ -431,6 +437,8 @@ export function AssetEditDialog({
               f={f}
               onSubmit={attemptSubmit}
               isSubmitting={isSubmitting}
+              saveFailed={saveFailed}
+              saveError={saveError}
             />
           )}
         </ResponsiveDialogContent>

@@ -62,11 +62,11 @@ export const useAssetBalanceTrend = (
  * 변경과 같은 범위(`"ledger"`)를 턴다 — `"asset"` 만 털면 가계부에 이월 거래가 안 보였다
  * (QA 23차 낮음).
  */
-export const useCreateAsset = () => {
+export const useCreateAsset = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: AssetFormValues) => assetApi.createAsset(data),
+    mutationFn: (data: AssetFormValues) => assetApi.createAsset(data, opts),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };
@@ -75,12 +75,12 @@ export const useCreateAsset = () => {
  * 자산 수정 — 이월 금액을 고치면 카드 이월 거래가, 결제일·결제계좌를 바꾸면 청구가,
  * 잔액을 고치면 잔액 앵커가 바뀐다. 가계부·카드·홈이 함께 늙으므로 `"ledger"` 다.
  */
-export const useUpdateAsset = () => {
+export const useUpdateAsset = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: AssetUpdateFormValues }) =>
-      assetApi.updateAsset(id, data),
+      assetApi.updateAsset(id, data, opts),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
   });
 };
