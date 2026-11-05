@@ -1,5 +1,5 @@
-import { useId, useState, type CSSProperties, type ReactNode } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useId, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import {
   BarChart3,
   Bell,
@@ -7,7 +7,6 @@ import {
   CreditCard,
   FileBarChart,
   Mail,
-  CircleAlert,
   Moon,
   Target,
   Users,
@@ -17,149 +16,49 @@ import {
 } from "lucide-react";
 import {
   useCurrentUser,
-  useUpdateUserPreferences,
-  useUserPreferences,
+  usePreferenceEditor,
   type EmailFrequency,
   type NotificationSound,
 } from "@/features/user";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { InputTimePicker } from "@/shared/ui/input-time-picker";
-import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
-import { Skeleton as SkeletonBase } from "@/shared/ui/skeleton";
-import { ThresholdSlider } from "./ThresholdSlider";
-import { Switch } from "@/shared/ui/switch";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+  BottomSheet,
+  BottomSheetBody,
+  BottomSheetContent,
+  BottomSheetFooter,
+} from "@/shared/ds/bottom-sheet";
+import { Button } from "@/shared/ds/button";
+import { Card } from "@/shared/ds/card";
+import { useInputButtonSurface } from "@/shared/ds/input-button";
+import {
+  List,
+  ListButtonItem,
+  ListHeader,
+  ListItem,
+  ListRadioGroup,
+  ListRadioItem,
+  ListSwitchItem,
+} from "@/shared/ds/list";
+import {
+  Popover,
+  PopoverBody,
+  PopoverContent,
+  PopoverFooter,
+  PopoverTrigger,
+} from "@/shared/ds/popover";
+import { ResultSection } from "@/shared/ds/result-section";
+import { Skeleton } from "@/shared/ds/skeleton";
+import { Slider, SliderValue } from "@/shared/ds/slider";
+import { useSnackbar } from "@/shared/ds/snackbar";
+import {
+  TimePicker,
+  formatTimeValue,
+  type TimeValue,
+} from "@/shared/ds/time-picker";
+import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 
-type Tone = "expense" | "warning" | "info" | "brand" | "success";
+const ICON = { "aria-hidden": true } as const;
 
-const TONE_STYLE: Record<Tone, { bg: string; fg: string }> = {
-  expense: { bg: "var(--status-danger-subtle)", fg: "var(--status-danger-fg)" },
-  warning: {
-    bg: "var(--status-warning-subtle)",
-    fg: "var(--status-warning-fg)",
-  },
-  info: { bg: "var(--status-info-subtle)", fg: "var(--status-info-fg)" },
-  // brand-subtle 은 다크에서 surface 와 거의 같아 박스가 묻힘 —
-  // fg-brand(다크=primary-light 자동 swap) 15% 틴트로 양 모드 가시성 확보.
-  brand: {
-    bg: "var(--color-bg-brand-weak)",
-    fg: "var(--fg-brand)",
-  },
-  success: {
-    bg: "var(--status-success-subtle)",
-    fg: "var(--status-success-fg)",
-  },
-};
-
-/** 한 행의 [tone 아이콘박스] 제목 + 회색 설명 + 우측 컨트롤 레이아웃. */
-function SettingRow({
-  icon,
-  tone,
-  title,
-  titleId,
-  titleStyle,
-  description,
-  descriptionColor = "var(--fg-tertiary)",
-  control,
-  disabled,
-}: {
-  icon: ReactNode;
-  tone: Tone;
-  title: string;
-  /** 제목 글에 다는 id — 안의 선택 칸이 이 글로 이름을 받는다(aria-labelledby) */
-  titleId?: string;
-  /** 제목 타이포 override — 마스터 카드는 카드 제목 톤(16/700) 사용. */
-  titleStyle?: CSSProperties;
-  description: ReactNode;
-  /** 설명 색 override — 마스터 카드 설명은 앱 정합으로 fg-secondary. */
-  descriptionColor?: string;
-  control: ReactNode;
-  disabled?: boolean;
-}) {
-  const t = TONE_STYLE[tone];
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        // 앱 정합: off(disabled) 처리는 행 전체 opacity 가 아닌
-        // 아이콘 박스 opacity 0.4 + 텍스트색 fg-disabled 교체로 표현.
-      }}
-    >
-      <span
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 36,
-          height: 36,
-          flexShrink: 0,
-          borderRadius: "var(--radius-md)",
-          background: t.bg,
-          color: t.fg,
-          opacity: disabled ? 0.4 : 1,
-          transition:
-            "opacity var(--motion-duration-fast) var(--motion-ease-out)",
-        }}
-      >
-        {icon}
-      </span>
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div
-          id={titleId}
-          style={{
-            // 앱 행 제목(bodySm 13/semi) 정합 — body-md(15) → label-sm(13).
-            fontSize: "var(--text-label-sm)",
-            fontWeight: "600",
-            color: disabled ? "var(--fg-disabled)" : "var(--fg-primary)",
-            lineHeight: "1.5",
-            ...titleStyle,
-          }}
-        >
-          {title}
-        </div>
-        <div
-          style={{
-            fontSize: "var(--text-caption)",
-            color: disabled ? "var(--fg-disabled)" : descriptionColor,
-            // 앱 caption h1.5 정합
-            lineHeight: "1.5",
-            marginTop: 2,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {description}
-        </div>
-      </div>
-      <div style={{ flexShrink: 0 }}>{control}</div>
-    </div>
-  );
-}
-
-function CardSubtitle({ children }: { children: ReactNode }) {
-  return (
-    <p
-      style={{
-        fontSize: "var(--text-caption)",
-        color: "var(--fg-tertiary)",
-        margin: 0,
-        lineHeight: "1.5",
-      }}
-    >
-      {children}
-    </p>
-  );
-}
-
+/** 알림 종류 일곱 — 앞 아이콘은 그림 TYPES 의 이름 그대로(I-15 49). */
 const NOTIFY_ROWS: {
   field:
     | "notifyPayment"
@@ -170,56 +69,48 @@ const NOTIFY_ROWS: {
     | "notifyWeeklyReport"
     | "notifyMonthlyReport";
   icon: ReactNode;
-  tone: Tone;
   titleKey: string;
   descKey: string;
 }[] = [
   {
     field: "notifyPayment",
-    icon: <CreditCard size={18} strokeWidth={1.9} />,
-    tone: "expense",
+    icon: <CreditCard {...ICON} />,
     titleKey: "rows.payment.title",
     descKey: "rows.payment.desc",
   },
   {
     field: "notifyBudget",
-    icon: <Target size={18} strokeWidth={1.9} />,
-    tone: "warning",
+    icon: <Target {...ICON} />,
     titleKey: "rows.budget.title",
     descKey: "rows.budget.desc",
   },
   {
     field: "notifyAutoRecord",
-    icon: <Zap size={18} strokeWidth={1.9} />,
-    tone: "info",
+    icon: <Zap {...ICON} />,
     titleKey: "rows.autoRecord.title",
     descKey: "rows.autoRecord.desc",
   },
   {
     field: "notifyDutchPay",
-    icon: <Users size={18} strokeWidth={1.9} />,
-    tone: "brand",
+    icon: <Users {...ICON} />,
     titleKey: "rows.dutchPay.title",
     descKey: "rows.dutchPay.desc",
   },
   {
     field: "notifyCalendar",
-    icon: <CalendarClock size={18} strokeWidth={1.9} />,
-    tone: "success",
+    icon: <CalendarClock {...ICON} />,
     titleKey: "rows.calendar.title",
     descKey: "rows.calendar.desc",
   },
   {
     field: "notifyWeeklyReport",
-    icon: <BarChart3 size={18} strokeWidth={1.9} />,
-    tone: "info",
+    icon: <BarChart3 {...ICON} />,
     titleKey: "rows.weeklyReport.title",
     descKey: "rows.weeklyReport.desc",
   },
   {
     field: "notifyMonthlyReport",
-    icon: <FileBarChart size={18} strokeWidth={1.9} />,
-    tone: "info",
+    icon: <FileBarChart {...ICON} />,
     titleKey: "rows.monthlyReport.title",
     descKey: "rows.monthlyReport.desc",
   },
@@ -237,105 +128,245 @@ const EMAIL_FREQ_OPTIONS: { value: EmailFrequency; labelKey: string }[] = [
   { value: "MONTHLY", labelKey: "email.frequency.MONTHLY" },
 ];
 
-// 모바일 카드 다이어트 — 알림 섹션 셸: 모바일은 플랫 헤드+본문(.m-subpage), 데스크톱은 기존 카드
-// 마크업(패딩 16 고정 · 앱 정합)을 그대로 일반화.
-function NotifSection({
-  mobile,
+/** 들인 줄(시작 · 종료 · 발송 주기) — 앞 아이콘 자리(22)만큼 비워 제목이 부모 제목 줄에 선다(왼쪽 58). */
+const INDENT = <span aria-hidden className="inline-block w-[22px]" />;
+
+const toTime = (hhmm: string): TimeValue | undefined =>
+  /^\d{2}:\d{2}$/.test(hhmm)
+    ? { hour: Number(hhmm.slice(0, 2)), minute: Number(hhmm.slice(3, 5)) }
+    : undefined;
+
+/** 스위치 줄 — 켬 · 끔은 누르는 순간 적용(요청 중에도 막지 않는다). 불러오는 동안은 스위치 자리만 Skeleton. */
+function SwitchRow({
+  loading,
+  icon,
   title,
-  subtitle,
-  action,
-  contentPad = true,
-  gap = "var(--spacing-sm)",
+  detail,
+  detailLoading,
+  checked,
+  disabled,
+  onChange,
+}: {
+  loading: boolean;
+  icon: ReactNode;
+  title: string;
+  detail?: ReactNode;
+  /** 설명이 값에 따라 바뀌는 줄 — 불러오는 동안은 글 대신 Skeleton(사실처럼 보이지 않게) */
+  detailLoading?: boolean;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  if (loading)
+    return (
+      <ListItem
+        prefix={icon}
+        title={title}
+        detail={
+          detailLoading ? (
+            <Skeleton radius="4" text="t3" className="w-40" />
+          ) : (
+            detail
+          )
+        }
+        suffix={<Skeleton radius="full" className="h-8 w-[52px]" />}
+      />
+    );
+  return (
+    <ListSwitchItem
+      prefix={icon}
+      title={title}
+      detail={detail}
+      checked={checked}
+      disabled={disabled}
+      onCheckedChange={onChange}
+    />
+  );
+}
+
+/** 값 줄 — 누르면 고르는 면(1280 미만 시트 · 이상 팝오버)이 열린다. 값은 오른쪽 끝선 하나, 꺾쇠 없음. */
+function PickRow({
+  indent,
+  icon,
+  title,
+  value,
+  loading,
+  disabled,
+  done,
+  onOpen,
   children,
 }: {
-  mobile: boolean;
-  title: React.ReactNode;
-  subtitle?: React.ReactNode;
-  action?: React.ReactNode;
-  /** false 면 CardContent p-0 (내부가 자체 패딩 보유 — quiet/email 카드) */
-  contentPad?: boolean;
-  /** 모바일 섹션 label↔content gap (기본 sm). 섹션별 조정용. */
-  gap?: string;
-  children: React.ReactNode;
+  indent?: boolean;
+  icon?: ReactNode;
+  title: string;
+  value: string;
+  loading: boolean;
+  disabled?: boolean;
+  /** 바닥 "완료" — 시각 고르기만(고르는 동안 값은 그대로, 완료에 들어간다). 목록 고르기는 누르면 바로 넣고 닫힌다 */
+  done?: { label: string; onDone: () => void };
+  /** 열 때 — 고르는 값(draft)을 지금 서버 값으로 다시 잡는다 */
+  onOpen?: () => void;
+  /** 고르는 면 안 — close 로 닫는다 */
+  children: (close: () => void) => ReactNode;
 }) {
-  if (mobile) {
+  const wide = useInputButtonSurface() === "popover";
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+  const change = (next: boolean) => {
+    if (next) onOpen?.();
+    setOpen(next);
+  };
+  const prefix = indent ? INDENT : icon;
+  if (loading)
     return (
-      // 섹션 label↔content 간격 padding → gap(sm) 으로(사용자 결정) — 앱 Column spacing 정합.
-      <section style={{ display: "flex", flexDirection: "column", gap }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <h2
-              style={{
-                fontSize: "var(--text-body-lg)",
-                fontWeight: 700,
-                margin: 0,
-                letterSpacing: "-0.01em",
-                color: "var(--fg-primary)",
-              }}
-            >
-              {title}
-            </h2>
-            {action != null && (
-              <span style={{ marginLeft: "auto" }}>{action}</span>
-            )}
-          </div>
-          {subtitle != null && (
-            <div
-              style={{
-                fontSize: "var(--text-caption)",
-                color: "var(--fg-tertiary)",
-                marginTop: 2,
-              }}
-            >
-              {subtitle}
-            </div>
-          )}
-        </div>
-        {children}
-      </section>
+      <ListItem
+        prefix={prefix}
+        title={title}
+        suffix={<Skeleton radius="4" text="t5" className="w-16" />}
+      />
     );
-  }
+  const doneButton = done ? (
+    <Button
+      onClick={() => {
+        done.onDone();
+        close();
+      }}
+    >
+      {done.label}
+    </Button>
+  ) : null;
+  const row = (
+    <ListButtonItem
+      prefix={prefix}
+      title={title}
+      suffix={
+        // 막히면 값도 막힘 색(뒤 붙이개 색을 덮지 않는다)
+        <span className={disabled ? undefined : "text-fg-neutral-muted"}>
+          {value}
+        </span>
+      }
+      suffixText
+      disabled={disabled}
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      onClick={wide ? undefined : () => change(true)}
+    />
+  );
+  return wide ? (
+    <Popover open={open} onOpenChange={change}>
+      <PopoverTrigger asChild>{row}</PopoverTrigger>
+      <PopoverContent aria-label={title} align="end">
+        <PopoverBody>{children(close)}</PopoverBody>
+        {doneButton && <PopoverFooter>{doneButton}</PopoverFooter>}
+      </PopoverContent>
+    </Popover>
+  ) : (
+    <>
+      {row}
+      <BottomSheet open={open} onOpenChange={change}>
+        <BottomSheetContent title={title}>
+          <BottomSheetBody>{children(close)}</BottomSheetBody>
+          {doneButton && <BottomSheetFooter>{doneButton}</BottomSheetFooter>}
+        </BottomSheetContent>
+      </BottomSheet>
+    </>
+  );
+}
+
+/** 시각 줄 — 12시간 · 5분 단위 Time Picker, "완료" 에 들어간다. */
+function TimeRow({
+  title,
+  value,
+  loading,
+  disabled,
+  doneLabel,
+  onPick,
+}: {
+  title: string;
+  value: string;
+  loading: boolean;
+  disabled?: boolean;
+  doneLabel: string;
+  onPick: (hhmm: string) => void;
+}) {
+  const current = toTime(value);
+  const [draft, setDraft] = useState<TimeValue | undefined>(current);
   return (
-    <Card>
-      <CardHeader
-        className={
-          action != null
-            ? "flex-row items-center justify-between p-[var(--spacing-lg)] md:p-[var(--spacing-lg)] pb-[2px] md:pb-[2px]"
-            : "gap-[2px] p-[var(--spacing-lg)] md:p-[var(--spacing-lg)] pb-[8px] md:pb-[8px]"
-        }
+    <PickRow
+      indent
+      title={title}
+      value={formatTimeValue(current)}
+      loading={loading}
+      disabled={disabled}
+      // 열 때마다 지금 서버 값에서 시작 — 완료 없이 닫은 값은 버린다
+      onOpen={() => setDraft(current)}
+      done={{
+        label: doneLabel,
+        onDone: () => {
+          const v = draft ?? current ?? { hour: 22, minute: 0 };
+          const pad = (n: number) => String(n).padStart(2, "0");
+          onPick(`${pad(v.hour)}:${pad(v.minute)}`);
+        },
+      }}
+    >
+      {() => (
+        <div className="flex justify-center">
+          <TimePicker
+            aria-label={title}
+            value={draft}
+            onValueChange={setDraft}
+            minuteStep={1}
+            autoFocus
+          />
+        </div>
+      )}
+    </PickRow>
+  );
+}
+
+/** 묶음 제목 — List Header boldSolid · h2(폰) / h3(카드 안). 위 16, 첫 묶음은 8. */
+function Group({
+  title,
+  headingAs,
+  first,
+  children,
+}: {
+  title: string;
+  headingAs: "h2" | "h3";
+  first?: boolean;
+  children: ReactNode;
+}) {
+  const hid = useId();
+  return (
+    <section>
+      <ListHeader
+        as={headingAs}
+        id={hid}
+        variant="boldSolid"
+        className={first ? "pt-x2" : "pt-x4"}
       >
-        <CardTitle
-          style={{
-            fontSize: "var(--text-body-lg)",
-            lineHeight: "1.6",
-            fontWeight: 700,
-          }}
-        >
-          {title}
-        </CardTitle>
-        {action}
-        {subtitle != null && <CardSubtitle>{subtitle}</CardSubtitle>}
-      </CardHeader>
-      <CardContent
-        className={
-          contentPad
-            ? "p-[var(--spacing-lg)] md:p-[var(--spacing-lg)]"
-            : "p-0 md:p-0"
-        }
-      >
-        {children}
-      </CardContent>
-    </Card>
+        {title}
+      </ListHeader>
+      {children && <List aria-labelledby={hid}>{children}</List>}
+    </section>
   );
 }
 
 export function NotificationsManager({ mobile }: { mobile: boolean }) {
   const { t } = useTranslation("notification");
-  const preferencesQ = useUserPreferences();
-  const updateMut = useUpdateUserPreferences();
-  const { data: currentUser } = useCurrentUser();
+  const { t: tc } = useTranslation("common");
+  const snackbar = useSnackbar();
+  // 누르는 순간 화면이 바뀌고(낙관적) 키 하나씩 저장한다. 실패하면 서버 값으로 되돌리고 critical 스낵바 고정 글 —
+  // 요청은 silent · [다시 시도] 없음(스위치를 다시 누르는 것이 재시도, I-15 덧붙임 14-1 M1). 값 줄 · 슬라이더도 같다.
+  const {
+    pref,
+    query: preferencesQ,
+    save,
+  } = usePreferenceEditor(() =>
+    snackbar.show({ message: t("settingsSaveFailed"), tone: "critical" }),
+  );
+  const { data: currentUser, isLoading: userLoading } = useCurrentUser();
 
-  const pref = preferencesQ.data;
   const isLoading = preferencesQ.isLoading;
 
   const pushEnabled = pref?.pushEnabled ?? true;
@@ -349,499 +380,236 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
   const emailEnabled = pref?.emailEnabled ?? false;
   const emailFrequency: EmailFrequency = pref?.emailFrequency ?? "WEEKLY";
 
-  const calmDisabled = isLoading || updateMut.isPending;
-  // 예산 경고 기준을 끄는 동안의 값 — 머리 값 · 슬라이더가 따라가고, 저장이 끝나면 서버 값으로 돌아온다
+  // 예산 경고 기준을 끄는 동안의 값 — 머리 값 · 손잡이가 따라가고, 놓으면 저장한다
   const [drag, setDrag] = useState<number | null>(null);
-  // 기준 저장이 실패하면 값은 서버 값으로 되돌아가고(onSettled) 슬라이더 아래 Field 오류 글로 알린다(slider.yaml commit)
-  const [thresholdFailed, setThresholdFailed] = useState(false);
-  const thresholdErrorId = useId();
-  const uid = useId(); // 알림음 선택 칸 이름 잇기
-  // 기준 저장이 실패한 뒤 다른 설정이 실패하면 마지막 실패가 그쪽이므로 화면 아래 글이 맡는다(숨지 않게)
-  const otherFailedLast =
-    updateMut.isError &&
-    updateMut.variables != null &&
-    !("budgetAlertThreshold" in updateMut.variables);
-  const showThresholdError = thresholdFailed && !otherFailedLast;
+  const thresholdLabelId = useId();
   const shownThreshold = drag ?? warnThreshold;
 
-  if (isLoading) {
-    return (
-      // 설정 서브페이지 섹션 간격 spacing-2xl(32) 통일(사용자 결정).
-      // 앱 _Content 하단 SizedBox(x32) 정합 — 최하단 여백 32.
-      <div
-        className="flex flex-col"
-        style={{ gap: "var(--spacing-2xl)", paddingBottom: 32 }}
-      >
-        {!mobile && (
-          <ManagerHead
-            title={t("prefs.title")}
-            description={t("prefs.description")}
-          />
-        )}
-        {/* 앱 _PrefsSkeleton 정합 — 카드별 단일 h96 블록(rounded-lg=12) 4개. */}
-        {[0, 1, 2, 3].map((i) => (
-          <SkeletonBase
-            key={i}
-            className="w-full rounded-[var(--radius-lg)]"
-            style={{ height: 96 }}
-          />
-        ))}
-      </div>
+  const headingAs = mobile ? "h2" : "h3";
+  const head = !mobile && (
+    <ManagerHead
+      title={t("prefs.title")}
+      description={t("prefs.description")}
+    />
+  );
+  const wrap = (content: ReactNode) => (
+    <div className="flex flex-col">
+      {head}
+      {mobile ? (
+        <div className="pb-x6">{content}</div>
+      ) : (
+        <Card body="list">
+          <div className="pb-x6">{content}</div>
+        </Card>
+      )}
+    </div>
+  );
+
+  if (preferencesQ.isError && !pref) {
+    return wrap(
+      <ResultSection
+        kind="failure"
+        size={mobile ? "large" : "medium"}
+        title={t("prefsLoadFailed.title")}
+        description={t("loadFailed.desc")}
+        primaryAction={{
+          label: tc("retry"),
+          loading: preferencesQ.isRefetching,
+          onClick: () => void preferencesQ.refetch(),
+        }}
+      />,
     );
   }
 
-  return (
-    // 설정 서브페이지 섹션 간격 spacing-2xl(32) 통일(사용자 결정) — 앱 x32 정합.
-    // 앱 _Content 하단 SizedBox(x32) 정합 — 최하단 여백 32.
-    <div
-      className="flex flex-col"
-      style={{ gap: "var(--spacing-2xl)", paddingBottom: 32 }}
-    >
-      {!mobile && (
-        <ManagerHead
-          title={t("prefs.title")}
-          description={t("prefs.description")}
-        />
-      )}
-
-      {/* 1) 푸시 알림 (마스터) — 앱 PCardVariant.brand 정합:
-          bg-brand-subtle + 1px brand border + shadow 없음. */}
-      <Card
-        variant="bordered"
-        style={{
-          background: "var(--bg-brand-subtle)",
-          borderColor: "var(--border-brand)",
-        }}
-      >
-        {/* 앱 _MasterCard 패딩 EdgeInsets.all(lg=16) 고정 — 데스크톱에서도 24 아님. */}
-        <CardContent className="p-[var(--spacing-lg)] md:p-[var(--spacing-lg)]">
-          <SettingRow
-            icon={<Bell size={18} strokeWidth={1.9} />}
-            tone="brand"
+  const off = !pushEnabled;
+  return wrap(
+    <>
+      {/* 푸시 알림 — 맨 위 줄(묶음 제목 없음) */}
+      {/* 폰은 상단 바 바로 아래(T21 = 0), 카드 안은 위 8 */}
+      <div className={mobile ? undefined : "pt-x2"}>
+        <List aria-label={t("prefs.title")}>
+          <SwitchRow
+            loading={isLoading}
+            icon={<Bell {...ICON} />}
             title={t("push.title")}
-            // 앱 _MasterCard 제목은 카드 제목 톤(bodyLg 16/700/lh1.6).
-            titleStyle={{
-              fontSize: "var(--text-body-lg)",
-              fontWeight: 700,
-              lineHeight: "1.6",
-            }}
-            description={pushEnabled ? t("push.on") : t("push.off")}
-            // 앱 _MasterCard 설명색 fgSecondary.
-            descriptionColor="var(--fg-secondary)"
-            control={
-              <Switch
-                checked={pushEnabled}
-                disabled={calmDisabled}
-                onCheckedChange={(v) => updateMut.mutate({ pushEnabled: v })}
-              />
-            }
+            detail={pushEnabled ? t("push.on") : t("push.off")}
+            detailLoading
+            checked={pushEnabled}
+            onChange={(v) => save({ pushEnabled: v })}
           />
-        </CardContent>
-      </Card>
+        </List>
+      </div>
 
-      {/* 2) 알림 종류 */}
-      {/* 앱 _SectionCard 헤더(LTRB 16,16,16,8 + 제목↔서브 2) 정합. 모바일 카드 다이어트 — 셸 벗김. */}
-      <NotifSection
-        mobile={mobile}
-        gap="0"
-        title={t("types.title")}
-        subtitle={t("types.subtitle")}
-      >
-        {/* 행 사이 구분선 — 카드 가장자리까지 full-bleed (CardContent 패딩을
-              음수 마진으로 뚫고 같은 만큼 안쪽 패딩 복원, 앱 정합).
-              패딩이 16 고정이므로 full-bleed 인셋도 lg(16) 고정. */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {NOTIFY_ROWS.map((row, i) => (
-            <div
-              key={row.field}
-              className={
-                mobile
-                  ? undefined
-                  : "-mx-[var(--spacing-lg)] px-[var(--spacing-lg)]"
-              }
-              style={{
-                paddingTop: 12,
-                paddingBottom: i === NOTIFY_ROWS.length - 1 ? 0 : 12,
-                borderBottom:
-                  i === NOTIFY_ROWS.length - 1
-                    ? "none"
-                    : "1px solid var(--border-subtle)",
-              }}
+      <Group title={t("types.title")} headingAs={headingAs}>
+        {NOTIFY_ROWS.map((row) => (
+          <SwitchRow
+            key={row.field}
+            loading={isLoading}
+            icon={row.icon}
+            title={t(row.titleKey)}
+            detail={
+              // 예산 알림 설명은 DB 기준값(budget_alert_threshold) 기반 — 아래 기준 줄과 같은 값
+              row.field === "notifyBudget"
+                ? t("rows.budget.desc", { threshold: warnThreshold })
+                : t(row.descKey)
+            }
+            detailLoading={row.field === "notifyBudget"}
+            checked={pref?.[row.field] ?? true}
+            disabled={off}
+            onChange={(v) => save({ [row.field]: v })}
+          />
+        ))}
+      </Group>
+
+      {/* 예산 알림 기준 — 눈금 없이 양 끝 표식 */}
+      <Group title={t("threshold.title")} headingAs={headingAs}>
+        <li className="list-none px-global-gutter pb-x4 pt-x1">
+          <div className="flex items-baseline justify-between gap-x2">
+            <span
+              id={thresholdLabelId}
+              className="font-medium text-t4 text-fg-neutral"
             >
-              <SettingRow
-                icon={row.icon}
-                tone={row.tone}
-                title={t(row.titleKey)}
-                description={
-                  // 예산 알림 설명은 DB 임계값(budget_alert_threshold) 기반 — 아래 임계값 카드와 동일 값
-                  row.field === "notifyBudget"
-                    ? t("rows.budget.desc", { threshold: warnThreshold })
-                    : t(row.descKey)
-                }
-                disabled={!pushEnabled}
-                control={
-                  <Switch
-                    checked={pref?.[row.field] ?? true}
-                    disabled={!pushEnabled || calmDisabled}
-                    onCheckedChange={(v) =>
-                      updateMut.mutate({ [row.field]: v })
-                    }
-                  />
-                }
-              />
-            </div>
-          ))}
-        </div>
-      </NotifSection>
-
-      {/* 3) 예산 알림 임계값 — 모바일 카드 다이어트: 셸 벗김. */}
-      <NotifSection
-        mobile={mobile}
-        title={t("threshold.title")}
-        action={
-          <span
-            style={{
-              fontSize: "var(--text-caption)",
-              color: "var(--fg-tertiary)",
-            }}
-          >
-            {t("threshold.current")}{" "}
-            <strong style={{ color: "var(--fg-brand-strong)" }}>
-              {shownThreshold}%
-            </strong>
-          </span>
-        }
-      >
-        <div
-          style={{
-            fontSize: "var(--text-caption)",
-            // 앱 임계값 설명 본문색 fgTertiary 정합.
-            color: "var(--fg-tertiary)",
-            marginBottom: 8,
-            lineHeight: "1.5",
-          }}
-        >
-          <Trans
-            t={t}
-            i18nKey="threshold.desc"
-            components={{
-              warn: <strong style={{ color: "var(--status-warning-fg)" }} />,
-              over: <strong style={{ color: "var(--status-danger-fg)" }} />,
-            }}
-          />
-        </div>
-        {/* 앱 Flutter Slider 는 위젯 높이 44 — 트랙 위아래 ~20px 내재 여백.
-              웹 슬라이더(16px)에 동일한 실효 간격을 padding 으로 재현. */}
-        <div style={{ padding: "20px 0" }}>
-          <ThresholdSlider
-            value={shownThreshold}
-            disabled={isLoading}
-            onDrag={(v) => {
-              setThresholdFailed(false);
-              setDrag(v);
-            }}
-            describedBy={showThresholdError ? thresholdErrorId : undefined}
-            onCommit={(v) =>
-              updateMut.mutate(
-                { budgetAlertThreshold: v },
-                {
-                  onSuccess: () => setThresholdFailed(false),
-                  onError: () => setThresholdFailed(true),
-                  onSettled: () => setDrag(null),
-                },
-              )
-            }
-          />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            // 앱 눈금 라벨 PTypo.micro(11/500/lh1.5/ls0.44) 정합.
-            fontSize: "var(--text-badge)",
-            fontWeight: 500,
-            lineHeight: "1.5",
-            letterSpacing: "0.44px",
-            color: "var(--fg-tertiary)",
-          }}
-        >
-          <span>50</span>
-          <span>60</span>
-          <span>70</span>
-          <span>80</span>
-          <span>90</span>
-          <span>100</span>
-        </div>
-        {/* 오류 글 — 입력 자리(트랙 + 눈금 글) 전체 아래, Field 오류와 같은 꼴(circle-alert 16 · t4 · fg-critical, 보이는 글은 숨기고 polite 로 한 번 읽힌다) */}
-        {showThresholdError && (
-          <p
-            id={thresholdErrorId}
-            aria-hidden
-            data-slot="field-error"
-            style={{
-              display: "flex",
-              margin: "8px 0 0",
-              fontSize: "var(--text-t4)",
-              lineHeight: "var(--text-t4--line-height)",
-              color: "var(--color-fg-critical)",
-            }}
-          >
-            <CircleAlert
-              aria-hidden
-              size={16}
-              style={{
-                flexShrink: 0,
-                marginRight: 6,
-                marginTop: "calc((var(--text-t4--line-height) - 1rem) / 2)",
+              {t("threshold.label")}
+            </span>
+            {isLoading ? (
+              <Skeleton radius="4" text="t5" className="w-10" />
+            ) : (
+              <SliderValue>{shownThreshold}%</SliderValue>
+            )}
+          </div>
+          <div className="pt-x2">
+            <Slider
+              aria-labelledby={thresholdLabelId}
+              // 값 말풍선 자리(위 24)는 쓰지 않는다 — 머리 줄이 값을 보인다
+              className="!pt-0"
+              min={50}
+              max={100}
+              step={5}
+              value={shownThreshold}
+              formatValue={(v) => `${v}%`}
+              disabled={isLoading}
+              onValueChange={setDrag}
+              onValueCommit={(v) => {
+                setDrag(null);
+                save({ budgetAlertThreshold: v });
               }}
             />
-            <span style={{ minWidth: 0 }}>{t("saveError")}</span>
+          </div>
+          <p className="m-0 mt-x2 text-t3 text-fg-neutral-subtle">
+            {t("threshold.desc")}
           </p>
-        )}
-        <span className="sr-only" aria-live="polite">
-          {showThresholdError ? t("saveError") : null}
-        </span>
-      </NotifSection>
+        </li>
+      </Group>
 
-      {/* 4) 방해 금지 시간 — 모바일 카드 다이어트: 셸 벗김(내부 16 패딩은 카드 기준이라 모바일 0). */}
-      <NotifSection
-        mobile={mobile}
-        gap="0"
-        title={t("quiet.title")}
-        subtitle={t("quiet.subtitle")}
-        contentPad={false}
-      >
-        <div
-          style={{
-            paddingLeft: mobile ? 0 : 16,
-            paddingRight: mobile ? 0 : 16,
-            paddingTop: 12,
-            paddingBottom: 12,
-          }}
-        >
-          <SettingRow
-            icon={<Moon size={18} strokeWidth={1.9} />}
-            // 앱 _Tone.info 정합 — Moon 박스 info(파랑계) 톤.
-            tone="info"
-            title={t("quiet.use.title")}
-            description={t("quiet.use.desc")}
-            control={
-              <Switch
-                checked={quietHoursEnabled}
-                disabled={calmDisabled}
-                onCheckedChange={(v) =>
-                  updateMut.mutate({ quietHoursEnabled: v })
-                }
-              />
-            }
-          />
-        </div>
-        {quietHoursEnabled && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 12,
-              paddingLeft: mobile ? 0 : 16,
-              paddingRight: mobile ? 0 : 16,
-              paddingBottom: 12,
-            }}
-          >
-            <div>
-              {/* 앱 PSectionLabel(label) = caption 12 / fgSecondary, 아래 gap 4. */}
-              <div
-                style={{
-                  fontSize: "var(--text-caption)",
-                  color: "var(--fg-secondary)",
-                  marginBottom: 4,
-                }}
-              >
-                {t("quiet.start")}
-              </div>
-              <InputTimePicker
-                value={quietHoursStart}
-                disabled={calmDisabled}
-                onValueChange={(v) => updateMut.mutate({ quietHoursStart: v })}
-              />
-            </div>
-            <div>
-              <div
-                style={{
-                  fontSize: "var(--text-caption)",
-                  color: "var(--fg-secondary)",
-                  marginBottom: 4,
-                }}
-              >
-                {t("quiet.end")}
-              </div>
-              <InputTimePicker
-                value={quietHoursEnd}
-                disabled={calmDisabled}
-                onValueChange={(v) => updateMut.mutate({ quietHoursEnd: v })}
-              />
-            </div>
-          </div>
-        )}
-      </NotifSection>
-
-      {/* 5) 소리·진동 — 모바일 카드 다이어트: 셸 벗김. */}
-      <NotifSection
-        mobile={mobile}
-        gap="var(--spacing-md)"
-        title={t("sound.title")}
-      >
-        {/* 행 사이 구분선 — 카드 가장자리까지 full-bleed (앱 정합).
-              패딩 16 고정이므로 full-bleed 인셋도 lg(16) 고정. */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div
-            className={
-              mobile
-                ? undefined
-                : "-mx-[var(--spacing-lg)] px-[var(--spacing-lg)]"
-            }
-            style={{
-              paddingBottom: 12,
-              borderBottom: "1px solid var(--border-subtle)",
-            }}
-          >
-            <SettingRow
-              icon={<Volume2 size={18} strokeWidth={1.9} />}
-              tone="info"
-              title={t("sound.notif.title")}
-              titleId={`${uid}sound-label`}
-              description={t("sound.notif.desc")}
-              control={
-                <Select
-                  value={notificationSound}
-                  disabled={calmDisabled}
-                  onValueChange={(v) =>
-                    updateMut.mutate({
-                      notificationSound: v as NotificationSound,
-                    })
-                  }
-                >
-                  {/* 앱 PSelect 정합: 폭 120 / 값 폰트 bodyLg(16) / chevron fgSecondary. */}
-                  <SelectTrigger
-                    id={`${uid}sound`}
-                    aria-labelledby={`${uid}sound-label ${uid}sound`}
-                    className="w-[120px] text-body-lg [&>svg]:text-text-secondary"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SOUND_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {t(o.labelKey)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              }
+      <Group title={t("quiet.title")} headingAs={headingAs}>
+        <SwitchRow
+          loading={isLoading}
+          icon={<Moon {...ICON} />}
+          title={t("quiet.use.title")}
+          detail={t("quiet.use.desc")}
+          disabled={off}
+          checked={quietHoursEnabled}
+          onChange={(v) => save({ quietHoursEnabled: v })}
+        />
+        {/* 방해 금지를 끄면(또는 푸시를 끄면) 시작 · 종료 줄은 숨기지 않고 막힘 색으로 값을 보여 준다 */}
+        {
+          <>
+            <TimeRow
+              title={t("quiet.start")}
+              value={quietHoursStart}
+              disabled={off || !quietHoursEnabled}
+              loading={isLoading}
+              doneLabel={tc("done")}
+              onPick={(v) => save({ quietHoursStart: v })}
             />
-          </div>
-          <div style={{ paddingTop: 12 }}>
-            <SettingRow
-              icon={<Vibrate size={18} strokeWidth={1.9} />}
-              tone="brand"
-              title={t("sound.vibration.title")}
-              description={t("sound.vibration.desc")}
-              control={
-                <Switch
-                  checked={vibrationEnabled}
-                  disabled={calmDisabled}
-                  onCheckedChange={(v) =>
-                    updateMut.mutate({ vibrationEnabled: v })
-                  }
-                />
-              }
+            <TimeRow
+              title={t("quiet.end")}
+              value={quietHoursEnd}
+              disabled={off || !quietHoursEnabled}
+              loading={isLoading}
+              doneLabel={tc("done")}
+              onPick={(v) => save({ quietHoursEnd: v })}
             />
-          </div>
-        </div>
-      </NotifSection>
+          </>
+        }
+      </Group>
 
-      {/* 6) 이메일 알림 — 모바일 카드 다이어트: 셸 벗김(내부 16 패딩은 카드 기준이라 모바일 0). */}
-      <NotifSection
-        mobile={mobile}
-        gap="0"
-        title={t("email.title")}
-        subtitle={t("email.subtitle")}
-        contentPad={false}
-      >
-        <div
-          style={{
-            paddingLeft: mobile ? 0 : 16,
-            paddingRight: mobile ? 0 : 16,
-            paddingTop: 12,
-            paddingBottom: 12,
-          }}
+      <Group title={t("sound.title")} headingAs={headingAs}>
+        <PickRow
+          icon={<Volume2 {...ICON} />}
+          title={t("sound.notif.title")}
+          value={t(`sound.options.${notificationSound}`)}
+          disabled={off}
+          loading={isLoading}
         >
-          <SettingRow
-            icon={<Mail size={18} strokeWidth={1.9} />}
-            tone="info"
-            title={t("email.receive.title")}
-            // 앱 빈 이메일 fallback 문구 정합.
-            description={currentUser?.userEmail ?? t("email.empty")}
-            control={
-              <Switch
-                checked={emailEnabled}
-                disabled={calmDisabled}
-                onCheckedChange={(v) => updateMut.mutate({ emailEnabled: v })}
-              />
-            }
-          />
-        </div>
-        {emailEnabled && (
-          <div
-            style={{
-              paddingLeft: mobile ? 0 : 16,
-              paddingRight: mobile ? 0 : 16,
-              paddingBottom: 12,
-            }}
-          >
-            {/* 앱 PSectionLabel(label) = caption 12 / fgSecondary, 아래 gap 8. */}
-            <div
-              style={{
-                fontSize: "var(--text-caption)",
-                color: "var(--fg-secondary)",
-                marginBottom: 8,
+          {(close) => (
+            <ListRadioGroup
+              aria-label={t("sound.notif.title")}
+              value={notificationSound}
+              onValueChange={(v) => {
+                save({ notificationSound: v as NotificationSound });
+                close();
               }}
             >
-              {t("email.frequency.label")}
-            </div>
-            <Tabs
-              value={emailFrequency}
-              onValueChange={(v) =>
-                v && updateMut.mutate({ emailFrequency: v as EmailFrequency })
-              }
-            >
-              <TabsList variant="pill" size="sm" className="w-full">
+              {SOUND_OPTIONS.map((o) => (
+                <ListRadioItem
+                  key={o.value}
+                  value={o.value}
+                  title={t(o.labelKey)}
+                />
+              ))}
+            </ListRadioGroup>
+          )}
+        </PickRow>
+        <SwitchRow
+          loading={isLoading}
+          icon={<Vibrate {...ICON} />}
+          title={t("sound.vibration.title")}
+          detail={t("sound.vibration.desc")}
+          disabled={off}
+          checked={vibrationEnabled}
+          onChange={(v) => save({ vibrationEnabled: v })}
+        />
+      </Group>
+
+      <Group title={t("email.title")} headingAs={headingAs}>
+        <SwitchRow
+          loading={isLoading}
+          icon={<Mail {...ICON} />}
+          title={t("email.receive.title")}
+          detail={currentUser?.userEmail ?? t("email.empty")}
+          detailLoading={userLoading}
+          checked={emailEnabled}
+          onChange={(v) => save({ emailEnabled: v })}
+        />
+        {emailEnabled && (
+          <PickRow
+            indent
+            title={t("email.frequency.label")}
+            value={t(`email.frequency.${emailFrequency}`)}
+            loading={isLoading}
+          >
+            {(close) => (
+              <ListRadioGroup
+                aria-label={t("email.frequency.label")}
+                value={emailFrequency}
+                onValueChange={(v) => {
+                  save({ emailFrequency: v as EmailFrequency });
+                  close();
+                }}
+              >
                 {EMAIL_FREQ_OPTIONS.map((o) => (
-                  <TabsTrigger
+                  <ListRadioItem
                     key={o.value}
                     value={o.value}
-                    className="flex-1"
-                    disabled={calmDisabled}
-                  >
-                    {t(o.labelKey)}
-                  </TabsTrigger>
+                    title={t(o.labelKey)}
+                  />
                 ))}
-              </TabsList>
-            </Tabs>
-          </div>
+              </ListRadioGroup>
+            )}
+          </PickRow>
         )}
-      </NotifSection>
-
-      {updateMut.isError && !showThresholdError && (
-        <div
-          style={{
-            // 앱 에러 메시지 타이포 bodySm(13) 정합.
-            fontSize: "var(--text-body-sm)",
-            color: "var(--color-fg-critical)",
-          }}
-        >
-          {t("saveError")}
-        </div>
-      )}
-    </div>
+      </Group>
+    </>,
   );
 }

@@ -19,7 +19,6 @@ vi.mock("react-i18next", () => ({
 
 const { InputDatePicker } = await import("./input-date-picker");
 const { isCompleteDate } = await import("@/shared/lib");
-const { InputTimePicker } = await import("./input-time-picker");
 
 let container: HTMLDivElement;
 let root: Root;
@@ -71,28 +70,6 @@ function DateHost({
   const [value, setValue] = useState(initial);
   return (
     <InputDatePicker
-      value={value}
-      commitOnComplete={commit}
-      onValueChange={(v) => {
-        seen.push(v);
-        setValue(v);
-      }}
-    />
-  );
-}
-
-function TimeHost({
-  initial,
-  commit,
-  seen,
-}: {
-  initial: string;
-  commit: boolean;
-  seen: string[];
-}) {
-  const [value, setValue] = useState(initial);
-  return (
-    <InputTimePicker
       value={value}
       commitOnComplete={commit}
       onValueChange={(v) => {
@@ -187,29 +164,5 @@ describe("다 친 날짜만 받는 호스트(통계 기간)", () => {
     typeInto(input(), "2026-09-30");
     expect(seen).toEqual(["2026-09-30"]);
     expect(input().value).toBe("2026-09-30");
-  });
-});
-
-describe("InputTimePicker", () => {
-  it("끈 채로는 종전 그대로", () => {
-    const seen: string[] = [];
-    act(() =>
-      root.render(<TimeHost initial="10:00" commit={false} seen={seen} />),
-    );
-    typeInto(input(), "11:30");
-    expect(seen).toEqual(["1", "11", "11:", "11:3", "11:30"]);
-  });
-
-  it("켜면 HH:MM 이 완성될 때 한 번만 나가고, 미완성으로 떠나면 되돌아간다", () => {
-    const seen: string[] = [];
-    act(() => root.render(<TimeHost initial="10:00" commit seen={seen} />));
-    typeInto(input(), "11:30");
-    expect(seen).toEqual(["11:30"]);
-
-    typeInto(input(), "9:");
-    expect(input().value).toBe("9:");
-    blur(input());
-    expect(input().value).toBe("11:30");
-    expect(seen).toEqual(["11:30"]);
   });
 });

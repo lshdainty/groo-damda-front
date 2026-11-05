@@ -906,12 +906,8 @@ dutchPay,form.addParticipant,참가자 추가,Add Participant
 dutchPay,deleteConfirm.title,더치페이 삭제,Delete Dutch Pay
 dutchPay,deleteConfirm.message,"""{{name}}"" 더치페이를 삭제할까요? 삭제한 더치페이는 되돌릴 수 없어요.","Delete the ""{{name}}"" Dutch Pay? This action cannot be undone."
 notification,title,알림,Notifications
-notification,empty,알림이 없습니다,No notifications
+notification,empty,아직 알림이 없어요,No notifications yet
 notification,markAllRead,모두 읽음,Read all
-notification,type.EVENT_REMINDER,일정 알림,Event Reminder
-notification,type.BUDGET_ALERT,예산 알림,Budget Alert
-notification,type.TODO_REMINDER,할일 알림,Todo Reminder
-notification,type.SYSTEM,시스템 알림,System
 group,title,그룹,Groups
 group,addGroup,그룹 추가,Add Group
 group,editGroup,그룹 수정,Edit Group
@@ -1248,19 +1244,18 @@ memo,tags.loadFailed,태그를 불러오지 못했어요,Could not load tags
 memo,tags.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
 memo,tags.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
 memo,tags.deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
-notification,connectionLost,알림 연결이 끊어졌습니다,Notification connection lost
-notification,connectionRestored,알림 연결이 복구되었습니다,Notification connection restored
+notification,connectionLost,알림 연결이 끊어졌어요,Notification connection lost
+notification,connectionRestored,알림 연결이 다시 이어졌어요,Notification connection restored
 notification,newNotification,새 알림,New notification
 notification,eventReminder,일정 알림,Event Reminder
 notification,budgetAlert,예산 알림,Budget Alert
 notification,todoReminder,할 일 알림,Todo Reminder
 notification,prefs.title,알림 설정,Notification settings
-notification,prefs.description,결제·예산·일정 등 어떤 알림을 어떻게 받을지 설정합니다.,Choose which notifications to receive and how.
+notification,prefs.description,결제·예산·일정 등 어떤 알림을 어떻게 받을지 정해요.,Choose which notifications to receive and how.
 notification,push.title,푸시 알림,Push Notifications
-notification,push.on,모든 알림이 활성화되어 있어요,All notifications are on
+notification,push.on,모든 알림이 켜져 있어요,All notifications are on
 notification,push.off,알림이 꺼져 있어요,Notifications are off
 notification,types.title,알림 종류,Notification Types
-notification,types.subtitle,필요한 알림만 켜두면 더 편해요.,Keep only the notifications you need.
 notification,rows.payment.title,결제 알림,Payment Alerts
 notification,rows.payment.desc,"결제 예정일 D-1, 결제일 당일 알림",Notify the day before and on the payment date
 notification,rows.budget.title,예산 알림,Budget Alerts
@@ -1270,40 +1265,41 @@ notification,rows.autoRecord.desc,반복 거래가 자동으로 기록되었을 
 notification,rows.dutchPay.title,더치페이 알림,Dutch Pay Alerts
 notification,rows.dutchPay.desc,송금 요청 / 정산 완료 알림,Transfer requests and settlement completion
 notification,rows.calendar.title,일정 알림,Event Alerts
-notification,rows.calendar.desc,캘린더 이벤트 시작 15분 전,15 minutes before a calendar event
+notification,rows.calendar.desc,캘린더 일정 시작 15분 전,15 minutes before a calendar event
 notification,rows.weeklyReport.title,주간 리포트,Weekly Report
 notification,rows.weeklyReport.desc,매주 월요일 오전 9시,Every Monday at 9 AM
 notification,rows.monthlyReport.title,월간 리포트,Monthly Report
 notification,rows.monthlyReport.desc,매월 1일 오전 9시,On the 1st of each month at 9 AM
-notification,threshold.title,예산 알림 임계값,Budget Alert Threshold
-notification,threshold.current,현재,Current
-notification,threshold.desc,예산 사용률이 이 값을 넘으면 <warn>경고</warn> 상태로 표시되고 알림을 받습니다. 100%는 <over>초과</over>로 별도 알림이 발생합니다.,When usage exceeds this value it's shown as <warn>Warning</warn> and you get notified. At 100% a separate <over>Over</over> alert is sent.
+notification,threshold.title,예산 알림 기준,Budget alert threshold
+notification,threshold.label,경고로 표시할 사용률,Usage that shows as a warning
+notification,threshold.desc,이 값을 넘으면 경고로 표시되고 알림을 받아요. 100%를 넘으면 초과 알림이 따로 와요.,Over this value it shows as a warning and you get a notification. Over 100% you get a separate alert.
 notification,quiet.title,방해 금지 시간,Do Not Disturb
-notification,quiet.subtitle,이 시간에는 알림이 소리·진동 없이 표시됩니다.,During these hours notifications appear without sound or vibration.
 notification,quiet.use.title,방해 금지 사용,Enable Do Not Disturb
 notification,quiet.use.desc,시간대를 지정해 자동 무음,Auto-mute during a set time range
 notification,quiet.start,시작,Start
 notification,quiet.end,종료,End
-notification,sound.title,소리·진동,Sound & Vibration
+notification,sound.title,소리 · 진동,Sound & Vibration
 notification,sound.notif.title,알림음,Notification Sound
-notification,sound.notif.desc,앱 알림 사운드,App notification sound
 notification,sound.options.CHIME,차임,Chime
 notification,sound.options.DEFAULT,기본,Default
 notification,sound.options.NONE,무음,Silent
 notification,sound.vibration.title,진동,Vibration
 notification,sound.vibration.desc,모바일에서 진동 함께 알림,Vibrate on mobile along with notifications
 notification,email.title,이메일 알림,Email Notifications
-notification,email.subtitle,앱을 잘 안 열어도 이메일로 요약을 받아볼 수 있어요.,Get email summaries even if you rarely open the app.
 notification,email.receive.title,이메일 받기,Receive Emails
-notification,email.empty,등록된 이메일이 없습니다,No email registered
+notification,email.empty,등록된 이메일이 없어요,No email registered
 notification,email.frequency.label,발송 주기,Frequency
 notification,email.frequency.DAILY,매일,Daily
 notification,email.frequency.WEEKLY,매주,Weekly
 notification,email.frequency.MONTHLY,매월,Monthly
-notification,saveError,저장에 실패했어요. 잠시 뒤 다시 시도해주세요.,Failed to save. Please try again shortly.
-notification,popover.unread,읽지 않은 알림 <b>{{count}}</b>개,<b>{{count}}</b> unread
+notification,loadFailed.title,알림을 불러오지 못했어요,Could not load notifications
+notification,loadFailed.desc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
+notification,prefsLoadFailed.title,알림 설정을 불러오지 못했어요,Could not load notification settings
+notification,settingsSaveFailed,알림 설정을 저장하지 못했어요.,Could not save the notification settings.
+notification,deleteFailed,알림을 삭제하지 못했어요.,Could not delete the notification.
+notification,markAllFailed,알림을 모두 읽음으로 바꾸지 못했어요.,Could not mark all notifications as read.
+notification,markReadFailed,알림을 읽음으로 바꾸지 못했어요.,Could not mark the notification as read.
 notification,popover.noNew,새 알림이 없어요,No new notifications
-notification,popover.empty,아직 알림이 없어요,No notifications yet
 user,passwordChange,비밀번호 변경,Change password
 user,passwordChangeDescription,현재 비밀번호를 확인한 뒤 새 비밀번호로 바꿔요,Verify your current password and set a new one
 user,currentPassword,현재 비밀번호,Current Password

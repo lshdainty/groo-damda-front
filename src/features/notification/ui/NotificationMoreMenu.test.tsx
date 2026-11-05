@@ -13,6 +13,7 @@ declare global {
 const state = vi.hoisted(() => ({
   wide: true,
   mutate: vi.fn(),
+  confirmFail: vi.fn(),
   pending: false,
 }));
 
@@ -25,28 +26,42 @@ vi.mock("react-i18next", () => ({
 }));
 vi.mock("../model/useNotifications", () => ({
   useDeleteNotification: () => ({
-    mutate: state.mutate,
+    mutateAsync: state.mutate,
     isPending: state.pending,
   }),
 }));
-// 확인창 껍데기는 shared/ui/groo/dialogs 의 몫이다 — 여기서는 어떤 글과 단추로 부르는지만 본다
-vi.mock("@/shared/ui/groo/dialogs", () => ({
-  ConfirmDialog: (p: {
+vi.mock("@/shared/lib/confirm-fail", () => ({
+  useConfirmFail: () => state.confirmFail,
+}));
+// 확인창 껍데기는 shared/ui/groo/alert-confirm 의 몫이다 — 여기서는 어떤 글과 동작으로 부르는지만 본다
+vi.mock("@/shared/ui/groo/alert-confirm", () => ({
+  AlertConfirm: (p: {
     title: string;
     message: string;
     confirmLabel?: string;
-    danger?: boolean;
-    loading?: boolean;
-    onCancel: () => void;
-    onConfirm: () => void;
+    onConfirm: () => Promise<unknown> | void;
+    onError?: () => void;
+    onClose: () => void;
   }) => (
-    <div role="alertdialog" data-danger={p.danger ? "" : undefined}>
+    <div role="alertdialog">
       <h2>{p.title}</h2>
       <p>{p.message}</p>
-      <button type="button" data-testid="cancel" onClick={p.onCancel}>
+      <button type="button" data-testid="cancel" onClick={p.onClose}>
         cancel
       </button>
-      <button type="button" data-testid="confirm" onClick={p.onConfirm}>
+      <button
+        type="button"
+        data-testid="confirm"
+        onClick={async () => {
+          try {
+            await p.onConfirm();
+            p.onClose();
+          } catch {
+            p.onClose();
+            p.onError?.();
+          }
+        }}
+      >
         {p.confirmLabel}
       </button>
     </div>
@@ -89,7 +104,8 @@ beforeEach(() => {
     Element.prototype.hasPointerCapture = () => false;
   }
   window.history.replaceState(null, "");
-  state.mutate = vi.fn();
+  state.mutate = vi.fn().mockResolvedValue(undefined);
+  state.confirmFail = vi.fn();
   state.pending = false;
   window.matchMedia = ((query: string) => ({
     matches: state.wide,
@@ -212,10 +228,19 @@ describe.each([
     await click(document.querySelector("[data-testid=confirm]")!);
     expect(state.mutate).toHaveBeenCalledTimes(1);
     expect(state.mutate.mock.calls[0]![0]).toBe(7);
-    // 성공 콜백이 확인창을 닫는다
-    await act(async () => {
-      state.mutate.mock.calls[0]![1].onSuccess();
-    });
     expect(document.querySelector("[role=alertdialog]")).toBeNull();
+    expect(state.confirmFail).not.toHaveBeenCalled();
+  });
+
+  it("지우기가 실패하면 확인창을 닫고 critical 스낵바 + 다시 시도(고정 글)를 띄운다", async () => {
+    state.mutate = vi.fn().mockRejectedValue(new Error("x"));
+    render();
+    await openMenu();
+    await click(row()!);
+    await tick(1100);
+    await click(document.querySelector("[data-testid=confirm]")!);
+    expect(document.querySelector("[role=alertdialog]")).toBeNull();
+    expect(state.confirmFail).toHaveBeenCalledTimes(1);
+    expect(state.confirmFail.mock.calls[0]![0].message).toBe("deleteFailed");
   });
 });

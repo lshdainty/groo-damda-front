@@ -40,6 +40,9 @@ export function NotificationRow({
   const { t } = useTranslation("notification");
   const { Icon, bg, fg } = notificationVisual(notification.notificationType);
   const unread = !notification.isRead;
+  const cut = notification.title.lastIndexOf(" ") + 1;
+  const titleHead = notification.title.slice(0, cut);
+  const titleTail = notification.title.slice(cut);
 
   const common = {
     prefix: (
@@ -47,23 +50,29 @@ export function NotificationRow({
         <Icon size={20} strokeWidth={2} aria-hidden />
       </ListTile>
     ),
+    // 점은 제목 글 안의 인라인이다 — 줄바꿈이 나도 마지막 글 바로 뒤 6 에 붙고, 점만 다음 줄로 떨어지지 않게 마지막 단어와 묶는다
     title: (
-      <span className="inline-flex items-center gap-x1_5">
-        {notification.title}
-        {pending ? (
-          <Spinner size="sm" />
-        ) : (
-          unread && (
-            <>
-              <span
-                aria-hidden
-                className="size-1.5 shrink-0 rounded-full bg-bg-brand-solid"
-              />
-              <span className="sr-only">{t("row.unread")}</span>
-            </>
-          )
-        )}
-      </span>
+      <>
+        {titleHead}
+        <span className="whitespace-nowrap">
+          {titleTail}
+          {pending ? (
+            <span className="ml-x1_5 inline-block align-middle">
+              <Spinner size="sm" />
+            </span>
+          ) : (
+            unread && (
+              <>
+                <span
+                  aria-hidden
+                  className="ml-x1_5 inline-block size-1.5 shrink-0 rounded-full bg-fg-brand align-middle"
+                />
+                <span className="sr-only">{t("row.unread")}</span>
+              </>
+            )
+          )}
+        </span>
+      </>
     ),
     detail: (
       <span className="line-clamp-2 text-fg-neutral-muted">

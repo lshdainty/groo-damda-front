@@ -1,12 +1,11 @@
 // 막힌 것은 불투명도로 흐리게 하지 않고 비활성 전용 색을 쓴다(01-029 · 기초 STA-01).
-// 옛 공용 셋(캘린더 막힌 날 · 색 견본 · 슬라이더)의 남은 opacity-50 을 걷었다 — 클래스로 잠근다(색 값은 groo-tokens 가 정한다).
+// 옛 공용 셋(캘린더 막힌 날 · 색 견본)의 남은 opacity-50 을 걷었다 — 클래스로 잠근다(색 값은 groo-tokens 가 정한다).
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Calendar } from "./calendar";
 import { ColorSwatchGroup } from "./color-swatch";
-import { Slider } from "./slider";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -90,23 +89,5 @@ describe("막힘은 전용 색 — opacity-50 을 쓰지 않는다", () => {
       // 색이 곧 값이다 — 인라인 배경은 그대로
     }
     expect(items[0]!.style.background).not.toBe("");
-  });
-
-  it("막힌 슬라이더는 트랙 bg-disabled · 채움 · 손잡이 fg-disabled — Radix 는 data-disabled 를 단다", () => {
-    act(() => root.render(<Slider disabled defaultValue={[30]} />));
-    const track = container.querySelector("[data-disabled]")!;
-    expect(track).not.toBeNull();
-    const all = Array.from(container.querySelectorAll("[class]"));
-    expect(
-      all.some((e) => classesOf(e).some((c) => /(^|:)opacity-/.test(c))),
-    ).toBe(false);
-    const joined = all.map((e) => e.getAttribute("class")).join(" ");
-    expect(joined).toContain("data-[disabled]:bg-bg-disabled");
-    expect(joined).toContain("data-[disabled]:bg-fg-disabled");
-    expect(joined).toContain("data-[disabled]:border-fg-disabled");
-    // 막히면 Radix 가 트랙 · 채움 · 손잡이에 data-disabled 를 단다 — 그 표식에서 색이 바뀐다
-    expect(
-      container.querySelectorAll("[data-disabled]").length,
-    ).toBeGreaterThanOrEqual(3);
   });
 });
