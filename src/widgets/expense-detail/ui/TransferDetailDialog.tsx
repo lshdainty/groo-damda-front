@@ -8,6 +8,11 @@ import { LogoTile } from "@/shared/ds/logo-tile";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { KRW, isEn } from "@/shared/lib/groo/format";
 import {
+  formatAssetAmount,
+  isForeignCurrency,
+} from "@/shared/lib/groo/currency";
+import { dsLocale } from "@/shared/ds/i18n";
+import {
   HIDE_AMOUNTS_MASK,
   useHideAmounts,
 } from "@/shared/lib/groo/hide-amounts-core";
@@ -109,14 +114,19 @@ export function TransferDetailDialog({
   const interest = transfer.interestAmount ?? 0;
   // 매수 충당·카드 결제로 생긴 이체는 원본과 금액이 묶여 있다.
   const locked = transfer.autoSource != null;
-  const won = (v: number) =>
-    hidden
-      ? HIDE_AMOUNTS_MASK
-      : `${isEn() ? "₩" : ""}${KRW(v, { abs: true })}${isEn() ? "" : "원"}`;
-
   const assets = assetsQ.data?.assets ?? [];
   const fromAsset = assets.find((a) => a.rowId === transfer.fromAssetRowId);
   const toAsset = assets.find((a) => a.rowId === transfer.toAssetRowId);
+  // 금액 · 수수료 · 이자 · 원금은 보내는 계좌 통화, 받는 금액(toAmount)은 받는 계좌 통화다(I-13). 계좌를 모르면 원화로 본다.
+  const fromCurrency = fromAsset?.currency ?? null;
+  const toCurrency = toAsset?.currency ?? null;
+  const inCur = (v: number, code: string | null) =>
+    hidden
+      ? HIDE_AMOUNTS_MASK
+      : isForeignCurrency(code)
+        ? formatAssetAmount(Math.abs(v), code!, dsLocale())
+        : `${isEn() ? "₩" : ""}${KRW(v, { abs: true })}${isEn() ? "" : "원"}`;
+  const won = (v: number) => inCur(v, fromCurrency);
 
   const runDelete = () => {
     // 실패는 서버 글 대신 고정 글 — 확인창을 닫고 스낵바 + [다시 시도](28-3)
@@ -188,7 +198,12 @@ export function TransferDetailDialog({
               }
               name={t("addTx.transfer")}
               amount={
-                <AmountText amount={transfer.amount} sign="" kind="transfer" />
+                <AmountText
+                  amount={transfer.amount}
+                  sign=""
+                  kind="transfer"
+                  currency={fromCurrency}
+                />
               }
               dateTime={dateTimeLabel(transfer.transferDate)}
             />
@@ -227,6 +242,13 @@ export function TransferDetailDialog({
             </List>
 
             <List data-slot="tx-detail-kv" className="pt-x1">
+              {/* 통화가 다른 두 계좌 사이 — 받는 쪽이 그 통화로 받은 금액(서버 toAmount) */}
+              {transfer.toAmount != null && (
+                <KvRow
+                  label={t("transferReceived")}
+                  value={inCur(transfer.toAmount, toCurrency)}
+                />
+              )}
               {fee > 0 && (
                 <KvRow label={t("transferFeePrefix")} value={won(fee)} />
               )}

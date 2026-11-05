@@ -14,11 +14,15 @@ import {
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
-import { withCommaBreaks } from "@/shared/ds/i18n";
+import { dsLocale, withCommaBreaks } from "@/shared/ds/i18n";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthDayDow } from "@/shared/lib/date";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { KRW, isEn } from "@/shared/lib/groo/format";
+import {
+  formatAssetAmount,
+  isForeignCurrency,
+} from "@/shared/lib/groo/currency";
 import { HideUnit, MaskAmount } from "@/shared/lib/groo/hide-amounts";
 import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
 import type { HideKind } from "@/shared/lib/groo/hide-amounts-cards";
@@ -38,13 +42,25 @@ export function AmountText({
   sign,
   card = "ledger.txDetail",
   kind,
+  currency,
 }: {
   amount: number;
   /** "−" · "+" · "" */
   sign: string;
   card?: ComponentProps<typeof MaskAmount>["card"];
   kind?: HideKind;
+  /** 금액의 통화 — 외화면 "$1,000.00"(이체는 보내는 계좌 통화, I-13). 없으면 원화 */
+  currency?: string | null;
 }) {
+  if (isForeignCurrency(currency)) {
+    return (
+      <MaskAmount card={card} kind={kind}>
+        {withCommaBreaks(
+          `${sign}${formatAssetAmount(Math.abs(amount), currency!, dsLocale())}`,
+        )}
+      </MaskAmount>
+    );
+  }
   return (
     <>
       <MaskAmount card={card} kind={kind}>

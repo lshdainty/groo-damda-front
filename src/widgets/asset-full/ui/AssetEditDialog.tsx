@@ -137,7 +137,9 @@ export function AssetEditDialog({
     setRefFailed(false);
     // 새 자산의 통화는 설정의 기본 통화에서 온다 — 못 받은 채면 KRW 로 조용히 저장하지 않고 다시 받는다
     const needAssets = assetsQ.isError && !assetsQ.data;
-    const needCurrency = !item && !defaultCurrencyReady;
+    // 카드는 원화만이라 기본 통화를 기다릴 일이 없다
+    const needCurrency =
+      !item && !defaultCurrencyReady && editingGroup !== "card";
     if (needAssets || needCurrency) {
       void Promise.all([
         needAssets ? assetsQ.refetch().then((r) => !r.isError) : true,

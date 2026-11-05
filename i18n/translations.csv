@@ -469,7 +469,8 @@ asset,form.balance,잔액,Balance
 asset,form.currency,통화,Currency
 asset,form.exchangeRate,환율,Exchange rate
 asset,form.exchangeRatePlaceholder,{{code}} 1당 원화,KRW per 1 {{code}}
-asset,form.exchangeRateHint,순자산은 잔액 × 환율로 환산해요. 비워 두면 환산 없이 그대로 더해져요.,Net worth converts balance × rate. Left empty it is added without conversion.
+asset,form.exchangeRateHint,외화 잔액 · 예수금을 원화로 바꿀 때 써요.,Converts the foreign balance or cash to KRW.
+asset,form.exchangeRateRequired,환율을 입력해주세요.,Enter the exchange rate.
 asset,form.institution,금융기관,Institution
 asset,form.institutionPlaceholder,금융기관명을 입력하세요,Enter institution name
 asset,form.icon,아이콘,Icon
@@ -528,6 +529,8 @@ asset,editDialog.pickKindError,추가할 종류를 골라주세요.,Choose what 
 asset,editDialog.titleAddKind,{{kind}} 추가,Add {{kind}}
 asset,editDialog.titleEditKind,{{kind}} 수정,Edit {{kind}}
 asset,editDialog.saveFailed,자산을 저장하지 못했어요.,Couldn't save the asset.
+asset,editDialog.saveCardForeign,카드는 원화로만 등록할 수 있어요.,Cards can only be registered in KRW.
+asset,editDialog.saveRateRequired,외화 자산은 환율을 입력해야 저장할 수 있어요.,Enter the exchange rate to save a foreign-currency asset.
 asset,editDialog.kindLabel,종류,Type
 asset,editDialog.optional,선택,Optional
 asset,editDialog.rulesGroup,표시 설정,Display settings
@@ -1670,6 +1673,10 @@ expense,transferPrincipal,원금,Principal
 expense,addTx.interestHint,상환액 중 이자 몫 — 부채는 이자를 뺀 만큼만 줄어들어요,The interest portion — debt decreases only by the rest
 expense,addTx.interestSplit,원금 {{principal}}원 · 이자 {{interest}}원,Principal {{principal}} · Interest {{interest}}
 expense,transferFeePrefix,수수료,Fee
+expense,transferReceivedTag,받는 금액 {{amount}},Received {{amount}}
+expense,transferReceived,받는 금액,Amount received
+expense,addTx.receiveAmount,받는 금액 약 {{amount}},Amount received ≈ {{amount}}
+expense,addTx.approxKrw,약 {{amount}},≈ {{amount}}
 expense,transferListTitle,이체 내역,Transfers
 expense,transferDeleteTitle,이체 삭제,Delete transfer
 expense,transferDeleteConfirm,이 이체를 삭제할까요? 양쪽 계좌 잔액이 이체 전으로 돌아가요. 삭제한 이체는 되돌릴 수 없어요.,Delete this transfer? Both accounts' balances go back to before the transfer. A deleted transfer can't be restored.
@@ -2833,6 +2840,8 @@ calendar,labels.usage,{{count}}건에 사용 중,Used by {{count}} events
 asset,holdings.sectionTitle,보유 종목,Holdings
 asset,holdings.countLabel,보유 {{n}}종목,{{n}} holdings
 asset,holdings.cashBalance,예수금,Cash
+asset,holdings.krwInputHint,원화로 입력해요,Enter in KRW
+asset,fx.approxKrw,약 {{amount}},≈ {{amount}}
 asset,trade.title,매수·매도,Buy / Sell
 asset,trade.buy,매수,Buy
 asset,trade.sell,매도,Sell
@@ -2860,7 +2869,7 @@ asset,trade.settlementCashHelp,증권계좌 예수금에서 결제해요. 모자
 asset,trade.settlementAccountHelp,예수금이 모자라면 이 계좌에서 부족분만큼 자동으로 이체돼요.,A transfer covers any shortfall from this account.
 asset,trade.settlementDelta,결제 계좌 변동,Settlement account change
 asset,trade.realizedPreview,실현손익,Realized P/L
-asset,trade.fundingNotice,예수금이 모자라 결제 계좌에서 {{amount}}원을 옮겨요,{{amount}} moves from the settlement account to cover the shortfall
+asset,trade.fundingNotice,예수금이 모자라 결제 계좌에서 {{amount}}만큼 옮겨요,{{amount}} moves from the settlement account to cover the shortfall
 asset,trade.insufficientCash,예수금이 마이너스가 돼요. 그대로 기록됩니다.,Cash will go negative. It is recorded as is.
 asset,trade.insufficientQty,보유 수량보다 많이 팔 수 없어요.,Cannot sell more than you hold.
 asset,trade.saveFailed,매매를 처리하지 못했어요.,Couldn't process the trade.

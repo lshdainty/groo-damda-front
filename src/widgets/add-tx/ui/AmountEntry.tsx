@@ -57,7 +57,7 @@ export function CurrencyChip({ f }: { f: TxForm }) {
 
 /**
  * 밑줄 금액 칸 (D 20 · 20a) — 원화면 정수 + 뒤 글자 대신 통화 칩, 외화면 현지 금액(소수 둘째 자리).
- * 이체에는 통화 칩이 없다(외화는 지출 · 수입에만) — 뒤 글자 "원".
+ * 이체에는 통화 칩이 없다(외화는 지출 · 수입에만) — 뒤 글자는 보내는 계좌 통화(I-13 — 원화 "원", USD 계좌면 "$").
  */
 export function AmountEntry({
   f,
@@ -110,7 +110,7 @@ export function AmountEntry({
       max={MAX_AMOUNT}
       onValueChange={f.setAmount}
       onKeyDown={enter}
-      unit={showChip ? <CurrencyChip f={f} /> : undefined}
+      unit={showChip ? <CurrencyChip f={f} /> : f.transferUnit}
     />
   );
 }

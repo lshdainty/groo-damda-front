@@ -5,6 +5,11 @@ import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
 import { cn } from "@/shared/lib/cn";
 import { useTallTitle } from "@/shared/lib/groo/use-tall-title";
 import { KRW, MINUS, isEn } from "@/shared/lib/groo/format";
+import {
+  formatAssetAmount,
+  isForeignCurrency,
+} from "@/shared/lib/groo/currency";
+import { dsLocale } from "@/shared/ds/i18n";
 import { HideUnit, MaskAmount } from "@/shared/lib/groo/hide-amounts";
 import {
   isScheduledDate,
@@ -26,6 +31,8 @@ import type { AssetTransfer } from "../model/types";
  *   이체는 순자산 증감이 0(수수료 제외)이라 +/- 를 붙이면 지출·수입 합계와 헷갈린다.
  * - `perspectiveAssetRowId` 있음(자산 상세): 그 자산 기준으로 출금이면 -(금액+수수료), 입금이면 +금액.
  *   수수료는 보내는 쪽에서만 빠진다(백엔드 recordTransfer 와 동일 규칙).
+ * - 금액 · 수수료는 보내는 계좌 통화, 받는 쪽 관점은 받은 금액(`toAmount`, 없으면 amount)을 받는 계좌 통화로(I-13).
+ *   통화가 다른 이체는 금액 아래 작게 "받는 금액 $1,000.00" 이 붙는다. 통화를 모르면(`currencyOf` 없음) 원화로 찍는다.
  */
 export function TransferRow({
   transfer,
@@ -34,6 +41,7 @@ export function TransferRow({
   showDate,
   gutter = false,
   selectSpace = false,
+  currencyOf,
 }: {
   transfer: AssetTransfer;
   perspectiveAssetRowId?: number;
@@ -46,6 +54,8 @@ export function TransferRow({
   gutter?: boolean;
   /** 고르기 모드 — 이체는 고를 수 없어 체크 자리만 비운다(글자 자리는 거래 줄과 같다, I-07 Q6-A) */
   selectSpace?: boolean;
+  /** 계좌 rowId → 통화(`useAssetCurrencyOf`). 없으면 원화로 본다 */
+  currencyOf?: (assetRowId: number) => string | null | undefined;
 }) {
   const tallRef = useTallTitle();
   const { t } = useTranslation("expense");
@@ -57,11 +67,14 @@ export function TransferRow({
   const isIn =
     perspectiveAssetRowId != null &&
     transfer.toAssetRowId === perspectiveAssetRowId;
-  const signed = isOut
-    ? -(transfer.amount + fee)
-    : isIn
-      ? transfer.amount
-      : null;
+  const fromCurrency = currencyOf?.(transfer.fromAssetRowId) ?? null;
+  const toCurrency = currencyOf?.(transfer.toAssetRowId) ?? null;
+  const received = transfer.toAmount ?? transfer.amount;
+  const signed = isOut ? -(transfer.amount + fee) : isIn ? received : null;
+  // 줄 금액의 통화 — 받는 쪽 관점만 받는 계좌 통화
+  const shownCurrency = isIn ? toCurrency : fromCurrency;
+  const foreignText = (n: number, code: string | null) =>
+    formatAssetAmount(Math.abs(n), code!, dsLocale());
   // 이체도 미래 날짜로 넣을 수 있다 — 거래와 같은 표시를 준다. 합계에 안 드는 줄이라 금액만 옅게
   const scheduled = isScheduledDate(transfer.transferDate);
   const time = txTimeLabel(transfer.transferDate);
@@ -94,7 +107,9 @@ export function TransferRow({
           {/* 수수료도 금액이다 — 위 이체 금액은 가려지는데 여기만 그대로 남아
               있었다(2026-09-17 설계 조사). 같은 카드·같은 종류로 판정한다. */}
           <MaskAmount card="ledger.txList" kind="transfer" mask="•••">
-            {KRW(fee, { abs: true })}
+            {isForeignCurrency(fromCurrency)
+              ? foreignText(fee, fromCurrency)
+              : KRW(fee, { abs: true })}
           </MaskAmount>
         </TagGroupItem>
       )}
@@ -115,18 +130,48 @@ export function TransferRow({
         scheduled ? "text-fg-neutral-subtle" : "text-fg-neutral",
       )}
     >
-      <MaskAmount card="ledger.txList" kind="transfer">
-        {signed == null ? "" : signed < 0 ? MINUS : "+"}
-        {isEn() ? "₩" : ""}
-        {KRW(signed ?? transfer.amount, { abs: true })}
-      </MaskAmount>
-      <HideUnit card="ledger.txList" kind="transfer">
-        {isEn() ? "" : "원"}
-      </HideUnit>
+      {isForeignCurrency(shownCurrency) ? (
+        <MaskAmount card="ledger.txList" kind="transfer">
+          {signed == null ? "" : signed < 0 ? MINUS : "+"}
+          {foreignText(signed ?? transfer.amount, shownCurrency)}
+        </MaskAmount>
+      ) : (
+        <>
+          <MaskAmount card="ledger.txList" kind="transfer">
+            {signed == null ? "" : signed < 0 ? MINUS : "+"}
+            {isEn() ? "₩" : ""}
+            {KRW(signed ?? transfer.amount, { abs: true })}
+          </MaskAmount>
+          <HideUnit card="ledger.txList" kind="transfer">
+            {isEn() ? "" : "원"}
+          </HideUnit>
+        </>
+      )}
     </span>
   );
 
-  const suffix = amountEl;
+  // 통화가 다른 이체의 받는 금액 — 설명 줄(계좌 이름 · 시각)을 밀지 않게 금액 아래 작은 글로(AssetRow 의 외화 작은 글과 같은 자리)
+  const receivedText =
+    transfer.toAmount != null && !isIn
+      ? t("transferReceivedTag", {
+          amount: isForeignCurrency(toCurrency)
+            ? foreignText(transfer.toAmount, toCurrency)
+            : `${isEn() ? "₩" : ""}${KRW(transfer.toAmount, { abs: true })}${isEn() ? "" : "원"}`,
+        })
+      : null;
+  const suffix =
+    receivedText == null ? (
+      amountEl
+    ) : (
+      <span className="flex flex-col items-end gap-x0_5">
+        {amountEl}
+        <span className="whitespace-nowrap text-t3 font-medium tabular-nums text-fg-neutral-subtle">
+          <MaskAmount card="ledger.txList" kind="transfer" mask="•••">
+            {receivedText}
+          </MaskAmount>
+        </span>
+      </span>
+    );
 
   // 이체는 회색 타일(list.md Prefix "이체 줄은 회색") — chart-gray-weak 바탕 + chart-gray 아이콘 20
   const prefix = (

@@ -1,5 +1,4 @@
-import type { Asset, AssetType } from "@/entities/asset";
-import { assetBalanceInKrw } from "@/shared/lib/groo/currency";
+import { assetKrw, type Asset, type AssetType } from "@/entities/asset";
 import { MASK } from "@/shared/lib/groo/money-text";
 import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
 import { useHideAmounts } from "@/shared/lib/groo/hide-amounts-core";
@@ -14,8 +13,11 @@ export const CARD_TYPES: AssetType[] = ["CREDIT_CARD", "CHECK_CARD"];
 export const INVESTMENT_TYPES: AssetType[] = ["INVESTMENT"];
 export const LOAN_TYPES: AssetType[] = ["LOAN"];
 
-/** 줄에서 쓰는 원화 환산 잔액 — 외화는 환율로 환산해 더한다(I-17 Q4 A, 서버 요약과 같은 셈) */
-export const krwOf = (a: Asset) => assetBalanceInKrw(a);
+/**
+ * 줄에서 쓰는 원화 합계 — 서버 `balanceInKrw`(round(예수금 × 환율) + 보유 평가, I-13 길 A)를 읽는다. 라이브 시세가 켜졌으면
+ * `useLiveAssets` 가 보유 평가 자리만 라이브로 바꾼 값이 들어 있다. 옛 서버(칸 없음)만 balance × 환율로 폴백.
+ */
+export const krwOf = (a: Asset) => assetKrw(a);
 
 /**
  * 카드 사용률 — usage = abs(balance)/creditLimit*100. 한도에 가까워져도 색은 바꾸지 않는다(progress.md) —

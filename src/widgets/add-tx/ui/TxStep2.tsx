@@ -366,10 +366,16 @@ export function TxStep2({ f }: { f: TxForm }) {
               />
             )}
           </PickRow>
+          {f.transferHintText != null && (
+            // 금액은 보내는 계좌 통화(I-13) — 외화면 원화 어림, 두 계좌 통화가 다르면 받는 금액(읽기 전용, 서버와 같은 식 · HALF_UP)
+            <p className="m-0 px-global-gutter pb-x2 pt-x1 font-sans text-t3 text-fg-neutral-subtle">
+              {f.transferHintText}
+            </p>
+          )}
           <StepRow
             title={t("addTx.fee")}
             prefix={<Percent />}
-            value={f.fee ? money(Number(f.fee)) : none}
+            value={f.fee ? f.transferMoney(Number(f.fee)) : none}
             empty={!f.fee}
             onClick={() => f.setSub("fee")}
           />
@@ -377,7 +383,7 @@ export function TxStep2({ f }: { f: TxForm }) {
             <StepRow
               title={t("addTx.interest")}
               prefix={<Percent />}
-              value={f.interest ? money(Number(f.interest)) : none}
+              value={f.interest ? f.transferMoney(Number(f.interest)) : none}
               empty={!f.interest}
               ref={f.refFor("interest")}
               errorMessage={

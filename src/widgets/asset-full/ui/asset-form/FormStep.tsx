@@ -12,6 +12,18 @@ import { CheckRows } from "./CheckRows";
 import { focusNameField } from "./focus";
 
 /**
+ * 저장 실패 Callout 의 고정 글 — 서버 원문은 내지 않는다(28-5). 고쳐 다시 할 수 있는 두 코드만 가려 다른 고정 글:
+ * AST_037 카드는 원화만 · AST_036 외화 자산 환율 필수(I-13). 그 밖은 "자산을 저장하지 못했어요."
+ */
+function saveFailedText(t: AssetForm["t"], err: unknown): string {
+  const code = (err as { response?: { data?: { code?: unknown } } } | null)
+    ?.response?.data?.code;
+  if (code === "AST_037") return t("editDialog.saveCardForeign");
+  if (code === "AST_036") return t("editDialog.saveRateRequired");
+  return t("editDialog.saveFailed");
+}
+
+/**
  * 추가 · 수정 2단계(I-17 B · C) — 그 종류의 칸만. 칸 사이 24(Field ↔ Field), 마지막 칸 ↔ 체크 줄 둘은 한 면 안 16(T14).
  * 바닥은 [추가] · [저장] — 늘 켜 둔다. 필수가 비면 누를 때 칸마다 오류(껍데기 `attemptSubmit`). 열리면 첫 칸에 초점.
  */
@@ -59,7 +71,7 @@ export function FormStep({
             <Callout tone="critical" role="alert" className="mb-x4">
               {refFailed && !saveFailed
                 ? tCommon("query.referenceSaveFailed")
-                : t("editDialog.saveFailed")}
+                : saveFailedText(t, saveError)}
             </Callout>
           </div>
         )}

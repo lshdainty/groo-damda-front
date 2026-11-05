@@ -86,17 +86,34 @@ export const formatOriginalAmount = (
 };
 
 /**
+ * 자산 금액 표기 — 외화 예수금 · 잔액 · 이체 금액은 서버가 **정수 1단위**로 저장하므로 소수 없이 `$100` · `−$1,000`(I-13).
+ * 시세 · 단가 · 해외 결제의 원 통화 금액처럼 원래 소수가 있는 값은 {@link formatOriginalAmount}(소수 자리 늘 보임) 그대로다.
+ */
+export const formatAssetAmount = (
+  amount: number,
+  code: string,
+  locale: string,
+): string => {
+  const body = Math.abs(Math.round(amount)).toLocaleString(locale, {
+    maximumFractionDigits: 0,
+  });
+  return `${amount < 0 ? MINUS : ""}${currencySymbol(code)}${body}`;
+};
+
+/**
  * 자산 잔액의 원화 환산 — 클라이언트 합산은 이 함수를 거친다.
  *
- * 서버는 순자산·요약을 이미 환산해서 준다. 화면에서 자산 목록을 다시 더하는 곳
- * (총자산 카드, 비중 막대)이 raw balance 를 쓰면 USD 1,000 이 1,000원으로 더해져
- * 서버 값과 어긋난다.
+ * 서버가 원화 합계 칸(`balanceInKrw` = round(예수금 × 환율) + 보유 평가(원화))을 주면 그 값을 그대로 쓴다(I-13 길 A).
+ * 투자 자산의 보유 평가는 원화라 balance 전체에 환율을 곱하면 보유분이 두 번 환산된다. 칸이 없는 옛 서버일 때만
+ * 옛 식(balance × 환율)으로 폴백한다.
  */
 export const assetBalanceInKrw = (asset: {
   balance: number;
+  balanceInKrw?: number | null;
   currency?: string | null;
   exchangeRate?: number | null;
 }): number => {
+  if (asset.balanceInKrw != null) return asset.balanceInKrw;
   const rate = asset.exchangeRate;
   if (!isForeignCurrency(asset.currency) || rate == null || rate <= 0)
     return asset.balance;

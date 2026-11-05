@@ -51,7 +51,8 @@ export function TrendSection({
   const data = (trendQ.data ?? []).map((p, i) => ({
     label: t("assetDetail.weekLabel", { n: i + 1 }),
     weekStart: p.weekStart,
-    balance: p.balance,
+    // 원화 합계(서버 balanceInKrw — 줄 · 상세 큰 금액과 같은 한 식, I-13 길 A). 옛 서버면 balance
+    balance: p.balanceInKrw ?? p.balance,
   }));
   // Y축: 0 기준 nice 눈금 — 음수 잔액(대출)도 0 아래로 확장
   const vals = data.map((d) => d.balance);

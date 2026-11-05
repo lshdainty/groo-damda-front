@@ -2,6 +2,7 @@ export { assetApi } from "./api/assetApi";
 export type { TransferListParams } from "./api/assetApi";
 export {
   useAssets,
+  useAssetCurrencyOf,
   useAsset,
   useAssetSummary,
   useNetWorthTrend,

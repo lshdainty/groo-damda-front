@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { ExpenseRow, isRefundedTx, type Expense } from "@/entities/expense";
 import { TransferRow, type AssetTransfer, type Asset } from "@/entities/asset";
+import { useAssetCurrencyOf } from "@/features/asset";
 import { KRW, MINUS, formatDay } from "@/shared/lib/groo/format";
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
 import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
@@ -29,6 +30,8 @@ export function LedgerGroups({
   onExpense: (e: Expense) => void;
   onTransfer: (t: AssetTransfer) => void;
 }) {
+  // 이 계좌 관점의 이체 금액은 그 계좌 통화로(I-13 — 외화 계좌에서 나간 $1,000 이 "1,000원" 으로 찍히지 않게)
+  const currencyOf = useAssetCurrencyOf();
   return (
     <LedgerList>
       {groups.map(([d, items]) => {
@@ -58,6 +61,7 @@ export function LedgerGroups({
                   key={`t${item.transfer.rowId}`}
                   transfer={item.transfer}
                   perspectiveAssetRowId={asset.rowId}
+                  currencyOf={currencyOf}
                   gutter
                   onClick={onTransfer}
                 />

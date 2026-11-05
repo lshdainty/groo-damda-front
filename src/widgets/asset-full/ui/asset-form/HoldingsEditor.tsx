@@ -41,7 +41,10 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
     holdingsTotal,
     allowStock,
     manualAddTypes,
+    isForeign,
   } = f;
+  // 보유 평가 · 매수원가는 외화 계좌에서도 원화다(I-13 길 A) — 칸은 "원" 그대로, 외화 계좌에만 칸 아래 안내
+  const krwHint = isForeign ? t("holdings.krwInputHint") : undefined;
   const patch = (key: string, p: Partial<EditHolding>) =>
     setHoldings((prev) =>
       prev.map((x) => (x.key === key ? { ...x, ...p } : x)),
@@ -182,7 +185,10 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
                             />
                           </Field>
                           {/* 평가액 — 연동은 시세로 계산(읽기 전용), 미연동은 직접 입력 */}
-                          <Field label={t("holdings.value")}>
+                          <Field
+                            label={t("holdings.value")}
+                            description={h.linked ? undefined : krwHint}
+                          >
                             {h.linked ? (
                               <Input
                                 readOnly
@@ -214,16 +220,23 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
                             description={
                               h.totalCost != null &&
                               h.totalCost > 0 &&
-                              qtyNumber(h.quantity)
-                                ? t("holdings.avgPriceInline", {
+                              qtyNumber(h.quantity) ? (
+                                <>
+                                  {krwHint && (
+                                    <span className="block">{krwHint}</span>
+                                  )}
+                                  {t("holdings.avgPriceInline", {
                                     avg: `${wonPrefix()}${KRW(
                                       Math.round(
                                         h.totalCost /
                                           (qtyNumber(h.quantity) || 1),
                                       ),
                                     )}`,
-                                  })
-                                : undefined
+                                  })}
+                                </>
+                              ) : (
+                                krwHint
+                              )
                             }
                             className="col-span-2"
                           >

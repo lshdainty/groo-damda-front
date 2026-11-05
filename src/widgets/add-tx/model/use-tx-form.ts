@@ -27,12 +27,24 @@ import type {
   ExpenseFormValues,
 } from "@/entities/expense";
 import type { AssetTransfer } from "@/entities/asset";
-import type { Asset, AssetType } from "@/entities/asset";
+import {
+  toKrw,
+  transferReceiveAmount,
+  type Asset,
+  type AssetType,
+} from "@/entities/asset";
 import type { ExpenseTemplate } from "@/entities/expense-template";
 import { closedCycleSpan, cyclePaymentDate } from "@/entities/expense";
 import { isHttpStatus } from "@/shared/api";
 import type { ExpenseSplitFormValue } from "@/entities/expense-split";
-import { DEFAULT_CURRENCY } from "@/shared/lib/groo/currency";
+import {
+  DEFAULT_CURRENCY,
+  currencyUnit,
+  formatAssetAmount,
+  isForeignCurrency,
+} from "@/shared/lib/groo/currency";
+import { money } from "@/shared/lib/groo/format";
+import { dsLocale } from "@/shared/ds/i18n";
 import { isLoanTarget, transferPartiesReady } from "@/features/asset-transfer";
 
 /** 결제 수단 → 허용 자산 타입. null이면 전체 허용. */
@@ -654,6 +666,57 @@ export function useTxForm({
   }
 
   const amountNumber = parseAmount(amount);
+
+  // 이체 금액 · 수수료 · 이자는 **보내는 계좌 통화**다(I-13 서버 정의) — 칸 뒤 글자 · 줄 값이 그 통화를 따른다.
+  // 보내는 계좌를 아직 안 골랐으면 원화. 외화 예수금은 정수 1단위라(센트 없음) 칸은 정수 그대로다.
+  const transferFrom =
+    isTransfer && fromAssetRowId != null
+      ? assets.find((a) => a.rowId === fromAssetRowId)
+      : undefined;
+  const transferTo =
+    isTransfer && toAssetRowId != null
+      ? assets.find((a) => a.rowId === toAssetRowId)
+      : undefined;
+  const transferCurrency = transferFrom?.currency || DEFAULT_CURRENCY;
+  const transferUnit = currencyUnit(transferCurrency);
+  /** 보내는 계좌 통화로 쓴 금액 글 — 원화 "1,300,000원" · 외화 "$1,000.00" */
+  const transferMoney = (n: number) =>
+    isForeignCurrency(transferCurrency)
+      ? formatAssetAmount(n, transferCurrency, dsLocale())
+      : money(n);
+  // 두 계좌 통화가 다르면 받는 금액(읽기 전용) — round(금액 × 보내는 환율 ÷ 받는 환율) HALF_UP, 서버 resolveToAmount 와 같은 식
+  const transferReceive =
+    isTransfer && amountNumber > 0
+      ? transferReceiveAmount(amountNumber, transferFrom, transferTo)
+      : null;
+  const transferReceiveText =
+    transferReceive != null && transferTo
+      ? t("addTx.receiveAmount", {
+          amount: isForeignCurrency(transferTo.currency)
+            ? formatAssetAmount(
+                transferReceive,
+                transferTo.currency,
+                dsLocale(),
+              )
+            : money(transferReceive),
+        })
+      : null;
+  // 보내는 계좌가 외화면 원화 어림 "약 130,000원" — 원 단위로 친 줄 알았던 사람이 2단계 · 금액 단계에서 알아보게(I-13 검수).
+  // 받는 쪽이 원화면 받는 금액 줄이 같은 말을 하므로 그때는 두지 않는다.
+  const transferApproxText =
+    isTransfer &&
+    amountNumber > 0 &&
+    transferFrom &&
+    isForeignCurrency(transferCurrency) &&
+    !(transferReceive != null && !isForeignCurrency(transferTo?.currency))
+      ? t("addTx.approxKrw", {
+          amount: money(toKrw(amountNumber, transferFrom)),
+        })
+      : null;
+  /** 이체 금액 칸 아래 · 2단계 받는 계좌 줄 아래 읽기 전용 글 — 원화 어림과 받는 금액 */
+  const transferHintText =
+    [transferApproxText, transferReceiveText].filter(Boolean).join(" · ") ||
+    null;
 
   // 유효 분할 = 이번 세션에서 맞춘 분할 ?? 서버 분할. 금액이 분할 합과 어긋나면 일치화 필요.
   const serverSplitForms: ExpenseSplitFormValue[] = useMemo(
@@ -1493,6 +1556,11 @@ export function useTxForm({
     fxSeed,
     setFxSeed,
     amountNumber,
+    transferCurrency,
+    transferUnit,
+    transferMoney,
+    transferReceiveText,
+    transferHintText,
     serverSplitForms,
     rewriteSplitsApply,
     effectiveSplits,

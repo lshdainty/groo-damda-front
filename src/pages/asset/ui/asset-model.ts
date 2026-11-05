@@ -55,6 +55,8 @@ export function useAssetGroups() {
   //
   // 비교 대상은 평가금액끼리다. 라이브 값은 보유분만 계산하는데 balance 는
   // 예수금 + 평가금액이라, 그걸 빼면 예수금만큼 순자산이 깎인다.
+  // 둘 다 원화다 — 보유 평가(holdingBalance)는 외화 자산에서도 원화이고 서버 순자산도 round(예수금 × 환율) + 보유 평가라(I-13 길 A)
+  // 환율을 곱하지 않고 그대로 뺀다.
   const liveDelta = useMemo(
     () =>
       linked.reduce((s, a) => {

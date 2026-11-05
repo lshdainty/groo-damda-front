@@ -35,6 +35,8 @@ export function AmountSub({ f }: { f: TxForm }) {
       label={t("form.amount")}
       invalid={!!err}
       errorMessage={err}
+      // 두 계좌 통화가 다른 이체 — 칸 아래 읽기 전용 "받는 금액 약 $1,000.00"(I-13)
+      description={f.transferHintText ?? undefined}
       className="px-global-gutter pb-x2 pt-x3 [&_label]:sr-only"
     >
       <AmountEntry
@@ -108,9 +110,11 @@ export function FeeSub({ f, kind }: { f: TxForm; kind: "fee" | "interest" }) {
       description={kind === "interest" ? t("addTx.interestHint") : undefined}
       className="px-global-gutter pb-x2 pt-x3 [&_label]:sr-only"
     >
+      {/* 수수료 · 이자도 보내는 계좌 통화다(I-13) — 뒤 글자가 그 통화 */}
       <AmountInput
         variant="underline"
         aria-label={label}
+        unit={f.transferUnit}
         autoFocus
         value={value}
         max={MAX_AMOUNT}

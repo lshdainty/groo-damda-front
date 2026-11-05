@@ -33,7 +33,7 @@ import { useLedgerScroll } from "@/shared/ui/groo/use-ledger-scroll";
 import { TransferRow } from "@/entities/asset";
 import { TransferDetailDialog } from "@/widgets/expense-detail/ui/TransferDetailDialog";
 import { useRangeSummary, useExpenseCategories } from "@/features/expense";
-import { useAssets } from "@/features/asset";
+import { useAssetCurrencyOf, useAssets } from "@/features/asset";
 import type { AssetTransfer } from "@/entities/asset";
 import type { Expense } from "@/entities/expense";
 import { FilterDialog } from "@/features/expense/ui/FilterDialog";
@@ -195,6 +195,8 @@ export function ExpenseMobileSkeleton({ month }: { month?: string }) {
 
 export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
   const { t } = useTranslation("expense");
+  // 이체 줄은 보내는 · 받는 계좌 통화로 찍는다(I-13)
+  const currencyOf = useAssetCurrencyOf();
   const dsT = useDsText();
   const [searchParams] = useSearchParams();
   const initialMonth = monthFromQuery(searchParams.get("month"));
@@ -520,6 +522,7 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
                   key={ledgerKey(item)}
                   gutter
                   transfer={item.transfer}
+                  currencyOf={currencyOf}
                   onClick={(tr) => setTransferDetail(tr)}
                 />
               );
