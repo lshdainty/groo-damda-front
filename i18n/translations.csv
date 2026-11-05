@@ -1577,6 +1577,7 @@ dutchPay,done,완료,Done
 dutchPay,friends,친구,Friends
 dutchPay,emptyActive.title,진행 중인 정산이 없어요,No active settlements
 dutchPay,emptyActive.desc,오른쪽 아래 + 버튼으로 새 정산을 만들어보세요.,Tap the + button at the bottom right to create a settlement.
+dutchPay,emptyActive.descWide,오른쪽 위 [정산 만들기]로 새 정산을 만들어보세요.,Use Create settlement at the top right to start a new settlement.
 dutchPay,emptyPast.title,완료된 정산이 없어요,No completed settlements
 dutchPay,emptyPast.desc,정산을 마치면 여기에 모여요.,Completed settlements appear here.
 dutchPay,emptyFriends.title,함께 정산한 친구가 없어요,No friends yet

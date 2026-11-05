@@ -129,7 +129,7 @@ export function DutchDetailDialog({
     <Button
       variant="neutralSolid"
       size={wide ? undefined : "large"}
-      className={wide ? undefined : "flex-1"}
+      className={wide ? undefined : "grow"}
       loading={pending.has("all")}
       onClick={() => void guard("all", receiveAll)}
     >
@@ -244,7 +244,7 @@ export function DutchDetailDialog({
                 {all}
               </>
             ) : (
-              <div className="flex w-full items-center gap-x2">
+              <div className="flex w-full min-w-0! flex-wrap items-center gap-x2 gap-y2">
                 {del}
                 {requestAll}
                 {all}

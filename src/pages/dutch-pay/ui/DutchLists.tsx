@@ -174,7 +174,11 @@ export function DutchTabContent({
         icon={tab === "active" ? <Users /> : <SearchX />}
         title={t(tab === "active" ? "emptyActive.title" : "emptyPast.title")}
         description={t(
-          tab === "active" ? "emptyActive.desc" : "emptyPast.desc",
+          tab === "active"
+            ? size === "medium"
+              ? "emptyActive.descWide"
+              : "emptyActive.desc"
+            : "emptyPast.desc",
         )}
       />
     );
