@@ -36,7 +36,7 @@ export function AmountSub({ f }: { f: TxForm }) {
       invalid={!!err}
       errorMessage={err}
       // 두 계좌 통화가 다른 이체 — 칸 아래 읽기 전용 "받는 금액 약 $1,000.00"(I-13)
-      description={f.transferReceiveText ?? undefined}
+      description={f.transferHintText ?? undefined}
       className="px-global-gutter pb-x2 pt-x3 [&_label]:sr-only"
     >
       <AmountEntry

@@ -28,6 +28,7 @@ import type {
 } from "@/entities/expense";
 import type { AssetTransfer } from "@/entities/asset";
 import {
+  toKrw,
   transferReceiveAmount,
   type Asset,
   type AssetType,
@@ -39,7 +40,7 @@ import type { ExpenseSplitFormValue } from "@/entities/expense-split";
 import {
   DEFAULT_CURRENCY,
   currencyUnit,
-  formatOriginalAmount,
+  formatAssetAmount,
   isForeignCurrency,
 } from "@/shared/lib/groo/currency";
 import { money } from "@/shared/lib/groo/format";
@@ -681,7 +682,7 @@ export function useTxForm({
   /** 보내는 계좌 통화로 쓴 금액 글 — 원화 "1,300,000원" · 외화 "$1,000.00" */
   const transferMoney = (n: number) =>
     isForeignCurrency(transferCurrency)
-      ? formatOriginalAmount(n, transferCurrency, dsLocale())
+      ? formatAssetAmount(n, transferCurrency, dsLocale())
       : money(n);
   // 두 계좌 통화가 다르면 받는 금액(읽기 전용) — round(금액 × 보내는 환율 ÷ 받는 환율) HALF_UP, 서버 resolveToAmount 와 같은 식
   const transferReceive =
@@ -692,7 +693,7 @@ export function useTxForm({
     transferReceive != null && transferTo
       ? t("addTx.receiveAmount", {
           amount: isForeignCurrency(transferTo.currency)
-            ? formatOriginalAmount(
+            ? formatAssetAmount(
                 transferReceive,
                 transferTo.currency,
                 dsLocale(),
@@ -700,6 +701,22 @@ export function useTxForm({
             : money(transferReceive),
         })
       : null;
+  // 보내는 계좌가 외화면 원화 어림 "약 130,000원" — 원 단위로 친 줄 알았던 사람이 2단계 · 금액 단계에서 알아보게(I-13 검수).
+  // 받는 쪽이 원화면 받는 금액 줄이 같은 말을 하므로 그때는 두지 않는다.
+  const transferApproxText =
+    isTransfer &&
+    amountNumber > 0 &&
+    transferFrom &&
+    isForeignCurrency(transferCurrency) &&
+    !(transferReceive != null && !isForeignCurrency(transferTo?.currency))
+      ? t("addTx.approxKrw", {
+          amount: money(toKrw(amountNumber, transferFrom)),
+        })
+      : null;
+  /** 이체 금액 칸 아래 · 2단계 받는 계좌 줄 아래 읽기 전용 글 — 원화 어림과 받는 금액 */
+  const transferHintText =
+    [transferApproxText, transferReceiveText].filter(Boolean).join(" · ") ||
+    null;
 
   // 유효 분할 = 이번 세션에서 맞춘 분할 ?? 서버 분할. 금액이 분할 합과 어긋나면 일치화 필요.
   const serverSplitForms: ExpenseSplitFormValue[] = useMemo(
@@ -1543,6 +1560,7 @@ export function useTxForm({
     transferUnit,
     transferMoney,
     transferReceiveText,
+    transferHintText,
     serverSplitForms,
     rewriteSplitsApply,
     effectiveSplits,

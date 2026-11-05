@@ -1676,6 +1676,7 @@ expense,transferFeePrefix,수수료,Fee
 expense,transferReceivedTag,받는 금액 {{amount}},Received {{amount}}
 expense,transferReceived,받는 금액,Amount received
 expense,addTx.receiveAmount,받는 금액 약 {{amount}},Amount received ≈ {{amount}}
+expense,addTx.approxKrw,약 {{amount}},≈ {{amount}}
 expense,transferListTitle,이체 내역,Transfers
 expense,transferDeleteTitle,이체 삭제,Delete transfer
 expense,transferDeleteConfirm,이 이체를 삭제할까요? 양쪽 계좌 잔액이 이체 전으로 돌아가요. 삭제한 이체는 되돌릴 수 없어요.,Delete this transfer? Both accounts' balances go back to before the transfer. A deleted transfer can't be restored.
@@ -2839,7 +2840,6 @@ calendar,labels.usage,{{count}}건에 사용 중,Used by {{count}} events
 asset,holdings.sectionTitle,보유 종목,Holdings
 asset,holdings.countLabel,보유 {{n}}종목,{{n}} holdings
 asset,holdings.cashBalance,예수금,Cash
-asset,holdings.cashInline,예수금 {{amount}},Cash {{amount}}
 asset,holdings.krwInputHint,원화로 입력해요,Enter in KRW
 asset,fx.approxKrw,약 {{amount}},≈ {{amount}}
 asset,trade.title,매수·매도,Buy / Sell

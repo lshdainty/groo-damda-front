@@ -185,7 +185,7 @@ export function TxStep1({ f }: { f: TxForm }) {
         description={
           f.emptyPresetName != null && f.entryNumber <= 0
             ? t("addTx.emptyPresetHint", { name: f.emptyPresetName })
-            : (f.transferReceiveText ?? undefined)
+            : (f.transferHintText ?? undefined)
         }
         className="px-global-gutter pb-x4 pt-x3 [&_label]:sr-only"
       >
