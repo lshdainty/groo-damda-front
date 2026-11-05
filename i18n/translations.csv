@@ -209,7 +209,7 @@ todo,editTodoTitle,할 일 수정,Edit todo
 todo,count,건,
 todo,detail,자세히,Details
 todo,addTodoLabel,할 일 추가,Add to-do
-todo,toggleFailed,완료로 바꾸지 못했어요. 잠시 후 다시 시도해주세요.,Couldn't update the to-do. Please try again in a moment.
+todo,toggleFailed,할 일 상태를 바꾸지 못했어요.,Couldn't update the to-do.
 todo,saveFailed,할 일을 저장하지 못했어요.,Couldn't save the to-do.
 todo,deleteFailed,할 일을 삭제하지 못했어요.,Couldn't delete the to-do.
 todo,noDueDate,마감일 없음,No due date
