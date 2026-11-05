@@ -5,7 +5,11 @@ import { useDefaultCurrencyState } from "@/features/user";
 import { todayLocalKey } from "@/shared/lib/date";
 import { pendingBillWindow } from "@/entities/expense";
 import { parseAmount } from "@/shared/lib/groo/amount";
-import { currencyUnit, isForeignCurrency } from "@/shared/lib/groo/currency";
+import {
+  DEFAULT_CURRENCY,
+  currencyUnit,
+  isForeignCurrency,
+} from "@/shared/lib/groo/currency";
 import { nameIssue } from "@/shared/lib/groo/name-policy";
 import type { AccountSub } from "../../lib/account-sub";
 import {
@@ -224,7 +228,11 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
   // 기본 통화를 `useState` 초기값으로 굳히면 안 된다(D7) — `/me/preferences` 는 설정
   // 화면을 안 들른 세션에서 이 폼보다 늦게 도착해서, 초기값으로 받으면 첫 렌더의
   // `KRW` 에 잠긴 채 열린다. 매 렌더 읽어야 늦게 온 값이 반영된다.
-  const currency = currencyPick ?? item?.currency ?? defaultCurrency;
+  // 카드(신용 · 체크)는 원화만이다(I-13 사용자 결정 4, 서버 AST_037) — 통화 칸이 없고 늘 원화로 보낸다. 해외 결제는 거래의 통화 칸으로 적는다.
+  const currency =
+    editingGroup === "card"
+      ? DEFAULT_CURRENCY
+      : (currencyPick ?? item?.currency ?? defaultCurrency);
   const [exchangeRate, setExchangeRate] = useState<string>(init.exchangeRate);
   // 환율은 통화가 원화가 아닐 때만 의미가 있다 — 서버도 KRW 의 환산율은 1 로
   // 정규화한다(`Asset.normalizeRate`). 칸을 숨길 뿐 값은 들고 있는다:
@@ -372,9 +380,15 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
     card: editingGroup === "card" && isNew && !selectedCard,
     paymentDay:
       cardType === "CREDIT" && editingGroup === "card" && !paymentDay.trim(),
+    // 외화 자산은 환율이 필수다(서버 AST_036) — 비면 원화로 그대로 더해져 합계가 틀린다
+    exchangeRate: isForeign && !(Number(exchangeRate.replace(/,/g, "")) > 0),
   };
   const canSubmit =
-    !nameErr && !issues.name && !issues.card && !issues.paymentDay;
+    !nameErr &&
+    !issues.name &&
+    !issues.card &&
+    !issues.paymentDay &&
+    !issues.exchangeRate;
   // 누르고도 못 보낸 적이 있으면 오류 글을 세운다 — 고치면 저절로 걷힌다
   const [showErrors, setShowErrors] = useState(false);
   // 못 보낸 횟수 — 첫 오류 칸에 초점을 옮기는 신호

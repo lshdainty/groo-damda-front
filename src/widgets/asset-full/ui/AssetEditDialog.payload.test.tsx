@@ -243,14 +243,24 @@ describe("통화 — 칸이 생겼으니 싣는다, 대신 읽어 온 값으로 
     expect(update!.exchangeRate).toBe(1_380);
   });
 
-  it("카드 수정: 지금 통화·환율이 그대로 나간다", () => {
-    const { update } = submit(usdCard);
-    expect(update!.currency).toBe("USD");
-    expect(update!.exchangeRate).toBe(1_380);
+  it("카드 수정: 카드는 원화만이라 통화 칸이 없고 원화로 나간다(I-13 결정 4 · 서버 AST_037)", () => {
+    const { update } = submit(usdCard, undefined, () => {
+      expect(fxInput()).toBeNull();
+    });
+    expect(update!.currency).toBe("KRW");
+    expect(update!.exchangeRate).toBeNull();
   });
 
-  it("세 묶음 다 서버 값으로 열린다 — 안 채우면 저장만으로 원화가 된다", () => {
-    for (const item of [usdInvest, usdAccount, usdCard]) {
+  it("외화 자산은 환율이 필수다 — 비우면 저장이 안 나가고 칸 오류(I-13 · 서버 AST_036)", () => {
+    const { update } = submit(usdAccount, undefined, () => {
+      setInput(fxInput()!, "");
+    });
+    expect(update).toBeNull();
+    expect(document.body.textContent).toContain("form.exchangeRateRequired");
+  });
+
+  it("계좌 · 투자는 서버 값으로 열린다 — 안 채우면 저장만으로 원화가 된다", () => {
+    for (const item of [usdInvest, usdAccount]) {
       submit(item, undefined, () => {
         expect(currencyTriggerText()).toBe("$ USD");
         expect(fxInput()?.value).toBe("1380");
@@ -307,7 +317,11 @@ describe("기본 통화 — 새 자산만 설정 값으로 연다 (D7 · QA #124
   it("새 자산은 설정의 기본 통화로 열린다", () => {
     prefs.defaultCurrency = "USD";
     for (const kind of ["입출금", "투자"] as const) {
-      const { create } = submit(null, kind, nameIt);
+      // 외화면 환율이 필수라(I-13) 함께 적는다
+      const { create } = submit(null, kind, () => {
+        nameIt();
+        setInput(fxInput()!, "1300");
+      });
       expect(create, kind).not.toBeNull();
       expect(create!.currency, kind).toBe("USD");
     }

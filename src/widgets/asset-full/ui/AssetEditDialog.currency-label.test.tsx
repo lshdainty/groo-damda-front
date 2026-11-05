@@ -210,10 +210,10 @@ describe("금액 칸의 단위는 고른 통화를 따른다", () => {
     expect(unitOf("editDialog.overdraftLimitLabel")).toBe("$");
   });
 
-  it("카드는 사용액과 신용한도가 **같은 단위**다", () => {
+  it("카드는 원화만이다 — 옛 USD 카드도 사용액 · 신용한도가 원(I-13 결정 4, 서버 AST_037)", () => {
     open(card("USD"));
-    expect(unitOf("editDialog.balanceLabelCard")).toBe("$");
-    expect(unitOf("editDialog.creditLimit")).toBe("$");
+    expect(unitOf("editDialog.balanceLabelCard")).toBe("원");
+    expect(unitOf("editDialog.creditLimit")).toBe("원");
   });
 
   it("새 자산은 설정의 기본 통화를 따른다 — 적어 둔 통화가 없다(D7)", () => {
