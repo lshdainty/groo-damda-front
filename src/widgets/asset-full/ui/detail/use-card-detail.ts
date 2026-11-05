@@ -12,6 +12,7 @@ import {
 import { useSearchExpenses } from "@/features/expense";
 import { formatDay, money } from "@/shared/lib/groo/format";
 import { fmtBillingDate } from "./detail-shared";
+import { useAssetMask } from "../../lib/asset-groups";
 
 // 결제 회차(청구월) 항목 — 예정 1건 + 과거 결제 완료 이력.
 export type CardStatement = {
@@ -44,6 +45,7 @@ export type CardStatement = {
  * 청구 계산 · 요청 · 무효화 · 서버 키는 지난 CardDetailBody 그대로다(옮기기만 했다 — desk-card-billing-money-cap · card-payment-anchor-collision).
  */
 export function useCardDetail(asset: Asset) {
+  const m = useAssetMask("asset.detail", asset.isAmountHidden === "Y");
   const { t } = useTranslation("asset");
   const billingQ = useCardBilling(asset.rowId, { silent: true });
   const { data: billing, isLoading } = billingQ;
@@ -288,7 +290,7 @@ export function useCardDetail(asset: Asset) {
     billing?.paymentAssetRowId == null
       ? t("assetDetail.payNoAccountNote")
       : cardDebt < payAmountNum
-        ? t("assetDetail.payMoveNote", { amount: money(cardDebt) })
+        ? t("assetDetail.payMoveNote", { amount: m(money(cardDebt)) })
         : null;
 
   const [payFailed, setPayFailed] = useState(false);
