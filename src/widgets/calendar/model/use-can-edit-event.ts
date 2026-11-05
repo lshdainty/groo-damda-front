@@ -32,7 +32,7 @@ export function canEditEvent(
 /** `canEditEvent` 에 나(현재 사용자)와 내 캘린더 권한을 채워 돌려준다 */
 export function useCanEditEvent(): (event: IEvent) => boolean {
   const { data: me } = useCurrentUser();
-  const { data: calendars } = useUserCalendars();
+  const { data: calendars } = useUserCalendars({ reference: true });
   const roleOf = (id: number) => calendars?.find((c) => c.rowId === id)?.myRole;
   return (event) => canEditEvent(event, me?.rowId, roleOf);
 }

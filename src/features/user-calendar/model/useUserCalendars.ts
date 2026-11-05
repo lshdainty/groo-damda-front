@@ -1,3 +1,8 @@
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePendingIds } from "@/shared/lib/groo/use-pending-ids";
 import { invalidateFor, userCalendarKeys } from "@/shared/config";
@@ -7,15 +12,17 @@ import type {
   CalendarRole,
 } from "@/entities/user-calendar";
 
-export const useUserCalendars = (opts?: {
-  silent?: boolean;
-  /** false 면 요청하지 않는다 — 쓰는 구역이 아닐 때 목록을 받지 않게 */
-  enabled?: boolean;
-}) => {
+export const useUserCalendars = (
+  opts?: ReferenceOpts & {
+    /** false 면 요청하지 않는다 — 쓰는 구역이 아닐 때 목록을 받지 않게 */
+    enabled?: boolean;
+  },
+) => {
   return useQuery({
     queryKey: userCalendarKeys.list(),
-    queryFn: () => userCalendarApi.getCalendars(opts),
+    queryFn: () => userCalendarApi.getCalendars(referenceSilent(opts)),
     enabled: opts?.enabled,
+    ...referenceMeta(opts),
   });
 };
 

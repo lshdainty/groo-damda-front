@@ -1,3 +1,8 @@
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { useQuery } from "@tanstack/react-query";
 import { holidayKeys } from "@/shared/config";
 import { holidayApi } from "../api/holidayApi";
@@ -12,10 +17,13 @@ export const useCalendarHolidays = (
   startDate: string,
   endDate: string,
   enabled: boolean,
+  opts?: ReferenceOpts,
 ) => {
   return useQuery({
     queryKey: holidayKeys.list({ startDate, endDate }),
-    queryFn: () => holidayApi.getHolidays(startDate, endDate),
+    queryFn: () =>
+      holidayApi.getHolidays(startDate, endDate, referenceSilent(opts)),
     enabled: enabled && !!startDate && !!endDate,
+    ...referenceMeta(opts),
   });
 };

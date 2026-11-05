@@ -90,7 +90,7 @@ export function EventDetailSurface({
   const wide = useWideSurface();
   const hasList = listDate != null;
   const canEdit = useCanEditEvent();
-  const { data: labels = [] } = useEventLabels();
+  const { data: labels = [] } = useEventLabels({ reference: true });
   const updateEvent = useUpdateEvent();
 
   const [step, setStep] = useState<Step>(

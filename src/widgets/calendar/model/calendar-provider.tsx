@@ -50,7 +50,7 @@ export const CalendarProvider = ({
     useState<IBuiltinSource[]>(BUILTIN_SOURCES);
 
   // Fetch user calendars
-  const { data: userCalendarsData } = useUserCalendars();
+  const { data: userCalendarsData } = useUserCalendars({ reference: true });
   const userCalendars = useMemo(
     () => userCalendarsData ?? [],
     [userCalendarsData],

@@ -63,7 +63,7 @@ export function QuickAddDialog({
 }) {
   const { t } = useTranslation("calendar");
   const { t: tc } = useTranslation("common");
-  const { data: userCalendars = [] } = useUserCalendars();
+  const { data: userCalendars = [] } = useUserCalendars({ reference: true });
   const calendars = userCalendars.filter(isCalendarShown);
   const defaultCalendar = calendars.find((c) => c.isDefault) ?? calendars[0];
 

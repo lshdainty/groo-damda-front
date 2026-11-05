@@ -42,7 +42,7 @@ export function CalendarEventFormHost({
   onDelete?: () => void;
 }) {
   const wide = useWideSurface();
-  const { data: labels = [] } = useEventLabels();
+  const { data: labels = [] } = useEventLabels({ reference: true });
   const createEvent = useCreateEvent();
   const updateEvent = useUpdateEvent();
   // "자세히" 를 눌렀으면 그 값을 들고 있다 — 없으면 빠른 추가 단계

@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, silentConfig, type SilentOpts } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type { Holiday } from "@/entities/calendar";
 
@@ -11,11 +11,13 @@ export const holidayApi = {
   getHolidays: async (
     startDate: string,
     endDate: string,
+    opts?: SilentOpts,
   ): Promise<Holiday[]> => {
     const resp: ApiResponse<{ holidays: Holiday[] }> = await apiClient.get(
       "/v1/holidays",
       {
         params: { startDate, endDate },
+        ...silentConfig(opts),
       },
     );
     return resp.data.holidays;
