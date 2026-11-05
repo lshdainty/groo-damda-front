@@ -16,6 +16,7 @@ export { hideCardsApi } from "./hideCardsApi";
 export {
   REFERENCE_META,
   isReferenceNoticeHeld,
+  onReferenceNoticeRelease,
   isReferenceQuery,
   useHoldReferenceNotice,
   referenceMeta,

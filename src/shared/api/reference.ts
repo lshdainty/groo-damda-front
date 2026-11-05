@@ -32,10 +32,19 @@ export const isReferenceQuery = (meta: unknown): boolean =>
 /*
  * 폼 · 시트가 열려 있는 동안은 공용 참조 실패 스낵바를 띄우지 않는다 — 그 안의 참조 목록 실패는 폼이 맡는다
  * (불러 둔 값 유지 · 저장 때 다시 받기 · 또 실패하면 폼 Callout). 열려 있는 수를 세는 전역 카운터 하나.
- * ResponsiveDialog 가 열림에 맞춰 부른다. 닫힌 뒤에 알리지는 않는다(그 사이 실패는 폼 · 화면 자리가 말했다).
+ * ResponsiveDialog 가 열림에 맞춰 부른다. 마지막 하나가 닫히면 구독자(공용 스낵바)가 한 번 다시 판단한다 —
+ * 그 사이 쉰 참조 실패가 값 없이 남아 있으면 그때 알린다.
  */
 let heldCount = 0;
+const releaseListeners = new Set<() => void>();
 
+/** 열려 있던 폼 · 시트가 모두 닫혔을 때 부른다. 구독 해제 함수를 돌려준다 */
+export const onReferenceNoticeRelease = (cb: () => void): (() => void) => {
+  releaseListeners.add(cb);
+  return () => {
+    releaseListeners.delete(cb);
+  };
+};
 export const isReferenceNoticeHeld = (): boolean => heldCount > 0;
 
 export function useHoldReferenceNotice(active: boolean): void {
@@ -44,6 +53,7 @@ export function useHoldReferenceNotice(active: boolean): void {
     heldCount += 1;
     return () => {
       heldCount -= 1;
+      if (heldCount === 0) releaseListeners.forEach((cb) => cb());
     };
   }, [active]);
 }

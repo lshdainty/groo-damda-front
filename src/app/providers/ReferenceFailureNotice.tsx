@@ -1,7 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { isReferenceNoticeHeld, isReferenceQuery } from "@/shared/api";
+import {
+  isReferenceNoticeHeld,
+  isReferenceQuery,
+  onReferenceNoticeRelease,
+} from "@/shared/api/reference";
 import { useSnackbar } from "@/shared/ds/snackbar";
 
 // 같은 순간 여러 훅이 함께 실패해도 한 번만 알리려고 모으는 시간
@@ -74,8 +78,15 @@ export const ReferenceFailureNotice = () => {
       gatherTimer = setTimeout(show, GATHER_MS);
     });
 
+    // 폼 · 시트가 모두 닫히면 한 번 다시 판단한다 — 그 사이 쉰 실패가 값 없이 남았으면 알린다
+    const unsubscribeRelease = onReferenceNoticeRelease(() => {
+      if (gatherTimer !== undefined || shown) return;
+      gatherTimer = setTimeout(show, GATHER_MS);
+    });
+
     return () => {
       unsubscribe();
+      unsubscribeRelease();
       if (gatherTimer !== undefined) clearTimeout(gatherTimer);
       if (shownTimer !== undefined) clearTimeout(shownTimer);
     };
