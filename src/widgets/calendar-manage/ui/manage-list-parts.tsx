@@ -86,7 +86,7 @@ export function ManageEmpty({ title, hint }: { title: string; hint?: string }) {
 /** 불러오는 중 — 줄 모양 그대로(앞 타일 40 · 제목 t5 · 설명 t3), 카드 · 선 없이. 실제 줄은 위아래 12 · 높이 64 */
 export function ManageRowsSkeleton({ rows = 2 }: { rows?: number }) {
   return (
-    <div aria-busy="true" aria-hidden>
+    <div aria-busy="true">
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-x3 px-x6 py-x3">
           <Skeleton radius="12" className="size-x10 shrink-0" />

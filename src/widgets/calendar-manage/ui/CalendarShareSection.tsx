@@ -7,7 +7,6 @@ import {
   Eye,
   Link,
   Pencil,
-  Plus,
   RefreshCw,
   Trash2,
 } from "lucide-react";
@@ -142,7 +141,6 @@ export function CalendarShareSection({ mobile }: { mobile: boolean }) {
       size="small"
       onClick={() => setCreating(true)}
     >
-      <Plus aria-hidden />
       {t("newCalendar")}
     </DsButton>
   );
@@ -171,6 +169,7 @@ export function CalendarShareSection({ mobile }: { mobile: boolean }) {
         onRetry={() => void calendarsQ.refetch()}
         band={mobile}
         size="medium"
+        as="h2"
       />,
     )
   ) : (
@@ -179,7 +178,11 @@ export function CalendarShareSection({ mobile }: { mobile: boolean }) {
         mobile,
         <ManageSection
           id={ownedId}
-          title={`${t("shareSection.myCalendars")} · ${owned.length}`}
+          title={countTitle(
+            t("shareSection.myCalendars"),
+            owned.length,
+            isLoading,
+          )}
           action={addAction}
           first
           mobile={mobile}
@@ -191,7 +194,11 @@ export function CalendarShareSection({ mobile }: { mobile: boolean }) {
         mobile,
         <ManageSection
           id={sharedId}
-          title={`${t("shareSection.sharedCalendars")} · ${shared.length}`}
+          title={countTitle(
+            t("shareSection.sharedCalendars"),
+            shared.length,
+            isLoading,
+          )}
           first={false}
           mobile={mobile}
         >
@@ -205,7 +212,7 @@ export function CalendarShareSection({ mobile }: { mobile: boolean }) {
     mobile,
     <ManageSection
       id={joinId}
-      title={t("joinByCode")}
+      title={t("inviteCode")}
       first={false}
       mobile={mobile}
     >
@@ -246,7 +253,9 @@ export function CalendarShareSection({ mobile }: { mobile: boolean }) {
         />
       )}
       <div className={mobile ? "flex flex-col pb-x6" : "flex flex-col gap-x2"}>
-        <ManageIntro mobile={mobile}>{t("shareSection.infoDesc")}</ManageIntro>
+        {mobile && (
+          <ManageIntro mobile>{t("shareSection.infoDesc")}</ManageIntro>
+        )}
         {lists}
         {join}
       </div>
@@ -316,6 +325,11 @@ export function CalendarShareSection({ mobile }: { mobile: boolean }) {
       )}
     </>
   );
+}
+
+// 불러오는 동안은 수를 말하지 않는다(받은 게 없는데 0 이라 하지 않게)
+function countTitle(name: string, count: number, loading: boolean) {
+  return loading ? name : `${name} · ${count}`;
 }
 
 // 폰은 흰 면 위에 묶음을 그대로, 데스크톱은 묶음마다 목록 카드(43)

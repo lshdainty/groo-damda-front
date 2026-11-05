@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Plus, Tag, Trash2 } from "lucide-react";
+import { Pencil, Tag, Trash2 } from "lucide-react";
 import { Button as DsButton } from "@/shared/ds/button";
 import { Card as DsCard } from "@/shared/ds/card";
 import { List, ListButtonItem, ListTile } from "@/shared/ds/list";
@@ -85,23 +85,6 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
         }
         title={label.labelName}
         detail={t("labels.usage", { count: label.usageCount ?? 0 })}
-        suffix={
-          mobile ? undefined : (
-            // 데스크톱 삭제 길 — 편집 대화상자에는 삭제가 없어 이 단추가 유일한 길이다(질문 1). 모양만 역할 이름으로.
-            <DsButton
-              type="button"
-              variant="ghost"
-              ghostColor="critical"
-              size="small"
-              layout="iconOnly"
-              className="-mr-x2_5"
-              aria-label={`${label.labelName} ${tc("delete")}`}
-              onClick={() => setConfirmDelete(label)}
-            >
-              <Trash2 aria-hidden />
-            </DsButton>
-          )
-        }
       />
     );
     if (!mobile) return row;
@@ -139,6 +122,7 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
         onRetry={() => void labelsQ.refetch()}
         band={mobile}
         size="medium"
+        as="h2"
       />
     );
     body = mobile ? failure : <DsCard body="list">{failure}</DsCard>;
@@ -160,7 +144,11 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
     const section = (
       <ManageSection
         id={listId}
-        title={`${t("labelsSection.allLabels")} · ${list.length}`}
+        title={
+          isLoading
+            ? t("labelsSection.allLabels")
+            : `${t("labelsSection.allLabels")} · ${list.length}`
+        }
         action={
           <DsButton
             type="button"
@@ -169,7 +157,6 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
             size="small"
             onClick={() => setEditing({ kind: "new" })}
           >
-            <Plus aria-hidden />
             {t("newLabel")}
           </DsButton>
         }
@@ -191,7 +178,9 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
         />
       )}
       <div className={mobile ? "flex flex-col pb-x6" : "flex flex-col gap-x2"}>
-        <ManageIntro mobile={mobile}>{t("labelsSection.infoDesc")}</ManageIntro>
+        {mobile && (
+          <ManageIntro mobile>{t("labelsSection.infoDesc")}</ManageIntro>
+        )}
         {body}
       </div>
 
@@ -203,6 +192,11 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
           onSave={onSave}
           mobile={mobile}
           submitting={submitting}
+          onRequestDelete={(l) => {
+            // 편집 대화상자는 닫고 확인창부터 — 지우기는 확인창 한 벌(밀기와 같다)
+            setEditing(null);
+            setConfirmDelete(l);
+          }}
         />
       )}
       {confirmDelete && (
@@ -232,8 +226,11 @@ function LabelEditDialog({
   onSave,
   mobile,
   submitting,
+  onRequestDelete,
 }: {
   label: EventLabel | null;
+  /** 수정 폼일 때만 바닥 왼쪽 [삭제] — 이 길이 데스크톱 · 폰 모두의 지우기다(09b-2 가 폼을 새로 짤 때 옮긴다) */
+  onRequestDelete?: (label: EventLabel) => void;
   existing: EventLabel[];
   onClose: () => void;
   onSave: (values: { labelName: string; color: string }) => void;
@@ -283,6 +280,19 @@ function LabelEditDialog({
       saving={submitting}
       saveDisabled={touched && !valid}
       onCancel={onClose}
+      leftSlot={
+        label && onRequestDelete ? (
+          <DsButton
+            type="button"
+            variant="ghost"
+            ghostColor="critical"
+            size="small"
+            onClick={() => onRequestDelete(label)}
+          >
+            {tCommon("delete")}
+          </DsButton>
+        ) : undefined
+      }
     />
   );
 

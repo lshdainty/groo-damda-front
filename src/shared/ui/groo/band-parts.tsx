@@ -66,8 +66,11 @@ export function BandFailure({
   band,
   className,
   size = "medium",
+  as = "h3",
 }: {
   title: string;
+  /** 제목 태그 — 기본 h3. 화면 제목 바로 아래 구역이면 h2 */
+  as?: "h2" | "h3";
   /** 설명 — 기본 "잠시 뒤 다시 시도해주세요." */
   description?: string;
   onRetry: () => void;
@@ -82,7 +85,7 @@ export function BandFailure({
     <ResultSection
       kind="failure"
       size={size}
-      as="h3"
+      as={as}
       title={title}
       description={description ?? t("loadFailedDesc")}
       primaryAction={{ label: dsT("common.retry"), onClick: onRetry }}

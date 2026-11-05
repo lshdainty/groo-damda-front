@@ -311,7 +311,7 @@
 }
 
 /* .cat-row, .cat-row:last-child/:hover, .cat-row__icon/__text/__label/__meta/__actions/__del/__more
- *   → MANAGE_ROW (@/shared/ui/groo/manage-row-tokens.ts) 의 토큰 + className 으로 이동.
+ *   → 토큰 + className 으로 옮겼다(옛 manage-row-tokens.ts 는 걷었다).
  *     actions 는 이후 hover-reveal 을 걷고 항상 표시로 바뀌었다.
  *
  * ---------- Category edit dialog ----------

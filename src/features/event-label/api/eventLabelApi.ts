@@ -1,13 +1,6 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, silentConfig, type SilentOpts } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type { EventLabel, EventLabelFormValues } from "@/entities/event-label";
-
-/** silent — 실패를 호출처가 화면 안에서 고정 글로 말한다(전역 서버 원문 토스트와 겹치지 않게, 호출처 단위) */
-type SilentOpts = { silent?: boolean };
-const silentConfig = (opts?: SilentOpts) =>
-  (opts?.silent
-    ? { silent: true }
-    : {}) as import("axios").AxiosRequestConfig & { silent?: boolean };
 
 export const eventLabelApi = {
   createLabel: async (data: EventLabelFormValues): Promise<EventLabel> => {

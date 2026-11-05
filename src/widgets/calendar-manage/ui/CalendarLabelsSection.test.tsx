@@ -8,6 +8,8 @@ declare global {
 }
 
 const state = vi.hoisted(() => ({
+  fail: undefined as unknown as (o: { message: string }) => void,
+  deleteCalls: [] as number[],
   q: {
     data: undefined as unknown,
     isLoading: false,
@@ -21,7 +23,8 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 vi.mock("@/shared/lib/confirm-fail", () => ({
-  useConfirmFail: () => () => {},
+  // 실패 길을 막지 않는다 — 호출 인자를 state 에 남긴다
+  useConfirmFail: () => (o: { message: string }) => state.fail(o),
 }));
 vi.mock("@/features/event-label", () => {
   const idle = () => ({
@@ -33,7 +36,15 @@ vi.mock("@/features/event-label", () => {
     useEventLabels: () => state.q,
     useCreateEventLabel: idle,
     useUpdateEventLabel: idle,
-    useDeleteEventLabel: idle,
+    // 삭제는 늘 실패한다 — 확인창 뒤 실패 길(스낵바 + 다시 시도)을 본다
+    useDeleteEventLabel: () => ({
+      mutate: () => {},
+      mutateAsync: async (id: number) => {
+        state.deleteCalls.push(id);
+        throw new Error("fail");
+      },
+      isPending: false,
+    }),
   };
 });
 
@@ -44,6 +55,8 @@ let root: Root;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  state.fail = vi.fn();
+  state.deleteCalls = [];
   state.q = {
     data: undefined,
     isLoading: false,
@@ -69,29 +82,73 @@ const labels = [
   },
 ];
 
+const flush = () => act(async () => {});
+
 describe("라벨 화면", () => {
-  it("줄은 버튼이고 폰에는 줄 끝 삭제 단추가 없다", () => {
+  it("줄은 버튼이고 줄 끝에는 아무것도 없다(폰 · 데스크톱 모두 — 삭제는 편집 대화상자 · 밀기)", () => {
     state.q.data = labels;
-    act(() => root.render(<CalendarLabelsSection mobile />));
-    const row = container.querySelector("[data-slot=list-item] button");
-    expect(row?.textContent).toContain("가족 행사·경조사 모임");
-    expect(container.querySelectorAll("[data-slot=list-suffix]").length).toBe(
-      0,
-    );
+    for (const mobile of [true, false]) {
+      act(() => root.render(<CalendarLabelsSection mobile={mobile} />));
+      const row = container.querySelector("[data-slot=list-item] button");
+      expect(row?.textContent).toContain("가족 행사·경조사 모임");
+      expect(container.querySelectorAll("[data-slot=list-suffix]").length).toBe(
+        0,
+      );
+    }
   });
 
-  it("데스크톱 줄 끝에는 삭제 단추 하나(꺾쇠 없음)", () => {
-    state.q.data = labels;
-    act(() => root.render(<CalendarLabelsSection mobile={false} />));
-    const suffix = container.querySelector("[data-slot=list-suffix]");
-    expect(suffix?.querySelectorAll("button").length).toBe(1);
-    expect(suffix?.querySelectorAll("svg.lucide-chevron-right").length).toBe(0);
-  });
-
-  it("불러오기 실패는 빈 목록이 아니라 다시 시도를 보인다", () => {
+  it("불러오기 실패는 빈 목록이 아니라 다시 시도를 보이고, 누르면 refetch 한다", () => {
     state.q.isError = true;
     act(() => root.render(<CalendarLabelsSection mobile />));
     expect(container.textContent).toContain("labelsSection.loadFailed");
     expect(container.textContent).not.toContain("noLabels");
+    const retry = [...container.querySelectorAll("button")].find(
+      (b) => b.textContent?.trim() === "retry",
+    );
+    expect(retry, "다시 시도 단추").not.toBeUndefined();
+    act(() => retry!.click());
+    expect(state.q.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("내용이 있는 채 다시 불러오기가 실패하면 목록을 지우지 않는다", () => {
+    state.q.data = labels;
+    state.q.isError = true;
+    act(() => root.render(<CalendarLabelsSection mobile />));
+    expect(container.textContent).toContain("가족 행사·경조사 모임");
+    expect(container.textContent).not.toContain("labelsSection.loadFailed");
+  });
+
+  it("불러오는 동안 목록 제목에 수(0)를 말하지 않는다", () => {
+    state.q.isLoading = true;
+    act(() => root.render(<CalendarLabelsSection mobile />));
+    expect(container.textContent).not.toContain("· 0");
+    expect(container.querySelector("[aria-busy=true]")).not.toBeNull();
+  });
+
+  it("수정 대화상자 바닥 왼쪽 [삭제] → 확인창 → 실패하면 useConfirmFail(한 문장)", async () => {
+    state.q.data = labels;
+    act(() => root.render(<CalendarLabelsSection mobile={false} />));
+    const row = container.querySelector(
+      "[data-slot=list-item] button",
+    ) as HTMLButtonElement;
+    act(() => row.click());
+    const del = [...document.body.querySelectorAll("button")].find(
+      (b) => b.textContent?.trim() === "delete",
+    );
+    expect(del, "수정 대화상자의 [삭제]").not.toBeUndefined();
+    act(() => del!.click());
+    await flush();
+    expect(document.body.textContent).toContain("labelsSection.deleteTitle");
+    const confirm = [...document.body.querySelectorAll("button")]
+      .filter((b) => b.textContent?.trim() === "delete")
+      .pop();
+    await act(async () => {
+      confirm!.click();
+    });
+    await flush();
+    expect(state.deleteCalls).toEqual([1]);
+    expect(state.fail).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "labelsSection.deleteFailed" }),
+    );
   });
 });
