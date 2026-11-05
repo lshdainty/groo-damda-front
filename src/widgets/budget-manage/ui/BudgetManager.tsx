@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Copy, Pencil, Trash2 } from "lucide-react";
 import {
@@ -174,15 +174,20 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
     updateMut.reset();
   };
 
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면(성공 · 실패) 끈다
+  const savingRef = useRef(false);
+  const settle = { onSettled: () => (savingRef.current = false) };
+
   const saveCategoryBudget = (draft: BudgetDraft) => {
     // 이중 제출은 요청 앞에서 막는다
-    if (createMut.isPending || updateMut.isPending) return;
+    if (savingRef.current) return;
+    savingRef.current = true;
     clearSaveError();
     const existing = editing !== "new" && editing ? editing : null;
     if (existing) {
       updateMut.mutate(
         { id: existing.rowId, budgetAmount: draft.budgetAmount },
-        { onSuccess: () => setEditing(null) },
+        { ...settle, onSuccess: () => setEditing(null) },
       );
     } else {
       // 새 카테고리 예산 생성 — 중복 시 update
@@ -192,7 +197,7 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
       if (dup) {
         updateMut.mutate(
           { id: dup.rowId, budgetAmount: draft.budgetAmount },
-          { onSuccess: () => setEditing(null) },
+          { ...settle, onSuccess: () => setEditing(null) },
         );
       } else {
         createMut.mutate(
@@ -202,19 +207,20 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
             budgetYear: year,
             budgetMonth: month,
           },
-          { onSuccess: () => setEditing(null) },
+          { ...settle, onSuccess: () => setEditing(null) },
         );
       }
     }
   };
 
   const saveMonthlyBudget = (value: number) => {
-    if (createMut.isPending || updateMut.isPending) return;
+    if (savingRef.current) return;
+    savingRef.current = true;
     clearSaveError();
     if (monthlyBudget) {
       updateMut.mutate(
         { id: monthlyBudget.rowId, budgetAmount: value },
-        { onSuccess: () => setEditMonthly(false) },
+        { ...settle, onSuccess: () => setEditMonthly(false) },
       );
     } else {
       createMut.mutate(
@@ -224,7 +230,7 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
           budgetYear: year,
           budgetMonth: month,
         },
-        { onSuccess: () => setEditMonthly(false) },
+        { ...settle, onSuccess: () => setEditMonthly(false) },
       );
     }
   };

@@ -21,9 +21,16 @@ vi.mock("react-router-dom", () => ({
 vi.mock("@/shared/ui/groo/primitives", () => ({
   Icon: () => <svg />,
 }));
-vi.mock("./BudgetFormDialog", () => ({
-  BudgetFormDialog: () => null,
+const formProps = vi.hoisted(() => ({
+  last: null as null | { onSave: (d: unknown) => void },
 }));
+vi.mock("./BudgetFormDialog", () => ({
+  BudgetFormDialog: (p: { onSave: (d: unknown) => void }) => {
+    formProps.last = p;
+    return null;
+  },
+}));
+const saveMutate = vi.hoisted(() => vi.fn());
 
 const q = (data: unknown, extra: object = {}) => ({
   data,
@@ -38,7 +45,7 @@ const state = {
   cats: q(undefined) as ReturnType<typeof q>,
 };
 const mut = () => ({
-  mutate: vi.fn(),
+  mutate: saveMutate,
   mutateAsync: vi.fn(),
   reset: vi.fn(),
   isPending: false,
@@ -565,5 +572,25 @@ describe("실패 알림은 한 곳 — 전역 오류 토스트를 끈다", () =>
     // 옵션 없이 부른(전역 토스트가 켜진) 만들기 · 고치기 훅은 더는 없다
     expect(createOpts).not.toContain(undefined);
     expect(updateOpts).not.toContain(undefined);
+  });
+});
+
+describe("예산 폼 저장 이중 제출", () => {
+  it("같은 틱에 두 번 눌러도 요청은 한 번", async () => {
+    saveMutate.mockClear();
+    render(false);
+    await act(async () =>
+      (
+        container.querySelector(
+          "[aria-label^='manager.editNamed']",
+        ) as HTMLElement
+      ).click(),
+    );
+    const p = formProps.last!;
+    act(() => {
+      p.onSave({ categoryRowId: 1, budgetAmount: 900_000 });
+      p.onSave({ categoryRowId: 1, budgetAmount: 900_000 });
+    });
+    expect(saveMutate).toHaveBeenCalledTimes(1);
   });
 });
