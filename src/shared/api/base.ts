@@ -5,9 +5,7 @@ import type {
   InternalAxiosRequestConfig,
   AxiosResponse,
 } from "axios";
-import { toast } from "sonner";
 import { rememberCurrentPath } from "@/shared/lib/groo/login-redirect";
-import { userFacingMessage } from "./error-message";
 import { beginAttempt, endChain } from "./request-budget";
 
 const AUTH_FLAG_KEY = "authenticated";
@@ -26,13 +24,16 @@ export const removeToken = () => clearAuthenticated();
 export const hasToken = (): boolean => isAuthenticated();
 
 /**
- * 전역 토스트를 끌 수 있는 요청 설정.
+ * 요청 설정의 "알림은 호출처가 한다" 표식.
  *
- * - `silent` — 이 요청의 실패는 **전부** 호출처가 직접 처리한다.
- * - `silentStatuses` — 적어 둔 상태 코드만 "예상된 답" 으로 보고 넘긴다. 나머지 실패는
- *   그대로 뜬다. 하위 자원 조회의 404(`/v1/expense/{id}/splits` — 부모 거래가 이미
- *   지워졌다)처럼 **서버가 제대로 답한 것**을 사용자에게 오류로 옮길 이유가 없는
- *   자리에 쓴다. `silent` 로 통째로 끄면 그 요청의 5xx 까지 조용해진다.
+ * 전역 서버 원문 토스트는 없앴다(단계 9) — 응답 인터셉터는 더 이상 실패를 화면에 알리지 않는다. 실패는 늘
+ * 호출처가 자기 자리에서 고정 글로 말한다(조회 = Result Section · 폼 저장 = Callout · 삭제 등 = 스낵바).
+ * 그래서 아래 두 값은 **동작이 아니라 표식**이다 — 호출처 177줄이 "이 요청의 실패는 내가 말한다" 는 뜻으로 넘기고 있어
+ * 타입과 이름을 남겼다. (옛 뜻: silent = 전역 토스트 끔 · silentStatuses = 예상된 상태 코드만 끔.)
+ *
+ * - `silent` — 이 요청의 실패는 호출처가 직접 알린다.
+ * - `silentStatuses` — 적어 둔 상태 코드는 "예상된 답"(하위 자원 404 등)으로, 호출처가 `isHttpStatus` 로 알아보고
+ *   도메인 값으로 옮긴다.
  */
 export type QuietRequestConfig = AxiosRequestConfig & {
   silent?: boolean;
@@ -65,21 +66,6 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const lang = localStorage.getItem("i18nextLng") || "ko";
     config.headers["Accept-Language"] = lang;
-    // 증권 시세·계좌 조회 GET 은 업스트림 간헐 오류가 있어도 몇 초 뒤 다음 폴링이 스스로
-    // 회복하고 화면엔 '—' 폴백이 있다 — 실패마다 전역 토스트를 띄우면 "증권사 API 호출에
-    // 실패했습니다"가 10초마다 뜨는 노이즈만 남는다.
-    // **접두사를 늘릴 때 여기도 늘려야 한다.** /v1/securities/ 를 새로 열고 자산 화면을
-    // 거기로 옮겼을 때 이 목록을 안 따라 고쳐 토스트가 되살아난 적이 있다.
-    // 명시적으로 silent 를 지정한 요청은 그 값을 존중한다.
-    const cfg = config as InternalAxiosRequestConfig & { silent?: boolean };
-    const quietPrefixes = ["/v1/toss/", "/v1/namu/", "/v1/securities/"];
-    if (
-      cfg.method === "get" &&
-      cfg.silent === undefined &&
-      quietPrefixes.some((p) => cfg.url?.startsWith(p))
-    ) {
-      cfg.silent = true;
-    }
     // 불러오기는 처음 요청부터 다시 시도까지 합쳐 10초 안에 끝낸다(request-budget.ts)
     beginAttempt(config);
     return config;
@@ -88,30 +74,14 @@ apiClient.interceptors.request.use(
 );
 
 /**
- * 전역 API 에러 핸들러 (이중 방어 — sonner id 중복방지 + 시간 throttle):
- * - 4xx/5xx 응답 시 server message(또는 fallback)를 toast.error 로 노출.
- * - sonner id 로 active toast update — 같은 메시지가 화면에 떠 있는 동안엔 1건.
- * - 시간 throttle — toast 가 dismiss 된 직후 같은 메시지가 다시 와도 무시
- *   (예: 사용자가 mutation 버튼을 빠르게 여러 번 클릭, 또는 페이지의 병렬 query 가 같은 에러로 떨어지는 케이스).
- * - 호출처(mutation onError 등)에서 toast.error 를 별도로 호출하지 말 것 — 중복 노출.
- *   특수 메시지가 필요하면 mutation.onError 에서 처리하되 error.config.silent = true 로 전역 skip.
- * - 401 은 toast 없이 /login 리다이렉트 (세션 만료). 병렬 401 동시 발생 시 redirect 1회만.
+ * 응답 인터셉터 — 알림을 띄우지 않는다(전역 서버 원문 토스트 없음, 단계 9).
+ * - 401 은 /login 으로 보낸다(세션 만료). 병렬 401 이 동시에 나도 이동은 1회만.
+ * - 그 밖의 실패는 그대로 호출처에 던진다 — 호출처가 자기 자리에서 고정 글로 알린다
+ *   (조회 = Result Section · 폼 저장 = Callout · 삭제 등 = 스낵바 + [다시 시도]).
  */
 
-// 401 동시 발생 시 redirect 1회만 — 병렬 query 가 401 로 떨어질 때 토스트/리다이렉트 중복 방지
+// 401 동시 발생 시 redirect 1회만 — 병렬 query 가 401 로 떨어질 때 리다이렉트 중복 방지
 let isRedirectingToLogin = false;
-
-// 동일 메시지 throttle — sonner id 외 시간 기반 가드 (3초 내 같은 메시지 무시)
-const TOAST_THROTTLE_MS = 3000;
-const recentToastAt: Map<string, number> = new Map();
-
-const showApiErrorToast = (message: string) => {
-  const now = Date.now();
-  const last = recentToastAt.get(message) ?? 0;
-  if (now - last < TOAST_THROTTLE_MS) return;
-  recentToastAt.set(message, now);
-  toast.error(message, { id: `api-error-${message}` });
-};
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -132,29 +102,6 @@ apiClient.interceptors.response.use(
       }
       return Promise.reject(error);
     }
-    const reqConfig = error.config as QuietRequestConfig | undefined;
-    // silent flag 가 있으면 호출처에서 직접 처리 — 전역 toast skip
-    if (reqConfig?.silent === true) {
-      return Promise.reject(error);
-    }
-    // 이 요청에서는 오류가 아니라고 미리 밝혀 둔 상태 코드 — 나머지는 그대로 띄운다.
-    const status = error.response?.status;
-    if (status != null && reqConfig?.silentStatuses?.includes(status)) {
-      return Promise.reject(error);
-    }
-    // 구독 게이트(SUBS_001) 403 은 토스트 제외 — 미구독 기능은 UI 가 이미 숨기므로
-    // 사용자에겐 노이즈일 뿐. 쿼리 실패는 그대로 전파돼 호출부가 폴백 처리한다.
-    if (
-      error.response?.status === 403 &&
-      error.response?.data?.code === "SUBS_001"
-    ) {
-      return Promise.reject(error);
-    }
-    const message = userFacingMessage(
-      error.response?.data?.message,
-      error.config?.url,
-    );
-    showApiErrorToast(message);
     return Promise.reject(error);
   },
 );
