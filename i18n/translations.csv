@@ -6,6 +6,7 @@ common,cancel,취소,Cancel
 common,delete,삭제,Delete
 common,retry,다시 시도,Try again
 common,query.referenceFailed,일부 정보를 불러오지 못했어요.,Some information couldn't be loaded.
+common,query.referenceSaveFailed,필요한 정보를 불러오지 못해 저장하지 못했어요. 다시 시도해주세요.,Couldn't save because some information couldn't be loaded. Please try again.
 common,query.failedNamed,{{name}} 정보를 불러오지 못했어요,Couldn't load the {{name}} info
 common,edit,수정,Edit
 common,create,생성,Create
@@ -810,12 +811,15 @@ asset,assetDetail.usagePeriodLabel,카드 이용 기간,Card usage period
 asset,assetDetail.billingInfo,결제 정보,Billing info
 asset,assetDetail.cycleMix,이번 회차 구성,This cycle
 asset,assetDetail.perfTitle,{{month}}월 실적,Month {{month}} target
+asset,assetDetail.perfName,카드 실적,card performance
 asset,assetDetail.perfAchieved,실적 달성,Target met
 asset,assetDetail.yearLabel,{{year}}년,{{year}}
 asset,assetDetail.payAmountEmpty,결제 금액을 넣어주세요.,Enter the payment amount.
 asset,assetDetail.payAmountOver,결제 금액은 {{amount}}까지예요.,The payment can be up to {{amount}}.
 asset,assetDetail.payFailed,결제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't process the payment. Please try again in a moment.
 asset,trade.recordTitle,거래 기록,Trade log
+asset,trade.recordName,거래 기록,trade history
+asset,trade.previewName,거래 후 미리보기,trade preview
 asset,trade.detailTitle,거래 기록,Trade record
 asset,trade.kind,종류,Type
 asset,trade.unitPrice,단가,Unit price

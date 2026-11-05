@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { ChipRadio, ChipRadioGroup } from "@/shared/ds/chip";
 import { DatePicker, dayKey, parseDayKey } from "@/shared/ds/date-picker";
@@ -58,7 +59,9 @@ export function AssetTradeDialog({
   const wide = useWideSurface();
   // 저장 실패는 전역 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글)이 알린다 — 요청은 silent, 폼은 열린 채 · 쓴 값 그대로
   const createMut = useCreateTrade({ silent: true });
-  const { data: assetsData } = useAssets();
+  // 결제 계좌 후보 — 폼 안의 참조 목록이라 실패해도 폼은 그대로 두고, 저장할 때 다시 받는다(submit)
+  const assetsQ = useAssets({ silent: true });
+  const assetsData = assetsQ.data;
   // 결제 계좌 후보 — 이 증권계좌 자신은 뺀다(예수금 경로와 같아진다).
   const settlementOptions = useMemo(
     () =>
@@ -155,7 +158,8 @@ export function AssetTradeDialog({
   }, [payload]);
 
   // 실현손익·예수금 잔액은 서버가 계산한다 — 화면이 같은 규칙을 따로 들고 있으면 갈라진다.
-  const { data: preview } = useTradePreview(settled);
+  const previewQ = useTradePreview(settled, { silent: true });
+  const preview = previewQ.data;
   const cashDelta = preview?.cashDelta ?? null;
   const cashAfter = preview?.cashAfter ?? null;
   const realizedPreview = isSell ? (preview?.realizedPl ?? null) : null;
@@ -180,9 +184,11 @@ export function AssetTradeDialog({
         : undefined;
   const amountError =
     tried && amountNum <= 0 ? t("trade.amountRequired") : undefined;
+  // 결제 계좌 후보를 저장할 때 다시 받다 또 실패했다 — 요청은 보내지 않고 폼 Callout 으로 알린다(submit)
+  const [refFailed, setRefFailed] = useState(false);
   const errorRef = useScrollToError<HTMLDivElement>(
-    createMut.isError,
-    createMut.error,
+    createMut.isError || refFailed,
+    createMut.error ?? refFailed,
   );
   // 서버 글은 내지 않는다 — 고쳐 다시 할 수 있는 보유 수량 부족만 오류 코드(ASSET_012)로 가려 고정 글을 준다
   const failCode = (
@@ -200,15 +206,28 @@ export function AssetTradeDialog({
     if (savingRef.current) return;
     savingRef.current = true;
     createMut.reset();
-    // 미리보기에 보낸 것과 같은 몸통을 보낸다 — 보여 준 값과 저장될 값이 다를 수 없다.
-    createMut.mutate(payload, {
-      onSuccess: () => {
-        onClose();
-      },
-      onSettled: () => {
-        savingRef.current = false;
-      },
-    });
+    setRefFailed(false);
+    const send = () => {
+      // 미리보기에 보낸 것과 같은 몸통을 보낸다 — 보여 준 값과 저장될 값이 다를 수 없다.
+      createMut.mutate(payload, {
+        onSuccess: () => {
+          onClose();
+        },
+        onSettled: () => {
+          savingRef.current = false;
+        },
+      });
+    };
+    if (assetsQ.isError && !assetsQ.data) {
+      void assetsQ.refetch().then((r) => {
+        if (r.isError) {
+          setRefFailed(true);
+          savingRef.current = false;
+        } else send();
+      });
+      return;
+    }
+    send();
   };
 
   const critical = viaCash && (cashAfter ?? 0) < 0;
@@ -223,10 +242,12 @@ export function AssetTradeDialog({
     >
       <ResponsiveDialogContent title={t("trade.title")}>
         <ResponsiveDialogBody>
-          {createMut.isError && (
+          {(createMut.isError || refFailed) && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {saveFailedText}
+                {createMut.isError
+                  ? saveFailedText
+                  : tc("query.referenceSaveFailed")}
               </Callout>
             </div>
           )}
@@ -380,36 +401,48 @@ export function AssetTradeDialog({
             </Field>
 
             {/* 예수금이 어떻게 되는지 먼저 보여 준다 — 저장하고 나서 놀라지 않게. 키-값 줄 */}
-            <List aria-label={t("trade.preview")} className="-mx-global-gutter">
-              <ListItem
-                title={
-                  viaCash ? t("trade.cashAfter") : t("trade.settlementDelta")
-                }
-                suffix={
-                  <span
-                    className={`text-end font-bold tabular-nums ${critical ? "text-fg-critical" : "text-fg-neutral"}`}
-                  >
-                    {/* 서버가 아직 답하기 전에는 자리만 잡아 둔다 — 틀린 값을 잠깐 보여 주느니 낫다. */}
-                    {cashAfter == null || cashDelta == null
-                      ? "—"
-                      : viaCash
-                        ? money(cashAfter)
-                        : `${cashDelta >= 0 ? "+" : "−"}${money(Math.abs(cashDelta))}`}
-                  </span>
-                }
+            {previewQ.isError ? (
+              <BandFailure
+                title={tc("query.failedNamed", {
+                  name: t("trade.previewName"),
+                })}
+                onRetry={() => void previewQ.refetch()}
               />
-              {realizedPreview != null && (
+            ) : (
+              <List
+                aria-label={t("trade.preview")}
+                className="-mx-global-gutter"
+              >
                 <ListItem
-                  title={t("trade.realizedPreview")}
+                  title={
+                    viaCash ? t("trade.cashAfter") : t("trade.settlementDelta")
+                  }
                   suffix={
-                    <span className="text-end font-bold tabular-nums text-fg-neutral">
-                      {realizedPreview >= 0 ? "+" : "−"}
-                      {money(Math.abs(realizedPreview))}
+                    <span
+                      className={`text-end font-bold tabular-nums ${critical ? "text-fg-critical" : "text-fg-neutral"}`}
+                    >
+                      {/* 서버가 아직 답하기 전에는 자리만 잡아 둔다 — 틀린 값을 잠깐 보여 주느니 낫다. */}
+                      {cashAfter == null || cashDelta == null
+                        ? "—"
+                        : viaCash
+                          ? money(cashAfter)
+                          : `${cashDelta >= 0 ? "+" : "−"}${money(Math.abs(cashDelta))}`}
                     </span>
                   }
                 />
-              )}
-            </List>
+                {realizedPreview != null && (
+                  <ListItem
+                    title={t("trade.realizedPreview")}
+                    suffix={
+                      <span className="text-end font-bold tabular-nums text-fg-neutral">
+                        {realizedPreview >= 0 ? "+" : "−"}
+                        {money(Math.abs(realizedPreview))}
+                      </span>
+                    }
+                  />
+                )}
+              </List>
+            )}
             {/* 예수금이 모자라면 결제 계좌에서 그만큼 끌어온다 — 이체가 한 건 생긴다는 걸 미리 알린다. */}
             {fundingAmount > 0 && (
               <p className="m-0 text-t3 text-fg-neutral-subtle">

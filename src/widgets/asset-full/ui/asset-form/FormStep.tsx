@@ -21,6 +21,7 @@ export function FormStep({
   isSubmitting,
   saveFailed,
   saveError,
+  refFailed,
 }: {
   f: AssetForm;
   onSubmit: () => void;
@@ -29,11 +30,16 @@ export function FormStep({
   saveFailed?: boolean;
   /** 실패마다 새 값 — 같은 실패가 이어져도 Callout 을 다시 보이게 올린다 */
   saveError?: unknown;
+  /** 폼 안 참조 목록을 저장 때 다시 받다 또 실패했다 — 요청은 보내지 않았다. 같은 Callout 자리에 다른 글 */
+  refFailed?: boolean;
 }) {
   const { t, tCommon, isNew, editingGroup, submitTick } = f;
   const bodyRef = useRef<HTMLDivElement>(null);
   // 본문은 스크롤되고 [저장] 은 바닥이라 내린 채 실패하면 맨 위 Callout 이 가려진다 — 실패하면 올려 보인다
-  const errorRef = useScrollToError<HTMLDivElement>(!!saveFailed, saveError);
+  const errorRef = useScrollToError<HTMLDivElement>(
+    !!saveFailed || !!refFailed,
+    saveError ?? refFailed,
+  );
   // 새 자산은 2단계에 들어가면 이름 칸에 초점 — 수정은 표면이 받는다(폰에서 키보드가 가리지 않게)
   useEffect(() => {
     if (isNew) focusNameField(bodyRef.current);
@@ -48,10 +54,12 @@ export function FormStep({
   return (
     <>
       <ResponsiveDialogBody ref={bodyRef} scrollFog>
-        {saveFailed && (
+        {(saveFailed || refFailed) && (
           <div ref={errorRef}>
             <Callout tone="critical" role="alert" className="mb-x4">
-              {t("editDialog.saveFailed")}
+              {refFailed && !saveFailed
+                ? tCommon("query.referenceSaveFailed")
+                : t("editDialog.saveFailed")}
             </Callout>
           </div>
         )}

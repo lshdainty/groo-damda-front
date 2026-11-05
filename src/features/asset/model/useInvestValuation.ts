@@ -56,7 +56,7 @@ export function linkedSymbolsOf(assets: Asset[]): string[] {
 export function useInvestValuation(
   investAssets: Asset[],
 ): Map<number, InvestValuation> {
-  const { data: features } = useMyFeatures();
+  const { data: features } = useMyFeatures({ reference: true });
   const enabled =
     (features?.features?.includes("SECURITIES") ?? false) &&
     (features?.connectedBrokers?.length ?? 0) > 0;

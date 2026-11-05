@@ -3,6 +3,7 @@ import { Check, Target } from "lucide-react";
 import { Badge } from "@/shared/ds/badge";
 import { List, ListItem, ListTile } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
+import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { money } from "@/shared/lib/groo/format";
 import { useAssetMask } from "../../lib/asset-groups";
 import { useCardPerformance } from "@/features/card-performance";
@@ -11,7 +12,7 @@ import { currentYearMonth } from "./detail-shared";
 /**
  * 카드 월 실적(I-17 47) — 회색 · 초록 상자를 걷고 List 줄: 앞 타일 40(미달 chart-gray-weak + target · 달성 chart-green-weak + check) ·
  * 제목 "{M}월 실적" · 설명 "{현재}원 / {기준}원 · {pct}%" · 뒤 Badge(미달 neutral "실적까지 {금액}" · 달성 positive "실적 달성").
- * 실적 무관 카드면 줄을 그리지 않는다. 실패도 줄을 그리지 않는다(실적은 덧붙임 — 오류 원문 없음).
+ * 실적 무관 카드면 줄을 그리지 않는다. 실패는 줄 자리에서 말한다(BandFailure — 오류 원문 없음).
  */
 export function CardPerfBadge({
   assetRowId,
@@ -23,7 +24,9 @@ export function CardPerfBadge({
   const { t } = useTranslation("asset");
   const m = useAssetMask("asset.detail", masked);
   const ym = currentYearMonth();
-  const { data: p, isLoading } = useCardPerformance(assetRowId, ym);
+  const { t: tc } = useTranslation("common");
+  const perfQ = useCardPerformance(assetRowId, ym, { silent: true });
+  const { data: p, isLoading } = perfQ;
   if (isLoading) {
     return (
       <div aria-hidden className="flex items-center gap-x3 px-x6 py-x3">
@@ -35,6 +38,13 @@ export function CardPerfBadge({
       </div>
     );
   }
+  if (perfQ.isError && !p)
+    return (
+      <BandFailure
+        title={tc("query.failedNamed", { name: t("assetDetail.perfName") })}
+        onRetry={() => void perfQ.refetch()}
+      />
+    );
   if (!p || !p.isRequired || p.requiredAmount == null) return null;
   const done = p.isAchieved;
   const pct = Math.trunc(Math.min(Math.max(p.achievementRate, 0), 1.5) * 100);

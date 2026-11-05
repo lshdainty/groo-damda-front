@@ -9,10 +9,10 @@ import type {
   SavingGoalReorderItem,
 } from "@/entities/savingGoal";
 
-export const useSavingGoals = () => {
+export const useSavingGoals = (opts?: SilentOpts) => {
   return useQuery({
     queryKey: savingGoalKeys.list(),
-    queryFn: () => savingGoalApi.getSavingGoals(),
+    queryFn: () => savingGoalApi.getSavingGoals(opts),
   });
 };
 

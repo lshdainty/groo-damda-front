@@ -233,7 +233,7 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
   // 투자 — 보유 종목 다건 편집 (design AssetEditDialog invest 분기 미러).
   // 기존 holdings 우선, 구버전 단일 연동(tossSymbol)은 linked 1건으로 합성(하위호환).
   const [holdings, setHoldings] = useState<EditHolding[]>(init.holdings);
-  const { data: features } = useMyFeatures();
+  const { data: features } = useMyFeatures({ reference: true });
   const liveEnabled =
     (features?.features?.includes("SECURITIES") ?? false) &&
     (features?.connectedBrokers?.length ?? 0) > 0;
@@ -290,7 +290,9 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
   );
   const [paymentNone, setPaymentNone] = useState(init.paymentNone);
 
-  const { data: assetsData } = useAssets();
+  // 결제 계좌 후보 — 폼 안의 참조 목록이라 실패해도 폼은 그대로 두고, 저장할 때 다시 받는다(AssetEditDialog.attemptSubmit)
+  const assetsQ = useAssets({ silent: true });
+  const { data: assetsData } = assetsQ;
   const bankAccounts = useMemo(
     () =>
       (assetsData?.assets ?? []).filter(
@@ -555,6 +557,7 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
     paymentNone,
     setPaymentNone,
     assetsData,
+    assetsQ,
     bankAccounts,
     cardCompanyName,
     cardBrandColor,

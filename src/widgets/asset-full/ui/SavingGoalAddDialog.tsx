@@ -65,8 +65,11 @@ export function SavingGoalAddDialog({
   const updateMut = useUpdateSavingGoal({ silent: true });
   const contributeMut = useContributeSavingGoal({ silent: true });
   // 목록 화면에서만 열리므로 캐시 재사용 — 추가 요청이 나가지 않는다.
-  const goalsQ = useSavingGoals();
+  // 이름 중복 검사용 기존 목표 목록 — 폼 안의 참조 목록이라 실패해도 폼은 그대로 두고, 저장할 때 다시 받는다(handleSubmit)
+  const goalsQ = useSavingGoals({ silent: true });
   const goals = goalsQ.data?.goals ?? [];
+  // 저장할 때 다시 받다 또 실패했다 — 요청은 보내지 않고 폼 Callout 으로 알린다
+  const [refFailed, setRefFailed] = useState(false);
 
   const [initial] = useState(() => ({
     title: goal?.title ?? "",
@@ -109,7 +112,10 @@ export function SavingGoalAddDialog({
     createMut.isError || updateMut.isError || contributeMut.isError;
   const saveError =
     createMut.error ?? updateMut.error ?? contributeMut.error ?? undefined;
-  const errorRef = useScrollToError<HTMLDivElement>(saveFailed, saveError);
+  const errorRef = useScrollToError<HTMLDivElement>(
+    saveFailed || refFailed,
+    saveError ?? refFailed,
+  );
   const clearSaveError = () => {
     createMut.reset();
     updateMut.reset();
@@ -123,9 +129,9 @@ export function SavingGoalAddDialog({
     savingRef.current = false;
   };
 
-  const validate = (): Errors => {
+  const validate = (goalList = goals): Errors => {
     const out: Errors = {};
-    const takenTitles = goals
+    const takenTitles = goalList
       .filter((g) => g.rowId !== goal?.rowId)
       .map((g) => g.title);
     const issue = nameIssue(title, GOAL_NAME_MAX, takenTitles);
@@ -142,9 +148,20 @@ export function SavingGoalAddDialog({
     return out;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (goalList = goals) => {
     if (saving || savingRef.current) return;
-    const found = validate();
+    if (goalsQ.isError && !goalsQ.data) {
+      // 이름 중복을 가릴 수 없다 — 한 번 다시 받고, 그래도 안 되면 저장하지 않는다
+      setRefFailed(false);
+      savingRef.current = true;
+      void goalsQ.refetch().then((r) => {
+        savingRef.current = false;
+        if (r.isError) setRefFailed(true);
+        else handleSubmit(r.data?.goals ?? []);
+      });
+      return;
+    }
+    const found = validate(goalList);
     setErrors(found);
     if (found.name) return nameRef.current?.focus();
     if (found.target) return targetRef.current?.focus();
@@ -239,10 +256,12 @@ export function SavingGoalAddDialog({
         }}
       >
         <ResponsiveDialogBody>
-          {saveFailed && (
+          {(saveFailed || refFailed) && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("savingGoal.saveFailed")}
+                {saveFailed
+                  ? t("savingGoal.saveFailed")
+                  : tc("query.referenceSaveFailed")}
               </Callout>
             </div>
           )}
@@ -306,7 +325,7 @@ export function SavingGoalAddDialog({
         </ResponsiveDialogBody>
         <ResponsiveDialogFooter>
           <ResponsiveDialogCancel>{tc("cancel")}</ResponsiveDialogCancel>
-          <Button loading={saving} onClick={handleSubmit}>
+          <Button loading={saving} onClick={() => handleSubmit()}>
             {isEdit ? tc("save") : tc("add")}
           </Button>
         </ResponsiveDialogFooter>

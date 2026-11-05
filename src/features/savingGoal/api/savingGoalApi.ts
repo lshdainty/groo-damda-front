@@ -26,9 +26,13 @@ export const savingGoalApi = {
     return resp.data;
   },
 
-  getSavingGoals: async (): Promise<{ goals: SavingGoal[] }> => {
-    const resp: ApiResponse<{ goals: SavingGoal[] }> =
-      await apiClient.get("/v1/saving-goals");
+  getSavingGoals: async (
+    opts?: SilentOpts,
+  ): Promise<{ goals: SavingGoal[] }> => {
+    const resp: ApiResponse<{ goals: SavingGoal[] }> = await apiClient.get(
+      "/v1/saving-goals",
+      silentConfig(opts),
+    );
     return resp.data;
   },
 

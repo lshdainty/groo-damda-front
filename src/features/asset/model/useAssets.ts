@@ -3,6 +3,7 @@ import {
   referenceMeta,
   referenceSilent,
   type ReferenceOpts,
+  type SilentOpts,
 } from "@/shared/api";
 import { assetKeys, invalidateFor } from "@/shared/config";
 import { assetApi } from "../api/assetApi";
@@ -217,10 +218,13 @@ export const useCreateTrade = (opts?: { silent?: boolean }) => {
  *
  * <p>입력할 때마다 부르지 않도록 호출부에서 값을 늦춰(debounce) 넘긴다.
  */
-export const useTradePreview = (data: AssetTradeFormValues | null) =>
+export const useTradePreview = (
+  data: AssetTradeFormValues | null,
+  opts?: SilentOpts,
+) =>
   useQuery({
     queryKey: [...assetKeys.all, "trade-preview", data],
-    queryFn: () => assetApi.previewTrade(data as AssetTradeFormValues),
+    queryFn: () => assetApi.previewTrade(data as AssetTradeFormValues, opts),
     enabled: data != null,
     // 같은 입력이면 다시 묻지 않는다 — 저장 전이라 서버 상태가 바뀔 일이 없다.
     staleTime: 30_000,
@@ -228,10 +232,10 @@ export const useTradePreview = (data: AssetTradeFormValues | null) =>
     retry: false,
   });
 
-export const useAssetTrades = (assetRowId?: number) =>
+export const useAssetTrades = (assetRowId?: number, opts?: SilentOpts) =>
   useQuery({
     queryKey: [...assetKeys.all, "trades", assetRowId],
-    queryFn: () => assetApi.getTrades(assetRowId as number),
+    queryFn: () => assetApi.getTrades(assetRowId as number, opts),
     enabled: assetRowId != null,
   });
 

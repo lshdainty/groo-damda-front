@@ -1,15 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { referenceMeta } from "@/shared/api";
 import { invalidateFor, subscriptionKeys } from "@/shared/config";
 import { subscriptionApi } from "../api/subscriptionApi";
 
 const SECURITIES = "SECURITIES";
 
 /** 내 기능권한 + 증권사 연결상태. 메뉴 게이트·설정의 단일 소스. */
-export const useMyFeatures = () =>
+export const useMyFeatures = (opts?: { reference?: boolean }) =>
   useQuery({
     queryKey: subscriptionKeys.myFeatures(),
     queryFn: () => subscriptionApi.getMyFeatures(),
     staleTime: 60_000,
+    ...referenceMeta(opts),
   });
 
 /** 증권 기능권한 보유 여부 (로딩 중엔 false → 게이트 기본 닫힘). */
