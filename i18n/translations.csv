@@ -658,6 +658,7 @@ asset,savingGoal.deleteNamed,{{name}} 목표 삭제,Delete {{name}} goal
 asset,savingGoal.remaining,남은 금액,Remaining
 asset,savingGoal.achievedAt,달성일,Achieved on
 asset,savingGoal.saveFailed,저축 목표를 저장하지 못했어요.,Couldn't save the saving goal.
+asset,savingGoal.firstContributeFailed,목표는 만들었지만 첫 납입을 기록하지 못했어요.,The goal was created but the first deposit could not be recorded.
 asset,savingGoal.errName,목표 이름을 입력해주세요.,Enter a goal name.
 asset,savingGoal.errAmount,목표 금액을 입력해주세요.,Enter a goal amount.
 asset,savingGoal.errCurrentExceeds,현재 모은 금액이 목표 금액보다 클 수 없어요.,The amount saved can't exceed the target amount.

@@ -4,6 +4,7 @@ import { MAX_AMOUNT, parseAmount } from "@/shared/lib/groo/amount";
 import { nameIssue } from "@/shared/lib/groo/name-policy";
 import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import {
   ResponsiveDialog,
@@ -116,6 +117,7 @@ export function SavingGoalAddDialog({
   };
   // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다.
   // 누르는 순간 켜고, 요청이 끝나는 갈래(성공 · 실패 · 납입까지 이어지는 뒤 요청)마다 끈다
+  const confirmFail = useConfirmFail();
   const savingRef = useRef(false);
   const release = () => {
     savingRef.current = false;
@@ -194,15 +196,23 @@ export function SavingGoalAddDialog({
         },
         {
           onError: release,
+          // 만들기가 성공하면 목표는 있는 것 — 폼을 닫는다. 첫 납입이 실패해도 폼은 열지 않고(다시 누르면 같은 목표가 또 만들어진다)
+          // 스낵바 [다시 시도] 가 만든 목표 id 로 납입만 다시 보낸다
           onSuccess: (created) => {
+            release();
+            onClose();
             if (currentNum > 0) {
-              contributeMut.mutate(
-                { id: created.rowId, data: { amount: currentNum } },
-                { onSuccess: () => onClose(), onSettled: release },
+              const pay = () =>
+                contributeMut.mutateAsync({
+                  id: created.rowId,
+                  data: { amount: currentNum },
+                });
+              pay().catch(() =>
+                confirmFail({
+                  message: t("savingGoal.firstContributeFailed"),
+                  retry: pay,
+                }),
               );
-            } else {
-              release();
-              onClose();
             }
           },
         },

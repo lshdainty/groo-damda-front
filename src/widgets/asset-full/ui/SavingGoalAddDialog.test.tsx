@@ -23,7 +23,15 @@ const state = {
   contribute: vi.fn(),
   opts: [] as unknown[],
   failed: false,
+  snack: [] as Array<{ message: string; action?: { onClick: () => void } }>,
 };
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: { message: string; action?: { onClick: () => void } }) =>
+      state.snack.push(o),
+    dismiss: () => {},
+  }),
+}));
 vi.mock("@/features/savingGoal", () => ({
   useSavingGoals: () => ({ data: { goals: state.goals } }),
   useCreateSavingGoal: (o?: unknown) => {
@@ -50,6 +58,7 @@ vi.mock("@/features/savingGoal", () => ({
     state.opts.push(o);
     return {
       mutate: state.contribute,
+      mutateAsync: state.contribute,
       reset: () => {},
       isPending: false,
       isError: false,
@@ -85,6 +94,7 @@ beforeEach(async () => {
   state.update = vi.fn();
   state.contribute = vi.fn();
   state.opts = [];
+  state.snack = [];
   state.failed = false;
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -317,5 +327,30 @@ describe("저장 실패(I-28-5 3b)", () => {
     act(() => cbs.onError());
     click(byText("add"));
     expect(state.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("만들기 성공 · 첫 납입 실패 — 만들기 1회 · 폼 닫힘 · 스낵바, [다시 시도] 는 납입만 1회 더", async () => {
+    state.contribute = vi.fn().mockRejectedValue(new Error("x"));
+    const { onClose } = mount();
+    type(inputs()[0]!, "유럽 여행");
+    type(inputs()[1]!, "5000000");
+    type(inputs()[2]!, "100000");
+    click(byText("add"));
+    const cbs = state.create.mock.calls[0]![1] as {
+      onSuccess: (c: { rowId: number }) => void;
+    };
+    await act(async () => cbs.onSuccess({ rowId: 9 }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(state.create).toHaveBeenCalledTimes(1);
+    expect(state.contribute).toHaveBeenCalledTimes(1);
+    expect(state.snack).toHaveLength(1);
+    expect(state.snack[0]!.message).toBe("savingGoal.firstContributeFailed");
+    await act(async () => state.snack[0]!.action!.onClick());
+    expect(state.contribute).toHaveBeenCalledTimes(2);
+    expect(state.contribute.mock.calls[1]![0]).toEqual({
+      id: 9,
+      data: { amount: 100000 },
+    });
+    expect(state.create).toHaveBeenCalledTimes(1);
   });
 });
