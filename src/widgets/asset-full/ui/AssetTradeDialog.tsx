@@ -32,7 +32,7 @@ import type {
 } from "@/entities/asset";
 import { MINUS, money } from "@/shared/lib/groo/format";
 import {
-  formatOriginalAmount,
+  formatAssetAmount,
   isForeignCurrency,
 } from "@/shared/lib/groo/currency";
 import { dsLocale } from "@/shared/ds/i18n";
@@ -193,7 +193,7 @@ export function AssetTradeDialog({
       exchangeRate: rateOf.exchangeRate,
     });
     return {
-      main: sign + formatOriginalAmount(Math.abs(n), code!, dsLocale()),
+      main: sign + formatAssetAmount(Math.abs(n), code!, dsLocale()),
       approx: t("fx.approxKrw", { amount: sign + money(krw) }),
     };
   };

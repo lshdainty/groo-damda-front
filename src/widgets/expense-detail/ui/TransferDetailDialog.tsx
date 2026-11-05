@@ -8,7 +8,7 @@ import { LogoTile } from "@/shared/ds/logo-tile";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { KRW, isEn } from "@/shared/lib/groo/format";
 import {
-  formatOriginalAmount,
+  formatAssetAmount,
   isForeignCurrency,
 } from "@/shared/lib/groo/currency";
 import { dsLocale } from "@/shared/ds/i18n";
@@ -124,7 +124,7 @@ export function TransferDetailDialog({
     hidden
       ? HIDE_AMOUNTS_MASK
       : isForeignCurrency(code)
-        ? formatOriginalAmount(Math.abs(v), code!, dsLocale())
+        ? formatAssetAmount(Math.abs(v), code!, dsLocale())
         : `${isEn() ? "₩" : ""}${KRW(v, { abs: true })}${isEn() ? "" : "원"}`;
   const won = (v: number) => inCur(v, fromCurrency);
 

@@ -86,6 +86,21 @@ export const formatOriginalAmount = (
 };
 
 /**
+ * 자산 금액 표기 — 외화 예수금 · 잔액 · 이체 금액은 서버가 **정수 1단위**로 저장하므로 소수 없이 `$100` · `−$1,000`(I-13).
+ * 시세 · 단가 · 해외 결제의 원 통화 금액처럼 원래 소수가 있는 값은 {@link formatOriginalAmount}(소수 자리 늘 보임) 그대로다.
+ */
+export const formatAssetAmount = (
+  amount: number,
+  code: string,
+  locale: string,
+): string => {
+  const body = Math.abs(Math.round(amount)).toLocaleString(locale, {
+    maximumFractionDigits: 0,
+  });
+  return `${amount < 0 ? MINUS : ""}${currencySymbol(code)}${body}`;
+};
+
+/**
  * 자산 잔액의 원화 환산 — 클라이언트 합산은 이 함수를 거친다.
  *
  * 서버가 원화 합계 칸(`balanceInKrw` = round(예수금 × 환율) + 보유 평가(원화))을 주면 그 값을 그대로 쓴다(I-13 길 A).

@@ -6,7 +6,7 @@ import { cn } from "@/shared/lib/cn";
 import { useTallTitle } from "@/shared/lib/groo/use-tall-title";
 import { KRW, MINUS, isEn } from "@/shared/lib/groo/format";
 import {
-  formatOriginalAmount,
+  formatAssetAmount,
   isForeignCurrency,
 } from "@/shared/lib/groo/currency";
 import { dsLocale } from "@/shared/ds/i18n";
@@ -74,7 +74,7 @@ export function TransferRow({
   // 줄 금액의 통화 — 받는 쪽 관점만 받는 계좌 통화
   const shownCurrency = isIn ? toCurrency : fromCurrency;
   const foreignText = (n: number, code: string | null) =>
-    formatOriginalAmount(Math.abs(n), code!, dsLocale());
+    formatAssetAmount(Math.abs(n), code!, dsLocale());
   // 이체도 미래 날짜로 넣을 수 있다 — 거래와 같은 표시를 준다. 합계에 안 드는 줄이라 금액만 옅게
   const scheduled = isScheduledDate(transfer.transferDate);
   const time = txTimeLabel(transfer.transferDate);

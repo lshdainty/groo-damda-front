@@ -8,7 +8,7 @@ import { BigAmount } from "@/shared/ui/groo/band-parts";
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import type { Asset } from "@/entities/asset";
 import {
-  formatOriginalAmount,
+  formatAssetAmount,
   isForeignCurrency,
 } from "@/shared/lib/groo/currency";
 import { dsLocale } from "@/shared/ds/i18n";
@@ -34,7 +34,7 @@ export function AssetAmount({
   const foreign = isForeignCurrency(asset.currency);
   const foreignText = (n: number) =>
     (n < 0 ? MINUS : "") +
-    formatOriginalAmount(Math.abs(n), asset.currency, dsLocale());
+    formatAssetAmount(Math.abs(n), asset.currency, dsLocale());
   const label = isCheckLinked
     ? t("assetDetail.valueCheckCard")
     : isCard

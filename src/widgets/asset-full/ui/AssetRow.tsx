@@ -10,7 +10,7 @@ import { LogoTile } from "@/shared/ds/logo-tile";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
 import {
-  formatOriginalAmount,
+  formatAssetAmount,
   isForeignCurrency,
 } from "@/shared/lib/groo/currency";
 import { MINUS, formatChangeRate } from "@/shared/lib/groo/format";
@@ -66,7 +66,7 @@ function kindLabelOf(asset: Asset, t: TFunction<"asset">): string {
 /**
  * 자산 줄(56) — ds List 줄: 앞 Logo Tile 40 · 제목 · 설명 Tag Group(기관 · 보유 요약 · 결제일) · 뒤 금액 + 작은 글(사용액 · 등락 · 배지) · ›.
  * 카드 사용 막대는 ds Progress limit(8, 넘으면 끝까지 fg-critical + "N원 초과", 70 · 90% 경고 색 없음) 을 줄 아래에 둔다.
- * 외화는 원화 합계(서버 balanceInKrw)가 주 표기, 자산 통화 예수금이 아래 한 줄. 이 자산만 가렸으면 금액을 전부 가린다.
+ * 외화는 원화 합계(서버 balanceInKrw)가 주 표기, 외화 계좌(투자 아님)는 자산 통화 잔액이 아래 한 줄. 이 자산만 가렸으면 금액을 전부 가린다.
  */
 export function AssetRow({
   asset,
@@ -108,7 +108,7 @@ export function AssetRow({
   const cash = asset.cashBalance ?? asset.balance;
   const foreignCash =
     (cash < 0 ? MINUS : "") +
-    formatOriginalAmount(Math.abs(cash), asset.currency, dsLocale());
+    formatAssetAmount(Math.abs(cash), asset.currency, dsLocale());
 
   const tags: ReactNode[] = [];
   // 줄어드는 항목: 요약 설명은 기관 2 · 보유 요약/메모 1, 종류 설명은 기관만 1(종류 · 결제일은 0 — 꼭 보여야 한다, tag-group.md)
@@ -173,17 +173,13 @@ export function AssetRow({
         <span className="text-end text-t5 font-bold tabular-nums text-fg-neutral">
           {withCommaBreaks(m(main))}
         </span>
-        {foreign && checkCardMonthly == null && (
-          // 작은 글은 자산 통화 잔액 — 투자는 예수금만 자산 통화다(보유 평가는 원화, I-13 길 A). balance 를 달러로 찍으면 원화 평가가 달러로 보인다.
-          <span className={small}>
-            {m(
-              asset.assetType === "INVESTMENT" &&
-                (asset.holdingBalance ?? 0) !== 0
-                ? t("holdings.cashInline", { amount: foreignCash })
-                : foreignCash,
-            )}
-          </span>
-        )}
+        {foreign &&
+          checkCardMonthly == null &&
+          asset.assetType !== "INVESTMENT" && (
+            // 외화 계좌의 자산 통화 잔액(정수 — "$100"). 투자는 줄에 두지 않는다 — 예수금만 자산 통화라 작은 글이 기관 · 종목 설명을
+            // 밀어 자른다(I-13 검수). 투자 예수금 "$100 + 약 130,000원" 은 상세에서만.
+            <span className={small}>{m(foreignCash)}</span>
+          )}
         {investVal?.changePct != null && (
           <Delta
             direction={investVal.changePct >= 0 ? "up" : "down"}

@@ -4,6 +4,7 @@ import {
   CURRENCIES,
   currencySymbol,
   currencyUnit,
+  formatAssetAmount,
   formatOriginalAmount,
 } from "./currency";
 
@@ -129,5 +130,19 @@ describe("formatOriginalAmount", () => {
     expect(formatOriginalAmount(-5.5, "USD", "ko-KR")).toBe("\u2212$5.50");
     expect(formatOriginalAmount(-1280, "JPY", "en-US")).toBe("\u2212¥1,280");
     expect(formatOriginalAmount(-5.5, "USD", "ko-KR")).not.toContain("-");
+  });
+});
+
+describe("formatAssetAmount — 외화 예수금 · 잔액 · 이체는 정수 1단위(I-13)", () => {
+  it("소수 없이 — $100 · $1,000 · €897", () => {
+    expect(formatAssetAmount(100, "USD", "ko-KR")).toBe("$100");
+    expect(formatAssetAmount(1_000, "USD", "en-US")).toBe("$1,000");
+    expect(formatAssetAmount(897, "EUR", "ko-KR")).toBe("€897");
+  });
+  it("음수는 기호 앞 U+2212", () => {
+    expect(formatAssetAmount(-900, "USD", "ko-KR")).toBe("\u2212$900");
+  });
+  it("시세 · 단가는 지금 규칙(formatOriginalAmount) 그대로 — 소수 둘째 자리", () => {
+    expect(formatOriginalAmount(100, "USD", "en-US")).toBe("$100.00");
   });
 });

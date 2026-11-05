@@ -20,7 +20,7 @@ import { formatMonthDayDow } from "@/shared/lib/date";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { KRW, isEn } from "@/shared/lib/groo/format";
 import {
-  formatOriginalAmount,
+  formatAssetAmount,
   isForeignCurrency,
 } from "@/shared/lib/groo/currency";
 import { HideUnit, MaskAmount } from "@/shared/lib/groo/hide-amounts";
@@ -56,7 +56,7 @@ export function AmountText({
     return (
       <MaskAmount card={card} kind={kind}>
         {withCommaBreaks(
-          `${sign}${formatOriginalAmount(Math.abs(amount), currency!, dsLocale())}`,
+          `${sign}${formatAssetAmount(Math.abs(amount), currency!, dsLocale())}`,
         )}
       </MaskAmount>
     );
