@@ -15,6 +15,8 @@ import {
   useToggleCalendarVisibility,
 } from "@/features/user-calendar";
 import { isCalendarShown } from "@/entities/user-calendar";
+import { useSnackbar } from "@/shared/ds/snackbar";
+import { i18n } from "@/shared/i18n/config";
 import { CalendarContext, type CalendarContextValue } from "./calendar-context";
 
 interface CalendarProviderProps {
@@ -55,6 +57,7 @@ export const CalendarProvider = ({
   );
 
   const toggleVisibilityMutation = useToggleCalendarVisibility();
+  const snackbar = useSnackbar();
 
   const events = useMemo(() => {
     return localEvents.length > 0 ? localEvents : externalEvents;
@@ -92,9 +95,16 @@ export const CalendarProvider = ({
 
   const handleToggleCalendarVisibility = useCallback(
     (calendarRowId: number) => {
-      toggleVisibilityMutation.mutate(calendarRowId);
+      // 바로 바뀌는 값 — 실패하면 서버 값 그대로(되돌림) + critical 스낵바 한 문장, 다시 시도 없음
+      toggleVisibilityMutation.mutate(calendarRowId, {
+        onError: () =>
+          snackbar.show({
+            message: i18n.t("calendar:filter.visibilityFailed"),
+            tone: "critical",
+          }),
+      });
     },
-    [toggleVisibilityMutation],
+    [toggleVisibilityMutation, snackbar],
   );
 
   const value = useMemo<CalendarContextValue>(

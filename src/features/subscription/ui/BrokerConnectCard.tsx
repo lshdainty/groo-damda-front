@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { CircleCheck, Link2 } from "lucide-react";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import { Callout } from "@/shared/ds/callout";
+import { useSnackbar } from "@/shared/ds/snackbar";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { Card } from "@/shared/ui/card";
 import { SecretField } from "@/features/subscription/ui/SecretField";
 import { toLocalDateKey } from "@/shared/lib/date";
@@ -42,34 +44,73 @@ export function BrokerConnectCard({
   const { broker, displayName, connected, primary, verifiedAt } = connection;
   const canConnect = apiKey.trim().length > 0 && apiSecret.trim().length > 0;
 
+  const snackbar = useSnackbar();
+  const confirmFail = useConfirmFail();
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면 끈다
+  const connectingRef = useRef(false);
+  // 키 · 시크릿을 고쳐 다시 넣는 폼이라 실패는 카드 안 폼 위 Callout(고정 글) — 서버 글 없음, 쓴 값 그대로.
+  // 자격증명 문제(4xx)와 서버 문제를 글로 나눈다
+  const status = (register.error as { response?: { status?: number } } | null)
+    ?.response?.status;
+  const connectFailedText =
+    status != null && status >= 400 && status < 500
+      ? t("broker.toastInvalid")
+      : t("broker.connectFailed");
+
   const onConnect = () => {
-    if (!canConnect) return;
+    if (!canConnect || connectingRef.current) return;
+    connectingRef.current = true;
+    register.reset();
     register.mutate(
       { broker, apiKey: apiKey.trim(), apiSecret: apiSecret.trim() },
       {
         onSuccess: () => {
-          toast.success(t("broker.toastConnected", { broker: displayName }));
+          snackbar.show({
+            message: t("broker.toastConnected", { broker: displayName }),
+            tone: "neutral",
+          });
           setApiKey("");
           setApiSecret("");
         },
-        onError: () => toast.error(t("broker.toastInvalid")),
+        onSettled: () => {
+          connectingRef.current = false;
+        },
       },
     );
   };
 
-  const onDisconnect = () =>
-    disconnect.mutate(broker, {
-      onSuccess: () =>
-        toast.success(t("broker.toastDisconnected", { broker: displayName })),
-      onError: () => toast.error(t("broker.toastDisconnectFailed")),
-    });
+  // 확인창 없는 단추 동작 — 실패는 critical 스낵바 + [다시 시도](묻지 않고 같은 요청)
+  const onDisconnect = () => {
+    const run = () => disconnect.mutateAsync(broker);
+    const done = () =>
+      snackbar.show({
+        message: t("broker.toastDisconnected", { broker: displayName }),
+        tone: "neutral",
+      });
+    run().then(done, () =>
+      confirmFail({
+        message: t("broker.toastDisconnectFailed"),
+        retry: run,
+        onRetried: done,
+      }),
+    );
+  };
 
-  const onSetPrimary = () =>
-    setPrimary.mutate(broker, {
-      onSuccess: () =>
-        toast.success(t("broker.toastPrimaryChanged", { broker: displayName })),
-      onError: () => toast.error(t("broker.toastPrimaryFailed")),
-    });
+  const onSetPrimary = () => {
+    const run = () => setPrimary.mutateAsync(broker);
+    const done = () =>
+      snackbar.show({
+        message: t("broker.toastPrimaryChanged", { broker: displayName }),
+        tone: "neutral",
+      });
+    run().then(done, () =>
+      confirmFail({
+        message: t("broker.toastPrimaryFailed"),
+        retry: run,
+        onRetried: done,
+      }),
+    );
+  };
 
   return (
     <Card variant="bordered" style={{ padding: 0, overflow: "hidden" }}>
@@ -223,6 +264,11 @@ export function BrokerConnectCard({
             gap: 14,
           }}
         >
+          {register.isError && (
+            <Callout tone="critical" role="alert">
+              {connectFailedText}
+            </Callout>
+          )}
           {/* 라벨은 서버가 준다 — 회사마다 같은 자리를 다르게 부른다. */}
           {/* 키도 시크릿과 같은 자격증명의 반쪽이라 같은 칸을 쓴다. */}
           <SecretField

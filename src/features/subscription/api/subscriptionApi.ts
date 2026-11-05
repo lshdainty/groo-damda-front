@@ -140,20 +140,27 @@ export const subscriptionApi = {
     apiKey: string,
     apiSecret: string,
   ): Promise<void> => {
-    await apiClient.post(`/v1/users/me/securities-credentials/${broker}`, {
-      apiKey,
-      apiSecret,
-    });
+    // 실패는 카드가 고정 글로 알린다 — 서버 원문 알림을 끈다
+    await apiClient.post(
+      `/v1/users/me/securities-credentials/${broker}`,
+      { apiKey, apiSecret },
+      QUIET,
+    );
   },
 
   disconnectBrokerCredential: async (broker: string): Promise<void> => {
-    await apiClient.delete(`/v1/users/me/securities-credentials/${broker}`);
+    await apiClient.delete(
+      `/v1/users/me/securities-credentials/${broker}`,
+      QUIET,
+    );
   },
 
   /** 가계부 자산 평가에 쓸 증권사를 지정한다. */
   setPrimaryBroker: async (broker: string): Promise<void> => {
     await apiClient.put(
       `/v1/users/me/securities-credentials/${broker}/primary`,
+      undefined,
+      QUIET,
     );
   },
 
@@ -168,11 +175,12 @@ export const subscriptionApi = {
     const resp: ApiResponse<IssuedApiToken> = await apiClient.post(
       "/v1/users/me/api-tokens",
       { name },
+      QUIET,
     );
     return resp.data;
   },
 
   revokeApiToken: async (rowId: number): Promise<void> => {
-    await apiClient.delete(`/v1/users/me/api-tokens/${rowId}`);
+    await apiClient.delete(`/v1/users/me/api-tokens/${rowId}`, QUIET);
   },
 };

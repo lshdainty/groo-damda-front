@@ -14,15 +14,29 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 
-const mocks = vi.hoisted(() => ({ calendars: [] as UserCalendar[] }));
+const mocks = vi.hoisted(() => ({
+  calendars: [] as UserCalendar[],
+  toggle: undefined as
+    undefined | ((id: number, o: { onError: () => void }) => void),
+  snack: [] as Array<{ message: string; tone?: string; action?: unknown }>,
+}));
 
 vi.mock("@/features/user-calendar", () => ({
   useUserCalendars: () => ({ data: mocks.calendars }),
   useToggleCalendarVisibility: () => ({
-    mutate: () => {},
+    mutate: (id: number, o: { onError: () => void }) => mocks.toggle?.(id, o),
     pendingIds: new Set<number>(),
   }),
 }));
+
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: { message: string }) => mocks.snack.push(o),
+    dismiss: () => {},
+  }),
+}));
+
+vi.mock("@/shared/i18n/config", () => ({ i18n: { t: (k: string) => k } }));
 
 const { CalendarProvider } = await import("./calendar-provider");
 
@@ -49,12 +63,16 @@ const calendar = (
 
 /** 판정 결과를 DOM 으로 뽑는다 — 렌더 밖으로 값을 실어 나르지 않는다. */
 const Probe = ({ ids }: { ids: number[] }) => {
-  const { isCalendarVisible } = useCalendar();
+  const { isCalendarVisible, toggleCalendarVisibility } = useCalendar();
   return (
     <ul>
       {ids.map((id) => (
         <li key={id} data-row={id}>
           {isCalendarVisible(id) ? "보임" : "숨김"}
+          <button
+            data-toggle={id}
+            onClick={() => toggleCalendarVisibility(id)}
+          />
         </li>
       ))}
     </ul>
@@ -79,6 +97,8 @@ const verdict = (rowId: number) =>
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   mocks.calendars = [];
+  mocks.toggle = undefined;
+  mocks.snack = [];
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -108,5 +128,20 @@ describe("그리드 필터의 보임 판정", () => {
     mocks.calendars = [calendar(1, "업무", { isDefault: true })];
     render([99]);
     expect(verdict(99)).toBe("보임");
+  });
+});
+
+describe("가시성 토글 실패", () => {
+  it("실패하면 값은 그대로(서버 목록) · critical 스낵바 한 문장 · 다시 시도 없음", () => {
+    mocks.calendars = [calendar(2, "업무")];
+    mocks.toggle = (_id, o) => o.onError();
+    render([2]);
+    act(() =>
+      container.querySelector<HTMLElement>("[data-toggle='2']")!.click(),
+    );
+    expect(verdict(2)).toBe("보임");
+    expect(mocks.snack).toEqual([
+      { message: "calendar:filter.visibilityFailed", tone: "critical" },
+    ]);
   });
 });

@@ -31,11 +31,11 @@ vi.mock("react-i18next", () => ({
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("sonner", () => ({
-  toast: {
-    success: (m: string) => state.toasts.push(m),
-    error: () => {},
-  },
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: { message: string }) => state.toasts.push(o.message),
+    dismiss: () => {},
+  }),
 }));
 vi.mock("@/shared/config", () => ({ config: state.config }));
 vi.mock("../model/useSubscription", () => ({
@@ -59,11 +59,13 @@ vi.mock("../model/useSubscription", () => ({
       });
     },
     isPending: false,
+    reset: () => {},
+    isError: false,
   }),
   useRevokeApiToken: () => ({
-    mutate: (rowId: number, opts?: { onSuccess?: () => void }) => {
+    mutateAsync: (rowId: number) => {
       state.revoked = rowId;
-      opts?.onSuccess?.();
+      return Promise.resolve();
     },
     isPending: false,
     variables: undefined,
@@ -267,7 +269,7 @@ describe("ApiTokenCard", () => {
     expect(state.toasts).toContain("apiToken.toastCopied");
   });
 
-  it("폐기는 그 토큰 번호로 나간다", () => {
+  it("폐기는 그 토큰 번호로 나간다", async () => {
     state.tokens = [
       {
         rowId: 3,
@@ -279,10 +281,12 @@ describe("ApiTokenCard", () => {
     ];
     render();
 
-    click(
-      document.body.querySelector(
-        'button[aria-label="apiToken.revokeAria(보고서 차트)"]',
-      )!,
+    await act(async () =>
+      click(
+        document.body.querySelector(
+          'button[aria-label="apiToken.revokeAria(보고서 차트)"]',
+        )!,
+      ),
     );
 
     expect(state.revoked).toBe(3);

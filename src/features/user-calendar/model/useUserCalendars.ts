@@ -51,7 +51,9 @@ export const useToggleCalendarVisibility = () => {
   const { pendingIds, begin, end } = usePendingIds();
 
   const mutation = useMutation({
-    mutationFn: (id: number) => userCalendarApi.toggleVisibility(id),
+    // silent — 실패는 호출처(캘린더 필터)가 고정 한 문장 스낵바로 말한다. 화면 값은 서버 목록에서 읽으므로 실패하면 그대로(되돌림)
+    mutationFn: (id: number) =>
+      userCalendarApi.toggleVisibility(id, { silent: true }),
     onMutate: (id: number) => begin(id),
     onSettled: (_data, _error, id) => end(id),
     // 표시 여부는 화면이 거르는 값이라 일정 캐시는 그대로 둔다.

@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { Copy, KeyRound } from "lucide-react";
 import {
   Alert,
@@ -9,6 +8,9 @@ import {
   AlertTitle,
 } from "@/shared/ui/alert";
 import { Button } from "@/shared/ui/button";
+import { Callout } from "@/shared/ds/callout";
+import { useSnackbar } from "@/shared/ds/snackbar";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { Card } from "@/shared/ui/card";
 import { Field, FieldLabel } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
@@ -69,24 +71,43 @@ export function ApiTokenCard() {
 
   const canIssue = name.trim().length > 0;
 
+  const snackbar = useSnackbar();
+  const confirmFail = useConfirmFail();
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면 끈다
+  const issuingRef = useRef(false);
+
+  // 발급 실패는 폼 맨 위 Callout(고정 글) — 요청은 silent, 쓴 이름 그대로
   const onIssue = () => {
-    if (!canIssue || issue.isPending) return;
+    if (!canIssue || issue.isPending || issuingRef.current) return;
+    issuingRef.current = true;
+    issue.reset();
     issue.mutate(name.trim(), {
       onSuccess: (data) => {
         setIssued(data);
         setName("");
       },
+      onSettled: () => {
+        issuingRef.current = false;
+      },
     });
   };
 
-  const onRevoke = (token: ApiToken) =>
-    revoke.mutate(token.rowId, {
-      onSuccess: () => {
-        toast.success(t("apiToken.toastRevoked"));
-        // 방금 만든 토큰을 곧바로 폐기했으면 원문을 계속 보여 줄 이유가 없다 — 이미 죽은 값이다.
-        if (issued?.rowId === token.rowId) setIssued(null);
-      },
-    });
+  // 폐기는 단추 동작 — 실패는 critical 스낵바 + [다시 시도](같은 폐기)
+  const onRevoke = (token: ApiToken) => {
+    const run = () => revoke.mutateAsync(token.rowId);
+    const done = () => {
+      snackbar.show({ message: t("apiToken.toastRevoked"), tone: "neutral" });
+      // 방금 만든 토큰을 곧바로 폐기했으면 원문을 계속 보여 줄 이유가 없다 — 이미 죽은 값이다.
+      if (issued?.rowId === token.rowId) setIssued(null);
+    };
+    run().then(done, () =>
+      confirmFail({
+        message: t("apiToken.revokeFailed"),
+        retry: run,
+        onRetried: done,
+      }),
+    );
+  };
 
   const copy = async (text: string) => {
     try {
@@ -102,7 +123,7 @@ export function ApiTokenCard() {
       document.execCommand("copy");
       document.body.removeChild(ta);
     }
-    toast.success(t("apiToken.toastCopied"), { id: "api-token-copy" });
+    snackbar.show({ message: t("apiToken.toastCopied"), tone: "neutral" });
   };
 
   return (
@@ -306,6 +327,11 @@ export function ApiTokenCard() {
           </>
         ) : (
           <>
+            {issue.isError && (
+              <Callout tone="critical" role="alert">
+                {t("apiToken.issueFailed")}
+              </Callout>
+            )}
             <Field>
               <FieldLabel>{t("apiToken.nameLabel")}</FieldLabel>
               <Input

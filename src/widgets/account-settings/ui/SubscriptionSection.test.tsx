@@ -21,11 +21,11 @@ vi.mock("react-i18next", () => ({
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-const toasts = vi.hoisted(() => ({
-  success: vi.fn(),
-  error: vi.fn(),
+const toasts = vi.hoisted(() => ({ show: vi.fn() }));
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
+  useSnackbar: () => ({ show: toasts.show, dismiss: () => {} }),
 }));
-vi.mock("sonner", () => ({ toast: toasts }));
 const confirmFail = vi.hoisted(() => vi.fn());
 vi.mock("@/shared/lib/confirm-fail", () => ({
   useConfirmFail: () => confirmFail,
@@ -76,7 +76,10 @@ vi.mock("@/features/subscription/model/useSubscription", () => ({
   useMyFeatures: () => server.features,
   useMySubscription: () => server.sub,
   useSubscriptionPlans: () => server.plans,
-  useSubscribe: () => ({ mutate: server.subscribe, isPending: false }),
+  useSubscribe: () => ({
+    mutateAsync: (...a: unknown[]) => Promise.resolve(server.subscribe(...a)),
+    isPending: false,
+  }),
   useCancelSubscription: () => ({
     mutateAsync: server.cancel,
     isPending: false,
@@ -141,8 +144,7 @@ beforeEach(() => {
   server.subscribe = vi.fn();
   server.cancel = vi.fn().mockResolvedValue(undefined);
   confirmFail.mockClear();
-  toasts.success.mockClear();
-  toasts.error.mockClear();
+  toasts.show.mockClear();
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -332,20 +334,32 @@ describe("가격 · 주기 (29 · 32)", () => {
     expect(text()).not.toContain("cycleYearly");
   });
 
-  it("구독 성공은 알림 · 실패는 고정 글 알림(서버 글이 아니다)", () => {
+  it("구독 성공은 positive 스낵바 한 문장", async () => {
     mount(true);
     const start = [...container.querySelectorAll("button")].find(
       (b) => b.textContent === "startPro",
     )!;
-    act(() => start.click());
-    const opts = server.subscribe.mock.calls[0]![1] as {
-      onSuccess: () => void;
-      onError: () => void;
+    await act(async () => start.click());
+    expect(toasts.show).toHaveBeenCalledWith({
+      message: "toast.subscribed",
+      tone: "positive",
+    });
+  });
+
+  it("구독이 실패하면 useConfirmFail 로 고정 글 + 다시 시도(서버 글이 아니다)", async () => {
+    server.subscribe = vi.fn().mockRejectedValue(new Error("서버 원문"));
+    mount(true);
+    const start = [...container.querySelectorAll("button")].find(
+      (b) => b.textContent === "startPro",
+    )!;
+    await act(async () => start.click());
+    expect(confirmFail).toHaveBeenCalledTimes(1);
+    const arg = confirmFail.mock.calls[0]![0] as {
+      message: string;
+      retry: () => Promise<unknown>;
     };
-    opts.onSuccess();
-    expect(toasts.success).toHaveBeenCalledWith("toast.subscribed");
-    opts.onError();
-    expect(toasts.error).toHaveBeenCalledWith("toast.subscribeFailed");
+    expect(arg.message).toBe("toast.subscribeFailed");
+    expect(typeof arg.retry).toBe("function");
   });
 });
 
@@ -403,7 +417,10 @@ describe("해지 확인 (46)", () => {
     )!;
     await act(async () => ok.click());
     expect(server.cancel).toHaveBeenCalledTimes(1);
-    expect(toasts.success).toHaveBeenCalledWith("toast.canceled");
+    expect(toasts.show).toHaveBeenCalledWith({
+      message: "toast.canceled",
+      tone: "neutral",
+    });
   });
 
   it("해지가 실패하면 확인창을 닫고 useConfirmFail 로 알린다(고정 글 · 다시 시도)", async () => {
@@ -429,7 +446,7 @@ describe("해지 확인 (46)", () => {
     };
     expect(arg.message).toBe("toast.cancelFailed");
     expect(typeof arg.retry).toBe("function");
-    expect(toasts.error).not.toHaveBeenCalled();
+    expect(toasts.show).not.toHaveBeenCalled();
   });
 });
 

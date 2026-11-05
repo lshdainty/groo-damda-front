@@ -12,7 +12,6 @@ import {
   Target,
   Wallet,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/shared/ds/button";
 import { Checkbox } from "@/shared/ds/checkbox";
 import { Field } from "@/shared/ds/field";
@@ -32,7 +31,7 @@ import {
 } from "@/shared/ds/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ds/tabs";
 import { ResultSection } from "@/shared/ds/result-section";
-import { serverErrorMessage } from "@/shared/api/error-message";
+import { useSnackbar } from "@/shared/ds/snackbar";
 import { downloadBlob } from "@/shared/lib/download";
 import { PeriodField } from "@/widgets/transaction-search/ui/PeriodField";
 import { DataImportSection } from "./DataImportSection";
@@ -200,6 +199,7 @@ export function DataExportSection({ mobile }: { mobile: boolean }) {
 function ExportPane({ mobile }: { mobile: boolean }) {
   const { t } = useTranslation("export");
   const dsT = useDsText();
+  const snackbar = useSnackbar();
   const wide = useWideSurface();
   const [format, setFormat] = useState<ExportFormat>("CSV");
   const [period, setPeriod] = useState<ExportPeriod>("THIS_MONTH");
@@ -301,19 +301,17 @@ function ExportPane({ mobile }: { mobile: boolean }) {
         mask,
       });
       downloadBlob(blob, buildFilename(format, selected, range));
-      // 알림 띠는 셸 PR 까지 옛 길(sonner) — 문구만 Writing 대로(Q7 7A)
-      toast.success(t("section.exportDone"));
+      snackbar.show({ message: t("section.exportDone"), tone: "neutral" });
     } catch (e) {
-      // 받기가 멈췄거나 서버가 거절했다 — 옛 길의 오류 알림 + 동작 "다시 시도"
-      toast.error(
-        e instanceof ExportStalledError
-          ? t("section.exportStalled")
-          : serverErrorMessage(e, t("section.exportFailed")),
-        {
-          id: "export-failed",
-          action: { label: dsT("common.retry"), onClick: handleExport },
-        },
-      );
+      // 받기가 멈췄거나 서버가 거절했다 — 서버 글은 내지 않고 고정 글 + [다시 시도](기본 6초, 겹치면 새 띠가 대신한다)
+      snackbar.show({
+        message:
+          e instanceof ExportStalledError
+            ? t("section.exportStalled")
+            : t("section.exportFailed"),
+        tone: "critical",
+        action: { label: dsT("common.retry"), onClick: handleExport },
+      });
     } finally {
       setDownloading(false);
     }

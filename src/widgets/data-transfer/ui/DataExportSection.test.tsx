@@ -36,12 +36,19 @@ vi.mock("@/features/import/api/importApi", () => ({
   analyzeImport: () => Promise.resolve(null),
   executeImport: () => Promise.resolve(null),
 }));
-vi.mock("sonner", () => ({
-  toast: {
-    success: (m: string) => state.toastSuccess.push(m),
-    error: (msg: string, opts: { action?: { label: string } }) =>
-      state.toastError.push({ msg, opts }),
-  },
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({
+    show: (o: {
+      message: string;
+      tone?: string;
+      action?: { label: string };
+    }) => {
+      if (o.tone === "critical")
+        state.toastError.push({ msg: o.message, opts: o });
+      else state.toastSuccess.push(o.message);
+    },
+    dismiss: () => {},
+  }),
 }));
 vi.mock("@/shared/lib/download", () => ({ downloadBlob: () => {} }));
 vi.mock("react-i18next", () => ({
@@ -229,7 +236,7 @@ describe("민감 정보 가리기 · 버튼 (I-05 44 · 45)", () => {
 });
 
 describe("내보내기 결과 알림 (I-05 47)", () => {
-  it("성공은 '내보냈어요' 문구(옛 길 sonner)", async () => {
+  it("성공은 '내보냈어요' neutral 스낵바", async () => {
     state.download = () => Promise.resolve(new Blob(["x"]));
     await render(false);
     await click(btnExact("export"));
@@ -242,6 +249,16 @@ describe("내보내기 결과 알림 (I-05 47)", () => {
     await click(btnExact("export"));
     expect(state.toastError).toHaveLength(1);
     expect(state.toastError[0]!.msg).toBe("section.exportStalled");
+    expect(state.toastError[0]!.opts.action?.label).toBeTruthy();
+  });
+
+  it("서버가 거절하면 서버 글이 아니라 고정 글 + 다시 시도", async () => {
+    state.download = () =>
+      Promise.reject({ response: { data: { message: "서버 원문 오류" } } });
+    await render(false);
+    await click(btnExact("export"));
+    expect(state.toastError).toHaveLength(1);
+    expect(state.toastError[0]!.msg).toBe("section.exportFailed");
     expect(state.toastError[0]!.opts.action?.label).toBeTruthy();
   });
 });
