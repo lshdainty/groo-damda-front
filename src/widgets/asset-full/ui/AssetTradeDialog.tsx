@@ -23,14 +23,19 @@ import { PickerRow } from "@/shared/ui/groo/picker-row";
 import { i18n } from "@/shared/i18n/config";
 import { useCreateTrade, useAssets, useTradePreview } from "@/features/asset";
 import { useStockSymbolName } from "@/features/stock/model/useStockMaster";
-import { sanitizeQty, qtyNumber, formatQty } from "@/entities/asset";
+import { sanitizeQty, qtyNumber, formatQty, toKrw } from "@/entities/asset";
 import type {
   Asset,
   AssetHolding,
   AssetTradeFormValues,
   TradeType,
 } from "@/entities/asset";
-import { KRW, money } from "@/shared/lib/groo/format";
+import { MINUS, money } from "@/shared/lib/groo/format";
+import {
+  formatOriginalAmount,
+  isForeignCurrency,
+} from "@/shared/lib/groo/currency";
+import { dsLocale } from "@/shared/ds/i18n";
 
 /**
  * 매수·매도 입력.
@@ -164,6 +169,29 @@ export function AssetTradeDialog({
   const cashAfter = preview?.cashAfter ?? null;
   const realizedPreview = isSell ? (preview?.realizedPl ?? null) : null;
   const fundingAmount = preview?.fundingAmount ?? 0;
+  // 금액의 통화(I-13 L6) — 예수금 증감 · 거래 후 예수금은 투자 계좌 통화(cashCurrency), 결제 계좌에서 옮기는 금액은 그 계좌
+  // 통화(fundingCurrency). 옛 서버(칸 없음)면 계좌 통화로 읽는다. 원화가 아니면 "약 …원" 을 함께 쓴다(그 계좌 환율, HALF_UP).
+  const cashCurrency = preview?.cashCurrency ?? asset.currency;
+  const settlementAsset =
+    settlementAssetRowId != null
+      ? settlementOptions.find((a) => a.rowId === settlementAssetRowId)
+      : undefined;
+  const fundingCurrency =
+    preview?.fundingCurrency ?? settlementAsset?.currency ?? "KRW";
+  const inCurrency = (
+    n: number,
+    code: string | null | undefined,
+    rateOf: { currency?: string | null; exchangeRate?: number | null },
+    signed = false,
+  ) => {
+    const sign = n < 0 ? MINUS : signed ? "+" : "";
+    if (!isForeignCurrency(code)) return sign + money(Math.abs(n));
+    const krw = toKrw(Math.abs(n), {
+      currency: code,
+      exchangeRate: rateOf.exchangeRate,
+    });
+    return `${sign}${formatOriginalAmount(Math.abs(n), code!, dsLocale())} (${t("fx.approxKrw", { amount: sign + money(krw) })})`;
+  };
 
   // 예수금으로 살 때만 잔액을 본다 — 결제 계좌는 마이너스를 막지 않는다(서버도 같은 규칙).
   const viaCash = settlementAssetRowId == null;
@@ -425,8 +453,8 @@ export function AssetTradeDialog({
                       {cashAfter == null || cashDelta == null
                         ? "—"
                         : viaCash
-                          ? money(cashAfter)
-                          : `${cashDelta >= 0 ? "+" : "−"}${money(Math.abs(cashDelta))}`}
+                          ? inCurrency(cashAfter, cashCurrency, asset)
+                          : inCurrency(cashDelta, cashCurrency, asset, true)}
                     </span>
                   }
                 />
@@ -446,7 +474,13 @@ export function AssetTradeDialog({
             {/* 예수금이 모자라면 결제 계좌에서 그만큼 끌어온다 — 이체가 한 건 생긴다는 걸 미리 알린다. */}
             {fundingAmount > 0 && (
               <p className="m-0 text-t3 text-fg-neutral-subtle">
-                {t("trade.fundingNotice", { amount: KRW(fundingAmount) })}
+                {t("trade.fundingNotice", {
+                  amount: inCurrency(
+                    fundingAmount,
+                    fundingCurrency,
+                    settlementAsset ?? { currency: fundingCurrency },
+                  ),
+                })}
               </p>
             )}
             {!isSell && critical && (
