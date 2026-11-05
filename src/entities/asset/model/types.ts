@@ -92,8 +92,12 @@ export interface AssetTradePreview {
   cashDelta: number;
   /** 거래 후 예수금. */
   cashAfter: number;
-  /** 예수금이 모자라 결제 계좌에서 끌어올 금액 — 0 이면 이체가 생기지 않는다. */
+  /** 예수금이 모자라 결제 계좌에서 끌어올 금액(결제 계좌 통화) — 0 이면 이체가 생기지 않는다. */
   fundingAmount: number;
+  /** cashDelta · cashAfter 의 통화(투자 계좌 통화). 옛 서버면 없다 */
+  cashCurrency?: string | null;
+  /** fundingAmount 의 통화(결제 계좌 통화). 결제 계좌가 없거나 옛 서버면 없다 */
+  fundingCurrency?: string | null;
 }
 
 export interface AssetTradeFormValues {
@@ -121,8 +125,13 @@ export interface Asset {
   /** 보유 종목 평가금액. 보유가 없으면 0 */
   holdingBalance: number;
   currency: string;
-  /** 원화 환산율 (통화 1단위당 원화). KRW 는 1 — 순자산은 balance × 이 값으로 환산된다 */
+  /** 원화 환산율 (통화 1단위당 원화). KRW 는 1 — 예수금(cashBalance)에만 곱한다(보유 평가는 원화) */
   exchangeRate: number;
+  /**
+   * 원화 합계 — 서버 한 식 `round(cashBalance × exchangeRate) + holdingBalance`(I-13 길 A). 줄 · 묶음 합계 · 상세 큰 금액이
+   * 이 값을 읽는다. 옛 서버면 없다(그때만 balance × 환율로 폴백 — `assetBalanceInKrw`).
+   */
+  balanceInKrw?: number | null;
   color: string | null;
   institution: string | null;
   memo: string | null;
@@ -425,8 +434,10 @@ export interface NetWorthTrendPoint {
 export interface AssetBalancePoint {
   /** 주 시작일 (월요일) — "YYYY-MM-DD" */
   weekStart: string;
-  /** 해당 주 말 시점 자산 잔액 */
+  /** 해당 주 말 시점 자산 잔액(자산 통화 · 옛 뜻 예수금 + 보유) */
   balance: number;
+  /** 같은 시점 원화 합계(자산 화면과 같은 한 식). 옛 서버면 없다 */
+  balanceInKrw?: number | null;
 }
 
 export interface AssetTransfer {
@@ -455,6 +466,11 @@ export interface AssetTransfer {
   /** ISO-LOCAL-DATETIME (YYYY-MM-DDTHH:mm:ss) */
   transferDate: string;
   createAt: string;
+  /**
+   * 받는 쪽 자산 통화로 받은 금액 — 두 계좌 통화가 다를 때만 값(서버 round(amount × 보내는 환율 ÷ 받는 환율)).
+   * null · 없음 = amount 와 같은 값을 받았다(같은 통화 · 옛 이체 · 옛 서버). amount · fee · interestAmount 는 보내는 계좌 통화.
+   */
+  toAmount?: number | null;
 }
 
 export interface AssetTransferFormValues {

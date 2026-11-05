@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { type Asset } from "@/entities/asset";
+import { assetKrw, cashInKrw, type Asset } from "@/entities/asset";
 import { isScheduledTx } from "@/entities/expense";
 import {
   holdingsOf,
@@ -131,14 +131,17 @@ export function useAssetDetailModel(asset: Asset) {
   const isCheckLinked =
     asset.assetType === "CHECK_CARD" && asset.paymentAssetRowId != null;
   const investVal = useAssetLiveValuation(asset, isInv);
-  // 라이브 평가는 '보유분'만 — 예수금을 더해야 계좌 총액이다. 투자도 예수금이 마이너스일 수 있다(부호를 살린다).
+  // 라이브 평가는 '보유분'(원화)만 — 예수금을 더해야 계좌 총액이다. 투자도 예수금이 마이너스일 수 있다(부호를 살린다).
+  // 큰 금액은 원화 합계 하나다(I-13 길 A): 서버 balanceInKrw, 라이브가 켜졌으면 round(예수금 × 환율) + 라이브 — 줄 · 묶음 합계와 같은 값.
+  // 예수금(investCash)은 자산 통화, investCashKrw 는 그 원화 환산.
   const investCash = isInv ? (asset.cashBalance ?? 0) : 0;
+  const investCashKrw = isInv ? cashInKrw(asset) : 0;
   const investHolding =
     investVal != null ? investVal.value : (asset.holdingBalance ?? 0);
-  const heroBalance = isCard ? Math.abs(asset.balance) : asset.balance;
+  const heroBalance = isCard ? Math.abs(asset.balance) : assetKrw(asset);
   const heroAmount =
     investVal != null
-      ? investCash + investVal.value
+      ? investCashKrw + investVal.value
       : isCheckLinked
         ? (asset.monthlyUsedAmount ?? 0)
         : heroBalance;
@@ -151,6 +154,7 @@ export function useAssetDetailModel(asset: Asset) {
     isCheckLinked,
     investVal,
     investCash,
+    investCashKrw,
     investHolding,
     heroAmount,
     ...ledger,
