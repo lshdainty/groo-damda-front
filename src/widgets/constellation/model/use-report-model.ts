@@ -29,8 +29,8 @@ import {
 export function useReportModel() {
   const { i18n } = useTranslation("constellation");
   const todayQ = useConstellationToday();
-  const skyQ = useConstellationSky(REPORT_SKY_DAYS);
-  const collectionQ = useConstellationCollection();
+  const skyQ = useConstellationSky(REPORT_SKY_DAYS, { reference: true });
+  const collectionQ = useConstellationCollection({ reference: true });
   const todosQ = useTodos();
 
   const todayISO = useMemo(() => isoOf(new Date()), []);

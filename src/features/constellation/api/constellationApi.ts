@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, silentConfig, type SilentOpts } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 
 /** 별자리 모양 — 0-100 정규 좌표 점들 + 연결선(점 인덱스 쌍). */
@@ -97,21 +97,29 @@ export function constellationWeakVar(colorKey: string): string {
 }
 
 export const constellationApi = {
-  getToday: async (): Promise<ConstellationToday> => {
+  getToday: async (opts?: SilentOpts): Promise<ConstellationToday> => {
     const resp: ApiResponse<ConstellationToday> = await apiClient.get(
       "/v1/constellations/today",
+      silentConfig(opts),
     );
     return resp.data;
   },
-  getSky: async (days: number): Promise<{ days: SkyDay[] }> => {
+  getSky: async (
+    days: number,
+    opts?: SilentOpts,
+  ): Promise<{ days: SkyDay[] }> => {
     const resp: ApiResponse<{ days: SkyDay[] }> = await apiClient.get(
       `/v1/constellations/sky?days=${days}`,
+      silentConfig(opts),
     );
     return resp.data;
   },
-  getCollection: async (): Promise<ConstellationCollection> => {
+  getCollection: async (
+    opts?: SilentOpts,
+  ): Promise<ConstellationCollection> => {
     const resp: ApiResponse<ConstellationCollection> = await apiClient.get(
       "/v1/constellations/collection",
+      silentConfig(opts),
     );
     return resp.data;
   },

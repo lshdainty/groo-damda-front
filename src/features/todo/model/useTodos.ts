@@ -1,3 +1,8 @@
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { SilentOpts } from "@/shared/api";
 import { useSnackbar } from "@/shared/ds/snackbar";
@@ -9,10 +14,11 @@ import { todoApi } from "../api/todoApi";
 import type { TodoListParams } from "../api/todoApi";
 import type { Todo, TodoFormValues } from "@/entities/todo";
 
-export const useTodos = (filters?: TodoListParams) => {
+export const useTodos = (filters?: TodoListParams, opts?: ReferenceOpts) => {
   return useQuery({
     queryKey: todoKeys.list(filters),
-    queryFn: () => todoApi.getTodos(filters),
+    queryFn: () => todoApi.getTodos(filters, referenceSilent(opts)),
+    ...referenceMeta(opts),
   });
 };
 

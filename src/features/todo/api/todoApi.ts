@@ -35,10 +35,13 @@ export const todoApi = {
     return mapTodo(resp.data);
   },
 
-  getTodos: async (params?: TodoListParams): Promise<Todo[]> => {
+  getTodos: async (
+    params?: TodoListParams,
+    opts?: SilentOpts,
+  ): Promise<Todo[]> => {
     const resp: ApiResponse<{ todos: Todo[] }> = await apiClient.get(
       "/v1/todos",
-      { params },
+      { params, ...silentConfig(opts) },
     );
     return resp.data.todos.map(mapTodo);
   },

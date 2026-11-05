@@ -122,7 +122,7 @@ function TodaySkyDetail({
   today: ConstellationToday;
   onClose: () => void;
 }) {
-  const collectionQ = useConstellationCollection();
+  const collectionQ = useConstellationCollection({ reference: true });
   const entry: CollectionEntry = useMemo(
     () =>
       collectionQ.data?.entries.find(

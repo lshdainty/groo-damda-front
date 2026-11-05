@@ -65,15 +65,15 @@ const TodoPageInner = ({
   const updateTodo = useUpdateTodo({ silent: true });
   const toggleStatus = useToggleTodoStatus();
   const deleteTodo = useDeleteTodo({ silent: true });
-  const todoTagsQ = useTodoTags();
+  const todoTagsQ = useTodoTags({ reference: true });
 
   const todos: Todo[] = useMemo(() => todosQ.data ?? [], [todosQ.data]);
   const today = useMemo(() => todayLocalKey(), []);
 
   // ── 별자리 게이미피케이션 — 할일 화면엔 스트립/토글 진입점만, 상세는 밤하늘 화면 ──
-  const constellationTodayQ = useConstellationToday();
+  const constellationTodayQ = useConstellationToday({ reference: true });
   // 모바일 원장 캘린더 마크(수집★/구름)용 — 이번 달 커버 확보(45일)
-  const skyQ = useConstellationSky(45);
+  const skyQ = useConstellationSky(45, { reference: true });
   // 오늘 완료 건수 — 완료 이벤트(completedAt) 기준 (히어로 캡션용)
   // completedAt 은 서버가 주는 `[UTC]` 라 로컬 날짜로 바꿔서 비교한다. 문자열을 자르면
   // UTC 날짜라, KST 새벽 0~9시에 끝낸 할일이 전날로 빠진다(today 는 로컬 날짜다).
