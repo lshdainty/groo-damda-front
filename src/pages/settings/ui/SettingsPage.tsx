@@ -120,7 +120,7 @@ export const SettingsPage = () => {
       if (name)
         snackbar.show({
           message: t("account.toast.linked", { name }),
-          tone: "positive",
+          tone: "neutral",
         });
       queryClient.invalidateQueries({ queryKey: oauthKeys.all });
     } else if (linkError) {
