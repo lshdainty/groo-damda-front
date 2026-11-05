@@ -62,7 +62,8 @@ function GateLoadFailed({
   // 전체 화면 라우트라 폰에는 전역 헤더가 없다 — 나갈 길(뒤로)을 붙인다(미구독 안내와 같다)
   return mobile ? (
     <>
-      <MobileBackHeader title={t("gate.title")} />
+      {/* 실패 화면이라 "구독이 필요해요" 제목은 달지 않는다 — 뒤로 길만 */}
+      <MobileBackHeader title="" />
       {result}
     </>
   ) : (
