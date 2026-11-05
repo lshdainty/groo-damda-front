@@ -140,8 +140,7 @@ describe("DialogContent 가 닫힌 직후", () => {
 
   // 여기부터 두 개는 "등록을 어디에 다느냐" 를 잠근다. 처음 구현은 `DialogContent`
   // 래퍼에 달았는데, 그 래퍼는 `open={false}` 여도 계속 마운트돼 있다 — 확인창·시트를
-  // controlled 로 쓰는 CalendarContainer·(예전 구독 대화상자)·
-  // HideAmountsUnlockDialog 가 전부 그 패턴이다. 그러면 '떠 있는 오버레이 수' 가 0 으로
+  // controlled 로 쓰는 CalendarContainer·(예전 구독 대화상자 · 금액 보기 인증 대화상자)가 전부 그 패턴이다. 그러면 '떠 있는 오버레이 수' 가 0 으로
   // 안 떨어져 차단이 한 번도 안 걸린다. 정작 #36 이 난 캘린더 화면이 그 상태였다.
   // 등록은 Portal 안(overlay)에 있어야 `open` 과 생애가 같아진다.
   it("controlled 로 닫아도 차단이 걸린다 — 래퍼는 닫힌 뒤에도 살아 있다", () => {

@@ -1,14 +1,26 @@
-import { useMemo, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/shared/ui/button";
-import { Chip } from "@/shared/ui/chip";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
+import { Info } from "lucide-react";
+import { Button } from "@/shared/ds/button";
+import { Card } from "@/shared/ds/card";
+import {
+  HelpBubble,
+  HelpBubbleContent,
+  HelpBubbleTrigger,
+} from "@/shared/ds/help-bubble";
+import { ListCheckGroup, ListCheckItem, ListHeader } from "@/shared/ds/list";
 import { SnackbarAvoidOverlap } from "@/shared/ds/snackbar";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/ds/tabs";
+import {
+  TopNavigation,
+  TopNavigationBackButton,
+  TopNavigationTitle,
+} from "@/shared/ds/top-navigation";
+import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
+import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 import { useCoverBottomNav } from "@/shared/ui/groo/use-cover-bottom-nav";
-import { MobileBackHeader } from "@/shared/ui/groo/mobile-back-header";
 import { useSettingsLeaveGuard } from "@/shared/ui/groo/settings-frame-context";
-import { HideAmountsUnlockDialog } from "./HideAmountsUnlockDialog";
+import { HideAmountsUnlockSurface } from "./HideAmountsUnlockSurface";
 import {
   cardsOfPage,
   HIDE_KIND_CARDS,
@@ -23,7 +35,7 @@ import {
 } from "@/shared/lib/groo/hide-amounts-core";
 
 /**
- * 금액 가리기 — 계정 > 보안 > 금액 가리기 (앱 `hide_amounts_screen.dart` 미러).
+ * 금액 가리기 — 계정 > 보안 > 금액 가리기 (앱 `hide_amounts_screen.dart` 미러). I-14 14-3 · 5-B List 체크 줄.
  *
  * <p>예전엔 스위치 하나가 앱 전체 금액을 덮었다. 자산은 가리고 싶어도 가계부는 봐야 하는
  * 경우가 있어서 화면(8) → 카드(37) 로 쪼갰다.
@@ -33,6 +45,10 @@ import {
  * 조정하려면 그만큼 비밀번호를 쳐야 했다.
  *
  * <p>인증은 <b>푸는 카드가 하나라도 있을 때만</b> 받는다. 가리기만 늘리는 저장은 그대로 통과.
+ *
+ * <p>모양: 폰은 흰 면 하나(소개 → 거래 종류 → 탭 → 가릴 화면 → 체크 줄) + 바닥 [저장] 띠,
+ * 데스크톱 · 태블릿은 제목 줄 + 카드 하나 + 카드 바닥 [저장]. 줄 사이 선은 두지 않는다 —
+ * 묶음은 목록 제목 + 여백으로 가르고 탭 줄만 끝까지 닿는 선을 갖는다(24 들인 선은 없다).
  */
 export function HideAmountsSection({
   mobile,
@@ -44,25 +60,26 @@ export function HideAmountsSection({
 }) {
   const { t } = useTranslation("settings");
   const { t: tc } = useTranslation("common");
+  const uid = useId();
+  // 말풍선은 위로 연다 — 폰은 스크롤 칸 윗변이 아니라 화면(껍데기) 안에서 자리를 본다
+  const [boundary, setBoundary] = useState<HTMLElement | null>(null);
   // 폰 껍데기가 탭 바를 덮는 동안 탭 바는 inert — 스낵바가 바닥 [저장] 위 8 에 선다
   useCoverBottomNav(mobile);
   const saved = useHiddenCards();
 
   /** 고르는 중인 선택 — 저장 전까지 어디에도 반영되지 않는다. */
   const [draft, setDraft] = useState<Set<HideCardKey>>(() => new Set(saved));
-  /** `null` 은 '전체' 탭(모든 카드를 한 판에). */
+  /** `null` 은 '전체' 탭(모든 화면 카드를 화면 이름으로 묶어서). */
   const [tab, setTab] = useState<HidePageKey | null>(null);
   /** 인증을 기다리는 저장 — 인증되면 그대로 반영한다. */
   const [awaitingUnlock, setAwaitingUnlock] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   // 화면 탭은 화면 카드만 다룬다 — 종류 3장은 위 별도 영역이 맡는다.
-  const screenPages = useMemo(() => HIDE_PAGES.filter((p) => p !== "kind"), []);
-  const tabCards = useMemo(
-    () => (tab === null ? SCREEN_HIDE_CARDS : cardsOfPage(tab)),
-    [tab],
-  );
-  const allOnThisTab = tabCards.every((c) => draft.has(c));
+  const screenPages = HIDE_PAGES.filter((p) => p !== "kind");
+  const tabCards = tab === null ? SCREEN_HIDE_CARDS : cardsOfPage(tab);
+  const onCount = tabCards.filter((c) => draft.has(c)).length;
+  const allOnThisTab = onCount === tabCards.length;
   const dirty =
     draft.size !== saved.size || [...draft].some((c) => !saved.has(c));
 
@@ -120,38 +137,69 @@ export function HideAmountsSection({
         },
   );
 
-  const pageLabel = (page: HidePageKey | null) =>
-    page === null ? t("hideAmounts.tabAll") : t(`hideAmounts.page.${page}`);
+  const pageLabel = (page: HidePageKey) => t(`hideAmounts.page.${page}`);
 
-  // 탭 라벨에 개수를 붙인다 — tabs spec 에 badge 가 없어 별도 스타일을 만들지 않는다(앱 정합).
-  const tabLabel = (page: HidePageKey | null) => {
-    const cards = page === null ? SCREEN_HIDE_CARDS : cardsOfPage(page);
-    const on = cards.filter((c) => draft.has(c)).length;
-    return on === 0 ? pageLabel(page) : `${pageLabel(page)} ${on}`;
-  };
+  const checkRows = (cards: readonly HideCardKey[]) =>
+    cards.map((card) => (
+      <ListCheckItem
+        key={card}
+        markPosition="suffix"
+        title={t(`hideAmounts.card.${card}`)}
+        checked={draft.has(card)}
+        onCheckedChange={() => toggle(card)}
+      />
+    ));
 
-  const selectAllButton = (
-    <Button variant="ghost" size="sm" onClick={toggleTabAll}>
-      {allOnThisTab ? t("hideAmounts.clearAll") : t("hideAmounts.selectAll")}
-    </Button>
+  const kindId = `${uid}-kind`;
+  const screensId = `${uid}-screens`;
+
+  // 거래 종류 — 화면 축과 다르므로 탭 줄에 끼우지 않고 맨 위 별도 묶음으로 둔다. 제목 오른쪽 ⓘ 가 설명(Help Bubble)을 연다.
+  const kindSection = (
+    <>
+      <ListHeader as="div" variant="boldSolid">
+        <h2 id={kindId} className="m-0 text-inherit [font:inherit]">
+          {t("hideAmounts.kindLabel")}
+        </h2>
+        <HelpBubble>
+          <HelpBubbleTrigger asChild>
+            <Button
+              variant="ghost"
+              ghostColor="neutralSubtle"
+              size="small"
+              layout="iconOnly"
+              // 보이는 아이콘 끝이 체크 끝선에 서도록 오른쪽 −10, 머리 높이는 44(HelpBubble 의 알림 자리 형제 때문에 머리 블리드가 안 걸려 직접)
+              className="-my-x2 -mr-x2_5"
+              aria-label={t("hideAmounts.kindHelp")}
+            >
+              <Info aria-hidden />
+            </Button>
+          </HelpBubbleTrigger>
+          <HelpBubbleContent
+            side="top"
+            collisionBoundary={boundary}
+            title={t("hideAmounts.kindLabel")}
+            description={t("hideAmounts.kindNote")}
+          />
+        </HelpBubble>
+      </ListHeader>
+      <ListCheckGroup aria-labelledby={kindId}>
+        {checkRows(HIDE_KIND_CARDS)}
+      </ListCheckGroup>
+    </>
   );
 
-  // 탭 — 전체 + 화면별. 개수는 지금 고른 상태를 그대로 비춘다.
-  // pill 채움으로 둔다. underline 은 활성 탭 밑줄과 탭바 아래 경계선이 나란히 겹쳐
-  // 선이 두 줄로 보인다(앱도 같은 이유로 pills).
+  // 탭 — 전체 + 화면별. 이름만(개수는 아래 "가릴 화면 · n / m" 이 말한다). 넘치면 가로 스크롤(Hug).
   const tabs = (
-    <div className="scrollbar-hide" style={{ overflowX: "auto", minWidth: 0 }}>
+    <div className="mt-x2">
       <Tabs
         value={tab ?? "all"}
         onValueChange={(v) => setTab(v === "all" ? null : (v as HidePageKey))}
       >
-        <TabsList variant="pills" size="sm">
-          <TabsTrigger variant="pills" value="all">
-            {tabLabel(null)}
-          </TabsTrigger>
+        <TabsList layout="hug" aria-label={t("hideAmounts.tabsAria")}>
+          <TabsTrigger value="all">{t("hideAmounts.tabAll")}</TabsTrigger>
           {screenPages.map((page) => (
-            <TabsTrigger key={page} variant="pills" value={page}>
-              {tabLabel(page)}
+            <TabsTrigger key={page} value={page}>
+              {pageLabel(page)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -159,114 +207,86 @@ export function HideAmountsSection({
     </div>
   );
 
-  const desc = (
-    <div
-      style={{
-        fontSize: "var(--text-caption)",
-        color: "var(--fg-tertiary)",
-        lineHeight: 1.55,
-      }}
-    >
-      {t("hideAmounts.sectionDesc")}
-    </div>
+  // 가릴 화면 · n / m + 모두 선택 · 해제 — 수는 지금 탭 기준
+  const screensHeader = (
+    <ListHeader as="div" className="pt-x4">
+      <h2
+        id={screensId}
+        className="m-0 text-inherit [font:inherit] tabular-nums"
+      >
+        {t("hideAmounts.screensCount", {
+          selected: onCount,
+          total: tabCards.length,
+        })}
+      </h2>
+      <Button
+        variant="ghost"
+        ghostColor="neutralMuted"
+        size="small"
+        onClick={toggleTabAll}
+      >
+        {allOnThisTab ? t("hideAmounts.clearAll") : t("hideAmounts.selectAll")}
+      </Button>
+    </ListHeader>
   );
 
-  // 카드 그리드 — 라벨이 길어 모바일 3열은 말줄임이 잦다(앱과 같은 2열).
-  const cardGrid = (cards: readonly HideCardKey[], columns: number) => (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-        gap: "var(--spacing-sm)",
-        gridAutoRows: 46,
-      }}
-    >
-      {cards.map((card) => (
-        <Chip
-          key={card}
-          shape="rounded"
-          fullWidth
-          selected={draft.has(card)}
-          onClick={() => toggle(card)}
-        >
-          {t(`hideAmounts.card.${card}`)}
-        </Chip>
-      ))}
-    </div>
-  );
+  // 전체 탭은 화면 이름(목록 제목)마다 묶는다. 화면 탭은 그 화면 줄만(제목은 탭 이름과 같은 말이라 두지 않는다)
+  const screens =
+    tab === null ? (
+      screenPages.map((page, i) => (
+        <div key={page}>
+          <ListHeader
+            as="div"
+            variant="boldSolid"
+            className={i === 0 ? "pt-x1" : "pt-x3"}
+          >
+            <h3
+              id={`${uid}-p-${page}`}
+              className="m-0 text-inherit [font:inherit]"
+            >
+              {pageLabel(page)}
+            </h3>
+          </ListHeader>
+          <ListCheckGroup aria-labelledby={`${uid}-p-${page}`}>
+            {checkRows(cardsOfPage(page))}
+          </ListCheckGroup>
+        </div>
+      ))
+    ) : (
+      <ListCheckGroup aria-labelledby={screensId}>
+        {checkRows(tabCards)}
+      </ListCheckGroup>
+    );
 
-  const grid = cardGrid(tabCards, mobile ? 2 : 3);
-
-  /**
-   * 거래 종류 — 화면 축과 다르므로 탭 줄에 끼우지 않고 맨 위 별도 영역으로 둔다.
-   * 탭에 넣으면 '화면' 목록에 화면이 아닌 게 섞이고, 어느 화면에서 왔든 늘 보여야 할
-   * 스위치가 탭 하나를 골라야 보이는 자리로 숨는다.
-   */
-  const kindSection = (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--spacing-sm)",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "var(--text-label-sm)",
-          fontWeight: 600,
-          color: "var(--fg-secondary)",
-          letterSpacing: "-0.01em",
-        }}
-      >
-        {t("hideAmounts.kindLabel")}
-      </div>
-      {cardGrid(HIDE_KIND_CARDS, 3)}
-      <div
-        style={{
-          fontSize: "var(--text-caption)",
-          color: "var(--fg-tertiary)",
-          lineHeight: 1.55,
-        }}
-      >
-        {t("hideAmounts.kindNote")}
-      </div>
-      <div
-        style={{
-          height: 1,
-          background: "var(--border-subtle)",
-          marginTop: "var(--spacing-xs)",
-        }}
-      />
-    </div>
+  const body = (
+    <>
+      {kindSection}
+      {tabs}
+      {screensHeader}
+      {screens}
+    </>
   );
 
   const dialogs = (
     <>
-      <HideAmountsUnlockDialog
+      <HideAmountsUnlockSurface
         open={awaitingUnlock}
-        onOpenChange={(o) => {
-          if (!o) setAwaitingUnlock(false);
-        }}
-        onVerified={() => {
-          setAwaitingUnlock(false);
-          commit();
-        }}
+        onOpenChange={setAwaitingUnlock}
+        onVerified={commit}
       />
       {confirmDiscard && (
-        <ConfirmDialog
+        <AlertConfirm
           title={t("hideAmounts.discardTitle")}
           message={t("hideAmounts.discardBody")}
           confirmLabel={t("hideAmounts.discardConfirm")}
-          danger
-          onCancel={() => {
-            leaveTo.current = null;
-            setConfirmDiscard(false);
-          }}
           onConfirm={() => {
             const go = leaveTo.current ?? onBack;
             leaveTo.current = null;
-            setConfirmDiscard(false);
             go();
+          }}
+          onClose={() => {
+            leaveTo.current = null;
+            setConfirmDiscard(false);
           }}
         />
       )}
@@ -274,62 +294,33 @@ export function HideAmountsSection({
   );
 
   if (mobile) {
-    // 앱 화면 정합 — AppBar(뒤로 + 모두 선택) / 탭 / 안내 / 스크롤되는 그리드 / 아래 고정 [저장].
+    // 흰 면 하나 — 상단 바(← 금액 가리기) / 한 번에 스크롤(소개 → 거래 종류 → 탭 → 가릴 화면) / 바닥 [저장] 띠
     return (
       <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: "var(--z-modal)",
-          background: "var(--bg-surface)",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        data-slot="hide-amounts-page"
+        ref={setBoundary}
+        className="fixed inset-0 z-(--z-modal) flex flex-col bg-bg-layer-default"
       >
-        <MobileBackHeader
-          title={t("hideAmounts.label")}
-          onBack={back}
-          trailing={selectAllButton}
-        />
-        <div
-          style={{
-            // 모바일 페이지 좌우 인셋 24 — 앱 hide_amounts_screen 정합(QA #164).
-            padding: "12px 24px 16px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--spacing-md)",
-            flexShrink: 0,
-          }}
-        >
-          {kindSection}
-          {tabs}
-          {desc}
+        <TopNavigation type="standard">
+          <TopNavigationBackButton
+            fallbackHref="/desk/settings?section=account"
+            onClick={back}
+          />
+          <TopNavigationTitle>{t("hideAmounts.label")}</TopNavigationTitle>
+        </TopNavigation>
+        {/* 본문 아래 여백 = 띠 높이는 flex 가 맡는다 — 마지막 줄이 띠 위로 끝까지 스크롤된다 */}
+        <div className="min-h-0 flex-1 overflow-y-auto pb-x6">
+          <p className="m-0 px-global-gutter pt-x4 pb-x2 font-sans text-t4 text-fg-neutral-subtle">
+            {t("hideAmounts.sectionDesc")}
+          </p>
+          {body}
         </div>
-        <div
-          className="scrollbar-hide"
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            minHeight: 0,
-            padding: "0 24px 24px",
-          }}
-        >
-          {grid}
-        </div>
-        {/* 저장 — 화면 아래 고정. 고르는 동안에는 아무것도 반영되지 않으므로 여기까지 와야 끝난다. */}
+        {/* 저장 — 고르는 동안에는 아무것도 반영되지 않으므로 여기까지 와야 끝난다. 위 끝까지 선 · 좌우 24 · 위 12 · 아래 16 + 안전 영역 */}
         <SnackbarAvoidOverlap>
-          <div
-            style={{
-              padding: "12px 24px",
-              paddingBottom: "calc(12px + env(safe-area-inset-bottom))",
-              flexShrink: 0,
-            }}
-          >
+          <div className="shrink-0 border-t border-stroke-neutral-subtle px-global-gutter pt-x3 pb-[calc(var(--spacing-x4)+env(safe-area-inset-bottom))]">
             <Button
-              size="lg"
+              variant="neutralSolid"
+              size="large"
               className="w-full"
               disabled={!dirty}
               onClick={save}
@@ -343,36 +334,28 @@ export function HideAmountsSection({
     );
   }
 
-  // 데스크톱 — 설정 우측 패널. 돌아가는 길 "‹ 계정" 과 제목 줄은 틀이 그린다(I-16 29).
+  // 데스크톱 · 태블릿 — 설정 우측 패널. 돌아가는 길 "‹ 계정" 은 틀이 그린다(I-16 29). 제목 줄 + 카드 하나 + 카드 바닥 [저장]
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--spacing-lg)",
-      }}
-    >
-      {kindSection}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--spacing-md)",
-        }}
-      >
-        {tabs}
-        <div style={{ marginLeft: "auto", flexShrink: 0 }}>
-          {selectAllButton}
+    <>
+      <ManagerHead
+        title={t("hideAmounts.label")}
+        description={t("hideAmounts.sectionDesc")}
+      />
+      <Card body="list" className="pb-0">
+        {body}
+        {/* 카드 바닥 줄 — 위 끝까지 선 · 채운 단추라 오른쪽 24 · 위아래 12 */}
+        <div className="mt-x3 flex justify-end border-t border-stroke-neutral-subtle px-x6 py-x3">
+          <Button
+            variant="neutralSolid"
+            size="small"
+            disabled={!dirty}
+            onClick={save}
+          >
+            {tc("save")}
+          </Button>
         </div>
-      </div>
-      {desc}
-      {grid}
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <Button disabled={!dirty} onClick={save}>
-          {tc("save")}
-        </Button>
-      </div>
+      </Card>
       {dialogs}
-    </div>
+    </>
   );
 }

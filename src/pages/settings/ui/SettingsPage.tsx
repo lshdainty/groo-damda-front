@@ -202,7 +202,7 @@ export const SettingsPage = () => {
       );
     }
 
-    // 금액 가리기는 헤더 액션(모두 선택)과 아래 고정 [저장] 이 있어 공용 서브페이지 셸을
+    // 금액 가리기는 아래 고정 [저장] 띠가 있어 공용 서브페이지 셸을
     // 쓰지 않는다 — 앱 화면처럼 자기 셸을 직접 그린다.
     if (section === "hide-amounts") {
       return <HideAmountsSection mobile onBack={goBack} />;
