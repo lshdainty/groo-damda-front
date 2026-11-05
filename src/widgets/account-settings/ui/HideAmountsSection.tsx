@@ -276,15 +276,17 @@ export function HideAmountsSection({
       </ListCheckGroup>
     );
 
+  // 폼 실패 Callout — 본문 맨 위(모바일은 소개 글보다 위). 앱과 같은 자리
+  const failure = saveFailed && (
+    <div ref={errorRef} className="px-global-gutter pt-x3">
+      <Callout tone="critical" role="alert">
+        {t("hideAmounts.saveFailed")}
+      </Callout>
+    </div>
+  );
+
   const body = (
     <>
-      {saveFailed && (
-        <div ref={errorRef} className="px-global-gutter pt-x3">
-          <Callout tone="critical" role="alert">
-            {t("hideAmounts.saveFailed")}
-          </Callout>
-        </div>
-      )}
       {kindSection}
       {tabs}
       {screensHeader}
@@ -337,6 +339,7 @@ export function HideAmountsSection({
         </TopNavigation>
         {/* 본문 아래 여백 = 띠 높이는 flex 가 맡는다 — 마지막 줄이 띠 위로 끝까지 스크롤된다 */}
         <div className="min-h-0 flex-1 overflow-y-auto pb-x6">
+          {failure}
           <p className="m-0 px-global-gutter pt-x4 pb-x2 font-sans text-t4 text-fg-neutral-subtle">
             {t("hideAmounts.sectionDesc")}
           </p>
@@ -369,6 +372,7 @@ export function HideAmountsSection({
         description={t("hideAmounts.sectionDesc")}
       />
       <Card body="list" className="pb-0">
+        {failure}
         {body}
         {/* 카드 바닥 줄 — 위 끝까지 선 · 채운 단추라 오른쪽 24 · 위아래 12 */}
         <div className="mt-x3 flex justify-end border-t border-stroke-neutral-subtle px-x6 py-x3">
