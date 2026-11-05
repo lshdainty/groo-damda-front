@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Copy, Pencil, Trash2 } from "lucide-react";
 import {
@@ -79,10 +79,11 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
   const summaryQ = useRangeSummary(monthStart, monthEnd);
   const { data: monthlySummary, isLoading: loadingSummary } = summaryQ;
 
-  const createMut = useCreateExpenseBudget();
-  const updateMut = useUpdateExpenseBudget();
+  // 폼 저장 실패는 전역 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글)이 알린다 — 요청은 silent, 폼은 열린 채 · 쓴 값 그대로
+  const createMut = useCreateExpenseBudget({ silent: true });
+  const updateMut = useUpdateExpenseBudget({ silent: true });
   const deleteMut = useDeleteExpenseBudget();
-  // 복사 전용 — 실패는 아래 스낵바("…가져오지 못했어요 + 다시 시도")가 알린다. 서버 원문 전역 토스트는 끈다(폼 저장은 위 두 개가 그대로 켠다)
+  // 복사 전용 — 실패는 아래 스낵바("…가져오지 못했어요 + 다시 시도")가 알린다. 서버 원문 전역 토스트는 끈다
   const copyCreateMut = useCreateExpenseBudget({ silent: true });
   const copyUpdateMut = useUpdateExpenseBudget({ silent: true });
   const snackbar = useSnackbar();
@@ -165,12 +166,28 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
     for (const q of failedQs) void q.refetch();
   };
 
+  // 폼 저장 실패 상태 — 열 때 · 닫을 때 · 다시 저장할 때 비운다(이전 실패가 새 폼에 비치지 않게)
+  const saveFailed = createMut.isError || updateMut.isError;
+  const saveError = createMut.error ?? updateMut.error;
+  const clearSaveError = () => {
+    createMut.reset();
+    updateMut.reset();
+  };
+
+  // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면(성공 · 실패) 끈다
+  const savingRef = useRef(false);
+  const settle = { onSettled: () => (savingRef.current = false) };
+
   const saveCategoryBudget = (draft: BudgetDraft) => {
+    // 이중 제출은 요청 앞에서 막는다
+    if (savingRef.current) return;
+    savingRef.current = true;
+    clearSaveError();
     const existing = editing !== "new" && editing ? editing : null;
     if (existing) {
       updateMut.mutate(
         { id: existing.rowId, budgetAmount: draft.budgetAmount },
-        { onSuccess: () => setEditing(null) },
+        { ...settle, onSuccess: () => setEditing(null) },
       );
     } else {
       // 새 카테고리 예산 생성 — 중복 시 update
@@ -180,7 +197,7 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
       if (dup) {
         updateMut.mutate(
           { id: dup.rowId, budgetAmount: draft.budgetAmount },
-          { onSuccess: () => setEditing(null) },
+          { ...settle, onSuccess: () => setEditing(null) },
         );
       } else {
         createMut.mutate(
@@ -190,17 +207,20 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
             budgetYear: year,
             budgetMonth: month,
           },
-          { onSuccess: () => setEditing(null) },
+          { ...settle, onSuccess: () => setEditing(null) },
         );
       }
     }
   };
 
   const saveMonthlyBudget = (value: number) => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    clearSaveError();
     if (monthlyBudget) {
       updateMut.mutate(
         { id: monthlyBudget.rowId, budgetAmount: value },
-        { onSuccess: () => setEditMonthly(false) },
+        { ...settle, onSuccess: () => setEditMonthly(false) },
       );
     } else {
       createMut.mutate(
@@ -210,7 +230,7 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
           budgetYear: year,
           budgetMonth: month,
         },
-        { onSuccess: () => setEditMonthly(false) },
+        { ...settle, onSuccess: () => setEditMonthly(false) },
       );
     }
   };
@@ -443,9 +463,14 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
           month={month}
           categories={categoryList}
           existing={categoryBudgets}
-          onClose={() => setEditing(null)}
+          onClose={() => {
+            clearSaveError();
+            setEditing(null);
+          }}
           onSave={saveCategoryBudget}
           submitting={submitting}
+          saveFailed={saveFailed}
+          saveError={saveError}
         />
       )}
       {editMonthly && (
@@ -455,9 +480,14 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
           month={month}
           categories={categoryList}
           existing={categoryBudgets}
-          onClose={() => setEditMonthly(false)}
+          onClose={() => {
+            clearSaveError();
+            setEditMonthly(false);
+          }}
           onSave={(draft) => saveMonthlyBudget(draft.budgetAmount)}
           submitting={submitting}
+          saveFailed={saveFailed}
+          saveError={saveError}
         />
       )}
       {confirmDelete && (

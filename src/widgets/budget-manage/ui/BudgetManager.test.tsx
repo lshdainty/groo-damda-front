@@ -21,9 +21,16 @@ vi.mock("react-router-dom", () => ({
 vi.mock("@/shared/ui/groo/primitives", () => ({
   Icon: () => <svg />,
 }));
-vi.mock("./BudgetFormDialog", () => ({
-  BudgetFormDialog: () => null,
+const formProps = vi.hoisted(() => ({
+  last: null as null | { onSave: (d: unknown) => void },
 }));
+vi.mock("./BudgetFormDialog", () => ({
+  BudgetFormDialog: (p: { onSave: (d: unknown) => void }) => {
+    formProps.last = p;
+    return null;
+  },
+}));
+const saveMutate = vi.hoisted(() => vi.fn());
 
 const q = (data: unknown, extra: object = {}) => ({
   data,
@@ -38,9 +45,12 @@ const state = {
   cats: q(undefined) as ReturnType<typeof q>,
 };
 const mut = () => ({
-  mutate: vi.fn(),
+  mutate: saveMutate,
   mutateAsync: vi.fn(),
+  reset: vi.fn(),
   isPending: false,
+  isError: false,
+  error: null,
 });
 const show = vi.hoisted(() => vi.fn());
 vi.mock("@/shared/ds/snackbar", () => ({
@@ -552,15 +562,35 @@ describe("되돌리기 — 404 는 이미 지운 것(L1)", () => {
   });
 });
 
-describe("실패 알림은 스낵바 하나(M5) — 전역 오류 토스트를 끈다", () => {
-  it("복사의 만들기 · 고치기 훅은 silent 로, 폼 저장용 훅은 그대로 켠 채 따로 쓴다", () => {
+describe("실패 알림은 한 곳 — 전역 오류 토스트를 끈다", () => {
+  it("복사 · 폼 저장 훅 모두 silent 다 — 복사는 스낵바, 폼 저장은 폼 맨 위 Callout 이 알린다", () => {
     createOpts.length = 0;
     updateOpts.length = 0;
     render(false);
     expect(createOpts).toContainEqual({ silent: true });
     expect(updateOpts).toContainEqual({ silent: true });
-    // 폼 저장(저장 실패는 전역 토스트가 알린다)은 옵션 없이 부른 훅을 쓴다
-    expect(createOpts).toContain(undefined);
-    expect(updateOpts).toContain(undefined);
+    // 옵션 없이 부른(전역 토스트가 켜진) 만들기 · 고치기 훅은 더는 없다
+    expect(createOpts).not.toContain(undefined);
+    expect(updateOpts).not.toContain(undefined);
+  });
+});
+
+describe("예산 폼 저장 이중 제출", () => {
+  it("같은 틱에 두 번 눌러도 요청은 한 번", async () => {
+    saveMutate.mockClear();
+    render(false);
+    await act(async () =>
+      (
+        container.querySelector(
+          "[aria-label^='manager.editNamed']",
+        ) as HTMLElement
+      ).click(),
+    );
+    const p = formProps.last!;
+    act(() => {
+      p.onSave({ categoryRowId: 1, budgetAmount: 900_000 });
+      p.onSave({ categoryRowId: 1, budgetAmount: 900_000 });
+    });
+    expect(saveMutate).toHaveBeenCalledTimes(1);
   });
 });
