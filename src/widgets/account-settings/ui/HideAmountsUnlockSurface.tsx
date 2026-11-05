@@ -58,7 +58,7 @@ function UnlockBody({
 /**
  * 금액 보기 본인 확인 표면(I-14 44 · I-17 52) — 1280 미만 시트 · 이상 Dialog 480 + 본문 부품(`HideAmountsUnlockFields`).
  * 페이지 위에 하나만 뜬다. 맞으면 `onVerified` 를 부르고 닫는다. 바깥을 눌러 닫히지 않는다(입력 폼 — `form`).
- * 옛 `HideAmountsUnlockDialog`(옛 Dialog sm)는 설정 쪽이 쓰는 동안 남는다.
+ * 금액 가리기 화면(I-14 44)과 자산 상세(I-17)가 함께 쓴다 — 옛 `HideAmountsUnlockDialog` 는 걷었다.
  */
 export function HideAmountsUnlockSurface({
   open,
