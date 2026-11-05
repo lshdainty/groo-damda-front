@@ -209,6 +209,19 @@ describe("카테고리 예산", () => {
   });
 });
 
+describe("저장 실패", () => {
+  it("실패하면 폼 맨 위 critical Callout 한 줄(고정 글) · 쓴 값은 그대로", () => {
+    mount({ kind: "total", saveFailed: true, saveError: new Error("x") });
+    const callout = document.querySelector<HTMLElement>("[role=alert]");
+    expect(callout?.textContent).toContain("edit.saveFailed");
+    expect(callout?.textContent).not.toContain("x");
+  });
+  it("실패가 없으면 Callout 이 없다", () => {
+    mount({ kind: "total" });
+    expect(document.querySelector("[role=alert]")).toBeNull();
+  });
+});
+
 describe("표면 경계", () => {
   it("1280 미만은 시트, 이상은 대화상자(바깥 누름으로 닫히지 않음)", () => {
     const { onClose } = mount({ kind: "total" });

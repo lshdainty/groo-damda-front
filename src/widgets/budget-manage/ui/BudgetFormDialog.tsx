@@ -3,6 +3,8 @@ import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { MAX_AMOUNT, parseAmount } from "@/shared/lib/groo/amount";
 import { Button } from "@/shared/ds/button";
+import { Callout } from "@/shared/ds/callout";
+import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { Chip, ChipGroup } from "@/shared/ds/chip";
 import {
   ResponsiveDialog,
@@ -48,6 +50,10 @@ export interface BudgetFormDialogProps {
   onClose: () => void;
   onSave: (draft: BudgetDraft) => void;
   submitting?: boolean;
+  /** 저장 요청이 실패했다 — 폼 맨 위 critical Callout(고정 글), 폼은 열린 채 · 쓴 값 그대로 */
+  saveFailed?: boolean;
+  /** 실패마다 새 값 — 같은 실패가 이어져도 Callout 을 다시 보이게 올린다 */
+  saveError?: unknown;
 }
 
 /**
@@ -64,6 +70,8 @@ export function BudgetFormDialog({
   onClose,
   onSave,
   submitting,
+  saveFailed,
+  saveError,
 }: BudgetFormDialogProps) {
   const { t } = useTranslation("budget");
   const { t: tc } = useTranslation("common");
@@ -86,6 +94,8 @@ export function BudgetFormDialog({
   const [amount, setAmount] = useState(initialAmount);
   const [show, setShow] = useState({ cat: false, amount: false });
 
+  // 본문은 스크롤되고 [저장] 은 바닥이라 내린 채 실패하면 맨 위 Callout 이 흐림 밑에 가린다 — 실패하면 올려 보인다
+  const errorRef = useScrollToError<HTMLDivElement>(!!saveFailed, saveError);
   const amountRef = useRef<HTMLInputElement>(null);
   const catRef = useRef<HTMLButtonElement>(null);
 
@@ -155,6 +165,13 @@ export function BudgetFormDialog({
         }}
       >
         <ResponsiveDialogBody>
+          {saveFailed && (
+            <div ref={errorRef}>
+              <Callout tone="critical" role="alert" className="mb-x4">
+                {t("edit.saveFailed")}
+              </Callout>
+            </div>
+          )}
           {!isTotal && (
             <div className="-mx-x6 mb-x3">
               <PickerRow

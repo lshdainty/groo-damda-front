@@ -1423,6 +1423,7 @@ budget,edit.noCategories,예산을 줄 지출 카테고리가 없어요.,There a
 budget,edit.noneSelected,선택 안 함,Not selected
 budget,edit.categoryLabel,카테고리,Category
 budget,edit.allBudgeted,모든 지출 카테고리에 이미 예산이 있어요.,All expense categories already have a budget.
+budget,edit.saveFailed,예산을 저장하지 못했어요.,Couldn't save the budget.
 budget,pageTitle,예산,Budget
 budget,subtitle,카테고리별 한도 관리,Manage per-category limits
 budget,complianceRate,이행률,Compliance rate

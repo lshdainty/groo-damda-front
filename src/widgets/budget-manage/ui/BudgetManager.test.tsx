@@ -40,7 +40,10 @@ const state = {
 const mut = () => ({
   mutate: vi.fn(),
   mutateAsync: vi.fn(),
+  reset: vi.fn(),
   isPending: false,
+  isError: false,
+  error: null,
 });
 const show = vi.hoisted(() => vi.fn());
 vi.mock("@/shared/ds/snackbar", () => ({
@@ -552,15 +555,15 @@ describe("되돌리기 — 404 는 이미 지운 것(L1)", () => {
   });
 });
 
-describe("실패 알림은 스낵바 하나(M5) — 전역 오류 토스트를 끈다", () => {
-  it("복사의 만들기 · 고치기 훅은 silent 로, 폼 저장용 훅은 그대로 켠 채 따로 쓴다", () => {
+describe("실패 알림은 한 곳 — 전역 오류 토스트를 끈다", () => {
+  it("복사 · 폼 저장 훅 모두 silent 다 — 복사는 스낵바, 폼 저장은 폼 맨 위 Callout 이 알린다", () => {
     createOpts.length = 0;
     updateOpts.length = 0;
     render(false);
     expect(createOpts).toContainEqual({ silent: true });
     expect(updateOpts).toContainEqual({ silent: true });
-    // 폼 저장(저장 실패는 전역 토스트가 알린다)은 옵션 없이 부른 훅을 쓴다
-    expect(createOpts).toContain(undefined);
-    expect(updateOpts).toContain(undefined);
+    // 옵션 없이 부른(전역 토스트가 켜진) 만들기 · 고치기 훅은 더는 없다
+    expect(createOpts).not.toContain(undefined);
+    expect(updateOpts).not.toContain(undefined);
   });
 });
