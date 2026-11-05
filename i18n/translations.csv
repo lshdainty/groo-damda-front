@@ -2411,7 +2411,7 @@ subscription,freeInUse,Free 플랜 이용 중,On the Free plan
 subscription,nextBill,다음 결제 {{date}},Next billing {{date}}
 subscription,activeUntil,{{date}}까지 이용,Access until {{date}}
 subscription,freeLocked,증권 연동 · 실시간 시세가 잠겨 있어요,Securities link and real-time quotes are locked
-subscription,spotlight,"증권 투자는 Pro 전용이에요. 실시간 시세·호가, 국내외 종목 검색, 관심종목, 보유 손익까지 — Pro를 구독하면 증권 탭이 바로 열려요.","Securities investing is Pro-only. Real-time quotes and order book, domestic and overseas search, watchlist, holdings P&L — subscribe to Pro and the Securities tab opens right away."
+subscription,spotlight,"증권 투자는 Pro 전용이에요. 실시간 시세 · 호가, 국내외 종목 검색, 관심종목, 보유 손익까지 — Pro를 구독하면 증권 탭이 바로 열려요.","Securities investing is Pro-only. Real-time quotes and order book, domestic and overseas search, watchlist, holdings P&L — subscribe to Pro and the Securities tab opens right away."
 subscription,cycleMonthly,월간,Monthly
 subscription,cycleYearly,연간 {{pct}}%↓,Yearly {{pct}}%↓
 subscription,cycleYearlyPlain,연간,Yearly

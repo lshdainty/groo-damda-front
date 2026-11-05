@@ -84,6 +84,7 @@ vi.mock("@/features/subscription/model/useSubscription", () => ({
 }));
 
 const { SubscriptionSection } = await import("./SubscriptionSection");
+const { formatDateSmart } = await import("@/shared/lib/date");
 
 // groo-sql 시드 그대로 — 월간 9,900 / 연간 99,000(차례 그대로)
 const MONTHLY = {
@@ -222,14 +223,21 @@ describe("지금 플랜 · 해지 유예 (28 · 31)", () => {
   it("자동갱신이 꺼졌으면 종료일로 말한다 — '다음 결제' 가 아니다", () => {
     asPro(subscription({ status: "CANCELLED", autoRenew: false }));
     mount(true);
-    expect(text()).toContain('activeUntil{"date":"2026-10-11"}');
+    // 화면 날짜 규칙 — 올해는 "10월 11일", 다른 해는 "2026년 10월 11일"(날짜 키를 그대로 보이지 않는다)
+    expect(text()).toContain(
+      `activeUntil{"date":"${formatDateSmart("2026-10-11")}"}`,
+    );
+    expect(text()).not.toContain("2026-10-11");
     expect(text()).not.toContain("nextBill");
   });
 
   it("자동갱신이 켜져 있으면 종전 '다음 결제' 문구 그대로다", () => {
     asPro();
     mount(true);
-    expect(text()).toContain('nextBill{"date":"2026-10-11"}');
+    expect(text()).toContain(
+      `nextBill{"date":"${formatDateSmart("2026-10-11")}"}`,
+    );
+    expect(text()).not.toContain("2026-10-11");
     expect(text()).not.toContain("activeUntil");
   });
 
@@ -576,5 +584,28 @@ describe("검수 반영 (J1 ~ J5)", () => {
       (r) => r.textContent?.includes("0원") || r.textContent?.includes("/"),
     );
     expect(rows.some((r) => r.className.includes("tabular-nums"))).toBe(true);
+  });
+});
+
+describe("날짜 꼴", () => {
+  it("다른 해 날짜는 연도를 붙이고(올해만 줄임) 해지 확인 글의 날짜도 같은 꼴이다", async () => {
+    asPro(
+      subscription({
+        autoRenew: false,
+        currentPeriodEnd: "2031-03-05T12:00:00",
+      }),
+    );
+    mount(true);
+    expect(text()).toContain(
+      `activeUntil{"date":"${formatDateSmart("2031-03-05")}"}`,
+    );
+    expect(formatDateSmart("2031-03-05")).toMatch(/2031/);
+    const open = [...container.querySelectorAll("button")].find(
+      (b) => b.textContent === "cancelSub",
+    )!;
+    act(() => open.click());
+    expect(
+      document.body.querySelector("[role=alertdialog]")?.textContent,
+    ).toContain(formatDateSmart("2031-03-05"));
   });
 });

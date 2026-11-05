@@ -245,6 +245,14 @@ describe("구독 줄 (I-14 34)", () => {
     expect(row().textContent).toContain("account.sub.perYear");
   });
 
+  it("다음 결제 날짜는 화면 날짜 꼴이다 — 2026-10-11 을 그대로 보이지 않는다", async () => {
+    const { formatDateSmart } = await import("@/shared/lib/date");
+    state.sub = sub(9_900, 1);
+    render(true);
+    expect(row().textContent).toContain(formatDateSmart("2026-10-11"));
+    expect(row().textContent).not.toContain("2026-10-11");
+  });
+
   it("꺾쇠가 붙고, 누르면 구독 관리 페이지로 보낸다(대화상자를 열지 않는다)", () => {
     state.sub = sub(9_900, 1);
     const open = vi.fn();

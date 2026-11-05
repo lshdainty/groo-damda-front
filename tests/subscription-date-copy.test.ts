@@ -102,3 +102,10 @@ describe("설정 화면 구독 줄의 날짜 문구", () => {
     expect(src).toContain('t("account.sub.proActiveUntil"');
   });
 });
+
+/** 날짜는 키(2026-10-11)가 아니라 화면 날짜 꼴(올해 "10월 11일" · 다른 해 "2027년 10월 11일")로 넘긴다 */
+describe("구독 날짜는 화면 날짜 꼴로 말한다", () => {
+  it.each([SECTION, SETTINGS])("%s 가 formatDateSmart 를 쓴다", (file) => {
+    expect(readFileSync(file, "utf-8")).toContain("formatDateSmart(");
+  });
+});

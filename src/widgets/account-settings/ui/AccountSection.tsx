@@ -22,7 +22,11 @@ import { List, ListButtonItem, ListHeader, ListItem } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import { isEn, money } from "@/shared/lib/groo/format";
-import { parseServerUtc, toLocalDateKey } from "@/shared/lib/date";
+import {
+  formatDateSmart,
+  parseServerUtc,
+  toLocalDateKey,
+} from "@/shared/lib/date";
 import { ALL_HIDE_CARDS } from "@/shared/lib/groo/hide-amounts-cards";
 import { useHiddenCards } from "@/shared/lib/groo/hide-amounts-core";
 import { useCurrentUser, WithdrawDialog } from "@/features/user";
@@ -100,8 +104,9 @@ export function AccountSection({
   // 구독은 KST(+9)에서 다음 결제일이 **항상 하루 이르게** 보인다. 로컬 날짜로 옮긴다.
   // 못 읽는 값이면 원문 앞 10자로 떨어뜨린다 — 앱과 같은 폴백이다.
   const periodEnd = subQ.data?.currentPeriodEnd;
+  // 화면 날짜 규칙 — 올해는 "11월 11일", 다른 해는 "2027년 11월 11일"(en "Nov 11" · "Nov 11, 2027")
   const nextBill = periodEnd
-    ? (toLocalDateKey(periodEnd) ?? periodEnd.slice(0, 10))
+    ? formatDateSmart(toLocalDateKey(periodEnd) ?? periodEnd.slice(0, 10))
     : null;
 
   // 가입 시각은 서버가 시간대 없이 주는 `[UTC]` — 그대로 읽으면 로컬로 둔갑해

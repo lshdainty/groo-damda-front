@@ -34,7 +34,7 @@ import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
 import { SnackbarAvoidOverlap } from "@/shared/ds/snackbar";
 import { useCoverBottomNav } from "@/shared/ui/groo/use-cover-bottom-nav";
 import { ManagerHead } from "@/shared/ui/groo/manager-layout";
-import { toLocalDateKey } from "@/shared/lib/date";
+import { formatDateSmart, toLocalDateKey } from "@/shared/lib/date";
 import { KRW, money, wonPrefix } from "@/shared/lib/groo/format";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import {
@@ -109,9 +109,12 @@ export function SubscriptionSection({
   // currentPeriodEnd 는 서버가 시간대 없이 주는 `[UTC]` (백엔드 UserSubscription 의 LocalDateTime). 자르면 UTC 날짜가 나와
   // KST(+9)에서 하루 이르게 보인다 — 계정의 '다음 결제'와 같은 값이라 같은 방식으로 읽어야 두 화면이 다른 날짜를 말하지 않는다.
   // 못 읽는 값이면 원문 앞 10자로 떨어뜨린다(앱과 같은 폴백).
+  // 화면 날짜 규칙 — 올해는 "11월 11일", 다른 해는 "2027년 11월 11일"(en "Nov 11" · "Nov 11, 2027")
   const periodEnd = sub?.currentPeriodEnd
-    ? (toLocalDateKey(sub.currentPeriodEnd) ??
-      sub.currentPeriodEnd.slice(0, 10))
+    ? formatDateSmart(
+        toLocalDateKey(sub.currentPeriodEnd) ??
+          sub.currentPeriodEnd.slice(0, 10),
+      )
     : null;
   // 해지해도 서버는 자동갱신만 끄고 **기간 끝까지 Pro 를 유지한다**(desk-back #332). 그래서 유예 기간에도 Pro 로 서고 날짜도
   // 남는데, 그날은 결제일이 아니라 **종료일**이다 — "다음 결제 10-11" 은 있지도 않은 결제를 예고한다.
