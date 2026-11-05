@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { SilentOpts } from "@/shared/api";
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+  type SilentOpts,
+} from "@/shared/api";
 import { expenseKeys, invalidateFor } from "@/shared/config";
 import { expenseCategoryApi } from "../api/expenseCategoryApi";
 import type {
@@ -13,11 +18,15 @@ type ReorderItem = {
   parentRowId: number | null;
 };
 
-/** `silent` — 불러오기 실패를 호출처가 직접 알릴 때(실패 Result Section) 전역 서버 원문 토스트를 끈다 */
-export const useExpenseCategories = (opts?: { silent?: boolean }) => {
+/**
+ * `silent` — 불러오기 실패를 호출처가 직접 알릴 때(실패 Result Section) 전역 서버 원문 토스트를 끈다.
+ * `reference` — 이름 · 선택지를 채우려는 참조 조회: 요청은 silent, 실패는 앱 공용 스낵바 한 자리가 알린다.
+ */
+export const useExpenseCategories = (opts?: ReferenceOpts) => {
   return useQuery({
     queryKey: expenseKeys.categories(),
-    queryFn: () => expenseCategoryApi.getCategories(opts),
+    queryFn: () => expenseCategoryApi.getCategories(referenceSilent(opts)),
+    ...referenceMeta(opts),
   });
 };
 

@@ -1,4 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  referenceMeta,
+  referenceSilent,
+  type ReferenceOpts,
+} from "@/shared/api";
 import { assetKeys, invalidateFor } from "@/shared/config";
 import { assetApi } from "../api/assetApi";
 import type { TransferListParams } from "../api/assetApi";
@@ -10,10 +15,12 @@ import type {
   ReorderItem,
 } from "@/entities/asset";
 
-export const useAssets = (opts?: { silent?: boolean }) => {
+/** `reference` — 계좌 이름 · 후보를 채우려는 참조 조회: 요청은 silent, 실패는 앱 공용 스낵바 한 자리가 알린다 */
+export const useAssets = (opts?: ReferenceOpts) => {
   return useQuery({
     queryKey: assetKeys.list(),
-    queryFn: () => assetApi.getAssets(opts),
+    queryFn: () => assetApi.getAssets(referenceSilent(opts)),
+    ...referenceMeta(opts),
   });
 };
 
