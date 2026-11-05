@@ -44,7 +44,7 @@ const foreignCurrenciesOf = (currencies: string[]): string[] =>
  * @param enabled 게이트(프로 + 증권사 연결). false 면 조회하지 않는다
  */
 export function useLivePrices(symbols: string[], enabled: boolean): LivePrices {
-  const { data: features } = useMyFeatures();
+  const { data: features } = useMyFeatures({ reference: true });
   const active = enabled && symbols.length > 0;
   const activeSymbols = useMemo(
     () => (active ? symbols : []),

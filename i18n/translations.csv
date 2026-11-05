@@ -2596,6 +2596,8 @@ export,import.uploadTitle,파일 업로드,Upload file
 export,import.uploadDesc,"CSV 또는 Excel(.xlsx, .xls) 파일을 올려주세요. 최대 10MB.","Upload a CSV or Excel (.xlsx, .xls) file. Up to 10MB."
 export,import.errorType,CSV 또는 Excel 파일만 올릴 수 있어요.,Only CSV or Excel files can be uploaded.
 export,import.errorSize,파일은 10MB까지 올릴 수 있어요.,Files up to 10MB can be uploaded.
+export,import.analyzeFailed,파일을 읽지 못했어요.,Couldn't read the file.
+export,import.runFailed,거래를 가져오지 못했어요.,Couldn't import the transactions.
 export,import.notice,가져온 데이터는 기존 거래에 추가되며 덮어쓰지 않아요. 미리보기에서 중복 · 오류를 확인할 수 있어요.,Imported data is added to existing transactions without overwriting. Check duplicates and errors in the preview.
 export,import.fileTitle,가져올 파일,File to import
 export,import.rowsDetected,{{total}}개 행 · 유효 {{valid}}건,{{total}} rows · {{valid}} valid
