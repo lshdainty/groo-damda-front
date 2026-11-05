@@ -1,4 +1,4 @@
-// 예산 경고 기준 — 끄는 동안 머리 "현재 N%" 도 슬라이더와 함께 따라가고, 저장이 끝나면 서버 값으로 돌아온다(slider.yaml 10-09).
+// 예산 경고 기준 — 끄는 동안 머리 값 "N%" 도 슬라이더와 함께 따라가고, 저장이 끝나면 서버 값으로 돌아온다(slider.yaml 10-09).
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -25,6 +25,11 @@ const mutate = vi.fn(
     fail = opts?.onError ?? null;
   },
 );
+const snackbarShow = vi.hoisted(() => vi.fn());
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: snackbarShow }),
+}));
+
 vi.mock("@/features/user", () => ({
   useUserPreferences: () => ({
     data: { budgetAlertThreshold: 85, pushEnabled: true },
@@ -54,6 +59,12 @@ beforeEach(() => {
       disconnect() {}
     },
   );
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  })) as unknown as typeof window.matchMedia;
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -67,8 +78,9 @@ afterEach(() => {
 
 const thumb = () => container.querySelector<HTMLElement>("[role=slider]")!;
 const head = () =>
-  Array.from(container.querySelectorAll("strong")).find((s) =>
-    /%$/.test(s.textContent ?? ""),
+  Array.from(container.querySelectorAll("span")).find(
+    (s) =>
+      /^\d+%$/.test(s.textContent ?? "") && s.className.includes("font-bold"),
   )!;
 
 describe("예산 경고 기준 슬라이더", () => {
@@ -118,33 +130,28 @@ describe("예산 경고 기준 슬라이더", () => {
     expect(error()!.textContent).toBe("saveError");
     expect(error()!.querySelector("svg")?.getAttribute("width")).toBe("16");
     expect(thumb().getAttribute("aria-describedby")).toBe(error()!.id);
-    expect(container.querySelector("[aria-live=polite]")?.textContent).toBe(
-      "saveError",
-    );
-    // 트랙 · 눈금 글(50 … 100) 아래 — 눈금과 트랙 사이에 끼지 않는다
-    const ticks = Array.from(container.querySelectorAll("span")).find(
-      (e) => e.textContent === "100",
-    )!.parentElement!;
-    expect(
-      ticks.compareDocumentPosition(error()!) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    // 같은 글이 화면 맨 아래에 한 번 더 뜨지 않는다(보이는 곳 한 곳)
+    // 보이는 곳은 한 곳(스낵바는 스위치 · 값 줄 저장 실패 몫이다)
     expect(container.querySelectorAll("[data-slot=field-error]")).toHaveLength(
       1,
     );
-    // 기준 저장이 실패한 뒤 다른 설정이 실패하면 화면 아래 오류 글이 맡는다(숨지 않는다)
-    mut.isError = true;
-    mut.variables = { pushEnabled: false };
-    act(() => root.render(<NotificationsManager mobile={false} />));
-    expect(error()).toBeNull();
-    expect(container.textContent).toContain("saveError");
-    mut.isError = false;
-    mut.variables = null;
-    act(() => root.render(<NotificationsManager mobile={false} />));
-    expect(error()).not.toBeNull();
     // 다시 끌면 오류 글이 걷힌다
     press();
     expect(error()).toBeNull();
+  });
+});
+
+describe("스위치 저장 실패 (I-15 덧붙임 14-1 M1)", () => {
+  it("실패하면 critical 스낵바 고정 글을 띄운다 — 서버 글 없이, [다시 시도] 없이", () => {
+    act(() => root.render(<NotificationsManager mobile={false} />));
+    const sw = container.querySelector<HTMLElement>("[role=switch]")!;
+    act(() => sw.click());
+    const opts = mutate.mock.calls[mutate.mock.calls.length - 1]![1] as {
+      onError?: () => void;
+    };
+    act(() => opts.onError?.());
+    expect(snackbarShow).toHaveBeenCalledWith({
+      message: "settingsSaveFailed",
+      tone: "critical",
+    });
   });
 });

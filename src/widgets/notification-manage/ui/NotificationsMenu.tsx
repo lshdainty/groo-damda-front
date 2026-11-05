@@ -28,7 +28,10 @@ import {
   useUnreadCount,
 } from "@/features/notification";
 import { useNow } from "@/shared/hooks";
-import { NotificationRow } from "@/entities/notification";
+import {
+  NotificationDayGroups,
+  NotificationRow,
+} from "@/entities/notification";
 import type { Notification } from "@/entities/notification";
 
 /**
@@ -54,10 +57,11 @@ export function NotificationsMenu({
   const bodyRef = useRef<HTMLDivElement>(null);
 
   const items: Notification[] = data ?? [];
-  const unread = items.filter((n) => !n.isRead).length;
+  // 안 읽은 수는 서버 수(useUnreadCount) — 받아 온 줄(최대 100개)만 세면 벨 · 화면과 수가 갈린다
+  const unread = unreadCount;
   const description =
     unread > 0
-      ? t("popover.unreadPlain", { count: unread })
+      ? t("popover.unreadPlain", { count: unread.toLocaleString() })
       : t("popover.noNew");
 
   // 누르면 읽음이 되고 초점이 다음 안 읽은 줄로 간다(9-2 A) — 눌린 줄은 버튼이 아니게 되므로 미리 옮긴다
@@ -99,11 +103,14 @@ export function NotificationsMenu({
     </List>
   ) : items.length === 0 ? (
     <p className="m-0 py-x10 text-center text-t3 text-fg-neutral-subtle">
-      {t("popover.empty")}
+      {t("empty")}
     </p>
   ) : (
-    <List aria-label={t("title")}>
-      {items.map((n) => (
+    <NotificationDayGroups
+      items={items}
+      now={now}
+      headingAs="h3"
+      renderRow={(n) => (
         <NotificationRow
           key={n.rowId}
           notification={n}
@@ -112,8 +119,8 @@ export function NotificationsMenu({
           onClick={() => readAndAdvance(n)}
           menu={<NotificationMoreMenu notification={n} />}
         />
-      ))}
-    </List>
+      )}
+    />
   );
 
   const body = (

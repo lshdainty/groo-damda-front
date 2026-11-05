@@ -286,17 +286,6 @@
 /* ---------- Notifications ---------- */
 /* 데스크톱 알림은 DS Popover · Bottom Sheet(NotificationsMenu), 줄은 DS List(NotificationRow). */
 
-/* 모바일 알림 페이지 — 가운데 목록만 스크롤하고 '알림 설정' 은 바닥에 고정한다.
-   바깥을 m-scroll 로 두면 footer 가 같이 흘러간다(NotificationsPage 주석 참고). */
-.notif-mobile {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-.notif-mobile__body {
-  min-height: 0;
-}
 /* ---------- Category / Asset / Budget Manager (settings) ----------
  *
  * .cat-mgr, .cat-mgr__head/__title/__sub/__toolbar/__tabs/__search

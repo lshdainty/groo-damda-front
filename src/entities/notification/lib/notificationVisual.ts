@@ -1,13 +1,10 @@
 /**
- * 알림 type 별 비주얼(아이콘 + tone 색) 공용 매핑 — notif-pop 디자인 SoT 미러.
- *
- * 데스크탑 팝오버(NotificationsPopover)와 모바일 페이지(NotificationsPage)가
- * 동일한 type별 tone 아이콘(34x34, radius 10)을 쓰도록 단일 source.
- * 매핑은 디자인 SoT(dialogs.jsx NotificationsPopover toneStyle)와 정합:
- * - BUDGET_ALERT  → AlertTriangle / warning(subtle·fg)
- * - TODO_REMINDER → ListChecks    / brand(subtle·strong)
- * - EVENT_REMINDER→ CalendarClock  / info(subtle·fg)
- * - SYSTEM(기본)  → Bell           / sunken·secondary
+ * 알림 type 별 비주얼(아이콘 + 차트 색) 공용 매핑 — 종류 타일 40 · 모서리 12 · 아이콘 20 의 색(I-15 43).
+ * 바탕은 차트 색의 옅은 바탕(chart-{색}-weak), 아이콘은 그 색(list.md Prefix 타일).
+ * - BUDGET_ALERT   → triangle-alert  / chart-orange
+ * - TODO_REMINDER  → list-checks     / chart-blue
+ * - EVENT_REMINDER → calendar-clock  / chart-green
+ * - SYSTEM(기본)   → bell            / chart-gray
  */
 import { AlertTriangle, Bell, CalendarClock, ListChecks } from "lucide-react";
 import type { NotificationType } from "../model/types";
@@ -27,22 +24,26 @@ export function notificationVisual(type: NotificationType): NotificationVisual {
     case "BUDGET_ALERT":
       return {
         Icon: AlertTriangle,
-        bg: "var(--status-warning-subtle)",
-        fg: "var(--status-warning-fg)",
+        bg: "var(--color-chart-orange-weak)",
+        fg: "var(--color-chart-orange)",
       };
     case "TODO_REMINDER":
       return {
         Icon: ListChecks,
-        bg: "var(--bg-brand-subtle)",
-        fg: "var(--fg-brand-strong)",
+        bg: "var(--color-chart-blue-weak)",
+        fg: "var(--color-chart-blue)",
       };
     case "EVENT_REMINDER":
       return {
         Icon: CalendarClock,
-        bg: "var(--status-info-subtle)",
-        fg: "var(--status-info-fg)",
+        bg: "var(--color-chart-green-weak)",
+        fg: "var(--color-chart-green)",
       };
     default:
-      return { Icon: Bell, bg: "var(--bg-sunken)", fg: "var(--fg-secondary)" };
+      return {
+        Icon: Bell,
+        bg: "var(--color-chart-gray-weak)",
+        fg: "var(--color-chart-gray)",
+      };
   }
 }

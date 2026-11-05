@@ -11,6 +11,7 @@ export function ThresholdSlider({
   onDrag,
   onCommit,
   describedBy,
+  labelledBy,
 }: {
   /** 지금 보이는 값 — 끄는 동안은 끄는 값, 아니면 서버 값 */
   value: number;
@@ -21,19 +22,21 @@ export function ThresholdSlider({
   onCommit: (next: number) => void;
   /** 오류 글의 id — 손잡이(role=slider)가 설명으로 읽는다 */
   describedBy?: string;
+  /** 머리 글("경고로 표시할 사용률")의 id — 손잡이의 이름 */
+  labelledBy?: string;
 }) {
   return (
     <Slider
       min={50}
       max={100}
       step={5}
-      // 5단위 눈금 점 — 앱 divisions(10) 틱 마커 정합 (10구간 + 1 = 11).
-      ticks={11}
+      // 눈금 점은 두지 않는다 — 양 끝 표식(50% · 100%)만(I-15 50)
       value={[value]}
       onValueChange={([v]) => onDrag(v!)}
       onValueCommit={([v]) => onCommit(v!)}
       disabled={disabled}
       aria-describedby={describedBy}
+      aria-labelledby={labelledBy}
     />
   );
 }

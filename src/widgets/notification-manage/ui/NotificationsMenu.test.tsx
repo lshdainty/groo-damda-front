@@ -45,7 +45,7 @@ vi.mock("@/features/notification", () => ({
 vi.mock("@/shared/hooks", () => ({ useNow: () => Date.now() }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (k: string, o?: { count?: number }) =>
+    t: (k: string, o?: { count?: number | string }) =>
       o?.count !== undefined ? `${k}:${o.count}` : k,
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
@@ -143,7 +143,7 @@ describe.each([
         /^(닫기|Close)$/.test(b.getAttribute("aria-label") ?? ""),
       ),
     ).toBe(true);
-    expect(el.querySelector("ul[aria-label]")).not.toBeNull();
+    expect(el.querySelector("ul[aria-labelledby]")).not.toBeNull();
     expect(buttonByText("prefs.title")).toBeDefined();
     expect(buttonByText("markAllRead")).toBeDefined();
   });

@@ -57,7 +57,7 @@ export function NotificationRow({
             <>
               <span
                 aria-hidden
-                className="size-1.5 shrink-0 rounded-full bg-bg-brand-solid"
+                className="size-1.5 shrink-0 rounded-full bg-fg-brand"
               />
               <span className="sr-only">{t("row.unread")}</span>
             </>

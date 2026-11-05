@@ -1,12 +1,12 @@
 import { i18n } from "@/shared/i18n/config";
-import { parseServerUtc, toLocalDateKey } from "@/shared/lib/date";
+import { formatDateSmart, parseServerUtc } from "@/shared/lib/date";
 
 /**
  * 알림 상대시간 포맷 — 벨(Popover)·Page 공용 single source(SoT 정합).
  *
  * createAt (ISO) →
  *   "방금"(<1분) / "n분 전"(<60분) / "n시간 전"(<24시간) /
- *   "어제"(1일) / "n일 전"(<7일) / "yyyy-MM-dd"(≥7일)
+ *   "어제"(1일) / "n일 전"(<7일) / "9월 30일"(≥7일 · 다른 해 "2025년 9월 30일" — 날짜 규칙)
  * ko 회귀0: ko 는 date ns 값이 기존 literal 과 동일. en 은 date-fns 없이 문자열 키.
  *
  * createAt 은 서버가 시간대 없이 주는 `[UTC]` 시각이라 [parseServerUtc] 로 읽는다 —
@@ -34,6 +34,6 @@ export function relativeTime(createAt: string, now: number): string {
   const d = Math.floor(h / 24);
   if (d === 1) return i18n.t("date:yesterday");
   if (d < 7) return i18n.t("date:daysAgo", { count: d });
-  // 1주 이상 지난 건 날짜만
-  return toLocalDateKey(createAt) ?? "";
+  // 1주 이상 지난 건 날짜만 — 올해는 줄임, 다른 해는 표준(앱 _relativeTime 과 같다)
+  return formatDateSmart(then);
 }
