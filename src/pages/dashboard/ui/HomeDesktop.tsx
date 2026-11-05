@@ -96,7 +96,7 @@ export function HomeDesktop() {
   const todayDStr = toLocalIso(new Date()).slice(0, 10);
   const recentQ = useExpenses({ startDate: todayDStr, endDate: todayDStr });
   const budgetsQ = useExpenseBudgets({ year: periodY, month: periodM });
-  const categoriesQ = useExpenseCategories();
+  const categoriesQ = useExpenseCategories({ reference: true });
   const recurringQ = useRecurringTransactions();
 
   const summary = dashboardQ.data;

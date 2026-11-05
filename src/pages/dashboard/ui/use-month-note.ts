@@ -8,7 +8,9 @@ export function useMonthNote(year: number, month: number, expense: number) {
   const prevM = prevDate.getMonth() + 1;
   const prevStart = `${prevY}-${pad2(prevM)}-01`;
   const prevEnd = `${prevY}-${pad2(prevM)}-${pad2(new Date(prevY, prevM, 0).getDate())}`;
-  const prevMonthlyQ = useRangeSummary(prevStart, prevEnd);
+  const prevMonthlyQ = useRangeSummary(prevStart, prevEnd, undefined, {
+    reference: true,
+  });
   const prevExpense = prevMonthlyQ.data?.totalExpense ?? 0;
 
   const today = new Date();

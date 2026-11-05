@@ -185,14 +185,18 @@ export function useStatsModel() {
     needPrev ? prevStart : "",
     needPrev ? prevEnd : "",
   );
-  const categoriesQ = useExpenseCategories();
+  const categoriesQ = useExpenseCategories({ reference: true });
   const merchantQ = useMerchantSummary(startDate, endDate);
   // 추이 탭 일별 시리즈 · 비교 탭 요일 집계 · 건수에 쓰는 raw 거래
-  const monthExpensesQ = useExpenses({ startDate, endDate });
-  const prevMonthExpensesQ = useExpenses({
-    startDate: prevStart,
-    endDate: prevEnd,
-  });
+  // 실패는 추이 탭 · 비교 탭이 자기 자리에서 말한다 — 서버 원문 토스트는 끈다
+  const monthExpensesQ = useExpenses({ startDate, endDate }, { silent: true });
+  const prevMonthExpensesQ = useExpenses(
+    {
+      startDate: prevStart,
+      endDate: prevEnd,
+    },
+    { silent: true },
+  );
   const heatmapQ = useExpenseHeatmap(startDate, endDate);
 
   const periodLbl = periodLabel(period);
@@ -368,6 +372,15 @@ export function useStatsModel() {
   const useDailyTrend =
     period.segMode === "m" ||
     (period.segMode === "custom" && monthlyBuckets.length <= 1);
+  // 추이 · 저축 막대는 요약(월별 묶음)에 더해, 일별로 그릴 때는 그 기간 거래 전체가 있어야 그려진다 —
+  // 둘 중 값이 없는 실패가 있으면 빈 차트가 아니라 실패로 말한다
+  const trendFailed =
+    (rangeQ.isError && !rangeQ.data) ||
+    (useDailyTrend && monthExpensesQ.isError && !monthExpensesQ.data);
+  const retryTrend = () => {
+    if (rangeQ.isError) void rangeQ.refetch();
+    if (monthExpensesQ.isError) void monthExpensesQ.refetch();
+  };
   const trendChartData = buildTrendData({
     useDailyTrend,
     period,
@@ -614,6 +627,8 @@ export function useStatsModel() {
     dayRate,
     // 추이
     trendChartData,
+    trendFailed,
+    retryTrend,
     useDailyTrend,
     avgIn,
     avgOut,
