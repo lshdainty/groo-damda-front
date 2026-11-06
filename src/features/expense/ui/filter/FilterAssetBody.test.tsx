@@ -52,4 +52,22 @@ describe("계좌 · 카드 줄 앞 타일 (I-wrap-b1 ε 8)", () => {
     expect(tiles[0]!.textContent).toBe("신");
     expect(tiles[1]!.textContent).toBe("비");
   });
+
+  it("기관 이름이 공백뿐이면 자산 이름 면 · 둘 다 비면 글자 없는 기본 타일(검수 L8)", () => {
+    act(() =>
+      root.render(
+        <FilterAssetBody
+          assets={[asset(1, "여행 통장", "   "), asset(2, "  ", null)]}
+          value={{ include: [], exclude: [] }}
+          onChange={() => {}}
+        />,
+      ),
+    );
+    const tiles = [
+      ...container.querySelectorAll<HTMLElement>("[data-slot=logo-tile]"),
+    ];
+    expect(tiles[0]!.dataset.face).toBe("name");
+    expect(tiles[0]!.textContent).toBe("여");
+    expect(tiles[1]!.textContent).toBe("");
+  });
 });
