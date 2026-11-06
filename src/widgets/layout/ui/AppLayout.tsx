@@ -17,7 +17,7 @@ import { MoneyTabs } from "./MoneyTabs";
 import { TabMemory } from "./TabMemory";
 import { AppTabBar } from "./AppTabBar";
 import { useDeviceSize } from "@/shared/lib/groo/responsive";
-import { SwipeActionsProvider } from "@/shared/ui/swipe-actions";
+import { SwipeActionsProvider } from "@/shared/ds/swipe-actions";
 import { AddTxSheet } from "@/widgets/add-tx";
 import { CalendarEventFormHost } from "@/widgets/calendar/ui/CalendarEventFormHost";
 import { useHideCardsSync } from "@/features/hide-amounts";
