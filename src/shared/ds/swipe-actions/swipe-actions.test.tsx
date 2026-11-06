@@ -738,6 +738,6 @@ describe("다른 줄이 열려 있을 때 · 화면이 바뀔 때 · 높이", ()
     expect(trayOf(w!).className).not.toMatch(/\babsolute\b/);
     expect(trayOf(w!).className).toMatch(/col-start-1 row-start-1/);
     expect(rowOf(w!).className).toMatch(/col-start-1 row-start-1/);
-    expect(rowOf(w!).className).toMatch(/min-h-14/);
+    expect(rowOf(w!).className).toMatch(/min-h-\[56px\]/);
   });
 });

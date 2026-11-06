@@ -272,7 +272,7 @@ const SwipeActions = React.forwardRef<HTMLDivElement, SwipeActionsProps>(
           data-slot="swipe-actions-row"
           className={cn(
             // 줄은 원래 높이 — 56 보다 낮으면 56(트레이가 더 높으면 그만큼). 남는 높이에는 내용을 가운데에 둔다
-            "relative col-start-1 row-start-1 flex min-h-14 flex-col justify-center bg-bg-layer-default",
+            "relative col-start-1 row-start-1 flex min-h-[56px] flex-col justify-center bg-bg-layer-default",
             "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-stroke-focus-ring",
             // 끄는 동안에는 손가락을 1:1 로 따라간다 — 손을 뗀 뒤 자리를 잡을 때만 전환을 쓴다(모션 줄이기면 바로)
             drag == null &&
