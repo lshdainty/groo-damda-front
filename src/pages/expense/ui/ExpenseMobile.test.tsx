@@ -5,6 +5,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Expense } from "@/entities/expense";
+import { SnackbarProvider } from "@/shared/ds/snackbar";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -99,6 +100,8 @@ vi.mock("@/features/expense", () => ({
   useLedgerResultToast: () => () => {},
 }));
 vi.mock("@/features/asset", () => ({
+  // 이체 줄 통화(1e49f429) — 모르면 원화로 찍힌다
+  useAssetCurrencyOf: () => () => null,
   useAssets: () => ({ data: { assets: [] } }),
   useAsset: () => ({ data: { rowId: 1, assetName: "생활비 통장" } }),
   useAssetTransfers: () => query({ transfers: [] }, st.transfersLoading),
@@ -191,7 +194,14 @@ afterEach(async () => {
 });
 
 const render = () =>
-  act(() => root.render(<ExpenseMobile onAddTx={() => {}} />));
+  act(() =>
+    // 줄 밀기 확인창이 useConfirmFail(스낵바)을 쓴다 — 앱 맨 위처럼 공급자를 둔다
+    root.render(
+      <SnackbarProvider>
+        <ExpenseMobile onAddTx={() => {}} />
+      </SnackbarProvider>,
+    ),
+  );
 const byName = (name: string) =>
   Array.from(container.querySelectorAll<HTMLElement>("button")).find(
     (b) => (b.getAttribute("aria-label") ?? b.textContent) === name,
