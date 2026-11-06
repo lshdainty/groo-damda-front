@@ -1723,6 +1723,7 @@ expense,addTx.errTo,받는 계좌를 골라주세요.,Choose the account to send
 expense,addTx.errFx,환율을 입력하거나 원화 금액을 넣어주세요.,Enter the exchange rate or the amount in won.
 expense,addTx.errInterest,이자는 금액보다 클 수 없어요.,Interest cannot be more than the amount.
 expense,addTx.splitsLoading,나눈 내역을 불러오는 중이에요. 잠시 뒤 다시 눌러주세요.,Loading the split items. Try again in a moment.
+expense,addTx.rewriteNeedsSplits,나눈 내역을 불러온 뒤에 고쳐 쓸 수 있어요,You can rewrite once the split items are loaded
 expense,addTx.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't save. Please try again in a moment.
 expense,addTx.categoryLoadFailed,카테고리를 불러오지 못했어요,Couldn't load categories
 expense,addTx.assetLoadFailed,계좌·카드를 불러오지 못했어요,Couldn't load accounts and cards

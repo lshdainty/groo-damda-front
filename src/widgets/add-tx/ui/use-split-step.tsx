@@ -52,7 +52,7 @@ import type { ExpenseSplitFormValue } from "@/entities/expense-split";
 import { PickRow } from "./tx-parts";
 import { LeafCategoryPick } from "./split-parts";
 import { Won } from "@/shared/ui/groo/won-text";
-import { PickSkeleton } from "./pick-bodies";
+import { PickSkeleton } from "@/shared/ui/groo/pick-load";
 import type { TxEmbedParts } from "./use-tx-sheet-parts";
 
 const NAME_MAX = 50;

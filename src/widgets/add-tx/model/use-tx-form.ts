@@ -777,6 +777,14 @@ export function useTxForm({
     splitsPending:
       isEdit && type !== "TRANSFER" && (splitsQ.isPending || splitsQ.isError),
   };
+  /**
+   * 수정 폼에서 나눈 내역을 못 받았다 — 그 자리 실패 + [다시 시도](상세 · 나누기 단계와 같은 꼴).
+   * 저장을 눌러야 알게 하지 않는다. 이체는 나눈 내역이 없어 보지 않는다.
+   */
+  const splitsLoadFailed =
+    isEdit && !!expense && type !== "TRANSFER" && splitsQ.isError;
+  const retrySplits = () => void splitsQ.refetch();
+  const splitsRetrying = splitsQ.isFetching;
   const firstError = (): TxField | null => {
     if (errors.entry) return "entry";
     if (errors.category) return "category";
@@ -1569,6 +1577,9 @@ export function useTxForm({
     splitMismatch,
     amountTooLarge,
     canRewrite,
+    splitsLoadFailed,
+    retrySplits,
+    splitsRetrying,
     savedInstallment,
     pickedCard,
     saveClosedSpan,

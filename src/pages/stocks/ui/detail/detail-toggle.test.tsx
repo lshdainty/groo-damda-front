@@ -45,6 +45,7 @@ const { CompositionBody } =
   await import("@/features/stock/ui/phone/composition");
 
 let host: HTMLDivElement;
+let root: ReturnType<typeof createRoot> | null = null;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   globalThis.ResizeObserver ??= class {
@@ -56,9 +57,17 @@ beforeEach(() => {
   host = document.createElement("div");
   document.body.appendChild(host);
 });
-afterEach(() => host.remove());
+// 뿌리를 내려놓지 않으면 시험이 끝난 뒤 남은 효과가 jsdom 이 정리된 다음 돌아 "window is not defined" 를 남긴다
+afterEach(() => {
+  act(() => root?.unmount());
+  root = null;
+  host.remove();
+});
 const mount = (n: React.ReactNode) =>
-  act(() => createRoot(host).render(<MemoryRouter>{n}</MemoryRouter>));
+  act(() => {
+    root = createRoot(host);
+    root.render(<MemoryRouter>{n}</MemoryRouter>);
+  });
 const btn = () => host.querySelector<HTMLButtonElement>("button")!;
 
 describe("관심 Toggle", () => {
