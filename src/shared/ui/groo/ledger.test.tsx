@@ -1,4 +1,5 @@
 // 공용 원장 부품(가계부 · 할 일 · 검색이 함께 쓴다) — ds 값: 머리는 Scroll Auto Hide, 오는 날은 불투명도 없이 색, 날짜 머리는 h2.
+import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -22,6 +23,7 @@ import {
   LedgerSumBtn,
 } from "./ledger";
 import { useLedgerScroll } from "./use-ledger-scroll";
+import { SCROLL_AUTO_HIDE_SYNC_EVENT } from "@/shared/ds/scroll-auto-hide";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -330,5 +332,125 @@ describe("원장 머리 — 달 이동 줄 · 주 달력은 남고 총액만 숨
     expect(container.querySelector("[data-ledger-collapse]")).toBeNull();
     expect(pin.querySelector("[data-ledger-keep]")).not.toBeNull();
     expect(pin.textContent).toContain("총액");
+  });
+});
+
+describe("펼친 월 달력 — 펼친 채 내리기 시작하면 고른 날이 든 주로 접는다", () => {
+  function Harness() {
+    const [expanded, setExpanded] = React.useState(true);
+    const { rootRef, pinRef, selected } = useLedgerScroll({
+      initialSelected: "2026-10-22",
+      expanded,
+      onCollapse: () => setExpanded(false),
+    });
+    return (
+      <div className="m-scroll" data-testid="scroll">
+        <LedgerShell ref={rootRef}>
+          <LedgerPin ref={pinRef}>
+            <LedgerKeep>
+              <output data-testid="sel">{selected}</output>
+              <LedgerExpand
+                aria-label="월 달력"
+                expanded={expanded}
+                onClick={() => setExpanded((v) => !v)}
+              />
+            </LedgerKeep>
+          </LedgerPin>
+          <LedgerList>
+            {["2026-10-29", "2026-10-22"].map((d) => (
+              <LedgerDayGroup key={d} day={d}>
+                {d}
+              </LedgerDayGroup>
+            ))}
+          </LedgerList>
+        </LedgerShell>
+      </div>
+    );
+  }
+
+  function setup() {
+    render(<Harness />);
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-testid=scroll]",
+    )!;
+    let top = 0;
+    Object.defineProperty(scroll, "scrollTop", {
+      configurable: true,
+      get: () => top,
+      set: (v: number) => {
+        top = v;
+      },
+    });
+    // 스파이가 22 를 그대로 고르게 — 22 묶음 윗변이 머리 아래 선 안
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    pin.getBoundingClientRect = () => ({ bottom: 400 }) as DOMRect;
+    const groups = container.querySelectorAll<HTMLElement>("[data-ledger-day]");
+    groups[0]!.getBoundingClientRect = () =>
+      ({ top: 100, bottom: 380 }) as DOMRect;
+    groups[1]!.getBoundingClientRect = () =>
+      ({ top: 380, bottom: 700 }) as DOMRect;
+    const scrollTo = (y: number) => {
+      top = y;
+      act(() => {
+        scroll.dispatchEvent(new Event("scroll"));
+      });
+    };
+    const expanded = () =>
+      container
+        .querySelector('[aria-label="월 달력"]')!
+        .getAttribute("aria-expanded");
+    const sel = () => container.querySelector("[data-testid=sel]")!.textContent;
+    return { scrollTo, expanded, sel };
+  }
+
+  it("맨 위(0)에서는 펼친 채로 있고, 20 미만 내림은 접지 않는다", () => {
+    const { scrollTo, expanded } = setup();
+    expect(expanded()).toBe("true");
+    scrollTo(0);
+    expect(expanded()).toBe("true");
+    scrollTo(19);
+    expect(expanded()).toBe("true");
+  });
+
+  it("20 이상 내리면 접히고(꺾쇠 ∨) 고른 날은 그대로다", () => {
+    const { scrollTo, expanded, sel } = setup();
+    scrollTo(10);
+    scrollTo(30);
+    expect(expanded()).toBe("false");
+    expect(sel()).toBe("2026-10-22");
+  });
+
+  it("접은 뒤 맨 위 묶음의 화면 y 가 바뀌었으면 그만큼 scrollTop 을 당기고, 머리 숨김에 sync 를 알린다", () => {
+    const { scrollTo, expanded } = setup();
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-testid=scroll]",
+    )!;
+    const groups = container.querySelectorAll<HTMLElement>("[data-ledger-day]");
+    // 접히면 달력이 268 줄어 묶음이 268 위로 간다 — 펼침 여부로 rect 를 바꾼다
+    const isOpen = () => expanded() === "true";
+    groups[0]!.getBoundingClientRect = () =>
+      ({ top: isOpen() ? 100 : -168, bottom: isOpen() ? 420 : 152 }) as DOMRect;
+    let synced = 0;
+    scroll.addEventListener(SCROLL_AUTO_HIDE_SYNC_EVENT, () => synced++);
+    scrollTo(300);
+    expect(expanded()).toBe("false");
+    expect(scroll.scrollTop).toBe(300 - 268);
+    expect(synced).toBe(1);
+  });
+
+  it("위로 올렸다가 다시 내리면 가장 위로 간 자리부터 20 을 센다", () => {
+    const { scrollTo, expanded } = setup();
+    scrollTo(500);
+    act(() => {
+      container.querySelector<HTMLElement>('[aria-label="월 달력"]')!.click();
+    });
+    expect(expanded()).toBe("true");
+    scrollTo(450);
+    scrollTo(465);
+    expect(expanded()).toBe("true");
+    scrollTo(470);
+    expect(expanded()).toBe("false");
   });
 });

@@ -19,6 +19,12 @@ import * as React from "react";
  * - sticky top 이 0 이 아니면(위에 고정 줄이 따로 있다) 그 값만큼 일찍 붙으므로, 스크롤한 거리는 붙는 순간부터 센다.
  */
 
+/**
+ * groo 확장 — 쓰는 쪽이 스크롤 위치를 직접 보정한 뒤(펼친 달력을 접으며 목록 자리 지키기 등) 스크롤 상자에 이 이벤트를 보내면,
+ * 그 보정을 사람의 스크롤로 세지 않는다(숨김 정도를 그대로 두고 기준 위치만 지금으로 옮긴다).
+ */
+export const SCROLL_AUTO_HIDE_SYNC_EVENT = "scroll-auto-hide:sync";
+
 const SNAP_THRESHOLD_RATIO = 0.5;
 const SCROLL_SETTLE_DELAY_MS = 120;
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
@@ -389,6 +395,16 @@ export function useScrollAutoHide(
       applyTranslate(0);
     };
 
+    // 쓰는 쪽의 위치 보정 — 사람의 스크롤이 아니므로 숨김 정도는 그대로, 기준 위치만 옮긴다
+    const handleSync = () => {
+      clearSettleTimer();
+      cancelSettling();
+      syncTracking();
+      stopTracking();
+      previousScrollTop = getScrollTop();
+      applyTranslate(clamp(translateY, computeMinTranslate(previousScrollTop)));
+    };
+
     // 키보드 스크롤 — 끝나면 움직임 없이 바로 스냅한다(칸 안의 글자 입력은 빼고)
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!SCROLL_KEYS.has(event.key)) return;
@@ -449,6 +465,7 @@ export function useScrollAutoHide(
     scrollContainer.addEventListener("wheel", handleInteractionStart, {
       passive: true,
     });
+    scrollContainer.addEventListener(SCROLL_AUTO_HIDE_SYNC_EVENT, handleSync);
     root.addEventListener("focusin", handleFocusIn);
     root.addEventListener("transitionend", handleTransitionComplete);
     root.ownerDocument.addEventListener("keydown", handleKeyDown);
@@ -464,6 +481,10 @@ export function useScrollAutoHide(
       scrollContainer.removeEventListener("touchend", handleTouchEnd);
       scrollContainer.removeEventListener("touchcancel", handleTouchEnd);
       scrollContainer.removeEventListener("wheel", handleInteractionStart);
+      scrollContainer.removeEventListener(
+        SCROLL_AUTO_HIDE_SYNC_EVENT,
+        handleSync,
+      );
       root.removeEventListener("focusin", handleFocusIn);
       root.removeEventListener("transitionend", handleTransitionComplete);
       root.ownerDocument.removeEventListener("keydown", handleKeyDown);

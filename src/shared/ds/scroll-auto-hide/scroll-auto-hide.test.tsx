@@ -5,6 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ScrollAutoHide } from "./scroll-auto-hide";
+import { SCROLL_AUTO_HIDE_SYNC_EVENT } from "./use-scroll-auto-hide";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -363,5 +364,27 @@ describe("ScrollAutoHide — groo 확장(남는 부분 · 위 고정 줄)", () =
     expect(translate()).toBe(-30);
     scrollTo(400);
     expect(translate()).toBe(-60);
+  });
+});
+
+describe("ScrollAutoHide — groo 확장(쓰는 쪽의 위치 보정)", () => {
+  it("보정 뒤 sync 이벤트를 보내면 그 위치 이동을 사람의 스크롤로 세지 않는다 — 숨김 그대로", () => {
+    const { box, scrollTo, translate } = mount();
+    scrollTo(400);
+    expect(translate()).toBe(-HEIGHT);
+    // 쓰는 쪽이 268 위로 당긴다(펼친 달력을 접으며 목록 자리 지키기)
+    box.scrollTop = 132;
+    act(() => {
+      box.dispatchEvent(new Event(SCROLL_AUTO_HIDE_SYNC_EVENT));
+    });
+    scrollTo(132);
+    expect(translate()).toBe(-HEIGHT);
+  });
+
+  it("sync 없이 같은 이동이면 위로 올린 만큼 드러난다(비교)", () => {
+    const { scrollTo, translate } = mount();
+    scrollTo(400);
+    scrollTo(132);
+    expect(translate()).toBe(0);
   });
 });

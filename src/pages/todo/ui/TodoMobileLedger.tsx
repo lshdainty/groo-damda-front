@@ -159,7 +159,12 @@ export function TodoMobileLedger({
     lock,
     scrollToDay,
     scrollToTop,
-  } = useLedgerScroll({ initialSelected: today });
+  } = useLedgerScroll({
+    initialSelected: today,
+    // 펼친 월 달력은 펼친 채 내리기 시작하면 고른 날이 든 주로 접힌다
+    expanded,
+    onCollapse: () => setExpanded(false),
+  });
 
   // 월 + 필터 적용 목록. 마감일 없는 할 일은 월과 무관하게 꼬리 묶음으로 낸다(모델 — 데스크톱과 같은 셈).
   const monthTodos = selectMonthTodos(todos, ym, filter, holdIds);

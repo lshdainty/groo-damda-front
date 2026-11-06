@@ -239,6 +239,9 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
     scrollToTop,
   } = useLedgerScroll({
     initialSelected: todayStr.startsWith(initialMonth) ? todayStr : null,
+    // 펼친 월 달력은 펼친 채 내리기 시작하면 고른 날이 든 주로 접힌다
+    expanded,
+    onCollapse: () => setExpanded(false),
   });
   // 상세→편집 flow — EditableList 패턴 인라인(dayhead 형식이 달라 리스트 자체 렌더).
   const [detail, setDetail] = useState<Expense | null>(null);
