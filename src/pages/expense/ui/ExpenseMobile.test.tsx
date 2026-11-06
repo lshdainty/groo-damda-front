@@ -631,3 +631,16 @@ describe("고른 달은 주소에 (I-wrap-b1 ε 9)", () => {
     expect(container.textContent).toContain("9월");
   });
 });
+
+describe("주소의 달이 이상하면 이번 달 (I-wrap-b1 ε 9)", () => {
+  it.each(["abc", "2026-13", "", "9999-01"])(
+    "?month=%s — 이번 달(2026년 10월)과 그 달 거래를 그린다",
+    (raw) => {
+      st.search = `month=${raw}`;
+      render();
+      expect(container.textContent).toContain("10월");
+      expect(container.textContent).not.toMatch(/9999|NaN/);
+      expect(container.textContent).toContain("12,000원");
+    },
+  );
+});
