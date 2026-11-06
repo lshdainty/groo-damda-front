@@ -1,5 +1,5 @@
 // Result Section 의 동작 — 모양 · 색은 scripts/check-ds-spec.mjs 가 크로미움에서 스펙 값과 맞춘다.
-import { act, createRef, type ReactNode } from "react";
+import { act, createRef, type ReactNode, type SVGProps } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -37,7 +37,10 @@ const nextFrame = () => act(() => vi.advanceTimersByTime(20));
 const slot = (name: string) =>
   container.querySelector<HTMLElement>(`[data-slot=${name}]`);
 
-const Receipt = () => <svg data-testid="receipt" />;
+// 받은 속성(data-testid 등)을 펼친다 — 버튼 앞 아이콘을 다른 이름으로 구별해 잰다
+const Receipt = (props: SVGProps<SVGSVGElement>) => (
+  <svg data-testid="receipt" {...props} />
+);
 
 describe("ResultSection", () => {
   it("기본은 empty · large — role=status 묶음, 제목은 h2", () => {
