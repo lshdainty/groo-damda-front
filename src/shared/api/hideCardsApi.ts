@@ -1,4 +1,4 @@
-import { apiClient } from "./base";
+import { apiClient, SAFE_TO_RETRY, type QuietRequestConfig } from "./base";
 import type { ApiResponse } from "@/shared/types";
 
 /**
@@ -23,9 +23,8 @@ export const hideCardsApi = {
     const resp: ApiResponse = await apiClient.put(
       "/v1/users/me/hide-cards",
       { hideCards },
-      { silent: true } as import("axios").AxiosRequestConfig & {
-        silent?: boolean;
-      },
+      // 통째로 교체라 다시 해도 같은 결과 — 응답을 못 받아도 확인 못 함 없이 실패 + [다시 시도](앱 저장 실패 범위 밖, 판단 ⑤ 와 같은 규칙)
+      { silent: true, ...SAFE_TO_RETRY } satisfies QuietRequestConfig,
     );
     if (!resp.success) throw new Error(resp.message);
   },
