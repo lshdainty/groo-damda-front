@@ -644,3 +644,20 @@ describe("주소의 달이 이상하면 이번 달 (I-wrap-b1 ε 9)", () => {
     },
   );
 });
+
+describe("주소가 달을 바꿔도 같은 정리 (I-wrap-b1 ε 검수 L4)", () => {
+  it("뒤로 · 앞으로 · 링크로 ?month= 가 바뀌면 펼친 달력을 접고 새 달을 보인다 — ‹ › 와 같은 길", () => {
+    st.search = "month=2026-10";
+    render();
+    const month = () => byName("월 달력")!;
+    click(month());
+    expect(month().getAttribute("aria-expanded")).toBe("true");
+
+    // 주소만 바뀐다(브라우저 뒤로 · 같은 화면 링크) — ‹ › 를 누르지 않았다
+    st.search = "month=2026-09";
+    render();
+
+    expect(container.textContent).toContain("9월");
+    expect(month().getAttribute("aria-expanded")).toBe("false");
+  });
+});

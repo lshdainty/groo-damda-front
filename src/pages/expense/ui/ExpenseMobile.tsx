@@ -1,5 +1,5 @@
 import { MonthTitle, MonthTitleStatic } from "@/shared/ui/groo/month-title";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import { FunnelX, Plus, ReceiptText, SlidersHorizontal } from "lucide-react";
@@ -388,13 +388,26 @@ export function ExpenseMobile({
   const weeks = useMemo(() => monthWeeks(month), [month]);
   const selWeek = pickWeek(weeks, selected, todayStr);
 
-  const pickMonth = (next: string) => {
-    setMonth(next);
-    setSelected(todayStr.startsWith(next) ? todayStr : null);
+  // 달 이동 정리(고른 날 · 펼침 · 스크롤)는 주소의 달이 바뀔 때 한 번 — ‹ › · 달 고르기뿐 아니라 뒤로 · 앞으로 · 같은 화면 링크도
+  // 같은 길을 지난다(I-wrap-b1 ε 검수 L4). 상태는 렌더 중에 맞추고(이전 달과 비교), 스크롤 잠금 · 맨 위로는 그 뒤 효과에서.
+  const [shownMonth, setShownMonth] = useState(month);
+  if (shownMonth !== month) {
+    setShownMonth(month);
+    setSelected(todayStr.startsWith(month) ? todayStr : null);
     setExpanded(false);
+  }
+  const settleMonth = useEffectEvent(() => {
     lock(800);
     scrollToTop();
-  };
+  });
+  // 처음 그린 달은 옮기지 않는다 — 들어온 거래(?txId=)로 옮기는 자리를 빼앗지 않게(정리한 달을 기억해 StrictMode 두 번 실행에도 한 번)
+  const settledMonth = useRef(month);
+  useEffect(() => {
+    if (settledMonth.current === shownMonth) return;
+    settledMonth.current = shownMonth;
+    settleMonth();
+  }, [shownMonth]);
+  const pickMonth = (next: string) => setMonth(next);
   const goMonth = (dir: -1 | 1) => pickMonth(shiftMonthKey(month, dir));
 
   const dowLabels = useMemo(() => dowLabelList(), []);
