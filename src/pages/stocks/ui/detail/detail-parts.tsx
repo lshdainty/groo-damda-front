@@ -471,20 +471,21 @@ export function QuotesBand({
     ...bids.map((b) => b.q ?? 0),
   );
   const barWidth = (q: number | null) => `${((q ?? 0) / maxQ) * 100}%`;
-  const fills = (tradesQ.data ?? [])
+  const priced = (tradesQ.data ?? [])
     .map((x) => ({ x, p: fin(x.price) }))
-    .flatMap(({ x, p }) => (p == null ? [] : [{ x, p }]))
-    .slice(0, 12)
-    .map(({ x, p }, i, arr) => {
-      const prev = i + 1 < arr.length ? arr[i + 1]!.p : p;
-      const q = fin(x.volume);
-      return {
-        time: tradeClock(x.timestamp),
-        p,
-        q: q == null ? null : Math.round(q),
-        dir: p >= prev ? 1 : -1,
-      };
-    });
+    .flatMap(({ x, p }) => (p == null ? [] : [{ x, p }]));
+  const fills = priced.slice(0, 12).map(({ x, p }, i) => {
+    // 바로 앞(더 오래된) 체결과 견준다 — 보이는 12줄 밖의 체결도 견줄 대상이다. 받은 것 중 가장 오래된 줄은
+    // 견줄 체결이 없어 오름 · 내림 어느 쪽도 아니다(중립 색)
+    const prev = priced[i + 1]?.p ?? null;
+    const q = fin(x.volume);
+    return {
+      time: tradeClock(x.timestamp),
+      p,
+      q: q == null ? null : Math.round(q),
+      dir: prev == null ? 0 : p >= prev ? 1 : -1,
+    };
+  });
 
   const head = (cols: string[], book = false) => (
     <thead>
@@ -655,7 +656,9 @@ export function QuotesBand({
                           "p-0 text-end text-t4 font-bold tabular-nums",
                           f.dir > 0
                             ? "text-fg-critical"
-                            : "text-fg-informative",
+                            : f.dir < 0
+                              ? "text-fg-informative"
+                              : "text-fg-neutral",
                         )}
                       >
                         {fmt(f.p)}
