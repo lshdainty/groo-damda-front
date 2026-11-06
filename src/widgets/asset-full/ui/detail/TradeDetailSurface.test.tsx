@@ -13,6 +13,10 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 // 1280 이상 대화상자 쪽을 본다(시트는 같은 본문 · 같은 바닥 단추)
+// 연동 종목 이름은 종목 마스터 조회(useQuery)로 읽는다 — 마스터에 없으면 티커 그대로
+vi.mock("@/features/stock/model/useStockMaster", () => ({
+  useStockSymbolName: () => ({ data: null }),
+}));
 vi.mock("@/shared/ds/overlay", async (orig) => ({
   ...(await orig<Record<string, unknown>>()),
   useWideSurface: () => true,
@@ -35,6 +39,12 @@ let container: HTMLDivElement;
 let root: Root;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  // 본문 스크롤 재기(use-body-scroll)가 ResizeObserver 를 쓴다 — jsdom 에 없다
+  globalThis.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
