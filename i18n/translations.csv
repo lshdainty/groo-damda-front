@@ -2898,6 +2898,7 @@ asset,holdings.linkedPending,{{n}}주 · 시세 연동 대기,{{n}} shares · aw
 asset,holdings.manualSub,직접 입력,Manual entry
 asset,holdings.todayChange,오늘 {{sign}}{{amount}}원,Today {{sign}}₩{{amount}}
 asset,holdings.editSummary,{{n}}종목 · {{total}}원,{{n}} holdings · ₩{{total}}
+asset,holdings.editSummaryUnknown,{{n}}종목 · —,{{n}} holdings · —
 asset,holdings.searchPlaceholder,종목 이름 검색,Search stock name
 asset,holdings.addStock,종목 추가,Add stock
 asset,holdings.addStockTitle,종목 추가,Add stock

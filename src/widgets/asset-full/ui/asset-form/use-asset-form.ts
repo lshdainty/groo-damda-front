@@ -282,6 +282,12 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
     () => holdings.reduce((s, h) => s + (holdingValueOf(h) ?? 0), 0),
     [holdings, holdingValueOf],
   );
+  // 연동 줄 중 시세를 모르는 것이 있다 — 합계를 0 · 부분합으로 말하면 조용히 틀린 값이라 "—"(판단 (5) 덧붙임).
+  // 저장은 막지 않는다: 연동 줄은 평가액을 보내지 않고(AssetEditDialog holdingsPayload holdingValue null · 보유가 있으면
+  // balance 생략) 서버가 시세 × 수량으로 따로 센다
+  const holdingsTotalUnknown = holdings.some(
+    (h) => h.linked && holdingValueOf(h) == null,
+  );
 
   // 카드
   const cardType: CardType = kind === "체크카드" ? "CHECK" : "CREDIT";
@@ -565,6 +571,7 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
     live,
     holdingValueOf,
     holdingsTotal,
+    holdingsTotalUnknown,
     // 연동 보유의 시세 · 환율을 못 받았다 — 평가액 미리보기가 비어 보이는 대신 그 자리 실패 + [다시 시도](판단 (5))
     holdingPricesFailed: priceActive && live.failed,
     holdingPricesRetrying: live.retrying,

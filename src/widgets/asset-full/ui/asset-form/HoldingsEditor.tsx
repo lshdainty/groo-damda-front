@@ -40,6 +40,7 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
     setHoldings,
     holdingValueOf,
     holdingsTotal,
+    holdingsTotalUnknown,
     allowStock,
     manualAddTypes,
     isForeign,
@@ -58,10 +59,13 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
       label={t("holdings.sectionTitle")}
       headerAction={
         <span className="num font-sans text-t5 font-bold text-fg-neutral">
-          {t("holdings.editSummary", {
-            n: holdings.length,
-            total: KRW(holdingsTotal),
-          })}
+          {holdingsTotalUnknown
+            ? // 시세를 모르는 연동 줄이 있으면 합계를 말하지 않는다(0 · 부분합 아님)
+              t("holdings.editSummaryUnknown", { n: holdings.length })
+            : t("holdings.editSummary", {
+                n: holdings.length,
+                total: KRW(holdingsTotal),
+              })}
         </span>
       }
       description={

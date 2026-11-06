@@ -105,6 +105,7 @@ afterEach(() => {
   act(() => root.unmount());
   container.remove();
 });
+let updated: Record<string, unknown> | null = null;
 const draw = () =>
   act(() =>
     root.render(
@@ -112,7 +113,9 @@ const draw = () =>
         item={invest}
         onClose={() => {}}
         onCreate={() => {}}
-        onUpdate={() => {}}
+        onUpdate={(v) => {
+          updated = v as unknown as Record<string, unknown>;
+        }}
       />,
     ),
   );
@@ -133,5 +136,31 @@ describe("자산 편집 — 보유 평가 미리보기 시세 실패", () => {
     expect(
       document.body.querySelector("[data-slot=price-fail-band]"),
     ).toBeNull();
+  });
+
+  it("합계는 0 이 아니라 '—' — 시세를 모르는 연동 줄이 있으면 합계를 말하지 않는다", () => {
+    live.failed = true;
+    draw();
+    const text = document.body.textContent ?? "";
+    expect(text).toContain("holdings.editSummaryUnknown");
+    expect(text).not.toContain("holdings.editSummary{");
+  });
+
+  it("시세 실패 중 저장해도 연동 줄 평가액 · 잔액은 보내지 않는다 — 서버가 시세 × 수량으로 센다(그래서 막지 않는다)", () => {
+    live.failed = true;
+    updated = null;
+    draw();
+    const save = [...document.body.querySelectorAll("button")].find(
+      (b) => b.textContent?.trim() === "save",
+    )!;
+    act(() => save.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(updated).not.toBeNull();
+    expect(updated!.balance).toBeUndefined();
+    const holdings = updated!.holdings as Array<Record<string, unknown>>;
+    expect(holdings[0]).toMatchObject({
+      linked: true,
+      tossSymbol: "A900001",
+      holdingValue: null,
+    });
   });
 });
