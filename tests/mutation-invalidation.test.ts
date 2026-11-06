@@ -57,6 +57,25 @@ vi.mock("@/shared/lib/groo/use-pending-ids", () => ({
 vi.mock("@/shared/lib/groo/use-hold-ids", () => ({
   useHoldIds: () => ({ holdIds: new Set<number>(), hold: () => undefined }),
 }));
+// 실패 알림(고정 글 스낵바)을 거는 훅들 — 리액트 밖에서 부르면 죽으므로 껍데기로 바꾼다
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({ t: (k: string) => k }),
+  initReactI18next: { type: "3rdParty", init: () => {} },
+}));
+vi.mock("@/shared/lib/confirm-fail", () => ({
+  useConfirmFail: () => () => undefined,
+}));
+vi.mock("@/shared/ds/snackbar", () => ({
+  useSnackbar: () => ({ show: () => undefined, dismiss: () => undefined }),
+}));
+// 알림 훅은 요청과 무효화를 mutationFn 한 자리에서 한다(다시 시도가 같은 일을 하게) — 요청만 걷는다
+vi.mock("@/features/notification/api/notificationApi", () => ({
+  notificationApi: {
+    markRead: async () => undefined,
+    markAllRead: async () => undefined,
+    deleteNotification: async () => undefined,
+  },
+}));
 
 const expenses = await import("@/features/expense/model/useExpenses");
 const sms = await import("@/features/sms/model/useCommitSms");
@@ -112,6 +131,7 @@ const WATCHLIST = "src/features/stock/api/watchlistApi.ts";
 const SUBSCRIPTIONS = "src/features/subscription/model/useSubscription.ts";
 
 type MutationLike = {
+  mutationFn?: (...args: unknown[]) => Promise<unknown>;
   onSuccess?: (...args: unknown[]) => void;
   onSettled?: (...args: unknown[]) => void;
 };
@@ -121,6 +141,8 @@ type Row = {
   hook: string;
   change: ChangeKind;
   call: () => unknown;
+  /** 무효화를 onSuccess 가 아니라 mutationFn 안에서 한다 — 실패의 [다시 시도] 가 같은 함수를 다시 부른다 */
+  inMutationFn?: true;
 };
 
 /** 뮤테이션 훅 → 고른 변경 이름. 새 뮤테이션은 여기 한 줄을 더해야 통과한다. */
@@ -635,18 +657,21 @@ const ROWS: Row[] = [
     hook: "useMarkRead",
     change: "notification",
     call: () => notifications.useMarkRead(),
+    inMutationFn: true,
   },
   {
     file: NOTIFICATIONS,
     hook: "useMarkAllRead",
     change: "notification",
     call: () => notifications.useMarkAllRead(),
+    inMutationFn: true,
   },
   {
     file: NOTIFICATIONS,
     hook: "useDeleteNotification",
     change: "notification",
     call: () => notifications.useDeleteNotification(),
+    inMutationFn: true,
   },
   {
     file: OAUTH_LINK,
@@ -802,9 +827,17 @@ describe("무효화 매핑 상수", () => {
 
 describe("뮤테이션이 고른 변경", () => {
   for (const row of ROWS) {
-    it(`${row.hook} → "${row.change}"`, () => {
+    it(`${row.hook} → "${row.change}"`, async () => {
       mocks.invalidated.length = 0;
       const mutation = row.call() as MutationLike;
+      if (row.inMutationFn) {
+        expect(mutation.mutationFn).toBeTypeOf("function");
+        await mutation.mutationFn?.(1);
+        expect(mocks.invalidated).toEqual(
+          INVALIDATION_MAP[row.change].map((key) => [...key]),
+        );
+        return;
+      }
       const handler = mutation.onSuccess ?? mutation.onSettled;
       expect(handler, `${row.hook} 에 onSuccess/onSettled 가 없다`).toBeTypeOf(
         "function",

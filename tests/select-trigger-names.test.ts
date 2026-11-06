@@ -42,8 +42,10 @@ describe("선택 칸 이름 — 제품 화면의 SelectTrigger", () => {
 
   it("검사 대상이 있다(스캔이 죽지 않았다)", () => {
     // 스캔이 죽지 않았다는 보호 장치 — 카테고리 편집 폼의 종류 · 상위 선택 칸 둘을 PickerRow(줄 칸)로 바꿔 26 → 24 로 줄었다(I-20 B 12)
-    // 옛 SelectTrigger 쓰는 곳은 화면이 ds Select 로 옮겨 갈수록 준다(일정 폼 09-2 에서 둘 줄어 19) — 스캔이 죽지 않았는지만 본다
-    expect(all.length).toBeGreaterThanOrEqual(15);
+    // 옛 SelectTrigger 쓰는 곳은 화면이 ds Select 로 옮겨 갈수록 준다(일정 폼 09-2 에서 둘 줄어 19 · ds 이관 뒤 2) — 스캔이 죽지 않았는지만 본다.
+    // 하한은 "스캔이 파일을 읽었다" 를 재는 값이다 — 남은 옛 칸이 0 이 되면 이 시험 묶음째 걷는다
+    expect(files.length).toBeGreaterThan(100);
+    expect(all.length).toBeGreaterThanOrEqual(1);
   });
 
   it("모든 선택 칸이 aria-labelledby 또는 aria-label 을 가진다", () => {
