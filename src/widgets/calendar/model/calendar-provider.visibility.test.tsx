@@ -29,7 +29,8 @@ vi.mock("@/features/user-calendar", () => ({
   }),
 }));
 
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: { message: string }) => mocks.snack.push(o),
     dismiss: () => {},

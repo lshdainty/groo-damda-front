@@ -13,6 +13,8 @@ import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// 저장 · 실패 알림이 useSnackbar 를 쓴다 — 앱 맨 위(src/app/index.tsx)처럼 공급자로 감싼다
+import { SnackbarProvider } from "@/shared/ds/snackbar";
 import { editAssetPath, type Asset } from "@/entities/asset";
 
 declare global {
@@ -86,10 +88,12 @@ let entry = "/desk/settings?section=accounts";
 /** 같은 자리에 같은 타입을 그린다 — 언마운트 없이 다시 그리는 것과 같다.
  *  (`MemoryRouter` 는 `initialEntries` 를 마운트할 때 한 번만 읽는다.) */
 const tree = () => (
-  <MemoryRouter initialEntries={[entry]}>
-    <Spy />
-    <AccountManager mobile={false} />
-  </MemoryRouter>
+  <SnackbarProvider>
+    <MemoryRouter initialEntries={[entry]}>
+      <Spy />
+      <AccountManager mobile={false} />
+    </MemoryRouter>
+  </SnackbarProvider>
 );
 
 function render(url: string) {

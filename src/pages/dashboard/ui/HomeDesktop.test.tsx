@@ -291,9 +291,15 @@ describe("데스크톱 홈", () => {
     render();
     expect(container.textContent).toContain("loadFailed.category");
     expect(container.textContent).toContain("loadFailed.month");
-    expect(container.textContent).not.toContain("0원");
+    // 실패한 카드 안에 0원이 없다 — 다른 카드(순자산 · 부채 0원 등)의 진짜 값은 따지지 않는다
+    const failedCards = Array.from(
+      container.querySelectorAll("[data-slot=card]"),
+    ).filter((c) => /loadFailed\.(month|category)/.test(c.textContent ?? ""));
+    expect(failedCards.length).toBe(2);
+    for (const c of failedCards) expect(c.textContent).not.toMatch(/(^|\D)0원/);
+    // [다시 시도] 는 ds 고정 글(한국어)이다
     const retry = Array.from(container.querySelectorAll("button")).filter((b) =>
-      b.textContent?.includes("Try again"),
+      b.textContent?.includes("다시 시도"),
     );
     expect(retry.length).toBeGreaterThan(0);
     act(() => retry[0]?.click());

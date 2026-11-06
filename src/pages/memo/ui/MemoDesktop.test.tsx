@@ -173,9 +173,11 @@ describe("MemoDesktop (I-15 15 ~ 19)", () => {
       container.querySelector("[data-slot=memo-body]")?.className,
     ).toContain("line-clamp-2");
     expect(container.querySelector('button[aria-label$="더보기"]')).toBeNull();
-    act(() =>
-      container.querySelector<HTMLElement>("[data-slot=list-body]")!.click(),
-    );
+    // 넓은 화면은 왼쪽 태그 칸도 List 줄이다(97bcdb01) — 메모 줄(본문이 든 줄)을 누른다
+    const memoRow = container
+      .querySelector("[data-slot=memo-body]")!
+      .closest<HTMLElement>("[data-slot=list-body]")!;
+    act(() => memoRow.click());
     expect(
       (screen as unknown as { setViewing: ReturnType<typeof vi.fn> })
         .setViewing,

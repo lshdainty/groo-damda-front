@@ -8,7 +8,8 @@ declare global {
 }
 
 const show = vi.hoisted(() => vi.fn());
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show, dismiss: vi.fn() }),
 }));
 const deleteAsync = vi.hoisted(() => vi.fn(() => Promise.resolve()));

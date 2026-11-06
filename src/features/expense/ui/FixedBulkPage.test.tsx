@@ -20,7 +20,8 @@ const snacks: {
   tone?: string;
   action?: { label: string; onClick: () => void };
 }[] = [];
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: (typeof snacks)[number]) => snacks.push(o),
     dismiss: () => {},

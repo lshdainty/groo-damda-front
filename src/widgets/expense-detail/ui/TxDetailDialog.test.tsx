@@ -85,7 +85,8 @@ vi.mock("react-i18next", () => ({
 vi.mock("react-router-dom", () => ({
   useNavigate: () => (to: string) => api.navigated.push(to),
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: (typeof api.snacks)[number]) => api.snacks.push(o),
     dismiss: () => {},
@@ -152,6 +153,8 @@ vi.mock("@/widgets/add-tx", () => ({
     };
     return { embedParts: api.parts, overlays: null };
   },
+  // 나누기 단계는 add-tx 묶음에서 가져온다(2525f941) — 아래 use-split-step 목과 같은 조각
+  useSplitStep: () => stepStub("split"),
 }));
 vi.mock("@/features/expense", () => ({
   useExpenseCategories: () => ({ data: api.categories, isLoading: false }),
@@ -1089,9 +1092,11 @@ describe("나누기 · 반복 설정 · 더치페이는 상세 안 한 단계다
     expect(document.querySelector("[data-slot=tx-detail-head]")).toBeNull();
   });
 
-  it("반복 설정 줄과 더치페이 줄도 각자 단계로 바뀐다", () => {
+  it("반복 설정 줄과 더치페이 줄도 각자 단계로 바뀐다", async () => {
     render();
     click(moreRow("recurring")!);
+    // 반복 단계는 연결된 반복 목록을 받은 뒤 연다(비동기) — 한 번 기다린다
+    await act(async () => {});
     expect(
       document.querySelector("[data-testid=step-recurring]"),
     ).not.toBeNull();

@@ -16,7 +16,8 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 const toastError = vi.hoisted(() => vi.fn());
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show: toastError, dismiss: () => {} }),
 }));
 const logout = vi.hoisted(() => vi.fn());

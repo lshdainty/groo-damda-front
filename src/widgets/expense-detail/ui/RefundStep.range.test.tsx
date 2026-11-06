@@ -16,6 +16,8 @@ const seen = vi.hoisted(() => ({
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: "ko" } }),
+  // 환불 확인 본문은 <Trans> 로 굵은 금액을 끼운다 — 여기서는 키만 그린다
+  Trans: ({ i18nKey }: { i18nKey: string }) => i18nKey,
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 vi.mock("@/shared/ds/date-picker", async (orig) => {

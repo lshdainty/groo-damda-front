@@ -4,6 +4,8 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// 저장 · 실패 알림이 useSnackbar 를 쓴다 — 앱 맨 위(src/app/index.tsx)처럼 공급자로 감싼다
+import { SnackbarProvider } from "@/shared/ds/snackbar";
 import type { Asset } from "@/entities/asset";
 
 declare global {
@@ -82,9 +84,11 @@ let root: Root;
 function render(mobile: boolean, addRequest = 0) {
   act(() =>
     root.render(
-      <MemoryRouter initialEntries={["/desk/settings?section=accounts"]}>
-        <AccountManager mobile={mobile} addRequest={addRequest} />
-      </MemoryRouter>,
+      <SnackbarProvider>
+        <MemoryRouter initialEntries={["/desk/settings?section=accounts"]}>
+          <AccountManager mobile={mobile} addRequest={addRequest} />
+        </MemoryRouter>
+      </SnackbarProvider>,
     ),
   );
 }

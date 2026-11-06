@@ -458,7 +458,13 @@ describe("머리 — 투자 유의 배지 · 등락", () => {
   it("경고 이름표(투자유의 포함)가 배지로 그려진다", () => {
     render();
     const head = container.querySelector("#stock-name")!.closest("section")!;
-    expect(head.textContent).toContain("warning.INVESTMENT_ATTENTION");
+    // 이름은 t(`warning.<코드>`, { defaultValue: 코드 }) — 이 시험의 t 목은 defaultValue 를 돌려준다
+    expect(head.textContent).toContain("INVESTMENT_ATTENTION");
+    expect(
+      [...head.querySelectorAll("[data-slot=badge]")].some((b) =>
+        b.textContent?.includes("INVESTMENT_ATTENTION"),
+      ),
+    ).toBe(true);
   });
   it("전일 종가가 있으면 머리 증감 '▲ 10원 · 10.00%' — 부호 + 없음", () => {
     render();

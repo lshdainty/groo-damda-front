@@ -22,10 +22,13 @@ declare global {
 
 const state = vi.hoisted(() => ({
   prefs: undefined as Record<string, unknown> | undefined,
+  /** 값을 아직 받는 중 — 아니면 값이 없을 때 받기 실패로 본다 */
+  loading: false,
   patched: [] as Record<string, unknown>[],
 }));
 
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
 }));
 vi.mock("react-i18next", () => ({
@@ -41,8 +44,8 @@ vi.mock("@/shared/ui/theme-context", () => ({
 vi.mock("@/features/user", () => ({
   useUserPreferences: () => ({
     data: state.prefs,
-    isError: state.prefs === undefined,
-    isLoading: false,
+    isError: state.prefs === undefined && !state.loading,
+    isLoading: state.loading,
     refetch: () => {},
     isRefetching: false,
   }),
@@ -78,6 +81,7 @@ beforeEach(() => {
       }) as unknown as MediaQueryList;
   }
   state.prefs = { timezone: "Asia/Seoul", defaultCurrency: "KRW" };
+  state.loading = false;
   state.patched = [];
   localStorage.clear();
   container = document.createElement("div");
@@ -108,22 +112,29 @@ function openCurrency() {
  * 통화 라디오만 — 테마 타일도 `role="radio"` 라서 통째로 긁으면 그쪽이 먼저 걸린다.
  * 라벨이 `currency.<코드>`(목이 키를 그대로 흘린다)라 그걸로 가른다.
  */
-const currencyRadios = () =>
-  [...document.body.querySelectorAll("[role='radio']")].filter((el) =>
-    (el.textContent ?? "").includes("currency."),
+// ds ListRadioItem 은 radio 요소 안에 글이 없다(줄 글은 바깥 li) — 줄(li) 글로 가르고 그 안의 radio 를 누른다
+const currencyRows = () =>
+  [...document.body.querySelectorAll("[data-slot=list-item]")].filter(
+    (li) =>
+      li.querySelector("[role='radio']") &&
+      (li.textContent ?? "").includes("currency."),
   );
 
 function pickCurrency(code: string) {
-  const item = currencyRadios().find((el) =>
-    (el.textContent ?? "").includes(code),
-  );
+  const item = currencyRows()
+    .find((li) => (li.textContent ?? "").includes(code))
+    ?.querySelector("[role='radio']");
   if (!item) throw new Error(`통화 항목을 찾지 못했다: ${code}`);
   act(() => item.dispatchEvent(new MouseEvent("click", { bubbles: true })));
 }
 
 const checkedCurrency = () =>
-  currencyRadios()
-    .find((el) => el.getAttribute("aria-checked") === "true")
+  currencyRows()
+    .find(
+      (li) =>
+        li.querySelector("[role='radio']")?.getAttribute("aria-checked") ===
+        "true",
+    )
     ?.textContent?.trim() ?? null;
 
 describe("기본 통화는 서버에 저장한다 (QA #124)", () => {
@@ -158,20 +169,30 @@ describe("기본 통화는 서버에 저장한다 (QA #124)", () => {
     render();
     const trigger = openCurrency();
 
-    expect(trigger.textContent).toContain("EUR");
+    // 값 글은 단추 곁(InputButton 의 value 칸)에 있다 — 단추를 감싼 상자에서 본다
+    expect(trigger.closest("[data-slot=input-button]")!.textContent).toContain(
+      "EUR",
+    );
     expect(checkedCurrency()).toContain("EUR");
   });
 
   it("값이 아직 안 왔으면 원화로 그리지 않는다 — 값 글이 비고 칸이 막힌다", () => {
     state.prefs = undefined;
+    // 받는 중 — 받기 실패면 줄이 [다시 시도] 로 바뀐다(아래 시험)
+    state.loading = true;
     render();
     const trigger = [
       ...document.body.querySelectorAll<HTMLButtonElement>("button"),
-    ].find((b) => b.getAttribute("aria-label") === "currency.label")!;
+    ].find((b) => b.getAttribute("aria-label") === "currency.label");
 
-    expect(trigger.disabled).toBe(true);
-    expect(trigger.textContent).not.toContain("KRW");
-    expect(trigger.textContent).not.toContain("currency.KRW");
+    // 받는 동안 칸 자리는 Skeleton — 누를 칸이 없고(고를 수 없다) 원화 글도 없다
+    expect(trigger).toBeUndefined();
+    const row = [
+      ...document.body.querySelectorAll("[data-slot=list-item]"),
+    ].find((li) => li.textContent?.includes("currency.desc"))!;
+    expect(row.querySelector("[data-slot=skeleton]")).not.toBeNull();
+    expect(row.textContent).not.toContain("KRW");
+    expect(row.textContent).not.toContain("currency.KRW");
   });
 
   it("받기에 실패한 상태에서는 지역 · 통화 줄이 [다시 시도]로 바뀌어 저장 요청이 나갈 길이 없다 — 기본값이 서버 값을 덮지 않는다", () => {

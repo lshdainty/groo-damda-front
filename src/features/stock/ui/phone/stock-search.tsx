@@ -50,8 +50,9 @@ const SearchEntryButton = forwardRef<
       type="button"
       aria-haspopup="dialog"
       aria-label={t("search.label")}
-      data-slot="stock-search-entry"
       {...props}
+      // 트리거가 넘기는 data-slot(popover-trigger)에 덮이지 않게 펼친 뒤에 둔다 — 폭과 상관없이 같은 이름
+      data-slot="stock-search-entry"
       className={cn(
         compact
           ? "flex min-h-[40px] w-full cursor-pointer items-center gap-x2_5 py-x2 text-t6 text-fg-placeholder shadow-[inset_0_-1px_0_0_var(--color-stroke-neutral-weak)] lg:min-h-[34px] lg:gap-x2 lg:py-x1_5 lg:text-t5"

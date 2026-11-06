@@ -23,7 +23,8 @@ const mocks = vi.hoisted(() => ({
   snack: [] as Array<{ message: string; action?: { onClick: () => void } }>,
   del: vi.fn(),
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: { message: string; action?: { onClick: () => void } }) =>
       mocks.snack.push(o),
@@ -195,6 +196,8 @@ describe("종목 찾기 입구", () => {
       document.dispatchEvent(
         new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
       );
+      // 초점은 표면이 내려간 다음 틱에 돌아온다(Radix FocusScope 의 setTimeout 0)
+      await new Promise((r) => setTimeout(r, 10));
     });
     expect(document.querySelector("[data-slot=popover-content]")).toBeNull();
     expect(document.activeElement).toBe(entry);
@@ -235,6 +238,10 @@ describe("종목 찾기 입구", () => {
       set.call(input, "삼성");
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
+    // 서버 검색은 마지막 입력 뒤 300ms 에 나간다 — 결과가 그려질 때까지 기다린다
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 350));
+    });
     const key = async (k: string) =>
       act(async () => {
         input.dispatchEvent(
@@ -272,6 +279,10 @@ describe("종목 찾기 입구", () => {
     await act(async () => {
       set.call(input, "삼");
       input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    // 서버 검색은 마지막 입력 뒤 300ms 에 나간다
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 350));
     });
     expect(document.querySelectorAll('[role="option"]').length).toBe(1);
     expect(
@@ -540,10 +551,13 @@ describe("그룹 삭제 확인 · 폼 닫기 · ⋮ 메뉴 (P 절 15 · 16 · �
       );
       more.click();
     });
+    // 1280 미만이라 ⋮ 는 Menu Sheet 로 열린다(ResponsiveMenu) — 시트 줄도 함께 센다
     const items = [
-      ...document.querySelectorAll('[role="menuitem"], [role="menu"] button'),
+      ...document.querySelectorAll(
+        '[role="menuitem"], [role="menu"] button, [data-slot=menu-sheet-item]',
+      ),
     ].map((e) => e.textContent);
-    expect(items).toEqual(["watch.groupRename", "watch.groupDelete"]);
+    expect(items).toEqual(["watch.groupRenameItem", "watch.groupDelete"]);
   });
 });
 

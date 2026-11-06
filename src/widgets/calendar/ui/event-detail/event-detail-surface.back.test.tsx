@@ -48,6 +48,9 @@ vi.mock("@/widgets/calendar/model/useCalendarEvents", () => ({
       o?.onSuccess?.();
     },
     isPending: false,
+    isError: false,
+    // [수정] 은 지난 저장 실패를 지우고 폼을 연다(updateEvent.reset())
+    reset: () => {},
   }),
 }));
 

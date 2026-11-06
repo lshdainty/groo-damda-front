@@ -12,7 +12,8 @@ const snack: Array<{
   tone?: string;
   action?: { onClick: () => void };
 }> = [];
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: { message: string }) => snack.push(o),
     dismiss: () => {},

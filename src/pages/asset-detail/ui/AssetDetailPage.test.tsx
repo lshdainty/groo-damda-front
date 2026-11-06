@@ -89,7 +89,8 @@ vi.mock("@/widgets/asset-full", () => ({
   AssetLogo48: () => <span />,
   useAssetDescription: () => "설명",
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: Record<string, unknown>) => st.snacks.push(o),
     dismiss: () => {},

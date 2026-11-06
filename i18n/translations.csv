@@ -518,7 +518,7 @@ asset,tab.accountDeposit,계좌·예금,Accounts & Deposits
 asset,manager.title,계좌 · 카드 관리,Manage accounts & cards
 asset,manager.description,계좌 · 카드 · 투자를 추가하거나 고칠 수 있어요.,"Add or edit your accounts, cards, and investments."
 asset,manager.loadFailed,계좌·카드를 불러오지 못했어요,"Couldn't load your accounts and cards"
-asset,manager.emptyHint,[추가]를 눌러 첫 계좌나 카드를 등록해 보세요.,Tap [Add] to register your first account or card.
+asset,manager.emptyHint,[추가]를 눌러 첫 계좌나 카드를 등록해보세요.,Tap [Add] to register your first account or card.
 asset,excludedFromTotal,총액 제외,Excluded from total
 asset,deleteConfirm.titleAccount,계좌 삭제,Delete account
 asset,deleteConfirm.titleCard,카드 삭제,Delete card
@@ -2110,7 +2110,7 @@ stocks,search.noResults,'{{query}}'에 대한 검색 결과가 없어요,No resu
 stocks,connect.title,증권 계정을 연결해주세요,Connect a brokerage account
 stocks,connect.holdingsDesc,토스증권 키를 연결하면 보유 종목과 평가손익을 실시간으로 볼 수 있어요.,Connect your Toss Securities key to see holdings and P&L in real time.
 stocks,connect.action,설정에서 연결하기,Connect in settings
-stocks,connect.firstTitle,증권사를 연결해 주세요,Connect a brokerage
+stocks,connect.firstTitle,증권사를 연결해주세요,Connect a brokerage
 stocks,connect.firstDesc,토스증권 · 나무증권 키를 연결하면 시세와 보유 종목을 볼 수 있어요.,Connect your Toss Securities or NAMUH Securities key to see prices and holdings.
 stocks,connect.firstAction,증권사 연결하기,Connect a brokerage
 stocks,market.krShort,국내,Domestic
@@ -3078,7 +3078,7 @@ recurring,errInterestOver,이자는 금액보다 클 수 없어요.,Interest can
 recurring,pickValue,{{name}} 선택,Select {{name}}
 recurring,noValue,{{name}} 없음,No {{name}}
 recurring,nextDatesLine,다음 예정일 — {{dates}},Next dates — {{dates}}
-recurring,memoPlaceholder,메모를 적어 주세요,Write a note
+recurring,memoPlaceholder,메모를 적어주세요,Write a note
 recurring,clearValue,값 지우기,Clear value
 recurring,noAssets,고를 수 있는 계좌가 없어요.,There is no account to choose.
 recurring,moreOf,{{name}} 더보기,More actions for {{name}}

@@ -104,7 +104,8 @@ vi.mock("@/shared/lib/groo/hide-amounts-core", async (orig) => ({
   ...(await orig<typeof import("@/shared/lib/groo/hide-amounts-core")>()),
   useHideAmounts: () => hide.on,
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: (typeof st.snacks)[number]) => st.snacks.push(o),
     dismiss: () => {},
@@ -167,6 +168,8 @@ vi.mock("@/features/expense", () => ({
   }),
 }));
 vi.mock("@/features/asset", () => ({
+  // 이체 줄 통화(1e49f429) — 모르면 원화로 찍힌다
+  useAssetCurrencyOf: () => () => null,
   useAssets: () => ({
     data: {
       assets: [
@@ -779,6 +782,9 @@ describe("고르기 모드 · 일괄 작업 바 (I-07 33 ~ 36)", () => {
     for (const refund of [null, 0]) {
       st.refund = refund;
       st.snacks = [];
+      // 삭제가 성공해도 고르기 모드는 남는다 — 둘째 값은 화면을 새로 띄워 처음부터 고른다
+      act(() => root.unmount());
+      root = createRoot(container);
       await openDeleteConfirm();
       expect(document.querySelector("[role=alertdialog]")).toBeNull();
       expect(st.snacks).toEqual([{ message: "1건을 삭제했어요." }]);

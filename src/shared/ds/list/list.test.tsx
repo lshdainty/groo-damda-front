@@ -113,15 +113,16 @@ describe("List — 좁은 줄(03-D 결정 1 B · 결정 2 B)", () => {
         "@max-[calc(16rem+48px)]/list-item:[&>[data-slot=list-body]]:pr-0",
       ]),
     );
+    // 글 값 표식(data-value=text)도 값으로 친다(e2be1b0b) — 선택자는 :is(아이콘 없음, 글 값)
     // 값은 본문 칸 안 왼쪽 · 설명 아래 4(바깥 여백 2 + 안쪽 여백 2) — 화살표 · 컨트롤 · 작은 버튼이 든 뒤 붙이개는 값이 아니다(줄 끝 그대로)
     expect(content.join(" ")).toContain(
-      "@max-[calc(16rem+48px)]/list-item:[&>[data-slot=list-suffix]:not(:has(svg,button,a,input,[data-slot=list-mark]))]:mt-x0_5",
+      "@max-[calc(16rem+48px)]/list-item:[&>[data-slot=list-suffix]:is(:not(:has(svg,button,a,input,[data-slot=list-mark])),[data-value=text]:not(:has(>:is(svg,button,a,input,[data-slot=list-mark]))))]:mt-x0_5",
     );
     expect(content.join(" ")).toContain(
-      "[&>[data-slot=list-suffix]:not(:has(svg,button,a,input,[data-slot=list-mark]))]:row-start-2",
+      "[&>[data-slot=list-suffix]:is(:not(:has(svg,button,a,input,[data-slot=list-mark])),[data-value=text]:not(:has(>:is(svg,button,a,input,[data-slot=list-mark]))))]:row-start-2",
     );
     expect(content.join(" ")).toContain(
-      "@max-[calc(16rem+48px)]/list-item:[&>[data-slot=list-suffix]:not(:has(svg,button,a,input,[data-slot=list-mark]))]:pt-x0_5",
+      "@max-[calc(16rem+48px)]/list-item:[&>[data-slot=list-suffix]:is(:not(:has(svg,button,a,input,[data-slot=list-mark])),[data-value=text]:not(:has(>:is(svg,button,a,input,[data-slot=list-mark]))))]:pt-x0_5",
     );
     expect(content).toContain("[&>[data-slot=list-suffix]]:col-start-4");
   });

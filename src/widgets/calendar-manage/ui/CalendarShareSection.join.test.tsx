@@ -25,7 +25,8 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: "ko" } }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
 }));
 vi.mock("@/features/user-calendar", async () => {

@@ -14,6 +14,10 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 // 줄 부품은 껍데기 — 누르면 onClick 으로 거래를 넘기는 것만 본다
+// 이체 줄이 계좌 통화를 읽는다(useAssets 참조 조회) — 모르면 원화로 찍힌다
+vi.mock("@/features/asset", () => ({
+  useAssetCurrencyOf: () => () => null,
+}));
 vi.mock("@/entities/expense", () => ({
   ExpenseRow: ({
     expense,

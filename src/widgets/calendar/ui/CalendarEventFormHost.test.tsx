@@ -223,9 +223,11 @@ describe("저장 실패", () => {
       expect(alertText()).toContain("form.saveFailed");
       expect(closed).toBe(0);
       expect(field("title").value).toBe("치과");
-      // 맨 위 — 본문의 첫 자식
+      // 맨 위 — 본문의 첫 자식. Callout 은 오류 칸으로 옮기는 ref(useScrollToError)를 단 감싸개 안에 있다
       const body = document.querySelector("[data-slot$=body]")!;
-      expect(body.firstElementChild?.getAttribute("role")).toBe("alert");
+      expect(
+        body.firstElementChild?.firstElementChild?.getAttribute("role"),
+      ).toBe("alert");
     },
   );
 
@@ -355,21 +357,24 @@ describe("저장 요청은 silent 로 부른다", () => {
     expect(created[0]!.silent).toBe(true);
   });
 
-  it("일정 폼 추가 [저장] 은 silent: true", () => {
+  it("일정 폼 추가 [저장] 은 silent: true", async () => {
     setupFormDom(false);
     show(false);
     setValue(field("title"), "치과");
     click(lastButton("save"));
+    // 저장은 RHF handleSubmit 을 거쳐 비동기로 나간다
+    await act(async () => {});
     expect(created).toHaveLength(1);
     expect(created[0]!.silent).toBe(true);
     expect(updated).toHaveLength(0);
   });
 
-  it("일정 폼 수정 [저장] 도 silent: true", () => {
+  it("일정 폼 수정 [저장] 도 silent: true", async () => {
     setupFormDom(false);
     show(false, saved);
     setValue(field("title"), "정기 점검 2");
     click(lastButton("save"));
+    await act(async () => {});
     expect(updated).toHaveLength(1);
     expect(updated[0]).toMatchObject({ id: 5, silent: true });
     expect(created).toHaveLength(0);

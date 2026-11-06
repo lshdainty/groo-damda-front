@@ -20,7 +20,8 @@ const state = vi.hoisted(() => ({
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show: state.show, dismiss: () => {} }),
 }));
 vi.mock("@/features/memo-tag", () => ({

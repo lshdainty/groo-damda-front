@@ -264,8 +264,9 @@ describe("내보내기 결과 알림 (I-05 47)", () => {
     await click(btnExact("preview"));
     expect(container.textContent).toContain("section.previewFailed");
     expect(container.textContent).not.toContain("서버 원문");
+    // [다시 시도] 는 ds 고정 글(dsT("common.retry"))이라 목 키가 아니라 한국어로 나온다
     const retry = [...container.querySelectorAll("button")].find((b) =>
-      b.textContent?.includes("common.retry"),
+      b.textContent?.includes("다시 시도"),
     );
     expect(retry).toBeTruthy();
   });
@@ -333,7 +334,9 @@ describe("표기 한 벌(사용자 결정 · date-picker.md:181)", () => {
   it("기간 구분은 물결표를 앞뒤에 붙여 쓴다 — ' — ' 가 아니다", async () => {
     await render(false);
     const text = groups()[0]!.textContent!;
-    expect(text).toMatch(/\d~/);
+    // 한국어 표기는 "11월 1일~11월 30일" — 물결표 앞뒤에 빈칸이 없다
+    expect(text).toMatch(/\S~\S/);
+    expect(text).not.toMatch(/\s~|~\s/);
     expect(text).not.toContain(" — ");
   });
 

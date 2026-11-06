@@ -293,14 +293,22 @@ const valueOf = (title: string) =>
   rowOf(title).querySelector("[data-slot=list-suffix]")?.textContent;
 const rowButton = (title: string) =>
   rowOf(title).querySelector<HTMLElement>("[data-slot=list-body]");
+/**
+ * 지금 열린 맨 위 표면 — 고르기 시트는 고른 뒤 닫히는 동안(vaul 이 내려가는 시간, data-state=closed) 문서에 남는다. 문서 전체를
+ * 뒤지면 닫히는 앞 시트(보내는 계좌)의 줄을 눌러 버린다 — 열린 표면 안에서만 찾는다
+ */
+const topSurface = (): ParentNode =>
+  Array.from(
+    document.querySelectorAll("[role=dialog]:not([data-state=closed])"),
+  ).slice(-1)[0] ?? document;
 /** 고르기 시트 안의 줄 */
 const pickItem = (text: string) =>
   Array.from(
-    document.querySelectorAll<HTMLElement>("[data-slot=list-body]"),
+    topSurface().querySelectorAll<HTMLElement>("[data-slot=list-body]"),
   ).find((b) => b.textContent?.includes(text));
 const pickItemTitles = () =>
   Array.from(
-    document.querySelectorAll<HTMLElement>("[data-slot=list-body]"),
+    topSurface().querySelectorAll<HTMLElement>("[data-slot=list-body]"),
   ).map((b) => b.querySelector("[data-slot=list-title]")?.textContent);
 
 /** 줄을 눌러 고르기 시트를 열고 항목을 고른다 */

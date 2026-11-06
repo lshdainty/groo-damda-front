@@ -90,12 +90,14 @@ describe("거래 줄 — ds List", () => {
     expect(q("[data-slot=list-suffix]")?.textContent).toBe("R");
   });
 
-  it("설명이 줄어드는 정도는 스펙 예 그대로 — 카테고리 0 · 계좌 2 · 시각 0", () => {
+  // tag-group.md:62 "말줄임으로 줄이는 것은 이름 항목(카테고리 · 계좌 · 태그)뿐" — 카테고리도 줄어든다. 같은 문서 :158 의 예 코드(shrink 0)는
+  // 본문과 어긋난다(디자인시스템 판정 J1: 제품 1 이 맞다). 0 이면 긴 카테고리가 칸을 먼저 채워 시각이 잘렸다(5b0401b0)
+  it("설명이 줄어드는 정도 — 카테고리 1 · 계좌 2 · 시각 0(이름 항목만 줄어든다)", () => {
     render(base);
     const shrinks = Array.from(
       container.querySelectorAll<HTMLElement>("[data-slot=tag-group-item]"),
     ).map((e) => e.style.flexShrink);
-    expect(shrinks).toEqual(["0", "2", "0"]);
+    expect(shrinks).toEqual(["1", "2", "0"]);
   });
 
   it("앞 타일 40 · 모서리 r3 · 줄 전체가 버튼", () => {

@@ -29,7 +29,8 @@ vi.mock("react-i18next", () => ({
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
 }));
 vi.mock("@/shared/ds/top-navigation/top-navigation-context", () => ({
@@ -110,6 +111,15 @@ beforeEach(() => {
   state.hasPrev = false;
   state.failList = false;
   state.navType = "";
+  // 멤버 메뉴는 Menu Sheet(vaul)로 열린다 — vaul 이 matchMedia 를 부른다
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+  })) as unknown as typeof window.matchMedia;
   if (!globalThis.ResizeObserver) {
     globalThis.ResizeObserver = class {
       observe() {}
@@ -214,8 +224,10 @@ describe("캘린더 관리 페이지", () => {
     ].find(
       (b) => b.textContent?.trim() === "shareSection.changeTo.READ",
     ) as HTMLElement;
+    // Menu Sheet 는 닫힌 뒤 onSelect 를 부른다 — 닫힘 애니메이션이 없는 jsdom 에서는 1초 뒤의 안전 타이머가 부른다
     await act(async () => {
       item.click();
+      await new Promise((r) => setTimeout(r, 1100));
     });
     expect(state.roleCalls).toEqual([
       { id: 2, memberId: 2, permission: "READ" },
@@ -241,7 +253,8 @@ describe("캘린더 관리 페이지", () => {
       container.querySelector("[data-slot=result-section]"),
     ).not.toBeNull();
     expect(container.textContent).toContain("shareSection.loadFailed");
-    expect(container.textContent).toContain("retry");
+    // [다시 시도] 는 ds 고정 글이다(react-i18next 목을 타지 않는다)
+    expect(container.textContent).toContain("다시 시도");
   });
 
   it("캘린더 삭제 — 앞 화면(목록)이 있으면 history 뒤로(목록이 두 번 남지 않는다)", async () => {

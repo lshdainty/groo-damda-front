@@ -278,7 +278,11 @@ describe("값 맞춤 — 공용 List 규칙", () => {
 
   it("시작 · 종료 조각은 오른쪽 끝선, 좁은 줄(제목 아래로 내려간 값)에서는 왼쪽", () => {
     render(event());
-    const piece = container.querySelector("[data-slot=list-suffix] > span")!;
+    // 첫 붙이개는 이제 캘린더 줄의 색 점 부품이다(705df765) — 날짜 · 시각 조각 묶음(줄바꿈 flex-wrap)을 찾는다
+    const piece = [
+      ...container.querySelectorAll("[data-slot=list-suffix] > span"),
+    ].find((s) => s.className.includes("flex-wrap"))!;
+    expect(piece).toBeTruthy();
     expect(piece.className).toContain("justify-end");
     expect(piece.className).toContain(
       "@max-[calc(16rem+48px)]/list-item:justify-start",

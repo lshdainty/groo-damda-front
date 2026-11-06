@@ -200,6 +200,11 @@ vi.mock("@/features/stock/model/useTossStocks", async (orig) => {
               price: "15190",
               volume: "4",
             },
+            {
+              timestamp: "2026-10-29T12:59:58+09:00",
+              price: "15195",
+              volume: "2",
+            },
           ]),
   };
 });
@@ -330,7 +335,7 @@ describe("호가 · 체결 색은 역할 이름(M14) · 체결 시각은 12시�
     expect(q.innerHTML).not.toContain("--status-danger-fg");
     expect(q.innerHTML).not.toContain("--fg-brand");
   });
-  it("체결 탭 — 시각은 '오후 1:00' (초 없음), 하락 체결은 fg-informative", async () => {
+  it("체결 탭 — 시각은 '오후 1:00' (초 없음), 하락 체결은 fg-informative · 견줄 체결이 없는 가장 오래된 줄은 fg-neutral", async () => {
     render();
     const tab = [...container.querySelectorAll("[role=radio]")].find(
       (e) => e.textContent === "quotes.trades",
@@ -347,6 +352,13 @@ describe("호가 · 체결 색은 역할 이름(M14) · 체결 시각은 12시�
       (td) => td.textContent === "15,200원",
     )!;
     expect(up.className).toContain("text-fg-critical");
+    // 가장 오래된 체결은 견줄 앞 체결이 없다 — 오름 · 내림 어느 색도 아니다
+    const oldest = [...q.querySelectorAll("td")].find(
+      (td) => td.textContent === "15,195원",
+    )!;
+    expect(oldest.className).toContain("text-fg-neutral");
+    expect(oldest.className).not.toContain("text-fg-critical");
+    expect(oldest.className).not.toContain("text-fg-informative");
   });
 });
 

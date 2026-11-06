@@ -43,7 +43,8 @@ vi.mock("react-i18next", () => ({
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show: () => {} }),
 }));
 // 추가·상세 다이얼로그는 자체 쿼리를 여럿 건다 — 여기선 목록만 본다.

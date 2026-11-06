@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
   AlertDialog,
@@ -66,7 +67,9 @@ export function AlertConfirm({
                 await onConfirm();
                 onClose();
               } catch {
-                onClose();
+                // 확인창을 다 내린 뒤에 알린다 — onClose 가 부른 다시 그리기를 먼저 끝내야 onError(스낵바)가 뜨는 순간 창이
+                // DOM 에 남지 않는다(창 위에 스낵바를 겹치지 않는다 — snackbar.md 오류 · alert-dialog.md)
+                flushSync(onClose);
                 onError();
               } finally {
                 setRunning(false);

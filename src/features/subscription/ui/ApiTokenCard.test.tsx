@@ -31,7 +31,8 @@ vi.mock("react-i18next", () => ({
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: { message: string }) => state.toasts.push(o.message),
     dismiss: () => {},
@@ -316,6 +317,8 @@ describe("ApiTokenCard", () => {
     );
 
     expect(state.revoked).toBe(9);
+    // 폐기는 mutateAsync().then(done) — 응답 뒤에 원문을 치운다
+    await act(async () => {});
     expect(document.body.innerHTML).not.toContain(RAW);
   });
 });

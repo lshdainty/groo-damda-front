@@ -146,7 +146,8 @@ describe("Field", () => {
     act(() => {
       setNativeValue(el, "열두 글자");
     });
-    expect(count().textContent).toBe("4/12");
+    // 띄어쓰기도 한 글자다 — 열 · 두 · 공백 · 글 · 자 = 5
+    expect(count().textContent).toBe("5/12");
     expect(count().querySelector(".text-fg-critical")).toBeNull();
   });
 

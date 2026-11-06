@@ -72,6 +72,10 @@ const buttonByText = (text: string) =>
   Array.from(document.body.querySelectorAll("button")).find(
     (b) => b.textContent === text,
   );
+const footerButton = (text: string) =>
+  Array.from(document.body.querySelectorAll("[data-slot*=footer] button")).find(
+    (b) => b.textContent === text,
+  ) as HTMLButtonElement | undefined;
 const openRow = (name: string) => {
   const row = Array.from(
     container.querySelectorAll<HTMLElement>("[data-slot=list-body]"),
@@ -152,7 +156,8 @@ describe.each([
   it(`수정 폼 [삭제] → 확인창이 실제 사용 수와 '태그 없음' 을 말한다 (${noun})`, () => {
     render(ns, true, [tagOf(1, "운동", 3)]);
     openRow("운동");
-    const del = buttonByText("삭제")!;
+    // 바닥의 [삭제] — 목록 줄 밀기 트레이에도 [삭제] 가 있어 바닥 안에서 찾는다
+    const del = footerButton("삭제")!;
     expect(del.className).toContain("text-fg-critical");
     // 시트 바닥 [삭제] 는 주 버튼과 같은 large 48(글자만큼 폭) — small 이 아니다(I-15 215)
     expect(del.className).toContain("min-h-[48px]");
@@ -173,7 +178,7 @@ describe.each([
   it("사용 수 0 도 숫자로 말한다", () => {
     render(ns, true, [tagOf(1, "아이디어", 0)]);
     openRow("아이디어");
-    act(() => buttonByText("삭제")!.click());
+    act(() => footerButton("삭제")!.click());
     expect(screenText()).toContain(`${noun} 0건은 태그 없음으로 남아요`);
   });
 

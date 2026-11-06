@@ -59,8 +59,17 @@ const setup = (strict = false) => {
     </QueryClientProvider>
   );
   act(() => root.render(strict ? <StrictMode>{tree}</StrictMode> : tree));
-  return { spy, unmount: () => act(() => root.unmount()) };
+  let alive = true;
+  const unmount = () => {
+    if (!alive) return;
+    alive = false;
+    act(() => root.unmount());
+  };
+  mounted.push(unmount);
+  return { spy, unmount };
 };
+/** 시험이 띄운 훅 — 끝나면 모두 내린다. 안 내리면 앞 시험의 훅이 visibilitychange 를 계속 들어 다음 시험에 스트림이 더 생긴다 */
+const mounted: (() => void)[] = [];
 
 describe("useNotificationSSE", () => {
   beforeEach(() => {
@@ -74,6 +83,7 @@ describe("useNotificationSSE", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
   });
   afterEach(() => {
+    mounted.splice(0).forEach((unmount) => unmount());
     vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
@@ -104,11 +114,14 @@ describe("useNotificationSSE", () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
-  it("끊기면 늘려 가며 다시 잇고, 이어지면 한 번 맞춘다", () => {
+  it("끊기면 늘려 가며 다시 잇고, 이어지면 한 번 맞춘다", async () => {
     const { spy } = setup();
     act(() => first().onerror?.());
     expect(open()).toHaveLength(0);
-    act(() => void vi.advanceTimersByTime(1000));
+    // 다시 잇기 전에 세션 확인(fetch)을 기다린다 — 타이머 뒤 약속까지 흘려 보낸다
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
     expect(open()).toHaveLength(1);
     act(() => first().emit("CONNECT"));
     expect(spy).toHaveBeenCalledTimes(1);

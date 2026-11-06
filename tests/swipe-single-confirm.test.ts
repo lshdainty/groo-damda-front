@@ -10,12 +10,19 @@ import { describe, expect, it } from "vitest";
  * `onSelect` 에서 자기 확인창(`setConfirmDelete`)을 또 열어 같은 질문을 두 번 했다.
  * 스와이프의 `onSelect` 는 확인이 끝난 뒤이므로 바로 지운다. 데스크톱 삭제 버튼은 자기
  * 확인창을 그대로 쓴다.
+ *
+ * 이 규칙은 **옛 `@/shared/ui/swipe-actions`(스스로 묻는다)** 를 쓰는 파일에만 해당한다. ds `SwipeActions`
+ * (`@/shared/ds/swipe-actions`)는 묻지 않는다 — destructive 는 **부르는 쪽이** 확인창을 연다(swipe-actions.tsx 의
+ * SwipeAction.onSelect 주석). 그래서 ds 로 옮긴 화면의 `setConfirmDelete(...)` 는 한 번 묻는 올바른 길이다.
  */
 const files = execSync('git grep -l "kind: \\"destructive\\"" -- src', {
   encoding: "utf-8",
 })
   .split("\n")
-  .filter(Boolean);
+  .filter(Boolean)
+  .filter((f) =>
+    readFileSync(f, "utf-8").includes('from "@/shared/ui/swipe-actions"'),
+  );
 
 /** destructive 액션 블록 — `kind: "destructive"` 부터 그 액션의 `onSelect` 줄까지. */
 function destructiveOnSelects(src: string): string[] {
