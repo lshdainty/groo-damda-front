@@ -4,7 +4,7 @@ import { ScreenBands } from "@/shared/ui/groo/screen-bands";
 import { Button } from "@/shared/ds/button";
 import { MonthBar } from "@/shared/ui/groo/month-bar";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
-import { useBudgetModel } from "./budget-model";
+import { useBudgetModel, type BudgetMonth } from "./budget-model";
 import {
   CategorySection,
   ComplianceSection,
@@ -19,10 +19,10 @@ import {
  * 띠 사이 8 둘, 머리 아래 · 마지막 띠 아래 틈 0. 띠 안 구역 사이는 구역이 갖는 24 + 24 = 48(선 · 틈 없음), 달 줄 ↔ 총 예산은 12.
  * 이번 달 예산이 하나도 없으면 띠 ① 은 달 줄 + Result Section empty 이고 띠 ② 는 없다(Q3-B). 앱 `budget_screen.dart` 와 같은 구조 · 같은 값이다(짝 1).
  */
-export function BudgetMobile() {
+export function BudgetMobile({ month }: { month?: BudgetMonth } = {}) {
   const { t } = useTranslation("budget");
   const navigate = useNavigate();
-  const m = useBudgetModel();
+  const m = useBudgetModel(month);
   const goToSettings = () => navigate("/desk/settings?section=budget");
   const monthBar = (
     <MonthBar
