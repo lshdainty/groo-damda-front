@@ -64,6 +64,7 @@ vi.mock("react-i18next", () => ({
 }));
 vi.mock("@/shared/lib/confirm-fail", () => ({
   useConfirmFail: () => () => undefined,
+  useToggleFail: () => () => undefined,
 }));
 vi.mock("@/shared/ds/snackbar", () => ({
   useSnackbar: () => ({ show: () => undefined, dismiss: () => undefined }),
