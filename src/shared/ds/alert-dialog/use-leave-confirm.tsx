@@ -28,10 +28,15 @@ export interface LeaveConfirmOptions {
   container?: HTMLElement | null;
   /** false 면 모달 부작용을 끈다 — 카탈로그 · 문서 전용(AlertDialog 의 modal) */
   modal?: boolean;
+  /**
+   * 저장하는 중이다 — 닫기를 받지 않는다(묻지도 않는다). 저장 중에 닫히면 실패를 알릴 폼 맨 위 Callout 자리가 사라진다
+   * (skeleton.md:136). request() 가 false 를 돌려주므로 뒤로 가기는 칸을 다시 쌓고 끌던 시트는 제자리로 돌아간다
+   */
+  busy?: boolean;
 }
 
 /**
- * request() 는 닫기를 청한다 — 바로 닫았으면 true, 물었으면 false. node 를 표면 곁에 그린다
+ * request() 는 닫기를 청한다 — 바로 닫았으면 true, 물었거나 저장 중이라 받지 않았으면 false. node 를 표면 곁에 그린다
  * (확인창은 L5 라 시트 · 대화상자 위에 뜬다).
  */
 export function useLeaveConfirm({
@@ -40,18 +45,23 @@ export function useLeaveConfirm({
   contentRef,
   container,
   modal,
+  busy = false,
 }: LeaveConfirmOptions) {
   const dsT = useDsText();
   const [asking, setAsking] = React.useState(false);
   const dirtyRef = React.useRef(dirty);
   const leaveRef = React.useRef(leave);
+  const busyRef = React.useRef(busy);
   React.useEffect(() => {
     dirtyRef.current = dirty;
     leaveRef.current = leave;
+    busyRef.current = busy;
   });
   const returnRef = React.useRef<HTMLElement | null>(null);
   const leavingRef = React.useRef(false);
   const request = () => {
+    // 저장 중 — 닫지도 묻지도 않는다(X 는 모양 그대로, 누르면 아무 일 없음 — 저장 단추의 로딩이 "기다려라" 를 말한다)
+    if (busyRef.current) return false;
     if (!dirtyRef.current) {
       leaveRef.current();
       return true;
