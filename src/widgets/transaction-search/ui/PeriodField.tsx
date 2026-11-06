@@ -27,9 +27,10 @@ import {
   PopoverTrigger,
 } from "@/shared/ds/popover";
 
-// 빠른 기간 — 스펙 예시 다섯(date-picker.md "빠른 기간")
+// 빠른 기간 — 가계부 거르기(FilterPeriodBody)와 같은 필터라 같은 벌 셋: 이번 주 · 이번 달 · 최근 3개월.
+// 앱 검색 · 가계부 거르기도 셋이다(I-wrap-b1 ε — 앱 α 검수). 범위는 ds 날짜 선택의 달력 단위
 const PRESETS = DATE_PRESETS.filter((n) =>
-  ["thisWeek", "thisMonth", "lastMonth", "last3Months", "thisYear"].includes(n),
+  ["thisWeek", "thisMonth", "last3Months"].includes(n),
 );
 
 /**
