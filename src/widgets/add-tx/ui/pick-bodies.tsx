@@ -6,7 +6,7 @@ import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { Icon } from "@/shared/ui/groo/primitives";
 import { LogoTile } from "@/shared/ds/logo-tile";
 import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
-import { PickFailure, PickSkeleton } from "@/shared/ui/groo/pick-load";
+import { PickLoadGate } from "@/shared/ui/groo/pick-load";
 import type { TxForm } from "../model/use-tx-form";
 import type { Asset } from "@/entities/asset";
 
@@ -32,15 +32,21 @@ export function CategoryPickBody({
   close: () => void;
 }) {
   const { t } = useTranslation("expense");
-  if (f.categoriesQ.isPending) return <PickSkeleton />;
-  if (f.categoriesQ.isError)
-    return (
-      <PickFailure
-        title={t("addTx.categoryLoadFailed")}
-        onRetry={() => void f.categoriesQ.refetch()}
-        retrying={f.categoriesQ.isFetching}
-      />
-    );
+  return (
+    <PickLoadGate
+      pending={f.categoriesQ.isPending}
+      failed={f.categoriesQ.isError}
+      failedTitle={t("addTx.categoryLoadFailed")}
+      onRetry={() => void f.categoriesQ.refetch()}
+      retrying={f.categoriesQ.isFetching}
+    >
+      {() => <CategoryList f={f} close={close} />}
+    </PickLoadGate>
+  );
+}
+
+function CategoryList({ f, close }: { f: TxForm; close: () => void }) {
+  const { t } = useTranslation("expense");
   const ofType = f.categories
     .filter((c) => c.expenseType === f.type)
     .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -147,46 +153,47 @@ export function AssetPickBody({
   noneLabel?: string;
 }) {
   const { t } = useTranslation("expense");
-  if (f.assetsQ.isPending) return <PickSkeleton />;
-  if (f.assetsQ.isError)
-    return (
-      <PickFailure
-        title={t("addTx.assetLoadFailed")}
-        onRetry={() => void f.assetsQ.refetch()}
-        retrying={f.assetsQ.isFetching}
-      />
-    );
   const sorted = [...list].sort(ASSET_ORDER);
   return (
-    <div className="-mx-x6">
-      {sorted.length === 0 && (
-        <PickEmpty>{t("addTx.noPickableAsset")}</PickEmpty>
+    <PickLoadGate
+      pending={f.assetsQ.isPending}
+      failed={f.assetsQ.isError}
+      failedTitle={t("addTx.assetLoadFailed")}
+      onRetry={() => void f.assetsQ.refetch()}
+      retrying={f.assetsQ.isFetching}
+    >
+      {() => (
+        <div className="-mx-x6">
+          {sorted.length === 0 && (
+            <PickEmpty>{t("addTx.noPickableAsset")}</PickEmpty>
+          )}
+          <List aria-label={t("addTx.account")}>
+            {allowNone && (
+              <ListButtonItem
+                title={noneLabel ?? t("addTx.noAccountOption")}
+                aria-current={value == null ? true : undefined}
+                suffix={value == null ? <Check aria-hidden /> : undefined}
+                onClick={() => {
+                  if (value != null) onPick(null);
+                  close();
+                }}
+              />
+            )}
+            {sorted.map((a) => (
+              <AssetLine
+                key={a.rowId}
+                asset={a}
+                on={value === a.rowId}
+                onPick={() => {
+                  if (value !== a.rowId) onPick(a.rowId);
+                  close();
+                }}
+              />
+            ))}
+          </List>
+        </div>
       )}
-      <List aria-label={t("addTx.account")}>
-        {allowNone && (
-          <ListButtonItem
-            title={noneLabel ?? t("addTx.noAccountOption")}
-            aria-current={value == null ? true : undefined}
-            suffix={value == null ? <Check aria-hidden /> : undefined}
-            onClick={() => {
-              if (value != null) onPick(null);
-              close();
-            }}
-          />
-        )}
-        {sorted.map((a) => (
-          <AssetLine
-            key={a.rowId}
-            asset={a}
-            on={value === a.rowId}
-            onPick={() => {
-              if (value !== a.rowId) onPick(a.rowId);
-              close();
-            }}
-          />
-        ))}
-      </List>
-    </div>
+    </PickLoadGate>
   );
 }
 

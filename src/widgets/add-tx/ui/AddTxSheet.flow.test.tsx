@@ -50,6 +50,8 @@ const state = vi.hoisted(() => ({
   listsLate: false,
   /** 받아 오기가 실패한다 */
   refetchFails: false,
+  /** 자산 조회가 받은 목록 없이 실패한 상태 */
+  assetsFailed: false,
   /** 문자 해석 결과 — 없으면 못 알아본 문자 */
   parsed: null as Record<string, unknown> | null,
 }));
@@ -149,9 +151,13 @@ vi.mock("@/features/expense", () => ({
 }));
 vi.mock("@/features/asset", () => ({
   useAssets: () => ({
-    data: state.listsLate ? undefined : { assets: state.assets },
-    isPending: state.listsLate,
-    isError: false,
+    data:
+      state.listsLate || state.assetsFailed
+        ? undefined
+        : { assets: state.assets },
+    isPending: state.listsLate && !state.assetsFailed,
+    isError: state.assetsFailed,
+    isFetching: false,
     refetch: async () => {
       if (!state.refetchFails) state.listsLate = false;
       return {
@@ -319,6 +325,7 @@ beforeEach(() => {
       null;
   state.listsLate = false;
   state.refetchFails = false;
+  state.assetsFailed = false;
   state.parsed = null;
   state.assets = [];
   sent.touched = [];
@@ -1282,6 +1289,40 @@ describe("자산 · 카테고리 목록을 받기 전 · 실패한 채 수정해
     expect(sent.calls).toBe(0);
     // 목록을 못 받아 막은 저장은 "참조를 못 받았다" 고정 글이다(e6db3a35) — 저장 실패 글과 갈린다
     expect(dialogText()).toContain("query.referenceSaveFailed");
+  });
+});
+
+describe("계좌 고르기 — 받는 중 · 못 받음을 빈 목록과 가른다 (B2-6)", () => {
+  const sheetText = () =>
+    [...document.body.querySelectorAll("[role=dialog]")].slice(-1)[0]
+      ?.textContent ?? "";
+  const toAccountPick = async () => {
+    await open();
+    setValue(amountInput(), "5000");
+    await press("addTx.next");
+    click(row("addTx.account"));
+    await tick();
+  };
+
+  it("못 받았으면 실패 + [다시 시도] — 빈 글 · 계좌 없음 줄이 아니다", async () => {
+    state.assetsFailed = true;
+    await toAccountPick();
+    expect(sheetText()).toContain("addTx.assetLoadFailed");
+    expect(sheetText()).toContain("loadFailedDesc");
+    expect(sheetText()).not.toContain("addTx.noPickableAsset");
+    expect(sheetText()).not.toContain("addTx.noAccountOption");
+    expect(lastButton("retry")).toBeTruthy();
+  });
+
+  it("받는 중이면 Skeleton — 실패도 빈 글도 아니다", async () => {
+    state.listsLate = true;
+    await toAccountPick();
+    const sheet = [...document.body.querySelectorAll("[role=dialog]")].slice(
+      -1,
+    )[0]!;
+    expect(sheet.querySelector("[data-slot=pick-skeleton]")).not.toBeNull();
+    expect(sheetText()).not.toContain("addTx.assetLoadFailed");
+    expect(sheetText()).not.toContain("addTx.noPickableAsset");
   });
 });
 

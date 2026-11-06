@@ -52,6 +52,7 @@ export function PickFailure({
  * 목록을 받아야 고를 수 있는 고르기 몸 — 받는 중 · 못 받음 · 받음을 가른다.
  * 받는 중을 빈 목록("…이 없어요")으로, 못 받음을 빈 글로 보이지 않게 한다. 받은 뒤에만 `children` 을 그린다.
  * 조건은 호출처가 정한다(이미 받은 목록이 있는 채 다시 받기 실패는 보통 `ready`).
+ * 시트 · 팝오버 몸(좌우 24) 안에 둔다 — 받는 중 · 실패는 그 24 를 걷어 받은 목록과 끝선을 맞춘다.
  */
 export function PickLoadGate({
   pending,
@@ -70,10 +71,22 @@ export function PickLoadGate({
   retrying?: boolean;
   children: () => ReactNode;
 }) {
+  // 시트 · 팝오버 몸의 좌우 24 를 걷는다 — 받은 목록(PickList · List 의 -mx-x6)과 같은 끝선
   if (failed)
     return (
-      <PickFailure title={failedTitle} onRetry={onRetry} retrying={retrying} />
+      <div className="-mx-x6">
+        <PickFailure
+          title={failedTitle}
+          onRetry={onRetry}
+          retrying={retrying}
+        />
+      </div>
     );
-  if (pending) return <PickSkeleton />;
+  if (pending)
+    return (
+      <div className="-mx-x6">
+        <PickSkeleton />
+      </div>
+    );
   return <>{children()}</>;
 }
