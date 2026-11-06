@@ -12,6 +12,11 @@ import * as React from "react";
  * 높이(레이아웃)를 바꾸지 않고 translate3d 로만 옮긴다 — 목록이 접히는 만큼 당겨지지 않는다. ScrollTimeline 이 있는 브라우저는 스크롤과
  * 이동을 브라우저가 잇고, 없으면 scroll 이벤트로 같은 일을 한다.
  * 모션 줄이기면 자동 숨김을 끈다(늘 보인다). 숨은 영역 안으로 키보드 초점이 오면 바로 다 드러낸다 — 보이지 않는 단추에 초점이 머물지 않는다.
+ *
+ * groo 확장(SEED 에 없다) 두 가지 — SEED 기본(top 0 · 남는 부분 없음)에서는 동작이 그대로다.
+ * - keepRef: 영역 안의 이 요소부터 아래는 숨지 않는다. 숨는 거리는 영역 맨 위에서 이 요소 윗변까지다(원장 머리 — 총액 · 요약은 숨고
+ *   주 달력은 남는다). 영역이 그만큼만 위로 올라가므로 남는 부분이 바로 위에 붙은 다른 고정 줄 아래에 선다.
+ * - sticky top 이 0 이 아니면(위에 고정 줄이 따로 있다) 그 값만큼 일찍 붙으므로, 스크롤한 거리는 붙는 순간부터 센다.
  */
 
 const SNAP_THRESHOLD_RATIO = 0.5;
@@ -60,6 +65,7 @@ function hasTransitionDuration(value: string) {
 export function useScrollAutoHide(
   rootRef: React.RefObject<HTMLElement | null>,
   scrollContainerRef: React.RefObject<HTMLElement | null>,
+  keepRef?: React.RefObject<HTMLElement | null>,
 ) {
   React.useEffect(() => {
     const root = rootRef.current;
@@ -295,9 +301,20 @@ export function useScrollAutoHide(
       const rootRect = root.getBoundingClientRect();
       const scrollRect = scrollContainer.getBoundingClientRect();
       const scrollTop = getScrollTop();
-      height = rootRect.height;
+      // sticky top — relative 로 잴 때 그만큼 밀려 있고, 그만큼 일찍 붙는다(auto · 0 이면 SEED 그대로)
+      const stickyTop = Number.parseFloat(getComputedStyle(root).top) || 0;
+      const keep = keepRef?.current;
+      height =
+        keep && root.contains(keep)
+          ? Math.max(0, keep.getBoundingClientRect().top - rootRect.top)
+          : rootRect.height;
       naturalOffset =
-        scrollTop + rootRect.top - scrollRect.top - scrollContainer.clientTop;
+        scrollTop +
+        rootRect.top -
+        stickyTop -
+        scrollRect.top -
+        scrollContainer.clientTop -
+        stickyTop;
 
       root.style.position = previousPosition;
       root.style.transition = previousTransition;
@@ -355,8 +372,14 @@ export function useScrollAutoHide(
       if (!supportsScrollEnd) scheduleSettle();
     };
 
-    // 숨은 영역 안으로 초점이 오면 바로 다 드러낸다
-    const handleFocusIn = () => {
+    // 숨은 영역 안으로 초점이 오면 바로 다 드러낸다. 남는 부분(keepRef)은 늘 보이므로 그 안의 초점은 드러낼 일이 아니다 — 드러내면
+    // 누르는 사이(mousedown 초점 → mouseup) 남는 부분이 숨는 높이만큼 내려가 누른 칸에서 손이 벗어난다
+    const handleFocusIn = (event: FocusEvent) => {
+      if (
+        event.target instanceof Node &&
+        keepRef?.current?.contains(event.target)
+      )
+        return;
       clearSettleTimer();
       cancelSettling();
       stopTracking();
@@ -410,6 +433,7 @@ export function useScrollAutoHide(
     const resizeObserver = new ResizeObserver(measure);
     resizeObserver.observe(root);
     resizeObserver.observe(scrollContainer);
+    if (keepRef?.current) resizeObserver.observe(keepRef.current);
 
     scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
     scrollContainer.addEventListener("scrollend", settle);
@@ -448,5 +472,5 @@ export function useScrollAutoHide(
       root.style.transition = initialTransition;
       root.style.willChange = initialWillChange;
     };
-  }, [rootRef, scrollContainerRef]);
+  }, [rootRef, scrollContainerRef, keepRef]);
 }

@@ -14,6 +14,8 @@ import { useScrollAutoHide } from "./use-scroll-auto-hide";
  *   ScrollAutoHide   숨는 영역 — scrollContainerRef(스크롤 상자의 ref — 필수) · asChild(자식 하나를 루트로), 나머지는 div 속성.
  *                    바탕 · z-index 는 className 으로 쓰는 쪽이 정한다(원장 머리는 bg-bg-layer-default · z-2 — 스크롤 상자 안의 겹침 값,
  *                    층 토큰이 아니다). 스크롤 상자 맨 위에 둔다(sticky · top 0 은 부품이 건다)
+ *                    keepRef(groo 확장) — 영역 안에서 숨지 않고 남는 아래 부분(원장 머리의 주 달력). 위에 고정 줄이 따로 있으면 style.top 으로
+ *                    그 높이를 준다 — 남는 부분이 그 줄 바로 아래에 선다
  *
  * 스크롤 상자 맨 위에 붙은 영역이 아래로 스크롤하면 그 거리만큼 위로 숨고, 위로 스크롤하면 같은 거리만큼 드러난다. 스크롤이 끝나면
  * 영역 높이의 50% 를 기준으로 다 숨거나 다 드러난다(200ms motion-ease-enter). 높이를 바꾸지 않고 translate3d 로만 옮기므로 루트의
@@ -27,6 +29,8 @@ import { useScrollAutoHide } from "./use-scroll-auto-hide";
 type ScrollAutoHideOwnProps = {
   /** 스크롤을 감지할 상자의 ref — 숨는 영역은 이 상자 안 맨 위에 둔다 */
   scrollContainerRef: React.RefObject<HTMLElement | null>;
+  /** groo 확장 — 영역 안의 이 요소부터 아래는 숨지 않는다(숨는 거리 = 영역 맨 위 ~ 이 요소 윗변). 없으면 영역 전체가 숨는다(SEED) */
+  keepRef?: React.RefObject<HTMLElement | null>;
 };
 
 type ScrollAutoHideAsChildProps = ScrollAutoHideOwnProps &
@@ -54,11 +58,11 @@ function mergeRefs<T>(...refs: (React.Ref<T> | undefined)[]) {
 
 const ScrollAutoHide = React.forwardRef<HTMLElement, ScrollAutoHideProps>(
   function ScrollAutoHide(
-    { asChild, scrollContainerRef, className, ...props },
+    { asChild, scrollContainerRef, keepRef, className, ...props },
     forwardedRef,
   ) {
     const rootRef = React.useRef<HTMLElement>(null);
-    useScrollAutoHide(rootRef, scrollContainerRef);
+    useScrollAutoHide(rootRef, scrollContainerRef, keepRef);
 
     const Component = asChild ? Slot : "div";
 

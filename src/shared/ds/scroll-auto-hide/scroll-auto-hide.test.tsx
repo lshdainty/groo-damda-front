@@ -271,3 +271,97 @@ describe("ScrollAutoHide — 모션 줄이기 · 초점", () => {
     root = createRoot(container);
   });
 });
+
+describe("ScrollAutoHide — groo 확장(남는 부분 · 위 고정 줄)", () => {
+  // 영역 높이 100 중 아래 40(윗변 60)이 남는 부분 · 위에 48 짜리 고정 줄이 따로 있어 sticky top 48
+  function mountKeep({ stickyTop = 0 }: { stickyTop?: number } = {}) {
+    const boxRef = createRef<HTMLDivElement>();
+    const keepRef = createRef<HTMLDivElement>();
+    act(() =>
+      root.render(
+        <div ref={boxRef}>
+          <ScrollAutoHide
+            scrollContainerRef={boxRef}
+            keepRef={keepRef}
+            style={{ top: stickyTop }}
+          >
+            <button type="button">소비 요약</button>
+            <div ref={keepRef}>
+              <button type="button">15</button>
+            </div>
+          </ScrollAutoHide>
+        </div>,
+      ),
+    );
+    const box = boxRef.current!;
+    const area = box.querySelector<HTMLElement>("[data-scroll-auto-hide]")!;
+    const keep = keepRef.current!;
+    let scrollTop = 0;
+    Object.defineProperties(box, {
+      scrollTop: {
+        configurable: true,
+        get: () => scrollTop,
+        set: (v: number) => {
+          scrollTop = v;
+        },
+      },
+      scrollHeight: { configurable: true, value: 1000 },
+      clientHeight: { configurable: true, value: 300 },
+    });
+    box.getBoundingClientRect = () => ({ top: 0, height: 300 }) as DOMRect;
+    // 잴 때는 relative — 제자리(고정 줄 아래 stickyTop) + relative 로 밀린 top 만큼
+    area.getBoundingClientRect = () =>
+      ({ top: stickyTop + stickyTop, height: HEIGHT }) as DOMRect;
+    keep.getBoundingClientRect = () =>
+      ({ top: stickyTop + stickyTop + 60, height: 40 }) as DOMRect;
+    act(() => resize());
+    const scrollTo = (top: number) => {
+      scrollTop = top;
+      act(() => {
+        box.dispatchEvent(new Event("scroll"));
+      });
+    };
+    const translate = () =>
+      Number(
+        /translate3d\(0px, (-?[\d.]+)px/.exec(area.style.transform)?.[1] ?? 0,
+      );
+    return { area, keep, scrollTo, translate };
+  }
+
+  it("keepRef — 남는 부분 안의 초점은 드러내지 않고(누르는 칸이 밀리지 않는다), 숨은 부분의 초점은 드러낸다", () => {
+    const { area, keep, scrollTo, translate } = mountKeep();
+    scrollTo(400);
+    expect(translate()).toBe(-60);
+    act(() => keep.querySelector("button")!.focus());
+    expect(translate()).toBe(-60);
+    act(() => area.querySelector("button")!.focus());
+    expect(translate()).toBe(0);
+  });
+
+  it("keepRef — 남는 부분 위까지만 숨는다(주 달력은 남는다)", () => {
+    const { scrollTo, translate } = mountKeep();
+    scrollTo(30);
+    expect(translate()).toBe(-30);
+    scrollTo(400);
+    expect(translate()).toBe(-60);
+  });
+
+  it("keepRef — 50% 스냅도 숨는 높이(60) 기준이다", () => {
+    const { scrollTo, translate } = mountKeep();
+    scrollTo(400);
+    scrollTo(375); // 25 드러남 → 보이는 비 25/60 < 50%
+    const box = container.firstElementChild!;
+    act(() => {
+      box.dispatchEvent(new Event("scrollend"));
+    });
+    expect(translate()).toBe(-60);
+  });
+
+  it("sticky top 이 있으면 붙는 순간부터 센다 — 위 고정 줄 아래에서 1:1", () => {
+    const { scrollTo, translate } = mountKeep({ stickyTop: 48 });
+    scrollTo(30);
+    expect(translate()).toBe(-30);
+    scrollTo(400);
+    expect(translate()).toBe(-60);
+  });
+});
