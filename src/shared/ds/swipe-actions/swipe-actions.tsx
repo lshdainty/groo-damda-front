@@ -63,9 +63,24 @@ type SwipeActionsContextValue = {
 const SwipeActionsContext =
   React.createContext<SwipeActionsContextValue | null>(null);
 
-/** 목록의 조상 — 한 번에 한 줄만 열리고, 목록(또는 화면)을 스크롤하면 열린 줄이 닫힌다 */
-function SwipeActionsProvider({ children }: { children?: React.ReactNode }) {
+/**
+ * 목록의 조상 — 한 번에 한 줄만 열리고, 목록(또는 화면)을 스크롤하면 열린 줄이 닫힌다.
+ * closeKey: 바뀌면 열린 줄을 닫는다 — 셸이 화면(경로)을 넘길 때 쓴다(옛 줄은 사라져도 열림 표식이 남지 않게)
+ */
+function SwipeActionsProvider({
+  children,
+  closeKey,
+}: {
+  children?: React.ReactNode;
+  closeKey?: string;
+}) {
   const [openId, setOpenId] = React.useState<string | null>(null);
+  const [seenKey, setSeenKey] = React.useState(closeKey);
+  // 렌더 중 상태 맞추기 — 키가 바뀐 그 렌더에서 바로 닫는다(효과로 미루면 한 프레임 열린 채 그려진다)
+  if (seenKey !== closeKey) {
+    setSeenKey(closeKey);
+    setOpenId(null);
+  }
   React.useEffect(() => {
     if (openId == null) return;
     const close = () => setOpenId(null);
@@ -212,7 +227,8 @@ const SwipeActions = React.forwardRef<HTMLDivElement, SwipeActionsProps>(
         data-state={open ? "open" : "closed"}
         className={cn(
           // 트랙은 칠하지 않는다 — 놓인 면이 그대로 보인다. 세로 스크롤은 브라우저에 남긴다(pan-y)
-          "relative touch-pan-y overflow-hidden select-none [-webkit-touch-callout:none]",
+          // 줄과 트레이는 같은 칸에 겹쳐 쌓는다(grid) — 높이는 둘 중 큰 쪽이라 큰 글자로 트레이 칸이 더 높아도 잘리지 않는다
+          "relative grid touch-pan-y overflow-hidden select-none [-webkit-touch-callout:none]",
           // RTL 은 미는 방향이 뒤집힌다 — 줄이 움직이는 쪽의 부호
           "[--swipe-dir:-1] rtl:[--swipe-dir:1]",
           className,
@@ -230,7 +246,7 @@ const SwipeActions = React.forwardRef<HTMLDivElement, SwipeActionsProps>(
         {/* 트레이는 줄 뒤에 늘 있다. 닫혀 있을 땐 보조 기술에서 감춘다 — 안 그러면 줄마다 "수정 삭제" 를 읽는다. */}
         <div
           data-slot="swipe-actions-tray"
-          className="absolute inset-y-0 end-0 flex"
+          className="col-start-1 row-start-1 flex justify-self-end"
           aria-hidden={!open}
         >
           {/* 뒤집어 그린다 — 조금만 밀면 바깥쪽부터 드러나므로, 차례대로 두면 파괴적 동작이 제일 먼저 손에 닿는다 */}
@@ -255,7 +271,8 @@ const SwipeActions = React.forwardRef<HTMLDivElement, SwipeActionsProps>(
           tabIndex={-1}
           data-slot="swipe-actions-row"
           className={cn(
-            "relative bg-bg-layer-default",
+            // 줄은 원래 높이 — 56 보다 낮으면 56(트레이가 더 높으면 그만큼). 남는 높이에는 내용을 가운데에 둔다
+            "relative col-start-1 row-start-1 flex min-h-14 flex-col justify-center bg-bg-layer-default",
             "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-stroke-focus-ring",
             // 끄는 동안에는 손가락을 1:1 로 따라간다 — 손을 뗀 뒤 자리를 잡을 때만 전환을 쓴다(모션 줄이기면 바로)
             drag == null &&
@@ -300,6 +317,18 @@ const SwipeActions = React.forwardRef<HTMLDivElement, SwipeActionsProps>(
           onPointerCancel={finish}
           // 열려 있으면 누르기는 닫기만 한다(열어 둔 걸 못 보고 누르는 일이 많다). 밀고 난 뒤의 click 은 삼킨다
           onClickCapture={(e) => {
+            // 다른 줄이 열려 있으면 이 누름은 그 줄을 닫기만 한다(시트 · 이동을 열지 않는다) — 호출처가 따로 알 필요가 없다
+            if (
+              !open &&
+              !swallowClick.current &&
+              group?.openId != null &&
+              group.openId !== id
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+              group.setOpenId(null);
+              return;
+            }
             if (!open && !swallowClick.current) return;
             const wasSwipe = swallowClick.current;
             swallowClick.current = false;

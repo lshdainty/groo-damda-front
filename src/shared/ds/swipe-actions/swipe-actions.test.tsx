@@ -697,3 +697,47 @@ describe("라벨 폭 — 영어 · 긴 글은 칸이 글 폭만큼 넓어진다(
     host.remove();
   });
 });
+
+describe("다른 줄이 열려 있을 때 · 화면이 바뀔 때 · 높이", () => {
+  it("다른 줄이 열려 있는데 이 줄을 누르면 열린 줄을 닫기만 하고 이 누름은 먹지 않는다(swipe-actions.md:175)", async () => {
+    const onRowClick = vi.fn();
+    await render(<List rows={["스타벅스", "쿠팡"]} onRowClick={onRowClick} />);
+    const [a, b] = wrappers();
+    await drag(a!, -80);
+    expect(stateOf(a!)).toBe("open");
+    await tap(b!, b!.querySelector("button[type=button]:not([data-slot])")!);
+    expect(stateOf(a!)).toBe("closed");
+    expect(onRowClick).not.toHaveBeenCalled();
+    // 닫힌 뒤의 다음 누름은 먹는다
+    await tap(b!, b!.querySelector("button[type=button]:not([data-slot])")!);
+    expect(onRowClick).toHaveBeenCalledWith("쿠팡");
+  });
+
+  it("closeKey 가 바뀌면(화면을 옮기면) 열린 줄이 닫힌다 — 줄은 그대로여도", async () => {
+    const tree = (key: string) => (
+      <SwipeActionsProvider closeKey={key}>
+        <SwipeActions actions={[edit(), del()]} rowLabel="스타벅스">
+          <button type="button">스타벅스</button>
+        </SwipeActions>
+      </SwipeActionsProvider>
+    );
+    await render(tree("/a"));
+    const [w] = wrappers();
+    await drag(w!, -80);
+    expect(stateOf(w!)).toBe("open");
+    await render(tree("/a"));
+    expect(stateOf(w!)).toBe("open");
+    await render(tree("/b"));
+    expect(stateOf(w!)).toBe("closed");
+  });
+
+  it("줄과 트레이는 같은 칸에 겹쳐 쌓여 높이가 둘 중 큰 쪽이다 — 줄 최소 56, 잘려 나가지 않는다", async () => {
+    await render(<List />);
+    const [w] = wrappers();
+    expect(w!.className).toMatch(/\bgrid\b/);
+    expect(trayOf(w!).className).not.toMatch(/\babsolute\b/);
+    expect(trayOf(w!).className).toMatch(/col-start-1 row-start-1/);
+    expect(rowOf(w!).className).toMatch(/col-start-1 row-start-1/);
+    expect(rowOf(w!).className).toMatch(/min-h-14/);
+  });
+});
