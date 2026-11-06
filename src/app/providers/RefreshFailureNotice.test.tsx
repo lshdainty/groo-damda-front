@@ -201,3 +201,69 @@ describe("RefreshFailureNotice — 내용이 있는 채 다시 받다 실패", (
     expect(show).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("같은 조회의 연달은 실패 — 첫 실패만, 한 번 성공하면 다시 센다", () => {
+  /** 한 조회를 붙여 두고 성공 · 실패를 차례로 낸다 */
+  function oneQuery(key: string) {
+    let fail = false;
+    const observer = new QueryObserver(client, {
+      queryKey: [key],
+      queryFn: () =>
+        fail ? Promise.reject(httpError(500)) : Promise.resolve({ rows: [1] }),
+      retry: false,
+    });
+    unsubs.push(observer.subscribe(() => undefined));
+    return {
+      ok: async () => {
+        fail = false;
+        await observer.refetch();
+      },
+      fail: async () => {
+        fail = true;
+        await observer.refetch().catch(() => undefined);
+      },
+    };
+  }
+  // 스낵바가 떠 있는 4초 창을 넘긴다 — 연속 실패 규칙만 보려고
+  const past = () => vi.advanceTimersByTimeAsync(4100);
+
+  it("같은 키가 연달아 실패하면 한 번만 — 홈 요약 60초 폴링이 끊긴 동안 1분마다 뜨지 않는다", async () => {
+    const q = oneQuery("dashboard-summary");
+    await act(async () => {
+      await q.ok();
+      await q.fail();
+      await past();
+      await q.fail();
+      await past();
+      await q.fail();
+    });
+    expect(show).toHaveBeenCalledTimes(1);
+  });
+
+  it("한 번 성공한 뒤 다시 실패하면 다시 알린다", async () => {
+    const q = oneQuery("ledger-again");
+    await act(async () => {
+      await q.ok();
+      await q.fail();
+      await past();
+      await q.ok();
+      await q.fail();
+    });
+    expect(show).toHaveBeenCalledTimes(2);
+  });
+
+  it("다른 키는 따로 센다 — 앞 키가 연달아 실패 중이어도 새 키의 첫 실패는 알린다", async () => {
+    const a = oneQuery("key-a");
+    const b = oneQuery("key-b");
+    await act(async () => {
+      await a.ok();
+      await b.ok();
+      await a.fail();
+      await past();
+      await a.fail();
+      await past();
+      await b.fail();
+    });
+    expect(show).toHaveBeenCalledTimes(2);
+  });
+});

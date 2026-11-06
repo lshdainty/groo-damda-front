@@ -14,6 +14,8 @@ import { isReferenceQuery } from "./reference";
  *   - 참조(`meta: REFERENCE_META`) — ReferenceFailureNotice 가 맡는다(둘 다 뜨지 않게)
  *   - 화면을 떠난 뒤 끝난 질의(관찰자 0) — 보이지 않는 내용의 실패다
  *   - 401 — 응답 인터셉터가 로그인으로 보낸다. 403 · 404 는 빼지 않는다 — 다른 기기에서 지운 경우가 많아 보는 내용이 낡았다
+ *   - 같은 조회(queryKey)의 연달은 실패 — 첫 실패만 알리고, 한 번 성공하면 다시 센다(웹 · 앱 공용 규칙, 2026-11-06).
+ *     홈 요약처럼 되풀이해 받는 조회가 망이 끊긴 동안 1분마다 같은 스낵바를 띄우지 않는다
  */
 
 /** 시세처럼 되풀이해 받는 질의 — useQuery 의 meta 로 단다 */
@@ -24,7 +26,7 @@ export const isPollQuery = (meta: unknown): boolean =>
   meta !== null &&
   (meta as { poll?: unknown }).poll === true;
 
-type QueryLike = Pick<Query, "meta" | "getObserversCount"> & {
+type QueryLike = Pick<Query, "meta" | "getObserversCount" | "queryHash"> & {
   state: { data: unknown };
 };
 
@@ -49,8 +51,21 @@ export const onRefreshFailure = (cb: () => void): (() => void) => {
   };
 };
 
+// 지금 연달아 실패하고 있는 조회(queryHash) — 성공하면 빠진다
+const failing = new Set<string>();
+
 /** QueryCache onError 에 건다 */
 export const notifyRefreshFailure = (error: unknown, query: QueryLike) => {
-  if (!shouldNotifyRefreshFailure(error, query)) return;
+  const again = failing.has(query.queryHash);
+  failing.add(query.queryHash);
+  if (again || !shouldNotifyRefreshFailure(error, query)) return;
   listeners.forEach((cb) => cb());
+};
+
+/** QueryCache onSuccess 에 건다 — 그 조회의 연속 실패를 끝낸다 */
+export const clearRefreshFailure = (
+  _data: unknown,
+  query: Pick<Query, "queryHash">,
+) => {
+  failing.delete(query.queryHash);
 };

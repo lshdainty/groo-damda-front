@@ -14,6 +14,7 @@ export { silentConfig, type SilentOpts } from "./silent-config";
 export { loadFailed } from "./query-state";
 export {
   POLL_META,
+  clearRefreshFailure,
   isPollQuery,
   notifyRefreshFailure,
   onRefreshFailure,

@@ -1,13 +1,19 @@
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { retryDelay, retryOnlyServerErrors } from "@/shared/api/retry";
-import { notifyRefreshFailure } from "@/shared/api/refresh-failure";
+import {
+  clearRefreshFailure,
+  notifyRefreshFailure,
+} from "@/shared/api/refresh-failure";
 
 /** 앱의 QueryClient 설정 — 시험이 같은 설정으로 만든다 */
 export const createAppQueryClient = () =>
   new QueryClient({
     // 받아 둔 값이 있는 채 다시 받기가 실패하면 공용 스낵바 "새로 고치지 못했어요." 한 줄 —
-    // 폴링 · 참조 · 화면을 떠난 질의 · 401 은 뺀다(shared/api/refresh-failure.ts, 띄우는 자리는 RefreshFailureNotice)
-    queryCache: new QueryCache({ onError: notifyRefreshFailure }),
+    // 폴링 · 참조 · 화면을 떠난 질의 · 401 · 같은 조회의 연달은 실패는 뺀다(shared/api/refresh-failure.ts, 띄우는 자리는 RefreshFailureNotice)
+    queryCache: new QueryCache({
+      onError: notifyRefreshFailure,
+      onSuccess: clearRefreshFailure,
+    }),
     defaultOptions: {
       queries: {
         // 마운트/리마운트/포커스마다 전 쿼리 재요청되어 요청 폭주 → 60초 신선도로 억제.
