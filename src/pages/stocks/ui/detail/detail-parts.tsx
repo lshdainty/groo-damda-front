@@ -239,6 +239,15 @@ export function HeadBand({
       ) : (
         title
       )}
+      {/* 받아 둔 시세가 있는 채 실패 — 이름 바로 아래, 가격을 읽기 전에(섹션 첫 줄, 단계 4) */}
+      {stale && !failed && (
+        <PriceStaleCallout
+          band={false}
+          onRetry={onRetry ?? (() => {})}
+          retrying={retrying}
+          className="mt-x4"
+        />
+      )}
       <div className="mt-x4">
         {loading ? (
           <Skeleton text="t12" className="w-3/5" />
@@ -269,13 +278,6 @@ export function HeadBand({
             title={t("detail.priceFail")}
             onRetry={onRetry ?? (() => {})}
             retrying={retrying}
-          />
-        ) : stale ? (
-          <PriceStaleCallout
-            band={false}
-            onRetry={onRetry ?? (() => {})}
-            retrying={retrying}
-            className="mt-x3"
           />
         ) : (
           unavailable && (

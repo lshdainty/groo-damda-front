@@ -392,6 +392,15 @@ describe("토스 폰 화면", () => {
     expect(bands[0]!.textContent).toContain("detail.priceFail");
     expect(bands[0]!.textContent).toContain("detail.priceStale");
     expect(container.querySelector("[data-slot=price-fail-band]")).toBeNull();
+    // 섹션 첫 줄 — 내 투자 띠에서 Callout 이 평가금액 라벨보다 앞이다(숫자를 읽기 전에, 앱 p4a 와 같은 자리)
+    const invest = container.querySelector("[data-section=invest]")!;
+    const callout = invest.querySelector("[data-slot=price-stale-callout]")!;
+    const label = [...invest.querySelectorAll("*")].find(
+      (e) => e.children.length === 0 && e.textContent === "summary.title",
+    )!;
+    expect(
+      callout.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("폴링이 모두 정상이면 시세 실패 Callout · 띠가 없다", () => {

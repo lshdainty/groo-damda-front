@@ -49,6 +49,16 @@ export function AssetAmount({
       aria-label={label}
       className="px-global-gutter pt-x3"
     >
+      {model.investPriceFailed && (
+        // 섹션 첫 줄 — 평가액이 DB 잔액 · 옛 시세다. 숫자를 읽기 전에 알린다(단계 4)
+        <PriceStaleCallout
+          band={false}
+          shows={model.investPriceFailShows ?? "lastPrice"}
+          retrying={model.pricesRetrying}
+          onRetry={model.retryPrices}
+          className="pb-x3"
+        />
+      )}
       <p className="m-0 text-t3 font-medium text-fg-neutral-subtle">{label}</p>
       <BigAmount
         className="mt-x1"
@@ -59,16 +69,6 @@ export function AssetAmount({
         <p className="m-0 mt-x0_5 text-t3 font-medium tabular-nums text-fg-neutral-subtle">
           {withCommaBreaks(m(foreignText(asset.cashBalance ?? asset.balance)))}
         </p>
-      )}
-      {model.investPriceFailed && (
-        // 시세를 못 받아 평가액이 DB 잔액 · 옛 시세다 — 숫자는 두고 지금 시세가 아님을 띠 한 줄로(단계 4)
-        <PriceStaleCallout
-          band={false}
-          shows={model.investPriceFailShows ?? "lastPrice"}
-          retrying={model.pricesRetrying}
-          onRetry={model.retryPrices}
-          className="pt-x3"
-        />
       )}
       {isInv && (
         <div className="-mx-global-gutter mt-x1">

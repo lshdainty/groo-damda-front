@@ -81,6 +81,13 @@ export function InvestBand({
         </div>
       ) : (
         <div className="pb-x6 pt-x6">
+          {/* 섹션 첫 줄 — 숫자를 읽기 전에 "마지막으로 받은 값" 임을 먼저 알린다(앱 p4a 와 같은 자리) */}
+          {!loading && priceFailed && (
+            <PriceStaleCallout
+              onRetry={onRetryPrice ?? onRetry ?? (() => {})}
+              className="pb-x4"
+            />
+          )}
           <div className="px-x6">
             {loading ? (
               <div aria-busy className="flex flex-col items-start">
@@ -102,12 +109,6 @@ export function InvestBand({
               </p>
             )}
           </div>
-          {!loading && priceFailed && (
-            <PriceStaleCallout
-              onRetry={onRetryPrice ?? onRetry ?? (() => {})}
-              className="pt-x4"
-            />
-          )}
           {columns ? (
             <dl
               className="m-0 mt-x5 grid gap-x4 px-x6"
