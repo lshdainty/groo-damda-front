@@ -47,8 +47,8 @@ export type QuietRequestConfig = AxiosRequestConfig & {
 };
 
 /**
- * 쓰기 응답을 풀지 못했다(PARSE) — 2xx 를 받았으니 서버는 처리했을 수 있다. 다시 누르면 같은 거래가 두 번 들어갈 수 있어
- * 실패로 말하지 않는다(앱 M3 와 같은 규칙).
+ * 쓰기 결과를 확인하지 못했다 — 응답을 풀지 못했거나(PARSE, 2xx) 요청은 나갔는데 응답 전에 끊겼다(status 0).
+ * 서버는 처리했을 수 있다. 다시 누르면 같은 거래가 두 번 들어갈 수 있어 실패로 말하지 않는다(앱 M3 와 같은 규칙).
  */
 export class WriteUnconfirmedError extends Error {
   readonly code = "PARSE";
@@ -135,6 +135,17 @@ apiClient.interceptors.response.use(
       }
       return Promise.reject(error);
     }
+    // 돈이 움직이는 쓰기가 나갔는데 응답 전에 끊겼다(error.request 는 있고 response 가 없다) — 서버는 처리했을 수 있다.
+    // 실패로 말하면 다시 눌러 두 번 들어간다 → PARSE 와 같은 "확인하지 못했어요" 쪽. 요청을 만들지도 못했거나
+    // (request 없음) 시간 제한(ECONNABORTED) · 취소는 그대로 실패다(웹은 쓰기에 시간 제한을 걸지 않는다)
+    if (
+      (error?.config as QuietRequestConfig | undefined)?.confirmWrite &&
+      error.request != null &&
+      error.response == null &&
+      error.code !== "ECONNABORTED" &&
+      error.code !== "ERR_CANCELED"
+    )
+      return Promise.reject(new WriteUnconfirmedError(0));
     return Promise.reject(error);
   },
 );

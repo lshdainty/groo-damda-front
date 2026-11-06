@@ -7,6 +7,7 @@ import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
 declare global {
@@ -150,5 +151,40 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
       const data = await apiClient.post("/v1/notification/1/read");
       expect(data).toBe(BROKEN);
     });
+  });
+
+  it("요청은 나갔는데 응답 전에 끊긴 쓰기(request 있음 · response 없음) → 확인하지 못했어요 + 다시 받기", async () => {
+    apiClient.defaults.adapter = async (config) => {
+      throw new AxiosError(
+        "Network Error",
+        "ERR_NETWORK",
+        config as InternalAxiosRequestConfig,
+        {},
+      );
+    };
+    for (const [, hook, vars] of [cases[0]!, cases[5]!]) {
+      invalidate.mockClear();
+      const r = await run(hook, vars);
+      expect(isWriteUnconfirmed(r.ok ? null : r.error)).toBe(true);
+      expect(invalidate).toHaveBeenCalled();
+    }
+  });
+
+  it("요청을 만들지도 못했거나(request 없음) 시간 초과면 그대로 실패 — 다시 받기도 하지 않는다", async () => {
+    for (const make of [
+      (c: InternalAxiosRequestConfig) =>
+        new AxiosError("connect failed", "ERR_NETWORK", c),
+      (c: InternalAxiosRequestConfig) =>
+        new AxiosError("timeout", "ECONNABORTED", c, {}),
+    ]) {
+      apiClient.defaults.adapter = async (config) => {
+        throw make(config as InternalAxiosRequestConfig);
+      };
+      invalidate.mockClear();
+      const r = await run(cases[0]![1], cases[0]![2]);
+      expect(r.ok).toBe(false);
+      expect(isWriteUnconfirmed(r.ok ? null : r.error)).toBe(false);
+      expect(invalidate).not.toHaveBeenCalled();
+    }
   });
 });
