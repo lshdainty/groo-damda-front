@@ -565,6 +565,10 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
     live,
     holdingValueOf,
     holdingsTotal,
+    // 연동 보유의 시세 · 환율을 못 받았다 — 평가액 미리보기가 비어 보이는 대신 그 자리 실패 + [다시 시도](판단 (5))
+    holdingPricesFailed: priceActive && live.failed,
+    holdingPricesRetrying: live.retrying,
+    retryHoldingPrices: live.retry,
     cardType,
     selectedCard,
     setSelectedCard,
