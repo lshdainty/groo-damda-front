@@ -1,3 +1,4 @@
+import { LeaveGuardProvider } from "@/shared/ui/groo/leave-guard";
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -55,8 +56,11 @@ const ScreenEffects = () => {
 
 export const AppLayout = () => (
   <TopNavigationProvider product="그루 담다">
-    <ScreenEffects />
-    <Shell />
+    {/* 떠나기 가드 하나 — 세 갈래 셸(폰 풀스크린 · 폰 페이지 · 데스크톱) 모두 같은 가드를 본다(단계 5) */}
+    <LeaveGuardProvider>
+      <ScreenEffects />
+      <Shell />
+    </LeaveGuardProvider>
   </TopNavigationProvider>
 );
 

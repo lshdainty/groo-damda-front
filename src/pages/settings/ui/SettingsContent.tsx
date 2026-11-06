@@ -1,10 +1,7 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PageHead } from "@/shared/ui/groo/page-head";
-import {
-  SettingsFrameContext,
-  type LeaveGuard,
-} from "@/shared/ui/groo/settings-frame-context";
+import { SettingsFrameContext } from "@/shared/ui/groo/settings-frame-context";
 import { NEEDS_DESKTOP_HEAD, type SectionDef } from "../model/sections";
 import { SettingsBackLink } from "./SettingsBackLink";
 
@@ -23,17 +20,7 @@ interface Props {
 export const SettingsContent = ({ activeSection, back, renderBody }: Props) => {
   const { t } = useTranslation("settings");
   const [headSlot, setHeadSlot] = useState<HTMLElement | null>(null);
-  const leaveGuard = useRef<LeaveGuard | null>(null);
-  const frame = useMemo(
-    () => ({
-      headSlot,
-      setLeaveGuard: (guard: LeaveGuard | null) => {
-        leaveGuard.current = guard;
-      },
-      getLeaveGuard: () => leaveGuard.current,
-    }),
-    [headSlot],
-  );
+  const frame = useMemo(() => ({ headSlot }), [headSlot]);
   const ownHead = NEEDS_DESKTOP_HEAD.includes(activeSection.id);
   // 제목 줄 ↔ 첫 내용 24(T7). 예산 설정만 그 사이에 도구 줄이 들어 16 — 도구 줄 ↔ 첫 카드도 16(F 36)
   const gap = activeSection.id === "budget" ? "mb-x4" : "mb-x6";

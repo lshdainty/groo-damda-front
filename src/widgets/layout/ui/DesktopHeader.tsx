@@ -1,5 +1,6 @@
+import { useGuardedNavigate } from "../lib/use-guarded-navigate";
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Plus, Settings } from "lucide-react";
 import {
@@ -20,7 +21,7 @@ import { NotificationsMenu } from "@/widgets/notification-manage";
  */
 export function DesktopHeader({ onOpenAdd }: { onOpenAdd: () => void }) {
   const { t } = useTranslation("layout");
-  const navigate = useNavigate();
+  const navigate = useGuardedNavigate();
   const { pathname } = useLocation();
   const onSearch = pathname === "/desk/search";
   const { condition, update } = useSearchCondition();

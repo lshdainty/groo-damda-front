@@ -1,3 +1,4 @@
+import { useLeaveGuard } from "@/shared/ui/groo/leave-guard-context";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDeviceSize } from "@/shared/lib/groo/responsive";
@@ -140,14 +141,18 @@ export const SettingsPage = () => {
 
   // 섹션 바꾸기 = 기록을 남긴다(push) — 브라우저 뒤로 가기가 설정 안을 거슬러 간다.
   // 같은 섹션을 다시 누르면 아무것도 하지 않는다.
+  // 바꾼 채 떠나면 버려지는 화면(금액 가리기)이 맡긴 가드를 먼저 부른다 — 목록 · 태블릿 목록에서 다른 구역을 눌러도 묻는다(단계 5)
+  const leaveGuard = useLeaveGuard();
   const changeSection = (next: SectionId | "menu") => {
     if (next === section) return;
-    const p = new URLSearchParams(searchParams);
-    if (next === "menu") p.delete("section");
-    else p.set("section", next);
-    // 캘린더 관리의 주소 값은 그 구역 것이다 — 다른 구역으로 가면 남기지 않는다
-    p.delete("calendar");
-    setSearchParams(p);
+    leaveGuard(() => {
+      const p = new URLSearchParams(searchParams);
+      if (next === "menu") p.delete("section");
+      else p.set("section", next);
+      // 캘린더 관리의 주소 값은 그 구역 것이다 — 다른 구역으로 가면 남기지 않는다
+      p.delete("calendar");
+      setSearchParams(p);
+    });
   };
 
   /**

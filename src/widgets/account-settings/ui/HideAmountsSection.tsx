@@ -22,6 +22,7 @@ import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
 import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 import { useCoverBottomNav } from "@/shared/ui/groo/use-cover-bottom-nav";
 import { useSettingsLeaveGuard } from "@/shared/ui/groo/settings-frame-context";
+import { useBackClose } from "@/shared/ds/overlay";
 import { HideAmountsUnlockSurface } from "./HideAmountsUnlockSurface";
 import {
   cardsOfPage,
@@ -108,9 +109,14 @@ export function HideAmountsSection({
   const [saveFailTick, setSaveFailTick] = useState(0);
   const saveFailed = saveFailTick > 0;
   const errorRef = useScrollToError<HTMLDivElement>(saveFailed, saveFailTick);
+  // 저장이 나가 있다 — 그동안은 떠나기를 묻지도 받지도 않는다(busy — 떠나면 실패 Callout 자리가 사라진다)
+  const [saving, setSaving] = useState(false);
   const commit = async (viaUnlock = false) => {
     setSaveFailTick(0);
-    if (await setHiddenCards(draft)) {
+    setSaving(true);
+    const ok = await setHiddenCards(draft);
+    setSaving(false);
+    if (ok) {
       onBack();
       return;
     }
@@ -137,23 +143,30 @@ export function HideAmountsSection({
 
   // 저장하지 않고 나가려 할 때 — 고른 내용이 날아가는 걸 알리고, 확인하면 화면을 닫는다.
   const back = () => {
+    if (saving) return;
     if (dirty) setConfirmDiscard(true);
     else onBack();
   };
 
-  // 데스크톱 · 태블릿은 "‹ 계정" 을 틀이 그린다(I-16 29) — 바꾼 채 누르면 틀이 이 가드를 먼저 부르고,
-  // 확인하면 틀이 가려던 곳으로 간다.
+  // 바꾼 채 떠나는 모든 길이 묻는다(단계 5) — "‹ 계정"(틀) · 설정 구역 목록 · 사이드바 · 탭 바 · 머리 링크는 셸 공용 가드를,
+  // 브라우저 · 안드로이드 뒤로 가기는 dirty 동안 쌓아 둔 히스토리 칸 하나를 지난다. 확인하면 가려던 곳으로 간다.
   const leaveTo = useRef<(() => void) | null>(null);
   useSettingsLeaveGuard(
-    mobile
-      ? null
-      : (go) => {
-          if (dirty) {
-            leaveTo.current = go;
-            setConfirmDiscard(true);
-          } else go();
-        },
+    dirty
+      ? (go) => {
+          if (saving) return;
+          leaveTo.current = go;
+          setConfirmDiscard(true);
+        }
+      : null,
   );
+  // 뒤로 가기 — 칸을 바로 다시 쌓고(다음 뒤로 가기도 여기로) 묻는다. [나가기] 면 계정으로 간다(앞 화면으로 되돌리지 않고 이동)
+  useBackClose(dirty, (keep) => {
+    keep();
+    if (saving) return;
+    leaveTo.current = onBack;
+    setConfirmDiscard(true);
+  });
 
   const pageLabel = (page: HidePageKey) => t(`hideAmounts.page.${page}`);
 
