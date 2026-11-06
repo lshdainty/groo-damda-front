@@ -564,19 +564,23 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
           </LedgerMonthNav>
         </LedgerBar>
         <LedgerPin ref={pinRef}>
+          {/* 거르기 중 칩 줄은 주 달력 자리에서 남는다(Keep) — 무엇이 걸러져 보이는지 말하는 페이지 전체 조절 줄이라, 숨기면 거른 채라는
+              걸 잊고 "거래가 이것뿐" 으로 읽는다. 이때 총액 · 요약 · 달력은 그리지 않으므로 숨는 부분이 없다 */}
           {filterActive && (
-            <FilterChipsRow
-              filterValue={filterValue}
-              onChange={(v) =>
-                setFilterValue(
-                  v && filterActiveCount(v, viewPeriod) > 0 ? v : null,
-                )
-              }
-              assetName={asset?.assetName}
-              onClearAsset={clear}
-              categories={categoriesQ.data ?? []}
-              assets={assetsQ.data?.assets ?? []}
-            />
+            <LedgerKeep>
+              <FilterChipsRow
+                filterValue={filterValue}
+                onChange={(v) =>
+                  setFilterValue(
+                    v && filterActiveCount(v, viewPeriod) > 0 ? v : null,
+                  )
+                }
+                assetName={asset?.assetName}
+                onClearAsset={clear}
+                categories={categoriesQ.data ?? []}
+                assets={assetsQ.data?.assets ?? []}
+              />
+            </LedgerKeep>
           )}
 
           {/* 총액 + 인사이트 + 소비 요약. 필터 활성 시 숨김. 불러오지 못했어도 틀(머리 · 주 달력)은 그린다 */}

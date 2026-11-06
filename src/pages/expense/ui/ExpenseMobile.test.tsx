@@ -298,6 +298,38 @@ describe("머리 — 단추 · 요약 · 달력 (I-07 7 · 8 · 11)", () => {
   });
 });
 
+describe("고정 덩어리 — 달 줄 + (주 달력 또는 칩 줄)", () => {
+  it("평소: 주 달력 · 꺾쇠가 머리 안 남는 부분(Keep)이고 총액 · [소비 요약] 은 숨는 부분이다", () => {
+    render();
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    const keep = pin.querySelector<HTMLElement>("[data-ledger-keep]")!;
+    expect(keep.querySelector('[aria-label="월 달력"]')).not.toBeNull();
+    expect(keep.textContent).not.toContain("소비 요약");
+    expect(pin.textContent).toContain("소비 요약");
+    expect(
+      container.querySelector("[data-ledger-bar]")!.className.split(" "),
+    ).toContain("sticky");
+  });
+
+  it("거르기 중: 칩 줄이 Keep 으로 남고(sticky Pin 안, 위에 숨는 부분 없음) 달 줄도 남는다", () => {
+    st.search = "assetId=1";
+    render();
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    const keep = pin.querySelector<HTMLElement>("[data-ledger-keep]")!;
+    expect(pin.className.split(" ")).toContain("sticky");
+    // 칩 줄 — 걸린 자산 이름이 Keep 안에 있다
+    expect(keep.textContent).toContain("생활비 통장");
+    // 숨는 부분이 없다 — Keep 이 Pin 의 첫 자식
+    expect(pin.firstElementChild).toBe(keep);
+    expect(pin.textContent).not.toContain("소비 요약");
+    expect(container.querySelector("[data-ledger-bar]")).not.toBeNull();
+  });
+});
+
 describe("날짜 묶음 (I-07 14)", () => {
   it("머리는 h2 · List Header(t4 · 500)이고 그날 합계는 머리 안에 있다", () => {
     render();
