@@ -76,7 +76,8 @@ vi.mock("react-router-dom", () => ({
 }));
 
 const query = (data: unknown, loading = false) => ({
-  data: loading ? undefined : data,
+  // react-query 처럼 — 처음 불러오기 실패면 값이 없다
+  data: loading || st.failed ? undefined : data,
   isLoading: loading,
   isError: st.failed,
   refetch: async () => {},

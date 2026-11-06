@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -127,7 +128,7 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
   if (trendQ.isLoading) {
     return <Skeleton className="w-full" radius="8" style={{ height }} />;
   }
-  if (trendQ.isError) {
+  if (loadFailed(trendQ)) {
     return (
       <BandFailure
         title={t("loadFailed.trend")}
@@ -663,7 +664,7 @@ export function UpcomingBillsSection() {
       action={{ label: t("viewAll"), onClick: () => goToSettings() }}
     />
   );
-  if (recurringQ.isError) {
+  if (loadFailed(recurringQ)) {
     return (
       <>
         {head}
@@ -918,7 +919,7 @@ export function SavingGoalsSection({ place }: { place: Placement }) {
       }}
     />
   );
-  if (goalsQ.isError) {
+  if (loadFailed(goalsQ)) {
     return (
       <>
         {head}

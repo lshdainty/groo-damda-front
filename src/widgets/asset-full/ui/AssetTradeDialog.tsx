@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -451,7 +452,7 @@ export function AssetTradeDialog({
             </Field>
 
             {/* 예수금이 어떻게 되는지 먼저 보여 준다 — 저장하고 나서 놀라지 않게. 키-값 줄 */}
-            {previewQ.isError ? (
+            {loadFailed(previewQ) ? (
               <BandFailure
                 title={tc("query.failedNamed", {
                   name: t("trade.previewName"),

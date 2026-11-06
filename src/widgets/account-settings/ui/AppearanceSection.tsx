@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -115,7 +116,8 @@ export function AppearanceSection({ mobile }: { mobile: boolean }) {
   const prefsBusy = !prefs || updatePrefs.isPending;
   const prefsState = {
     loading: isLoading,
-    failed: isError,
+    // 처음 불러오기 실패만 — 받아 둔 설정이 있으면 그대로 두고 공용 스낵바가 알린다
+    failed: loadFailed({ isError, data: prefs }),
     retrying: isRefetching,
     onRetry: () => void refetch(),
   };

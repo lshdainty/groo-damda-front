@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { ArrowRightLeft, ChevronRight, ClipboardPaste } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -104,7 +105,7 @@ function PresetBlock({ f }: { f: TxForm }) {
             <Skeleton key={i} radius="full" className="h-9 w-24" />
           ))}
         </div>
-      ) : f.templatesQ.isError ? (
+      ) : loadFailed(f.templatesQ) ? (
         <div className="flex items-center justify-between gap-x2 px-global-gutter pb-x2">
           <p className="m-0 font-sans text-t4 text-fg-neutral-subtle">
             {t("addTx.presetLoadFailed")}

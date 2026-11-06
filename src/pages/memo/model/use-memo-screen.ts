@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -37,7 +38,7 @@ export function useMemoScreen() {
   // 편집기 선택지 — 서버 태그 목록(앱과 같다). 지금 메모의 태그가 목록에 없으면 폼이 그 값만 더 지킨다.
   const tagNames = (memoTagsQ.data ?? []).map((tag) => tag.tagName);
   // 태그 목록을 받았다 — 로딩 · 실패 중에는 "태그가 없다" 안내를 하지 않는다
-  const tagsReady = !memoTagsQ.isLoading && !memoTagsQ.isError;
+  const tagsReady = !memoTagsQ.isLoading && !loadFailed(memoTagsQ);
 
   const [query, setQuery] = useState("");
   const [pickedFilter, setTagFilter] = useState<string>("all");

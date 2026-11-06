@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useRef, useState, type ReactNode } from "react";
 import {
   ChevronRight,
@@ -335,12 +336,12 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
   // ── 본문 ──
   const loading =
     categoriesQ.isPending || (!o.initialSplits && splitsQ.isPending);
-  const loadFailed = !o.initialSplits && splitsQ.isError;
+  const splitsFailed = !o.initialSplits && loadFailed(splitsQ);
   const fmt = (n: number) => `${wonPre()}${KRW(n)}${isEn() ? "" : "원"}`;
 
   let body: ReactNode = null;
   if (expense) {
-    if (loadFailed) {
+    if (splitsFailed) {
       body = (
         <ResultSection
           size="medium"
@@ -387,7 +388,7 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
                   categories={categories}
                   type={expense.expenseType}
                   value={item.categoryRowId}
-                  failed={categoriesQ.isError}
+                  failed={loadFailed(categoriesQ)}
                   onRetry={() => void categoriesQ.refetch()}
                   onPick={(id) => {
                     setItem({ ...item, categoryRowId: id });
@@ -640,7 +641,7 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
 
   // ── 바닥 위 남은 금액 ──
   const above =
-    expense && !item && rows !== null && !loadFailed ? (
+    expense && !item && rows !== null && !splitsFailed ? (
       <div data-slot="split-remaining" className="px-global-gutter pb-x2 pt-x2">
         <p
           className={

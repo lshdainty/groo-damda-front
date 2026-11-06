@@ -32,7 +32,8 @@ vi.mock("react-i18next", () => ({
 vi.mock("sonner", () => ({ toast: { success: () => {}, error: () => {} } }));
 vi.mock("../model/useWithdrawal", () => ({
   useWithdrawalCheck: () => ({
-    data: state.check,
+    // react-query 처럼 — 처음 불러오기 실패면 값이 없다
+    data: state.isError ? undefined : state.check,
     isLoading: state.check === null && !state.isError,
     isError: state.isError,
     isFetching: false,

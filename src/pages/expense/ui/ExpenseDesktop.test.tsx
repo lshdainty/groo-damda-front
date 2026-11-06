@@ -45,6 +45,7 @@ const st = vi.hoisted(() => ({
   wide: true,
   list: [] as unknown[],
   failed: false,
+  stale: false,
   incomeSum: 450_000,
   expenseSum: 12_000,
   setSearch: [] as string[],
@@ -122,8 +123,9 @@ vi.mock("sonner", () => ({
   },
 }));
 
+// react-query 처럼 — 처음 불러오기 실패면 값이 없다(st.stale 이면 받아 둔 값이 있는 채 다시 받기 실패)
 const query = (data: unknown) => ({
-  data,
+  data: st.failed && !st.stale ? undefined : data,
   isLoading: false,
   isError: st.failed,
   refetch: async () => {},
@@ -255,6 +257,7 @@ beforeEach(async () => {
   st.search = "";
   st.wide = true;
   st.failed = false;
+  st.stale = false;
   st.setSearch = [];
   st.fixedCalls = [];
   st.deleteCalls = [];
@@ -472,6 +475,18 @@ describe("목록 카드 (I-07 31)", () => {
     click(row);
 
     expect(st.detail).toContain(1);
+  });
+
+  it("받아 둔 목록이 있는 채 다시 받다 실패하면 목록을 그대로 둔다 — 실패 자리로 바꾸지 않는다(공용 스낵바가 알린다)", () => {
+    st.failed = true;
+    st.stale = true;
+    render();
+    expect(container.querySelector("[data-slot=result-section]")).toBeNull();
+    expect(
+      container.querySelector(
+        "[data-slot=expense-list-card] button[data-slot=list-body]",
+      ),
+    ).not.toBeNull();
   });
 
   it("실패하면 Result Section + 다시 시도, 머리 · 달력은 그대로 — 건수를 내지 않는다", () => {

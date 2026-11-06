@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -443,7 +444,7 @@ function GoogleRow() {
   };
 
   const loading = providersQ.isLoading;
-  const failed = providersQ.isError;
+  const failed = loadFailed(providersQ);
 
   let detail: React.ReactNode;
   if (loading) detail = <Skeleton radius="4" text="t3" className="w-24" />;

@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import {
   forwardRef,
   useEffect,
@@ -168,7 +169,7 @@ function SearchBody({ onPick }: { onPick: (item: StockMasterItem) => void }) {
         </p>
       ) : (
         <ScrollFog use="overlayBody" className="min-h-0 flex-1">
-          {q.isError && !pending ? (
+          {loadFailed(q) && !pending ? (
             <SearchableListError
               title={t("search.failTitle")}
               retrying={q.isFetching}

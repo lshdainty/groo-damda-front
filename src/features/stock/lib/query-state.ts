@@ -5,5 +5,4 @@
  * 한 번 실패했다고 받아 둔 값을 실패 화면으로 바꾸면 안 된다 — **값이 하나도 없을 때만** 실패다.
  * 값이 있으면 그 값을 그대로 두고, 다음 성공에 새 값으로 바뀐다.
  */
-export const isHardError = (q: { isError: boolean; data?: unknown }): boolean =>
-  q.isError && q.data === undefined;
+export { loadFailed as isHardError } from "@/shared/api";

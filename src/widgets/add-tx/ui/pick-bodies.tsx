@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { Fragment, type ReactNode } from "react";
 import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -35,7 +36,7 @@ export function CategoryPickBody({
   return (
     <PickLoadGate
       pending={f.categoriesQ.isPending}
-      failed={f.categoriesQ.isError}
+      failed={loadFailed(f.categoriesQ)}
       failedTitle={t("addTx.categoryLoadFailed")}
       onRetry={() => void f.categoriesQ.refetch()}
       retrying={f.categoriesQ.isFetching}
@@ -157,7 +158,7 @@ export function AssetPickBody({
   return (
     <PickLoadGate
       pending={f.assetsQ.isPending}
-      failed={f.assetsQ.isError}
+      failed={loadFailed(f.assetsQ)}
       failedTitle={t("addTx.assetLoadFailed")}
       onRetry={() => void f.assetsQ.refetch()}
       retrying={f.assetsQ.isFetching}

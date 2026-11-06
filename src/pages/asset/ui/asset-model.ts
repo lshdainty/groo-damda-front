@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -75,8 +76,9 @@ export function useAssetGroups() {
       ? Math.round((changeAmount / Math.abs(lastMonth)) * 10000) / 100
       : (summaryQ.data?.changePercent ?? 0);
 
-  const assetsFailed = assetsQ.isError === true;
-  const summaryFailed = summaryQ.isError === true;
+  // 처음 불러오기 실패만 띠를 실패로 — 받아 둔 값이 있으면 그대로 두고 공용 스낵바가 알린다
+  const assetsFailed = loadFailed(assetsQ);
+  const summaryFailed = loadFailed(summaryQ);
 
   return {
     ...groups,

@@ -334,6 +334,21 @@ describe("저축 목표(60)", () => {
 });
 
 describe("카드마다 따로 불러오고 실패한다(62)", () => {
+  it("받아 둔 값이 있는 채 다시 받다 실패하면(추이 · 다가오는 지출 · 목표 · 자산 · 요약) 내용을 그대로 둔다 — 실패 자리로 바꾸지 않는다", () => {
+    for (const k of [
+      "trend",
+      "recurring",
+      "goals",
+      "assets",
+      "summary",
+    ] as const)
+      state[k] = { ...state[k], isError: true };
+    render();
+    expect(text()).not.toContain("loadFailed.");
+    expect(text()).toContain("주거래");
+    expect(text()).toContain("목표 1");
+  });
+
   it("추이가 실패하면 그 자리만 실패 + 다시 시도, 나머지는 그대로다", () => {
     state.trend = q(undefined, { isError: true });
     render();

@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useState } from "react";
 import { Badge } from "@/shared/ds/badge";
 import { CardArt } from "@/shared/ds/image-frame";
@@ -94,7 +95,7 @@ function CardProductList({
         />
       </List>
       <PickResults>
-        {q.isError ? (
+        {loadFailed(q) ? (
           <SearchableListError
             retrying={q.isFetching}
             onRetry={() => void q.refetch()}

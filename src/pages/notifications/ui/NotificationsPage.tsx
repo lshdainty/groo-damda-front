@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useRef, type ReactNode } from "react";
 import { Bell, Settings } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
@@ -92,7 +93,7 @@ export function NotificationsPage() {
 
   // 목록 위 상태 줄(머리말이 아니다 — h2 를 주지 않는다). 안 읽은 것이 0 이면 줄 전체를 두지 않는다.
   const head =
-    !isLoading && !isError && unreadCount > 0 ? (
+    !isLoading && !loadFailed({ isError, data }) && unreadCount > 0 ? (
       <ListHeader as="div" className="pt-x2">
         <span>
           {t("popover.unreadPlain", { count: formatCount(unreadCount) })}

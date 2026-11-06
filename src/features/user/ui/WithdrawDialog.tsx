@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ds/button";
@@ -149,7 +150,7 @@ export function WithdrawDialog({
   }, [method]);
 
   // 입력 폼인 때 — 점검이 끝났고 막히지 않았을 때만. 아니면 안내 표면(위 ✕ 하나).
-  const form = !checkQ.isLoading && !checkQ.isError && !blocked;
+  const form = !checkQ.isLoading && !loadFailed(checkQ) && !blocked;
   const dirty = reason.trim() !== "" || password !== "" || code !== "";
 
   const doWithdraw = async (reauthToken: string) => {
@@ -230,7 +231,7 @@ export function WithdrawDialog({
         <ProgressCircle size="40" aria-label={dsT("common.loading")} />
       </div>
     );
-  } else if (checkQ.isError) {
+  } else if (loadFailed(checkQ)) {
     body = (
       <ResultSection
         kind="failure"

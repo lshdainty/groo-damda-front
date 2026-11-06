@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Copy, KeyRound } from "lucide-react";
@@ -188,7 +189,7 @@ export function ApiTokenCard() {
           <Skeleton style={{ height: 60, borderRadius: "var(--radius-md)" }} />
         )}
 
-        {isError && (
+        {loadFailed({ isError, data: tokens }) && (
           <div style={{ fontSize: 13, color: "var(--fg-secondary)" }}>
             {t("apiToken.loadFailed")}
           </div>

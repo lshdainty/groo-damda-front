@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
@@ -680,7 +681,7 @@ export function TxDetailDialog({
 
             <MoreSection rows={moreRows} />
 
-            {splitCount > 0 && !splitsQ.isError && (
+            {splitCount > 0 && !loadFailed(splitsQ) && (
               <SplitSection
                 expense={expense}
                 splits={splits}
@@ -690,7 +691,7 @@ export function TxDetailDialog({
               />
             )}
             {splitsQ.isLoading && <SplitSkeleton />}
-            {splitsQ.isError && (
+            {loadFailed(splitsQ) && (
               <SplitFailure
                 onRetry={() => void splitsQ.refetch()}
                 retrying={splitsQ.isFetching}

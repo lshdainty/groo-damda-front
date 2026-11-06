@@ -30,7 +30,7 @@ vi.mock("@/shared/hooks", () => ({
 
 const sessions = vi.hoisted(() => ({
   q: {
-    data: [] as unknown[],
+    data: [] as unknown[] | undefined,
     isLoading: false,
     isError: false,
     refetch: vi.fn(),
@@ -128,7 +128,7 @@ describe("DevicesSection", () => {
   });
 
   it("실패 = Result Section failure + 다시 시도, 원문 없음 / 빈 = empty / 기기 0 이면 모두 로그아웃 없음", () => {
-    sessions.q = { ...sessions.q, data: [], isError: true };
+    sessions.q = { ...sessions.q, data: undefined, isError: true };
     mount(true);
     expect(
       container.querySelector("[data-slot=result-section]"),
@@ -143,7 +143,7 @@ describe("DevicesSection", () => {
     expect(container.textContent).not.toContain("devices.logoutAll");
 
     // 카드 안 Result Section 은 카드의 바로 아래 자식 — 좌우 24 규칙이 걸리고, 바닥 여백은 pb-0 이 아니다
-    sessions.q = { ...sessions.q, isError: true, data: [] };
+    sessions.q = { ...sessions.q, isError: true, data: undefined };
     mount(false);
     const card = container.querySelector("[data-slot=card]")!;
     expect(card.firstElementChild?.getAttribute("data-slot")).toBe(
@@ -155,6 +155,13 @@ describe("DevicesSection", () => {
     mount(false);
     expect(container.textContent).toContain("devices.empty");
     expect(container.querySelector("[data-slot=divider]")).toBeNull();
+  });
+
+  it("받아 둔 목록이 있는 채 다시 받다 실패하면 목록을 그대로 둔다 — 실패 자리로 바꾸지 않는다", () => {
+    sessions.q = { ...sessions.q, isError: true };
+    mount(true);
+    expect(container.querySelector("[data-slot=result-section]")).toBeNull();
+    expect(container.querySelectorAll("[data-slot=list-item]")).toHaveLength(2);
   });
 
   it("불러오는 중에는 Skeleton 줄 셋, 모두 로그아웃 없음", () => {

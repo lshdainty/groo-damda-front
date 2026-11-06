@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAsset, useAssetTransfers } from "@/features/asset";
@@ -250,8 +251,7 @@ export function useExpenseData(
     monthExpenses: monthExpensesQ.data ?? [],
     isLoadingMonthExpenses: monthExpensesQ.isLoading,
     /** 달력 막대를 못 받았다 — 값이 하나도 없을 때만. 목록과 같은 질의면 `isError` 가 이미 화면 전체를 대신한다 */
-    monthExpensesFailed:
-      monthExpensesQ.isError && monthExpensesQ.data === undefined,
+    monthExpensesFailed: loadFailed(monthExpensesQ),
     retryMonthExpenses: () => {
       void monthExpensesQ.refetch();
     },
@@ -259,11 +259,12 @@ export function useExpenseData(
     isLoadingList: expensesQ.isLoading || transfersQ.isLoading,
     isLoadingSummary: monthlyQ.isLoading,
     // 불러오지 못했다 — 비어 있음("거래가 없어요")으로 보이면 안 된다. 화면이 실패로 그리고 다시 시도를 둔다
-    // (필터가 걸리면 요약은 거른 목록으로 다시 세므로 서버 월 요약이 실패해도 상관없다)
+    // (필터가 걸리면 요약은 거른 목록으로 다시 세므로 서버 월 요약이 실패해도 상관없다).
+    // 처음 불러오기 실패만 — 받아 둔 목록이 있는데 다시 받다 실패하면 목록은 그대로 두고 공용 스낵바가 알린다
     isError:
-      expensesQ.isError ||
-      transfersQ.isError ||
-      (!filterActive && monthlyQ.isError),
+      loadFailed(expensesQ) ||
+      loadFailed(transfersQ) ||
+      (!filterActive && loadFailed(monthlyQ)),
     retry: () => {
       void expensesQ.refetch();
       void transfersQ.refetch();
