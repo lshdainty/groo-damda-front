@@ -22,8 +22,10 @@ export const useUpdateUserPreferences = () => {
   return useMutation({
     mutationFn: (data: Partial<UserPreferences>) =>
       userApi.updatePreferences(data),
-    onSuccess: (resp) => {
-      qc.setQueryData(PREF_KEY, resp);
+    // 응답을 못 받았으면(확인 못 함 — 전역 MutationCache 가 응답 없이 부른다) 서버는 바꿨을 수 있다 — 다시 받는다(검수 3차 M2)
+    onSuccess: (resp: UserPreferences | undefined) => {
+      if (resp) qc.setQueryData(PREF_KEY, resp);
+      else return qc.invalidateQueries({ queryKey: PREF_KEY });
     },
   });
 };

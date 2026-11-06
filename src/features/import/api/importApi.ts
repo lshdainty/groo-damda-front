@@ -112,8 +112,8 @@ export async function executeImport(
   const resp: ApiResponse<ImportExecuteResult> = await apiClient.post(
     "/v1/import/execute",
     fd,
-    // 파일 올리기 — 저장 확인 처리에서 뺀다(판단 (2) 예외). 실패는 가져오기 화면이 자리에서 말한다
-    { silent: true, ...NOT_A_SAVE } as import("axios").AxiosRequestConfig & {
+    // 파일을 올리지만 거래를 만드는 저장이다 — 쓰기 확인을 둔다(응답을 못 받으면 확인 못 함 + 다시 받기, 검수 3차 M2)
+    { silent: true } as import("axios").AxiosRequestConfig & {
       silent?: boolean;
     },
   );

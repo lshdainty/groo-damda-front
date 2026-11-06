@@ -273,7 +273,7 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
     }
   });
 
-  it("저장이 아닌 POST(로그인 · 로그아웃 · 본인 확인 · 파일 올리기 · 미리보기 · 문자 해석 · 건수 · 연결 시작)는 깨진 본문 · 끊긴 응답 · 502 에도 확인 못 함으로 가지 않는다 — 같은 조건의 일반 쓰기는 간다(판단 (2) 예외)", async () => {
+  it("저장이 아닌 POST(로그인 · 로그아웃 · 본인 확인 · 파일 분석 · 미리보기 · 문자 해석 · 건수 · 연결 시작)는 깨진 본문 · 끊긴 응답 · 502 에도 확인 못 함으로 가지 않는다 — 같은 조건의 일반 쓰기는 간다(판단 (2) 예외)", async () => {
     const { authApi } = await import("@/features/auth/api/authApi");
     const { userApi } = await import("@/features/user/api/userApi");
     const { analyzeImport, executeImport } =
@@ -302,16 +302,6 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
       ["reauth code verify", () => userApi.verifyReauthEmailCode("123456")],
       ["reauth password", () => userApi.verifyReauthPassword("p")],
       ["import analyze", () => analyzeImport(file, "BANKSALAD" as never)],
-      [
-        "import execute",
-        () =>
-          executeImport(file, {
-            source: "BANKSALAD" as never,
-            mapping: {} as never,
-            dupSkip: true,
-            autoCat: true,
-          }),
-      ],
       ["sms parse", () => parseSms("x")],
       ["export counts", () => fetchExportCounts({} as never)],
       ["export preview", () => fetchExportPreview({} as never)],
@@ -356,14 +346,29 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
         );
         expect(isWriteUnconfirmed(error), `${outcome} · ${name}`).toBe(false);
       }
-      // 같은 조건의 일반 쓰기는 확인 못 함
-      const error = await memoApi
-        .createMemo({ title: "t", content: "c" } as never)
-        .then(
+      // 같은 조건의 일반 쓰기는 확인 못 함 — 가져오기 실행은 파일을 올리지만 거래를 만드는 저장이라 여기다(검수 3차 M2)
+      for (const [name, call] of [
+        [
+          "memo",
+          () => memoApi.createMemo({ title: "t", content: "c" } as never),
+        ],
+        [
+          "import execute",
+          () =>
+            executeImport(file, {
+              source: "BANKSALAD" as never,
+              mapping: {} as never,
+              dupSkip: true,
+              autoCat: true,
+            }),
+        ],
+      ] as const) {
+        const error = await (call as () => Promise<unknown>)().then(
           () => null,
           (e: unknown) => e,
         );
-      expect(isWriteUnconfirmed(error), `${outcome} · memo`).toBe(true);
+        expect(isWriteUnconfirmed(error), `${outcome} · ${name}`).toBe(true);
+      }
     }
   });
 
@@ -412,5 +417,17 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
       );
       expect(isWriteUnconfirmed(e)).toBe(false);
     }
+  });
+
+  it("기본 설정 훅은 응답 없이 불리면(확인 못 함) 설정을 다시 받는다 — 응답으로 캐시를 쓰는 훅(검수 3차 M2)", async () => {
+    const { useUpdateUserPreferences } =
+      await import("@/features/user/model/useUserPreferences");
+    body = "{not json";
+    invalidate.mockClear();
+    const r = await run(useUpdateUserPreferences, { timezone: "Asia/Seoul" });
+    expect(isWriteUnconfirmed(r.ok ? null : r.error)).toBe(true);
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: ["user", "preferences"],
+    });
   });
 });
