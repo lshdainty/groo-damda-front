@@ -150,17 +150,25 @@ apiClient.interceptors.response.use(
       }
       return Promise.reject(error);
     }
-    // 쓰기가 나갔는데 응답 전에 끊겼다(error.request 는 있고 response 가 없다) — 서버는 처리했을 수 있다.
-    // 실패로 말하면 다시 눌러 두 번 들어간다 → PARSE 와 같은 "확인하지 못했어요" 쪽. 요청을 만들지도 못했거나
-    // (request 없음) 시간 제한(ECONNABORTED) · 취소는 그대로 실패다(웹은 쓰기에 시간 제한을 걸지 않는다)
-    if (
-      confirmsWrite(error?.config as QuietRequestConfig | undefined) &&
-      error.request != null &&
-      error.response == null &&
-      error.code !== "ECONNABORTED" &&
-      error.code !== "ERR_CANCELED"
-    )
-      return Promise.reject(new WriteUnconfirmedError(0));
+    if (confirmsWrite(error?.config as QuietRequestConfig | undefined)) {
+      // 게이트웨이(502 · 504) 뒤에서 서버는 이미 처리했을 수 있다 — 실패가 아니라 "확인하지 못했어요"(검수 2차 M3).
+      // 503 · 그 밖 5xx 는 서버가 받지 않았다는 뜻이라 그대로 실패다(앱과 같은 규칙)
+      const status = error.response?.status;
+      if (status === 502 || status === 504)
+        return Promise.reject(new WriteUnconfirmedError(status));
+      // 쓰기가 나갔는데 응답 전에 끊겼다(error.request 는 있고 response 가 없다) — 서버는 처리했을 수 있다.
+      // 실패로 말하면 다시 눌러 두 번 들어간다 → PARSE 와 같은 "확인하지 못했어요" 쪽. 요청을 만들지도 못했거나
+      // (request 없음) 시간 제한(ECONNABORTED) · 취소, 그리고 **기기가 오프라인**이면(보내지도 못했다 — M2) 그대로 실패다.
+      // 서버 꺼짐 · CORS 는 오프라인과 구분이 안 돼 확인 쪽으로 둔다
+      if (
+        error.request != null &&
+        error.response == null &&
+        error.code !== "ECONNABORTED" &&
+        error.code !== "ERR_CANCELED" &&
+        !(typeof navigator !== "undefined" && navigator.onLine === false)
+      )
+        return Promise.reject(new WriteUnconfirmedError(0));
+    }
     return Promise.reject(error);
   },
 );

@@ -206,4 +206,48 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
       expect(invalidate).not.toHaveBeenCalled();
     }
   });
+
+  it("기기가 오프라인이면(보내지도 못했다) 응답 없이 끊겨도 그대로 실패(검수 2차 M2)", async () => {
+    const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    apiClient.defaults.adapter = async (config) => {
+      throw new AxiosError(
+        "Network Error",
+        "ERR_NETWORK",
+        config as InternalAxiosRequestConfig,
+        {},
+      );
+    };
+    invalidate.mockClear();
+    const r = await run(cases[0]![1], cases[0]![2]);
+    expect(isWriteUnconfirmed(r.ok ? null : r.error)).toBe(false);
+    expect(invalidate).not.toHaveBeenCalled();
+    online.mockRestore();
+  });
+
+  it("쓰기의 502 · 504 는 확인하지 못함(게이트웨이 뒤에서 처리됐을 수 있다), 503 · 500 은 실패(검수 2차 M3)", async () => {
+    const answer = (status: number) => {
+      apiClient.defaults.adapter = async (config) => {
+        const c = config as InternalAxiosRequestConfig;
+        throw new AxiosError("x", "ERR_BAD_RESPONSE", c, {}, {
+          data: "",
+          status,
+          statusText: "",
+          headers: {},
+          config: c,
+        } as AxiosResponse);
+      };
+    };
+    for (const [status, unconfirmed] of [
+      [502, true],
+      [504, true],
+      [503, false],
+      [500, false],
+    ] as const) {
+      answer(status);
+      const r = await run(cases[5]![1], cases[5]![2]);
+      expect(isWriteUnconfirmed(r.ok ? null : r.error), String(status)).toBe(
+        unconfirmed,
+      );
+    }
+  });
 });
