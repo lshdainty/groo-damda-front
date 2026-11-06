@@ -293,20 +293,24 @@ export const CardBenefitPage = () => {
     <CardBenefitDetailDialog rowId={sheetId} onClose={() => setSheetId(null)} />
   );
 
+  // 폭으로 갈리는 건 몸통뿐이다 — 조회 시트는 두 return 모두 바깥 Fragment 의 둘째 자리에 둔다(몸통은 첫째 한 덩어리).
+  // 두 return 에 따로 두면 폭이 768 을 넘나들 때 시트가 다시 붙으며 상세를 처음부터 다시 불러온다(I-wrap-b1 ε 9)
   // ── 폰 — 흰 면 하나 ──────────────────────────────────────────────────────
   if (mobile) {
     return (
       <>
-        <TopNavigation type="standard">
-          <TopNavigationBackButton fallbackHref="/desk/more" />
-          <TopNavigationTitle>{t("benefit.headerTitle")}</TopNavigationTitle>
-        </TopNavigation>
-        <div className="flex-1 bg-bg-layer-default pb-screen-bottom">
-          <div className="px-global-gutter pt-x2">{search}</div>
-          <div className="px-global-gutter pt-x3">{filters}</div>
-          {countRow}
-          {body}
-        </div>
+        <>
+          <TopNavigation type="standard">
+            <TopNavigationBackButton fallbackHref="/desk/more" />
+            <TopNavigationTitle>{t("benefit.headerTitle")}</TopNavigationTitle>
+          </TopNavigation>
+          <div className="flex-1 bg-bg-layer-default pb-screen-bottom">
+            <div className="px-global-gutter pt-x2">{search}</div>
+            <div className="px-global-gutter pt-x3">{filters}</div>
+            {countRow}
+            {body}
+          </div>
+        </>
         {sheet}
       </>
     );
