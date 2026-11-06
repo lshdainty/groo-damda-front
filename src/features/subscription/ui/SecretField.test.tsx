@@ -47,12 +47,15 @@ function paste(el: HTMLInputElement, text: string) {
 /** 실제 사용처와 같은 controlled 배선. */
 function Harness({ label = "App Key" }: { label?: string }) {
   const [v, setV] = useState("");
+  const [shown, setShown] = useState(false);
   return (
     <SecretField
       label={label}
       value={v}
       onChange={setV}
-      toggleAriaLabel={`${label} 표시 전환`}
+      revealed={shown}
+      onRevealedChange={setShown}
+      toggleAriaLabel={`${label} 보기`}
     />
   );
 }
@@ -71,7 +74,7 @@ describe("SecretField", () => {
 
   it("눈 아이콘으로 벗겨 보고 다시 가린다", () => {
     render(<Harness />);
-    const btn = toggle("App Key 표시 전환");
+    const btn = toggle("App Key 보기");
 
     act(() => btn.click());
     expect(input().type).toBe("text");
@@ -99,7 +102,9 @@ describe("SecretField", () => {
         label="App Secret"
         value=""
         onChange={onChange}
-        toggleAriaLabel="App Secret 표시 전환"
+        revealed={false}
+        onRevealedChange={() => {}}
+        toggleAriaLabel="App Secret 보기"
       />,
     );
     paste(input(), "SEabcdef0123456789");
@@ -111,6 +116,6 @@ describe("SecretField", () => {
     render(<Harness label="Client ID" />);
     expect(container.textContent).toContain("Client ID");
     expect(input().placeholder).toBe("Client ID");
-    expect(toggle("Client ID 표시 전환")).toBeTruthy();
+    expect(toggle("Client ID 보기")).toBeTruthy();
   });
 });

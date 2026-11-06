@@ -2213,7 +2213,7 @@ stocks,range.1w,1주,1W
 stocks,range.1m,1개월,1M
 stocks,range.3m,3개월,3M
 stocks,range.1y,1년,1Y
-stocks,embed.chartUnavailable,차트를 표시할 수 없어요.,Chart unavailable
+stocks,embed.chartUnavailable,차트를 불러오지 못했어요.,Couldn't load the chart.
 stocks,market.KOSPI,코스피,KOSPI
 stocks,market.KOSDAQ,코스닥,KOSDAQ
 stocks,market.KONEX,코넥스,KONEX
@@ -2507,13 +2507,20 @@ subscription,broker.pageDesc,본인 API 키를 등록하면 보유 주식·시�
 subscription,broker.connectDesc,본인 API 키를 등록하면 보유 주식·시세를 가져와요,Register your API key to import holdings and prices
 subscription,broker.connected,연결됨,Connected
 subscription,broker.primary,기본,Primary
+subscription,broker.rowConnected,연결됨 · {{date}} 확인,Connected · Checked {{date}}
+subscription,broker.rowConnectedNoDate,연결됨,Connected
+subscription,broker.rowDisconnected,연결 안 됨,Not connected
+subscription,broker.verifiedOn,{{date}} 확인,Checked {{date}}
+subscription,broker.programGroup,내 프로그램에서 쓰기,Use in your programs
+subscription,broker.disconnectAsk,{{broker}} 연결을 해제할까요?,Disconnect {{broker}}?
+subscription,broker.disconnectDesc,해제하면 이 증권사의 시세와 보유 주식을 더 이상 가져오지 않아요. 다시 연결하려면 키를 새로 입력해야 해요.,"Once disconnected, we stop importing prices and holdings from this provider. To connect again, you'll need to enter your key again."
 subscription,broker.keyConnected,{{broker}} API 키 연결됨,{{broker}} API key connected
 subscription,broker.lastVerified,마지막 검증 · {{date}},Last verified · {{date}}
 subscription,broker.autoCollecting,보유 주식·시세 자동 수집 중,Auto-collecting holdings and prices
 subscription,broker.disconnect,연결 해제,Disconnect
 subscription,broker.connect,연결하기,Connect
-subscription,broker.toggleReveal,{{field}} 표시 전환,Toggle {{field}} visibility
-subscription,broker.useAsPrimary,이 증권사 시세로 자산 평가하기,Value assets with this provider
+subscription,broker.toggleReveal,{{field}} 보기,Show {{field}}
+subscription,broker.useAsPrimary,기본으로 쓰기,Use as primary
 subscription,broker.primaryHint,가계부 자산은 여기서 고른 증권사 시세로 계산해요.,Your assets are valued using the provider selected here.
 subscription,broker.keyHint,키는 서버에 암호화되어 저장되며 본인만 사용합니다. 발급은 {{broker}} 개발자센터에서 받을 수 있어요.,Your key is stored encrypted on the server and used only by you. Get yours from the {{broker}} developer center.
 subscription,broker.loadFailed,증권사 목록을 불러오지 못했어요,Couldn't load the securities list
@@ -2533,6 +2540,10 @@ subscription,apiToken.namePlaceholder,예: 보고서 차트,e.g. Report chart
 subscription,apiToken.issue,토큰 만들기,Create token
 subscription,apiToken.created,발급 {{date}},Created {{date}}
 subscription,apiToken.lastUsed,마지막 사용 {{date}},Last used {{date}}
+subscription,apiToken.count,{{n}}개,{{n}}
+subscription,apiToken.countNone,없음,None
+subscription,apiToken.revokeAsk,{{name}} 토큰을 폐기할까요?,Revoke the token {{name}}?
+subscription,apiToken.revokeDesc,이 토큰을 쓰던 프로그램은 바로 시세를 불러오지 못해요. 되돌릴 수 없어요.,"Programs using this token will stop getting prices right away. This can't be undone."
 subscription,apiToken.neverUsed,아직 안 썼어요,Not used yet
 subscription,apiToken.revoke,폐기,Revoke
 subscription,apiToken.revokeAria,{{name}} 토큰 폐기,Revoke token {{name}}

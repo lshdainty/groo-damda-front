@@ -90,7 +90,9 @@ export const useRegisterBrokerCredential = () => {
       apiKey: string;
       apiSecret: string;
     }) => subscriptionApi.registerBrokerCredential(broker, apiKey, apiSecret),
-    onSuccess: () => invalidateFor(queryClient, "broker-connection"),
+    // 새 연결 상태가 캐시에 들어온 뒤에 성공 콜백이 불린다 — 연결 화면이 "안 연결됨" 빈 폼으로 한 번 깜빡이지 않게
+    onSuccess: () =>
+      invalidateFor(queryClient, "broker-connection", { wait: true }),
   });
 };
 

@@ -1,11 +1,10 @@
-import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
-import { Field, FieldLabel } from "@/shared/ui/field";
+import { Field } from "@/shared/ds/field";
+import { Input } from "@/shared/ds/input";
+import { Toggle } from "@/shared/ds/toggle";
 
 /**
- * 자격증명 한 칸 — 기본은 가려져 있고 눈 아이콘으로 잠깐 벗겨 본다.
+ * 자격증명 한 칸 — 기본은 가려져 있고 눈 단추(Toggle)로 잠깐 벗겨 본다.
  *
  * **API Key 도 Secret 과 같은 자격증명의 반쪽이다.** 한동안 Key 만 평문이라
  * 어깨너머로 읽혔다. 두 칸이 같은 컴포넌트를 쓰면 한쪽만 다시 벗겨지는 일이 안 생긴다.
@@ -13,28 +12,29 @@ import { Field, FieldLabel } from "@/shared/ui/field";
  * 라벨은 **서버가 준다**(`connection.keyLabel` / `secretLabel`) — 토스는 "Client ID",
  * 나무는 "App Key". 그래서 여기에 이름을 박지 않고 받는다.
  *
- * 토글이 있어야 하는 이유: 붙여넣은 값이 맞는지 확인할 방법이 없으면 연동이 실패해도
- * 원인을 못 찾는다. 기본은 가린 상태고 벗겨 보는 건 사용자 의지다.
+ * 보임 여부(`revealed`)는 **부르는 쪽이 든다** — 시트 ↔ 대화상자가 바뀌어 이 칸이 새로 그려져도 쓰던 값 · 눈이 남는다.
+ * 눈 단추는 Toggle(보이는 40 · 누르는 44, toggle.md) — 이름은 고정("App Key 보기"), 켬은 aria-pressed, 가렸으면 eye-off.
  */
 export function SecretField({
   label,
   value,
   onChange,
+  revealed,
+  onRevealedChange,
   toggleAriaLabel,
 }: {
   /** 서버가 준 라벨. 라벨이자 placeholder 다. */
   label: string;
   value: string;
   onChange: (v: string) => void;
+  revealed: boolean;
+  onRevealedChange: (v: boolean) => void;
   /** 칸이 둘이라 토글 이름도 달라야 스크린리더가 구분한다. */
   toggleAriaLabel: string;
 }) {
-  const [revealed, setRevealed] = useState(false);
-
   return (
-    <Field>
-      <FieldLabel>{label}</FieldLabel>
-      <div style={{ position: "relative" }}>
+    <Field label={label}>
+      <div className="relative">
         <Input
           type={revealed ? "text" : "password"}
           value={value}
@@ -43,27 +43,18 @@ export function SecretField({
           // 브라우저·확장에 자격증명이 남지 않게 — 붙여넣기는 그대로 둔다.
           autoComplete="off"
           spellCheck={false}
-          className="w-full"
-          style={{ paddingRight: 40 }}
+          // 오른쪽 눈 단추(40)가 얹히는 자리만큼 비운다 — 글이 단추 밑으로 들어가지 않게
+          className="last:pr-[52px]"
         />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => setRevealed((v) => !v)}
-          aria-label={toggleAriaLabel}
-          aria-pressed={revealed}
-          style={{
-            position: "absolute",
-            right: 4,
-            top: "50%",
-            transform: "translateY(-50%)",
-            height: 32,
-            width: 32,
-          }}
-        >
-          {revealed ? <EyeOff size={16} /> : <Eye size={16} />}
-        </Button>
+        <span className="absolute inset-y-0 right-x1 flex items-center">
+          <Toggle
+            aria-label={toggleAriaLabel}
+            pressed={revealed}
+            onPressedChange={onRevealedChange}
+            icon={<EyeOff aria-hidden />}
+            pressedIcon={<Eye aria-hidden />}
+          />
+        </span>
       </div>
     </Field>
   );

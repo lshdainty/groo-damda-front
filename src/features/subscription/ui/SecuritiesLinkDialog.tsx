@@ -1,92 +1,299 @@
-import { loadFailed } from "@/shared/api";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Unplug } from "lucide-react";
-import { ModalShell } from "@/shared/ui/groo/dialogs";
-import { Skeleton } from "@/shared/ui/skeleton";
-import { ApiTokenCard } from "@/features/subscription/ui/ApiTokenCard";
-import { BrokerConnectCard } from "@/features/subscription/ui/BrokerConnectCard";
-import { useBrokerConnections } from "@/features/subscription/model/useSubscription";
+import { ChevronRight, KeyRound } from "lucide-react";
+import { loadFailed } from "@/shared/api";
+import { Badge } from "@/shared/ds/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  useLeaveConfirm,
+} from "@/shared/ds/alert-dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+} from "@/shared/ds/dialog";
+import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
+import { LogoTile } from "@/shared/ds/logo-tile";
+import { ResultSection } from "@/shared/ds/result-section";
+import { Skeleton } from "@/shared/ds/skeleton";
+import { ApiTokenStep } from "@/features/subscription/ui/ApiTokenStep";
+import { BrokerStep } from "@/features/subscription/ui/BrokerStep";
+import { verifiedDate } from "@/features/subscription/lib/verified-date";
+import {
+  useSecuritiesLinkFlow,
+  type SecuritiesLinkFlow,
+} from "@/features/subscription/model/useSecuritiesLinkFlow";
+import {
+  useApiTokens,
+  useBrokerConnections,
+} from "@/features/subscription/model/useSubscription";
 
 /**
- * 증권사 연동 다이얼로그.
+ * 증권사 연동 시트 · 대화상자 — 결정 B(I-wrap-b1 β): 첫 단계는 증권사 줄 목록, 줄을 누르면 같은 표면 안 다음 단계.
  *
- * 예전에는 토스 키 입력이 계정 설정 안에 인라인 카드로 덩그러니 있었다. 증권사가 둘 이상이
- * 되면 그 자리에 카드를 쌓을 수 없어 분리했다(앱은 같은 이유로 `/settings/securities` 화면).
+ * 예전에는 증권사마다 카드가 펼쳐져 폼이 증권사 수만큼 쌓였다. 줄 목록 → 다음 단계로 바꿔 폼은 한 번에 하나고,
+ * 증권사가 늘어도 줄만 는다. **목록은 서버가 준다** — 미연결 증권사까지 내려오므로 배포 없이 나타난다.
  *
- * **목록은 서버가 준다.** 미연결 증권사까지 내려오므로 증권사가 늘어도 프론트 배포 없이 나타난다.
+ * 표면(시트 ↔ 대화상자)은 1280 에서 `ResponsiveDialog` 가 가른다. 단계 · 쓰던 키 · 요청은 `useSecuritiesLinkFlow` 가
+ * 표면 위에서 들고 있어 폭을 넘나들어도 입력한 키가 남는다. 앱은 같은 흐름이 `/settings/securities/:broker` 라우트다.
  */
-export function SecuritiesLinkDialog({
-  onClose,
-  mobile,
-}: {
-  onClose: () => void;
-  mobile: boolean;
-}) {
+export function SecuritiesLinkDialog({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation("subscription");
-  const { data: connections, isLoading, isError } = useBrokerConnections();
+  const { t: tc } = useTranslation("common");
+  const connectionsQ = useBrokerConnections();
+  const tokensQ = useApiTokens();
+  const connections = connectionsQ.data;
+  const flow = useSecuritiesLinkFlow(connections);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  // 연결이 하나뿐이면 기본 소스를 고를 게 없다 — 버튼을 감춘다.
-  const connectedCount = connections?.filter((c) => c.connected).length ?? 0;
+  const step = flow.step;
+  const brokerStep =
+    step.kind === "broker"
+      ? connections?.find((c) => c.broker === step.broker)
+      : undefined;
+  // 목록에서 사라진 증권사의 단계는 첫 단계로 본다
+  const kind = step.kind === "broker" && !brokerStep ? "list" : step.kind;
+
+  const backAsk = useLeaveConfirm({
+    dirty: flow.brokerDirty || flow.tokenDirty,
+    contentRef,
+    leave: flow.backToList,
+  });
+
+  const tokenFormShown =
+    kind === "tokens" &&
+    !flow.issued &&
+    !loadFailed({ isError: tokensQ.isError, data: tokensQ.data });
+  // 입력 폼 — 연결 전 키 입력 · 토큰 만들기. 조회(첫 단계 · 연결됨 · 발급 직후)는 머리 ✕ 가 닫는다
+  const form = (kind === "broker" && !brokerStep?.connected) || tokenFormShown;
+
+  const title =
+    kind === "broker"
+      ? (brokerStep?.displayName ?? "")
+      : kind === "tokens"
+        ? t("apiToken.title")
+        : t("broker.title");
 
   return (
-    <ModalShell
-      title={t("broker.title")}
-      onClose={onClose}
-      size="md"
-      mobile={mobile}
-    >
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <div
-          style={{
-            fontSize: 12,
-            color: "var(--fg-secondary)",
-            lineHeight: 1.6,
-          }}
+    <>
+      <ResponsiveDialog
+        open
+        form={form}
+        dirty={flow.brokerDirty || flow.tokenDirty}
+        busy={flow.busy}
+        onOpenChange={(next) => {
+          if (!next) onClose();
+        }}
+      >
+        <ResponsiveDialogContent
+          ref={contentRef}
+          title={title}
+          onBack={kind === "list" ? undefined : () => backAsk.request()}
         >
-          {t("broker.pageDesc")}
+          {kind === "list" ? (
+            <ListStep
+              flow={flow}
+              loading={connectionsQ.isLoading}
+              failed={loadFailed({
+                isError: connectionsQ.isError,
+                data: connections,
+              })}
+              retrying={connectionsQ.isRefetching}
+              onRetry={() => void connectionsQ.refetch()}
+              tokenCount={tokensQ.data?.length}
+              tokenLoading={tokensQ.isLoading}
+            />
+          ) : kind === "broker" && brokerStep ? (
+            <BrokerStep connection={brokerStep} flow={flow} />
+          ) : (
+            <ApiTokenStep flow={flow} />
+          )}
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
+      {backAsk.node}
+
+      {/* 연결 해제 — 확인창 한 번. 실패는 critical 스낵바 + [다시 시도] */}
+      <AlertDialog
+        open={flow.disconnectAsk != null}
+        onOpenChange={(open) => {
+          if (!open) flow.setDisconnectAsk(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogTitle>
+            {t("broker.disconnectAsk", {
+              broker: flow.disconnectAsk?.displayName ?? "",
+            })}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {t("broker.disconnectDesc")}
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="criticalSolid"
+              onClick={() => {
+                const target = flow.disconnectAsk;
+                if (target) void flow.runDisconnect(target);
+              }}
+            >
+              {t("broker.disconnect")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 토큰 폐기 — 확인창 한 번 */}
+      <AlertDialog
+        open={flow.revokeAsk != null}
+        onOpenChange={(open) => {
+          if (!open) flow.setRevokeAsk(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogTitle>
+            {t("apiToken.revokeAsk", { name: flow.revokeAsk?.name ?? "" })}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {t("apiToken.revokeDesc")}
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="criticalSolid"
+              onClick={() => {
+                const target = flow.revokeAsk;
+                if (target) void flow.runRevoke(target);
+              }}
+            >
+              {t("apiToken.revoke")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+/** 첫 단계 — 안내 글 + 증권사 줄 + (웹만) 내 프로그램에서 쓰기 › API 토큰 */
+function ListStep({
+  flow,
+  loading,
+  failed,
+  retrying,
+  onRetry,
+  tokenCount,
+  tokenLoading,
+}: {
+  flow: SecuritiesLinkFlow;
+  loading: boolean;
+  failed: boolean;
+  retrying: boolean;
+  onRetry: () => void;
+  tokenCount: number | undefined;
+  tokenLoading: boolean;
+}) {
+  const { t } = useTranslation("subscription");
+  const { t: tDs } = useTranslation("ds");
+  const connections = flow.connections;
+
+  return (
+    <ResponsiveDialogBody scrollFog>
+      <p className="m-0 mb-x4 text-t4 text-fg-neutral-muted break-keep [overflow-wrap:break-word]">
+        {t("broker.pageDesc")}
+      </p>
+
+      {loading && (
+        <div className="flex flex-col gap-x3">
+          <Skeleton radius="12" className="h-[64px] w-full" />
+          <Skeleton radius="12" className="h-[64px] w-full" />
         </div>
+      )}
 
-        {isLoading && (
-          <>
-            <Skeleton
-              style={{ height: 180, borderRadius: "var(--radius-lg)" }}
+      {failed && (
+        <ResultSection
+          kind="failure"
+          size="medium"
+          title={t("broker.loadFailed")}
+          primaryAction={{
+            label: tDs("common.retry"),
+            onClick: onRetry,
+            loading: retrying,
+          }}
+        />
+      )}
+
+      {connections && (
+        <>
+          <List aria-label={t("broker.title")}>
+            {connections.map((c) => {
+              const date = verifiedDate(c.verifiedAt);
+              return (
+                <ListButtonItem
+                  key={c.broker}
+                  prefix={<LogoTile name={c.displayName} />}
+                  title={
+                    <>
+                      {c.displayName}
+                      {c.primary && (
+                        <Badge
+                          variant="weak"
+                          tone="brand"
+                          className="ml-x1_5 align-middle"
+                        >
+                          {t("broker.primary")}
+                        </Badge>
+                      )}
+                    </>
+                  }
+                  detail={
+                    c.connected
+                      ? date
+                        ? t("broker.rowConnected", { date })
+                        : t("broker.rowConnectedNoDate")
+                      : t("broker.rowDisconnected")
+                  }
+                  suffix={<ChevronRight aria-hidden />}
+                  onClick={() => flow.go({ kind: "broker", broker: c.broker })}
+                />
+              );
+            })}
+          </List>
+          {/* 토큰은 증권사 하나에 묶이지 않는 "내 프로그램 열쇠" — 연결이 하나도 없어도 감추지 않는다(끊은 뒤에도 폐기할 수 있어야 한다) */}
+          <ListHeader as="h3" id="sec-program-group" className="mt-x4">
+            {t("broker.programGroup")}
+          </ListHeader>
+          <List aria-labelledby="sec-program-group">
+            <ListButtonItem
+              prefix={
+                <ListTile>
+                  <KeyRound aria-hidden />
+                </ListTile>
+              }
+              title={t("apiToken.title")}
+              suffix={
+                <>
+                  {tokenLoading
+                    ? null
+                    : tokenCount == null
+                      ? null
+                      : tokenCount === 0
+                        ? t("apiToken.countNone")
+                        : t("apiToken.count", { n: tokenCount })}
+                  <ChevronRight aria-hidden />
+                </>
+              }
+              onClick={() => flow.go({ kind: "tokens" })}
             />
-            <Skeleton
-              style={{ height: 180, borderRadius: "var(--radius-lg)" }}
-            />
-          </>
-        )}
-
-        {loadFailed({ isError, data: connections }) && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "16px 14px",
-              color: "var(--fg-secondary)",
-              fontSize: 13,
-            }}
-          >
-            <Unplug size={18} />
-            {t("broker.loadFailed")}
-          </div>
-        )}
-
-        {connections?.map((c) => (
-          <BrokerConnectCard
-            key={c.broker}
-            connection={c}
-            showPrimaryAction={connectedCount > 1}
-          />
-        ))}
-
-        {/*
-          증권사 카드 아래에 둔다 — 토큰은 위에서 연결한 키로 가는 길이라 읽는 순서가 그렇다.
-          연결이 하나도 없어도 감추지 않는다. 연결을 끊은 뒤에도 남은 토큰을 보고 폐기할 수 있어야 한다.
-        */}
-        {connections && <ApiTokenCard />}
-      </div>
-    </ModalShell>
+          </List>
+        </>
+      )}
+    </ResponsiveDialogBody>
   );
 }

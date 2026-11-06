@@ -1,9 +1,8 @@
 import type { ReactNode } from "react";
-import { Link, useOutletContext } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
+import { Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ResultSection } from "@/shared/ds/result-section";
-import { Button } from "@/shared/ui/button";
-import { Card } from "@/shared/ui/card";
 import {
   TopNavigation,
   TopNavigationBackButton,
@@ -85,7 +84,7 @@ function GateLoadFailed({
 }
 
 /**
- * 미구독 안내 — StocksPage 의 `ConnectGate`(증권사 미연결)와 같은 모양이다.
+ * 미구독 안내 — StocksPage 의 `ConnectGate`(증권사 미연결)와 같은 모양이다(Result Section empty).
  * 같은 자리에 뜨는 두 안내가 서로 다르게 생기면 사용자는 다른 문제로 읽는다.
  */
 function SecuritiesUpsell() {
@@ -93,46 +92,18 @@ function SecuritiesUpsell() {
   // `/desk/stocks` 는 AppLayout FULLSCREEN_PATHS 라 모바일에 전역 헤더·탭바가 없다.
   // 자체 뒤로 헤더를 안 붙이면 나갈 길이 없는 화면이 된다.
   const { mobile } = useOutletContext<{ mobile: boolean }>();
-  const body = (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        textAlign: "center",
-        gap: 8,
+  const gate = (
+    <ResultSection
+      kind="empty"
+      icon={<Lock aria-hidden />}
+      title={t("gate.title")}
+      description={t("gate.desc")}
+      primaryAction={{
+        label: t("gate.action"),
+        href: "/desk/settings?section=subscription",
       }}
-    >
-      <div
-        style={{
-          fontSize: "var(--text-body-md)",
-          fontWeight: 700,
-          color: "var(--fg-primary)",
-        }}
-      >
-        {t("gate.title")}
-      </div>
-      <div
-        style={{
-          fontSize: "var(--text-body-sm)",
-          color: "var(--fg-tertiary)",
-          lineHeight: 1.5,
-        }}
-      >
-        {t("gate.desc")}
-      </div>
-      <Button variant="outline" size="sm" style={{ marginTop: 8 }} asChild>
-        <Link to="/desk/settings?section=subscription">{t("gate.action")}</Link>
-      </Button>
-    </div>
-  );
-  // 모바일 카드 다이어트 — 안내도 배경 위 플랫(StocksPage ConnectGate 정합).
-  const gate = mobile ? (
-    <div style={{ padding: "40px 24px" }}>{body}</div>
-  ) : (
-    <Card style={{ padding: "40px 24px", maxWidth: 430, margin: "0 auto" }}>
-      {body}
-    </Card>
+      className="px-x6 py-x6"
+    />
   );
   return mobile ? (
     <>
@@ -141,11 +112,14 @@ function SecuritiesUpsell() {
         <TopNavigationBackButton fallbackHref="/desk/more" />
         <TopNavigationTitle>{t("gate.title")}</TopNavigationTitle>
       </TopNavigation>
-      <div className={MOBILE_FACE}>
-        <div style={{ padding: "16px 24px 24px" }}>{gate}</div>
-      </div>
+      <div className={MOBILE_FACE}>{gate}</div>
     </>
   ) : (
-    <div style={{ padding: 24 }}>{gate}</div>
+    <div
+      data-slot="securities-gate"
+      className="flex min-h-[70dvh] flex-col justify-center rounded-[16px] bg-bg-layer-default"
+    >
+      {gate}
+    </div>
   );
 }
