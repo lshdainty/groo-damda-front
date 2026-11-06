@@ -136,8 +136,9 @@ describe("폰 홈 띠 — 구역마다 따로(사용자 10-23)", () => {
     expect(events.textContent).toContain("loadFailed.events");
     expect(todos.textContent).toContain("loadFailed.todos");
     expect(events.textContent).toContain("loadFailedDesc");
+    // [다시 시도] 는 ds 고정 글(한국어)이다
     const retry = Array.from(events.querySelectorAll("button")).find((b) =>
-      b.textContent?.includes("Try again"),
+      b.textContent?.includes("다시 시도"),
     );
     act(() => retry?.click());
     expect(refetch).toHaveBeenCalledTimes(1);
@@ -164,11 +165,13 @@ describe("폰 홈 띠 — 구역마다 따로(사용자 10-23)", () => {
     render();
     expect(container.textContent).toContain("loadFailed.netWorth");
     expect(container.textContent).toContain("loadFailedDesc");
-    expect(container.textContent).not.toContain("0원");
+    // 순자산 띠에 0원이 없다 — 다른 띠(평균 0원 등)의 진짜 값은 따지지 않는다
+    const netWorth = container.querySelector("[data-section=netWorth]")!;
+    expect(netWorth.textContent).not.toMatch(/(^|\D)0원/);
     expect(container.querySelector("[data-variant=hero]")).toBeNull();
     expect(container.querySelector("[data-section=events]")).not.toBeNull();
-    const retry = Array.from(container.querySelectorAll("button")).find((b) =>
-      b.textContent?.includes("Try again"),
+    const retry = Array.from(netWorth.querySelectorAll("button")).find((b) =>
+      b.textContent?.includes("다시 시도"),
     );
     act(() => retry?.click());
     expect(refetch).toHaveBeenCalledTimes(1);

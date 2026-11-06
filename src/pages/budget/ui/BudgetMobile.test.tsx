@@ -151,12 +151,13 @@ describe("금액 원까지 · 막대 색(I-08 8 · 12 · 14)", () => {
     render();
     const rows = section("total").querySelectorAll("[data-slot=kv-value]");
     expect(rows).toHaveLength(3);
-    expect(rows[2]!.textContent).toMatch(/^\+.*99,200,000$/);
+    // 시험 언어는 한국어다(tests/vitest.setup.ts) — 돈은 "+99,200,000원"
+    expect(rows[2]!.textContent).toBe("+99,200,000원");
     expect(rows[2]!.className).toContain("text-fg-brand");
     state.budgets = q([budget(1, null, 100_000), budget(2, 1, 800_000)]);
     render();
     const over = section("total").querySelectorAll("[data-slot=kv-value]")[2]!;
-    expect(over.textContent).toMatch(/^−.*700,000$/);
+    expect(over.textContent).toBe("−700,000원");
     expect(over.className).toContain("text-fg-critical");
     // 할당 넘침 안내 상자
     expect(section("total").textContent).toContain("manager.overCap");
