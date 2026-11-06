@@ -31,6 +31,9 @@ declare global {
 const assetState = vi.hoisted(() => ({
   loaded: true,
   removed: [] as number[],
+  /** 자산 조회 실패 — 받은 목록 없이 */
+  fail: false,
+  refetched: 0,
 }));
 const saveState = vi.hoisted(() => ({ fail: false }));
 const catState = vi.hoisted(() => ({ fail: false, args: [] as unknown[] }));
@@ -97,7 +100,13 @@ vi.mock("@/features/asset", () => ({
           ),
         }
       : undefined,
-    isLoading: !assetState.loaded,
+    isLoading: !assetState.loaded && !assetState.fail,
+    isError: assetState.fail,
+    isFetching: false,
+    refetch: async () => {
+      assetState.refetched += 1;
+      return { data: undefined };
+    },
   }),
 }));
 
@@ -214,6 +223,8 @@ let root: Root;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  assetState.loaded = true;
+  assetState.fail = false;
   globalThis.ResizeObserver = class {
     observe() {}
     unobserve() {}
@@ -650,6 +661,52 @@ describe("카테고리 조회 실패 (I-20 20-2 후속)", () => {
       catState.args.every((a) => (a as { silent?: boolean })?.silent),
     ).toBe(true);
     catState.fail = false;
+  });
+});
+
+describe("계좌 고르기 — 받는 중 · 못 받음을 빈 목록과 가른다 (B2-6)", () => {
+  it("못 받았으면 고르기 안에 실패 + [다시 시도] — 누르면 다시 받는다", async () => {
+    assetState.loaded = false;
+    assetState.fail = true;
+    assetState.refetched = 0;
+    render(null);
+    await click(rowButton("accountCard"));
+    await tick();
+    const surface = topSurface() as HTMLElement;
+    expect(surface.textContent).toContain("addTx.assetLoadFailed");
+    expect(surface.textContent).toContain("loadFailedDesc");
+    // "계좌·카드 없음" 줄도 없다 — 고를 수 있는 것처럼 보이지 않게
+    expect(pickItemTitles()).toEqual([]);
+    const retry = Array.from(surface.querySelectorAll("button")).find(
+      (b) => b.textContent?.trim() === "retry",
+    )!;
+    const before = assetState.refetched;
+    await click(retry);
+    expect(assetState.refetched).toBe(before + 1);
+    assetState.fail = false;
+    assetState.loaded = true;
+  });
+
+  it("받는 중이면 Skeleton — 실패도 빈 목록도 아니다", async () => {
+    assetState.loaded = false;
+    render(null);
+    await click(rowButton("accountCard"));
+    await tick();
+    const surface = topSurface() as HTMLElement;
+    expect(surface.querySelector("[data-slot=pick-skeleton]")).not.toBeNull();
+    expect(surface.textContent).not.toContain("addTx.assetLoadFailed");
+    expect(pickItemTitles()).toEqual([]);
+    assetState.loaded = true;
+  });
+
+  it("받았으면 목록 — 실패 · Skeleton 없음", async () => {
+    render(null);
+    await click(rowButton("accountCard"));
+    await tick();
+    const surface = topSurface() as HTMLElement;
+    expect(surface.querySelector("[data-slot=pick-skeleton]")).toBeNull();
+    expect(surface.textContent).not.toContain("addTx.assetLoadFailed");
+    expect(pickItemTitles().length).toBeGreaterThan(1);
   });
 });
 

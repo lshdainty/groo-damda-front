@@ -6,44 +6,11 @@ import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { Icon } from "@/shared/ui/groo/primitives";
 import { LogoTile } from "@/shared/ds/logo-tile";
 import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
-import { ResultSection } from "@/shared/ds/result-section";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { PickFailure, PickSkeleton } from "@/shared/ui/groo/pick-load";
 import type { TxForm } from "../model/use-tx-form";
 import type { Asset } from "@/entities/asset";
 
-/** 고르기 시트 · 팝오버 안의 불러오는 중 줄 — Skeleton 넷 */
-export function PickSkeleton() {
-  return (
-    <div aria-hidden className="flex flex-col gap-x4 px-global-gutter py-x2">
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center gap-x3">
-          <Skeleton radius="12" className="size-10 shrink-0" />
-          <Skeleton text="t5" className="w-2/3" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** 고르기 안 실패 — 서버 원문을 그리지 않는다. 폼 줄 값은 그대로 */
-function PickFailure({
-  title,
-  onRetry,
-}: {
-  title: string;
-  onRetry: () => void;
-}) {
-  const { t: tc } = useTranslation("common");
-  return (
-    <ResultSection
-      kind="failure"
-      size="medium"
-      title={title}
-      description={tc("loadFailedDesc")}
-      primaryAction={{ label: tc("retry"), onClick: onRetry }}
-    />
-  );
-}
+// 받는 중 · 실패 꼴은 프리셋 · 반복 거래 고르기와 한 벌(shared/ui/groo/pick-load)
 
 function PickEmpty({ children }: { children: ReactNode }) {
   return (
@@ -71,6 +38,7 @@ export function CategoryPickBody({
       <PickFailure
         title={t("addTx.categoryLoadFailed")}
         onRetry={() => void f.categoriesQ.refetch()}
+        retrying={f.categoriesQ.isFetching}
       />
     );
   const ofType = f.categories
@@ -185,6 +153,7 @@ export function AssetPickBody({
       <PickFailure
         title={t("addTx.assetLoadFailed")}
         onRetry={() => void f.assetsQ.refetch()}
+        retrying={f.assetsQ.isFetching}
       />
     );
   const sorted = [...list].sort(ASSET_ORDER);

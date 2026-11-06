@@ -36,6 +36,7 @@ import { AmountInput } from "@/shared/ui/groo/amount-input";
 import { FormFooter } from "@/shared/ui/groo/form-footer";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { PickList } from "@/shared/ui/groo/pick-list";
+import { PickLoadGate } from "@/shared/ui/groo/pick-load";
 import { PickerRow } from "@/shared/ui/groo/picker-row";
 import { SheetStepDone, StepDoneButton } from "@/shared/ui/groo/step-parts";
 import { useStepBack } from "@/shared/ui/groo/use-step-back";
@@ -462,18 +463,31 @@ export function PresetEditDialog({
     close: () => void,
     withNone: boolean,
   ) => (
-    <PickList
-      label={label}
-      selected={selected == null ? NONE : String(selected)}
-      items={[
-        ...(withNone ? [{ value: NONE, title: t("preset.noAccount") }] : []),
-        ...pool.map(assetItem),
-      ]}
-      onPick={(v) => {
-        onPick(v === NONE ? null : Number(v));
-        close();
-      }}
-    />
+    // 목록을 못 받았으면 실패 + [다시 시도], 받는 중이면 Skeleton — 빈 목록으로 읽히지 않게(거래 시트 AssetPickBody 와 한 벌)
+    <PickLoadGate
+      pending={assetsQ.data === undefined}
+      failed={assetsQ.isError && assetsQ.data === undefined}
+      failedTitle={t("addTx.assetLoadFailed")}
+      onRetry={() => void assetsQ.refetch()}
+      retrying={assetsQ.isFetching}
+    >
+      {() => (
+        <PickList
+          label={label}
+          selected={selected == null ? NONE : String(selected)}
+          items={[
+            ...(withNone
+              ? [{ value: NONE, title: t("preset.noAccount") }]
+              : []),
+            ...pool.map(assetItem),
+          ]}
+          onPick={(v) => {
+            onPick(v === NONE ? null : Number(v));
+            close();
+          }}
+        />
+      )}
+    </PickLoadGate>
   );
 
   const selectedCategory = categories.find((c) => c.rowId === categoryRowId);

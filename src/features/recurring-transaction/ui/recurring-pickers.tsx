@@ -9,6 +9,7 @@ import { PickList } from "@/shared/ui/groo/pick-list";
 import { CategoryPickList } from "@/features/expense/ui/CategoryPickList";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { PickerRow } from "@/shared/ui/groo/picker-row";
+import { PickLoadGate } from "@/shared/ui/groo/pick-load";
 import { formatDateLong } from "@/shared/lib/date";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import type { Asset } from "@/entities/asset";
@@ -223,7 +224,9 @@ export function AssetPickRow({
   errorMessage,
   emptyText,
   failed,
+  pending = false,
   onRetry,
+  retrying,
 }: {
   prefix?: ReactNode;
   title: string;
@@ -240,7 +243,10 @@ export function AssetPickRow({
   emptyText: string;
   /** 자산 목록을 못 받았다 — 빈 글이 아니라 실패 한 벌(고정 글 + 다시 시도) */
   failed?: boolean;
+  /** 자산 목록을 아직 못 받았다 — 빈 글("계좌가 없어요")이 아니라 Skeleton */
+  pending?: boolean;
   onRetry?: () => void;
+  retrying?: boolean;
 }) {
   const { t: tAsset } = useTranslation("asset");
   const picked = (valueAssets ?? assets).find((a) => a.rowId === value);
@@ -256,33 +262,38 @@ export function AssetPickRow({
       errorMessage={errorMessage}
       scrollFog
     >
-      {({ close }) =>
-        failed ? (
-          <BandFailure
-            title={tAsset("manager.loadFailed")}
-            onRetry={() => onRetry?.()}
-            className="-mx-x6"
-          />
-        ) : assets.length === 0 ? (
-          <p className="m-0 py-x3 font-sans text-t4 text-fg-neutral-subtle">
-            {emptyText}
-          </p>
-        ) : (
-          <PickList
-            label={surfaceTitle}
-            selected={value != null ? String(value) : null}
-            items={assets.map((a) => ({
-              value: String(a.rowId),
-              title: a.assetName,
-              detail: a.institution ?? undefined,
-            }))}
-            onPick={(v) => {
-              onChange(Number(v));
-              close();
-            }}
-          />
-        )
-      }
+      {({ close }) => (
+        // 받는 중 · 못 받음 · 받음 — 거래 시트 · 프리셋 계좌 고르기와 한 벌(shared/ui/groo/pick-load)
+        <PickLoadGate
+          pending={pending}
+          failed={!!failed}
+          failedTitle={tAsset("manager.loadFailed")}
+          onRetry={() => onRetry?.()}
+          retrying={retrying}
+        >
+          {() =>
+            assets.length === 0 ? (
+              <p className="m-0 py-x3 font-sans text-t4 text-fg-neutral-subtle">
+                {emptyText}
+              </p>
+            ) : (
+              <PickList
+                label={surfaceTitle}
+                selected={value != null ? String(value) : null}
+                items={assets.map((a) => ({
+                  value: String(a.rowId),
+                  title: a.assetName,
+                  detail: a.institution ?? undefined,
+                }))}
+                onPick={(v) => {
+                  onChange(Number(v));
+                  close();
+                }}
+              />
+            )
+          }
+        </PickLoadGate>
+      )}
     </PickerRow>
   );
 }

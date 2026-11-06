@@ -748,6 +748,8 @@ export function useRecurringForm({
               <AssetPickRow
                 failed={assetsQ.isError && !assetsQ.data}
                 onRetry={() => void assetsQ.refetch()}
+                pending={assetsQ.data === undefined}
+                retrying={assetsQ.isFetching}
                 prefix={<Wallet className={ROW_ICON} />}
                 title={
                   f.type === "INCOME"
@@ -809,6 +811,8 @@ export function useRecurringForm({
                 <AssetPickRow
                   failed={assetsQ.isError && !assetsQ.data}
                   onRetry={() => void assetsQ.refetch()}
+                  pending={assetsQ.data === undefined}
+                  retrying={assetsQ.isFetching}
                   prefix={<Wallet className={ROW_ICON} />}
                   title={te("addTx.fromAccount")}
                   placeholder={t("pickValue", {
@@ -832,6 +836,8 @@ export function useRecurringForm({
                 <AssetPickRow
                   failed={assetsQ.isError && !assetsQ.data}
                   onRetry={() => void assetsQ.refetch()}
+                  pending={assetsQ.data === undefined}
+                  retrying={assetsQ.isFetching}
                   prefix={<Wallet className={ROW_ICON} />}
                   title={te("preset.toAccount")}
                   placeholder={t("pickValue", {
