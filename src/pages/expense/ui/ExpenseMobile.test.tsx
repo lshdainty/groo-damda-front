@@ -309,11 +309,38 @@ describe("날짜 묶음 (I-07 14)", () => {
     const h = headers[0]!;
     expect(h.className).toContain("text-t4");
     expect(h.className).toContain("font-medium");
-    expect(h.querySelector("h2")?.textContent).toContain("26. 10. 15(목)");
+    expect(h.querySelector("h2")?.textContent).toContain("10월 15일 (목)");
     expect(h.querySelector("h2")?.textContent).toContain("오늘");
     // 합계는 h2 밖이라 머리말 이름에 섞이지 않는다
     expect(h.querySelector("h2")?.textContent).not.toContain("12,000");
     expect(h.textContent).toContain("12,000");
+  });
+
+  it("날짜 글은 요일 형식이다 — 올해 '10월 14일 (수)' + 어제, 할 일 원장과 같은 꼴(옛 '26. 10. 14(수)' 이 아니다)", () => {
+    render();
+    const h2 = Array.from(container.querySelectorAll("h2")).map(
+      (e) => e.textContent ?? "",
+    );
+    expect(h2[1]).toContain("10월 14일 (수)");
+    expect(h2[1]).toContain("어제");
+    expect(h2.join(" ")).not.toMatch(/\d{2}\. \d+\. \d+\(/);
+  });
+
+  it("다른 해면 표준 + 요일 '2026년 10월 15일 (목)' — 오늘 · 어제는 붙지 않는다", () => {
+    vi.setSystemTime(new Date("2027-01-05T12:00:00"));
+    st.search = "month=2026-10";
+    render();
+    const h2 = Array.from(container.querySelectorAll("h2")).map(
+      (e) => e.textContent ?? "",
+    );
+    expect(h2[0]).toContain("2026년 10월 15일 (목)");
+    expect(h2[0]).not.toContain("오늘");
+  });
+
+  it("영어는 'E, MMM d' — 'Thu, Oct 15'", async () => {
+    await i18n.changeLanguage("en");
+    render();
+    expect(container.querySelector("h2")?.textContent).toContain("Thu, Oct 15");
   });
 
   it("지출 합계는 fg-neutral · 수입은 fg-brand + '+' 다", () => {

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { i18n } from "@/shared/i18n/config";
-import { formatDateLong, formatDateSmart } from "./date";
+import { formatDateLong, formatDateSmart, formatMonthDayDow } from "./date";
 
 afterEach(async () => {
   await i18n.changeLanguage("ko");
@@ -29,5 +29,20 @@ describe("formatDateSmart — 올해는 줄임, 다른 해는 표준", () => {
   });
   it("다른 해 → '2025년 9월 30일'", () => {
     expect(formatDateSmart("2025-09-30", now)).toBe("2025년 9월 30일");
+  });
+});
+
+describe('formatMonthDayDow — 요일 형식(원장 날짜 머리 · DESIGN.desk.md 날짜 표 "요일")', () => {
+  const now = new Date(2026, 9, 29);
+  it("올해 → '10월 25일 (일)'", () => {
+    expect(formatMonthDayDow("2026-10-25", now)).toBe("10월 25일 (일)");
+  });
+  it("다른 해 → 표준 + 요일 '2025년 10월 25일 (토)'", () => {
+    expect(formatMonthDayDow("2025-10-25", now)).toBe("2025년 10월 25일 (토)");
+  });
+  it("영어 — 'E, MMM d', 다른 해는 연도를 붙인다", async () => {
+    await i18n.changeLanguage("en");
+    expect(formatMonthDayDow("2026-10-25", now)).toBe("Sun, Oct 25");
+    expect(formatMonthDayDow("2025-10-25", now)).toBe("Sat, Oct 25, 2025");
   });
 });

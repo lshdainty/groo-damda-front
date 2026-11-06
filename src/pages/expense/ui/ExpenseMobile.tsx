@@ -8,6 +8,7 @@ import { ResultSection } from "@/shared/ds/result-section";
 import { SwipeActionsProvider } from "@/shared/ds/swipe-actions";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
+import { formatMonthDayDow } from "@/shared/lib/date";
 import { KRW, MINUS, formatDay, isEn, minusOf } from "@/shared/lib/groo/format";
 import {
   INSIGHT_SAME_MAX,
@@ -457,8 +458,6 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
     );
   } else {
     body = grouped.map(([d, items]) => {
-      const [yy, mm, dd] = d.split("-");
-      const dow = formatDay(d).dow;
       const rel = relOf(d);
       // 일별 합계 — 이체는 자산 간 이동이라 지출/수입 어느 쪽에도 넣지 않는다.
       const dayExpenses = items.flatMap((i) =>
@@ -469,9 +468,8 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
       return (
         <LedgerDayGroup key={d} day={d}>
           <LedgerDayHead gutter>
-            <LedgerDayDate relative={rel}>
-              {(yy ?? "").slice(2)}. {Number(mm)}. {Number(dd)}({dow})
-            </LedgerDayDate>
+            {/* 날짜 머리 — 요일 형식(올해 "10월 25일 (일)" · 다른 해 "2025년 10월 25일 (토)" · en "Sun, Oct 25"), 할 일 원장과 같은 유틸 */}
+            <LedgerDayDate relative={rel}>{formatMonthDayDow(d)}</LedgerDayDate>
             {(dOut > 0 || dIn > 0) && (
               <LedgerDaySum className="num">
                 {dOut > 0 && (
