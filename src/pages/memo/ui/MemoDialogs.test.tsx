@@ -93,9 +93,11 @@ beforeEach(() => {
   root = createRoot(container);
 });
 
-afterEach(() => {
+afterEach(async () => {
   act(() => root.unmount());
   container.remove();
+  // 닫힌 표면은 쌓은 히스토리 칸을 history.go 로 되돌린다(use-back-close) — 그 popstate 가 다음 시험으로 새지 않게 흘려 보낸다
+  await new Promise((r) => setTimeout(r, 20));
 });
 
 const form = (memo: Memo | null, saveError = false, tagsReady = true) =>
@@ -121,6 +123,22 @@ const byName = (name: string) =>
   Array.from(document.body.querySelectorAll<HTMLElement>("button")).find(
     (b) => (b.getAttribute("aria-label") ?? b.textContent?.trim()) === name,
   );
+/** ⋮ 메뉴 줄 — 1280 미만이라 Menu Sheet 로 열린다(ResponsiveMenu). 1280 이상 Menu 의 menuitem 도 함께 센다 */
+const menuItems = () =>
+  Array.from(
+    document.body.querySelectorAll<HTMLElement>(
+      "[role=menuitem], [data-slot=menu-sheet-item]",
+    ),
+  );
+/** 메뉴 줄을 고른다 — 고른 동작은 표면이 닫힌 뒤 부른다(닫힘 애니메이션이 없는 jsdom 은 1초 안전 타이머) */
+const pick = async (label: string) => {
+  const item = menuItems().find((e) => e.textContent?.includes(label));
+  expect(item, `메뉴 줄 ${label}`).toBeTruthy();
+  await act(async () => {
+    item!.click();
+    await new Promise((r) => setTimeout(r, 1100));
+  });
+};
 const click = (el: Element | null | undefined) => {
   expect(el, "누를 것이 있다").toBeTruthy();
   act(() => (el as HTMLElement).click());
@@ -261,6 +279,8 @@ describe("메모 폼 — 검수 고침", () => {
   it("저장 실패 Callout 은 화면에 들이도록 scrollIntoView 를 부른다(M2)", () => {
     const spy = vi.fn();
     Element.prototype.scrollIntoView = spy;
+    // 실제 흐름 — 열린 폼에서 저장이 실패해 Callout 이 붙는다(처음부터 실패로 열면 Callout 이 붙기 전이라 부르지 않는다)
+    form(base);
     form(base, true);
     expect(spy).toHaveBeenCalled();
   });
@@ -359,11 +379,7 @@ describe("메모 상세 (I-15 14)", () => {
   it("⋮ 메뉴에서 [삭제] 를 고르면 확인창을 먼저 연다", async () => {
     detail(base);
     click(byName("여행 계획 더보기"));
-    const del = Array.from(
-      document.body.querySelectorAll<HTMLElement>("[role=menuitem]"),
-    ).find((e) => e.textContent?.includes("삭제"));
-    expect(del, "메뉴 줄 삭제").toBeTruthy();
-    await act(async () => del!.click());
+    await pick("삭제");
     expect(q("[role=alertdialog]")?.textContent).toContain(
       '"여행 계획" 메모를 삭제할까요?',
     );
@@ -375,20 +391,14 @@ describe("메모 상세 (I-15 14)", () => {
   it("⋮ 메뉴 첫 줄은 고정이면 '고정 해제', 아니면 '고정' 이다", () => {
     detail(base);
     click(byName("여행 계획 더보기"));
-    const items = Array.from(
-      document.body.querySelectorAll<HTMLElement>("[role=menuitem]"),
-    ).map((e) => e.textContent?.trim());
+    const items = menuItems().map((e) => e.textContent?.trim());
     expect(items[0]).toBe("고정 해제");
   });
 
   it("지우지 못하면(false) 상세를 닫지 않는다", async () => {
     detail(base, () => Promise.resolve(false));
     click(byName("여행 계획 더보기"));
-    await act(async () =>
-      Array.from(document.body.querySelectorAll<HTMLElement>("[role=menuitem]"))
-        .find((e) => e.textContent?.includes("삭제"))!
-        .click(),
-    );
+    await pick("삭제");
     const confirm = Array.from(
       document.body.querySelectorAll<HTMLElement>("[role=alertdialog] button"),
     ).find((b) => b.textContent === "삭제")!;
@@ -399,11 +409,7 @@ describe("메모 상세 (I-15 14)", () => {
   it("확인 뒤 지우면 상세를 닫는다 · 지우지 못하면 닫지 않는다", async () => {
     detail(base, () => Promise.resolve(true));
     click(byName("여행 계획 더보기"));
-    await act(async () =>
-      Array.from(document.body.querySelectorAll<HTMLElement>("[role=menuitem]"))
-        .find((e) => e.textContent?.includes("삭제"))!
-        .click(),
-    );
+    await pick("삭제");
     const confirm = Array.from(
       document.body.querySelectorAll<HTMLElement>("[role=alertdialog] button"),
     ).find((b) => b.textContent === "삭제")!;
