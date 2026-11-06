@@ -57,7 +57,12 @@ const state = vi.hoisted(() => ({
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (k: string, p?: Record<string, unknown>) =>
-      p && "name" in p ? `${k}:${String(p.name)}` : k,
+      p && "name" in p
+        ? `${k}:${String(p.name)}`
+        : // 환율 안내는 값을 이어 붙여 보인다 — 칸 · 안내 · 원화 줄이 같은 값인지 잰다
+          p && "rate" in p
+          ? `${k}:${String(p.original)} × ${String(p.rate)} = ${String(p.krw)}`
+          : k,
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
@@ -70,12 +75,18 @@ vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
 }));
 vi.mock("@/shared/lib/groo/hide-amounts", () => ({
   MaskAmount: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  HideUnit: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 vi.mock("@/features/expense", () => ({
   useLedgerResultToast: () => () => {},
   useReplaceExpense: (o: unknown) => {
     sent.opts.replace = o;
-    return { mutate: () => {}, isPending: false, isError: false };
+    return {
+      mutate: () => {},
+      isPending: false,
+      isError: false,
+      reset: () => {},
+    };
   },
   useExpenseCategories: () => ({
     data: state.listsLate ? undefined : state.categories,
@@ -101,6 +112,7 @@ vi.mock("@/features/expense", () => ({
       },
       isPending: false,
       isError: false,
+      reset: () => {},
     };
   },
   useUpdateExpense: (o: unknown) => {
@@ -112,6 +124,7 @@ vi.mock("@/features/expense", () => ({
       },
       isPending: false,
       isError: false,
+      reset: () => {},
     };
   },
   useCreateExpenseTemplate: (o: unknown) => {
@@ -157,6 +170,7 @@ vi.mock("@/features/asset", () => ({
     },
     isPending: false,
     isError: false,
+    reset: () => {},
   }),
   useUpdateTransfer: () => ({
     mutate: ({ data }: { data: Record<string, unknown> }) => {
@@ -178,6 +192,7 @@ vi.mock("@/features/sms", () => ({
     },
     isPending: false,
     isError: false,
+    reset: () => {},
   }),
 }));
 vi.mock("@/features/expense-split", () => ({
@@ -272,6 +287,11 @@ const amountInput = () =>
 const dialogText = () =>
   [...document.body.querySelectorAll("[role=dialog]")].slice(-1)[0]
     ?.textContent ?? "";
+/** 거래 폼 표면의 글 — 2단계 머리(addTx.stepMeta)를 가진 표면 */
+const formText = () =>
+  [...document.body.querySelectorAll("[role=dialog]")].find((d) =>
+    d.textContent?.includes("addTx.stepMeta"),
+  )?.textContent ?? "";
 /** 글이 그 말로 시작하는 버튼 — 프리셋 칩은 이름 뒤에 금액이 붙는다 */
 const pressStartingWith = async (prefix: string) => {
   const el = [...document.body.querySelectorAll("button")]
@@ -431,7 +451,8 @@ describe("외화 — 1단계 통화 칩 · 2단계 환율 칸", () => {
     await tick();
     await press("addTx.add");
     expect(sent.calls).toBe(0);
-    expect(dialogText()).toContain("addTx.errFx");
+    // 카테고리 고르기 표면이 닫히는 중이라 맨 뒤 [role=dialog] 가 아직 그것일 수 있다 — 폼 쪽에서 본다
+    expect(formText()).toContain("addTx.errFx");
   });
 });
 
@@ -499,6 +520,11 @@ describe("수정 — 2단계로 바로", () => {
       )!,
     );
     await tick();
+    // 바뀐 값이 있으면 ← 는 먼저 묻는다(useLeaveConfirm) — [나가기] 로 버린다
+    expect(
+      document.body.querySelector("[role=alertdialog]")?.textContent,
+    ).toContain("작성한 내용이 사라져요");
+    await press("나가기");
     expect(dialogText()).toContain("45,000원");
   });
 
@@ -1254,7 +1280,8 @@ describe("자산 · 카테고리 목록을 받기 전 · 실패한 채 수정해
     await press("save");
     await settle();
     expect(sent.calls).toBe(0);
-    expect(dialogText()).toContain("addTx.saveFailed");
+    // 목록을 못 받아 막은 저장은 "참조를 못 받았다" 고정 글이다(e6db3a35) — 저장 실패 글과 갈린다
+    expect(dialogText()).toContain("query.referenceSaveFailed");
   });
 });
 

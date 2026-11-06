@@ -4,7 +4,8 @@
  * ① 언어를 한국어로 고정한다. i18n 감지 순서는 localStorage(`i18nextLng`) → navigator 이고 jsdom 의
  *    navigator.language 는 en-US 라, 아무것도 안 하면 i18n 을 불러오는 시험이 영어로 돈다. 시험들은 "기본 한국어" 를
  *    전제로 쓰였다(영어를 재는 시험은 각자 changeLanguage("en") 을 한다).
- * ② jsdom 에 없는 브라우저 API 를 비워 둔다 — Element.scrollIntoView(오류 칸으로 옮기기, useScrollToError).
+ * ② jsdom 에 없는 브라우저 API 를 비워 둔다 — Element.scrollIntoView(오류 칸으로 옮기기, useScrollToError) ·
+ *    Element.scrollTo(실패하면 시트 본문을 맨 위로).
  */
 
 try {
@@ -26,4 +27,8 @@ if (typeof navigator !== "undefined") {
 
 if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = function scrollIntoView() {};
+}
+
+if (typeof Element !== "undefined" && !Element.prototype.scrollTo) {
+  Element.prototype.scrollTo = function scrollTo() {};
 }

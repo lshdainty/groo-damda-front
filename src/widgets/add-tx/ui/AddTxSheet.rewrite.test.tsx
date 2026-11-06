@@ -65,6 +65,7 @@ vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
 }));
 vi.mock("@/shared/lib/groo/hide-amounts", () => ({
   MaskAmount: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  HideUnit: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 vi.mock("@/features/expense", () => ({
   useExpenseCategories: () => ({
@@ -411,9 +412,16 @@ describe("[고쳐 쓰기](D13)", () => {
     expect(data.expenseDate).toBe("2026-08-20T12:30");
     expect(data.categoryRowId).toBe(11);
     // 분할은 편집 시트가 불러 둔 그대로 싣는다.
+    // 저장된 항목은 rowId 를 싣는다 — 서버가 제자리 수정한다(2525f941)
     expect(data.splits).toEqual([
-      { categoryRowId: 11, amount: 8_000, label: "밥", sortOrder: 0 },
-      { categoryRowId: 11, amount: 4_000, label: null, sortOrder: 1 },
+      { rowId: 1, categoryRowId: 11, amount: 8_000, label: "밥", sortOrder: 0 },
+      {
+        rowId: 2,
+        categoryRowId: 11,
+        amount: 4_000,
+        label: null,
+        sortOrder: 1,
+      },
     ]);
     // 교체 뒤 토스트 — 원래 카드의 결제계좌로 [잔액 고치기].
     expect(st.notified).toEqual([

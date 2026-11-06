@@ -51,6 +51,7 @@ vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
 }));
 vi.mock("@/shared/lib/groo/hide-amounts", () => ({
   MaskAmount: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  HideUnit: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 vi.mock("@/features/expense", () => ({
   useExpenseCategories: () => ({
