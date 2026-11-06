@@ -64,7 +64,7 @@ import {
   LedgerDayDate,
   LedgerDayGroup,
   LedgerDayHead,
-  LedgerDaySum,
+  LedgerDayTotals,
   LedgerDivider,
   LedgerDow,
   LedgerExpand,
@@ -474,29 +474,8 @@ export function ExpenseMobile({
           <LedgerDayHead gutter>
             {/* 날짜 머리 — 요일 형식(올해 "10월 25일 (일)" · 다른 해 "2025년 10월 25일 (토)" · en "Sun, Oct 25"), 할 일 원장과 같은 유틸 */}
             <LedgerDayDate relative={rel}>{formatMonthDayDow(d)}</LedgerDayDate>
-            {(dOut > 0 || dIn > 0) && (
-              <LedgerDaySum className="num">
-                {dOut > 0 && (
-                  <span className="text-fg-neutral">
-                    <MaskAmount card="ledger.txList" kind="expense">
-                      {MINUS}
-                      {wonPre()}
-                      {withCommaBreaks(KRW(dOut))}
-                    </MaskAmount>
-                    <WonUnit card="ledger.txList" kind="expense" />
-                  </span>
-                )}
-                {dIn > 0 && (
-                  <span className="ml-x2 text-fg-brand">
-                    <MaskAmount card="ledger.txList" kind="income">
-                      +{wonPre()}
-                      {withCommaBreaks(KRW(dIn))}
-                    </MaskAmount>
-                    <WonUnit card="ledger.txList" kind="income" />
-                  </span>
-                )}
-              </LedgerDaySum>
-            )}
+            {/* 그날 지출 · 수입 — 거래 검색과 같은 부품 */}
+            <LedgerDayTotals out={dOut} inn={dIn} />
           </LedgerDayHead>
           <div>
             {items.map((item) => {

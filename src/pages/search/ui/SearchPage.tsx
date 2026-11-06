@@ -9,12 +9,11 @@ import { ScrollAutoHide } from "@/shared/ds/scroll-auto-hide";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthDayDow, todayLocalKey } from "@/shared/lib/date";
-import { KRW, minusOf } from "@/shared/lib/groo/format";
 import {
   LedgerDayDate,
   LedgerDayGroup,
   LedgerDayHead,
-  LedgerDaySum,
+  LedgerDayTotals,
   LedgerList,
 } from "@/shared/ui/groo/ledger";
 import { PageHead } from "@/shared/ui/groo/page-head";
@@ -139,17 +138,8 @@ export function SearchPage() {
                 <LedgerDayDate relative={relOf(d)}>
                   {formatMonthDayDow(d)}
                 </LedgerDayDate>
-                <LedgerDaySum className="num">
-                  {dOut > 0 && (
-                    <span className="text-fg-neutral">
-                      {minusOf(dOut)}
-                      {KRW(dOut)}
-                    </span>
-                  )}
-                  {dIn > 0 && (
-                    <span className="ml-x2 text-fg-brand">+{KRW(dIn)}</span>
-                  )}
-                </LedgerDaySum>
+                {/* 그날 지출 · 수입 — 가계부 원장과 같은 부품(따로 · "원" 포함 · 수입 파란 글 · 자르지 않음) */}
+                <LedgerDayTotals out={dOut} inn={dIn} />
               </LedgerDayHead>
               <div>
                 {items.map((e) => (

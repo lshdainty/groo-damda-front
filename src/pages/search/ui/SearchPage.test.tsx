@@ -126,3 +126,50 @@ describe("검색 실패 (I-wrap-b1 ε · 앱 α 검수)", () => {
     expect(st.opts[st.opts.length - 1]).toEqual({ silent: true });
   });
 });
+
+// 날짜 머리 오른쪽은 가계부 원장과 같은 부품 — 그날 지출 · 수입 따로, "원" 포함, 수입은 + 파란 글, 자르지 않음(I-wrap-b1 ε 판단).
+describe("검색 날짜 머리 합계 (I-wrap-b1 ε)", () => {
+  const typed = (
+    rowId: number,
+    date: string,
+    amount: number,
+    expenseType: "EXPENSE" | "INCOME",
+  ) =>
+    ({
+      rowId,
+      expenseDate: `${date}T09:00:00`,
+      amount,
+      expenseType,
+    }) as unknown as Expense;
+  const sums = () =>
+    [...container.querySelectorAll("[data-ledger-day]")].map((g) =>
+      [...g.querySelectorAll("[data-slot=ledger-day-totals] > span")].map(
+        (s) => ({
+          text: s.textContent?.replace(/\u00a0/g, " "),
+          brand: s.className.includes("text-fg-brand"),
+        }),
+      ),
+    );
+  // 금액 글(원 · ₩)은 앱 언어를 따른다 — 시험 기본(en)이 아니라 ko 로
+  beforeEach(async () => {
+    const { i18n } = await import("@/shared/i18n/config");
+    await i18n.changeLanguage("ko");
+  });
+  it('지출만 · 수입만 · 둘 다 — "원" 포함, 수입은 + 파란 글, 1억 넘어도 자르지 않는다', () => {
+    st.data = [
+      typed(1, "2026-11-04", 3_000, "EXPENSE"),
+      typed(2, "2026-11-03", 123_456_789, "INCOME"),
+      typed(3, "2026-11-02", 3_000, "EXPENSE"),
+      typed(4, "2026-11-02", 5_000, "INCOME"),
+    ];
+    act(() => root.render(<SearchPage />));
+    expect(sums()).toEqual([
+      [{ text: "−3,000원", brand: false }],
+      [{ text: "+123,456,789원", brand: true }],
+      [
+        { text: "−3,000원", brand: false },
+        { text: "+5,000원", brand: true },
+      ],
+    ]);
+  });
+});
