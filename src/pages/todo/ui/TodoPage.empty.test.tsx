@@ -117,6 +117,10 @@ vi.mock("@/features/constellation", () => ({
 vi.mock("@/widgets/constellation", () => ({}));
 vi.mock("./TodoMobileLedger", () => ({ TodoMobileLedger: () => null }));
 
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
+  useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
+}));
 const { TodoPage } = await import("./TodoPage");
 
 let container: HTMLDivElement;

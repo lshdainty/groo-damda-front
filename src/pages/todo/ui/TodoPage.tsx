@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from "react";
+import { useSnackbar } from "@/shared/ds/snackbar";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toLocalDateKey, todayLocalKey } from "@/shared/lib/date";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   useTodos,
   useCreateTodo,
@@ -102,9 +103,8 @@ const TodoPageInner = ({
   const navigate = useNavigate();
   const openNightSky = () => navigate(NIGHT_SKY_PATH);
   const openReport = () => navigate(REPORT_PATH);
-  // 별빛 획득 토스트 — 완료 시 "+N · 수집까지 N별"
-  const [starToast, setStarToast] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 별빛 획득 알림 — 완료 시 "+N · 수집까지 N별". 스낵바(positive)가 알린다(역할 · 시간 · 쌓임은 스낵바 몫)
+  const snackbar = useSnackbar();
 
   // 같은 행을 따닥 눌러도 토글은 한 번만 나간다. `pendingIds` 잠금은 요청이 끝나면
   // 풀리는데(통신이 빠르면 100ms 남짓) 두 번째 탭이 그 뒤에 올 수 있고, 완료 원은
@@ -124,13 +124,13 @@ const TodoPageInner = ({
         const sky = constellationTodayQ.data;
         if (gain <= 0 || !sky || sky.collected) return;
         const left = Math.max(0, sky.goal - (sky.points + gain));
-        setStarToast(
-          left === 0
-            ? t("starToast.collected", { gain })
-            : t("starToast.progress", { gain, left }),
-        );
-        if (toastTimer.current) clearTimeout(toastTimer.current);
-        toastTimer.current = setTimeout(() => setStarToast(null), 2200);
+        snackbar.show({
+          tone: "positive",
+          message:
+            left === 0
+              ? t("starToast.collected", { gain })
+              : t("starToast.progress", { gain, left }),
+        });
       },
     });
   };
@@ -156,16 +156,6 @@ const TodoPageInner = ({
     if (id != null) updateTodo.mutate({ id, data: values }, settle);
     else createTodo.mutate(values, settle);
   };
-
-  const overlays = (
-    <>
-      {starToast && (
-        <div className="star-toast">
-          <Sparkles size={14} /> {starToast}
-        </div>
-      )}
-    </>
-  );
 
   const dialog = (
     <>
@@ -264,7 +254,6 @@ const TodoPageInner = ({
     <>
       {body}
       {dialog}
-      {overlays}
     </>
   );
 };

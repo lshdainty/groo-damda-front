@@ -2767,8 +2767,8 @@ todo,tdm.hideDoneChip,완료 숨기기,Hide completed
 todo,remain.title,남은 할 일,To-dos left
 todo,remain.none,남은 할 일이 없어요.,No to-dos left.
 todo,remain.count,{{count}}개,{{count}}
-todo,starToast.collected,별빛 +{{gain}} · 오늘의 별자리 수집!,+{{gain}} starlight · constellation collected!
-todo,starToast.progress,별빛 +{{gain}} · 수집까지 {{left}}별,+{{gain}} starlight · {{left}} to collect
+todo,starToast.collected,별빛 +{{gain}} · 오늘의 별자리를 수집했어요.,+{{gain}} starlight · Collected today's constellation.
+todo,starToast.progress,별빛 +{{gain}} · 수집까지 {{left}}별 남았어요.,+{{gain}} starlight · {{left}} to go.
 todo,tags.title,할 일 태그,Todo tags
 todo,tags.desc,할 일에 붙이는 태그예요. 할 일 화면의 거르기와 태그별 개수에 쓰여요. 태그를 지우면 그 할 일은 '태그 없음'으로 남아요.,"Tags you attach to to-dos. They are used for filtering and counts on the to-do screen. If you delete a tag, its to-dos stay as 'No tag'."
 todo,tags.new,태그 추가,Add tag

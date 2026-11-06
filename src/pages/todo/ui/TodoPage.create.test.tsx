@@ -89,6 +89,10 @@ const todo: Todo = {
 
 const state = { todos: [todo] as Todo[] };
 
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
+  useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
+}));
 const { TodoPage } = await import("./TodoPage");
 
 let container: HTMLDivElement;
