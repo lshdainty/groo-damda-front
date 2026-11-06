@@ -15,7 +15,10 @@ declare global {
 }
 
 /** 이번 제출이 실패하면 쓸 응답 — 없으면 성공. */
-const next = vi.hoisted(() => ({ error: null as unknown }));
+const next = vi.hoisted(() => ({
+  error: null as unknown,
+  shown: null as unknown,
+}));
 const toasts = vi.hoisted(() => ({ error: [] as string[] }));
 
 vi.mock("react-i18next", () => ({
@@ -35,12 +38,16 @@ vi.mock("@/features/user", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/user")>()),
   useChangePasswordMutation: () => ({
     isPending: false,
+    // 실패 뒤 다시 그린 화면이 읽는 오류(확인 못 함 글을 고른다)
+    error: next.shown,
     mutate: (
       _v: unknown,
       cb: { onSuccess?: () => void; onError?: (e: unknown) => void },
     ) => {
-      if (next.error) cb.onError?.(next.error);
-      else cb.onSuccess?.();
+      if (next.error) {
+        next.shown = next.error;
+        cb.onError?.(next.error);
+      } else cb.onSuccess?.();
     },
   }),
 }));
@@ -63,6 +70,7 @@ let root: Root;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   next.error = null;
+  next.shown = null;
   toasts.error.length = 0;
   if (!globalThis.ResizeObserver) {
     globalThis.ResizeObserver = class {
@@ -164,6 +172,18 @@ describe("비밀번호 변경 실패 문구 (QA #128)", () => {
     const alert = document.body.querySelector('[role="alert"]');
     expect(alert?.textContent).toContain("passwordChangeError");
     expect(field("currentPassword").value).toBe("old-one!");
+  });
+
+  it('응답을 못 받았으면 실패가 아니라 "비밀번호가 바뀌었는지 확인하지 못했어요…" Callout(검수 3차 L5)', async () => {
+    const { WriteUnconfirmedError } = await import("@/shared/api/base");
+    next.error = new WriteUnconfirmedError(0);
+    act(() =>
+      root.render(<PasswordChangeDialog open onOpenChange={() => {}} />),
+    );
+    await submit();
+    const alert = document.body.querySelector('[role="alert"]');
+    expect(alert?.textContent).toContain("query.passwordUnconfirmed");
+    expect(alert?.textContent).not.toContain("passwordChangeError");
   });
 
   it("현재 비밀번호가 틀리면 그 칸에 초점이 간다", async () => {

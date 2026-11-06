@@ -10,6 +10,7 @@ common,query.refreshFailed,새로 고치지 못했어요.,Couldn't refresh.
 common,query.saveUnconfirmed,저장됐는지 확인하지 못했어요. 목록에서 확인해주세요.,We couldn't confirm it was saved. Please check the list.
 common,query.payUnconfirmed,결제됐는지 확인하지 못했어요. 청구 내역에서 확인해주세요.,We couldn't confirm the payment. Please check the billing history.
 common,query.withdrawUnconfirmedRefresh,해지됐는지 확인하지 못했어요. 화면을 새로 고쳐 확인해주세요.,We couldn't confirm the cancellation. Please refresh the page to check.
+common,query.passwordUnconfirmed,비밀번호가 바뀌었는지 확인하지 못했어요. 새 비밀번호로 로그인해 확인해주세요.,We couldn't confirm your password was changed. Please sign in with the new password to check.
 common,query.unconfirmedSave,저장됐는지 확인하지 못했어요.,We couldn't confirm it was saved.
 common,query.unconfirmedDelete,삭제됐는지 확인하지 못했어요.,We couldn't confirm it was deleted.
 common,query.unconfirmedAction,처리됐는지 확인하지 못했어요.,We couldn't confirm it went through.

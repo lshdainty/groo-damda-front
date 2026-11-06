@@ -11,7 +11,7 @@ export function useSaveFailureText() {
   return (
     error: unknown,
     fallback: string,
-    kind: "save" | "pay" | "withdraw" = "save",
+    kind: "save" | "pay" | "withdraw" | "password" = "save",
   ): string =>
     isWriteUnconfirmed(error)
       ? t(
@@ -19,7 +19,9 @@ export function useSaveFailureText() {
             ? "query.payUnconfirmed"
             : kind === "withdraw"
               ? "query.withdrawUnconfirmedRefresh"
-              : "query.saveUnconfirmed",
+              : kind === "password"
+                ? "query.passwordUnconfirmed"
+                : "query.saveUnconfirmed",
         )
       : fallback;
 }

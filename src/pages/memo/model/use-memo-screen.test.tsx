@@ -38,8 +38,16 @@ vi.mock("@/features/memo", () => ({
     isError: false,
     refetch: () => {},
   }),
-  useCreateMemo: () => ({ mutateAsync: state.create, isPending: false }),
-  useUpdateMemo: () => ({ mutateAsync: state.update, isPending: false }),
+  useCreateMemo: () => ({
+    mutateAsync: state.create,
+    reset: () => {},
+    isPending: false,
+  }),
+  useUpdateMemo: () => ({
+    mutateAsync: state.update,
+    reset: () => {},
+    isPending: false,
+  }),
   useToggleMemoPin: () => ({
     mutateAsync: state.toggle,
     pendingIds: new Set<number>(),

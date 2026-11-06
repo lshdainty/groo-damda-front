@@ -118,7 +118,11 @@ export const PasswordChangeDialog = ({
             {failed && (
               <div ref={failedRef}>
                 <Callout tone="critical" role="alert">
-                  {sft(changePasswordMutation.error, t("passwordChangeError"))}
+                  {sft(
+                    changePasswordMutation.error,
+                    t("passwordChangeError"),
+                    "password",
+                  )}
                 </Callout>
               </div>
             )}

@@ -135,6 +135,9 @@ export function useMemoScreen() {
     const formIsMine = () => !detached && session.current === mine;
     if (formIsMine()) setSaveError(false);
     let saved: Memo;
+    // 새 시도마다 지난 오류를 비운다 — 지난 만들기의 확인 못 함이 이번 수정 실패 글을 바꾸지 않게(검수 3차 L6)
+    createMemo.reset();
+    updateMemo.reset();
     try {
       saved =
         id != null
