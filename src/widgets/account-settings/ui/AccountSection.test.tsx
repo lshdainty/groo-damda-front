@@ -40,7 +40,9 @@ const toasts = vi.hoisted(() => ({
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (k: string) => k,
+    // 날짜를 끼우는 글은 값을 이어 붙인다 — 화면 날짜 꼴로 넘기는지 잰다
+    t: (k: string, p?: Record<string, unknown>) =>
+      p && "date" in p ? `${k}:${String(p.date)}` : k,
     i18n: { language: "ko" },
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
@@ -229,10 +231,13 @@ describe("구독 줄 (I-14 34)", () => {
     },
     isLoading: false,
   });
+  // ds ListButtonItem 의 단추 안은 제목 · 설명뿐이고 값 · 꺾쇠는 줄(li)의 붙이개다 — 값은 줄에서, 누르기는 단추로
   const row = () =>
-    [...container.querySelectorAll("button[data-list-action]")].find((b) =>
-      b.textContent?.includes("담다 Pro"),
-    ) as HTMLButtonElement;
+    [...container.querySelectorAll("button[data-list-action]")]
+      .find((b) => b.textContent?.includes("담다 Pro"))!
+      .closest("[data-slot=list-item]") as HTMLElement;
+  const rowButton = () =>
+    row().querySelector<HTMLButtonElement>("button[data-list-action]")!;
 
   it("값이 서버 가격이다 — 월간 12000 이면 '12,000원 / 월', 연간이면 '/ 년'(박힌 9,900 이 아니다)", () => {
     state.sub = sub(12_000, 1);
@@ -261,7 +266,7 @@ describe("구독 줄 (I-14 34)", () => {
     const open = vi.fn();
     render(true, open);
     expect(row().querySelector("svg.lucide-chevron-right")).not.toBeNull();
-    act(() => row().click());
+    act(() => rowButton().click());
     expect(open).toHaveBeenCalledTimes(1);
     expect(container.querySelector("[role=dialog]")).toBeNull();
   });

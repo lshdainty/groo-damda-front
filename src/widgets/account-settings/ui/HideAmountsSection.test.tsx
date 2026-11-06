@@ -127,7 +127,8 @@ describe("HideAmountsSection", () => {
 
   it("전체 탭은 화면 이름마다 묶고, 화면 탭은 묶음 제목 없이 그 화면 줄만 보인다", () => {
     render(true);
-    const heads = [...container.querySelectorAll("h4")].map(
+    // 목록 제목 h2 · 화면 이름 h3(cb00523c) — 화면 묶음 제목은 h3
+    const heads = [...container.querySelectorAll("h3")].map(
       (h) => h.textContent,
     );
     expect(heads).toEqual([
@@ -146,7 +147,7 @@ describe("HideAmountsSection", () => {
       ...container.querySelectorAll<HTMLElement>('[role="tab"]'),
     ].find((t) => t.textContent === "hideAmounts.page.asset");
     click(asset);
-    expect(container.querySelectorAll("h4")).toHaveLength(0);
+    expect(container.querySelectorAll("h3")).toHaveLength(0);
     expect(checks().length).toBe(3 + ASSET);
   });
 
@@ -162,7 +163,7 @@ describe("HideAmountsSection", () => {
     );
     expect(on).toHaveLength(ASSET);
     expect(btn("hideAmounts.clearAll")).toBeTruthy();
-    expect(q("h3[id$='screens']")?.textContent).toContain(
+    expect(q("h2[id$='screens']")?.textContent).toContain(
       `"selected":${ASSET}`,
     );
   });
