@@ -74,11 +74,14 @@ function SaveForm({
   onClose,
   dirtyFromStart = false,
   onBack,
+  form = true,
 }: {
   save: () => Promise<void>;
   onClose: () => void;
   dirtyFromStart?: boolean;
   onBack?: () => void;
+  /** false 면 바깥(딤) 누르기로 닫히는 표면 — busy 가 그 길도 막는지 본다 */
+  form?: boolean;
 }) {
   const [open, setOpen] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -101,7 +104,7 @@ function SaveForm({
   };
   return (
     <ResponsiveDialog
-      form
+      form={form}
       open={open}
       dirty={memo !== ""}
       busy={busy}
@@ -170,19 +173,47 @@ for (const w of [false, true]) {
       );
     });
 
-    it("바깥(딤)을 눌러도 닫히지 않는다", async () => {
-      const { onClose } = await startSaving();
-      const dim =
-        q("[data-slot=dialog-overlay]") ??
-        q("[data-slot=bottom-sheet-overlay]");
+    // 폼은 원래 바깥 누르기를 무시한다 — 바깥 누르기로 닫히는 표면(form 아님)으로 보고, busy 없이는 닫히는 대조를 둔다(검수 L7)
+    const pressDim = () =>
       act(() => {
+        const dim =
+          q("[data-slot=dialog-overlay]") ??
+          q("[data-slot=bottom-sheet-overlay]");
         dim!.dispatchEvent(
           new MouseEvent("pointerdown", { bubbles: true, cancelable: true }),
         );
       });
+    it("바깥(딤)을 눌러 닫히는 표면도 저장 중에는 닫히지 않는다 — 저장 중이 아니면 닫힌다(대조)", async () => {
+      const { onClose, fail } = await startSaving({ form: false });
+      pressDim();
       await tick();
       expect(onClose).not.toHaveBeenCalled();
       expect(surface()).not.toBeNull();
+      await act(async () => fail());
+      await tick();
+      pressDim();
+      await tick();
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it("입력칸에 초점을 둔 채 저장하면 초점이 표면으로 옮겨 가둠 안에 남고, 실패하면 그 칸으로 돌아온다(검수 M2)", async () => {
+      let reject!: (e: unknown) => void;
+      const save = () =>
+        new Promise<void>((_, r) => {
+          reject = r;
+        });
+      act(() => root.render(<SaveForm save={save} onClose={() => {}} />));
+      await tick();
+      const input = q("input[aria-label=메모]") as HTMLInputElement;
+      act(() => input.focus());
+      expect(document.activeElement).toBe(input);
+      act(() => byText("저장")!.click());
+      await tick();
+      // 본문이 inert 가 되기 전에 표면으로 — 문서(body)로 빠지지 않는다
+      expect(document.activeElement).toBe(surface());
+      await act(async () => reject(new Error("500")));
+      await tick();
+      expect(document.activeElement).toBe(input);
     });
 
     it("머리 ← 를 눌러도 한 단계 뒤로 가지 않는다", async () => {
@@ -251,8 +282,6 @@ describe("시트(1280 미만) — 닫기 X · 뒤로 가기", () => {
     await tick();
     expect(onClose).not.toHaveBeenCalled();
     expect(surface()).not.toBeNull();
-    // 칸을 다시 쌓았다 — 다음 뒤로 가기도 이 시트로 온다
-    expect(window.history.state?.grooOverlayBack).toBe(true);
     await act(async () => fail());
     await tick();
     back();

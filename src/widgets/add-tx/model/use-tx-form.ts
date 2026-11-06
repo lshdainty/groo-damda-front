@@ -35,7 +35,7 @@ import {
 } from "@/entities/asset";
 import type { ExpenseTemplate } from "@/entities/expense-template";
 import { closedCycleSpan, cyclePaymentDate } from "@/entities/expense";
-import { isHttpStatus, isWriteUnconfirmed, loadFailed } from "@/shared/api";
+import { isHttpStatus, isWriteUnconfirmed } from "@/shared/api";
 import type { ExpenseSplitFormValue } from "@/entities/expense-split";
 import {
   DEFAULT_CURRENCY,
@@ -774,17 +774,17 @@ export function useTxForm({
       Number(interest) > amountNumber,
     /** 외화인데 환율도 원화 금액도 없다 */
     fx: isForeignTx && entryNumber > 0 && amountNumber <= 0,
+    // 분할만은 값이 있어도 마지막 받기가 실패면 막는다(loadFailed 가 아니라 isError) — 다른 기기에서 바꾼 분할을
+    // 옛 값으로 덮어쓸 수 있다(돈, 검수 L4)
     splitsPending:
-      isEdit &&
-      type !== "TRANSFER" &&
-      (splitsQ.isPending || loadFailed(splitsQ)),
+      isEdit && type !== "TRANSFER" && (splitsQ.isPending || splitsQ.isError),
   };
   /**
    * 수정 폼에서 나눈 내역을 못 받았다 — 그 자리 실패 + [다시 시도](상세 · 나누기 단계와 같은 꼴).
    * 저장을 눌러야 알게 하지 않는다. 이체는 나눈 내역이 없어 보지 않는다.
    */
   const splitsLoadFailed =
-    isEdit && !!expense && type !== "TRANSFER" && loadFailed(splitsQ);
+    isEdit && !!expense && type !== "TRANSFER" && splitsQ.isError;
   const retrySplits = () => void splitsQ.refetch();
   const splitsRetrying = splitsQ.isFetching;
   const firstError = (): TxField | null => {
@@ -802,7 +802,7 @@ export function useTxForm({
    * 고쳐 쓰기를 열 수 있나 — 분할을 알아야 교체 본문에 실을 수 있다. 모르는 채 열면 분할이
    * 빠진 본문이 나가 서버가 옛 분할을 옮기고, 금액을 바꿨다면 합이 안 맞아 거절된다.
    */
-  const canRewrite = !splitsQ.isPending && !loadFailed(splitsQ);
+  const canRewrite = !splitsQ.isPending && !splitsQ.isError;
 
   /** 저장될 할부 개월 — 신용카드 지출에만 있다(그 밖의 조합에선 칸이 사라진다). */
   const savedInstallment =

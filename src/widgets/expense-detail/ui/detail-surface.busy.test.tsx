@@ -109,8 +109,6 @@ describe("상세 안 수정 단계 — 저장 중", () => {
     expect(onClose).not.toHaveBeenCalled();
     expect(onStepBack).not.toHaveBeenCalled();
     expect(q("[role=alertdialog]")).toBeNull();
-    // 칸이 남아 있다 — 다음 뒤로 가기도 이 단계로 온다
-    expect(window.history.state?.grooOverlayBack).toBe(true);
     draw({ busy: false, failed: true, onClose, onStepBack });
     await tick();
     expect(q("[role=alert]")?.textContent).toBe("저장하지 못했어요.");

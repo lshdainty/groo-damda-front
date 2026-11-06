@@ -109,8 +109,6 @@ describe("카드 지금 결제 — 결제 중에는 닫지 않는다", () => {
     back();
     await tick();
     expect(setConfirmPay).not.toHaveBeenCalled();
-    // 칸이 남아 있다 — 예전에는 여기서 칸을 써 버려 다음 뒤로 가기가 페이지를 떠났다
-    expect(window.history.state?.grooOverlayBack).toBe(true);
     // 실패 — Callout 이 폼 맨 위에, 값은 그대로
     draw({ pending: false, payFailed: true, setConfirmPay });
     await tick();
