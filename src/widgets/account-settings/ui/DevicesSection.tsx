@@ -74,15 +74,27 @@ export function DevicesSection({ mobile }: { mobile: boolean }) {
 
   // 끊기 실패는 전역 알림이 아니라(요청이 silent) 여기서 한 번만 알린다 — 확인창은 닫고 critical 스낵바 + [다시 시도](묻지 않고 같은 요청).
   const confirmFail = useConfirmFail();
-  const failed = (retry: () => Promise<unknown>, onRetried: () => void) =>
-    confirmFail({ message: t("devices.logoutFailed"), retry, onRetried });
+  // 기기 로그아웃은 "삭제" 가 아니라 "처리" — 확인 못 함이면 "처리됐는지 확인하지 못했어요."(판단 ①)
+  const failed = (
+    error: unknown,
+    retry: () => Promise<unknown>,
+    onRetried: () => void,
+  ) =>
+    confirmFail({
+      error,
+      unconfirmedKind: "action",
+      message: t("devices.logoutFailed"),
+      retry,
+      onRetried,
+    });
 
   const onRevoke = async (device: DeviceSession) => {
     try {
       await revoke.mutateAsync(device.sessionId);
-    } catch {
+    } catch (error) {
       setConfirming(null);
       failed(
+        error,
         () => revoke.mutateAsync(device.sessionId),
         () => {
           // 다시 시도가 성공했을 때도 지금 이 브라우저를 끊었으면 로그아웃한다
@@ -99,9 +111,10 @@ export function DevicesSection({ mobile }: { mobile: boolean }) {
   const onRevokeAll = async () => {
     try {
       await revokeAll.mutateAsync();
-    } catch {
+    } catch (error) {
       setConfirmingAll(false);
       failed(
+        error,
         () => revokeAll.mutateAsync(),
         () => void logout(),
       );

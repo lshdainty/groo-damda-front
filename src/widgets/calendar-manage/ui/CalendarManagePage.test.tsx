@@ -38,6 +38,7 @@ vi.mock("@/shared/ds/top-navigation/top-navigation-context", () => ({
 }));
 vi.mock("@/shared/lib/confirm-fail", () => ({
   useConfirmFail: () => () => {},
+  useToggleFail: () => () => {},
 }));
 vi.mock("@/features/user", () => ({
   useCurrentUser: () => ({ data: { rowId: 1 }, isLoading: false }),

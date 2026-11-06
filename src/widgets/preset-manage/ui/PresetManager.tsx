@@ -12,6 +12,7 @@ import {
 } from "@/shared/ds/segmented-control";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
+import { useUnconfirmedSnack } from "@/shared/lib/confirm-fail";
 import { SwipeActions, type SwipeAction } from "@/shared/ds/swipe-actions";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import { BandFailure, ListTitle } from "@/shared/ui/groo/band-parts";
@@ -52,6 +53,7 @@ export function PresetManager({
   const { t: tc } = useTranslation("common");
   const titleId = useId();
   const snackbar = useSnackbar();
+  const unconfirmedSnack = useUnconfirmedSnack();
   // 불러오기 실패는 아래 실패 Result Section 이 알린다 — 전역 서버 원문 토스트와 겹치지 않게 끈다
   const templatesQ = useExpenseTemplates({ silent: true });
   // 카테고리 조회 실패도 같은 실패 한 벌(Result Section + 다시 시도)로 알린다 — 회색 타일로 "없는 카테고리" 처럼 읽히지 않게
@@ -100,7 +102,8 @@ export function PresetManager({
   }, [categories]);
 
   // 실패는 확인창을 닫고 스낵바로 — 창 위에 겹치지 않는다. "다시 시도" 는 같은 삭제를 다시 한다
-  const deleteFailed = (p: ExpenseTemplate) =>
+  const deleteFailed = (p: ExpenseTemplate, error: unknown) =>
+    unconfirmedSnack(error, "delete") ||
     snackbar.show({
       message: t("preset.deleteFailed"),
       tone: "critical",
@@ -110,7 +113,7 @@ export function PresetManager({
           deleteMut
             .mutateAsync(p.rowId)
             .then(() => setDetail((d) => (d?.rowId === p.rowId ? null : d)))
-            .catch(() => deleteFailed(p));
+            .catch((e: unknown) => deleteFailed(p, e));
         },
       },
     });
@@ -126,9 +129,9 @@ export function PresetManager({
         // 지운 프리셋의 상세가 열려 있었으면 함께 닫는다
         setDetail((d) => (d?.rowId === target.rowId ? null : d));
       },
-      onError: () => {
+      onError: (error) => {
         setConfirmDelete(null);
-        deleteFailed(target);
+        deleteFailed(target, error);
       },
     });
   };

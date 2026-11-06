@@ -15,7 +15,7 @@ import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
-import { useConfirmFail } from "@/shared/lib/confirm-fail";
+import { useConfirmFail, useToggleFail } from "@/shared/lib/confirm-fail";
 import { SwipeActions } from "@/shared/ds/swipe-actions";
 import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
@@ -102,6 +102,7 @@ export function RecurringManager({
 
   // 확인창 · 버튼 뒤 요청의 실패 — 공용 훅: critical 스낵바 + [다시 시도](묻지 않고 같은 요청을 바로)
   const confirmFail = useConfirmFail();
+  const toggleFail = useToggleFail();
   const togglePause = (it: RecurringTransaction) => {
     if (toggleMut.isPending) return;
     const name = displayTitle(it, t);
@@ -114,23 +115,16 @@ export function RecurringManager({
       });
     toggleMut.mutate(it.rowId, {
       onSuccess: done,
-      onError: () =>
-        confirmFail({
-          message: t(wasActive ? "pauseFailed" : "resumeFailed"),
-          // 토글은 뒤집기만 한다 — 응답만 실패하고 서버에는 반영됐으면 다시 뒤집지 않게, 최신 상태를 받아 이미 목표면 보내지 않는다
-          retry: async () => {
-            const r = await recurringsQ.refetch();
-            const cur = r.data?.find((x) => x.rowId === it.rowId);
-            if (cur && (cur.isActive === "Y") === !wasActive) return;
-            await toggleMut.mutateAsync(it.rowId);
-          },
-          onRetried: done,
-        }),
+      // 토글 — 실패는 스낵바 한 문장, [다시 시도] 없음(뒤집기 요청이라 다시 하면 두 번 뒤집힐 수 있다). 응답을 못 받았으면
+      // 되돌리지 않고 다시 받은 서버 값 + "바뀌었는지 확인하지 못했어요."(판단 ②)
+      onError: (error) =>
+        toggleFail(error, t(wasActive ? "pauseFailed" : "resumeFailed")),
     });
   };
 
-  const deleteFailed = (it: RecurringTransaction) =>
+  const deleteFailed = (it: RecurringTransaction, error: unknown) =>
     confirmFail({
+      error,
       message: t("deleteFailed"),
       retry: () => deleteMut.mutateAsync(it.rowId),
       onRetried: () =>
@@ -400,10 +394,10 @@ export function RecurringManager({
                 setDetailId(null);
               },
               // 실패는 확인창을 닫은 뒤 스낵바(고정 글 + 다시 시도)로 — 창 위에는 겹치지 않는다
-              onError: () => {
+              onError: (error) => {
                 const failed = confirmDelete;
                 setConfirmDelete(null);
-                deleteFailed(failed);
+                deleteFailed(failed, error);
               },
             })
           }

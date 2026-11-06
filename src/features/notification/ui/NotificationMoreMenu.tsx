@@ -67,8 +67,9 @@ export function NotificationMoreMenu({
           message={t("deleteDescription")}
           confirmLabel={tc("delete")}
           onConfirm={() => del.mutateAsync(notification.rowId)}
-          onError={() =>
+          onError={(error) =>
             confirmFail({
+              error,
               message: t("deleteFailed"),
               retry: () => del.mutateAsync(notification.rowId),
             })

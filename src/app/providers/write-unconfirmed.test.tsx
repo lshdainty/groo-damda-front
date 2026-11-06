@@ -344,4 +344,51 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
       expect(isWriteUnconfirmed(error), `${outcome} · memo`).toBe(true);
     }
   });
+
+  it("확인 못 함의 종류는 요청 방식으로 — DELETE 는 delete, 그 밖은 save(스낵바 글을 고르는 한 곳의 기본값, 판단 ①)", async () => {
+    const { memoApi } = await import("@/features/memo/api/memoApi");
+    body = "{not json";
+    const del = await memoApi.deleteMemo(1).then(
+      () => null,
+      (e: unknown) => e,
+    );
+    const create = await memoApi
+      .createMemo({ title: "t", content: "c" } as never)
+      .then(
+        () => null,
+        (e: unknown) => e,
+      );
+    expect(isWriteUnconfirmed(del) && del.kind).toBe("delete");
+    expect(isWriteUnconfirmed(create) && create.kind).toBe("save");
+  });
+
+  it("성공 · 끝 처리기가 없는 쓰기(알림 지우기 등)도 확인 못 함이면 화면이 보는 것을 모두 다시 받는다", async () => {
+    const { useDeleteNotification } =
+      await import("@/features/notification/model/useNotifications");
+    body = "{not json";
+    const r = await run(useDeleteNotification, 1);
+    expect(isWriteUnconfirmed(r.ok ? null : r.error)).toBe(true);
+    expect(invalidate).toHaveBeenCalledWith();
+  });
+
+  it("다시 해도 같은 쓰기(알림 읽음 · 모두 읽음 · 연결 끊기 · 기본 증권사 · 토큰 폐기)는 확인 못 함으로 바꾸지 않는다 — 그대로 실패 + [다시 시도](판단 ⑤)", async () => {
+    const { notificationApi } =
+      await import("@/features/notification/api/notificationApi");
+    const { subscriptionApi } =
+      await import("@/features/subscription/api/subscriptionApi");
+    body = "{not json";
+    for (const call of [
+      () => notificationApi.markRead(1),
+      () => notificationApi.markAllRead(),
+      () => subscriptionApi.disconnectBrokerCredential("NAMU"),
+      () => subscriptionApi.setPrimaryBroker("NAMU"),
+      () => subscriptionApi.revokeApiToken(1),
+    ]) {
+      const e = await call().then(
+        () => null,
+        (x: unknown) => x,
+      );
+      expect(isWriteUnconfirmed(e)).toBe(false);
+    }
+  });
 });

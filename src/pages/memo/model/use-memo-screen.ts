@@ -10,6 +10,7 @@ import {
 } from "@/features/memo";
 import { useMemoTags } from "@/features/memo-tag";
 import { useSnackbar } from "@/shared/ds/snackbar";
+import { useToggleFail, useUnconfirmedSnack } from "@/shared/lib/confirm-fail";
 import type { Memo, MemoFormValues } from "@/entities/memo";
 import { filterMemos, memoTagChips } from "./memo-list";
 
@@ -27,6 +28,8 @@ export function useMemoScreen() {
   const { t } = useTranslation("memo");
   const { t: tc } = useTranslation("common");
   const snackbar = useSnackbar();
+  const toggleFail = useToggleFail();
+  const unconfirmedSnack = useUnconfirmedSnack();
   const memosQ = useMemos(undefined, { silent: true });
   const memoTagsQ = useMemoTags({ reference: true });
   const createMemo = useCreateMemo({ silent: true });
@@ -89,12 +92,9 @@ export function useMemoScreen() {
     try {
       await togglePin.mutateAsync(memo.rowId);
       return true;
-    } catch {
-      snackbar.show({
-        message: t("pinFailed"),
-        tone: "critical",
-        action: { label: tc("retry"), onClick: () => void pinOf(memo) },
-      });
+    } catch (error) {
+      // 고정은 토글 — [다시 시도] 없이 한 문장(다시 하면 두 번 뒤집힐 수 있다). 응답을 못 받았으면 다시 받은 값 + "바뀌었는지 확인하지 못했어요."(판단 ②)
+      toggleFail(error, t("pinFailed"));
       return false;
     } finally {
       pinning.current.delete(memo.rowId);
@@ -106,7 +106,8 @@ export function useMemoScreen() {
     try {
       await deleteMemo.mutateAsync(memo.rowId);
       return true;
-    } catch {
+    } catch (error) {
+      if (unconfirmedSnack(error, "delete")) return false;
       snackbar.show({
         message: t("deleteFailed"),
         tone: "critical",
@@ -139,11 +140,11 @@ export function useMemoScreen() {
         id != null
           ? await updateMemo.mutateAsync({ id, data: values })
           : await createMemo.mutateAsync(values);
-    } catch {
+    } catch (error) {
       if (formIsMine()) {
         setSaveError(true);
         setSaveErrorSeq((n) => n + 1);
-      } else {
+      } else if (!unconfirmedSnack(error, "save")) {
         snackbar.show({
           message: t("saveFailed"),
           tone: "critical",

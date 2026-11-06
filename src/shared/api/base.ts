@@ -50,6 +50,21 @@ export type QuietRequestConfig = AxiosRequestConfig & {
 };
 
 /**
+ * 확인 못 한 쓰기가 무슨 일이었나 — 스낵바 한 문장을 고르는 데 쓴다(shared/lib/write-unconfirmed-text.ts 한 곳).
+ * 요청이 정하지 않으면 DELETE 는 delete, 그 밖은 save. 자리가 더 정확히 안다면(묶음 지우기 POST · 토글 · 연결) 자리가 넘긴다.
+ */
+export type WriteKind =
+  "save" | "delete" | "action" | "toggle" | "connect" | "pay" | "withdraw";
+
+/**
+ * 다시 해도 같은 결과인 쓰기 표식(알림 읽음 · 모두 읽음 · 연결 끊기 · 기본 증권사 정하기 · 토큰 폐기) — 확인 못 함으로 바꾸지 않고
+ * 그대로 실패 + [다시 시도] 다(두 번 들어갈 걱정이 없다).
+ */
+export const SAFE_TO_RETRY: Readonly<QuietRequestConfig> = Object.freeze({
+  confirmWrite: false,
+});
+
+/**
  * 저장이 아닌 요청 표식 — 응답이 깨지거나 응답 전에 끊겨도 "확인하지 못함" 으로 바꾸지 않고 그대로 실패다.
  * 로그인 · 로그아웃 · 본인 확인 · 파일 올리기 · 읽기용 POST(검색 · 미리보기 · 문자 해석 · 건수)에 쓴다.
  */
@@ -63,11 +78,18 @@ export const NOT_A_SAVE: Readonly<QuietRequestConfig> = Object.freeze({
  */
 export class WriteUnconfirmedError extends Error {
   readonly code = "PARSE";
-  constructor(readonly status: number) {
+  constructor(
+    readonly status: number,
+    /** 요청 방식으로 고른 기본 종류 — DELETE 는 delete, 그 밖은 save */
+    readonly kind: WriteKind = "save",
+  ) {
     super("write response could not be read");
     this.name = "WriteUnconfirmedError";
   }
 }
+
+const kindOf = (config: QuietRequestConfig | undefined): WriteKind =>
+  (config?.method ?? "").toLowerCase() === "delete" ? "delete" : "save";
 
 export const isWriteUnconfirmed = (
   error: unknown,
@@ -142,7 +164,12 @@ apiClient.interceptors.response.use(
       response.data != null &&
       !isEnvelope(response.data)
     )
-      return Promise.reject(new WriteUnconfirmedError(response.status));
+      return Promise.reject(
+        new WriteUnconfirmedError(
+          response.status,
+          kindOf(response.config as QuietRequestConfig),
+        ),
+      );
     return response.data;
   },
   (error) => {
@@ -163,8 +190,9 @@ apiClient.interceptors.response.use(
       // 게이트웨이(502 · 504) 뒤에서 서버는 이미 처리했을 수 있다 — 실패가 아니라 "확인하지 못했어요"(검수 2차 M3).
       // 503 · 그 밖 5xx 는 서버가 받지 않았다는 뜻이라 그대로 실패다(앱과 같은 규칙)
       const status = error.response?.status;
+      const kind = kindOf(error?.config as QuietRequestConfig | undefined);
       if (status === 502 || status === 504)
-        return Promise.reject(new WriteUnconfirmedError(status));
+        return Promise.reject(new WriteUnconfirmedError(status, kind));
       // 쓰기가 나갔는데 응답 전에 끊겼다(error.request 는 있고 response 가 없다) — 서버는 처리했을 수 있다.
       // 실패로 말하면 다시 눌러 두 번 들어간다 → PARSE 와 같은 "확인하지 못했어요" 쪽. 요청을 만들지도 못했거나
       // (request 없음) 시간 제한(ECONNABORTED) · 취소, 그리고 **기기가 오프라인**이면(보내지도 못했다 — M2) 그대로 실패다.
@@ -176,7 +204,7 @@ apiClient.interceptors.response.use(
         error.code !== "ERR_CANCELED" &&
         !(typeof navigator !== "undefined" && navigator.onLine === false)
       )
-        return Promise.reject(new WriteUnconfirmedError(0));
+        return Promise.reject(new WriteUnconfirmedError(0, kind));
     }
     return Promise.reject(error);
   },

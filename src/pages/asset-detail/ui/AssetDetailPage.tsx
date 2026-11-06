@@ -365,9 +365,10 @@ function Loaded({
                 leave();
               },
               // 실패 — 확인창을 닫고 critical 스낵바. [다시 시도] 는 묻지 않고 바로 재요청
-              () => {
+              (error: unknown) => {
                 setConfirmDelete(false);
                 confirmFail({
+                  error,
                   message: t("deleteConfirm.failed"),
                   retry: () => deleteAsset.mutateAsync(asset.rowId),
                   // 스낵바를 띄운 채 이미 화면을 떠났으면 한 번 더 뒤로 가지 않는다

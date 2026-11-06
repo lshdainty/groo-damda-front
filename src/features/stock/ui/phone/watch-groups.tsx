@@ -362,8 +362,9 @@ export function WatchGroupDeleteConfirm({
       }
       confirmLabel={t("watch.groupDelete")}
       onConfirm={() => deleteMut.mutateAsync(group.rowId)}
-      onError={() =>
+      onError={(error) =>
         confirmFail({
+          error,
           message: t("watch.groupDeleteFail"),
           retry: () => deleteMut.mutateAsync(group.rowId),
         })

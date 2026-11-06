@@ -1,4 +1,3 @@
-import { isWriteUnconfirmed } from "@/shared/api";
 import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { loadFailed } from "@/shared/api";
 import { useEffect, useRef, useState } from "react";
@@ -7,7 +6,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { Repeat, Scissors, Undo2, Users } from "lucide-react";
 
 import { useSnackbar } from "@/shared/ds/snackbar";
-import { useConfirmFail } from "@/shared/lib/confirm-fail";
+import { useConfirmFail, useUnconfirmedSnack } from "@/shared/lib/confirm-fail";
 import { Callout } from "@/shared/ds/callout";
 import { List } from "@/shared/ds/list";
 import { formatDateSmart, todayLocalKey } from "@/shared/lib/date";
@@ -175,6 +174,7 @@ export function TxDetailDialog({
   >();
   const [recurringGen, setRecurringGen] = useState(0);
   const confirmFail = useConfirmFail();
+  const unconfirmedSnack = useUnconfirmedSnack();
   const openingRecurring = useRef(false);
   const openRecurringWith = (list: RecurringTransaction[]) => {
     const latest = list
@@ -200,8 +200,9 @@ export function TxDetailDialog({
       let list: RecurringTransaction[];
       try {
         list = await load();
-      } catch {
+      } catch (error) {
         confirmFail({
+          error,
           message: t("txDetail.recurringLoadFailed"),
           retry: async () => {
             const r = await recurringsQ.refetch();
@@ -360,8 +361,9 @@ export function TxDetailDialog({
           setConfirmDelete(false);
           onClose();
         },
-        onError: () => {
+        onError: (error) => {
           setConfirmDelete(false);
+          if (unconfirmedSnack(error, "delete")) return;
           snackbar.show({
             message: t("txDetail.deleteFailed"),
             tone: "critical",
@@ -382,14 +384,8 @@ export function TxDetailDialog({
         },
         onError: (error) => {
           setConfirmCancelRefund(false);
-          // 결과를 확인하지 못했으면 실패라 하지 않고 [다시 시도] 도 두지 않는다(두 번 될 수 있다)
-          if (isWriteUnconfirmed(error)) {
-            snackbar.show({
-              message: tc("query.saveUnconfirmed"),
-              tone: "critical",
-            });
-            return;
-          }
+          // 결과를 확인하지 못했으면 실패라 하지 않고 [다시 시도] 도 두지 않는다(두 번 될 수 있다) — 환불 취소는 "처리"
+          if (unconfirmedSnack(error, "action")) return;
           snackbar.show({
             message: t("txDetail.refundCancelFailed"),
             tone: "critical",

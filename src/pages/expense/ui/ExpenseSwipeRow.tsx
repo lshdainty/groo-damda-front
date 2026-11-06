@@ -106,10 +106,12 @@ export function SwipeConfirmDialog({
                 try {
                   await action.onSelect();
                   onClose();
-                } catch {
+                } catch (error) {
                   // 실패하면 확인창을 닫고 스낵바 한 문장 + [다시 시도](같은 요청을 바로) — 요청은 silent 라 서버 글은 안 뜬다
                   onClose();
                   confirmFail({
+                    error,
+                    unconfirmedKind: "delete",
                     message: t("txDetail.deleteFailed"),
                     retry: () => action.onSelect() as Promise<unknown>,
                   });

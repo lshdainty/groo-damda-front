@@ -5,6 +5,7 @@ import { Card } from "@/shared/ds/card";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
+import { useUnconfirmedSnack } from "@/shared/lib/confirm-fail";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -177,6 +178,7 @@ export function ExpenseDesktop() {
   const bulkFixed = useBulkMarkFixed();
   const bulkDelete = useBulkDeleteExpenses();
   const snackbar = useSnackbar();
+  const unconfirmedSnack = useUnconfirmedSnack();
   const hideAmount = useHideAmounts("ledger.txList", "net");
 
   // ── 달 · 필터를 바꾸면 고른 것을 모두 푼다(모드는 그대로) ──
@@ -254,8 +256,9 @@ export function ExpenseDesktop() {
         message: t("bulk.fixedDone", { count: res.updatedCount }),
       });
       clearPickedAndFocus();
-    } catch {
-      // 실패하면 고른 것을 그대로 두고 critical 스낵바 + [다시 시도](같은 요청을 바로)
+    } catch (error) {
+      // 실패하면 고른 것을 그대로 두고 critical 스낵바 + [다시 시도](같은 요청을 바로). 응답을 못 받았으면 [다시 시도] 없이 한 문장
+      if (unconfirmedSnack(error, "action")) return;
       snackbar.show({
         message: t("bulk.fixedFailed"),
         tone: "critical",
@@ -303,8 +306,10 @@ export function ExpenseDesktop() {
     let res: Awaited<ReturnType<typeof bulkDelete.mutateAsync>>;
     try {
       res = await bulkDelete.mutateAsync(ids);
-    } catch {
+    } catch (error) {
       setDeleteOpen(false);
+      // 묶음 지우기는 POST 라 종류를 자리가 정한다
+      if (unconfirmedSnack(error, "delete")) return;
       snackbar.show({
         message: t("bulk.deleteFailed"),
         tone: "critical",

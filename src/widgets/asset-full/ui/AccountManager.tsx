@@ -398,8 +398,9 @@ export function AccountManager({
           })}
           confirmLabel={t("deleteConfirm.confirm")}
           onConfirm={() => deleteAsset.mutateAsync(confirmDelete.rowId)}
-          onError={() =>
+          onError={(error) =>
             confirmFail({
+              error,
               message: t("deleteConfirm.failed"),
               retry: () => deleteAsset.mutateAsync(confirmDelete.rowId),
             })

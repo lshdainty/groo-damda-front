@@ -12,7 +12,8 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSnackbar } from "@/shared/ds/snackbar";
-import { useConfirmFail } from "@/shared/lib/confirm-fail";
+import { isWriteUnconfirmed } from "@/shared/api";
+import { useToggleFail } from "@/shared/lib/confirm-fail";
 import type { WatchGroup } from "../api/stockApi";
 import { isHardError } from "../lib/query-state";
 import {
@@ -56,7 +57,7 @@ export function useWatchlist(): Watchlist {
 
   // 별을 누르는 순간 바뀌는 값 — 실패는 서버 원문 토스트 대신 스낵바 고정 글(요청은 silent)
   const snackbar = useSnackbar();
-  const confirmFail = useConfirmFail();
+  const toggleFail = useToggleFail();
   const createGroupMut = useCreateWatchGroup({ silent: true });
   const addItemMut = useAddWatchItem({ silent: true });
   const removeItemMut = useRemoveWatchItem({ silent: true });
@@ -85,24 +86,26 @@ export function useWatchlist(): Watchlist {
     }
     const entries = findWatchEntries(groups, symbol);
     if (entries.length > 0) {
-      // 별 해제 = 모든 그룹에서 제거 (기존 UX 유지). 일부 그룹만 실패해도 안내는 한 문장 하나,
-      // [다시 시도] 는 아직 안 지워진 것만 다시 지운다
-      let remaining = entries.map((e) => e.item.rowId);
+      // 별 해제 = 모든 그룹에서 제거 (기존 UX 유지). 일부 그룹만 실패해도 안내는 한 문장 하나.
+      // 별은 토글 — [다시 시도] 없음, 다시 하려면 별을 한 번 더 누른다. 응답을 못 받은 그룹이 있으면 "바뀌었는지 확인하지 못했어요."(판단 ②)
       const remove = async () => {
         const results = await Promise.allSettled(
-          remaining.map((id) => removeItemMut.mutateAsync(id)),
+          entries.map((e) => removeItemMut.mutateAsync(e.item.rowId)),
         );
-        remaining = remaining.filter(
-          (_, i) => results[i]!.status === "rejected",
+        const reasons = results.flatMap((r) =>
+          r.status === "rejected" ? [r.reason as unknown] : [],
         );
-        if (remaining.length > 0) throw new Error("watch-remove-failed");
+        if (reasons.length > 0)
+          throw (
+            reasons.find(isWriteUnconfirmed) ?? new Error("watch-remove-failed")
+          );
       };
-      remove().catch(() =>
-        confirmFail({ message: t("watch.removeFail"), retry: remove }),
+      remove().catch((error: unknown) =>
+        toggleFail(error, t("watch.removeFail")),
       );
       return;
     }
-    // 첫 관심 등록이면 기본 그룹부터 만든 뒤 넣는다. 그룹이 이미 만들어졌으면 다시 시도는 넣기만 다시 한다
+    // 첫 관심 등록이면 기본 그룹부터 만든 뒤 넣는다
     let groupId: number | undefined =
       groups.length === 0
         ? undefined
@@ -113,7 +116,7 @@ export function useWatchlist(): Watchlist {
       ).rowId;
       await addItemMut.mutateAsync({ groupId, symbol, marketCode });
     };
-    add().catch(() => confirmFail({ message: t("watch.addFail"), retry: add }));
+    add().catch((error: unknown) => toggleFail(error, t("watch.addFail")));
   };
 
   return {

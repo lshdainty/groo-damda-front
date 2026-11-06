@@ -1,4 +1,4 @@
-import { loadFailed } from "@/shared/api";
+import { isWriteUnconfirmed, loadFailed } from "@/shared/api";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -10,7 +10,7 @@ import {
   Moon,
   Sun,
 } from "lucide-react";
-import { useSnackbar } from "@/shared/ds/snackbar";
+import { useToggleFail } from "@/shared/lib/confirm-fail";
 
 import {
   BottomSheet,
@@ -107,9 +107,13 @@ export function AppearanceSection({ mobile }: { mobile: boolean }) {
 
   // 바꾸기 실패는 전역 알림이 아니라(요청이 silent) 여기서 고정 글 하나로 알린다. 값 글은 서버 값에서 읽으므로 이전 값으로 남는다.
   // 바로 바뀌는 값 — 실패하면 이전 값 그대로 + critical 스낵바(다시 시도 없음)
-  const snackbar = useSnackbar();
-  const saveFailed = () =>
-    snackbar.show({ message: t("prefs.saveFailed"), tone: "critical" });
+  // 응답을 못 받았으면 "바뀌었는지 확인하지 못했어요." + 설정을 다시 받아 서버 값으로 맞춘다(판단 ②). 기본 설정 훅의 성공 처리기는
+  // 응답으로 캐시를 쓰므로 응답 없이 불려도 다시 받지 않는다 — 여기서 다시 받는다
+  const toggleFail = useToggleFail();
+  const saveFailed = (error: unknown) => {
+    toggleFail(error, t("prefs.saveFailed"));
+    if (isWriteUnconfirmed(error)) void refetch();
+  };
   const savePref = (patch: Record<string, string>) =>
     updatePrefs.mutate(patch, { onError: saveFailed });
 

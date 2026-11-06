@@ -11,6 +11,7 @@ declare global {
 
 const h = vi.hoisted(() => ({
   fail: false,
+  failWith: null as unknown,
   toasts: [] as string[],
   config: undefined as unknown,
 }));
@@ -25,7 +26,7 @@ vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
 vi.mock("../api/todoApi", () => ({
   todoApi: {
     toggleTodoStatus: async () => {
-      if (h.fail) throw new Error("서버 원문");
+      if (h.fail) throw h.failWith ?? new Error("서버 원문");
       return {};
     },
   },
@@ -57,6 +58,7 @@ beforeEach(async () => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   await i18n.changeLanguage("ko");
   h.fail = false;
+  h.failWith = null;
   h.toasts = [];
   qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   qc.setQueryData(todoKeys.list(undefined), [todo("PENDING")]);
@@ -88,5 +90,19 @@ describe("useToggleTodoStatus", () => {
       holder.api!.mutate(1);
     });
     expect(h.toasts).toEqual([]);
+  });
+
+  it('응답을 못 받았으면 되돌리지 않고 "바뀌었는지 확인하지 못했어요." — 서버 값은 다시 받아 맞춘다(판단 ②)', async () => {
+    const { WriteUnconfirmedError } = await import("@/shared/api/base");
+    h.fail = true;
+    h.failWith = new WriteUnconfirmedError(0);
+    const invalidate = vi.spyOn(qc, "invalidateQueries");
+    await act(async () => {
+      holder.api!.mutate(1);
+    });
+    const list = qc.getQueryData<Todo[]>(todoKeys.list(undefined))!;
+    expect(list[0]!.status).toBe("COMPLETED");
+    expect(h.toasts).toEqual(["critical:바뀌었는지 확인하지 못했어요."]);
+    expect(invalidate).toHaveBeenCalled();
   });
 });

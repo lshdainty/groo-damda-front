@@ -285,9 +285,11 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
       await runRemove();
       setConfirmRemove(false);
       o.onSaved?.();
-    } catch {
+    } catch (error) {
       setConfirmRemove(false);
       confirmFail({
+        error,
+        unconfirmedKind: "delete",
         message: t("splitStep.removeFailed"),
         retry: runRemove,
         onRetried: o.onSaved,

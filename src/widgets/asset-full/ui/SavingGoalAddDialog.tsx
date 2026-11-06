@@ -226,8 +226,9 @@ export function SavingGoalAddDialog({
                   id: created.rowId,
                   data: { amount: currentNum },
                 });
-              pay().catch(() =>
+              pay().catch((error: unknown) =>
                 confirmFail({
+                  error,
                   message: t("savingGoal.firstContributeFailed"),
                   retry: pay,
                 }),

@@ -22,6 +22,7 @@ import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
+import { useUnconfirmedSnack } from "@/shared/lib/confirm-fail";
 import { SwipeActions } from "@/shared/ds/swipe-actions";
 import {
   CHART_PAIRS,
@@ -93,6 +94,7 @@ export function TagSettings<T extends TagLike>({
   const { t } = useTranslation(ns);
   const { t: tc } = useTranslation("common");
   const snackbar = useSnackbar();
+  const unconfirmedSnack = useUnconfirmedSnack();
   const [editing, setEditing] = useState<T | { kind: "new" } | null>(null);
   const [askDelete, setAskDelete] = useState<T | null>(null);
   const [running, setRunning] = useState(false);
@@ -127,7 +129,8 @@ export function TagSettings<T extends TagLike>({
   const doDelete = async (tag: T) => {
     try {
       await remove(tag.rowId);
-    } catch {
+    } catch (error) {
+      if (unconfirmedSnack(error, "delete")) return;
       snackbar.show({
         message: t("tags.deleteFailed"),
         tone: "critical",

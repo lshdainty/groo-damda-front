@@ -24,6 +24,9 @@ export const createAppQueryClient = () =>
         const o = mutation.options;
         // 성공 처리기가 응답 값을 읽다 던지면(동기 · 비동기 모두) 화면이 보는 것을 모두 다시 받는다
         const everything = () => context.client.invalidateQueries();
+        // 성공 · 끝 처리기가 둘 다 없는 쓰기(다시 받기를 요청 함수 안에서 하는 것 — 알림 지우기 · 모두 읽음 · 기기 전부 로그아웃 ·
+        // 비밀번호 바꾸기 · 해지)는 다시 받을 범위를 모른다 — 화면이 보는 것을 모두 다시 받는다
+        if (!o.onSuccess && !o.onSettled) return everything();
         try {
           return Promise.resolve(
             o.onSuccess

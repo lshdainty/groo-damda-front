@@ -264,6 +264,7 @@ export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
                 c.setPayoffTarget(null);
                 confirmFail({
                   error,
+                  unconfirmedKind: "pay",
                   message: t(
                     target.undo
                       ? "assetDetail.installmentUndoFailed"
@@ -297,6 +298,7 @@ export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
                 c.setConfirmCancelPay(false);
                 confirmFail({
                   error,
+                  unconfirmedKind: "pay",
                   message: t("assetDetail.cancelPaymentFailed"),
                   retry: () => c.cancelPayment.mutateAsync(id),
                 });

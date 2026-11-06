@@ -306,6 +306,7 @@ function TradeCancelConfirm({
             onClose();
             confirmFail({
               error,
+              unconfirmedKind: "action",
               message: t("trade.cancelFailed"),
               retry: () => deleteMut.mutateAsync(target.rowId),
               onRetried: done,

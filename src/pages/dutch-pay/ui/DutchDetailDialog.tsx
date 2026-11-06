@@ -77,9 +77,11 @@ export function DutchDetailDialog({
       await remove();
       setAskDelete(false);
       onClose();
-    } catch {
+    } catch (error) {
       setAskDelete(false);
       confirmFail({
+        error,
+        unconfirmedKind: "delete",
         message: t("deleteFailed"),
         retry: () => remove(),
         onRetried: onClose,
@@ -91,15 +93,25 @@ export function DutchDetailDialog({
   const receive = async (id: number) => {
     try {
       await markPaid(id);
-    } catch {
-      confirmFail({ message: t("markFailed"), retry: () => markPaid(id) });
+    } catch (error) {
+      confirmFail({
+        error,
+        unconfirmedKind: "action",
+        message: t("markFailed"),
+        retry: () => markPaid(id),
+      });
     }
   };
   const receiveAll = async () => {
     try {
       await settleAll();
-    } catch {
-      confirmFail({ message: t("settleFailed"), retry: () => settleAll() });
+    } catch (error) {
+      confirmFail({
+        error,
+        unconfirmedKind: "action",
+        message: t("settleFailed"),
+        retry: () => settleAll(),
+      });
     }
   };
 
