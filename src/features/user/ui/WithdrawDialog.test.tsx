@@ -666,8 +666,11 @@ describe("머리 설명 · [코드 받기] 자리(I-05 33 · 35)", () => {
     await act(async () => {
       resend.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
-    // 보낸 뒤 — 같은 묶음 안 [코드 받기] 바로 아래
+    // 보낸 뒤 — 같은 묶음 안 [코드 받기] 아래에 "메일로 코드를 보냈어요"(role=status, 11af746d) 그 아래 스팸함 안내
     const sent = document.body.querySelector('[data-slot="input-otp-resend"]')!;
-    expect(sent.nextElementSibling?.textContent).toBe("withdraw.codeHint");
+    const status = sent.nextElementSibling;
+    expect(status?.getAttribute("role")).toBe("status");
+    expect(status?.textContent).toBe("withdraw.codeSent");
+    expect(status?.nextElementSibling?.textContent).toBe("withdraw.codeHint");
   });
 });

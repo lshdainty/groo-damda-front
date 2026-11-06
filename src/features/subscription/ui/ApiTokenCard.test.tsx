@@ -317,6 +317,8 @@ describe("ApiTokenCard", () => {
     );
 
     expect(state.revoked).toBe(9);
+    // 폐기는 mutateAsync().then(done) — 응답 뒤에 원문을 치운다
+    await act(async () => {});
     expect(document.body.innerHTML).not.toContain(RAW);
   });
 });

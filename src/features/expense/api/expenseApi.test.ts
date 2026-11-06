@@ -50,9 +50,12 @@ describe("환불 마크·취소", () => {
 
     await expenseApi.refund(77, "2026-09-18T12:00:00");
 
-    expect(post).toHaveBeenCalledWith("/v1/expense/77/refund", {
-      refundedAt: "2026-09-18T12:00:00",
-    });
+    // 셋째 인자는 요청 옵션(silent 등) — 호출처가 안 주면 undefined
+    expect(post).toHaveBeenCalledWith(
+      "/v1/expense/77/refund",
+      { refundedAt: "2026-09-18T12:00:00" },
+      undefined,
+    );
     // 옛 모델처럼 수정 PUT 으로 환불을 만들면 안 된다 — 그쪽은 이제 400 이다.
     expect(put).not.toHaveBeenCalled();
   });
@@ -62,7 +65,7 @@ describe("환불 마크·취소", () => {
 
     await expenseApi.refund(77);
 
-    expect(post).toHaveBeenCalledWith("/v1/expense/77/refund", {});
+    expect(post).toHaveBeenCalledWith("/v1/expense/77/refund", {}, undefined);
   });
 
   it("취소는 DELETE 다", async () => {
@@ -72,7 +75,7 @@ describe("환불 마크·취소", () => {
       rowId: 77,
       refundedAt: null,
     });
-    expect(del).toHaveBeenCalledWith("/v1/expense/77/refund");
+    expect(del).toHaveBeenCalledWith("/v1/expense/77/refund", undefined);
   });
 });
 
@@ -143,7 +146,7 @@ describe("삭제는 환급액을 돌려준다", () => {
     await expect(expenseApi.deleteExpense(77)).resolves.toEqual({
       refundedAmount: 58_600,
     });
-    expect(del).toHaveBeenCalledWith("/v1/expense/77");
+    expect(del).toHaveBeenCalledWith("/v1/expense/77", undefined);
   });
 
   it("응답에 본문이 없어도 객체를 돌려준다", async () => {
@@ -166,9 +169,12 @@ describe("일괄 삭제", () => {
       deletedCount: 3,
       refundedAmount: 12_000,
     });
-    expect(post).toHaveBeenCalledWith("/v1/expenses/delete", {
-      expenseIds: [1, 2, 3],
-    });
+    // 일괄 삭제는 늘 silent — 실패는 일괄 작업 바가 알린다
+    expect(post).toHaveBeenCalledWith(
+      "/v1/expenses/delete",
+      { expenseIds: [1, 2, 3] },
+      { silent: true },
+    );
     // 단건 삭제 경로(DELETE)를 건수만큼 부르지 않는다
     expect(del).not.toHaveBeenCalled();
   });

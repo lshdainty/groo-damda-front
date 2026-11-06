@@ -180,13 +180,15 @@ describe("지운 거래의 분할 조회", () => {
     expect(btn().dataset.splits).toBe("0");
   });
 
-  it("404 만 삼킨다 — 서버가 아프면 그대로 알린다", async () => {
+  // 전역 서버 원문 토스트는 걷었다(1e149414) — 실패는 호출처가 알린다(상세의 분할 실패 띠 · 나누기 단계의 Result Section).
+  // 여기서 잠그는 것은 "500 은 삼키지 않고 실패 상태로 남긴다" 이다 — 404 처럼 빈 목록으로 바꾸지 않는다
+  it("404 만 삼킨다 — 서버가 아프면 실패로 남는다(알림은 호출처)", async () => {
     splitsFailure = "broken";
 
     await openThenDelete();
 
-    expect(spies.toastError).toHaveBeenCalledTimes(1);
-    expect(spies.toastError.mock.calls[0]?.[0]).toBe("서버가 아파요");
+    expect(spies.toastError).not.toHaveBeenCalled();
     expect(btn().dataset.failed).toBe("true");
+    expect(btn().dataset.splits).not.toBe("0");
   });
 });

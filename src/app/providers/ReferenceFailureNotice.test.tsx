@@ -11,9 +11,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { REFERENCE_META } from "@/shared/api/reference";
 
 const show = vi.fn();
+// 진짜 useSnackbar 는 늘 같은 값을 돌려준다(snackbar-context.ts) — 렌더마다 새 객체를 주면 이펙트가 다시 돌아 hold 해제를 놓친다
+const snackApi = { show, dismiss: vi.fn() };
 vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
-  useSnackbar: () => ({ show, dismiss: vi.fn() }),
+  useSnackbar: () => snackApi,
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k }),

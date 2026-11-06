@@ -39,11 +39,13 @@ vi.mock("@/shared/ui/groo/alert-confirm", () => ({
     title: string;
     message: string;
     confirmLabel?: string;
+    tone?: "criticalSolid" | "neutralSolid";
     onConfirm: () => Promise<unknown> | void;
     onError?: () => void;
     onClose: () => void;
   }) => (
-    <div role="alertdialog">
+    // 확정의 무게 — AlertConfirm 기본은 criticalSolid(지우기)
+    <div role="alertdialog" data-tone={p.tone ?? "criticalSolid"}>
       <h2>{p.title}</h2>
       <p>{p.message}</p>
       <button type="button" data-testid="cancel" onClick={p.onClose}>
@@ -206,7 +208,8 @@ describe.each([
     expect(dlg).not.toBeNull();
     expect(dlg.textContent).toContain("deleteTitle");
     expect(dlg.textContent).toContain("deleteDescription");
-    expect(dlg.getAttribute("data-danger")).not.toBeNull();
+    // 옛 ConfirmDialog 의 danger 대신 AlertConfirm 의 tone — 지우기는 critical
+    expect(dlg.getAttribute("data-tone")).toBe("criticalSolid");
     expect(state.mutate).not.toHaveBeenCalled();
   });
 
