@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { ListCheckGroup, ListCheckItem } from "@/shared/ds/list";
-import { AssetLogo, type Asset } from "@/entities/asset";
+import { LogoTile } from "@/shared/ds/logo-tile";
+import type { Asset } from "@/entities/asset";
 import type { IncludeExclude } from "../../model/filter";
 import { PickModeChips } from "./FilterIncludeExclude";
 import { useIncludeExclude } from "./use-include-exclude";
@@ -34,7 +35,14 @@ export function FilterAssetBody({
             <ListCheckItem
               key={a.rowId}
               markPosition="suffix"
-              prefix={<AssetLogo asset={a} size={40} />}
+              // 자산 목록 줄(AssetRow)과 같은 Logo Tile 40 — 기관이 있으면 기관 색, 없으면 이름 색(logo-tile.md)
+              prefix={
+                <LogoTile
+                  name={a.institution || a.assetName}
+                  face={a.institution ? "institution" : "name"}
+                  size={40}
+                />
+              }
               title={a.assetName}
               checked={pick.ids.includes(a.rowId)}
               onCheckedChange={(on) => pick.toggle(a.rowId, on === true)}
