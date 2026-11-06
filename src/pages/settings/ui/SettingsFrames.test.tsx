@@ -176,11 +176,12 @@ describe("데스크톱 두 칸 틀 (1280 이상)", () => {
   });
 
   it("위젯에 머리가 없는 섹션은 틀이 섹션 이름 · 설명으로 제목 줄을 그린다", () => {
-    mount("recurring", vi.fn(), () => <p>본문</p>);
+    // 머리 없는 섹션은 NEEDS_DESKTOP_HEAD(sections.ts) — 반복 거래는 이제 제 ManagerHead 를 그려 빠졌다(527ea90f)
+    mount("appearance", vi.fn(), () => <p>본문</p>);
     const h1 = container.querySelector("h1")!;
-    expect(h1.textContent).toBe(sec("recurring").labelKey);
+    expect(h1.textContent).toBe(sec("appearance").labelKey);
     expect(container.querySelector(".page__head .sub")!.textContent).toBe(
-      sec("recurring").descKey,
+      sec("appearance").descKey,
     );
   });
 
