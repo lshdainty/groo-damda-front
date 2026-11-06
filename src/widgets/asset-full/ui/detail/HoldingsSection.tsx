@@ -1,3 +1,4 @@
+import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Delta } from "@/shared/ds/card";
@@ -40,6 +41,7 @@ export function HoldingRow({
   unitKrw,
   prevUnitKrw,
   live,
+  priceFailed = false,
   onTrade,
 }: {
   asset: Asset;
@@ -51,6 +53,8 @@ export function HoldingRow({
   /** 전일 종가의 원화 환산가. 없으면 등락을 감춘다 */
   prevUnitKrw: number | null;
   live: boolean;
+  /** 시세 · 환율을 못 받았다 — 값을 기다리는 Skeleton 이 아니라 "—"(섹션 위 띠가 실패를 말한다, 단계 4) */
+  priceFailed?: boolean;
   onTrade?: (type: TradeType) => void;
 }) {
   const { t } = useTranslation("asset");
@@ -112,7 +116,7 @@ export function HoldingRow({
             {value != null ? withCommaBreaks(m(won(value))) : null}
             {value == null &&
               (holding.linked &&
-              (!live || (price != null && unitKrw == null)) ? (
+              (!live || priceFailed || (price != null && unitKrw == null)) ? (
                 "—"
               ) : (
                 <Skeleton text="t5" className="w-x10" />
@@ -343,6 +347,10 @@ export function HoldingsSection({ asset }: { asset: Asset }) {
       <ListTitle id={titleId}>
         {t("holdings.sectionTitle")} · {hs.length}
       </ListTitle>
+      {/* 시세를 못 받았다 — 예전에는 연동 줄 금액 Skeleton 이 끝없이 돌았다. 실패 + [다시 시도], 줄은 "—" · 받아 둔 값(단계 4) */}
+      {prices.failed && (
+        <PriceFailBand onRetry={prices.retry} className="pb-x2" />
+      )}
       {hs.length > 0 ? (
         <List aria-labelledby={titleId}>
           {hs.map((h, i) => (
@@ -364,6 +372,7 @@ export function HoldingsSection({ asset }: { asset: Asset }) {
                   : null
               }
               live={live}
+              priceFailed={prices.failed}
               onTrade={(type) => setTrade({ type, holding: h })}
             />
           ))}

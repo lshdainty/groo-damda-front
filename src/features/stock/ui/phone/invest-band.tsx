@@ -7,6 +7,7 @@ import { List, ListButtonItem, ListTile } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { KvListItem } from "./phone-parts";
+import { PriceFailBand } from "./price-fail-band";
 
 /*
  * 띠 ① 내 투자(I-13 7 · 8) — 지표(라벨 · 금액 · 증감) + 키-값 줄 + 포트폴리오 구성 줄.
@@ -34,6 +35,8 @@ export function InvestBand({
   onRetry,
   emptyNote,
   columns,
+  priceFailed,
+  onRetryPrice,
 }: {
   label: string;
   amount: string;
@@ -57,6 +60,9 @@ export function InvestBand({
    * 포트폴리오 구성 줄은 두지 않는다(오른쪽 · 아래에 구성 카드가 있다).
    */
   columns?: boolean;
+  /** 받아 둔 숫자가 있는 채 다시 받기(폴링)가 실패했다 — 숫자는 두고 지표 아래 띠 한 줄(단계 4) */
+  priceFailed?: boolean;
+  onRetryPrice?: () => void;
 }) {
   const { t } = useTranslation("stocks");
   return (
@@ -96,6 +102,12 @@ export function InvestBand({
               </p>
             )}
           </div>
+          {!loading && priceFailed && (
+            <PriceFailBand
+              onRetry={onRetryPrice ?? onRetry ?? (() => {})}
+              className="pt-x4"
+            />
+          )}
           {columns ? (
             <dl
               className="m-0 mt-x5 grid gap-x4 px-x6"

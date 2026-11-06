@@ -38,6 +38,11 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/features/asset", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/asset")>()),
   useInvestValuation: () => new Map(),
+  useInvestValuationState: () => ({
+    map: new Map(),
+    priceFailed: false,
+    retryPrices: () => {},
+  }),
   useAssets: () => ({
     data: {
       assets: [

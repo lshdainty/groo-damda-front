@@ -19,7 +19,7 @@ import { brokerPath } from "@/features/stock/lib/broker";
 import { fmtByCurrency, fmtFxRate, num } from "@/features/stock/lib/format";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { marketLookup } from "@/features/stock/lib/market-state";
-import { isHardError } from "@/features/stock/lib/query-state";
+import { isHardError, isStaleError } from "@/features/stock/lib/query-state";
 import { visibleSymbols } from "@/features/stock/lib/watch-prices";
 import { useWatchGroups } from "@/features/stock/api/watchlistApi";
 import {
@@ -37,6 +37,7 @@ import { useVisibleIds } from "@/features/stock/model/useVisibleIds";
 import type { WatchGroup } from "@/features/stock/api/stockApi";
 import { Card } from "@/shared/ds/card";
 import { InvestBand } from "@/features/stock/ui/phone/invest-band";
+import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
 import {
   MarketBand,
   type IndexLine,
@@ -121,6 +122,8 @@ export function TossStocksView({
     void accountsQ.refetch();
     if (accountSeq != null) void holdingsQ.refetch();
   };
+  // 받아 둔 보유 · 계좌가 있는 채 다시 받기가 실패했다 — 숫자는 두고 띠 한 줄(단계 4)
+  const holdingsStale = isStaleError(accountsQ) || isStaleError(holdingsQ);
   const fxQ = useTossExchangeRate();
   const fxRate = fxQ.data ? num(fxQ.data.rate) : null;
   const summary = holdings ? tossInvestSummary(holdings) : null;
@@ -160,6 +163,14 @@ export function TossStocksView({
         ),
       },
     ];
+  };
+  // 주문 가능 금액도 60초마다 받는 숫자 — 받아 둔 값이 있는 채 실패하면 내 투자 띠가 함께 말한다
+  const investStale =
+    holdingsStale || isStaleError(bpKrwQ) || isStaleError(bpUsdQ);
+  const retryInvestStale = () => {
+    retryInvest();
+    void bpKrwQ.refetch();
+    void bpUsdQ.refetch();
   };
   const dailyDir = summary ? directionOfPct(summary.dailyPnlPct) : "flat";
   const investRows = [
@@ -283,34 +294,44 @@ export function TossStocksView({
   const [form, setForm] = useState<{ group: WatchGroup | null } | null>(null);
   const [deleting, setDeleting] = useState<WatchGroup | null>(null);
 
+  // 보유 목록(빈 상태 · 줄) — 다시 받기가 실패해도 그대로 그린다
+  const holdingsBody = () =>
+    lines.length === 0 ? (
+      <ResultSection
+        kind="empty"
+        size="medium"
+        as="h3"
+        icon={<Search aria-hidden />}
+        title={t("holdings.empty")}
+      />
+    ) : (
+      <List aria-label={t("segments.holdings")}>
+        {lines.map((l) => (
+          <StockLine
+            key={l.key}
+            name={l.name}
+            detail={t("holding.lineDesc", {
+              code: l.symbol,
+              count: l.qty.toLocaleString(),
+            })}
+            amount={mask(amountText(l.value, l.currency))}
+            pct={l.returnPct}
+            onClick={() => open(l.symbol)}
+          />
+        ))}
+      </List>
+    );
   const holdingsList = investLoading ? (
     <LineSkeletons label={t("holdings.loading")} />
   ) : investFailed ? (
     <BandFailure band title={t("holdings.failTitle")} onRetry={retryInvest} />
-  ) : lines.length === 0 ? (
-    <ResultSection
-      kind="empty"
-      size="medium"
-      as="h3"
-      icon={<Search aria-hidden />}
-      title={t("holdings.empty")}
-    />
+  ) : holdingsStale ? (
+    <>
+      <PriceFailBand onRetry={retryInvest} className="pt-x2" />
+      {holdingsBody()}
+    </>
   ) : (
-    <List aria-label={t("segments.holdings")}>
-      {lines.map((l) => (
-        <StockLine
-          key={l.key}
-          name={l.name}
-          detail={t("holding.lineDesc", {
-            code: l.symbol,
-            count: l.qty.toLocaleString(),
-          })}
-          amount={mask(amountText(l.value, l.currency))}
-          pct={l.returnPct}
-          onClick={() => open(l.symbol)}
-        />
-      ))}
-    </List>
+    holdingsBody()
   );
 
   const investBand = (columns: boolean) => (
@@ -322,6 +343,8 @@ export function TossStocksView({
       loading={investLoading}
       failed={investFailed}
       onRetry={retryInvest}
+      priceFailed={investStale}
+      onRetryPrice={retryInvestStale}
       columns={columns}
       onOpenPortfolio={
         columns ? null : () => navigate(`${brokerPath("TOSS")}/portfolio`)
@@ -339,6 +362,8 @@ export function TossStocksView({
       }
       loading={idxQ.isLoading}
       failed={marketFailed}
+      priceFailed={isStaleError(idxQ)}
+      onRetryPrice={() => void idxQ.refetch()}
       onRetry={() => {
         void idxQ.refetch();
         void krQ.refetch();
@@ -375,6 +400,8 @@ export function TossStocksView({
             failed={isHardError(watchQ)}
             onRetry={() => void watchQ.refetch()}
             priceOf={quotes.priceOf}
+            quotesFailed={quotes.failed}
+            onRetryQuotes={quotes.retry}
             track={track}
             onOpen={open}
             onAddGroup={() => setForm({ group: null })}
@@ -436,6 +463,7 @@ export function TossStocksView({
                     loading={investLoading}
                     failed={investFailed}
                     onRetry={retryInvest}
+                    priceFailed={holdingsStale}
                   />
                 </DeskSlot>
               </>

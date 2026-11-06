@@ -1,3 +1,4 @@
+import { PriceFailBand } from "./price-fail-band";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EllipsisVertical, Pencil, Plus, Trash2 } from "lucide-react";
@@ -52,6 +53,8 @@ export function WatchGroups({
   onAddGroup,
   onRenameGroup,
   onDeleteGroup,
+  quotesFailed,
+  onRetryQuotes,
 }: {
   groups: WatchGroup[];
   loading?: boolean;
@@ -63,6 +66,9 @@ export function WatchGroups({
   onAddGroup: () => void;
   onRenameGroup: (g: WatchGroup) => void;
   onDeleteGroup: (g: WatchGroup) => void;
+  /** 관심 시세를 못 받았다(처음 · 받아 둔 값이 있어도) — 줄은 그대로("—" 또는 받아 둔 값) 두고 맨 위 띠 한 줄(단계 4) */
+  quotesFailed?: boolean;
+  onRetryQuotes?: () => void;
 }) {
   const { t } = useTranslation("stocks");
   if (failed)
@@ -97,6 +103,12 @@ export function WatchGroups({
     );
   return (
     <div data-slot="watch-groups">
+      {quotesFailed && (
+        <PriceFailBand
+          onRetry={onRetryQuotes ?? (() => {})}
+          className="pt-x2"
+        />
+      )}
       {groups.map((g, idx) => (
         <section
           key={g.rowId}

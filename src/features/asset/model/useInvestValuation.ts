@@ -56,6 +56,18 @@ export function linkedSymbolsOf(assets: Asset[]): string[] {
 export function useInvestValuation(
   investAssets: Asset[],
 ): Map<number, InvestValuation> {
+  return useInvestValuationState(investAssets).map;
+}
+
+/**
+ * 라이브 평가 맵 + 시세 실패(단계 4) — 시세 · 환율을 못 받으면 그 자산은 DB 잔액(또는 옛 시세)으로 보인다.
+ * `priceFailed` 면 화면이 그 카드에 "시세를 불러오지 못했어요" 띠를 둔다(숫자는 둔다 — 조용히 틀린 값으로 두지 않는다).
+ */
+export function useInvestValuationState(investAssets: Asset[]): {
+  map: Map<number, InvestValuation>;
+  priceFailed: boolean;
+  retryPrices: () => void;
+} {
   const { data: features } = useMyFeatures({ reference: true });
   const enabled =
     (features?.features?.includes("SECURITIES") ?? false) &&
@@ -69,7 +81,7 @@ export function useInvestValuation(
   );
   const live = useLivePrices(activeSymbols, active);
 
-  return useMemo(() => {
+  const map = useMemo(() => {
     const map = new Map<number, InvestValuation>();
     if (!active) return map;
 
@@ -114,6 +126,7 @@ export function useInvestValuation(
     }
     return map;
   }, [active, investAssets, live]);
+  return { map, priceFailed: live.failed, retryPrices: live.retry };
 }
 
 /**

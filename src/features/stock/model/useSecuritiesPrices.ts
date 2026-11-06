@@ -57,6 +57,8 @@ export const securitiesExchangeRateQuery = (currency: string) => ({
   queryKey: ["securities", "exchange-rate", currency, "KRW"],
   queryFn: () => securitiesApi.getExchangeRate(currency, "KRW"),
   ...COMMON,
+  // 평가 환율 — 실패는 자산 카드 띠가 말한다(단계 4). 공용 새로 고침 스낵바와 겹치지 않게 같은 표식
+  meta: POLL_META,
   staleTime: FX_STALE_TIME,
   gcTime: FX_GC_TIME,
 });

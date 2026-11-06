@@ -80,6 +80,11 @@ export function useTossWatchQuotes(symbols: string[]) {
   return {
     isLoading: results.some((r) => r.isLoading),
     isError: results.length > 0 && results.every((r) => r.isError),
+    /** 한 묶음이라도 못 받았다(처음 · 받아 둔 값이 있어도) — 화면이 띠 한 줄로 말한다(단계 4) */
+    failed: results.some((r) => r.isError),
+    retry: () => {
+      for (const r of results) if (r.isError) void r.refetch();
+    },
     priceOf: (symbol: string): RowQuote => {
       const price = prices.get(symbol) ?? null;
       return price == null
@@ -118,6 +123,11 @@ export function useNamuWatchQuotes(symbols: string[]) {
   return {
     isLoading: results.some((r) => r.isLoading),
     isError: results.length > 0 && results.every((r) => r.isError),
+    /** 한 묶음이라도 못 받았다(처음 · 받아 둔 값이 있어도) — 화면이 띠 한 줄로 말한다(단계 4) */
+    failed: results.some((r) => r.isError),
+    retry: () => {
+      for (const r of results) if (r.isError) void r.refetch();
+    },
     priceOf: (symbol: string): RowQuote => kept.get(symbol) ?? NONE,
   };
 }

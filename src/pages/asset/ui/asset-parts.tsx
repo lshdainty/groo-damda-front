@@ -1,3 +1,4 @@
+import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
 import { loadFailed } from "@/shared/api";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -810,9 +811,19 @@ export function GroupSection({
       </>
     );
   }
+  // 이 카드에 연동 투자 자산이 있는데 시세를 못 받았다 — 금액은 DB 잔액 · 옛 시세 그대로 두고 띠 한 줄(단계 4)
+  const priceFail =
+    g.priceFailed && assets.some((a) => g.linkedIds.has(a.rowId));
   return (
     <>
       {head}
+      {priceFail && (
+        <PriceFailBand
+          band={band}
+          onRetry={g.retryPrices}
+          className={band ? "pb-x2" : "px-x6 pb-x2"}
+        />
+      )}
       <List aria-label={title} className={band ? "pb-x3" : undefined}>
         {assets.map((a) => (
           <AssetRow

@@ -27,6 +27,7 @@ export {
 export {
   useInvestValuationMap,
   useInvestValuation,
+  useInvestValuationState,
   holdingsOf,
   type InvestValuation,
 } from "./model/useInvestValuation";

@@ -21,6 +21,8 @@ export function useNamuHoldings(currency: string) {
     queryKey: ["namu", "holdings", currency],
     queryFn: () => namuApi.getHoldings(currency),
     retry: false,
+    // 폴링은 아니지만 실패를 그 자리 띠가 말한다(단계 4) — 공용 새로 고침 스낵바와 겹치지 않게 같은 표식
+    meta: POLL_META,
     staleTime: 30_000,
   });
 }

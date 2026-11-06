@@ -1,4 +1,5 @@
-import { isHardError } from "@/features/stock/lib/query-state";
+import { isHardError, isStaleError } from "@/features/stock/lib/query-state";
+import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
 import { useMemo, useState, type ReactNode } from "react";
 import { amountText } from "@/features/stock/lib/amount-text";
 import { useTranslation } from "react-i18next";
@@ -120,6 +121,13 @@ export function NamuStocksView({
   const retryInvest = () => {
     void krwQ.refetch();
     void usdQ.refetch();
+  };
+  // 한 통화만 못 받았거나(그 통화가 합계 · 목록에서 빠진다) 받아 둔 값이 있는 채 다시 받기가 실패했다 —
+  // 남은 숫자는 두고 띠 한 줄(단계 4). 합계가 그 통화를 빼고 계산됐다는 걸 모르게 두지 않는다
+  const holdingsStale = !bothFailed && (krwQ.isError || usdQ.isError);
+  const retryStale = () => {
+    if (krwQ.isError) void krwQ.refetch();
+    if (usdQ.isError) void usdQ.refetch();
   };
 
   const pctOf = (p: number) => formatChangeRate(Math.abs(p), { sign: "none" });
@@ -271,6 +279,9 @@ export function NamuStocksView({
     <BandFailure band title={t("holdings.failTitle")} onRetry={retryInvest} />
   ) : (
     <>
+      {holdingsStale && (
+        <PriceFailBand onRetry={retryStale} className="pt-x2" />
+      )}
       {summary.mixed && (
         <div className="px-x6 pb-x2 pt-x1">
           <SegmentedControl
@@ -331,6 +342,8 @@ export function NamuStocksView({
       failed={bothFailed}
       failDescription={t("namu.failDesc")}
       onRetry={retryInvest}
+      priceFailed={holdingsStale}
+      onRetryPrice={retryStale}
       columns={columns}
       emptyNote={
         !loading && !bothFailed && summary.count === 0
@@ -390,6 +403,8 @@ export function NamuStocksView({
         void fxQ.refetch();
         void repQ.refetch();
       }}
+      priceFailed={isStaleError(repQ)}
+      onRetryPrice={() => void repQ.refetch()}
     />
   );
   const comp = composition(lines);
@@ -417,6 +432,8 @@ export function NamuStocksView({
             failed={isHardError(watchQ)}
             onRetry={() => void watchQ.refetch()}
             priceOf={quotes.priceOf}
+            quotesFailed={quotes.failed}
+            onRetryQuotes={quotes.retry}
             track={track}
             onOpen={open}
             onAddGroup={() => setForm({ group: null })}
@@ -477,6 +494,8 @@ export function NamuStocksView({
                     loading={loading}
                     failed={bothFailed}
                     onRetry={retryInvest}
+                    priceFailed={holdingsStale}
+                    onRetryPrice={retryStale}
                   />
                 </DeskSlot>
               </>

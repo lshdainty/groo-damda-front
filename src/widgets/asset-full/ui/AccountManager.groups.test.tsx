@@ -31,6 +31,11 @@ vi.mock("@/features/asset", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/asset")>()),
   // 라이브 평가는 이 시험 밖 — 빈 맵(연결 없음)
   useInvestValuation: () => state.live,
+  useInvestValuationState: () => ({
+    map: state.live,
+    priceFailed: false,
+    retryPrices: () => {},
+  }),
   useAssets: (opts?: { silent?: boolean }) => {
     state.useAssetsOpts = opts;
     return {

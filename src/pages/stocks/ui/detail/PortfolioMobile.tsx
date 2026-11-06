@@ -1,4 +1,5 @@
-import { isHardError } from "@/features/stock/lib/query-state";
+import { isHardError, isStaleError } from "@/features/stock/lib/query-state";
+import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -58,16 +59,24 @@ function TossComposition() {
       notice: c.fxMissing ? t("namu.donutNeedsFx") : undefined,
     };
   }, [holdingsQ.data, fx, t]);
+  const retry = () => {
+    void accountsQ.refetch();
+    void holdingsQ.refetch();
+  };
+  const failed = isHardError(accountsQ) || isHardError(holdingsQ);
   return (
-    <CompositionBody
-      data={data}
-      loading={accountsQ.isLoading || (seq != null && holdingsQ.isLoading)}
-      failed={isHardError(accountsQ) || isHardError(holdingsQ)}
-      onRetry={() => {
-        void accountsQ.refetch();
-        void holdingsQ.refetch();
-      }}
-    />
+    <>
+      {/* 받아 둔 보유가 있는 채 다시 받기가 실패했다 — 구성은 두고 띠 한 줄(단계 4) */}
+      {!failed && (isStaleError(accountsQ) || isStaleError(holdingsQ)) && (
+        <PriceFailBand onRetry={retry} className="pb-x2" />
+      )}
+      <CompositionBody
+        data={data}
+        loading={accountsQ.isLoading || (seq != null && holdingsQ.isLoading)}
+        failed={failed}
+        onRetry={retry}
+      />
+    </>
   );
 }
 
@@ -81,19 +90,33 @@ function NamuComposition() {
     [krwQ.data, usdQ.data, fxQ.data],
   );
   const c = composition(namuHoldingLines(view));
+  const failed = isHardError(krwQ) && isHardError(usdQ);
+  // 한 통화만 못 받았거나(그 통화가 구성에서 빠진다) 받아 둔 값이 있는 채 실패했다 — 띠 한 줄(단계 4)
+  const partial = !failed && (krwQ.isError || usdQ.isError);
   return (
-    <CompositionBody
-      data={{
-        items: c.items,
-        notice:
-          view.fxMissing || c.fxMissing ? t("namu.donutNeedsFx") : undefined,
-      }}
-      loading={krwQ.isLoading || usdQ.isLoading}
-      failed={isHardError(krwQ) && isHardError(usdQ)}
-      onRetry={() => {
-        void krwQ.refetch();
-        void usdQ.refetch();
-      }}
-    />
+    <>
+      {partial && (
+        <PriceFailBand
+          onRetry={() => {
+            if (krwQ.isError) void krwQ.refetch();
+            if (usdQ.isError) void usdQ.refetch();
+          }}
+          className="pb-x2"
+        />
+      )}
+      <CompositionBody
+        data={{
+          items: c.items,
+          notice:
+            view.fxMissing || c.fxMissing ? t("namu.donutNeedsFx") : undefined,
+        }}
+        loading={krwQ.isLoading || usdQ.isLoading}
+        failed={failed}
+        onRetry={() => {
+          void krwQ.refetch();
+          void usdQ.refetch();
+        }}
+      />
+    </>
   );
 }

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { withLiveHolding, type Asset } from "@/entities/asset";
-import { holdingsOf, useInvestValuation } from "@/features/asset";
+import { holdingsOf, useInvestValuationState } from "@/features/asset";
 
 /**
  * 투자 자산의 라이브 평가 — 자산 화면과 계좌 · 카드 관리가 **같은 훅**을 쓴다(I-17 후속: 관리 줄 금액이 자산 화면과 다르면 틀려 보인다).
@@ -14,7 +14,11 @@ export function useLiveAssets(assets: Asset[]) {
     () => assets.filter((a) => holdingsOf(a).some((h) => h.linked)),
     [assets],
   );
-  const investValMap = useInvestValuation(linked);
+  const {
+    map: investValMap,
+    priceFailed,
+    retryPrices,
+  } = useInvestValuationState(linked);
   const valMap = useMemo(() => {
     const m = new Map<number, number>();
     for (const [k, v] of investValMap) m.set(k, v.value);
@@ -27,5 +31,5 @@ export function useLiveAssets(assets: Asset[]) {
       ),
     [assets, valMap],
   );
-  return { list, linked, investValMap, valMap };
+  return { list, linked, investValMap, valMap, priceFailed, retryPrices };
 }

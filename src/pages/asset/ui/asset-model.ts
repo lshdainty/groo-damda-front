@@ -47,9 +47,8 @@ export function useAssetGroups() {
   const assetsQ = useAssets();
   const summaryQ = useAssetSummary();
   // 연동 보유가 있는 투자 자산은 라이브 평가액으로 잔액을 덮어쓴다 — 관리 화면과 같은 훅(`useLiveAssets`).
-  const { list, linked, investValMap, valMap } = useLiveAssets(
-    assetsQ.data?.assets ?? EMPTY_ASSETS,
-  );
+  const { list, linked, investValMap, valMap, priceFailed, retryPrices } =
+    useLiveAssets(assetsQ.data?.assets ?? EMPTY_ASSETS);
   const groups = useMemo(() => groupAssets(list), [list]);
 
   // 백엔드 summary(DB 잔액 기준)에 연결 자산의 (라이브−DB) 차액만큼 순자산/변화를 보정.
@@ -83,6 +82,10 @@ export function useAssetGroups() {
   return {
     ...groups,
     investValMap,
+    // 연동 투자 자산의 시세를 못 받았다 — 그 자산이 든 카드에 띠 한 줄(평가는 DB 잔액 · 옛 시세로 남는다, 단계 4)
+    priceFailed,
+    retryPrices,
+    linkedIds: new Set(linked.map((a) => a.rowId)),
     netWorth,
     changeAmount,
     changePercent,

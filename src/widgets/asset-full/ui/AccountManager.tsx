@@ -1,3 +1,4 @@
+import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
@@ -125,7 +126,12 @@ export function AccountManager({
   }
 
   // 투자 줄 금액은 자산 화면과 같은 라이브 평가(같은 훅 — 줄마다 시세 타이머를 두지 않는다)
-  const { list: liveAssets } = useLiveAssets(assets);
+  const {
+    list: liveAssets,
+    linked,
+    priceFailed,
+    retryPrices,
+  } = useLiveAssets(assets);
   const groups = useMemo(() => groupAssets(liveAssets), [liveAssets]);
 
   const saveFailed = createAsset.isError || updateAsset.isError;
@@ -314,6 +320,11 @@ export function AccountManager({
         first={i === 0}
         mobile={mobile}
       >
+        {/* 이 묶음에 연동 투자 자산이 있는데 시세를 못 받았다 — 금액은 DB 잔액 · 옛 시세 그대로, 띠 한 줄(단계 4) */}
+        {priceFailed &&
+          s.list.some((a) => linked.some((l) => l.rowId === a.rowId)) && (
+            <PriceFailBand onRetry={retryPrices} className="pb-x2" />
+          )}
         {s.list.length === 0 ? (
           <div className="px-x6">
             <BandEmpty>{t("noItems")}</BandEmpty>

@@ -1,4 +1,5 @@
-import { isHardError } from "@/features/stock/lib/query-state";
+import { isHardError, isStaleError } from "@/features/stock/lib/query-state";
+import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
 import { Fragment, useId, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { LineChart, Star } from "lucide-react";
@@ -354,6 +355,7 @@ export function KvBand({
   rows,
   loading,
   failed,
+  stale,
 }: {
   title: string;
   id: string;
@@ -361,6 +363,8 @@ export function KvBand({
   loading?: boolean;
   /** 실패 한 벌 — 제목 · 설명 · [다시 시도]. 오류 원문은 그리지 않는다 */
   failed?: { title: string; onRetry: () => void };
+  /** 받아 둔 값이 있는 채 다시 받기(폴링)가 실패했다 — 줄은 두고 제목 아래 띠 한 줄(단계 4) */
+  stale?: { onRetry: () => void };
 }) {
   if (failed)
     return (
@@ -372,6 +376,7 @@ export function KvBand({
   return (
     <section aria-labelledby={id}>
       <BandTitle id={id}>{title}</BandTitle>
+      {stale && <PriceFailBand onRetry={stale.onRetry} className="pb-x2" />}
       <List aria-labelledby={id} className="pb-x6">
         {rows.map((r) => (
           <KvListItem
@@ -569,6 +574,16 @@ export function QuotesBand({
           </SegmentedControlItem>
         </SegmentedControl>
         <div className="mt-x3">
+          {/* 받아 둔 호가 · 체결이 있는 채 다시 받기(5초)가 실패했다 — 표는 두고 위에 띠 한 줄(단계 4) */}
+          {(tab === "book" ? isStaleError(bookQ) : isStaleError(tradesQ)) && (
+            <PriceFailBand
+              band={false}
+              onRetry={() =>
+                void (tab === "book" ? bookQ.refetch() : tradesQ.refetch())
+              }
+              className="pb-x3"
+            />
+          )}
           {tab === "book" ? (
             bookQ.isPending ? (
               <TableSkeleton label={t("quotes.orderbookLoading")} />
