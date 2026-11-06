@@ -38,21 +38,31 @@ vi.mock("@/shared/ui/groo/primitives", () => ({
   Icon: () => <svg />,
 }));
 // 고정 정리 화면은 여기서 열림 · 닫힘만 본다(고른 체크는 FixedBulk.test) — 견본이 자기가 받은 값을 보인다
-vi.mock("@/features/expense/ui/FixedBulk", () => ({
-  FixedBulk: ({
-    mobile,
-    onClose,
-  }: {
-    mobile: boolean;
-    onClose: () => void;
-  }) => (
-    <div data-testid="fixed-bulk" data-mobile={String(mobile)}>
-      <button type="button" onClick={onClose}>
-        close
-      </button>
-    </div>
-  ),
-}));
+const fbMounts = vi.hoisted(() => ({ n: 0 }));
+vi.mock("@/features/expense/ui/FixedBulk", async () => {
+  const React = await import("react");
+  return {
+    FixedBulk: ({
+      mobile,
+      onClose,
+    }: {
+      mobile: boolean;
+      onClose: () => void;
+    }) => {
+      // 마운트 횟수 — 폭이 768 · 1280 을 넘나들어도 다시 붙지 않아야 고른 체크가 남는다
+      React.useEffect(() => {
+        fbMounts.n += 1;
+      }, []);
+      return (
+        <div data-testid="fixed-bulk" data-mobile={String(mobile)}>
+          <button type="button" onClick={onClose}>
+            close
+          </button>
+        </div>
+      );
+    },
+  };
+});
 
 type Q = {
   data?: unknown;
@@ -311,5 +321,21 @@ describe("폭이 바뀌어도 고른 것이 남는다 (I-wrap-b1 ε 9)", () => {
     go("/desk/stats/fixed", { fromStats: true });
     go("/desk/stats");
     expect(selectedTab()).toBe("tab.trend");
+  });
+
+  it("768 · 1280 을 넘나들어도 고정 정리는 다시 붙지 않는다(한 번만 마운트)", () => {
+    fbMounts.n = 0;
+    render(true);
+    go("/desk/stats/fixed", { fromStats: true });
+    render(false);
+    wide.on = true;
+    try {
+      render(false);
+      wide.on = false;
+      render(true);
+    } finally {
+      wide.on = false;
+    }
+    expect(fbMounts.n).toBe(1);
   });
 });

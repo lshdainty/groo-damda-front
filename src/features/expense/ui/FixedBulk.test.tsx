@@ -27,6 +27,7 @@ vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 const mutateAsync = vi.fn();
 const mState = { isError: false, isPending: false, error: null as unknown };
+const reset = vi.fn();
 const refetch = vi.fn();
 const qState = { error: false, empty: false };
 vi.mock("../model/useExpenses", () => ({
@@ -54,6 +55,7 @@ vi.mock("../model/useExpenses", () => ({
   }),
   useBulkMarkFixed: () => ({
     mutateAsync,
+    reset,
     isPending: mState.isPending,
     isError: mState.isError,
     error: mState.error,
@@ -69,6 +71,7 @@ const setWide = (next: boolean) => {
 };
 
 const { FixedBulk } = await import("./FixedBulk");
+const { WriteUnconfirmedError } = await import("@/shared/api/base");
 
 let container: HTMLDivElement;
 let root: Root;
@@ -116,6 +119,7 @@ afterEach(() => {
   listeners.clear();
   delete (window as { matchMedia?: unknown }).matchMedia;
   mutateAsync.mockReset();
+  reset.mockReset();
   onClose.mockReset();
   act(() => root.unmount());
   container.remove();
@@ -256,5 +260,194 @@ describe("1280 이상 — 통계 위 대화상자", () => {
     ).not.toBeNull();
     expect(checked()).toBe("true");
     expect(apply().disabled).toBe(false);
+  });
+});
+
+const byLabel = (re: RegExp) =>
+  Array.from(document.querySelectorAll<HTMLButtonElement>("button")).find(
+    (b) =>
+      re.test(b.textContent ?? "") ||
+      re.test(b.getAttribute("aria-label") ?? ""),
+  )!;
+
+describe("입력 폼 — 처음과 다르게 골랐으면 닫기 전에 묻는다(dialog.md:84 · 111)", () => {
+  it("1280 이상: 바닥 [취소] [N건 적용], 머리 X 없음", () => {
+    wide = true;
+    renderIt(false);
+    expect(document.querySelector("[data-slot=dialog-cancel]")).not.toBeNull();
+    expect(document.querySelector("[data-slot=dialog-close]")).toBeNull();
+  });
+
+  it("1280 이상: 아무것도 안 골랐으면 [취소] 가 바로 닫고, 골랐으면 먼저 묻는다", () => {
+    wide = true;
+    renderIt(false);
+    act(() => byLabel(/^cancel$/).click());
+    expect(onClose).toHaveBeenCalledTimes(1);
+    onClose.mockReset();
+    renderIt(false);
+    act(() => check().click());
+    act(() => byLabel(/^cancel$/).click());
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.querySelector("[role=alertdialog]")).not.toBeNull();
+  });
+
+  it("1280 미만 페이지: ← 도 같은 질문 — 골랐으면 묻고, 안 골랐으면 바로 닫는다", () => {
+    renderIt(true);
+    const back = () =>
+      document.querySelector<HTMLElement>(
+        "[data-slot=top-navigation-back-button]",
+      )!;
+    act(() => back().click());
+    expect(onClose).toHaveBeenCalledTimes(1);
+    onClose.mockReset();
+    act(() => check().click());
+    act(() => back().click());
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.querySelector("[role=alertdialog]")).not.toBeNull();
+  });
+
+  it("종류를 바꾼 것도 처음과 다르다(고른 체크가 없어도 묻는다)", () => {
+    renderIt(true);
+    act(() => byLabel(/fixed\.kind\.income/).click());
+    act(() =>
+      document
+        .querySelector<HTMLElement>("[data-slot=top-navigation-back-button]")!
+        .click(),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+describe("적용 중 · 실패 뒤", () => {
+  it("적용 중에는 본문이 입력을 받지 않는다 — 종류를 바꿔도 안 먹고 고른 체크가 그대로다(페이지)", () => {
+    renderIt(true);
+    act(() => check().click());
+    mState.isPending = true;
+    renderIt(true);
+    const body = document.querySelector("[data-slot=fixed-bulk-page] [inert]");
+    expect(body).not.toBeNull();
+    act(() => byLabel(/fixed\.kind\.income/).click());
+    expect(check().getAttribute("aria-checked")).toBe("true");
+    expect(
+      document.querySelector("[role=radio][aria-checked=true]")?.textContent,
+    ).toContain("fixed.kind.expense");
+  });
+
+  it("실패 뒤 고른 것을 바꾸면 실패 표시를 걷는다 — 바닥 단추가 다시 N건 적용이 된다", () => {
+    mState.isError = true;
+    renderIt(true);
+    expect(apply().textContent).toBe("retry");
+    act(() => check().click());
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it("떠난 뒤(언마운트) 성공하면 닫지 않고 스낵바로만 알린다", async () => {
+    let resolve!: (v: { updatedCount: number }) => void;
+    mutateAsync.mockReturnValue(new Promise((r) => (resolve = r)));
+    renderIt(true);
+    act(() => check().click());
+    act(() => apply().click());
+    act(() => root.unmount());
+    root = createRoot(container);
+    await act(async () => resolve({ updatedCount: 2 }));
+    expect(snacks).toEqual([
+      expect.objectContaining({
+        message: expect.stringContaining("doneFixed"),
+      }),
+    ]);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("떠난 뒤 실패하면 critical 스낵바 한 문장, 확인 못 한 쓰기는 '확인하지 못했어요' 문장", async () => {
+    let reject!: (e: unknown) => void;
+    mutateAsync.mockReturnValue(new Promise((_, r) => (reject = r)));
+    renderIt(true);
+    act(() => check().click());
+    act(() => apply().click());
+    act(() => root.unmount());
+    root = createRoot(container);
+    await act(async () => reject(new Error("500")));
+    expect(snacks).toEqual([
+      { tone: "critical", message: "fixed.bulk.failed" },
+    ]);
+    snacks.length = 0;
+    mutateAsync.mockReturnValue(
+      Promise.reject(new WriteUnconfirmedError(504, "save")),
+    );
+    renderIt(true);
+    act(() => check().click());
+    await act(async () => apply().click());
+    // 화면이 있으면 Callout 이 맡는다 — 스낵바는 없다
+    expect(snacks).toEqual([]);
+  });
+
+  it("1280 이상 대화상자는 설명 문단을 aria-describedby 로 잇는다", () => {
+    wide = true;
+    renderIt(false);
+    const dlg = document.querySelector("[role=dialog]")!;
+    const id = dlg.getAttribute("aria-describedby")!;
+    expect(document.getElementById(id)?.textContent).toContain(
+      "fixed.bulk.desc",
+    );
+  });
+
+  it("‹ 통계 링크: Ctrl · 가운데 누르기는 막지 않는다(새 탭), 그냥 누르면 닫기를 청한다", () => {
+    renderIt(false);
+    const link = document.querySelector<HTMLAnchorElement>(
+      "a[href='/desk/stats']",
+    )!;
+    const ctrl = new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
+      ctrlKey: true,
+    });
+    act(() => {
+      link.dispatchEvent(ctrl);
+    });
+    expect(ctrl.defaultPrevented).toBe(false);
+    const plain = new MouseEvent("click", { bubbles: true, cancelable: true });
+    act(() => {
+      link.dispatchEvent(plain);
+    });
+    expect(plain.defaultPrevented).toBe(true);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("닫을 때 초점(dialog.md:179)", () => {
+  it("1280 이상: 닫히면 연 단추로 돌아간다 — 주소가 바뀌어 대화상자가 통째로 내려가도", async () => {
+    wide = true;
+    const trigger = document.createElement("button");
+    document.body.appendChild(trigger);
+    trigger.focus();
+    renderIt(false);
+    // 열린 대화상자가 초점을 가져간다
+    const dialog = document.querySelector<HTMLElement>("[role=dialog]")!;
+    act(() => dialog.focus());
+    act(() => root.unmount());
+    root = createRoot(container);
+    await act(async () => {
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+    });
+    expect(document.activeElement).toBe(trigger);
+    trigger.remove();
+  });
+
+  it("1280 미만 페이지는 되돌리지 않는다(화면을 옮긴 것이라 셸이 제목으로 보낸다)", async () => {
+    const trigger = document.createElement("button");
+    document.body.appendChild(trigger);
+    trigger.focus();
+    renderIt(true);
+    const other = document.createElement("button");
+    document.body.appendChild(other);
+    act(() => other.focus());
+    act(() => root.unmount());
+    root = createRoot(container);
+    await act(async () => {
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+    });
+    expect(document.activeElement).not.toBe(trigger);
+    trigger.remove();
+    other.remove();
   });
 });
