@@ -3,6 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ArrowLeft, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
+import { useBeforeUnloadWhile } from "@/shared/lib/before-unload";
 import { useHoldReferenceNotice } from "@/shared/api";
 import { Button, type ButtonProps } from "@/shared/ds/button";
 import { useLeaveConfirm } from "@/shared/ds/alert-dialog";
@@ -17,6 +18,7 @@ import {
   focusOpener,
   mergeRefs,
   useOpenState,
+  useRefocusAfterBusy,
   useWideSurface,
   withButtonSize,
   type OpenChange,
@@ -71,6 +73,7 @@ import { useDsText } from "@/shared/ds/i18n";
  *   - 바닥 [취소] · 닫기 버튼 · Esc 는 닫는다. 바깥(딤) 누르기는 조회 · 안내만 닫고 입력 폼(form)은 무시한다.
  *   - dirty 면 어느 길이든 닫기 전에 "작성한 내용이 사라져요" 를 묻는다(Field 의 이탈 시 안내) — [계속 작성] 이면 그대로.
  *   - 뒤로 가기는 1280 미만(시트)에서만 닫는다 — 1280 이상에서 뒤로 가기는 "이전 페이지" 다(overlay/use-back-close.ts).
+ *   - busy(저장 중)면 어느 길도 받지 않는다 — 묻지도 않는다. 머리 ← 도, 본문 입력도 받지 않는다(inert). 닫기 X 는 모양 그대로다.
  *
  * 열면 초점은 대화상자(컨테이너)로 가고 열린 동안 안을 돈다. 닫으면 연 자리(트리거, 없으면 열 때 초점이 있던 곳)로 돌아간다.
  * 뒤 화면은 보조 기술에서 숨기고 스크롤을 잠근다(Radix). role="dialog" + aria-modal, 제목 aria-labelledby · 설명 aria-describedby
@@ -96,6 +99,8 @@ import { useDsText } from "@/shared/ds/i18n";
 
 type DialogContextValue = {
   form: boolean;
+  /** 저장 중 — 닫기 · 머리 뒤로를 받지 않고 본문은 입력을 받지 않는다(inert) */
+  busy: boolean;
   /** 닫기를 청한다 — 바로 닫았으면 true, 바뀐 값이 있어 물었으면 false */
   requestClose: () => boolean;
   contentRef: React.RefObject<HTMLDivElement | null>;
@@ -114,6 +119,11 @@ export interface DialogProps {
   form?: boolean;
   /** 바뀐 값이 있다 — 닫기 전에 "작성한 내용이 사라져요" 를 묻는다 */
   dirty?: boolean;
+  /**
+   * 저장하는 중이다(저장 단추가 로딩) — 닫기 X · 취소 · Esc · 바깥 · 뒤로 가기 · 끌기 · 머리 ← 를 받지 않고 본문은 입력을 받지 않는다
+   * (state loading). 닫기 X 는 흐리게 하지 않고 모양 그대로 둔다. 응답이 오면 성공은 닫고, 실패는 폼 맨 위 Callout 으로 값을 남긴다
+   */
+  busy?: boolean;
   /** 띄울 자리 — 기본 document.body. 다크가 문서가 아니라 하위 요소에 걸린 곳(카탈로그의 다크 판)에서 그 안의 요소로 */
   container?: HTMLElement | null;
   /** false 면 모달 부작용(초점 가둠 · 바깥 비활성 · 뒤 화면 숨김 · 스크롤 잠금)을 끈다 — 카탈로그 · 문서 전용 */
@@ -127,12 +137,16 @@ function Dialog({
   onOpenChange,
   form = false,
   dirty = false,
+  busy = false,
   container,
   modal = true,
   children,
 }: DialogProps) {
   const [open, setOpen] = useOpenState(openProp, defaultOpen, onOpenChange);
   const contentRef = React.useRef<HTMLDivElement>(null);
+  useRefocusAfterBusy(busy, contentRef);
+  // 열린 폼이 바뀐 값을 가졌거나 저장 중이면 새로 고침 · 탭 닫기에 브라우저 기본 확인창(판단 (3))
+  useBeforeUnloadWhile(open && (dirty || busy));
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const openRef = React.useRef(open);
   React.useLayoutEffect(() => {
@@ -143,10 +157,12 @@ function Dialog({
     contentRef,
     container,
     modal,
+    busy,
     leave: () => setOpen(false),
   });
   const value: DialogContextValue = {
     form,
+    busy,
     requestClose: leave.request,
     contentRef,
     triggerRef,
@@ -249,6 +265,7 @@ const DialogContent = React.forwardRef<
           data-slot="dialog-content"
           data-size={size}
           data-form={form || undefined}
+          aria-busy={ctx?.busy || undefined}
           aria-modal="true"
           {...(description == null ? { "aria-describedby": undefined } : null)}
           className={cn(DIALOG_CONTENT, DIALOG_SIZE[size], className)}
@@ -300,7 +317,10 @@ const DialogContent = React.forwardRef<
                   aria-label={dsT("topNavigation.back")}
                   data-slot="dialog-back"
                   className={DIALOG_BACK}
-                  onClick={onBack}
+                  // 저장 중에는 한 단계 뒤로도 가지 않는다 — 실패 Callout 을 그릴 폼이 사라진다
+                  onClick={() => {
+                    if (!ctx?.busy) onBack();
+                  }}
                 >
                   <ArrowLeft aria-hidden strokeWidth={2} />
                 </button>
@@ -364,11 +384,14 @@ export interface DialogBodyProps extends React.HTMLAttributes<HTMLDivElement> {
 const DialogBody = React.forwardRef<HTMLDivElement, DialogBodyProps>(
   ({ scrollFog = false, className, ...props }, ref) => {
     const own = React.useRef<HTMLDivElement>(null);
+    const busy = React.useContext(DialogContext)?.busy ?? false;
     useBodyScroll(own);
     useScrollFog(own, scrollFog ? "overlayBody" : null);
     return (
       <div
         ref={mergeRefs(ref, own)}
+        // 저장 중 — 본문은 입력을 받지 않는다(모양은 그대로)
+        inert={busy || undefined}
         data-slot="dialog-body"
         data-scroll-fog={scrollFog ? "overlayBody" : undefined}
         className={cn(
@@ -433,6 +456,7 @@ function ResponsiveDialog({
   onOpenChange,
   form = false,
   dirty = false,
+  busy = false,
   container,
   modal,
   children,
@@ -449,6 +473,7 @@ function ResponsiveDialog({
           onOpenChange={setOpen}
           form={form}
           dirty={dirty}
+          busy={busy}
           container={container}
           modal={modal}
         >
@@ -460,6 +485,7 @@ function ResponsiveDialog({
           onOpenChange={setOpen}
           form={form}
           dirty={dirty}
+          busy={busy}
           container={container}
           modal={modal}
         >

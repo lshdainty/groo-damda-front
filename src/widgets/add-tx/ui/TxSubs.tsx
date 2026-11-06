@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useState } from "react";
 import { Coins } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -250,6 +251,7 @@ export function PresetAllSub({ f }: { f: TxForm }) {
 /** 프리셋 저장 단계 (E 32) — 요약 줄 · 이름 · 금액 줄 하나(Q6 B). 금액 0 은 "비워 둠" 으로 저장된다 */
 export function PresetSaveSub({ f }: { f: TxForm }) {
   const { t } = useTranslation("expense");
+  const sft = useSaveFailureText();
   const isTransfer = f.type === "TRANSFER";
   const cat = f.selectedCategory;
   const palette = getPaletteByColor(cat?.color ?? null);
@@ -286,7 +288,7 @@ export function PresetSaveSub({ f }: { f: TxForm }) {
       {f.presetFailed && (
         <div className="px-global-gutter pb-x5">
           <Callout tone="critical" role="alert">
-            {t("addTx.saveFailed")}
+            {sft(f.presetError, t("addTx.saveFailed"))}
           </Callout>
         </div>
       )}

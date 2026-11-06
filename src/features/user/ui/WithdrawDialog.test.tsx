@@ -32,7 +32,8 @@ vi.mock("react-i18next", () => ({
 vi.mock("sonner", () => ({ toast: { success: () => {}, error: () => {} } }));
 vi.mock("../model/useWithdrawal", () => ({
   useWithdrawalCheck: () => ({
-    data: state.check,
+    // react-query 처럼 — 처음 불러오기 실패면 값이 없다
+    data: state.isError ? undefined : state.check,
     isLoading: state.check === null && !state.isError,
     isError: state.isError,
     isFetching: false,
@@ -396,6 +397,20 @@ describe("막는 게 없을 때", () => {
     const text = document.body.textContent ?? "";
     expect(text).toContain("withdraw.failed");
     expect(text).not.toContain("Network Error");
+  });
+
+  it("해지 결과를 확인하지 못하면 실패가 아니라 웹 전용 '새로 고쳐 확인' 글이다", async () => {
+    const { WriteUnconfirmedError } = await import("@/shared/api/base");
+    state.withdrawError = new WriteUnconfirmedError(0);
+    act(() => click("withdraw.next"));
+    await flushClickGuard();
+    const pw = document.getElementById("withdraw-password") as HTMLInputElement;
+    act(() => setValue(pw, "whatever"));
+    await act(async () => click("withdraw.confirm"));
+
+    const text = document.body.textContent ?? "";
+    expect(text).toContain("query.withdrawUnconfirmedRefresh");
+    expect(text).not.toContain("withdraw.failed");
   });
 
   it("비밀번호 확인 → 그 티켓으로 해지 → 로그아웃까지 이어진다", async () => {

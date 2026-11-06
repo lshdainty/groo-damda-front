@@ -4,8 +4,8 @@ import {
   type ReferenceOpts,
 } from "@/shared/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { SilentOpts } from "@/shared/api";
-import { useSnackbar } from "@/shared/ds/snackbar";
+import { isWriteUnconfirmed, type SilentOpts } from "@/shared/api";
+import { useToggleFail } from "@/shared/lib/confirm-fail";
 import { i18n } from "@/shared/i18n/config";
 import { usePendingIds } from "@/shared/lib/groo/use-pending-ids";
 import { useHoldIds } from "@/shared/lib/groo/use-hold-ids";
@@ -51,7 +51,7 @@ export const useUpdateTodo = (opts?: SilentOpts) => {
 
 export const useToggleTodoStatus = () => {
   const queryClient = useQueryClient();
-  const snackbar = useSnackbar();
+  const toggleFail = useToggleFail();
   const { pendingIds, begin, end } = usePendingIds();
   // 낙관 갱신이 행을 목록에서 빼도 잠깐은 자리를 지킨다 — 자리 유지를 시작하는 자리는
   // 낙관 갱신을 하는 여기여야 화면마다 배선이 복제되지 않는다(QA #29).
@@ -90,9 +90,11 @@ export const useToggleTodoStatus = () => {
 
       return { previousQueries };
     },
-    onError: (_err, _id, context) => {
+    onError: (err, _id, context) => {
       // 요청이 silent 라 서버 원문 토스트가 없다 — 되돌린 자리에서 우리 글로 알린다(바로 바뀌는 값이라 다시 시도 없음)
-      snackbar.show({ message: i18n.t("todo:toggleFailed"), tone: "critical" });
+      toggleFail(err, i18n.t("todo:toggleFailed"));
+      // 응답을 못 받았으면 되돌리지 않는다 — 서버는 바꿨을 수 있다. onSettled 가 다시 받아 서버 값으로 맞춘다(판단 ②)
+      if (isWriteUnconfirmed(err)) return;
       // 에러 시 이전 상태로 롤백
       if (context?.previousQueries) {
         for (const [queryKey, data] of context.previousQueries) {

@@ -56,8 +56,11 @@ interface DetailSurfaceProps {
    * 닫기 원 · 바깥 · 끌어내리기로 시트 전체를 닫을 때 물을 값 — 기본은 `dirty`. 끼운 수정 폼은 ← 는 단계 값(`dirty`)만, 닫기는 폼 전체 변경까지 묻는다(N7)
    */
   closeDirty?: boolean;
-  /** 저장 중이라 닫지 못한다 — 닫으면 응답 뒤 콜백(상세 갱신 · 알림)이 사라진다(L1) */
-  closeBlocked?: boolean;
+  /**
+   * 저장 중이다 — 표면(ds busy)이 닫기 · 끌기 · 뒤로 가기를 받지 않고, 한 단계 뒤(← · Esc · 기기 뒤로 · 바닥 [취소])도 가지 않는다.
+   * 닫히거나 단계를 떠나면 실패 Callout 을 그릴 폼이 사라진다(L1 · I-wrap-b2b 1)
+   */
+  busy?: boolean;
   /** 한 단계 뒤(상세로) */
   onStepBack?: () => void;
   footer?: DetailFooter;
@@ -90,7 +93,7 @@ export function DetailSurface({
   subStep = false,
   dirty = false,
   closeDirty,
-  closeBlocked = false,
+  busy = false,
   onStepBack,
   footer,
   footerNode,
@@ -121,6 +124,7 @@ export function DetailSurface({
     dirty,
     leave: () => onStepBack?.(),
     contentRef,
+    busy,
   });
 
   // 기기 뒤로 가기(1280 미만) — 단계에서는 시트가 아니라 이 단계만 닫는다. 물어서 안 닫았으면 칸을 다시 쌓는다
@@ -165,8 +169,9 @@ export function DetailSurface({
           open
           form={subStep}
           dirty={subStep && (closeDirty ?? dirty)}
+          busy={busy}
           onOpenChange={(next) => {
-            if (!next && !closeBlocked) onClose();
+            if (!next) onClose();
           }}
         >
           <DialogContent title={title} {...stepProps}>
@@ -216,8 +221,9 @@ export function DetailSurface({
         open
         form={subStep}
         dirty={subStep && (closeDirty ?? dirty)}
+        busy={busy}
         onOpenChange={(next) => {
-          if (!next && !closeBlocked) onClose();
+          if (!next) onClose();
         }}
       >
         <BottomSheetContent

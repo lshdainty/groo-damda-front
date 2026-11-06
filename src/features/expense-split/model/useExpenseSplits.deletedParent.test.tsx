@@ -74,7 +74,7 @@ const installAdapter = () => {
     calls.push(`${(cfg.method ?? "").toUpperCase()} ${url}`);
     if (url === `/v1/expense/${TX_ID}` && cfg.method === "delete") {
       deleted = true;
-      return ok(cfg, { data: null });
+      return ok(cfg, { success: true, data: null });
     }
     if (url === SPLITS_URL && cfg.method === "get") {
       if (!deleted) return ok(cfg, { data: { splits: [{ rowId: 1 }] } });

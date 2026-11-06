@@ -1,3 +1,5 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
+import { PriceFailBand, PriceStaleCallout } from "./price-fail-band";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EllipsisVertical, Pencil, Plus, Trash2 } from "lucide-react";
@@ -52,6 +54,9 @@ export function WatchGroups({
   onAddGroup,
   onRenameGroup,
   onDeleteGroup,
+  quotesFailed,
+  quotesRetrying,
+  onRetryQuotes,
 }: {
   groups: WatchGroup[];
   loading?: boolean;
@@ -63,6 +68,13 @@ export function WatchGroups({
   onAddGroup: () => void;
   onRenameGroup: (g: WatchGroup) => void;
   onDeleteGroup: (g: WatchGroup) => void;
+  /**
+   * 관심 시세를 못 받았다 — load(보이는 시세가 하나도 없다): 맨 위 Result Section + [다시 시도], 줄은 "—" /
+   * stale(받아 둔 시세가 있다): 맨 위 Callout, 줄은 받아 둔 값(단계 4)
+   */
+  quotesFailed?: "load" | "stale" | null;
+  quotesRetrying?: boolean;
+  onRetryQuotes?: () => void;
 }) {
   const { t } = useTranslation("stocks");
   if (failed)
@@ -97,6 +109,20 @@ export function WatchGroups({
     );
   return (
     <div data-slot="watch-groups">
+      {quotesFailed === "load" && (
+        <PriceFailBand
+          onRetry={onRetryQuotes ?? (() => {})}
+          retrying={quotesRetrying}
+          className="pt-x2"
+        />
+      )}
+      {quotesFailed === "stale" && (
+        <PriceStaleCallout
+          onRetry={onRetryQuotes ?? (() => {})}
+          retrying={quotesRetrying}
+          className="pt-x2"
+        />
+      )}
       {groups.map((g, idx) => (
         <section
           key={g.rowId}
@@ -228,6 +254,7 @@ export function WatchGroupForm({
   // 저장 실패는 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글) — 요청은 silent, 폼은 열린 채 · 쓴 이름 그대로
   const createMut = useCreateWatchGroup({ silent: true });
   const renameMut = useRenameWatchGroup({ silent: true });
+  const sft = useSaveFailureText();
   const busy = createMut.isPending || renameMut.isPending;
   const canSave = name.trim().length > 0 && !busy;
   const saveFailed = createMut.isError || renameMut.isError;
@@ -264,6 +291,7 @@ export function WatchGroupForm({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={busy}
     >
       <ResponsiveDialogContent
         title={group ? t("watch.groupRename") : t("watch.groupAdd")}
@@ -279,7 +307,10 @@ export function WatchGroupForm({
           {saveFailed && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("watch.groupSaveFail")}
+                {sft(
+                  createMut.error ?? renameMut.error,
+                  t("watch.groupSaveFail"),
+                )}
               </Callout>
             </div>
           )}
@@ -331,8 +362,9 @@ export function WatchGroupDeleteConfirm({
       }
       confirmLabel={t("watch.groupDelete")}
       onConfirm={() => deleteMut.mutateAsync(group.rowId)}
-      onError={() =>
+      onError={(error) =>
         confirmFail({
+          error,
           message: t("watch.groupDeleteFail"),
           retry: () => deleteMut.mutateAsync(group.rowId),
         })

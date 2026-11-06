@@ -196,8 +196,10 @@ describe("종목 찾기 입구", () => {
       document.dispatchEvent(
         new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
       );
-      // 초점은 표면이 내려간 다음 틱에 돌아온다(Radix FocusScope 의 setTimeout 0)
-      await new Promise((r) => setTimeout(r, 10));
+      // 초점은 표면이 내려간 다음 틱에 돌아온다(Radix FocusScope 의 setTimeout 0) — 느린 CI 에서도 흔들리지 않게 돌아올 때까지 기다린다
+      for (let i = 0; i < 50 && document.activeElement !== entry; i += 1) {
+        await new Promise((r) => setTimeout(r, 20));
+      }
     });
     expect(document.querySelector("[data-slot=popover-content]")).toBeNull();
     expect(document.activeElement).toBe(entry);

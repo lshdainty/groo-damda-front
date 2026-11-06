@@ -161,7 +161,8 @@ describe("실제 경로(apiClient + 가짜 adapter) — axios 가 합쳐 넘기�
       const response = {
         status,
         statusText: "",
-        data: {},
+        // 서버 껍데기 — 쓰기는 껍데기가 아니면 "확인하지 못함" 으로 바뀐다
+        data: status >= 400 ? {} : { success: true, data: null },
         headers: {},
         config: cfg,
       };

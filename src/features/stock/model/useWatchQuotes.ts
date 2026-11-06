@@ -4,6 +4,7 @@
  * 심볼 목록은 부르는 쪽이 만든다(보이는 그룹의 합 — `visibleSymbols`). 여기서는 나누어 부르고 모은다.
  * 한 사람의 키로 그 사람 것만 부른다 — 공유 캐시 · 묶음 조회를 만들지 않는다.
  */
+import { POLL_META } from "@/shared/api";
 import { useMemo, useState } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { stockKeys } from "@/shared/config";
@@ -50,6 +51,8 @@ export function useTossWatchQuotes(symbols: string[]) {
       refetchOnWindowFocus: false,
       staleTime: 15_000,
       refetchInterval: 10_000,
+      // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+      meta: POLL_META,
     })),
   });
   // 전일 종가는 시장 날짜로 가른다 — 시세 응답의 통화로 시장을 정한다(미국은 뉴욕). 통화를 모르는 심볼(시세 전)은 아직 부르지 않아
@@ -77,6 +80,20 @@ export function useTossWatchQuotes(symbols: string[]) {
   return {
     isLoading: results.some((r) => r.isLoading),
     isError: results.length > 0 && results.every((r) => r.isError),
+    /**
+     * 못 받은 묶음이 있다 — 값 없이 처음 실패한 묶음이 있으면 "load"(그 자리 Result Section), 실패한 묶음이 모두 받아 둔
+     * 값이 있으면 "stale"(Callout — 보이는 값은 마지막으로 받은 시세). 아니면 null(단계 4)
+     */
+    // 값 없이 처음 실패한 묶음이 있으면 그 자리 Result Section(값이 없을 때의 규칙 — 검수 2차 L4)
+    failed: results.some((r) => r.isError && r.data === undefined)
+      ? ("load" as const)
+      : results.some((r) => r.isError)
+        ? ("stale" as const)
+        : null,
+    retrying: results.some((r) => r.isFetching),
+    retry: () => {
+      for (const r of results) if (r.isError) void r.refetch();
+    },
     priceOf: (symbol: string): RowQuote => {
       const price = prices.get(symbol) ?? null;
       return price == null
@@ -115,6 +132,20 @@ export function useNamuWatchQuotes(symbols: string[]) {
   return {
     isLoading: results.some((r) => r.isLoading),
     isError: results.length > 0 && results.every((r) => r.isError),
+    /**
+     * 못 받은 묶음이 있다 — 값 없이 처음 실패한 묶음이 있으면 "load"(그 자리 Result Section), 실패한 묶음이 모두 받아 둔
+     * 값이 있으면 "stale"(Callout — 보이는 값은 마지막으로 받은 시세). 아니면 null(단계 4)
+     */
+    // 값 없이 처음 실패한 묶음이 있으면 그 자리 Result Section(값이 없을 때의 규칙 — 검수 2차 L4)
+    failed: results.some((r) => r.isError && r.data === undefined)
+      ? ("load" as const)
+      : results.some((r) => r.isError)
+        ? ("stale" as const)
+        : null,
+    retrying: results.some((r) => r.isFetching),
+    retry: () => {
+      for (const r of results) if (r.isError) void r.refetch();
+    },
     priceOf: (symbol: string): RowQuote => kept.get(symbol) ?? NONE,
   };
 }

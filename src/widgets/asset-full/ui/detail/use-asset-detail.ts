@@ -5,7 +5,7 @@ import { assetKrw, cashInKrw, type Asset } from "@/entities/asset";
 import { isScheduledTx } from "@/entities/expense";
 import {
   holdingsOf,
-  useInvestValuation,
+  useInvestValuationState,
   useAssetTransfers,
 } from "@/features/asset";
 import { useSearchExpenses } from "@/features/expense";
@@ -28,8 +28,15 @@ import {
  */
 export function useAssetLiveValuation(asset: Asset, isInv: boolean) {
   const investAssets = useMemo(() => (isInv ? [asset] : []), [isInv, asset]);
-  const investValMap = useInvestValuation(investAssets);
-  return isInv ? (investValMap.get(asset.rowId) ?? null) : null;
+  const v = useInvestValuationState(investAssets);
+  return {
+    investVal: isInv ? (v.map.get(asset.rowId) ?? null) : null,
+    // 시세를 못 받았다 — 평가액이 DB 잔액 · 옛 시세로 남는다(단계 4). 금액 카드가 띠 한 줄로 말한다
+    priceFailed: isInv && v.priceFailed,
+    priceFailShows: v.priceFailShows,
+    pricesRetrying: v.pricesRetrying,
+    retryPrices: v.retryPrices,
+  };
 }
 
 /**
@@ -130,7 +137,13 @@ export function useAssetDetailModel(asset: Asset) {
   // 연결계좌형 체크카드 — 결제가 계좌에서 즉시 빠져 잔액이 늘 0 이다. 금액은 "이번 달 사용액", 내역은 당월 전체, 추이는 없다.
   const isCheckLinked =
     asset.assetType === "CHECK_CARD" && asset.paymentAssetRowId != null;
-  const investVal = useAssetLiveValuation(asset, isInv);
+  const {
+    investVal,
+    priceFailed: investPriceFailed,
+    priceFailShows: investPriceFailShows,
+    pricesRetrying,
+    retryPrices,
+  } = useAssetLiveValuation(asset, isInv);
   // 라이브 평가는 '보유분'(원화)만 — 예수금을 더해야 계좌 총액이다. 투자도 예수금이 마이너스일 수 있다(부호를 살린다).
   // 큰 금액은 원화 합계 하나다(I-13 길 A): 서버 balanceInKrw, 라이브가 켜졌으면 round(예수금 × 환율) + 라이브 — 줄 · 묶음 합계와 같은 값.
   // 예수금(investCash)은 자산 통화, investCashKrw 는 그 원화 환산.
@@ -153,6 +166,10 @@ export function useAssetDetailModel(asset: Asset) {
     isCredit,
     isCheckLinked,
     investVal,
+    investPriceFailed,
+    investPriceFailShows,
+    pricesRetrying,
+    retryPrices,
     investCash,
     investCashKrw,
     investHolding,

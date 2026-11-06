@@ -3,6 +3,7 @@ import { List, ListItem } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
+import { PriceStaleCallout } from "./price-fail-band";
 import { BandTitle, PctDelta } from "./phone-parts";
 
 /*
@@ -85,6 +86,9 @@ export function MarketBand({
   loading,
   failed,
   onRetry,
+  priceFailed,
+  priceRetrying,
+  onRetryPrice,
 }: {
   markets: MarketState[];
   /** 장 상태 줄을 기다리는 중(나무 — 대표 종목 시세가 오기 전) — 줄 자리에 값 Skeleton */
@@ -94,11 +98,23 @@ export function MarketBand({
   loading?: boolean;
   failed?: boolean;
   onRetry?: () => void;
+  /** 받아 둔 지수 · 시세가 있는 채 다시 받기(폴링)가 실패했다 — 값은 두고 제목 아래 띠 한 줄(단계 4) */
+  priceFailed?: boolean;
+  /** 다시 받는 중 — Callout 다시 누름을 무시한다 */
+  priceRetrying?: boolean;
+  onRetryPrice?: () => void;
 }) {
   const { t } = useTranslation("stocks");
   return (
     <section aria-labelledby="stocks-market-title" data-section="market">
       <BandTitle id="stocks-market-title">{t("market.title")}</BandTitle>
+      {!failed && priceFailed && (
+        <PriceStaleCallout
+          onRetry={onRetryPrice ?? onRetry ?? (() => {})}
+          retrying={priceRetrying}
+          className="pb-x2"
+        />
+      )}
       {failed ? (
         <div className="pb-x6 pt-x3">
           <BandFailure

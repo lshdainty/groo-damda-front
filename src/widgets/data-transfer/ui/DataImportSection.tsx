@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
+import { isWriteUnconfirmed } from "@/shared/api";
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { FileSpreadsheet } from "lucide-react";
 import { AttachmentInput } from "@/shared/ds/attachment-input";
 import type {
@@ -148,7 +150,9 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
   const [file, setFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   // 가져오기 실행이 실패했다 — 매핑 단계 맨 위 안내, 값은 그대로 두고 다시 누르면 된다
-  const [runFailed, setRunFailed] = useState(false);
+  // 실행 실패 글 — 응답을 못 받았으면 실패가 아니라 "저장됐는지 확인하지 못했어요."(만들어졌을 수 있다, 검수 3차 M2)
+  const [runFailed, setRunFailed] = useState<string | null>(null);
+  const sft = useSaveFailureText();
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ImportAnalyzeResult | null>(null);
   const [mapping, setMapping] = useState<ImportMapping>({});
@@ -203,8 +207,19 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
 
   const runImport = async () => {
     if (!file || !canExecute) return;
-    setRunFailed(false);
+    setRunFailed(null);
     setExecuting(true);
+    // 가져오기 한 번이 거래를 수백 건 만든다 — 캐시를 비우지 않으면 가계부·통계·예산
+    // (expenses) · 자산 잔액과 추이(assets) · 카드 실적(cards) · 홈 요약(dashboard)이
+    // 전부 옛 값으로 남아 사용자가 손으로 새로고침해야 했다(QA #144).
+    // 어느 화면이 열려 있을지 모르므로 루트 키로 통째로 무효화한다 — 지금 보고 있는
+    // 화면만 다시 받고 나머지는 다음에 열릴 때 받는다. 응답을 못 받았을 때도 같은 범위를 다시 받는다
+    const refresh = () => {
+      queryClient.invalidateQueries({ queryKey: expenseKeys.all });
+      queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      queryClient.invalidateQueries({ queryKey: cardKeys.all });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+    };
     try {
       const res = await executeImport(file, {
         source,
@@ -212,19 +227,12 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
         dupSkip,
         autoCat,
       });
-      // 가져오기 한 번이 거래를 수백 건 만든다 — 캐시를 비우지 않으면 가계부·통계·예산
-      // (expenses) · 자산 잔액과 추이(assets) · 카드 실적(cards) · 홈 요약(dashboard)이
-      // 전부 옛 값으로 남아 사용자가 손으로 새로고침해야 했다(QA #144).
-      // 어느 화면이 열려 있을지 모르므로 루트 키로 통째로 무효화한다 — 지금 보고 있는
-      // 화면만 다시 받고 나머지는 다음에 열릴 때 받는다.
-      queryClient.invalidateQueries({ queryKey: expenseKeys.all });
-      queryClient.invalidateQueries({ queryKey: assetKeys.all });
-      queryClient.invalidateQueries({ queryKey: cardKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      refresh();
       setResult(res);
       setStep("done");
-    } catch {
-      setRunFailed(true);
+    } catch (error) {
+      if (isWriteUnconfirmed(error)) refresh();
+      setRunFailed(sft(error, t("import.runFailed")));
     } finally {
       setExecuting(false);
     }
@@ -387,7 +395,7 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
         <>
           {runFailed && (
             <Callout tone="critical" role="alert">
-              {t("import.runFailed")}
+              {runFailed}
             </Callout>
           )}
           {/* 실행하면 반드시 실패할 행을 미리 알린다 — 넣고 나서 실패 숫자만 보면 원인을 알 수 없다. */}

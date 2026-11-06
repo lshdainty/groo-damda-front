@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useScrollToError } from "@/shared/hooks/useScrollToError";
@@ -29,6 +30,7 @@ export function CalendarNameDialog({
   const { t } = useTranslation("calendar");
   const { t: tc } = useTranslation("common");
   const updateMut = useUpdateUserCalendar({ silent: true });
+  const sft = useSaveFailureText();
   const [name, setName] = useState(calendar.calendarName);
   const [showError, setShowError] = useState(false);
   const [saveError, setSaveError] = useState(false);
@@ -76,6 +78,7 @@ export function CalendarNameDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={updateMut.isPending}
     >
       <ResponsiveDialogContent
         title={t("shareSection.renameTitle")}
@@ -90,7 +93,7 @@ export function CalendarNameDialog({
           {saveError && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("shareSection.saveFailed")}
+                {sft(updateMut.error, t("shareSection.saveFailed"))}
               </Callout>
             </div>
           )}

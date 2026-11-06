@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Info, Pencil, Plus, Tag, Tags, Trash2 } from "lucide-react";
@@ -21,6 +22,7 @@ import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
+import { useUnconfirmedSnack } from "@/shared/lib/confirm-fail";
 import { SwipeActions } from "@/shared/ds/swipe-actions";
 import {
   CHART_PAIRS,
@@ -92,11 +94,14 @@ export function TagSettings<T extends TagLike>({
   const { t } = useTranslation(ns);
   const { t: tc } = useTranslation("common");
   const snackbar = useSnackbar();
+  const unconfirmedSnack = useUnconfirmedSnack();
   const [editing, setEditing] = useState<T | { kind: "new" } | null>(null);
   const [askDelete, setAskDelete] = useState<T | null>(null);
   const [running, setRunning] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  // 저장 실패의 오류 — 결과를 확인하지 못한 쓰기면 폼 글이 "저장됐는지 확인하지 못했어요" 로 바뀐다
+  const [saveErrorDetail, setSaveErrorDetail] = useState<unknown>(null);
   const [saveErrorSeq, setSaveErrorSeq] = useState(0);
 
   const openEditor = (target: T | { kind: "new" }) => {
@@ -111,8 +116,9 @@ export function TagSettings<T extends TagLike>({
       if (editing && "rowId" in editing) await update(editing.rowId, values);
       else await create(values);
       setEditing(null);
-    } catch {
+    } catch (e) {
       setSaveError(true);
+      setSaveErrorDetail(e);
       setSaveErrorSeq((n) => n + 1);
     } finally {
       setSaving(false);
@@ -123,7 +129,8 @@ export function TagSettings<T extends TagLike>({
   const doDelete = async (tag: T) => {
     try {
       await remove(tag.rowId);
-    } catch {
+    } catch (error) {
+      if (unconfirmedSnack(error, "delete")) return;
       snackbar.show({
         message: t("tags.deleteFailed"),
         tone: "critical",
@@ -275,6 +282,7 @@ export function TagSettings<T extends TagLike>({
           tag={"rowId" in editing ? editing : null}
           existing={tags}
           saveError={saveError}
+          saveErrorDetail={saveErrorDetail}
           saveErrorSeq={saveErrorSeq}
           submitting={saving}
           onClose={() => setEditing(null)}
@@ -321,6 +329,7 @@ export function TagEditDialog<T extends TagLike>({
   tag,
   existing,
   saveError,
+  saveErrorDetail,
   saveErrorSeq,
   submitting,
   onClose,
@@ -331,6 +340,7 @@ export function TagEditDialog<T extends TagLike>({
   tag: T | null;
   existing: readonly T[];
   saveError: boolean;
+  saveErrorDetail?: unknown;
   /** 저장이 실패할 때마다 늘어난다 — 실패 Callout 을 화면에 들이는 신호 */
   saveErrorSeq: number;
   submitting?: boolean;
@@ -342,6 +352,7 @@ export function TagEditDialog<T extends TagLike>({
   const { t: tc } = useTranslation("common");
   const isNew = !tag;
   const errorRef = useScrollToError<HTMLDivElement>(saveError, saveErrorSeq);
+  const sft = useSaveFailureText();
   const [initial] = useState(() => ({
     name: tag?.tagName ?? "",
     // 새 태그는 안 쓴 첫 색 — 늘 빨강으로 시작하지 않는다. 고치는 태그는 저장된 색 그대로(팔레트 밖이어도 바꾸지 않는다)
@@ -390,6 +401,7 @@ export function TagEditDialog<T extends TagLike>({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={submitting}
     >
       <ResponsiveDialogContent
         title={isNew ? t("tags.new") : t("tags.editTitle")}
@@ -400,7 +412,7 @@ export function TagEditDialog<T extends TagLike>({
             {saveError && (
               <div ref={errorRef}>
                 <Callout tone="critical" role="alert">
-                  {t("tags.saveFailed")}
+                  {sft(saveErrorDetail, t("tags.saveFailed"))}
                 </Callout>
               </div>
             )}

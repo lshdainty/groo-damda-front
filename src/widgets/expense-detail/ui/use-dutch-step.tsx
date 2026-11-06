@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { refetchMissingRefs } from "@/shared/api";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronRight, StickyNote } from "lucide-react";
@@ -103,6 +104,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
   const expenseDay =
     (expense.expenseDate ?? "").slice(0, 10) || todayLocalKey();
   const createMut = useCreateDutchPay({ silent: true });
+  const sft = useSaveFailureText();
   const categoriesQ = useExpenseCategories({ silent: true });
   const userQ = useCurrentUser();
 
@@ -314,7 +316,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
           <div className="px-global-gutter pb-x3 pt-x1">
             <Callout tone="critical" role="alert">
               {saveFailed
-                ? t("fromTx.saveFailed")
+                ? sft(createMut.error, t("fromTx.saveFailed"))
                 : tc("query.referenceSaveFailed")}
             </Callout>
           </div>

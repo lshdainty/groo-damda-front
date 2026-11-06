@@ -524,10 +524,12 @@ export function CategoryManager({
                       setConfirmDelete(null);
                       focusRow(next);
                     },
-                    () => {
+                    (error: unknown) => {
                       // 확인창을 닫고 critical 스낵바 + [다시 시도](묻지 않고 같은 삭제)
                       setConfirmDelete(null);
                       confirmFail({
+                        error,
+                        unconfirmedKind: "delete",
                         message: t("deleteFailed"),
                         retry: remove,
                         onRetried: () => focusRow(next),

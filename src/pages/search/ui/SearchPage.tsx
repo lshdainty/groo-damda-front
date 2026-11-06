@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Receipt, Search } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
@@ -82,7 +83,7 @@ export function SearchPage() {
           title={t("searchEmptyHint")}
         />
       );
-    if (query.isError)
+    if (loadFailed(query))
       return <ResultSection kind="failure" title={t("searchFailed")} />;
     if (query.isLoading || query.isFetching)
       return (

@@ -124,6 +124,7 @@ describe("고쳐 쓰기", () => {
     // 404 는 전역 토스트 없이 넘긴다 — 재시도의 404 는 교체가 앞서 끝났다는 뜻이다(QA 26 5).
     expect(post).toHaveBeenCalledWith("/v1/expense/77/replace", body, {
       silentStatuses: [404],
+      silent: undefined,
     });
     expect(put).not.toHaveBeenCalled();
   });

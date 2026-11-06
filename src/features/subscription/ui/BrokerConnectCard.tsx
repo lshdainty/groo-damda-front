@@ -6,6 +6,7 @@ import { Button } from "@/shared/ui/button";
 import { Callout } from "@/shared/ds/callout";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
+import { isWriteUnconfirmed } from "@/shared/api";
 import { Card } from "@/shared/ui/card";
 import { SecretField } from "@/features/subscription/ui/SecretField";
 import { toLocalDateKey } from "@/shared/lib/date";
@@ -34,6 +35,7 @@ export function BrokerConnectCard({
   showPrimaryAction: boolean;
 }) {
   const { t } = useTranslation("subscription");
+  const { t: tc } = useTranslation("common");
   const register = useRegisterBrokerCredential();
   const disconnect = useDisconnectBrokerCredential();
   const setPrimary = useSetPrimaryBroker();
@@ -52,8 +54,11 @@ export function BrokerConnectCard({
   // 자격증명 문제(4xx)와 서버 문제를 글로 나눈다
   const status = (register.error as { response?: { status?: number } } | null)
     ?.response?.status;
-  const connectFailedText =
-    status != null && status >= 400 && status < 500
+  // 응답을 못 받았으면 실패가 아니다 — 연결됐을 수 있다. 연결 상태는 저절로 다시 받는다(useRegisterBrokerCredential 성공 처리기,
+  // 전역 MutationCache) · "연결됐는지 확인하지 못했어요."(판단 ⑤)
+  const connectFailedText = isWriteUnconfirmed(register.error)
+    ? tc("query.unconfirmedConnect")
+    : status != null && status >= 400 && status < 500
       ? t("broker.toastInvalid")
       : t("broker.connectFailed");
 
@@ -87,8 +92,9 @@ export function BrokerConnectCard({
         message: t("broker.toastDisconnected", { broker: displayName }),
         tone: "neutral",
       });
-    run().then(done, () =>
+    run().then(done, (error: unknown) =>
       confirmFail({
+        error,
         message: t("broker.toastDisconnectFailed"),
         retry: run,
         onRetried: done,
@@ -103,8 +109,9 @@ export function BrokerConnectCard({
         message: t("broker.toastPrimaryChanged", { broker: displayName }),
         tone: "neutral",
       });
-    run().then(done, () =>
+    run().then(done, (error: unknown) =>
       confirmFail({
+        error,
         message: t("broker.toastPrimaryFailed"),
         retry: run,
         onRetried: done,

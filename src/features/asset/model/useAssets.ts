@@ -126,6 +126,7 @@ export const useCardBilling = (id: number, opts?: { silent?: boolean }) => {
 
 export const usePayCard = () => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger");
 
   return useMutation({
     mutationFn: ({
@@ -138,7 +139,7 @@ export const usePayCard = () => {
       /** 결제할 회차의 결제일 — 다음 회차를 미리 낼 때 넘긴다. 없으면 다가오는 회차. */
       paymentDate?: string;
     }) => assetApi.payCard(id, amount, paymentDate),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    onSuccess: refresh,
   });
 };
 
@@ -187,23 +188,25 @@ export const useAssetTransfers = (
 
 export const useCreateTransfer = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger");
 
   return useMutation({
     mutationFn: (data: AssetTransferFormValues) =>
       assetApi.createTransfer(data, opts),
     // 이자가 있는 이체는 지출 거래를 하나 만든다.
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    onSuccess: refresh,
   });
 };
 
 /** 이체 수정 — 서버가 이자 지출·잔액 이력을 다시 만든다. */
 export const useUpdateTransfer = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger", { wait: true });
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: AssetTransferFormValues }) =>
       assetApi.updateTransfer(id, data, opts),
-    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
+    onSuccess: refresh,
   });
 };
 

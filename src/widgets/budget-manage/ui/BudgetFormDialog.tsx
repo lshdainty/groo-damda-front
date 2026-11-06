@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -96,6 +97,7 @@ export function BudgetFormDialog({
 
   // 본문은 스크롤되고 [저장] 은 바닥이라 내린 채 실패하면 맨 위 Callout 이 흐림 밑에 가린다 — 실패하면 올려 보인다
   const errorRef = useScrollToError<HTMLDivElement>(!!saveFailed, saveError);
+  const sft = useSaveFailureText();
   const amountRef = useRef<HTMLInputElement>(null);
   const catRef = useRef<HTMLButtonElement>(null);
 
@@ -152,6 +154,7 @@ export function BudgetFormDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={submitting}
     >
       <ResponsiveDialogContent
         title={title}
@@ -168,7 +171,7 @@ export function BudgetFormDialog({
           {saveFailed && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("edit.saveFailed")}
+                {sft(saveError, t("edit.saveFailed"))}
               </Callout>
             </div>
           )}

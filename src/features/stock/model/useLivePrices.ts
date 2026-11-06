@@ -9,7 +9,7 @@
  *
  * 그래서 **통화별 환율**과 **전일 종가 조달**을 여기 한 곳에 둔다.
  */
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueries } from "@tanstack/react-query";
 import {
   securitiesExchangeRateQuery,
@@ -33,6 +33,20 @@ export interface LivePrices {
   prevUnitKrw: (symbol: string) => number | null;
   /** 견적의 거래 통화. 화면이 통화 기호를 붙일 때 쓴다. */
   currencyOf: (symbol: string) => string | undefined;
+  /**
+   * 시세 · 환율을 못 받았다(처음 · 받아 둔 값이 있어도) — 평가가 DB 잔액으로 조용히 바뀌거나 옛 시세로 남는다.
+   * 화면이 그 카드에 "시세를 불러오지 못했어요" 띠를 둔다(단계 4)
+   */
+  failed: boolean;
+  /**
+   * 실패했을 때 보이는 값 — 시세 · 환율 중 값이 하나도 없는 것이 있으면 lastBalance(그 자산은 DB 잔액으로 대체 —
+   * 보유 줄은 "—"), 모두 받아 둔 값이 있으면 lastPrice(옛 시세). 실패가 아니면 null
+   */
+  failedShows: "lastPrice" | "lastBalance" | null;
+  /** 다시 받는 중 — 다시 시도의 진행 원 · 다시 누름 무시 */
+  retrying: boolean;
+  /** 못 받은 시세 · 환율만 다시 받는다 */
+  retry: () => void;
 }
 
 /** 원화가 아닌 통화만 환율이 필요하다. */
@@ -95,6 +109,25 @@ export function useLivePrices(symbols: string[], enabled: boolean): LivePrices {
     marketTzOfCurrency(currencyBySymbol.get(s)),
   );
 
+  const failed =
+    active && (pricesQ.isError || rateQueries.some((r) => r.isError));
+  const failedShows = !failed
+    ? null
+    : pricesQ.data === undefined ||
+        rateQueries.some((r) => r.isError && r.data === undefined)
+      ? ("lastBalance" as const)
+      : ("lastPrice" as const);
+  const retrying = pricesQ.isFetching || rateQueries.some((r) => r.isFetching);
+  // 다시 받기는 부르는 순간의 질의를 본다 — 함수 자체는 늘 같아 아래 묶음이 렌더마다 새로 만들어지지 않는다
+  const retryRef = useRef(() => {});
+  useEffect(() => {
+    retryRef.current = () => {
+      if (pricesQ.isError) void pricesQ.refetch();
+      for (const r of rateQueries) if (r.isError) void r.refetch();
+    };
+  });
+  const [retryFailed] = useState(() => () => retryRef.current());
+
   return useMemo(() => {
     const bySymbol = new Map(
       (quotes ?? [])
@@ -123,6 +156,18 @@ export function useLivePrices(symbols: string[], enabled: boolean): LivePrices {
         return q ? { price: q.price, currency: q.currency } : undefined;
       },
       currencyOf: (symbol) => bySymbol.get(symbol)?.currency,
+      failed,
+      failedShows,
+      retrying,
+      retry: retryFailed,
     };
-  }, [quotes, rateByCurrency, candlePrevCloses]);
+  }, [
+    quotes,
+    rateByCurrency,
+    candlePrevCloses,
+    failed,
+    failedShows,
+    retrying,
+    retryFailed,
+  ]);
 }

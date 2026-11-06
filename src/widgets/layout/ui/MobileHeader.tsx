@@ -1,4 +1,5 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useGuardedNavigate } from "../lib/use-guarded-navigate";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Bell, Search } from "lucide-react";
 import {
@@ -57,7 +58,7 @@ function SearchHeader() {
 function RootHeader() {
   const { t } = useTranslation("layout");
   const { pathname } = useLocation();
-  const navigate = useNavigate();
+  const navigate = useGuardedNavigate();
   const { data: unreadCount = 0 } = useUnreadCount({ reference: true });
   const actions = rootActionsFor(pathname);
   const hasUnread = unreadCount > 0;

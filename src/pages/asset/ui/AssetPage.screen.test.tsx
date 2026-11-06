@@ -49,6 +49,9 @@ const q = (data: unknown, extra: object = {}) => ({
 });
 const state = {
   invest: new Map() as Map<number, unknown>,
+  priceFailed: false as boolean,
+  /** 연동 보유가 있는 자산 — holdingsOf 가 연동 줄 하나를 돌려준다 */
+  linked: new Set<number>(),
   assets: q(undefined) as ReturnType<typeof q>,
   summary: q(undefined) as ReturnType<typeof q>,
   trend: q(undefined) as ReturnType<typeof q>,
@@ -60,7 +63,15 @@ vi.mock("@/features/asset", () => ({
   useAssetSummary: () => state.summary,
   useNetWorthTrend: () => state.trend,
   useInvestValuation: () => state.invest,
-  holdingsOf: () => [],
+  useInvestValuationState: () => ({
+    map: state.invest,
+    priceFailed: state.priceFailed ?? false,
+    priceFailShows: state.priceFailed ? "lastBalance" : null,
+    pricesRetrying: false,
+    retryPrices: () => {},
+  }),
+  holdingsOf: (a: { rowId: number }) =>
+    state.linked.has(a.rowId) ? [{ linked: true, tossSymbol: "005930" }] : [],
 }));
 vi.mock("@/features/recurring-transaction", () => ({
   useRecurringTransactions: () => state.recurring,
@@ -334,6 +345,47 @@ describe("저축 목표(60)", () => {
 });
 
 describe("카드마다 따로 불러오고 실패한다(62)", () => {
+  it("연동 투자 자산의 시세를 못 받으면 그 자산이 든 카드에만 Callout '시세를 불러오지 못했어요 · 보이는 값은 시세가 아닌 마지막 잔액' — 금액은 그대로(단계 4)", () => {
+    state.linked = new Set([2]);
+    state.priceFailed = true;
+    render();
+    const bands = [
+      ...document.querySelectorAll("[data-slot=price-stale-callout]"),
+    ];
+    expect(bands).toHaveLength(1);
+    expect(bands[0]!.textContent).toContain("detail.priceFail");
+    expect(bands[0]!.textContent).toContain("detail.priceStaleBalance");
+    // 보이는 내용이 있으면 실패 Result Section 을 쓰지 않는다(result-section.md:53)
+    expect(document.querySelector("[data-slot=price-fail-band]")).toBeNull();
+    expect(text()).toContain("증권");
+    state.priceFailed = false;
+    state.linked = new Set();
+  });
+
+  it("시세 실패여도 연동 자산이 없으면 띠를 두지 않는다", () => {
+    state.priceFailed = true;
+    render();
+    expect(
+      document.querySelector("[data-slot=price-stale-callout]"),
+    ).toBeNull();
+    state.priceFailed = false;
+  });
+
+  it("받아 둔 값이 있는 채 다시 받다 실패하면(추이 · 다가오는 지출 · 목표 · 자산 · 요약) 내용을 그대로 둔다 — 실패 자리로 바꾸지 않는다", () => {
+    for (const k of [
+      "trend",
+      "recurring",
+      "goals",
+      "assets",
+      "summary",
+    ] as const)
+      state[k] = { ...state[k], isError: true };
+    render();
+    expect(text()).not.toContain("loadFailed.");
+    expect(text()).toContain("주거래");
+    expect(text()).toContain("목표 1");
+  });
+
   it("추이가 실패하면 그 자리만 실패 + 다시 시도, 나머지는 그대로다", () => {
     state.trend = q(undefined, { isError: true });
     render();

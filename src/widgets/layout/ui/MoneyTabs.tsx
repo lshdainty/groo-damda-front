@@ -1,4 +1,5 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useGuardedNavigate } from "../lib/use-guarded-navigate";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ds/tabs";
 import { MONEY_TABS, isMoneyPath } from "../model/shell";
@@ -11,7 +12,7 @@ import { MONEY_TABS, isMoneyPath } from "../model/shell";
 export function MoneyTabs() {
   const { t } = useTranslation("layout");
   const { pathname } = useLocation();
-  const navigate = useNavigate();
+  const navigate = useGuardedNavigate();
   if (!isMoneyPath(pathname)) return null;
   const current = MONEY_TABS.find(
     (m) => pathname === m.path || pathname.startsWith(`${m.path}/`),

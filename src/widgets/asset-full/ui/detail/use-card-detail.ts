@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { parseAmount } from "@/shared/lib/groo/amount";
+import { isWriteUnconfirmed } from "@/shared/api";
 import type { Asset, InstallmentDue } from "@/entities/asset";
 import type { Expense } from "@/entities/expense";
 import {
@@ -318,6 +319,8 @@ export function useCardDetail(asset: Asset) {
     billing,
     isLoading,
     isError: billingQ.isError && !billing,
+    // 결제 응답을 못 읽었다(PARSE) — 결제됐을 수 있다. "결제됐는지 확인하지 못했어요" 로 말하고 청구는 훅이 다시 받는다
+    payUnconfirmed: isWriteUnconfirmed(payCard.error),
     refetch: () => void billingQ.refetch(),
     payCard,
     confirmPay,

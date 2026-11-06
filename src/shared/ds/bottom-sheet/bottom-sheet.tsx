@@ -5,12 +5,14 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { ArrowLeft, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
+import { useBeforeUnloadWhile } from "@/shared/lib/before-unload";
 import { useLeaveConfirm } from "@/shared/ds/alert-dialog";
 import {
   focusOpener,
   mergeRefs,
   useBackClose,
   useOpenState,
+  useRefocusAfterBusy,
   useWideSurface,
   withButtonSize,
   type OpenChange,
@@ -62,6 +64,8 @@ import { useDsText } from "@/shared/ds/i18n";
  *   - 끌기는 vaul 의 기준 그대로다 — 놓을 때 0.4px/ms 보다 빠르거나 높이의 25% 이상 내려왔으면 닫고 아니면 200ms exit 로 제자리.
  *     열린 뒤 0.5초는 끌리지 않고, 본문이 스크롤돼 있으면(맨 위가 아니면) 끌지 않고 스크롤한다.
  *   - dirty 면 어느 길이든 닫기 전에 "작성한 내용이 사라져요" 를 묻는다 — [계속 작성] 이면 그대로(끌던 시트는 제자리로).
+ *   - busy(저장 중)면 어느 길도 받지 않는다 — 묻지도 않는다(뒤로 가기는 칸을 다시 쌓고, 끌던 시트는 제자리로). 머리 ← 도,
+ *     본문 입력도 받지 않는다(inert). 닫기 X 는 흐리게 하지 않고 모양 그대로다 — 저장 단추의 로딩이 "기다려라" 를 말한다.
  *
  * 열면 초점은 시트(컨테이너)로 가고 열린 동안 시트 안을 돈다. 닫으면 연 자리(트리거, 없으면 열 때 초점이 있던 곳)로 돌아간다.
  * 뒤 화면은 보조 기술에서 숨기고 스크롤을 잠근다(Radix Dialog). role="dialog" + aria-modal, 제목 aria-labelledby · 설명 aria-describedby.
@@ -105,6 +109,8 @@ function useSheetRefs(name: string) {
 
 type SheetContextValue = {
   form: boolean;
+  /** 저장 중 — 닫기 · 머리 뒤로를 받지 않고 본문은 입력을 받지 않는다(inert) */
+  busy: boolean;
   /** 닫기를 청한다 — 바로 닫았으면 true, 바뀐 값이 있어 물었으면 false */
   requestClose: () => boolean;
   /** 시트 · 딤 요소를 받아 둔다 — 초점을 옮기고 끌던 자리를 지울 때 쓴다 */
@@ -134,6 +140,11 @@ export interface BottomSheetProps {
   form?: boolean;
   /** 바뀐 값이 있다 — 닫기 전에 "작성한 내용이 사라져요" 를 묻는다 */
   dirty?: boolean;
+  /**
+   * 저장하는 중이다(저장 단추가 로딩) — 닫기 X · Esc · 바깥 · 뒤로 가기 · 끌기 · 머리 ← 를 받지 않고 본문은 입력을 받지 않는다
+   * (state loading). 닫기 X 는 흐리게 하지 않고 모양 그대로 둔다. 뒤로 가기는 칸을 다시 쌓아 다음 뒤로 가기도 이 시트로 온다
+   */
+  busy?: boolean;
   /** 스냅 높이(vaul — 화면 높이 비율 0 ~ 1 또는 "300px", 낮은 것부터) — 주면 손잡이를 단다. form 이면 쓰지 않는다 */
   snapPoints?: SnapPoint[];
   /** 지금 스냅 높이 — 주면 제어한다(기본은 가장 낮은 높이에서 연다) */
@@ -152,6 +163,7 @@ function BottomSheet({
   onOpenChange,
   form = false,
   dirty = false,
+  busy = false,
   snapPoints,
   activeSnapPoint,
   onActiveSnapPointChange,
@@ -174,8 +186,12 @@ function BottomSheet({
     contentRef,
     container,
     modal,
+    busy,
     leave: () => setOpen(false),
   });
+  useRefocusAfterBusy(busy, contentRef);
+  // 열린 폼이 바뀐 값을 가졌거나 저장 중이면 새로 고침 · 탭 닫기에 브라우저 기본 확인창(판단 (3))
+  useBeforeUnloadWhile(open && (dirty || busy));
   // 뒤로 가기(1280 미만) — 바뀐 값이 있어 물었으면 칸을 다시 쌓는다
   useBackClose(open && narrow && modal, (keep) => {
     if (!leave.request()) keep();
@@ -205,6 +221,7 @@ function BottomSheet({
 
   const value: SheetContextValue = {
     form,
+    busy,
     requestClose: leave.request,
     setContent: (node) => {
       contentRef.current = node;
@@ -371,6 +388,7 @@ const BottomSheetSurface = React.forwardRef<
         <SheetContentPrimitive
           ref={mergeRefs(ref, own, setContent)}
           data-slot="bottom-sheet-content"
+          aria-busy={ctx.busy || undefined}
           aria-modal="true"
           className={cn(
             SHEET_CONTENT,
@@ -471,7 +489,10 @@ const BottomSheetContent = React.forwardRef<
             aria-label={dsT("topNavigation.back")}
             data-slot="bottom-sheet-back"
             className={SHEET_BACK}
-            onClick={onBack}
+            // 저장 중에는 한 단계 뒤로도 가지 않는다 — 실패 Callout 을 그릴 폼이 사라진다
+            onClick={() => {
+              if (!ctx.busy) onBack();
+            }}
           >
             <ArrowLeft aria-hidden strokeWidth={2} />
           </button>
@@ -532,10 +553,13 @@ export interface BottomSheetBodyProps extends React.HTMLAttributes<HTMLDivElemen
 const BottomSheetBody = React.forwardRef<HTMLDivElement, BottomSheetBodyProps>(
   ({ scrollFog = false, className, ...props }, ref) => {
     const own = React.useRef<HTMLDivElement>(null);
+    const busy = React.useContext(SheetContext)?.busy ?? false;
     useScrollFog(own, scrollFog ? "overlayBody" : null);
     return (
       <div
         ref={mergeRefs(ref, own)}
+        // 저장 중 — 본문은 입력을 받지 않는다(모양은 그대로)
+        inert={busy || undefined}
         data-slot="bottom-sheet-body"
         data-scroll-fog={scrollFog ? "overlayBody" : undefined}
         className={cn(

@@ -46,7 +46,7 @@ import {
   dateKeyIn,
   marketTzOfCurrency,
 } from "@/features/stock/lib/prev-close";
-import { isHardError } from "@/features/stock/lib/query-state";
+import { isHardError, isStaleError } from "@/features/stock/lib/query-state";
 import { useDayKey } from "@/features/stock/model/useDayKey";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { Card } from "@/shared/ds/card";
@@ -388,6 +388,14 @@ function TossBody({ symbol, desk }: { symbol: string; desk: boolean }) {
             : todayRows
         }
         loading={todayLoading}
+        stale={
+          !todayFailed && isStaleError(todayQ)
+            ? {
+                onRetry: () => void todayQ.refetch(),
+                retrying: todayQ.isFetching,
+              }
+            : undefined
+        }
         failed={
           todayFailed
             ? {
@@ -425,7 +433,10 @@ function TossBody({ symbol, desk }: { symbol: string; desk: boolean }) {
           ? t("detail.priceUnavailable")
           : undefined
       }
+      // 처음 실패는 그 자리 Result Section, 받아 둔 값이 있는 채 다시 받기 실패는 값을 두고 Callout(단계 4)
       failed={isHardError(pricesQ)}
+      stale={isStaleError(pricesQ)}
+      retrying={pricesQ.isFetching}
       onRetry={() => void pricesQ.refetch()}
       loading={pricesQ.isLoading}
       warnings={(warningsQ.data ?? []).map((w) =>
@@ -442,7 +453,22 @@ function TossBody({ symbol, desk }: { symbol: string; desk: boolean }) {
     />
   );
   const holdBand = holding && (
-    <KvBand id="stock-holding" title={t("holding.title")} rows={holdRows} />
+    <KvBand
+      id="stock-holding"
+      title={t("holding.title")}
+      rows={holdRows}
+      stale={
+        isStaleError(accountsQ) || isStaleError(holdingsQ)
+          ? {
+              onRetry: () => {
+                void accountsQ.refetch();
+                void holdingsQ.refetch();
+              },
+              retrying: accountsQ.isFetching || holdingsQ.isFetching,
+            }
+          : undefined
+      }
+    />
   );
   const quotesBand = (
     <QuotesBand
@@ -782,7 +808,10 @@ function NamuBody({ symbol, desk }: { symbol: string; desk: boolean }) {
           : undefined
       }
       loading={quoteQ.isPending}
+      // 처음 실패는 그 자리 Result Section, 받아 둔 값이 있는 채 다시 받기 실패는 값을 두고 Callout(단계 4)
       failed={quoteFailed}
+      stale={isStaleError(quoteQ)}
+      retrying={quoteQ.isFetching}
       onRetry={() => void quoteQ.refetch()}
       warnings={(q?.warnings ?? []).map((w) =>
         t(`warning.${w.warningType}`, { defaultValue: w.warningType }),
@@ -797,8 +826,26 @@ function NamuBody({ symbol, desk }: { symbol: string; desk: boolean }) {
       chartHeight={desk ? 200 : 168}
     />
   );
+  // 나무 보유 — 한 통화만 못 받았거나 받아 둔 값이 있는 채 실패했다(이 종목이 빠졌을 수도 있다) — 띠 한 줄(단계 4)
+  const namuHoldStale =
+    !(isHardError(krwQ) && isHardError(usdQ)) && (krwQ.isError || usdQ.isError);
   const holdBand = holding && (
-    <KvBand id="stock-holding" title={t("holding.title")} rows={holdRows} />
+    <KvBand
+      id="stock-holding"
+      title={t("holding.title")}
+      rows={holdRows}
+      stale={
+        namuHoldStale
+          ? {
+              onRetry: () => {
+                if (krwQ.isError) void krwQ.refetch();
+                if (usdQ.isError) void usdQ.refetch();
+              },
+              retrying: krwQ.isFetching || usdQ.isFetching,
+            }
+          : undefined
+      }
+    />
   );
   const todayBand =
     !quoteFailed && (quoteQ.isPending || todayRows.length > 0) ? (
@@ -815,6 +862,14 @@ function NamuBody({ symbol, desk }: { symbol: string; desk: boolean }) {
             : todayRows
         }
         loading={quoteQ.isPending}
+        stale={
+          isStaleError(quoteQ)
+            ? {
+                onRetry: () => void quoteQ.refetch(),
+                retrying: quoteQ.isFetching,
+              }
+            : undefined
+        }
       />
     ) : null;
   const quotesBand = quoteFailed ? null : (

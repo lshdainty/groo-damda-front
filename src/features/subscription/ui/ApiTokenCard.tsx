@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Copy, KeyRound } from "lucide-react";
@@ -100,8 +101,9 @@ export function ApiTokenCard() {
       // 방금 만든 토큰을 곧바로 폐기했으면 원문을 계속 보여 줄 이유가 없다 — 이미 죽은 값이다.
       if (issued?.rowId === token.rowId) setIssued(null);
     };
-    run().then(done, () =>
+    run().then(done, (error: unknown) =>
       confirmFail({
+        error,
         message: t("apiToken.revokeFailed"),
         retry: run,
         onRetried: done,
@@ -188,7 +190,7 @@ export function ApiTokenCard() {
           <Skeleton style={{ height: 60, borderRadius: "var(--radius-md)" }} />
         )}
 
-        {isError && (
+        {loadFailed({ isError, data: tokens }) && (
           <div style={{ fontSize: 13, color: "var(--fg-secondary)" }}>
             {t("apiToken.loadFailed")}
           </div>

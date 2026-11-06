@@ -1,6 +1,7 @@
 /**
  * 증권사 무관 시세 훅. 자산 화면이 쓴다 — 증권사를 몰라도 된다.
  */
+import { POLL_META } from "@/shared/api";
 import { useQuery } from "@tanstack/react-query";
 import { securitiesApi } from "../api/securitiesApi";
 
@@ -30,6 +31,8 @@ export const useSecuritiesPrices = (
     enabled: symbols.length > 0,
     ...COMMON,
     refetchInterval,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 /**
@@ -54,6 +57,8 @@ export const securitiesExchangeRateQuery = (currency: string) => ({
   queryKey: ["securities", "exchange-rate", currency, "KRW"],
   queryFn: () => securitiesApi.getExchangeRate(currency, "KRW"),
   ...COMMON,
+  // 평가 환율 — 실패는 자산 카드 띠가 말한다(단계 4). 공용 새로 고침 스낵바와 겹치지 않게 같은 표식
+  meta: POLL_META,
   staleTime: FX_STALE_TIME,
   gcTime: FX_GC_TIME,
 });

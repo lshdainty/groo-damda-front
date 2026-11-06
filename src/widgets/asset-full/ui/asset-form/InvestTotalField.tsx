@@ -9,7 +9,7 @@ import type { AssetForm } from "./use-asset-form";
  * 고른 통화를 붙이면 라벨이 값을 속인다.
  */
 export function InvestTotalField({ f }: { f: AssetForm }) {
-  const { t, holdingsTotal } = f;
+  const { t, holdingsTotal, holdingsTotalUnknown } = f;
   return (
     <Field
       label={t("editDialog.balanceLabelInvest")}
@@ -17,7 +17,8 @@ export function InvestTotalField({ f }: { f: AssetForm }) {
     >
       <Input
         readOnly
-        value={KRW(holdingsTotal)}
+        // 시세를 모르는 연동 줄이 있으면 0 이 아니라 "—"
+        value={holdingsTotalUnknown ? "—" : KRW(holdingsTotal)}
         suffix={currencyUnit(DEFAULT_CURRENCY)}
       />
     </Field>

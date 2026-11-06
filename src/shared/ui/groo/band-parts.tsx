@@ -67,8 +67,11 @@ export function BandFailure({
   className,
   size = "medium",
   as = "h3",
+  retrying,
 }: {
   title: string;
+  /** 다시 받는 중 — [다시 시도] 단추에 진행 원(B2a) */
+  retrying?: boolean;
   /** 제목 태그 — 기본 h3. 화면 제목 바로 아래 구역이면 h2 */
   as?: "h2" | "h3";
   /** 설명 — 기본 "잠시 뒤 다시 시도해주세요." */
@@ -88,7 +91,11 @@ export function BandFailure({
       as={as}
       title={title}
       description={description ?? t("loadFailedDesc")}
-      primaryAction={{ label: dsT("common.retry"), onClick: onRetry }}
+      primaryAction={{
+        label: dsT("common.retry"),
+        onClick: onRetry,
+        loading: retrying,
+      }}
       className={cn(band && "px-x6", "[[data-slot=card]_&]:px-0", className)}
     />
   );

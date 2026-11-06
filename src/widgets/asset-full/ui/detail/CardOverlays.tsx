@@ -7,6 +7,7 @@ import { BottomSheet, BottomSheetContent } from "@/shared/ds/bottom-sheet";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
+  ResponsiveDialogCancel,
   ResponsiveDialogContent,
   ResponsiveDialogFooter,
 } from "@/shared/ds/dialog";
@@ -120,9 +121,7 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
       : over
         ? t("assetDetail.payAmountOver", { amount: m(money(c.upcoming)) })
         : undefined;
-  const close = () => {
-    if (!c.payCard.isPending) c.setConfirmPay(false);
-  };
+  const close = () => c.setConfirmPay(false);
   const date = c.st?.paymentDate ?? c.billing?.nextPaymentDate;
   const submit = () => {
     setTried(true);
@@ -133,6 +132,8 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
       open
       form
       dirty={c.payAmount !== initial}
+      // 저장하는 동안은 닫지 않는다 — 표면이 막아 시트 뒤로 칸 · 확인창 [나가기] 가 어긋나지 않는다
+      busy={c.payCard.isPending}
       onOpenChange={(next) => {
         if (!next) close();
       }}
@@ -151,7 +152,11 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
                 : ""}
             </p>
             {c.payFailed && (
-              <Callout tone="critical">{t("assetDetail.payFailed")}</Callout>
+              <Callout tone="critical">
+                {c.payUnconfirmed
+                  ? tc("query.payUnconfirmed")
+                  : t("assetDetail.payFailed")}
+              </Callout>
             )}
             {c.payMoveNote && <Callout tone="warning">{c.payMoveNote}</Callout>}
             <Field
@@ -185,11 +190,10 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
               wide ? "ml-auto flex items-center gap-x2" : "flex min-w-0 flex-1"
             }
           >
-            {wide && (
-              <Button variant="neutralWeak" size="small" onClick={close}>
-                {tc("cancel")}
-              </Button>
-            )}
+            {/* 대화상자의 [취소] — 표면의 닫기를 청한다(저장 중이면 받지 않는다 · 바뀐 값이 있으면 묻는다) */}
+            <ResponsiveDialogCancel size="small">
+              {tc("cancel")}
+            </ResponsiveDialogCancel>
             <Button
               size={wide ? "small" : "large"}
               className={wide ? undefined : "flex-1"}
@@ -256,9 +260,11 @@ export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
             const target = c.payoffTarget!;
             runPayoff(target).then(
               () => c.setPayoffTarget(null),
-              () => {
+              (error) => {
                 c.setPayoffTarget(null);
                 confirmFail({
+                  error,
+                  unconfirmedKind: "pay",
                   message: t(
                     target.undo
                       ? "assetDetail.installmentUndoFailed"
@@ -288,9 +294,11 @@ export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
             const id = c.lastPayment!.rowId;
             c.cancelPayment.mutateAsync(id).then(
               () => c.setConfirmCancelPay(false),
-              () => {
+              (error) => {
                 c.setConfirmCancelPay(false);
                 confirmFail({
+                  error,
+                  unconfirmedKind: "pay",
                   message: t("assetDetail.cancelPaymentFailed"),
                   retry: () => c.cancelPayment.mutateAsync(id),
                 });

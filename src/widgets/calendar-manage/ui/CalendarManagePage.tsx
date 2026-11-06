@@ -7,7 +7,7 @@ import { Card } from "@/shared/ds/card";
 import { List, ListButtonItem } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
-import { useConfirmFail } from "@/shared/lib/confirm-fail";
+import { useConfirmFail, useToggleFail } from "@/shared/lib/confirm-fail";
 import { hasPreviousEntry } from "@/shared/ds/top-navigation/top-navigation-context";
 import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
@@ -136,6 +136,7 @@ function ManageBody({
   const navigate = useNavigate();
   const snackbar = useSnackbar();
   const confirmFail = useConfirmFail();
+  const toggleFail = useToggleFail();
   const { data: currentUser } = useCurrentUser();
   const membersQ = useCalendarMembers(calendar.rowId, { silent: true });
   // 바로 나가는 셋(색 · 권한 · 코드 새로 만들기)은 서버 글을 내지 않는다 — 고정 한 문장 critical 스낵바(P4)
@@ -177,8 +178,10 @@ function ManageBody({
     snackbar.show({ message: t("shareSection.toast.codeRegenerated") });
   };
   const regenerateWithFail = () =>
-    regenerate().catch(() =>
+    regenerate().catch((error: unknown) =>
       confirmFail({
+        error,
+        unconfirmedKind: "action",
         message: t("shareSection.regenFailed"),
         retry: regenerate,
       }),
@@ -197,11 +200,9 @@ function ManageBody({
     member: CalendarMember,
     permission: Exclude<CalendarRole, "OWNER">,
   ) =>
-    roleChange(member, permission).catch(() =>
-      confirmFail({
-        message: t("shareSection.roleFailed"),
-        retry: () => roleChange(member, permission),
-      }),
+    // 권한은 고르는 순간 바뀌는 값 — 토글과 같이 [다시 시도] 없이 한 문장, 응답을 못 받았으면 다시 받은 값 + "바뀌었는지 확인하지 못했어요."(판단 ②)
+    roleChange(member, permission).catch((error: unknown) =>
+      toggleFail(error, t("shareSection.roleFailed")),
     );
 
   // 색은 바로 반영하는 값 — 실패하면 줄 값은 옛 색 그대로이고 [다시 시도] 는 두지 않는다(스위치와 같다). 요청 중에는 다음 고름을 받지 않는다
@@ -209,11 +210,8 @@ function ManageBody({
     if (hex === calendar.color || colorMut.isPending) return;
     colorMut
       .mutateAsync({ id: calendar.rowId, data: { color: hex } })
-      .catch(() =>
-        snackbar.show({
-          message: t("shareSection.colorFailed"),
-          tone: "critical",
-        }),
+      .catch((error: unknown) =>
+        toggleFail(error, t("shareSection.colorFailed")),
       );
   };
 
@@ -432,8 +430,10 @@ function ManageBody({
           })}
           confirmLabel={t("shareSection.removeMemberAction")}
           onConfirm={() => removeMember(confirmRemove)}
-          onError={() =>
+          onError={(error) =>
             confirmFail({
+              error,
+              unconfirmedKind: "action",
               message: t("shareSection.removeMemberFailed"),
               retry: () => removeMember(confirmRemove),
             })
@@ -450,8 +450,9 @@ function ManageBody({
           })}
           confirmLabel={tc("delete")}
           onConfirm={deleteCalendar}
-          onError={() =>
+          onError={(error) =>
             confirmFail({
+              error,
               message: t("shareSection.deleteFailed"),
               retry: deleteCalendar,
             })

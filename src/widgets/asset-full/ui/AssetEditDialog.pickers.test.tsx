@@ -76,9 +76,10 @@ vi.mock("@/features/card-catalog", () => ({
 vi.mock("@/features/stock/model/useStockMaster", () => ({
   useStockSearch: (q: string) => {
     state.stockCalls.push(q);
+    // react-query 처럼 — 처음 받기 실패면 값이 없다
     if (q === "실패")
       return {
-        data: [],
+        data: undefined,
         isFetching: false,
         isError: true,
         refetch: () => Promise.resolve(),

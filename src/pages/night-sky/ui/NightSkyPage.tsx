@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import type { ReactNode } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -115,7 +116,7 @@ function TodayBand({
           entries={m.collectionQ.data.entries}
           onOpen={onOpenReport}
         />
-      ) : m.skyQ.isError || m.collectionQ.isError ? null : (
+      ) : loadFailed(m.skyQ) || loadFailed(m.collectionQ) ? null : (
         <ListRowSkeleton />
       )}
     </>
@@ -166,7 +167,7 @@ function NightSkyDesktop() {
           entries={m.collectionQ.data.entries}
           onOpen={() => navigate(REPORT_PATH)}
         />
-      ) : m.skyQ.isError || m.collectionQ.isError ? null : (
+      ) : loadFailed(m.skyQ) || loadFailed(m.collectionQ) ? null : (
         <ListRowSkeleton />
       )}
     </Card>

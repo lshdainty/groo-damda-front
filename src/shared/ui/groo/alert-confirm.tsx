@@ -38,9 +38,10 @@ export function AlertConfirm({
   /**
    * 확정이 실패했을 때 — **필수**. 확인창을 닫은 뒤 부른다(호출처가 Snackbar critical + "다시 시도" 를 띄운다. 창 위에는
    * 겹치지 않는다 — snackbar.md 오류 · alert-dialog.md). 전역 서버 원문 알림이 없으므로 이걸 빠뜨린 새 호출처는 실패가
-   * 아무 말 없이 지나간다 — 던지지 않는 확인(요청이 아닌 것)도 다 이 자리를 채운다
+   * 아무 말 없이 지나간다 — 던지지 않는 확인(요청이 아닌 것)도 다 이 자리를 채운다. 던진 오류를 넘긴다 — 확인 못 한 쓰기면
+   * 호출처(useConfirmFail)가 [다시 시도] 없이 "…확인하지 못했어요." 로 말한다
    */
-  onError: () => void;
+  onError: (error: unknown) => void;
   onClose: () => void;
 }) {
   const { t: tc } = useTranslation("common");
@@ -66,11 +67,11 @@ export function AlertConfirm({
               try {
                 await onConfirm();
                 onClose();
-              } catch {
+              } catch (error) {
                 // 확인창을 다 내린 뒤에 알린다 — onClose 가 부른 다시 그리기를 먼저 끝내야 onError(스낵바)가 뜨는 순간 창이
                 // DOM 에 남지 않는다(창 위에 스낵바를 겹치지 않는다 — snackbar.md 오류 · alert-dialog.md)
                 flushSync(onClose);
-                onError();
+                onError(error);
               } finally {
                 setRunning(false);
               }

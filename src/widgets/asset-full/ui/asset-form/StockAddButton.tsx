@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/shared/ds/button";
@@ -108,12 +109,10 @@ function StockSearchList({
 }) {
   const [typed, setTyped] = useState("");
   const [keyword, setKeyword] = useState("");
-  const {
-    data: matches = [],
-    isFetching,
-    isError,
-    refetch,
-  } = useStockSearch(keyword.trim());
+  const searchQ = useStockSearch(keyword.trim());
+  const { data: matches = [], isFetching, refetch } = searchQ;
+  // 처음 받기 실패만 — 받아 둔 결과가 있으면 그대로 둔다
+  const isError = loadFailed(searchQ);
   const results = matches
     .filter((s) => !linkedSymbols.includes(s.symbol))
     .slice(0, 6);

@@ -35,6 +35,8 @@ export interface EventFormFlowArgs {
   initialDirty?: boolean;
   /** 저장(추가 · 수정)이 실패했다 — 폼 맨 위에 critical Callout(고정 문구), 폼은 열려 있고 입력값은 그대로 */
   saveError?: boolean;
+  /** 저장 실패의 오류 — 결과를 확인하지 못한 쓰기면 Callout 글이 "저장됐는지 확인하지 못했어요" 로 바뀐다 */
+  saveErrorDetail?: unknown;
   onSubmit: (data: CalendarEventFormValues) => void;
   /** 수정 모드 삭제 — 제공 시 바닥 왼쪽에 [삭제]. 확인창은 부르는 쪽이 연다 */
   onDelete?: () => void;
@@ -56,6 +58,7 @@ export function useEventFormFlow({
   initialDirty = false,
   isLoading,
   saveError = false,
+  saveErrorDetail,
   onSubmit,
   onDelete,
 }: EventFormFlowArgs) {
@@ -132,6 +135,7 @@ export function useEventFormFlow({
     dirty: step !== "list" && draft !== stepOrigin,
     leave: cancelStep,
     contentRef: NO_FALLBACK_SURFACE,
+    busy: isLoading ?? false,
   });
   const requestCancelStep = () => leave.request();
   useStepBack(!wide && step !== "list", requestCancelStep);
@@ -171,6 +175,7 @@ export function useEventFormFlow({
     heading,
     isNew: !event,
     saveError,
+    saveErrorDetail,
     focusTitleOnOpen,
     del,
     isLoading,

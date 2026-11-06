@@ -62,6 +62,11 @@ vi.mock("@/features/asset", () => ({
     }),
   useNetWorthTrend: () => stub([]),
   useInvestValuation: () => new Map(),
+  useInvestValuationState: () => ({
+    map: new Map(),
+    priceFailed: false,
+    retryPrices: () => {},
+  }),
   holdingsOf: () => [],
 }));
 vi.mock("@/features/recurring-transaction", () => ({

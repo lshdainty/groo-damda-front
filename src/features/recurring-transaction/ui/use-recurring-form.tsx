@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -241,6 +242,7 @@ export function useRecurringForm({
   const { t: tc } = useTranslation("common");
   const createMut = useCreateRecurringTransaction({ silent: true });
   const updateMut = useUpdateRecurringTransaction({ silent: true });
+  const sft = useSaveFailureText();
   const isEdit = recurring != null;
   const categoriesQ = useExpenseCategories({ silent: true });
   const assetsQ = useAssets({ silent: true });
@@ -657,7 +659,7 @@ export function useRecurringForm({
       {step === "list" && saveError && (
         <div ref={errorRef}>
           <Callout tone="critical" role="alert" className="mb-x4">
-            {t("saveFailed")}
+            {sft(createMut.error ?? updateMut.error, t("saveFailed"))}
           </Callout>
         </div>
       )}

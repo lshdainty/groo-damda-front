@@ -1,4 +1,4 @@
-import { referenceMeta } from "@/shared/api";
+import { isWriteUnconfirmed, referenceMeta } from "@/shared/api";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DEFAULT_CURRENCY } from "@/shared/lib/groo/currency";
@@ -22,8 +22,10 @@ export const useUpdateUserPreferences = () => {
   return useMutation({
     mutationFn: (data: Partial<UserPreferences>) =>
       userApi.updatePreferences(data),
-    onSuccess: (resp) => {
-      qc.setQueryData(PREF_KEY, resp);
+    // 응답을 못 받았으면(확인 못 함 — 전역 MutationCache 가 응답 없이 부른다) 서버는 바꿨을 수 있다 — 다시 받는다(검수 3차 M2)
+    onSuccess: (resp: UserPreferences | undefined) => {
+      if (resp) qc.setQueryData(PREF_KEY, resp);
+      else return qc.invalidateQueries({ queryKey: PREF_KEY });
     },
   });
 };
@@ -67,9 +69,10 @@ export const useDefaultCurrencyState = () => {
  * - `save` 는 키 하나씩 따로 보낸다(설정 전체를 덮어쓰지 않는다). 누르는 순간 화면 값(`pref`)이 바뀐다.
  * - 같은 키를 또 누르면 앞 요청의 응답은 버린다(늦게 온 응답이 나중 값을 되돌리지 않게). 응답은 그 키만 캐시에 병합한다.
  * - 실패하면 그 키의 화면 값을 서버 값으로 되돌리고 `onFail` 을 **요청마다** 부른다(앞 요청에 덮인 것은 부르지 않는다).
+ * - 응답을 못 받았으면(확인 못 함) 서버는 바꿨을 수 있다 — 되돌리지 않고 설정을 다시 받은 뒤 그 값으로 맞춘다(판단 ②).
  * - 요청은 silent 다(전역 서버 글 없음) — 알림은 부르는 쪽이 한다.
  */
-export function usePreferenceEditor(onFail: () => void) {
+export function usePreferenceEditor(onFail: (error: unknown) => void) {
   const qc = useQueryClient();
   const query = useUserPreferences();
   const [overlay, setOverlay] = useState<Partial<UserPreferences>>({});
@@ -105,10 +108,12 @@ export function usePreferenceEditor(onFail: () => void) {
             );
             settle();
           },
-          () => {
+          (error: unknown) => {
             if (seq.current[key] !== mine) return;
-            settle();
-            failRef.current();
+            failRef.current(error);
+            if (isWriteUnconfirmed(error))
+              void qc.invalidateQueries({ queryKey: PREF_KEY }).finally(settle);
+            else settle();
           },
         );
       }

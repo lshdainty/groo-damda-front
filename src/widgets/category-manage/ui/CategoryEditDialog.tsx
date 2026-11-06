@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -183,6 +184,7 @@ export function CategoryEditDialog({
   };
 
   const errorRef = useScrollToError<HTMLDivElement>(!!saveFailed, saveError);
+  const sft = useSaveFailureText();
   const submit = () => {
     if (submitting) return;
     // 같은 상위 · 같은 종류 안에서만 이름이 겹치면 안 된다(서버 규칙과 같다)
@@ -237,6 +239,7 @@ export function CategoryEditDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={submitting}
     >
       <ResponsiveDialogContent
         title={isNew ? te("addCategory") : t("editTitle")}
@@ -297,7 +300,7 @@ export function CategoryEditDialog({
           {saveFailed && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("saveFailed")}
+                {sft(saveError, t("saveFailed"))}
               </Callout>
             </div>
           )}

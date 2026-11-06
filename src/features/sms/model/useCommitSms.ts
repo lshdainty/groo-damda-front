@@ -11,9 +11,10 @@ import { commitSms, type SmsCommitRequest } from "../api/smsApi";
  */
 export const useCommitSms = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger");
 
   return useMutation({
     mutationFn: (request: SmsCommitRequest) => commitSms(request, opts),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    onSuccess: refresh,
   });
 };

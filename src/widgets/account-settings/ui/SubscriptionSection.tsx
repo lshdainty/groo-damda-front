@@ -156,8 +156,10 @@ export function SubscriptionSection({
     const started = () =>
       snackbar.show({ message: t("toast.subscribed"), tone: "positive" });
     const run = () => subscribe.mutateAsync(selected.planCode);
-    run().then(started, () =>
+    run().then(started, (error: unknown) =>
       confirmFail({
+        error,
+        unconfirmedKind: "action",
         message: t("toast.subscribeFailed"),
         retry: run,
         onRetried: started,
@@ -384,8 +386,10 @@ export function SubscriptionSection({
         await doCancel();
         canceled();
       }}
-      onError={() =>
+      onError={(error) =>
         confirmFail({
+          error,
+          unconfirmedKind: "action",
           message: t("toast.cancelFailed"),
           retry: doCancel,
           onRetried: canceled,

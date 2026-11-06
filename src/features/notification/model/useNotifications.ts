@@ -40,8 +40,12 @@ export const useMarkRead = () => {
     onMutate: (id: number) => begin(id),
     onSettled: (_data, _error, id) => end(id),
     // 실패: critical 스낵바 한 문장 + [다시 시도](바로 다시 요청) — 요청은 silent
-    onError: (_e, id) =>
-      confirmFail({ message: t("markReadFailed"), retry: () => run(id) }),
+    onError: (error, id) =>
+      confirmFail({
+        error,
+        message: t("markReadFailed"),
+        retry: () => run(id),
+      }),
   });
   /** 진행 중인 항목 id — 그 항목만 스피너·잠금. */
   return { ...mutation, pendingIds };
@@ -60,7 +64,8 @@ export const useMarkAllRead = () => {
 
   return useMutation({
     mutationFn: run,
-    onError: () => confirmFail({ message: t("markAllFailed"), retry: run }),
+    onError: (error) =>
+      confirmFail({ error, message: t("markAllFailed"), retry: run }),
   });
 };
 

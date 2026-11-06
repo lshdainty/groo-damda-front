@@ -1,3 +1,5 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
+import { loadFailed } from "@/shared/api";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ds/button";
@@ -125,6 +127,7 @@ export function WithdrawDialog({
   const verifyCode = useVerifyReauthEmailCodeMutation();
   const verifyPassword = useVerifyReauthPasswordMutation();
   const withdraw = useWithdrawMutation();
+  const sft = useSaveFailureText();
 
   // 해지가 나가 있는 동안 또 눌려도 아무 일이 없어야 한다 — 두 번 불러도 결과는
   // 같지만(서버가 멱등) 그 사이 두 번째 요청이 이미 쓴 티켓을 들고 가 401 이 뜬다.
@@ -149,7 +152,7 @@ export function WithdrawDialog({
   }, [method]);
 
   // 입력 폼인 때 — 점검이 끝났고 막히지 않았을 때만. 아니면 안내 표면(위 ✕ 하나).
-  const form = !checkQ.isLoading && !checkQ.isError && !blocked;
+  const form = !checkQ.isLoading && !loadFailed(checkQ) && !blocked;
   const dirty = reason.trim() !== "" || password !== "" || code !== "";
 
   const doWithdraw = async (reauthToken: string) => {
@@ -197,8 +200,9 @@ export function WithdrawDialog({
     }
     try {
       await doWithdraw(token);
-    } catch {
-      setReauthError(t("withdraw.failed"));
+    } catch (e) {
+      // 결과를 확인하지 못했으면(응답을 못 읽음 · 응답 전에 끊김) 실패라 하지 않는다 — 해지됐을 수 있다(앱 withdrawUnconfirmed 와 같은 자리, 글은 웹 전용 — 새로 고침)
+      setReauthError(sft(e, t("withdraw.failed"), "withdraw"));
       setBusy(false);
     } finally {
       runningRef.current = false;
@@ -230,7 +234,7 @@ export function WithdrawDialog({
         <ProgressCircle size="40" aria-label={dsT("common.loading")} />
       </div>
     );
-  } else if (checkQ.isError) {
+  } else if (loadFailed(checkQ)) {
     body = (
       <ResultSection
         kind="failure"
@@ -396,7 +400,13 @@ export function WithdrawDialog({
   } else {
     footer = (
       <ResponsiveDialogFooter>
-        <Button variant="neutralWeak" onClick={() => setStep("impact")}>
+        <Button
+          variant="neutralWeak"
+          // 확인 중에는 앞 단계로 가지 않는다 — 실패 글을 그릴 칸이 사라진다
+          onClick={() => {
+            if (!busy) setStep("impact");
+          }}
+        >
           {tc("back")}
         </Button>
         <Button
@@ -419,6 +429,7 @@ export function WithdrawDialog({
         }}
         form={form}
         dirty={dirty}
+        busy={busy}
       >
         <ResponsiveDialogContent
           title={t("withdraw.title")}

@@ -1,3 +1,4 @@
+import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
 import { Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/shared/ds/badge";
 import { Button } from "@/shared/ds/button";
@@ -39,9 +40,13 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
     setHoldings,
     holdingValueOf,
     holdingsTotal,
+    holdingsTotalUnknown,
     allowStock,
     manualAddTypes,
     isForeign,
+    holdingPricesFailed,
+    holdingPricesRetrying,
+    retryHoldingPrices,
   } = f;
   // 보유 평가 · 매수원가는 외화 계좌에서도 원화다(I-13 길 A) — 칸은 "원" 그대로, 외화 계좌에만 칸 아래 안내
   const krwHint = isForeign ? t("holdings.krwInputHint") : undefined;
@@ -54,10 +59,13 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
       label={t("holdings.sectionTitle")}
       headerAction={
         <span className="num font-sans text-t5 font-bold text-fg-neutral">
-          {t("holdings.editSummary", {
-            n: holdings.length,
-            total: KRW(holdingsTotal),
-          })}
+          {holdingsTotalUnknown
+            ? // 시세를 모르는 연동 줄이 있으면 합계를 말하지 않는다(0 · 부분합 아님)
+              t("holdings.editSummaryUnknown", { n: holdings.length })
+            : t("holdings.editSummary", {
+                n: holdings.length,
+                total: KRW(holdingsTotal),
+              })}
         </span>
       }
       description={
@@ -73,6 +81,14 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
         role="group"
         aria-label={t("holdings.sectionTitle")}
       >
+        {/* 평가액 미리보기의 시세를 못 받았다 — 칸을 비워 두지 않고 그 자리 실패 + [다시 시도](B2a 분할 실패와 같은 꼴, 고정 글) */}
+        {holdingPricesFailed && (
+          <PriceFailBand
+            band={false}
+            onRetry={retryHoldingPrices}
+            retrying={holdingPricesRetrying}
+          />
+        )}
         {/* 종목 추가 — 주식은 검색 시트, 금 · 코인은 검색 대상이 아니라 직접 추가로만 담는다(토스 · 마스터 모두 미제공).
           기관이 유형을 정하므로 증권사면 금 · 코인 단추가 없다. */}
         <div className="flex flex-wrap gap-x2">

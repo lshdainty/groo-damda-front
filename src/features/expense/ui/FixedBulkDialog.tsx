@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useTranslation } from "react-i18next";
 import { KRW } from "@/shared/lib/groo/format";
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
@@ -156,6 +157,7 @@ function FixedBulkModal({
     groups,
     apply,
   } = useFixedBulk({ startDate, endDate, onClose });
+  const sft = useSaveFailureText();
   const errorRef = useScrollToError<HTMLDivElement>(mut.isError, mut.error);
 
   return (
@@ -180,7 +182,7 @@ function FixedBulkModal({
         // 본문은 스크롤되고 [적용] 은 바닥이라 내려서 고른 뒤 실패하면 Callout 이 화면 밖이다 — ref 로 맨 위로 올린다
         <div ref={errorRef} style={{ marginBottom: 16 }}>
           <Callout tone="critical" role="alert">
-            {t("fixed.bulk.failed")}
+            {sft(mut.error, t("fixed.bulk.failed"))}
           </Callout>
         </div>
       )}

@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import { Button } from "@/shared/ds/button";
@@ -22,6 +22,8 @@ import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
 import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 import { useCoverBottomNav } from "@/shared/ui/groo/use-cover-bottom-nav";
 import { useSettingsLeaveGuard } from "@/shared/ui/groo/settings-frame-context";
+import { useBackClose, whenBackSlotsSettled } from "@/shared/ds/overlay";
+import { useLeaveGuardBypass } from "@/shared/ui/groo/leave-guard-context";
 import { HideAmountsUnlockSurface } from "./HideAmountsUnlockSurface";
 import {
   cardsOfPage,
@@ -55,10 +57,16 @@ import {
 export function HideAmountsSection({
   mobile,
   onBack,
+  onBrowserBack = onBack,
 }: {
   mobile: boolean;
   /** 뒤로 — 이 화면은 계정 > 보안에서 들어온다(눈 버튼도 여기로 직행). */
   onBack: () => void;
+  /**
+   * 브라우저 · 안드로이드 뒤로 → [나가기] 로 떠날 때 — 앞 칸으로 되돌아간다(앞으로 push 하지 않는다, 검수 3차 L1).
+   * 주지 않으면 onBack
+   */
+  onBrowserBack?: () => void;
 }) {
   const { t } = useTranslation("settings");
   const { t: tc } = useTranslation("common");
@@ -108,10 +116,16 @@ export function HideAmountsSection({
   const [saveFailTick, setSaveFailTick] = useState(0);
   const saveFailed = saveFailTick > 0;
   const errorRef = useScrollToError<HTMLDivElement>(saveFailed, saveFailTick);
+  // 저장이 나가 있다 — 그동안은 떠나기를 묻지도 받지도 않는다(busy — 떠나면 실패 Callout 자리가 사라진다)
+  const [saving, setSaving] = useState(false);
   const commit = async (viaUnlock = false) => {
     setSaveFailTick(0);
-    if (await setHiddenCards(draft)) {
-      onBack();
+    setSaving(true);
+    const ok = await setHiddenCards(draft);
+    setSaving(false);
+    if (ok) {
+      // 화면이 스스로 떠난다 — 칸을 먼저 걷고 가드를 지나 돌아간다(검수 2차 H1 · H3)
+      leave(onBack);
       return;
     }
     if (viaUnlock) {
@@ -137,23 +151,52 @@ export function HideAmountsSection({
 
   // 저장하지 않고 나가려 할 때 — 고른 내용이 날아가는 걸 알리고, 확인하면 화면을 닫는다.
   const back = () => {
+    if (saving) return;
     if (dirty) setConfirmDiscard(true);
     else onBack();
   };
 
-  // 데스크톱 · 태블릿은 "‹ 계정" 을 틀이 그린다(I-16 29) — 바꾼 채 누르면 틀이 이 가드를 먼저 부르고,
-  // 확인하면 틀이 가려던 곳으로 간다.
+  // 바꾼 채 떠나는 모든 길이 묻는다(단계 5) — "‹ 계정"(틀) · 설정 구역 목록 · 사이드바 · 탭 바 · 머리 링크는 셸 공용 가드를,
+  // 브라우저 · 안드로이드 뒤로 가기는 dirty 동안 쌓아 둔 히스토리 칸 하나를 지난다. 확인하면 가려던 곳으로 간다.
   const leaveTo = useRef<(() => void) | null>(null);
+  // 화면이 스스로 떠나는 길(저장 성공 · [나가기]) — 바뀐 값의 뒤로 칸과 확인창 칸을 먼저 걷고(되돌림이 끝난 뒤) 가드를
+  // 지나 옮긴다. 그래야 [나가기] 가 다시 묻지 않고(H2), 같은 주소 칸이 남아 뒤로 가기가 헛돌지 않는다(H3 · M1)
+  const [leaving, setLeaving] = useState(false);
+  const pendingLeave = useRef<(() => void) | null>(null);
+  const bypass = useLeaveGuardBypass();
+  const leave = (go: () => void) => {
+    pendingLeave.current = go;
+    setConfirmDiscard(false);
+    setLeaving(true);
+  };
+  // 효과는 leaving 만 따른다 — bypass 가 렌더마다 새 함수여도 다시 돌지 않는다(검수 3차 L2). leaving 은 되돌리지 않는다:
+  // 앞으로 가는 이동(navigate(-1))은 popstate 뒤에 끝나 그 사이 가드를 다시 켜면 뒤로 칸이 다시 쌓인다(시험으로 확인)
+  const leaveNow = useEffectEvent((go: () => void) => bypass(go));
+  useEffect(() => {
+    if (!leaving) return;
+    const go = pendingLeave.current;
+    pendingLeave.current = null;
+    if (!go) return;
+    // 화면이 내려가면 기다림을 거둔다 — 늦게 온 popstate 가 내려간 화면의 이동을 부르지 않게
+    return whenBackSlotsSettled(() => leaveNow(go));
+  }, [leaving]);
+  const guarding = dirty && !leaving;
   useSettingsLeaveGuard(
-    mobile
-      ? null
-      : (go) => {
-          if (dirty) {
-            leaveTo.current = go;
-            setConfirmDiscard(true);
-          } else go();
-        },
+    guarding
+      ? (go) => {
+          if (saving) return;
+          leaveTo.current = go;
+          setConfirmDiscard(true);
+        }
+      : null,
   );
+  // 뒤로 가기 — 칸을 바로 다시 쌓고(다음 뒤로 가기도 여기로) 묻는다. [나가기] 면 계정으로 간다(앞 화면으로 되돌리지 않고 이동)
+  useBackClose(guarding, (keep) => {
+    keep();
+    if (saving) return;
+    leaveTo.current = onBrowserBack;
+    setConfirmDiscard(true);
+  });
 
   const pageLabel = (page: HidePageKey) => t(`hideAmounts.page.${page}`);
 
@@ -309,7 +352,7 @@ export function HideAmountsSection({
           onConfirm={() => {
             const go = leaveTo.current ?? onBack;
             leaveTo.current = null;
-            go();
+            leave(go);
           }}
           // 요청이 아니라 화면을 나가는 확인이다 — 던지지 않는다
           onError={() => {}}
@@ -353,6 +396,7 @@ export function HideAmountsSection({
               size="large"
               className="w-full"
               disabled={!dirty}
+              loading={saving}
               onClick={save}
             >
               {tc("save")}
@@ -380,6 +424,7 @@ export function HideAmountsSection({
             variant="neutralSolid"
             size="small"
             disabled={!dirty}
+            loading={saving}
             onClick={save}
           >
             {tc("save")}

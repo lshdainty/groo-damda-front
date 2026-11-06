@@ -82,6 +82,7 @@ export function CalendarJoinDialog({ onClose }: { onClose: () => void }) {
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={joinMut.isPending}
     >
       <ResponsiveDialogContent
         title={t("joinByCode")}

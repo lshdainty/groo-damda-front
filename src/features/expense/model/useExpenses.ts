@@ -24,11 +24,12 @@ export const useExpenses = (
 
 export const useCreateExpense = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger");
 
   return useMutation({
     mutationFn: (data: ExpenseFormValues) =>
       expenseApi.createExpense(data, opts),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
+    onSuccess: refresh,
   });
 };
 
@@ -56,12 +57,13 @@ export const useBulkMarkFixed = () => {
 
 export const useUpdateExpense = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger", { wait: true });
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: ExpenseFormValues }) =>
       expenseApi.updateExpense(id, data, opts),
     // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게
-    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
+    onSuccess: refresh,
   });
 };
 
@@ -117,6 +119,7 @@ export const useReplaceExpense = (opts?: { silent?: boolean }) => {
     // 받은 채 다시 눌렀으면 교체는 앞선 요청에서 끝났다(다른 기기에서 지웠어도 같다). 안
     // 털면 목록에 사라진 옛 행이 남아 보인다(QA 26차 5). 그 밖의 실패는 서버가 아무것도
     // 안 바꿨으므로 그대로 둔다.
+    // 확인 못 한 쓰기(PARSE · 응답 없음)는 MutationCache 가 성공처럼(error null) 이 처리기를 한 번 더 부른다
     onSettled: (_data, error) => {
       if (error == null || isHttpStatus(error, 404)) {
         invalidateFor(queryClient, "ledger");

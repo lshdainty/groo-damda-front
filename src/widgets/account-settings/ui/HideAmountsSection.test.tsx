@@ -172,7 +172,11 @@ describe("HideAmountsSection", () => {
     render(true);
     click(checks()[0]);
     click(btn("save"));
-    await act(async () => {});
+    // 떠남은 뒤로 칸을 걷은 뒤에 옮긴다(검수 2차 H1) — 몇 차례 기다린다
+    for (let i = 0; i < 4; i++)
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 0));
+      });
     expect(q("[data-verify]")).toBeNull();
     expect(store.set).toHaveBeenCalledTimes(1);
     expect(onBack).toHaveBeenCalledTimes(1);
@@ -185,7 +189,11 @@ describe("HideAmountsSection", () => {
     click(btn("save"));
     expect(store.set).not.toHaveBeenCalled();
     click(q("[data-verify]") ?? undefined);
-    await act(async () => {});
+    // 떠남은 뒤로 칸을 걷은 뒤에 옮긴다(검수 2차 H1) — 몇 차례 기다린다
+    for (let i = 0; i < 4; i++)
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 0));
+      });
     expect(store.set).toHaveBeenCalledTimes(1);
     // 저장에 넘긴 값 = 고른 집합(지출 거래만 빠진 나머지)
     expect([...(store.set.mock.calls[0]![0] as Set<string>)]).toEqual([
@@ -199,7 +207,11 @@ describe("HideAmountsSection", () => {
     render(true);
     click(checks()[0]);
     click(btn("save"));
-    await act(async () => {});
+    // 떠남은 뒤로 칸을 걷은 뒤에 옮긴다(검수 2차 H1) — 몇 차례 기다린다
+    for (let i = 0; i < 4; i++)
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 0));
+      });
     expect(onBack).not.toHaveBeenCalled();
     expect(container.textContent).toContain("hideAmounts.saveFailed");
     expect(checks()[0]!.getAttribute("aria-checked")).toBe("true");
@@ -213,7 +225,11 @@ describe("HideAmountsSection", () => {
     click(checks()[0]);
     click(btn("save"));
     click(q("[data-verify]") ?? undefined);
-    await act(async () => {});
+    // 떠남은 뒤로 칸을 걷은 뒤에 옮긴다(검수 2차 H1) — 몇 차례 기다린다
+    for (let i = 0; i < 4; i++)
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 0));
+      });
     expect(onBack).not.toHaveBeenCalled();
   });
 

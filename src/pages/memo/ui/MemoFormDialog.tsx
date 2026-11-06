@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Palette, Pin, Tag } from "lucide-react";
@@ -47,6 +48,7 @@ export function MemoFormDialog({
   memo,
   tags,
   saveError,
+  saveErrorDetail,
   saveErrorSeq,
   tagsReady,
   submitting,
@@ -57,6 +59,8 @@ export function MemoFormDialog({
   /** 고를 수 있는 태그 이름 — 서버 목록 ∪ 메모에 남은 이름 */
   tags: string[];
   saveError: boolean;
+  /** 저장 실패의 오류 — 결과를 확인하지 못한 쓰기면 글이 바뀐다 */
+  saveErrorDetail?: unknown;
   /** 저장이 실패할 때마다 늘어난다 — 실패 Callout 을 화면에 들이는 신호 */
   saveErrorSeq: number;
   /** 태그 목록을 받았다 — 로딩 · 실패 중에는 "태그를 만들어요" 안내를 하지 않는다 */
@@ -92,6 +96,7 @@ export function MemoFormDialog({
   const titleRef = useRef<HTMLInputElement>(null);
   // 저장이 실패하면 본문이 내려가 있어도 맨 위 Callout 이 보이게 올린다(M2)
   const errorRef = useScrollToError<HTMLDivElement>(saveError, saveErrorSeq);
+  const sft = useSaveFailureText();
 
   const dirty =
     title !== initial.title ||
@@ -135,6 +140,7 @@ export function MemoFormDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={submitting}
     >
       <ResponsiveDialogContent
         title={isNew ? t("newMemo") : t("editMemo")}
@@ -153,7 +159,7 @@ export function MemoFormDialog({
           {saveError && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("saveFailed")}
+                {sft(saveErrorDetail, t("saveFailed"))}
               </Callout>
             </div>
           )}

@@ -1,7 +1,11 @@
 /**
  * 구독·기능권한·증권사 크리덴셜 API. 증권 기능 게이트(메뉴 노출)와 설정(증권사 연결)의 백엔드 연동.
  */
-import { apiClient, type QuietRequestConfig } from "@/shared/api";
+import {
+  apiClient,
+  SAFE_TO_RETRY,
+  type QuietRequestConfig,
+} from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 
 export interface MyFeatures {
@@ -154,7 +158,8 @@ export const subscriptionApi = {
   disconnectBrokerCredential: async (broker: string): Promise<void> => {
     await apiClient.delete(
       `/v1/users/me/securities-credentials/${broker}`,
-      QUIET,
+      // 연결 끊기는 다시 해도 같은 결과 — 확인 못 함 없이 그대로 실패 + [다시 시도](판단 ⑤)
+      { ...QUIET, ...SAFE_TO_RETRY },
     );
   },
 
@@ -163,7 +168,8 @@ export const subscriptionApi = {
     await apiClient.put(
       `/v1/users/me/securities-credentials/${broker}/primary`,
       undefined,
-      QUIET,
+      // 기본 증권사 정하기는 다시 해도 같은 결과
+      { ...QUIET, ...SAFE_TO_RETRY },
     );
   },
 
@@ -184,6 +190,10 @@ export const subscriptionApi = {
   },
 
   revokeApiToken: async (rowId: number): Promise<void> => {
-    await apiClient.delete(`/v1/users/me/api-tokens/${rowId}`, QUIET);
+    // 토큰 폐기는 다시 해도 같은 결과
+    await apiClient.delete(`/v1/users/me/api-tokens/${rowId}`, {
+      ...QUIET,
+      ...SAFE_TO_RETRY,
+    });
   },
 };

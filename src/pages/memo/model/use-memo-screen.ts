@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -9,6 +10,7 @@ import {
 } from "@/features/memo";
 import { useMemoTags } from "@/features/memo-tag";
 import { useSnackbar } from "@/shared/ds/snackbar";
+import { useToggleFail, useUnconfirmedSnack } from "@/shared/lib/confirm-fail";
 import type { Memo, MemoFormValues } from "@/entities/memo";
 import { filterMemos, memoTagChips } from "./memo-list";
 
@@ -26,6 +28,8 @@ export function useMemoScreen() {
   const { t } = useTranslation("memo");
   const { t: tc } = useTranslation("common");
   const snackbar = useSnackbar();
+  const toggleFail = useToggleFail();
+  const unconfirmedSnack = useUnconfirmedSnack();
   const memosQ = useMemos(undefined, { silent: true });
   const memoTagsQ = useMemoTags({ reference: true });
   const createMemo = useCreateMemo({ silent: true });
@@ -37,7 +41,7 @@ export function useMemoScreen() {
   // 편집기 선택지 — 서버 태그 목록(앱과 같다). 지금 메모의 태그가 목록에 없으면 폼이 그 값만 더 지킨다.
   const tagNames = (memoTagsQ.data ?? []).map((tag) => tag.tagName);
   // 태그 목록을 받았다 — 로딩 · 실패 중에는 "태그가 없다" 안내를 하지 않는다
-  const tagsReady = !memoTagsQ.isLoading && !memoTagsQ.isError;
+  const tagsReady = !memoTagsQ.isLoading && !loadFailed(memoTagsQ);
 
   const [query, setQuery] = useState("");
   const [pickedFilter, setTagFilter] = useState<string>("all");
@@ -88,12 +92,9 @@ export function useMemoScreen() {
     try {
       await togglePin.mutateAsync(memo.rowId);
       return true;
-    } catch {
-      snackbar.show({
-        message: t("pinFailed"),
-        tone: "critical",
-        action: { label: tc("retry"), onClick: () => void pinOf(memo) },
-      });
+    } catch (error) {
+      // 고정은 토글 — [다시 시도] 없이 한 문장(다시 하면 두 번 뒤집힐 수 있다). 응답을 못 받았으면 다시 받은 값 + "바뀌었는지 확인하지 못했어요."(판단 ②)
+      toggleFail(error, t("pinFailed"));
       return false;
     } finally {
       pinning.current.delete(memo.rowId);
@@ -105,7 +106,8 @@ export function useMemoScreen() {
     try {
       await deleteMemo.mutateAsync(memo.rowId);
       return true;
-    } catch {
+    } catch (error) {
+      if (unconfirmedSnack(error, "delete")) return false;
       snackbar.show({
         message: t("deleteFailed"),
         tone: "critical",
@@ -133,16 +135,19 @@ export function useMemoScreen() {
     const formIsMine = () => !detached && session.current === mine;
     if (formIsMine()) setSaveError(false);
     let saved: Memo;
+    // 새 시도마다 지난 오류를 비운다 — 지난 만들기의 확인 못 함이 이번 수정 실패 글을 바꾸지 않게(검수 3차 L6)
+    createMemo.reset();
+    updateMemo.reset();
     try {
       saved =
         id != null
           ? await updateMemo.mutateAsync({ id, data: values })
           : await createMemo.mutateAsync(values);
-    } catch {
+    } catch (error) {
       if (formIsMine()) {
         setSaveError(true);
         setSaveErrorSeq((n) => n + 1);
-      } else {
+      } else if (!unconfirmedSnack(error, "save")) {
         snackbar.show({
           message: t("saveFailed"),
           tone: "critical",
@@ -184,6 +189,8 @@ export function useMemoScreen() {
     viewing,
     setViewing,
     saveError,
+    // 저장 실패의 오류 — 결과를 확인하지 못한 쓰기면 폼 글이 바뀐다
+    saveErrorDetail: createMemo.error ?? updateMemo.error,
     saveErrorSeq,
     tagsReady,
     tagColors,

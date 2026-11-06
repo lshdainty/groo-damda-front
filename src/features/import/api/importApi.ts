@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, NOT_A_SAVE } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 
 // ─── 타입 (백엔드 dataimport 미러) ─────────────────────────────
@@ -86,7 +86,7 @@ export async function analyzeImport(
   const resp: ApiResponse<ImportAnalyzeResult> = await apiClient.post(
     "/v1/import/analyze",
     fd,
-    { silent: true } as import("axios").AxiosRequestConfig & {
+    { silent: true, ...NOT_A_SAVE } as import("axios").AxiosRequestConfig & {
       silent?: boolean;
     },
   );
@@ -112,6 +112,7 @@ export async function executeImport(
   const resp: ApiResponse<ImportExecuteResult> = await apiClient.post(
     "/v1/import/execute",
     fd,
+    // 파일을 올리지만 거래를 만드는 저장이다 — 쓰기 확인을 둔다(응답을 못 받으면 확인 못 함 + 다시 받기, 검수 3차 M2)
     { silent: true } as import("axios").AxiosRequestConfig & {
       silent?: boolean;
     },

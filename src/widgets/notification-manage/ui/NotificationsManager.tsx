@@ -48,7 +48,7 @@ import {
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { Slider, SliderValue } from "@/shared/ds/slider";
-import { useSnackbar } from "@/shared/ds/snackbar";
+import { useToggleFail } from "@/shared/lib/confirm-fail";
 import {
   TimePicker,
   formatTimeValue,
@@ -355,15 +355,15 @@ function Group({
 export function NotificationsManager({ mobile }: { mobile: boolean }) {
   const { t } = useTranslation("notification");
   const { t: tc } = useTranslation("common");
-  const snackbar = useSnackbar();
+  const toggleFail = useToggleFail();
   // 누르는 순간 화면이 바뀌고(낙관적) 키 하나씩 저장한다. 실패하면 서버 값으로 되돌리고 critical 스낵바 고정 글 —
   // 요청은 silent · [다시 시도] 없음(스위치를 다시 누르는 것이 재시도, I-15 덧붙임 14-1 M1). 값 줄 · 슬라이더도 같다.
   const {
     pref,
     query: preferencesQ,
     save,
-  } = usePreferenceEditor(() =>
-    snackbar.show({ message: t("settingsSaveFailed"), tone: "critical" }),
+  } = usePreferenceEditor((error) =>
+    toggleFail(error, t("settingsSaveFailed")),
   );
   const { data: currentUser, isLoading: userLoading } = useCurrentUser();
 

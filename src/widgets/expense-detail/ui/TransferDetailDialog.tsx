@@ -6,6 +6,7 @@ import { Callout } from "@/shared/ds/callout";
 import { List, ListItem } from "@/shared/ds/list";
 import { LogoTile } from "@/shared/ds/logo-tile";
 import { useSnackbar } from "@/shared/ds/snackbar";
+import { useUnconfirmedSnack } from "@/shared/lib/confirm-fail";
 import { KRW, isEn } from "@/shared/lib/groo/format";
 import {
   formatAssetAmount,
@@ -81,6 +82,7 @@ export function TransferDetailDialog({
   const { t } = useTranslation("expense");
   const { t: tc } = useTranslation("common");
   const snackbar = useSnackbar();
+  const unconfirmedSnack = useUnconfirmedSnack();
   const [step, setStep] = useState<"detail" | "edit">("detail");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [openRecurring, setOpenRecurring] = useState(false);
@@ -137,8 +139,9 @@ export function TransferDetailDialog({
           setConfirmDelete(false);
           onClose();
         },
-        onError: () => {
+        onError: (error) => {
           setConfirmDelete(false);
+          if (unconfirmedSnack(error, "delete")) return;
           snackbar.show({
             message: t("transferDeleteFailed"),
             tone: "critical",
@@ -160,7 +163,7 @@ export function TransferDetailDialog({
         subStep={isEditing}
         dirty={isEditing ? ep.dirty : false}
         closeDirty={isEditing ? ep.dirtyAll : undefined}
-        closeBlocked={isEditing && form.submitting}
+        busy={isEditing && form.submitting}
         onStepBack={isEditing ? ep.onBack : undefined}
         footerNode={isEditing ? ep.footer : undefined}
         bodyRef={isEditing ? ep.bodyRef : undefined}

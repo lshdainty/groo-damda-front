@@ -175,8 +175,9 @@ export function CalendarLabelsSection({ mobile }: { mobile: boolean }) {
             name: confirmDelete.labelName,
           })}
           onConfirm={() => deleteMut.mutateAsync(confirmDelete.rowId)}
-          onError={() =>
+          onError={(error) =>
             confirmFail({
+              error,
               message: t("labelsSection.deleteFailed"),
               retry: () => deleteMut.mutateAsync(confirmDelete.rowId),
             })

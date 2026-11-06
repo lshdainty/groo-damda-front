@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -46,9 +47,16 @@ export function useAssetGroups() {
   const assetsQ = useAssets();
   const summaryQ = useAssetSummary();
   // 연동 보유가 있는 투자 자산은 라이브 평가액으로 잔액을 덮어쓴다 — 관리 화면과 같은 훅(`useLiveAssets`).
-  const { list, linked, investValMap, valMap } = useLiveAssets(
-    assetsQ.data?.assets ?? EMPTY_ASSETS,
-  );
+  const {
+    list,
+    linked,
+    investValMap,
+    valMap,
+    priceFailed,
+    priceFailShows,
+    pricesRetrying,
+    retryPrices,
+  } = useLiveAssets(assetsQ.data?.assets ?? EMPTY_ASSETS);
   const groups = useMemo(() => groupAssets(list), [list]);
 
   // 백엔드 summary(DB 잔액 기준)에 연결 자산의 (라이브−DB) 차액만큼 순자산/변화를 보정.
@@ -75,12 +83,19 @@ export function useAssetGroups() {
       ? Math.round((changeAmount / Math.abs(lastMonth)) * 10000) / 100
       : (summaryQ.data?.changePercent ?? 0);
 
-  const assetsFailed = assetsQ.isError === true;
-  const summaryFailed = summaryQ.isError === true;
+  // 처음 불러오기 실패만 띠를 실패로 — 받아 둔 값이 있으면 그대로 두고 공용 스낵바가 알린다
+  const assetsFailed = loadFailed(assetsQ);
+  const summaryFailed = loadFailed(summaryQ);
 
   return {
     ...groups,
     investValMap,
+    // 연동 투자 자산의 시세를 못 받았다 — 그 자산이 든 카드에 띠 한 줄(평가는 DB 잔액 · 옛 시세로 남는다, 단계 4)
+    priceFailed,
+    priceFailShows,
+    pricesRetrying,
+    retryPrices,
+    linkedIds: new Set(linked.map((a) => a.rowId)),
     netWorth,
     changeAmount,
     changePercent,

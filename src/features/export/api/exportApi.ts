@@ -1,4 +1,4 @@
-import { apiClient, type QuietRequestConfig } from "@/shared/api";
+import { apiClient, NOT_A_SAVE, type QuietRequestConfig } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 
 export type ExportFormat = "CSV" | "EXCEL" | "JSON";
@@ -38,7 +38,7 @@ export async function fetchExportCounts(
   body: ExportQueryBody,
 ): Promise<ExportTypeCount[]> {
   // 실패는 데이터 종류 묶음 아래에서 알린다(전역 토스트 대신 — I-05 42)
-  const config: QuietRequestConfig = { silent: true };
+  const config: QuietRequestConfig = { silent: true, ...NOT_A_SAVE };
   const resp: ApiResponse<{ counts: ExportTypeCount[] }> = await apiClient.post(
     "/v1/export/counts",
     body,
@@ -54,6 +54,7 @@ export async function fetchExportPreview(
   const resp: ApiResponse<{ tables: ExportPreviewTable[] }> =
     await apiClient.post("/v1/export/preview", body, {
       silent: true,
+      ...NOT_A_SAVE,
     } as QuietRequestConfig);
   return resp.data.tables;
 }

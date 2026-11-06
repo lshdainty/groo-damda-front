@@ -21,8 +21,9 @@ export function TodoDeleteConfirm({
       message={t("deleteConfirm.message", { name })}
       onConfirm={onConfirm}
       // 실패하면 확인창을 닫고 critical 스낵바 + [다시 시도](묻지 않고 같은 삭제)
-      onError={() =>
+      onError={(error) =>
         confirmFail({
+          error,
           message: t("deleteFailed"),
           retry: async () => {
             await onConfirm();

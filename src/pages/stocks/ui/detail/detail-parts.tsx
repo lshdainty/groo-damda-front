@@ -1,4 +1,5 @@
-import { isHardError } from "@/features/stock/lib/query-state";
+import { isHardError, isStaleError } from "@/features/stock/lib/query-state";
+import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
 import { Fragment, useId, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { LineChart, Star } from "lucide-react";
@@ -178,6 +179,8 @@ export function HeadBand({
   approx,
   unavailable,
   failed,
+  stale,
+  retrying,
   onRetry,
   warnings,
   loading,
@@ -198,6 +201,10 @@ export function HeadBand({
   unavailable?: string;
   /** 시세 조회가 실패했다(받아 둔 값 없음) — "미지원" 이 아니라 실패 한 벌 + 다시 시도(검수 H4) */
   failed?: boolean;
+  /** 받아 둔 시세가 있는 채 다시 받기(폴링)가 실패했다 — 값은 두고 Callout 한 줄(단계 4) */
+  stale?: boolean;
+  /** 다시 받는 중 — 실패 [다시 시도] 진행 원 · Callout 다시 누름 무시 */
+  retrying?: boolean;
   onRetry?: () => void;
   warnings?: string[];
   loading?: boolean;
@@ -232,6 +239,15 @@ export function HeadBand({
       ) : (
         title
       )}
+      {/* 받아 둔 시세가 있는 채 실패 — 이름 바로 아래, 가격을 읽기 전에(섹션 첫 줄, 단계 4) */}
+      {stale && !failed && (
+        <PriceStaleCallout
+          band={false}
+          onRetry={onRetry ?? (() => {})}
+          retrying={retrying}
+          className="mt-x4"
+        />
+      )}
       <div className="mt-x4">
         {loading ? (
           <Skeleton text="t12" className="w-3/5" />
@@ -261,6 +277,7 @@ export function HeadBand({
           <BandFailure
             title={t("detail.priceFail")}
             onRetry={onRetry ?? (() => {})}
+            retrying={retrying}
           />
         ) : (
           unavailable && (
@@ -354,6 +371,7 @@ export function KvBand({
   rows,
   loading,
   failed,
+  stale,
 }: {
   title: string;
   id: string;
@@ -361,6 +379,8 @@ export function KvBand({
   loading?: boolean;
   /** 실패 한 벌 — 제목 · 설명 · [다시 시도]. 오류 원문은 그리지 않는다 */
   failed?: { title: string; onRetry: () => void };
+  /** 받아 둔 값이 있는 채 다시 받기(폴링)가 실패했다 — 줄은 두고 제목 아래 띠 한 줄(단계 4) */
+  stale?: { onRetry: () => void; retrying?: boolean };
 }) {
   if (failed)
     return (
@@ -372,6 +392,13 @@ export function KvBand({
   return (
     <section aria-labelledby={id}>
       <BandTitle id={id}>{title}</BandTitle>
+      {stale && (
+        <PriceStaleCallout
+          onRetry={stale.onRetry}
+          retrying={stale.retrying}
+          className="pb-x2"
+        />
+      )}
       <List aria-labelledby={id} className="pb-x6">
         {rows.map((r) => (
           <KvListItem
@@ -406,6 +433,8 @@ export interface BookQuery {
   /** 아직 값도 오류도 없다(꺼져 있어 시작 전인 질의 포함) — 이때 "없어요" 를 보이지 않는다 */
   isPending: boolean;
   isError: boolean;
+  /** 다시 받는 중 — 실패 Callout 다시 누름을 무시한다 */
+  isFetching?: boolean;
   refetch: () => unknown;
 }
 
@@ -569,6 +598,17 @@ export function QuotesBand({
           </SegmentedControlItem>
         </SegmentedControl>
         <div className="mt-x3">
+          {/* 받아 둔 호가 · 체결이 있는 채 다시 받기(5초)가 실패했다 — 표는 두고 위에 띠 한 줄(단계 4) */}
+          {(tab === "book" ? isStaleError(bookQ) : isStaleError(tradesQ)) && (
+            <PriceStaleCallout
+              band={false}
+              retrying={tab === "book" ? bookQ.isFetching : tradesQ.isFetching}
+              onRetry={() =>
+                void (tab === "book" ? bookQ.refetch() : tradesQ.refetch())
+              }
+              className="pb-x3"
+            />
+          )}
           {tab === "book" ? (
             bookQ.isPending ? (
               <TableSkeleton label={t("quotes.orderbookLoading")} />

@@ -385,6 +385,30 @@ describe("토스 폰 화면", () => {
     expect(container.textContent).not.toContain("holdings.failTitle");
     expect(container.textContent).toContain("$6,185.55");
     expect(container.textContent).toContain("한국종목");
+    // 조용히 옛 값으로 두지 않는다 — 내 투자 · 보유 목록에 Callout "시세를 불러오지 못했어요 · 마지막으로 받은 시세"(단계 4).
+    // 보이는 내용이 있으니 실패 Result Section 은 아니다
+    const bands = container.querySelectorAll("[data-slot=price-stale-callout]");
+    expect(bands.length).toBeGreaterThanOrEqual(1);
+    expect(bands[0]!.textContent).toContain("detail.priceFail");
+    expect(bands[0]!.textContent).toContain("detail.priceStale");
+    expect(container.querySelector("[data-slot=price-fail-band]")).toBeNull();
+    // 섹션 첫 줄 — 내 투자 띠에서 Callout 이 평가금액 라벨보다 앞이다(숫자를 읽기 전에, 앱 p4a 와 같은 자리)
+    const invest = container.querySelector("[data-section=invest]")!;
+    const callout = invest.querySelector("[data-slot=price-stale-callout]")!;
+    const label = [...invest.querySelectorAll("*")].find(
+      (e) => e.children.length === 0 && e.textContent === "summary.title",
+    )!;
+    expect(
+      callout.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("폴링이 모두 정상이면 시세 실패 Callout · 띠가 없다", () => {
+    render();
+    expect(container.querySelector("[data-slot=price-fail-band]")).toBeNull();
+    expect(
+      container.querySelector("[data-slot=price-stale-callout]"),
+    ).toBeNull();
   });
 
   it("금액 가리기를 켜면 내 투자 · 보유 줄의 금액이 모두 가려진다", () => {

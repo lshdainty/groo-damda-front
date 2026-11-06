@@ -27,6 +27,7 @@ const state = vi.hoisted(() => ({
   entries: [] as Array<{ item: { rowId: number } }>,
   failIds: [] as number[],
   addResult: "ok" as "ok" | "fail",
+  addError: null as unknown,
   createResult: "ok" as "ok" | "fail",
 }));
 
@@ -57,7 +58,7 @@ vi.mock("../api/watchlistApi", () => ({
         state.addItem(...a);
         return state.addResult === "ok"
           ? Promise.resolve({})
-          : Promise.reject(new Error("x"));
+          : Promise.reject(state.addError ?? new Error("x"));
       },
     };
   },
@@ -138,6 +139,7 @@ afterEach(() => {
   state.removeItem.mockClear();
   state.refetch.mockClear();
   state.snack = [];
+  state.addError = null;
   state.opts = [];
   state.entries = [];
   state.failIds = [];
@@ -226,33 +228,15 @@ describe("그룹 질의가 아직이거나 실패했을 때 별 — 기본 그�
     for (const o of state.opts) expect(o).toEqual({ silent: true });
   });
 
-  it("넣기가 실패하면 스낵바 + [다시 시도] 가 같은 그룹에 넣기만 다시 한다", async () => {
+  it("넣기가 실패하면 스낵바 한 문장, [다시 시도] 없음 — 별은 토글이라 다시 하려면 한 번 더 누른다(판단 ②)", async () => {
     state.groups = [group(1, "관심", [])];
     state.addResult = "fail";
     render(<Probe />);
     await act(async () => seen.toggleWatch("005930", "KOSPI"));
-    expect(state.snack).toHaveLength(1);
-    expect(state.snack[0]).toMatchObject({
-      message: "watch.addFail",
-      tone: "critical",
-    });
-    state.addResult = "ok";
-    await act(async () => state.snack[0]!.action!.onClick());
-    expect(state.addItem).toHaveBeenCalledTimes(2);
+    expect(state.snack).toEqual([
+      { message: "watch.addFail", tone: "critical" },
+    ]);
     expect(state.createGroup).not.toHaveBeenCalled();
-  });
-
-  it("첫 등록에서 그룹은 만들어졌는데 넣기가 실패하면 다시 시도는 넣기만 다시 한다", async () => {
-    state.groups = [];
-    state.addResult = "fail";
-    render(<Probe />);
-    await act(async () => seen.toggleWatch("005930", "KOSPI"));
-    expect(state.snack).toHaveLength(1);
-    state.addResult = "ok";
-    await act(async () => state.snack[0]!.action!.onClick());
-    expect(state.createGroup).toHaveBeenCalledTimes(1);
-    expect(state.addItem).toHaveBeenCalledTimes(2);
-    expect(state.addItem.mock.calls[1]![0]).toMatchObject({ groupId: 77 });
   });
 
   it("그룹이 있으면 새로 만들지 않고 그 그룹에 넣는다", () => {
@@ -263,7 +247,7 @@ describe("그룹 질의가 아직이거나 실패했을 때 별 — 기본 그�
     expect(state.addItem).toHaveBeenCalledTimes(1);
   });
 
-  it("별 해제가 일부 그룹만 실패하면 스낵바 하나 + [다시 시도] 가 남은 것만 다시 지운다", async () => {
+  it("별 해제가 일부 그룹만 실패하면 스낵바 하나, [다시 시도] 없음(토글)", async () => {
     state.groups = [
       group(1, "관심", ["005930"]),
       group(2, "반도체", ["005930"]),
@@ -273,14 +257,20 @@ describe("그룹 질의가 아직이거나 실패했을 때 별 — 기본 그�
     render(<Probe />);
     await act(async () => seen.toggleWatch("005930", "KOSPI"));
     expect(state.removeItem).toHaveBeenCalledTimes(2);
-    expect(state.snack).toHaveLength(1);
-    expect(state.snack[0]).toMatchObject({
-      message: "watch.removeFail",
-      tone: "critical",
-    });
-    state.failIds = [];
-    await act(async () => state.snack[0]!.action!.onClick());
-    expect(state.removeItem).toHaveBeenCalledTimes(3);
-    expect(state.removeItem.mock.calls[2]![0]).toBe(200);
+    expect(state.snack).toEqual([
+      { message: "watch.removeFail", tone: "critical" },
+    ]);
+  });
+
+  it('응답을 못 받았으면 "바뀌었는지 확인하지 못했어요." — 실패 글이 아니다(판단 ②)', async () => {
+    const { WriteUnconfirmedError } = await import("@/shared/api/base");
+    state.groups = [group(1, "관심", [])];
+    state.addResult = "fail";
+    state.addError = new WriteUnconfirmedError(0);
+    render(<Probe />);
+    await act(async () => seen.toggleWatch("005930", "KOSPI"));
+    expect(state.snack).toEqual([
+      { message: "query.unconfirmedToggle", tone: "critical" },
+    ]);
   });
 });

@@ -150,4 +150,26 @@ describe("나무 관심 시세", () => {
     await settle();
     expect(holder.current!.isError).toBe(true);
   });
+
+  it("값 없이 처음 실패한 묶음이 있으면 load(Result Section), 받아 둔 값이 있는 채 실패면 stale(Callout) — 검수 2차 L4", async () => {
+    getPrices.mockRejectedValue(new Error("down"));
+    await mount(["A"]);
+    await settle();
+    expect(holder.current!.failed).toBe("load");
+    getPrices.mockReset();
+    getPrices.mockResolvedValue([
+      { symbol: "A", price: 110, currency: "KRW", previousClose: 100 },
+    ]);
+    await act(async () => {
+      await qc.refetchQueries();
+    });
+    await settle();
+    expect(holder.current!.failed).toBeNull();
+    getPrices.mockRejectedValue(new Error("down"));
+    await act(async () => {
+      await qc.refetchQueries().catch(() => undefined);
+    });
+    await settle();
+    expect(holder.current!.failed).toBe("stale");
+  });
 });

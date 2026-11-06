@@ -1,4 +1,4 @@
-import { apiClient, type QuietRequestConfig } from "@/shared/api";
+import { apiClient, NOT_A_SAVE, type QuietRequestConfig } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
   Asset,
@@ -143,7 +143,7 @@ export const assetApi = {
       {
         ...(Object.keys(params).length > 0 ? { params } : {}),
         ...silentConfig({ silent: true }),
-      },
+      } as QuietRequestConfig,
     );
     return resp.data;
   },
@@ -197,9 +197,7 @@ export const assetApi = {
     const resp: ApiResponse<AssetTransfer> = await apiClient.post(
       "/v1/asset-transfer",
       data,
-      { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
-        silent?: boolean;
-      },
+      { silent: opts?.silent } as QuietRequestConfig,
     );
     return resp.data;
   },
@@ -213,9 +211,7 @@ export const assetApi = {
     const resp: ApiResponse<AssetTransfer> = await apiClient.put(
       `/v1/asset-transfer/${id}`,
       data,
-      { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
-        silent?: boolean;
-      },
+      { silent: opts?.silent } as QuietRequestConfig,
     );
     return resp.data;
   },
@@ -251,7 +247,7 @@ export const assetApi = {
     const resp: ApiResponse<AssetTradePreview> = await apiClient.post(
       "/v1/asset-trade/preview",
       data,
-      silentConfig(opts),
+      { ...silentConfig(opts), ...NOT_A_SAVE },
     );
     return resp.data;
   },

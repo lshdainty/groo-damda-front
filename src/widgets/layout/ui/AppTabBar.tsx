@@ -1,3 +1,4 @@
+import { useLeaveGuard } from "@/shared/ui/groo/leave-guard-context";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Calendar1, Home, Menu, ReceiptText } from "lucide-react";
@@ -38,7 +39,9 @@ export function AppTabBar({
 }) {
   const { t } = useTranslation("layout");
   const { pathname } = useLocation();
-  const navigate = useNavigate();
+  // 다시 누름(첫 화면으로)도 떠나기 가드를 먼저 — [계속 작성] 이면 기억도 지우지 않는다
+  const leaveGuard = useLeaveGuard();
+  const rawNavigate = useNavigate();
   const link = useLinkClick();
 
   const tab = (
@@ -58,11 +61,13 @@ export function AppTabBar({
         to: recall(id)?.path ?? href,
         before: () => expectRestore(id, recall(id)?.scroll ?? 0),
       })}
-      onReselect={({ scrollToTop }) => {
-        forget(id, href);
-        navigate(href, { replace: true });
-        scrollToTop();
-      }}
+      onReselect={({ scrollToTop }) =>
+        leaveGuard(() => {
+          forget(id, href);
+          rawNavigate(href, { replace: true });
+          scrollToTop();
+        })
+      }
     />
   );
 

@@ -73,6 +73,11 @@ vi.mock("@/features/asset", () => ({
   useCardBilling: () => ({ ...empty, data: billing.data }),
   useCardPerformance: () => empty,
   useInvestValuation: () => empty,
+  useInvestValuationState: () => ({
+    map: empty,
+    priceFailed: false,
+    retryPrices: () => {},
+  }),
   useDeleteTrade: () => ({ mutate: () => {} }),
   useCancelCardPayment: () => ({ mutate: () => {} }),
   useInstallmentPayoff: () => ({ mutate: () => {} }),

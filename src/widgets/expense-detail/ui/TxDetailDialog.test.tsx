@@ -191,7 +191,8 @@ vi.mock("@/features/expense", () => ({
 }));
 vi.mock("@/features/expense-split", () => ({
   useExpenseSplits: () => ({
-    data: api.splits,
+    // react-query 처럼 — 처음 불러오기 실패면 값이 없다
+    data: api.splitsError ? undefined : api.splits,
     isLoading: false,
     isError: api.splitsError,
     isFetching: false,

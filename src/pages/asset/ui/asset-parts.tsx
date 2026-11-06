@@ -1,3 +1,5 @@
+import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
+import { loadFailed } from "@/shared/api";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -127,7 +129,7 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
   if (trendQ.isLoading) {
     return <Skeleton className="w-full" radius="8" style={{ height }} />;
   }
-  if (trendQ.isError) {
+  if (loadFailed(trendQ)) {
     return (
       <BandFailure
         title={t("loadFailed.trend")}
@@ -663,7 +665,7 @@ export function UpcomingBillsSection() {
       action={{ label: t("viewAll"), onClick: () => goToSettings() }}
     />
   );
-  if (recurringQ.isError) {
+  if (loadFailed(recurringQ)) {
     return (
       <>
         {head}
@@ -809,9 +811,21 @@ export function GroupSection({
       </>
     );
   }
+  // 이 카드에 연동 투자 자산이 있는데 시세를 못 받았다 — 금액은 DB 잔액 · 옛 시세 그대로 두고 띠 한 줄(단계 4)
+  const priceFail =
+    g.priceFailed && assets.some((a) => g.linkedIds.has(a.rowId));
   return (
     <>
       {head}
+      {priceFail && (
+        <PriceStaleCallout
+          band={band}
+          shows={g.priceFailShows ?? "lastPrice"}
+          retrying={g.pricesRetrying}
+          onRetry={g.retryPrices}
+          className={band ? "pb-x2" : "px-x6 pb-x2"}
+        />
+      )}
       <List aria-label={title} className={band ? "pb-x3" : undefined}>
         {assets.map((a) => (
           <AssetRow
@@ -918,7 +932,7 @@ export function SavingGoalsSection({ place }: { place: Placement }) {
       }}
     />
   );
-  if (goalsQ.isError) {
+  if (loadFailed(goalsQ)) {
     return (
       <>
         {head}

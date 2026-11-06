@@ -47,6 +47,17 @@ export const onReferenceNoticeRelease = (cb: () => void): (() => void) => {
 };
 export const isReferenceNoticeHeld = (): boolean => heldCount > 0;
 
+/*
+ * 참조 실패 스낵바를 마지막으로 띄운 시각 — 같은 장애에서 새로 고침 실패 스낵바(RefreshFailureNotice)가 뒤이어 한 번 더
+ * critical 띠를 띄우지 않게 본다(검수 L9 — 한 사건에 한 문장).
+ */
+let referenceShownAt = -Infinity;
+export const markReferenceNoticeShown = (): void => {
+  referenceShownAt = Date.now();
+};
+export const referenceNoticeShownWithin = (ms: number): boolean =>
+  Date.now() - referenceShownAt < ms;
+
 export function useHoldReferenceNotice(active: boolean): void {
   React.useEffect(() => {
     if (!active) return;

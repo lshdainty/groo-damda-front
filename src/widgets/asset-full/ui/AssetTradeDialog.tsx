@@ -1,3 +1,5 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
+import { loadFailed } from "@/shared/api";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -10,6 +12,7 @@ import { DatePicker, dayKey, parseDayKey } from "@/shared/ds/date-picker";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
+  ResponsiveDialogCancel,
   ResponsiveDialogContent,
   ResponsiveDialogFooter,
 } from "@/shared/ds/dialog";
@@ -239,13 +242,16 @@ export function AssetTradeDialog({
     createMut.error ?? refFailed,
   );
   // 서버 글은 내지 않는다 — 고쳐 다시 할 수 있는 보유 수량 부족만 오류 코드(ASSET_012)로 가려 고정 글을 준다
+  const sft = useSaveFailureText();
   const failCode = (
     createMut.error as { response?: { data?: { code?: unknown } } } | null
   )?.response?.data?.code;
-  const saveFailedText =
+  const saveFailedText = sft(
+    createMut.error,
     failCode === "ASSET_012"
       ? t("trade.saveInsufficientQty")
-      : t("trade.saveFailed");
+      : t("trade.saveFailed"),
+  );
   // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면(성공 · 실패) 끈다
   const savingRef = useRef(false);
   const submit = () => {
@@ -287,6 +293,7 @@ export function AssetTradeDialog({
       form
       dirty={dirty}
       onOpenChange={(next) => !next && onClose()}
+      busy={createMut.isPending}
     >
       <ResponsiveDialogContent title={t("trade.title")}>
         <ResponsiveDialogBody>
@@ -449,7 +456,7 @@ export function AssetTradeDialog({
             </Field>
 
             {/* 예수금이 어떻게 되는지 먼저 보여 준다 — 저장하고 나서 놀라지 않게. 키-값 줄 */}
-            {previewQ.isError ? (
+            {loadFailed(previewQ) ? (
               <BandFailure
                 title={tc("query.failedNamed", {
                   name: t("trade.previewName"),
@@ -529,11 +536,10 @@ export function AssetTradeDialog({
               wide ? "ml-auto flex items-center gap-x2" : "flex min-w-0 flex-1"
             }
           >
-            {wide && (
-              <Button variant="neutralWeak" size="small" onClick={onClose}>
-                {tc("cancel")}
-              </Button>
-            )}
+            {/* 대화상자의 [취소] — 표면의 닫기를 청한다(저장 중이면 받지 않는다 · 바뀐 값이 있으면 묻는다) */}
+            <ResponsiveDialogCancel size="small">
+              {tc("cancel")}
+            </ResponsiveDialogCancel>
             <Button
               size={wide ? "small" : "large"}
               className={wide ? undefined : "flex-1"}

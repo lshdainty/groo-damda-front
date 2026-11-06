@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -9,7 +10,7 @@ import {
   Moon,
   Sun,
 } from "lucide-react";
-import { useSnackbar } from "@/shared/ds/snackbar";
+import { useToggleFail } from "@/shared/lib/confirm-fail";
 
 import {
   BottomSheet,
@@ -106,16 +107,18 @@ export function AppearanceSection({ mobile }: { mobile: boolean }) {
 
   // 바꾸기 실패는 전역 알림이 아니라(요청이 silent) 여기서 고정 글 하나로 알린다. 값 글은 서버 값에서 읽으므로 이전 값으로 남는다.
   // 바로 바뀌는 값 — 실패하면 이전 값 그대로 + critical 스낵바(다시 시도 없음)
-  const snackbar = useSnackbar();
-  const saveFailed = () =>
-    snackbar.show({ message: t("prefs.saveFailed"), tone: "critical" });
+  // 응답을 못 받았으면 "바뀌었는지 확인하지 못했어요." — 설정은 기본 설정 훅이 다시 받아 서버 값으로 맞춘다(판단 ②)
+  const toggleFail = useToggleFail();
+  const saveFailed = (error: unknown) =>
+    toggleFail(error, t("prefs.saveFailed"));
   const savePref = (patch: Record<string, string>) =>
     updatePrefs.mutate(patch, { onError: saveFailed });
 
   const prefsBusy = !prefs || updatePrefs.isPending;
   const prefsState = {
     loading: isLoading,
-    failed: isError,
+    // 처음 불러오기 실패만 — 받아 둔 설정이 있으면 그대로 두고 공용 스낵바가 알린다
+    failed: loadFailed({ isError, data: prefs }),
     retrying: isRefetching,
     onRetry: () => void refetch(),
   };

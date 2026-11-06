@@ -156,3 +156,48 @@ describe("6초 창", () => {
     expect(show).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("화면의 실패 Result Section 이 떠 있는 동안", () => {
+  it("참조 실패 스낵바는 쉬고(겹쳐 말하지 않는다), 실패 자리가 사라지면 한 번 다시 판단해 알린다", async () => {
+    const { ResultSection } = await import("@/shared/ds/result-section");
+    const render = (failed: boolean) =>
+      act(async () => {
+        root.render(
+          <QueryClientProvider client={client}>
+            <ReferenceFailureNotice />
+            {failed && (
+              <ResultSection kind="failure" title="거래를 불러오지 못했어요" />
+            )}
+          </QueryClientProvider>,
+        );
+      });
+    await render(true);
+    await act(async () => {
+      await fail("cats-under-failure", REFERENCE_META);
+      vi.advanceTimersByTime(400);
+    });
+    expect(show).not.toHaveBeenCalled();
+    await render(false);
+    await act(async () => {
+      vi.advanceTimersByTime(400);
+    });
+    expect(show).toHaveBeenCalledTimes(1);
+  });
+
+  it("빈 상태(empty) Result Section 은 쉬게 하지 않는다", async () => {
+    const { ResultSection } = await import("@/shared/ds/result-section");
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={client}>
+          <ReferenceFailureNotice />
+          <ResultSection kind="empty" icon={<svg />} title="거래가 없어요" />
+        </QueryClientProvider>,
+      );
+    });
+    await act(async () => {
+      await fail("cats-under-empty", REFERENCE_META);
+      vi.advanceTimersByTime(400);
+    });
+    expect(show).toHaveBeenCalledTimes(1);
+  });
+});

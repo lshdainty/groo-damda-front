@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Palette } from "lucide-react";
@@ -50,6 +51,7 @@ export function LabelFormDialog({
   const { t: tc } = useTranslation("common");
   const createMut = useCreateEventLabel({ silent: true });
   const updateMut = useUpdateEventLabel({ silent: true });
+  const sft = useSaveFailureText();
   const isNew = !label;
   const [initial] = useState(() => ({
     name: label?.labelName ?? "",
@@ -118,6 +120,7 @@ export function LabelFormDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={createMut.isPending || updateMut.isPending}
     >
       <ResponsiveDialogContent
         title={isNew ? t("newLabel") : t("editLabel")}
@@ -136,7 +139,10 @@ export function LabelFormDialog({
           {saveError && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("labelsSection.saveFailed")}
+                {sft(
+                  createMut.error ?? updateMut.error,
+                  t("labelsSection.saveFailed"),
+                )}
               </Callout>
             </div>
           )}

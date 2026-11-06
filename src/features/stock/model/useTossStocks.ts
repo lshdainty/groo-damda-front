@@ -2,6 +2,7 @@
  * 토스증권 Open API 연동 react-query 훅.
  * 모든 쿼리는 `retry: false` — 키 미설정(503)·백엔드 미기동 시 즉시 실패시켜 호출부가 mock 으로 폴백한다.
  */
+import { POLL_META } from "@/shared/api";
 import { useMemo } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { stockKeys } from "@/shared/config";
@@ -43,6 +44,8 @@ export const useTossPrices = (symbols: string[]) =>
     // 현재가는 라이브로 — 상세 헤더 가격/등락%·리스트 시세가 주기적으로 갱신된다.
     // (탭이 백그라운드면 react-query 가 기본적으로 폴링 일시정지)
     refetchInterval: 10_000,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 /**
@@ -58,6 +61,8 @@ export const useTossOrderbook = (symbol: string | null, enabled = true) =>
     staleTime: 3_000,
     // 호가는 변동이 잦음 → 5초 폴링. 백그라운드 탭 자동 일시정지.
     refetchInterval: 5_000,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 export const useTossTrades = (
@@ -73,6 +78,8 @@ export const useTossTrades = (
     staleTime: 3_000,
     // 체결 테이프도 5초 폴링.
     refetchInterval: 5_000,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 export const useTossPriceLimits = (symbol: string | null) =>
@@ -105,6 +112,8 @@ export const useTossCandles = (
     ...COMMON,
     // 일별표·등락률 계산용 캔들도 주기 갱신 — 1m 은 15초, 1d 는 60초.
     refetchInterval: interval === "1m" ? 15_000 : 60_000,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 /** 투자자별 매매동향 — 상세를 열 때 한 번, 5분 안에는 다시 안 묻는다(일별 값 · 폴링 없음) */
@@ -132,6 +141,8 @@ export const useTossBuyingPower = (
     ...COMMON,
     staleTime: 30_000,
     refetchInterval: 60_000,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 export const useTossStockWarnings = (symbol: string | null) =>
@@ -170,6 +181,8 @@ export const useTossAccounts = () =>
     queryKey: stockKeys.accounts(),
     queryFn: () => stockApi.getAccounts(),
     ...COMMON,
+    // 폴링은 아니지만 실패를 그 자리 띠가 말한다(단계 4) — 공용 새로 고침 스낵바와 겹치지 않게 같은 표식
+    meta: POLL_META,
     staleTime: 5 * 60_000,
   });
 
@@ -183,6 +196,8 @@ export const useTossHoldings = (accountSeq: number | null) =>
     // 보유종목 평가액은 현재가 반영 → 라이브로 갱신(상세 보유정보·포트폴리오 도넛).
     // 백그라운드 탭은 react-query 가 자동 일시정지.
     refetchInterval: 10_000,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 // ---- 랭킹 / 시장 지표 / 전일종가 --------------------------------------------
@@ -204,6 +219,8 @@ export const useTossRankings = (
     ...COMMON,
     staleTime: 30_000,
     refetchInterval: 60_000,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 /** 시장 지표 현재가 (코스피·코스닥 지수 등 토스 카탈로그 8종) */
@@ -215,6 +232,8 @@ export const useTossIndicatorPrices = (symbols: string[], enabled = true) =>
     ...COMMON,
     staleTime: 30_000,
     refetchInterval: 60_000,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 /**

@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/shared/ds/button";
@@ -17,6 +18,7 @@ import { EventFormDialogBody } from "./dialog-body";
 export function EventFormDialogPanel({ flow }: { flow: EventFormFlow }) {
   const { t } = useTranslation("calendar");
   const { t: tc } = useTranslation("common");
+  const sft = useSaveFailureText();
   const {
     view,
     heading,
@@ -24,6 +26,7 @@ export function EventFormDialogPanel({ flow }: { flow: EventFormFlow }) {
     isLoading,
     save,
     saveError,
+    saveErrorDetail,
     focusTitleOnOpen,
     setErrorEl,
   } = flow;
@@ -33,7 +36,7 @@ export function EventFormDialogPanel({ flow }: { flow: EventFormFlow }) {
         {saveError && (
           <div ref={setErrorEl}>
             <Callout tone="critical" role="alert" className="mb-x4">
-              {t("form.saveFailed")}
+              {sft(saveErrorDetail, t("form.saveFailed"))}
             </Callout>
           </div>
         )}

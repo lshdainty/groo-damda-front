@@ -6,6 +6,16 @@ common,cancel,취소,Cancel
 common,delete,삭제,Delete
 common,retry,다시 시도,Try again
 common,query.referenceFailed,일부 정보를 불러오지 못했어요.,Some information couldn't be loaded.
+common,query.refreshFailed,새로 고치지 못했어요.,Couldn't refresh.
+common,query.saveUnconfirmed,저장됐는지 확인하지 못했어요. 목록에서 확인해주세요.,We couldn't confirm it was saved. Please check the list.
+common,query.payUnconfirmed,결제됐는지 확인하지 못했어요. 청구 내역에서 확인해주세요.,We couldn't confirm the payment. Please check the billing history.
+common,query.withdrawUnconfirmedRefresh,해지됐는지 확인하지 못했어요. 화면을 새로 고쳐 확인해주세요.,We couldn't confirm the cancellation. Please refresh the page to check.
+common,query.passwordUnconfirmed,비밀번호가 바뀌었는지 확인하지 못했어요. 새 비밀번호로 로그인해 확인해주세요.,We couldn't confirm your password was changed. Please sign in with the new password to check.
+common,query.unconfirmedSave,저장됐는지 확인하지 못했어요.,We couldn't confirm it was saved.
+common,query.unconfirmedDelete,삭제됐는지 확인하지 못했어요.,We couldn't confirm it was deleted.
+common,query.unconfirmedAction,처리됐는지 확인하지 못했어요.,We couldn't confirm it went through.
+common,query.unconfirmedToggle,바뀌었는지 확인하지 못했어요.,We couldn't confirm it changed.
+common,query.unconfirmedConnect,연결됐는지 확인하지 못했어요.,We couldn't confirm the connection.
 common,query.referenceSaveFailed,필요한 정보를 불러오지 못해 저장하지 못했어요.,Couldn't save because some information couldn't be loaded.
 common,query.failedNamed,{{name}} 정보를 불러오지 못했어요,Couldn't load the {{name}} info
 common,edit,수정,Edit
@@ -2228,6 +2238,8 @@ stocks,securityType.WARRANT,워런트,Warrant
 stocks,search.hint,종목명·심볼로 검색하세요 (국내 + 미국·중국·일본·홍콩·베트남),Search by name or symbol (KR + US·CN·JP·HK·VN)
 stocks,detail.priceUnavailable,토스 시세 미지원 종목이에요 (국내·미국만 제공),Price unavailable via Toss (KR·US only)
 stocks,detail.priceFail,시세를 불러오지 못했어요,Couldn't load the price
+stocks,detail.priceStale,보이는 값은 마지막으로 받은 시세예요.,The values shown are the last prices received.
+stocks,detail.priceStaleBalance,보이는 값은 시세가 아닌 마지막 잔액이에요.,"The values shown are the last balance, not live prices."
 stocks,discover.loading,순위를 불러오는 중이에요,Loading rankings
 stocks,discover.empty,집계된 순위가 없어요,No rankings available
 stocks,watch.defaultGroupName,관심,Watchlist
@@ -2892,6 +2904,7 @@ asset,holdings.linkedPending,{{n}}주 · 시세 연동 대기,{{n}} shares · aw
 asset,holdings.manualSub,직접 입력,Manual entry
 asset,holdings.todayChange,오늘 {{sign}}{{amount}}원,Today {{sign}}₩{{amount}}
 asset,holdings.editSummary,{{n}}종목 · {{total}}원,{{n}} holdings · ₩{{total}}
+asset,holdings.editSummaryUnknown,{{n}}종목 · —,{{n}} holdings · —
 asset,holdings.searchPlaceholder,종목 이름 검색,Search stock name
 asset,holdings.addStock,종목 추가,Add stock
 asset,holdings.addStockTitle,종목 추가,Add stock

@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useTranslation } from "react-i18next";
 import { Unplug } from "lucide-react";
 import { ModalShell } from "@/shared/ui/groo/dialogs";
@@ -56,7 +57,7 @@ export function SecuritiesLinkDialog({
           </>
         )}
 
-        {isError && (
+        {loadFailed({ isError, data: connections }) && (
           <div
             style={{
               display: "flex",

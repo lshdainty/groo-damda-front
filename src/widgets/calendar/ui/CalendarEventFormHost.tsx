@@ -57,6 +57,7 @@ export function CalendarEventFormHost({
         end={selectedEndDate ?? day}
         isLoading={createEvent.isPending}
         saveError={createEvent.isError}
+        saveErrorDetail={createEvent.error}
         onClose={onClose}
         onDetail={setDraft}
         // 실패는 대화상자의 Callout 이 알린다 — 전역 토스트(서버 글)는 끈다
@@ -90,6 +91,7 @@ export function CalendarEventFormHost({
       onRetryLabels={() => void labelsQ.refetch()}
       isLoading={event ? updateEvent.isPending : createEvent.isPending}
       saveError={event ? updateEvent.isError : createEvent.isError}
+      saveErrorDetail={event ? updateEvent.error : createEvent.error}
       onClose={onClose}
       onDelete={onDelete}
       onSubmit={(data) => {

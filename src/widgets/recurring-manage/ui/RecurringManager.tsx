@@ -114,10 +114,14 @@ export function RecurringManager({
       });
     toggleMut.mutate(it.rowId, {
       onSuccess: done,
-      onError: () =>
+      // 응답을 못 받았으면(뒤집혔을 수 있다) [다시 시도] 없이 다시 받은 서버 값 + "바뀌었는지 확인하지 못했어요."(판단 ②).
+      // 그 밖의 실패는 [다시 시도] 를 남긴다 — 앱(recurring_actions.dart _toggleBody)과 같게 다시 시도는 먼저 서버 상태를 받아
+      // 이미 목표 상태면 보내지 않는다(뒤집기 API 라도 두 번 뒤집히지 않는다)
+      onError: (error) =>
         confirmFail({
+          error,
+          unconfirmedKind: "toggle",
           message: t(wasActive ? "pauseFailed" : "resumeFailed"),
-          // 토글은 뒤집기만 한다 — 응답만 실패하고 서버에는 반영됐으면 다시 뒤집지 않게, 최신 상태를 받아 이미 목표면 보내지 않는다
           retry: async () => {
             const r = await recurringsQ.refetch();
             const cur = r.data?.find((x) => x.rowId === it.rowId);
@@ -129,8 +133,9 @@ export function RecurringManager({
     });
   };
 
-  const deleteFailed = (it: RecurringTransaction) =>
+  const deleteFailed = (it: RecurringTransaction, error: unknown) =>
     confirmFail({
+      error,
       message: t("deleteFailed"),
       retry: () => deleteMut.mutateAsync(it.rowId),
       onRetried: () =>
@@ -400,10 +405,10 @@ export function RecurringManager({
                 setDetailId(null);
               },
               // 실패는 확인창을 닫은 뒤 스낵바(고정 글 + 다시 시도)로 — 창 위에는 겹치지 않는다
-              onError: () => {
+              onError: (error) => {
                 const failed = confirmDelete;
                 setConfirmDelete(null);
-                deleteFailed(failed);
+                deleteFailed(failed, error);
               },
             })
           }

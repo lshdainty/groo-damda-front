@@ -1,6 +1,10 @@
 export {
   apiClient,
   isHttpStatus,
+  isWriteUnconfirmed,
+  NOT_A_SAVE,
+  SAFE_TO_RETRY,
+  WriteUnconfirmedError,
   setToken,
   getToken,
   removeToken,
@@ -9,8 +13,17 @@ export {
   clearAuthenticated,
   isAuthenticated,
 } from "./base";
-export type { QuietRequestConfig } from "./base";
+export type { QuietRequestConfig, WriteKind } from "./base";
 export { silentConfig, type SilentOpts } from "./silent-config";
+export { loadFailed } from "./query-state";
+export {
+  POLL_META,
+  clearRefreshFailure,
+  isPollQuery,
+  notifyRefreshFailure,
+  onRefreshFailure,
+  shouldNotifyRefreshFailure,
+} from "./refresh-failure";
 
 export { hideCardsApi } from "./hideCardsApi";
 export {

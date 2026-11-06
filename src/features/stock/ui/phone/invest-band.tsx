@@ -7,6 +7,7 @@ import { List, ListButtonItem, ListTile } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { KvListItem } from "./phone-parts";
+import { PriceStaleCallout } from "./price-fail-band";
 
 /*
  * 띠 ① 내 투자(I-13 7 · 8) — 지표(라벨 · 금액 · 증감) + 키-값 줄 + 포트폴리오 구성 줄.
@@ -34,6 +35,9 @@ export function InvestBand({
   onRetry,
   emptyNote,
   columns,
+  priceFailed,
+  priceRetrying,
+  onRetryPrice,
 }: {
   label: string;
   amount: string;
@@ -57,6 +61,11 @@ export function InvestBand({
    * 포트폴리오 구성 줄은 두지 않는다(오른쪽 · 아래에 구성 카드가 있다).
    */
   columns?: boolean;
+  /** 받아 둔 숫자가 있는 채 다시 받기(폴링)가 실패했다 — 숫자는 두고 지표 아래 띠 한 줄(단계 4) */
+  priceFailed?: boolean;
+  /** 다시 받는 중 — Callout 다시 누름을 무시한다 */
+  priceRetrying?: boolean;
+  onRetryPrice?: () => void;
 }) {
   const { t } = useTranslation("stocks");
   return (
@@ -75,6 +84,14 @@ export function InvestBand({
         </div>
       ) : (
         <div className="pb-x6 pt-x6">
+          {/* 섹션 첫 줄 — 숫자를 읽기 전에 "마지막으로 받은 값" 임을 먼저 알린다(앱 p4a 와 같은 자리) */}
+          {!loading && priceFailed && (
+            <PriceStaleCallout
+              onRetry={onRetryPrice ?? onRetry ?? (() => {})}
+              retrying={priceRetrying}
+              className="pb-x4"
+            />
+          )}
           <div className="px-x6">
             {loading ? (
               <div aria-busy className="flex flex-col items-start">

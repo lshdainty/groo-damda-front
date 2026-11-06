@@ -1,3 +1,4 @@
+import { loadFailed } from "@/shared/api";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -57,13 +58,10 @@ export function DevicesSection({ mobile }: { mobile: boolean }) {
   const { t: tCommon } = useTranslation("common");
   const { t: tDs } = useTranslation("ds");
   const { logout } = useAuth();
-  const {
-    data: devices = [],
-    isLoading,
-    isError,
-    refetch,
-    isRefetching,
-  } = useDeviceSessions();
+  const devicesQ = useDeviceSessions();
+  const { data: devices = [], isLoading, refetch, isRefetching } = devicesQ;
+  // 처음 불러오기 실패만 — 받아 둔 목록이 있으면 그대로 두고 공용 스낵바가 알린다
+  const isError = loadFailed(devicesQ);
   // 흐르는 '지금' — 목록을 받아 온 시각(dataUpdatedAt)이 아니다. useDeviceSessions 에
   // refetchInterval 이 없어 설정 화면을 열어 두면 그 값이 갱신되지 않아 '방금 전' 에 멈춘다.
   // 앱(devices_screen.dart 의 nowTickProvider)과 같은 1분 해상도를 쓴다.
@@ -76,15 +74,27 @@ export function DevicesSection({ mobile }: { mobile: boolean }) {
 
   // 끊기 실패는 전역 알림이 아니라(요청이 silent) 여기서 한 번만 알린다 — 확인창은 닫고 critical 스낵바 + [다시 시도](묻지 않고 같은 요청).
   const confirmFail = useConfirmFail();
-  const failed = (retry: () => Promise<unknown>, onRetried: () => void) =>
-    confirmFail({ message: t("devices.logoutFailed"), retry, onRetried });
+  // 기기 로그아웃은 "삭제" 가 아니라 "처리" — 확인 못 함이면 "처리됐는지 확인하지 못했어요."(판단 ①)
+  const failed = (
+    error: unknown,
+    retry: () => Promise<unknown>,
+    onRetried: () => void,
+  ) =>
+    confirmFail({
+      error,
+      unconfirmedKind: "action",
+      message: t("devices.logoutFailed"),
+      retry,
+      onRetried,
+    });
 
   const onRevoke = async (device: DeviceSession) => {
     try {
       await revoke.mutateAsync(device.sessionId);
-    } catch {
+    } catch (error) {
       setConfirming(null);
       failed(
+        error,
         () => revoke.mutateAsync(device.sessionId),
         () => {
           // 다시 시도가 성공했을 때도 지금 이 브라우저를 끊었으면 로그아웃한다
@@ -101,9 +111,10 @@ export function DevicesSection({ mobile }: { mobile: boolean }) {
   const onRevokeAll = async () => {
     try {
       await revokeAll.mutateAsync();
-    } catch {
+    } catch (error) {
       setConfirmingAll(false);
       failed(
+        error,
         () => revokeAll.mutateAsync(),
         () => void logout(),
       );
