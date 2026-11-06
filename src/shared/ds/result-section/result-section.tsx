@@ -2,6 +2,7 @@ import * as React from "react";
 import { CircleAlert, CircleCheck } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
+import { useHoldReferenceNotice } from "@/shared/api";
 import { Button } from "@/shared/ds/button";
 
 import { resultSectionVariants } from "./result-section-variants";
@@ -167,6 +168,9 @@ const ResultSection = React.forwardRef<HTMLDivElement, ResultSectionProps>(
     },
     ref,
   ) => {
+    // 실패 자리가 떠 있는 동안 공용 참조 실패 스낵바는 쉰다 — 이 자리가 이미 "불러오지 못했어요" 를 말한다.
+    // 사라지면(다시 받기 성공 · 화면을 떠남) 참조 알림이 한 번 다시 판단한다(시트 보류와 같은 카운트)
+    useHoldReferenceNotice(kind === "failure");
     // 처음 한 프레임은 내용을 감춘다 — status 에 나중에 들어온 내용이어야 보조 기술이 읽는다
     const [revealed, setRevealed] = React.useState(false);
     React.useEffect(() => {
