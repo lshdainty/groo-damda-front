@@ -185,7 +185,8 @@ describe("예산 설정 폰 — 흰 면 하나(I-08 18 · 21)", () => {
     render();
     const vals = container.querySelectorAll("[data-slot=kv-value]");
     expect(vals).toHaveLength(3);
-    expect(vals[2]!.textContent).toMatch(/^−.*700,000$/);
+    // 시험 언어는 한국어다(tests/vitest.setup.ts) — 돈은 "−700,000원"
+    expect(vals[2]!.textContent).toBe("−700,000원");
     expect(vals[2]!.className).toContain("text-fg-critical");
     expect(container.textContent).toContain("manager.overCap");
   });
