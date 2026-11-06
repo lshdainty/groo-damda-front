@@ -94,9 +94,11 @@ describe("일정 누름", () => {
     expect((mocks.setSelectedDate.mock.calls[0]![0] as Date).getDate()).toBe(
       16,
     );
+    // 연 순간의 보기도 적는다 — 보기가 바뀌면 상세를 비우려고(120b5297)
     expect(screen().detail).toEqual({
       ref: { id: 3, day: "2026-10-16" },
       day: "2026-10-16",
+      view: "month",
     });
   });
 
