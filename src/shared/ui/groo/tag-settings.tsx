@@ -390,6 +390,7 @@ export function TagEditDialog<T extends TagLike>({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={submitting}
     >
       <ResponsiveDialogContent
         title={isNew ? t("tags.new") : t("tags.editTitle")}

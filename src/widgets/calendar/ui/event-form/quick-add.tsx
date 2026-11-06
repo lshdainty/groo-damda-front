@@ -134,6 +134,7 @@ export function QuickAddDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={isLoading ?? false}
     >
       <DialogContent
         title={t("addEvent")}

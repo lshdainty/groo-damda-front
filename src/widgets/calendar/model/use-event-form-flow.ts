@@ -132,6 +132,7 @@ export function useEventFormFlow({
     dirty: step !== "list" && draft !== stepOrigin,
     leave: cancelStep,
     contentRef: NO_FALLBACK_SURFACE,
+    busy: isLoading ?? false,
   });
   const requestCancelStep = () => leave.request();
   useStepBack(!wide && step !== "list", requestCancelStep);

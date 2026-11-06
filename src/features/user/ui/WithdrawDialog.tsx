@@ -396,7 +396,13 @@ export function WithdrawDialog({
   } else {
     footer = (
       <ResponsiveDialogFooter>
-        <Button variant="neutralWeak" onClick={() => setStep("impact")}>
+        <Button
+          variant="neutralWeak"
+          // 확인 중에는 앞 단계로 가지 않는다 — 실패 글을 그릴 칸이 사라진다
+          onClick={() => {
+            if (!busy) setStep("impact");
+          }}
+        >
           {tc("back")}
         </Button>
         <Button
@@ -419,6 +425,7 @@ export function WithdrawDialog({
         }}
         form={form}
         dirty={dirty}
+        busy={busy}
       >
         <ResponsiveDialogContent
           title={t("withdraw.title")}

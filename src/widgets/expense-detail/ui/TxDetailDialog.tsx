@@ -515,8 +515,10 @@ export function TxDetailDialog({
         closeDirty={
           stepParts ? stepParts.dirtyAll : editing ? ep.dirtyAll : undefined
         }
-        closeBlocked={
-          (editing && form.submitting) || (stepParts?.busy ?? false)
+        busy={
+          (editing && form.submitting) ||
+          (inRefund && refundMut.isPending) ||
+          (stepParts?.busy ?? false)
         }
         onStepBack={
           stepParts

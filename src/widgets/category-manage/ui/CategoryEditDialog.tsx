@@ -237,6 +237,7 @@ export function CategoryEditDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={submitting}
     >
       <ResponsiveDialogContent
         title={isNew ? te("addCategory") : t("editTitle")}

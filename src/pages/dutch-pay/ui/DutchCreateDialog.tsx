@@ -301,6 +301,7 @@ export function DutchCreateDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={busy}
     >
       <ResponsiveDialogContent
         title={heading}
@@ -459,7 +460,10 @@ export function DutchCreateDialog({
               <Button
                 variant="neutralWeak"
                 className={wide ? "mr-auto" : undefined}
-                onClick={() => setStep(1)}
+                // 저장 중에는 앞 단계로 가지 않는다 — 실패 알림을 그릴 단계가 사라진다
+                onClick={() => {
+                  if (!busy) setStep(1);
+                }}
               >
                 {t("prev")}
               </Button>

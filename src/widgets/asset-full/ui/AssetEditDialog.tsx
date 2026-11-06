@@ -402,6 +402,12 @@ export function AssetEditDialog({
     else onUpdate(common);
   };
 
+  // 금액 보기 인증 단계의 확인 요청이 나가 있다 — 그동안도 표면이 닫히지 않고 ← 로 2단계에 가지 않는다(busy)
+  const [unlockBusy, setUnlockBusy] = useState(false);
+  const backFromUnlock = () => {
+    if (!unlockBusy) setStep("form");
+  };
+
   const kindName = kind ? t(KIND_LABEL_KEY[kind]) : "";
   const { t: tSettings } = useTranslation("settings");
   const title =
@@ -422,6 +428,7 @@ export function AssetEditDialog({
         onOpenChange={(next) => {
           if (!next) handleClose();
         }}
+        busy={isSubmitting || (step === "unlock" && unlockBusy)}
       >
         <ResponsiveDialogContent
           ref={contentRef}
@@ -429,7 +436,7 @@ export function AssetEditDialog({
           // 추가 2단계의 ← 는 1단계로 — 수정에는 1단계가 없어 ← 도 없다
           onBack={
             step === "unlock"
-              ? () => setStep("form")
+              ? backFromUnlock
               : step === "form" && isNew
                 ? () => backToKind.request()
                 : undefined
@@ -445,7 +452,8 @@ export function AssetEditDialog({
             <KindStep f={f} showError={showKindError} onNext={goNext} />
           ) : step === "unlock" ? (
             <UnlockStep
-              onBack={() => setStep("form")}
+              onBack={backFromUnlock}
+              onBusyChange={setUnlockBusy}
               onVerified={() => {
                 // 확인되면 2단계로 돌아가 저장을 이어 간다 — 저장이 실패해도 폼에 남는다
                 unlockedRef.current = true;

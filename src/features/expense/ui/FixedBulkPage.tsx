@@ -37,7 +37,6 @@ export function FixedBulkPage({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.fixed");
-  useBackClose(true, () => onClose());
   const {
     kind,
     setKind,
@@ -50,6 +49,14 @@ export function FixedBulkPage({
     groups,
     apply,
   } = useFixedBulk({ startDate, endDate, onClose });
+  // 적용 중에는 ← · Esc · 기기 뒤로 가기로 나가지 않는다 — 나가면 실패 Callout 을 그릴 페이지가 사라진다(뒤로 가기는 칸을 다시 쌓는다)
+  const leave = () => {
+    if (!mut.isPending) onClose();
+  };
+  useBackClose(true, (keep) => {
+    if (mut.isPending) keep();
+    else onClose();
+  });
   // 실패하면 Callout 이 보이게 본문을 맨 위로(스크롤 컨테이너는 아래 flex-1 overflow-y-auto)
   const errorRef = useScrollToError<HTMLDivElement>(mut.isError, mut.error);
   const page = (
@@ -60,11 +67,11 @@ export function FixedBulkPage({
       data-slot="fixed-bulk-page"
       className="fixed inset-0 z-(--z-modal) flex flex-col bg-bg-layer-default"
       onKeyDown={(e) => {
-        if (e.key === "Escape") onClose();
+        if (e.key === "Escape") leave();
       }}
     >
       <TopNavigation>
-        <TopNavigationBackButton fallbackHref="/desk/stats" onClick={onClose} />
+        <TopNavigationBackButton fallbackHref="/desk/stats" onClick={leave} />
         <TopNavigationTitle>{t("fixed.bulk.title")}</TopNavigationTitle>
       </TopNavigation>
       <div className="min-h-0 flex-1 overflow-y-auto pb-x4">

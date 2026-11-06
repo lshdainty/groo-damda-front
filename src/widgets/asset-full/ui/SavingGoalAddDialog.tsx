@@ -245,6 +245,7 @@ export function SavingGoalAddDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={saving}
     >
       <ResponsiveDialogContent
         title={isEdit ? t("savingGoal.titleEdit") : t("savingGoal.titleAdd")}

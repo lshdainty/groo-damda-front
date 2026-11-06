@@ -118,6 +118,7 @@ export function LabelFormDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={createMut.isPending || updateMut.isPending}
     >
       <ResponsiveDialogContent
         title={isNew ? t("newLabel") : t("editLabel")}

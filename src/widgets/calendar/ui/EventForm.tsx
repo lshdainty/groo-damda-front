@@ -30,6 +30,7 @@ export const EventForm = ({ onClose, ...args }: EventFormProps) => {
         open
         form
         dirty={flow.dirty}
+        busy={flow.isLoading ?? false}
         onOpenChange={(next) => {
           if (!next) onClose();
         }}
@@ -45,6 +46,7 @@ export const EventForm = ({ onClose, ...args }: EventFormProps) => {
       form
       // 장소 · 설명 단계의 Esc · 뒤로 가기는 친 글을 버리고 줄 칸으로 돌아간다 — 시트를 닫는 물음은 줄 칸 단계에서만
       dirty={flow.dirty && !flow.inStep}
+      busy={flow.isLoading ?? false}
       onOpenChange={(next) => {
         if (next) return;
         if (flow.inStep) flow.requestCancelStep();

@@ -101,6 +101,7 @@ export const PasswordChangeDialog = ({
       onOpenChange={(o) => {
         if (!o) onOpenChange(false);
       }}
+      busy={changePasswordMutation.isPending}
     >
       <ResponsiveDialogContent
         title={t("passwordChange")}

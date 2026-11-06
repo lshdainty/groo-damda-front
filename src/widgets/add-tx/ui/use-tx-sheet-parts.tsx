@@ -110,6 +110,7 @@ export function useTxSheetParts(
     dirty: inRecon ? split.dirty : f.subDirty,
     leave: () => (inRecon ? split.onBack() : f.leaveSub(true)),
     contentRef,
+    busy: f.submitting,
   });
   const back = (): boolean => {
     // 저장이 나가 있는 동안은 나가지 않는다 — 나가면 응답 뒤 콜백(onSaved · 알림)이 사라진다
@@ -135,6 +136,8 @@ export function useTxSheetParts(
       if (layers[layers.length - 1] !== contentRef.current) return;
       e.preventDefault();
       e.stopPropagation();
+      // 저장 중에는 1단계로도 가지 않는다 — 실패 Callout 을 그릴 2단계가 사라진다
+      if (f.submitting) return;
       f.setMain("1");
     };
     window.addEventListener("keydown", onKey, true);

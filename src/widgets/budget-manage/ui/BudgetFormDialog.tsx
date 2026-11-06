@@ -152,6 +152,7 @@ export function BudgetFormDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={submitting}
     >
       <ResponsiveDialogContent
         title={title}

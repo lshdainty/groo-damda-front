@@ -76,6 +76,7 @@ export function CalendarNameDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={updateMut.isPending}
     >
       <ResponsiveDialogContent
         title={t("shareSection.renameTitle")}

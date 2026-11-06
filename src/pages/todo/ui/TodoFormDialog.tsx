@@ -218,6 +218,7 @@ export function TodoFormDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={submitting}
     >
       <ResponsiveDialogContent
         title={isNew ? t("newTodo") : t("editTodoTitle")}

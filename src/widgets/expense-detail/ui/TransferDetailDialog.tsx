@@ -160,7 +160,7 @@ export function TransferDetailDialog({
         subStep={isEditing}
         dirty={isEditing ? ep.dirty : false}
         closeDirty={isEditing ? ep.dirtyAll : undefined}
-        closeBlocked={isEditing && form.submitting}
+        busy={isEditing && form.submitting}
         onStepBack={isEditing ? ep.onBack : undefined}
         footerNode={isEditing ? ep.footer : undefined}
         bodyRef={isEditing ? ep.bodyRef : undefined}

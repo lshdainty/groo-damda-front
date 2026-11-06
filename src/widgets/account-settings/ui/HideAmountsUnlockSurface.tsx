@@ -4,6 +4,7 @@ import { Button } from "@/shared/ds/button";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
+  ResponsiveDialogCancel,
   ResponsiveDialogContent,
   ResponsiveDialogFooter,
 } from "@/shared/ds/dialog";
@@ -12,10 +13,8 @@ import { HideAmountsUnlockFields } from "./HideAmountsUnlockBody";
 import { useHideAmountsUnlock } from "./use-hide-amounts-unlock";
 
 function UnlockBody({
-  onClose,
   unlock,
 }: {
-  onClose: () => void;
   unlock: ReturnType<typeof useHideAmountsUnlock>;
 }) {
   const { t } = useTranslation("settings");
@@ -35,11 +34,10 @@ function UnlockBody({
             wide ? "ml-auto flex items-center gap-x2" : "flex min-w-0 flex-1"
           }
         >
-          {wide && (
-            <Button variant="neutralWeak" size="small" onClick={onClose}>
-              {t("hideAmounts.cancel")}
-            </Button>
-          )}
+          {/* 대화상자의 [취소] — 표면의 닫기를 청한다(확인 중이면 받지 않는다 · 친 값이 있으면 묻는다) */}
+          <ResponsiveDialogCancel size="small">
+            {t("hideAmounts.cancel")}
+          </ResponsiveDialogCancel>
           <Button
             size={wide ? "small" : "large"}
             className={wide ? undefined : "flex-1"}
@@ -93,9 +91,10 @@ function UnlockSurface({
       form
       dirty={unlock.password !== ""}
       onOpenChange={onOpenChange}
+      busy={unlock.pending}
     >
       <ResponsiveDialogContent title={t("hideAmounts.unlockTitle")}>
-        <UnlockBody onClose={() => onOpenChange(false)} unlock={unlock} />
+        <UnlockBody unlock={unlock} />
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

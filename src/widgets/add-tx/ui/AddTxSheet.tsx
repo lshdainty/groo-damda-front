@@ -52,8 +52,10 @@ function AddTxSheetBody(props: TxFormProps) {
         form
         // 단계 안에서는 ← 가 묻는다 — 시트 전체를 닫는 물음은 단계 밖에서만
         dirty={f.dirty && !sub}
+        // 저장하는 동안은 닫지 않는다 — 닫기 · 뒤로 가기 · Esc 를 표면이 받지 않는다(칸은 다시 쌓는다)
+        busy={f.submitting}
         onOpenChange={(next) => {
-          if (next || f.submitting) return;
+          if (next) return;
           if (sub) {
             void leave.request();
             return;

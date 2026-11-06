@@ -27,6 +27,7 @@ export function RecurringAddDialog(props: RecurringFormProps) {
     dirty: stepDirty,
     leave: form.exitStep,
     contentRef,
+    busy: form.submitting,
   });
   // 기기 뒤로 가기 = 한 단계 뒤(시트 전체가 닫히지 않는다). 바뀐 글이 있어 물었으면 칸을 다시 쌓는다
   useBackClose(inStep, (keep) => {
@@ -54,6 +55,7 @@ export function RecurringAddDialog(props: RecurringFormProps) {
       open
       form
       dirty={form.dirty && !inStep}
+      busy={form.submitting}
       onOpenChange={(next) => {
         if (next) return;
         if (inStep) void leave.request();

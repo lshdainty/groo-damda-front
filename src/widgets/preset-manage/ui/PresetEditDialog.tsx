@@ -421,6 +421,7 @@ export function PresetEditDialog({
     dirty: step != null && draft !== stepOrigin,
     leave: () => setStep(null),
     contentRef,
+    busy: submitting,
   });
   useStepBack(step != null, () => leave.request());
 
@@ -584,6 +585,7 @@ export function PresetEditDialog({
           if (step != null) leave.request();
           else onClose();
         }}
+        busy={submitting}
       >
         <ResponsiveDialogContent
           ref={contentRef}

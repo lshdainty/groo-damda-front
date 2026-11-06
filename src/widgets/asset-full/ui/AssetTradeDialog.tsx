@@ -10,6 +10,7 @@ import { DatePicker, dayKey, parseDayKey } from "@/shared/ds/date-picker";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
+  ResponsiveDialogCancel,
   ResponsiveDialogContent,
   ResponsiveDialogFooter,
 } from "@/shared/ds/dialog";
@@ -287,6 +288,7 @@ export function AssetTradeDialog({
       form
       dirty={dirty}
       onOpenChange={(next) => !next && onClose()}
+      busy={createMut.isPending}
     >
       <ResponsiveDialogContent title={t("trade.title")}>
         <ResponsiveDialogBody>
@@ -529,11 +531,10 @@ export function AssetTradeDialog({
               wide ? "ml-auto flex items-center gap-x2" : "flex min-w-0 flex-1"
             }
           >
-            {wide && (
-              <Button variant="neutralWeak" size="small" onClick={onClose}>
-                {tc("cancel")}
-              </Button>
-            )}
+            {/* 대화상자의 [취소] — 표면의 닫기를 청한다(저장 중이면 받지 않는다 · 바뀐 값이 있으면 묻는다) */}
+            <ResponsiveDialogCancel size="small">
+              {tc("cancel")}
+            </ResponsiveDialogCancel>
             <Button
               size={wide ? "small" : "large"}
               className={wide ? undefined : "flex-1"}

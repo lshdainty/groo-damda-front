@@ -135,6 +135,7 @@ export function MemoFormDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={submitting}
     >
       <ResponsiveDialogContent
         title={isNew ? t("newMemo") : t("editMemo")}

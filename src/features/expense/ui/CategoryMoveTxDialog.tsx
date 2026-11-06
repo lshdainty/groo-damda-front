@@ -158,6 +158,7 @@ export function CategoryMoveTxDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={submitting}
     >
       <ResponsiveDialogContent
         title={t("moveTx.title")}

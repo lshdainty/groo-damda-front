@@ -163,6 +163,8 @@ export function EventDetailSurface({
       else leaveEdit();
     },
     contentRef,
+    // 저장 중에는 상세로도 돌아가지 않는다 — 실패 Callout 을 그릴 수정 폼이 사라진다
+    busy: updateEvent.isPending,
   });
 
   const openDetail = (e: IEvent, el: HTMLElement) => {
@@ -229,6 +231,7 @@ export function EventDetailSurface({
             open
             form
             dirty={flow.dirty}
+            busy={updateEvent.isPending}
             onOpenChange={(next) => {
               if (!next) onClose();
             }}
@@ -299,6 +302,7 @@ export function EventDetailSurface({
         open
         form={inEdit}
         dirty={inEdit && flow.dirty && !flow.inStep}
+        busy={inEdit && updateEvent.isPending}
         onOpenChange={(next) => {
           if (!next) onClose();
         }}

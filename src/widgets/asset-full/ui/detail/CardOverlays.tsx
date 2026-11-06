@@ -7,6 +7,7 @@ import { BottomSheet, BottomSheetContent } from "@/shared/ds/bottom-sheet";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
+  ResponsiveDialogCancel,
   ResponsiveDialogContent,
   ResponsiveDialogFooter,
 } from "@/shared/ds/dialog";
@@ -120,9 +121,7 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
       : over
         ? t("assetDetail.payAmountOver", { amount: m(money(c.upcoming)) })
         : undefined;
-  const close = () => {
-    if (!c.payCard.isPending) c.setConfirmPay(false);
-  };
+  const close = () => c.setConfirmPay(false);
   const date = c.st?.paymentDate ?? c.billing?.nextPaymentDate;
   const submit = () => {
     setTried(true);
@@ -133,6 +132,8 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
       open
       form
       dirty={c.payAmount !== initial}
+      // 저장하는 동안은 닫지 않는다 — 표면이 막아 시트 뒤로 칸 · 확인창 [나가기] 가 어긋나지 않는다
+      busy={c.payCard.isPending}
       onOpenChange={(next) => {
         if (!next) close();
       }}
@@ -185,11 +186,10 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
               wide ? "ml-auto flex items-center gap-x2" : "flex min-w-0 flex-1"
             }
           >
-            {wide && (
-              <Button variant="neutralWeak" size="small" onClick={close}>
-                {tc("cancel")}
-              </Button>
-            )}
+            {/* 대화상자의 [취소] — 표면의 닫기를 청한다(저장 중이면 받지 않는다 · 바뀐 값이 있으면 묻는다) */}
+            <ResponsiveDialogCancel size="small">
+              {tc("cancel")}
+            </ResponsiveDialogCancel>
             <Button
               size={wide ? "small" : "large"}
               className={wide ? undefined : "flex-1"}

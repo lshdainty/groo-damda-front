@@ -264,6 +264,7 @@ export function WatchGroupForm({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={busy}
     >
       <ResponsiveDialogContent
         title={group ? t("watch.groupRename") : t("watch.groupAdd")}

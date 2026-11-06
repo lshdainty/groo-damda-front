@@ -78,6 +78,7 @@ export function CalendarCreateDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
+      busy={createMut.isPending}
     >
       <ResponsiveDialogContent
         title={t("newCalendar")}

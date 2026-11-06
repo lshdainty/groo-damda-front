@@ -33,6 +33,9 @@ vi.mock("@/shared/ds/dialog", () => ({
   ResponsiveDialogFooter: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
+  ResponsiveDialogCancel: ({ children }: { children: React.ReactNode }) => (
+    <button type="button">{children}</button>
+  ),
 }));
 
 const { HideAmountsUnlockSurface } = await import("./HideAmountsUnlockSurface");
