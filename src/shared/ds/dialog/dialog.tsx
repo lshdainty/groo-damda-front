@@ -3,6 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ArrowLeft, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
+import { useBeforeUnloadWhile } from "@/shared/lib/before-unload";
 import { useHoldReferenceNotice } from "@/shared/api";
 import { Button, type ButtonProps } from "@/shared/ds/button";
 import { useLeaveConfirm } from "@/shared/ds/alert-dialog";
@@ -144,6 +145,8 @@ function Dialog({
   const [open, setOpen] = useOpenState(openProp, defaultOpen, onOpenChange);
   const contentRef = React.useRef<HTMLDivElement>(null);
   useRefocusAfterBusy(busy, contentRef);
+  // 열린 폼이 바뀐 값을 가졌거나 저장 중이면 새로 고침 · 탭 닫기에 브라우저 기본 확인창(판단 (3))
+  useBeforeUnloadWhile(open && (dirty || busy));
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const openRef = React.useRef(open);
   React.useLayoutEffect(() => {

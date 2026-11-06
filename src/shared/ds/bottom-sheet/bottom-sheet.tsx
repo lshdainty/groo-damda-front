@@ -5,6 +5,7 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { ArrowLeft, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
+import { useBeforeUnloadWhile } from "@/shared/lib/before-unload";
 import { useLeaveConfirm } from "@/shared/ds/alert-dialog";
 import {
   focusOpener,
@@ -189,6 +190,8 @@ function BottomSheet({
     leave: () => setOpen(false),
   });
   useRefocusAfterBusy(busy, contentRef);
+  // 열린 폼이 바뀐 값을 가졌거나 저장 중이면 새로 고침 · 탭 닫기에 브라우저 기본 확인창(판단 (3))
+  useBeforeUnloadWhile(open && (dirty || busy));
   // 뒤로 가기(1280 미만) — 바뀐 값이 있어 물었으면 칸을 다시 쌓는다
   useBackClose(open && narrow && modal, (keep) => {
     if (!leave.request()) keep();

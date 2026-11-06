@@ -88,3 +88,25 @@ export function useBackClose(
     };
   }, [enabled]);
 }
+
+/**
+ * 거둔 칸을 되돌리는 이동(flushBack 의 history.go)이 끝난 뒤에 cb 를 부른다 — 화면이 스스로 떠날 때 먼저 칸을 걷고(바뀐 값의 칸 ·
+ * 확인창 칸) 그다음 옮겨야 뒤로 가기가 같은 주소 칸에서 헛돌지 않는다(검수 2차 H3 · M1). 칸을 거두는 정리(effect 정리)가
+ * 끝난 다음(커밋 뒤)에 부른다 — 되돌릴 칸이 없으면 바로 부른다.
+ */
+export function whenBackSlotsSettled(cb: () => void) {
+  // flushBack 은 정리 중 queueMicrotask 로 걸린다 — 그 뒤에 본다
+  queueMicrotask(() => {
+    if (selfPops === 0) {
+      cb();
+      return;
+    }
+    const onPop = () => {
+      // onPopState(먼저 걸린 리스너)가 우리 되돌림을 센 뒤다
+      if (selfPops > 0) return;
+      window.removeEventListener("popstate", onPop);
+      cb();
+    };
+    window.addEventListener("popstate", onPop);
+  });
+}

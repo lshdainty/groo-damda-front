@@ -126,10 +126,13 @@ function render(mobile: boolean) {
     ),
   );
 }
-const tick = () =>
-  act(async () => {
-    await new Promise((r) => setTimeout(r, 0));
-  });
+// 떠남은 뒤로 칸을 걷은 뒤에 옮긴다(검수 2차) — 한 번에 여러 차례 기다린다
+const tick = async () => {
+  for (let i = 0; i < 4; i++)
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+};
 const where = () => container.querySelector("[data-where]")!.textContent;
 const asked = () =>
   document.body.textContent?.includes("hideAmounts.discardTitle") ?? false;
@@ -149,9 +152,10 @@ const side = () =>
         new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }),
       );
   });
+// 진짜 뒤로 가기 — 칸을 실제로 꺼낸다
 const browserBack = () =>
   act(() => {
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    window.history.back();
   });
 
 describe("금액 가리기 — 바꾼 채 떠나기", () => {

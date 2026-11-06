@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import { Button } from "@/shared/ds/button";
@@ -22,7 +22,8 @@ import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
 import { ManagerHead } from "@/shared/ui/groo/manager-layout";
 import { useCoverBottomNav } from "@/shared/ui/groo/use-cover-bottom-nav";
 import { useSettingsLeaveGuard } from "@/shared/ui/groo/settings-frame-context";
-import { useBackClose } from "@/shared/ds/overlay";
+import { useBackClose, whenBackSlotsSettled } from "@/shared/ds/overlay";
+import { useLeaveGuardBypass } from "@/shared/ui/groo/leave-guard-context";
 import { HideAmountsUnlockSurface } from "./HideAmountsUnlockSurface";
 import {
   cardsOfPage,
@@ -117,7 +118,8 @@ export function HideAmountsSection({
     const ok = await setHiddenCards(draft);
     setSaving(false);
     if (ok) {
-      onBack();
+      // 화면이 스스로 떠난다 — 칸을 먼저 걷고 가드를 지나 돌아간다(검수 2차 H1 · H3)
+      leave(onBack);
       return;
     }
     if (viaUnlock) {
@@ -151,8 +153,25 @@ export function HideAmountsSection({
   // 바꾼 채 떠나는 모든 길이 묻는다(단계 5) — "‹ 계정"(틀) · 설정 구역 목록 · 사이드바 · 탭 바 · 머리 링크는 셸 공용 가드를,
   // 브라우저 · 안드로이드 뒤로 가기는 dirty 동안 쌓아 둔 히스토리 칸 하나를 지난다. 확인하면 가려던 곳으로 간다.
   const leaveTo = useRef<(() => void) | null>(null);
+  // 화면이 스스로 떠나는 길(저장 성공 · [나가기]) — 바뀐 값의 뒤로 칸과 확인창 칸을 먼저 걷고(되돌림이 끝난 뒤) 가드를
+  // 지나 옮긴다. 그래야 [나가기] 가 다시 묻지 않고(H2), 같은 주소 칸이 남아 뒤로 가기가 헛돌지 않는다(H3 · M1)
+  const [leaving, setLeaving] = useState(false);
+  const pendingLeave = useRef<(() => void) | null>(null);
+  const bypass = useLeaveGuardBypass();
+  const leave = (go: () => void) => {
+    pendingLeave.current = go;
+    setConfirmDiscard(false);
+    setLeaving(true);
+  };
+  useEffect(() => {
+    if (!leaving) return;
+    const go = pendingLeave.current;
+    pendingLeave.current = null;
+    if (go) whenBackSlotsSettled(() => bypass(go));
+  }, [leaving, bypass]);
+  const guarding = dirty && !leaving;
   useSettingsLeaveGuard(
-    dirty
+    guarding
       ? (go) => {
           if (saving) return;
           leaveTo.current = go;
@@ -161,7 +180,7 @@ export function HideAmountsSection({
       : null,
   );
   // 뒤로 가기 — 칸을 바로 다시 쌓고(다음 뒤로 가기도 여기로) 묻는다. [나가기] 면 계정으로 간다(앞 화면으로 되돌리지 않고 이동)
-  useBackClose(dirty, (keep) => {
+  useBackClose(guarding, (keep) => {
     keep();
     if (saving) return;
     leaveTo.current = onBack;
@@ -322,7 +341,7 @@ export function HideAmountsSection({
           onConfirm={() => {
             const go = leaveTo.current ?? onBack;
             leaveTo.current = null;
-            go();
+            leave(go);
           }}
           // 요청이 아니라 화면을 나가는 확인이다 — 던지지 않는다
           onError={() => {}}
