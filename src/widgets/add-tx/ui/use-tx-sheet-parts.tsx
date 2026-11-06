@@ -311,7 +311,9 @@ export function useTxSheetParts(
             <Callout tone="critical" role="alert">
               {f.listsFailed
                 ? tc("query.referenceSaveFailed")
-                : t("addTx.saveFailed")}
+                : f.saveUnconfirmed
+                  ? tc("query.saveUnconfirmed")
+                  : t("addTx.saveFailed")}
             </Callout>
           </div>
         )}

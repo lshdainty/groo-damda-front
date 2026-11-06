@@ -54,6 +54,8 @@ const state = vi.hoisted(() => ({
   assetsFailed: false,
   /** 문자 해석 결과 — 없으면 못 알아본 문자 */
   parsed: null as Record<string, unknown> | null,
+  /** 거래 고치기의 지난 실패(없으면 실패 아님) */
+  updateError: null as unknown,
 }));
 
 vi.mock("react-i18next", () => ({
@@ -125,7 +127,8 @@ vi.mock("@/features/expense", () => ({
         sent.calls += 1;
       },
       isPending: false,
-      isError: false,
+      isError: state.updateError != null,
+      error: state.updateError,
       reset: () => {},
     };
   },
@@ -327,6 +330,7 @@ beforeEach(() => {
   state.refetchFails = false;
   state.assetsFailed = false;
   state.parsed = null;
+  state.updateError = null;
   state.assets = [];
   sent.touched = [];
   sent.calls = 0;
@@ -1433,6 +1437,27 @@ describe("호스트가 폼을 든 채 한 단계로 보인다 — 실제 폼 (I-
     expect(dialogTextOf("host-form")).toContain("777원");
     await press("save");
     expect(sent.update).toMatchObject({ amount: 777 });
+  });
+
+  it("저장 응답을 못 읽었으면(PARSE) '저장됐는지 확인하지 못했어요', 그 밖의 실패는 '저장하지 못했어요'", async () => {
+    const { WriteUnconfirmedError } = await import("@/shared/api");
+    state.updateError = new WriteUnconfirmedError(200);
+    await act(async () => {
+      root.render(<Host onBack={() => {}} onSaved={() => {}} />);
+    });
+    click(lastButton("open-edit"));
+    await tick();
+    expect(dialogTextOf("host-form")).toContain("query.saveUnconfirmed");
+    expect(dialogTextOf("host-form")).not.toContain("addTx.saveFailed");
+    state.updateError = Object.assign(new Error("500"), {
+      response: { status: 500 },
+    });
+    await act(async () => {
+      root.render(<Host onBack={() => {}} onSaved={() => {}} />);
+    });
+    await tick();
+    expect(dialogTextOf("host-form")).toContain("addTx.saveFailed");
+    state.updateError = null;
   });
 
   it("저장 실패 뒤 다시 [수정] 하면 지난 실패 알림이 남아 있지 않다 (N6)", async () => {

@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, type QuietRequestConfig } from "@/shared/api";
 import type { ExpenseType } from "@/entities/expense";
 import type { ApiResponse } from "@/shared/types";
 
@@ -91,9 +91,7 @@ export async function commitSms(
   const resp: ApiResponse<SmsCommitResult> = await apiClient.post(
     "/v1/import/sms/commit",
     request,
-    { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
-      silent?: boolean;
-    },
+    { silent: opts?.silent, confirmWrite: true } as QuietRequestConfig,
   );
   return resp.data;
 }

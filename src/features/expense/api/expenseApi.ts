@@ -40,7 +40,10 @@ export const expenseApi = {
     data: ExpenseFormValues,
     opts?: { silent?: boolean },
   ): Promise<Expense> => {
-    const config: QuietRequestConfig = { silent: opts?.silent };
+    const config: QuietRequestConfig = {
+      silent: opts?.silent,
+      confirmWrite: true,
+    };
     const resp: ApiResponse<Expense> = await apiClient.post(
       "/v1/expense",
       data,
@@ -65,7 +68,10 @@ export const expenseApi = {
     data: ExpenseFormValues,
     opts?: { silent?: boolean },
   ): Promise<Expense> => {
-    const config: QuietRequestConfig = { silent: opts?.silent };
+    const config: QuietRequestConfig = {
+      silent: opts?.silent,
+      confirmWrite: true,
+    };
     const resp: ApiResponse<Expense> = await apiClient.put(
       `/v1/expense/${id}`,
       data,
@@ -95,6 +101,7 @@ export const expenseApi = {
     const config: QuietRequestConfig = {
       silentStatuses: [404],
       silent: opts?.silent,
+      confirmWrite: true,
     };
     const resp: ApiResponse<Expense> = await apiClient.post(
       `/v1/expense/${id}/replace`,

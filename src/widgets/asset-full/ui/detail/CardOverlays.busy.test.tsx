@@ -63,6 +63,7 @@ const back = () =>
 function draw(o: {
   pending: boolean;
   payFailed?: boolean;
+  payUnconfirmed?: boolean;
   payAmount?: string;
   setConfirmPay: (v: boolean) => void;
 }) {
@@ -73,6 +74,7 @@ function draw(o: {
     upcoming: 10000,
     payAmountValid: true,
     payFailed: o.payFailed ?? false,
+    payUnconfirmed: o.payUnconfirmed ?? false,
     payMoveNote: null,
     setPayAmount: () => {},
     setPayFailed: () => {},
@@ -171,5 +173,20 @@ describe("카드 지금 결제 — 결제 중에는 닫지 않는다", () => {
     await tick();
     expect(setConfirmPay).not.toHaveBeenCalled();
     expect(q("[data-slot=dialog-content]")).not.toBeNull();
+  });
+
+  it("결제 응답을 못 읽었으면(PARSE) '결제됐는지 확인하지 못했어요' — 결제 실패 글이 아니다, 폼은 연 채", async () => {
+    wide = false;
+    const setConfirmPay = vi.fn();
+    draw({
+      pending: false,
+      payFailed: true,
+      payUnconfirmed: true,
+      setConfirmPay,
+    });
+    await tick();
+    expect(document.body.textContent).toContain("query.payUnconfirmed");
+    expect(document.body.textContent).not.toContain("assetDetail.payFailed");
+    expect(setConfirmPay).not.toHaveBeenCalled();
   });
 });

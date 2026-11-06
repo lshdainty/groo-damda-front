@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invalidateFor } from "@/shared/config";
+import { isWriteUnconfirmed } from "@/shared/api";
 import { commitSms, type SmsCommitRequest } from "../api/smsApi";
 
 /**
@@ -15,5 +16,9 @@ export const useCommitSms = (opts?: { silent?: boolean }) => {
   return useMutation({
     mutationFn: (request: SmsCommitRequest) => commitSms(request, opts),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
+    // 응답을 못 읽었다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 범위를 다시 받아 목록이 진실을 보이게 한다
+    onError: (error) => {
+      if (isWriteUnconfirmed(error)) invalidateFor(queryClient, "ledger");
+    },
   });
 };

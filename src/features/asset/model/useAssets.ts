@@ -4,6 +4,7 @@ import {
   referenceSilent,
   type ReferenceOpts,
   type SilentOpts,
+  isWriteUnconfirmed,
 } from "@/shared/api";
 import { assetKeys, invalidateFor } from "@/shared/config";
 import { assetApi } from "../api/assetApi";
@@ -139,6 +140,10 @@ export const usePayCard = () => {
       paymentDate?: string;
     }) => assetApi.payCard(id, amount, paymentDate),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
+    // 응답을 못 읽었다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 범위를 다시 받아 목록이 진실을 보이게 한다
+    onError: (error) => {
+      if (isWriteUnconfirmed(error)) invalidateFor(queryClient, "ledger");
+    },
   });
 };
 
@@ -193,6 +198,10 @@ export const useCreateTransfer = (opts?: { silent?: boolean }) => {
       assetApi.createTransfer(data, opts),
     // 이자가 있는 이체는 지출 거래를 하나 만든다.
     onSuccess: () => invalidateFor(queryClient, "ledger"),
+    // 응답을 못 읽었다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 범위를 다시 받아 목록이 진실을 보이게 한다
+    onError: (error) => {
+      if (isWriteUnconfirmed(error)) invalidateFor(queryClient, "ledger");
+    },
   });
 };
 
@@ -204,6 +213,11 @@ export const useUpdateTransfer = (opts?: { silent?: boolean }) => {
     mutationFn: ({ id, data }: { id: number; data: AssetTransferFormValues }) =>
       assetApi.updateTransfer(id, data, opts),
     onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
+    // 응답을 못 읽었다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 범위를 다시 받아 목록이 진실을 보이게 한다
+    onError: (error) => {
+      if (isWriteUnconfirmed(error))
+        return invalidateFor(queryClient, "ledger", { wait: true });
+    },
   });
 };
 

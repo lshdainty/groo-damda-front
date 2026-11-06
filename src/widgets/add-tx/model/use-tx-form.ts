@@ -35,7 +35,7 @@ import {
 } from "@/entities/asset";
 import type { ExpenseTemplate } from "@/entities/expense-template";
 import { closedCycleSpan, cyclePaymentDate } from "@/entities/expense";
-import { isHttpStatus, loadFailed } from "@/shared/api";
+import { isHttpStatus, isWriteUnconfirmed, loadFailed } from "@/shared/api";
 import type { ExpenseSplitFormValue } from "@/entities/expense-split";
 import {
   DEFAULT_CURRENCY,
@@ -967,6 +967,18 @@ export function useTxForm({
     updateTransferMut.isError ||
     commitSmsMut.isError ||
     listsFailed;
+  /**
+   * 저장 응답을 못 읽었다(PARSE) — 서버는 저장했을 수 있다. Callout 은 "저장하지 못했어요" 가 아니라 "저장됐는지 확인하지 못했어요"
+   * (다시 누르면 같은 거래가 두 번 들어갈 수 있다). 목록은 훅이 성공 때처럼 다시 받는다
+   */
+  const saveUnconfirmed = [
+    createMut,
+    updateMut,
+    replaceMut,
+    createTransferMut,
+    updateTransferMut,
+    commitSmsMut,
+  ].some((m) => isWriteUnconfirmed(m.error));
 
   /**
    * 문자 해석 결과를 폼에 채운다.
@@ -1594,6 +1606,7 @@ export function useTxForm({
     confirmSave,
     submitting,
     saveFailed,
+    saveUnconfirmed,
     listsFailed,
     subDirty,
     leaveSub,

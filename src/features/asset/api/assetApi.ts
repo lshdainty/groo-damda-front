@@ -143,7 +143,8 @@ export const assetApi = {
       {
         ...(Object.keys(params).length > 0 ? { params } : {}),
         ...silentConfig({ silent: true }),
-      },
+        confirmWrite: true,
+      } as QuietRequestConfig,
     );
     return resp.data;
   },
@@ -197,9 +198,7 @@ export const assetApi = {
     const resp: ApiResponse<AssetTransfer> = await apiClient.post(
       "/v1/asset-transfer",
       data,
-      { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
-        silent?: boolean;
-      },
+      { silent: opts?.silent, confirmWrite: true } as QuietRequestConfig,
     );
     return resp.data;
   },
@@ -213,9 +212,7 @@ export const assetApi = {
     const resp: ApiResponse<AssetTransfer> = await apiClient.put(
       `/v1/asset-transfer/${id}`,
       data,
-      { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
-        silent?: boolean;
-      },
+      { silent: opts?.silent, confirmWrite: true } as QuietRequestConfig,
     );
     return resp.data;
   },

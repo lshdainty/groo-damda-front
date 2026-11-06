@@ -38,7 +38,34 @@ export const hasToken = (): boolean => isAuthenticated();
 export type QuietRequestConfig = AxiosRequestConfig & {
   silent?: boolean;
   silentStatuses?: readonly number[];
+  /**
+   * 돈이 움직이는 쓰기 — 2xx 인데 응답 본문이 `{ success: true, … }` 모양이 아니면(깨진 JSON 이 문자열로 들어옴 ·
+   * 다른 모양) 성공으로 넘기지 않고 `WriteUnconfirmedError`(PARSE)로 거절한다. 서버는 처리했을 수 있으므로 호출처는
+   * "저장하지 못했어요" 가 아니라 "저장됐는지 확인하지 못했어요" 로 말하고, 성공 때와 같은 범위를 다시 받는다.
+   */
+  confirmWrite?: boolean;
 };
+
+/**
+ * 쓰기 응답을 풀지 못했다(PARSE) — 2xx 를 받았으니 서버는 처리했을 수 있다. 다시 누르면 같은 거래가 두 번 들어갈 수 있어
+ * 실패로 말하지 않는다(앱 M3 와 같은 규칙).
+ */
+export class WriteUnconfirmedError extends Error {
+  readonly code = "PARSE";
+  constructor(readonly status: number) {
+    super("write response could not be read");
+    this.name = "WriteUnconfirmedError";
+  }
+}
+
+export const isWriteUnconfirmed = (
+  error: unknown,
+): error is WriteUnconfirmedError => error instanceof WriteUnconfirmedError;
+
+const isEnvelope = (body: unknown): boolean =>
+  typeof body === "object" &&
+  body !== null &&
+  (body as { success?: unknown }).success === true;
 
 /**
  * 이 실패가 그 상태 코드인가.
@@ -86,6 +113,12 @@ let isRedirectingToLogin = false;
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     endChain(response.config);
+    // 돈이 움직이는 쓰기는 응답 모양을 확인한다 — 못 읽으면 성공도 실패도 아닌 PARSE
+    if (
+      (response.config as QuietRequestConfig).confirmWrite &&
+      !isEnvelope(response.data)
+    )
+      return Promise.reject(new WriteUnconfirmedError(response.status));
     return response.data;
   },
   (error) => {

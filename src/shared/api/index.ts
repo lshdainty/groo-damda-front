@@ -1,6 +1,8 @@
 export {
   apiClient,
   isHttpStatus,
+  isWriteUnconfirmed,
+  WriteUnconfirmedError,
   setToken,
   getToken,
   removeToken,

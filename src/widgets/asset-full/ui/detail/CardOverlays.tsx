@@ -152,7 +152,11 @@ function PayDialog({ asset, c }: { asset: Asset; c: CardDetail }) {
                 : ""}
             </p>
             {c.payFailed && (
-              <Callout tone="critical">{t("assetDetail.payFailed")}</Callout>
+              <Callout tone="critical">
+                {c.payUnconfirmed
+                  ? tc("query.payUnconfirmed")
+                  : t("assetDetail.payFailed")}
+              </Callout>
             )}
             {c.payMoveNote && <Callout tone="warning">{c.payMoveNote}</Callout>}
             <Field
