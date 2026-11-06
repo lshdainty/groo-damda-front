@@ -328,6 +328,28 @@ describe("고정 덩어리 — 달 줄 + (주 달력 또는 칩 줄)", () => {
     expect(pin.textContent).not.toContain("소비 요약");
     expect(container.querySelector("[data-ledger-bar]")).not.toBeNull();
   });
+
+  it("거르기 중 칩 줄 아래에 여백(pb-x3) 뒤 주 달력 덩어리와 같은 선 하나를 긋는다", () => {
+    st.search = "assetId=1";
+    render();
+    const keep = container.querySelector<HTMLElement>("[data-ledger-keep]")!;
+    const chips = keep.firstElementChild as HTMLElement;
+    expect(chips.className.split(" ")).toEqual(
+      expect.arrayContaining(["pt-x2", "pb-x3"]),
+    );
+    const line = keep.lastElementChild as HTMLElement;
+    expect(line.getAttribute("data-slot")).toBe("divider");
+    expect(keep.querySelectorAll("[data-slot=divider]").length).toBe(1);
+    // 평소 주 달력 덩어리의 선과 같은 부품 · 같은 클래스
+    act(() => root.unmount());
+    root = createRoot(container);
+    st.search = "";
+    render();
+    const calLine = container
+      .querySelector("[data-ledger-keep]")!
+      .querySelector<HTMLElement>("[data-slot=divider]")!;
+    expect(calLine.className).toBe(line.className);
+  });
 });
 
 describe("날짜 묶음 (I-07 14)", () => {
