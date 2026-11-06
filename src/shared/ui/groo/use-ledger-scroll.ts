@@ -127,7 +127,7 @@ export function useLedgerScroll({
   }, []);
 
   /**
-   * 날을 눌러 그 날 묶음으로 옮긴다 — 묶음이 보이는 머리 바로 아래에 선다. 머리의 sticky top(상단 바 + 달 이동 줄)은 늘 보이고,
+   * 날을 눌러 그 날 묶음으로 옮긴다 — 묶음 윗변이 보이는 머리(고정 덩어리) 아래 끝에 딱 붙는다(틈 0 — 앱과 같다). 머리의 sticky top(상단 바 + 달 이동 줄)은 늘 보이고,
    * 아래로 가면 스크롤 방향 때문에 Keep 위(총액 · 요약)가 숨으니 Keep(주 달력)만 빼고, 위로 가면 머리 전체가 드러나니 전체를 뺀다
    * (Scroll Auto Hide — 내리면 숨고 올리면 드러난다).
    */
@@ -135,7 +135,6 @@ export function useLedgerScroll({
     const el = rootRef.current?.querySelector(`[data-ledger-day="${ds}"]`);
     const p = scroller();
     if (!el || !p) return;
-    const gap = 6;
     const top =
       p.scrollTop +
       el.getBoundingClientRect().top -
@@ -148,10 +147,9 @@ export function useLedgerScroll({
     const keep = pin?.querySelector<HTMLElement>("[data-ledger-keep]");
     // 숨는 높이 — Keep 윗변까지(Keep 이 없으면 머리 전체)
     const hideH = keep ? keep.offsetTop : pinH;
-    const downTarget = top - (stickyTop + pinH - hideH) - gap;
+    const downTarget = top - (stickyTop + pinH - hideH);
     p.scrollTo({
-      top:
-        downTarget > p.scrollTop ? downTarget : top - (stickyTop + pinH) - gap,
+      top: downTarget > p.scrollTop ? downTarget : top - (stickyTop + pinH),
       behavior: "smooth",
     });
   };
