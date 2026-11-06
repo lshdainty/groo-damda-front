@@ -14,5 +14,7 @@ export default defineConfig({
     // 레포 설정을 검사하는 테스트는 src 밖에 둔다 — 안에 두면 FSD 게이트가
     // 그 파일까지 어느 계층으로 분류하려 든다.
     include: ["src/**/*.test.{ts,tsx}", "tests/**/*.test.ts"],
+    // 언어 한국어 고정 · jsdom 에 없는 API 를 채운다 — 까닭은 파일 머리에
+    setupFiles: ["./tests/vitest.setup.ts"],
   },
 });
