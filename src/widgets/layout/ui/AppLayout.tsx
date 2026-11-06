@@ -175,11 +175,13 @@ const Shell = () => {
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-bg-layer-basement">
           <DesktopHeader onOpenAdd={() => setAddOpen(true)} />
           {/* flex flex-col — 페이지가 flex-1 로 scroll wrapper 전체 height 를 차지하도록
-              (viewport fit 패턴 지원). 자식 페이지가 자연 height 면 동일 동작. */}
+              (viewport fit 패턴 지원). 자식 페이지가 자연 height 면 동일 동작.
+              relative — 본문 안의 absolute 요소(sr-only 등)가 기댈 자리를 여기로 잡는다. 없으면 위에 positioned 조상이 없는
+              요소는 문서 첫 상자에 기대 본문 스크롤 높이만큼 문서를 늘려 창 스크롤이 하나 더 생긴다(카드 혜택 쪽 넘김의 sr-only). */}
           <main
             id="main"
             tabIndex={-1}
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col bg-bg-layer-basement outline-none"
+            className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col bg-bg-layer-basement outline-none"
           >
             <Outlet
               context={{ onAddTx: () => setAddOpen(true), mobile: false }}
