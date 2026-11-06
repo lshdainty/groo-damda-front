@@ -9,16 +9,23 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 
-const st = vi.hoisted(() => ({ data: [] as unknown[] }));
+const st = vi.hoisted(() => ({
+  data: [] as unknown[] | undefined,
+  error: false,
+  refetch: 0,
+  opts: [] as unknown[],
+}));
 
 vi.mock("react-i18next", () => ({
   useTranslation: (ns?: string) => ({
     t: (k: string) =>
-      ns === "expense" && k === "txm.today"
-        ? "오늘"
-        : ns === "expense" && k === "txm.yesterday"
-          ? "어제"
-          : k,
+      ns === "ds" && k === "common.retry"
+        ? "다시 시도"
+        : ns === "expense" && k === "txm.today"
+          ? "오늘"
+          : ns === "expense" && k === "txm.yesterday"
+            ? "어제"
+            : k,
     i18n: { language: "ko" },
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
@@ -28,12 +35,18 @@ vi.mock("react-router-dom", () => ({
   useSearchParams: () => [new URLSearchParams("q=커피"), () => {}],
 }));
 vi.mock("@/features/expense/model/useExpenses", () => ({
-  useSearchExpenses: () => ({
-    data: st.data,
-    isLoading: false,
-    isFetching: false,
-    isError: false,
-  }),
+  useSearchExpenses: (_p: unknown, opts?: unknown) => {
+    st.opts.push(opts);
+    return {
+      data: st.error ? undefined : st.data,
+      isLoading: false,
+      isFetching: false,
+      isError: st.error,
+      refetch: async () => {
+        st.refetch += 1;
+      },
+    };
+  },
 }));
 vi.mock("@/entities/expense", async (orig) => ({
   ...(await orig<typeof import("@/entities/expense")>()),
@@ -55,6 +68,7 @@ let container: HTMLDivElement;
 let root: Root;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  Object.assign(st, { data: [], error: false, refetch: 0, opts: [] });
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(2026, 10, 6, 12, 0, 0));
   container = document.createElement("div");
@@ -94,5 +108,21 @@ describe("검색 날짜 머리 (I-wrap-b1 ε 3)", () => {
       "2025년 11월 5일 (수)",
     ]);
     expect(container.textContent).not.toMatch(/\d{2}\. \d+\. \d+\(/);
+  });
+});
+
+describe("검색 실패 (I-wrap-b1 ε · 앱 α 검수)", () => {
+  it("그 자리 Result Section + [다시 시도] — 누르면 같은 조건으로 다시 받고, 서버 원문 토스트는 끈다", () => {
+    st.error = true;
+    act(() => root.render(<SearchPage />));
+    const result = container.querySelector("[data-slot=result-section]");
+    expect(result?.textContent).toContain("searchFailed");
+    const retry = [...container.querySelectorAll("button")].find(
+      (b) => b.textContent === "다시 시도",
+    );
+    if (!retry) throw new Error("[다시 시도] 가 없다");
+    act(() => retry.click());
+    expect(st.refetch).toBe(1);
+    expect(st.opts[st.opts.length - 1]).toEqual({ silent: true });
   });
 });

@@ -53,11 +53,13 @@ export function SearchPage() {
   const { t } = useTranslation("common");
   const { t: tl } = useTranslation("layout");
   const { t: te } = useTranslation("expense");
+  const { t: tDs } = useTranslation("ds");
   const { mobile } = useOutletContext<{ mobile: boolean }>();
   const { condition, update } = useSearchCondition();
   const debounced = useDebounced(condition, 350);
   const idle = isIdle(debounced);
-  const query = useSearchExpenses(toSearchParams(debounced));
+  // 실패는 이 자리 Result Section 이 말한다 — 서버 원문 토스트는 끈다
+  const query = useSearchExpenses(toSearchParams(debounced), { silent: true });
   const [detail, setDetail] = useState<Expense | null>(null);
 
   // 스크롤 상자는 셸의 main — 칩 줄이 이 상자 맨 위에서 숨고 드러난다
@@ -98,7 +100,18 @@ export function SearchPage() {
         />
       );
     if (loadFailed(query))
-      return <ResultSection kind="failure" title={t("searchFailed")} />;
+      // 그 자리 실패 + [다시 시도](같은 조건으로 다시) — 서버 글은 내지 않는다(B2a 실패 규칙)
+      return (
+        <ResultSection
+          kind="failure"
+          title={t("searchFailed")}
+          primaryAction={{
+            label: tDs("common.retry"),
+            onClick: () => void query.refetch(),
+            loading: query.isFetching,
+          }}
+        />
+      );
     if (query.isLoading || query.isFetching)
       return (
         <div className="flex flex-col gap-x6 py-x4" aria-busy="true">
