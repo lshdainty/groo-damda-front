@@ -246,33 +246,6 @@
   gap: 8px;
 }
 
-/* Donut */
-.donut-wrap {
-  position: relative;
-  display: inline-flex;
-}
-.donut-wrap .center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-.donut-wrap .center .lbl {
-  font-size: var(--text-badge);
-  color: var(--fg-tertiary);
-  font-weight: 500;
-}
-.donut-wrap .center .val {
-  font-size: var(--text-title-md);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.022em;
-  margin-top: 2px;
-}
-
 /* Modal/Dialog 디자인은 shadcn Dialog (shared/ui/dialog.tsx) 로 이전됨.
    .modal*, .modal-overlay, modalIn/modalOut/fadeIn/fadeOut 모두 제거.
    호출자는 ModalShell (shared/ui/groo/dialogs.tsx) 또는 Dialog 컴포넌트를 직접 사용. */

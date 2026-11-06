@@ -1,29 +1,27 @@
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
+import { Pie, PieChart } from "recharts";
+import {
+  Chart,
+  ChartDonutCenter,
+  assignChartColors,
+  chartDonutRadii,
+} from "@/shared/ds/chart";
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { List, ListItem } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { ChartPie } from "lucide-react";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
-import { Donut } from "@/shared/ui/groo/charts";
 import { cn } from "@/shared/lib/cn";
 import { MaskAmount } from "@/shared/lib/groo/hide-amounts";
 
 /*
  * 포트폴리오 구성 본문(I-13 19) — 도넛 112 가운데(가운데 글 "{n}종목") + 아래 12 에 범례 줄.
  * 범례는 List 키-값 줄: 앞 색 칸 10(모서리 2) + 종목 이름(줄바꿈) · 값 비중 "98.95%".
- * 색은 지금 PortfolioDonut 의 차트 색 배정 그대로. 환율이 없어 비중을 못 내면 도넛 대신 Result Section empty small.
+ * 도넛은 ds Chart(자산 구성 도넛과 같은 길 — Pie + chartDonutRadii · 가운데 ChartDonutCenter, chart.md). 두께는 지름을 따른다(112 → 17 · 120 → 18).
+ * 색은 차트 색 배정 순서(assignChartColors). 환율이 없어 비중을 못 내면 도넛 대신 Result Section empty small.
  */
-
-const PALETTE = [
-  "var(--color-chart-blue)",
-  "var(--color-chart-green)",
-  "var(--color-chart-violet)",
-  "var(--color-chart-orange)",
-  "var(--color-chart-pink)",
-  "var(--color-chart-indigo)",
-  "var(--color-chart-brown)",
-];
 
 export interface CompositionView {
   items: { key: string; name: string; pct: number }[];
@@ -52,6 +50,7 @@ export function CompositionBody({
   titled?: boolean;
 }) {
   const { t } = useTranslation("stocks");
+  const legendId = useId();
   if (failed)
     return (
       <div className="py-x6">
@@ -94,23 +93,32 @@ export function CompositionBody({
         />
       </div>
     );
-  const colored = data.items.map((it, i) => ({
-    ...it,
-    color: PALETTE[i % PALETTE.length]!,
-  }));
+  const colored = assignChartColors(data.items);
+  const size = side ? 120 : 112;
+  const count = t("unit.stocksCount", { count: colored.length });
   const donut = (
-    <Donut
-      size={side ? 120 : 112}
-      stroke={20}
-      segments={colored.map((c) => ({ value: c.pct, color: c.color }))}
+    <Chart
+      label={`${t("portfolio.title")} — ${colored
+        .map((c) => `${c.name} ${pctText(c.pct)}`)
+        .join(" · ")}`}
+      legendId={legendId}
+      height={size}
+      style={{ width: size }}
     >
-      <span className="text-t4 font-bold tabular-nums text-fg-neutral">
-        {t("unit.stocksCount", { count: colored.length })}
-      </span>
-    </Donut>
+      <PieChart>
+        <Pie
+          data={colored}
+          dataKey="pct"
+          nameKey="name"
+          {...chartDonutRadii(size)}
+        />
+      </PieChart>
+      <ChartDonutCenter amount={count} />
+    </Chart>
   );
   const legend = (
     <List
+      id={legendId}
       className={side ? "min-w-0 flex-1" : "mt-x3"}
       aria-label={t("portfolio.title")}
     >
@@ -122,7 +130,7 @@ export function CompositionBody({
             <span
               aria-hidden
               className="block size-2.5 rounded-[2px]"
-              style={{ background: c.color }}
+              style={{ background: c.fill }}
             />
           }
           title={c.name}
