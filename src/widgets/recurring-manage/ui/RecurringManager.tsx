@@ -15,7 +15,7 @@ import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
-import { useConfirmFail, useToggleFail } from "@/shared/lib/confirm-fail";
+import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { SwipeActions } from "@/shared/ds/swipe-actions";
 import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
@@ -102,7 +102,6 @@ export function RecurringManager({
 
   // 확인창 · 버튼 뒤 요청의 실패 — 공용 훅: critical 스낵바 + [다시 시도](묻지 않고 같은 요청을 바로)
   const confirmFail = useConfirmFail();
-  const toggleFail = useToggleFail();
   const togglePause = (it: RecurringTransaction) => {
     if (toggleMut.isPending) return;
     const name = displayTitle(it, t);
@@ -115,10 +114,22 @@ export function RecurringManager({
       });
     toggleMut.mutate(it.rowId, {
       onSuccess: done,
-      // 토글 — 실패는 스낵바 한 문장, [다시 시도] 없음(뒤집기 요청이라 다시 하면 두 번 뒤집힐 수 있다). 응답을 못 받았으면
-      // 되돌리지 않고 다시 받은 서버 값 + "바뀌었는지 확인하지 못했어요."(판단 ②)
+      // 응답을 못 받았으면(뒤집혔을 수 있다) [다시 시도] 없이 다시 받은 서버 값 + "바뀌었는지 확인하지 못했어요."(판단 ②).
+      // 그 밖의 실패는 [다시 시도] 를 남긴다 — 앱(recurring_actions.dart _toggleBody)과 같게 다시 시도는 먼저 서버 상태를 받아
+      // 이미 목표 상태면 보내지 않는다(뒤집기 API 라도 두 번 뒤집히지 않는다)
       onError: (error) =>
-        toggleFail(error, t(wasActive ? "pauseFailed" : "resumeFailed")),
+        confirmFail({
+          error,
+          unconfirmedKind: "toggle",
+          message: t(wasActive ? "pauseFailed" : "resumeFailed"),
+          retry: async () => {
+            const r = await recurringsQ.refetch();
+            const cur = r.data?.find((x) => x.rowId === it.rowId);
+            if (cur && (cur.isActive === "Y") === !wasActive) return;
+            await toggleMut.mutateAsync(it.rowId);
+          },
+          onRetried: done,
+        }),
     });
   };
 
