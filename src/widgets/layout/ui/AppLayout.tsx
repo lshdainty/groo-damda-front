@@ -17,7 +17,9 @@ import { MoneyTabs } from "./MoneyTabs";
 import { TabMemory } from "./TabMemory";
 import { AppTabBar } from "./AppTabBar";
 import { useDeviceSize } from "@/shared/lib/groo/responsive";
-import { SwipeActionsProvider } from "@/shared/ui/swipe-actions";
+import { useWideSurface } from "@/shared/ds/overlay";
+import { isFixedBulkPath } from "@/shared/lib/groo/fixed-bulk-path";
+import { SwipeActionsProvider } from "@/shared/ds/swipe-actions";
 import { AddTxSheet } from "@/widgets/add-tx";
 import { CalendarEventFormHost } from "@/widgets/calendar/ui/CalendarEventFormHost";
 import { useHideCardsSync } from "@/features/hide-amounts";
@@ -44,13 +46,18 @@ const ScreenEffects = () => {
   const { pathname } = useLocation();
   useScreenTitle(t(screenTitleKey(pathname)));
   const last = useRef(pathname);
+  const wide = useWideSurface();
   useEffect(() => {
     if (last.current === pathname) return;
+    const from = last.current;
     last.current = pathname;
+    // 1280 이상의 고정 정리(/desk/stats/fixed)는 주소만 있는 같은 화면 위 대화상자다 — 화면을 옮긴 게 아니므로 뒤 통계를 맨 위로
+    // 보내지 않고 초점도 제목으로 옮기지 않는다(닫으면 초점은 Dialog 가 연 단추로 돌려놓는다, dialog.md:179)
+    if (wide && (isFixedBulkPath(from) || isFixedBulkPath(pathname))) return;
     // 새 화면이 그려진 다음 프레임에 — 제목(data-screen-title)이 DOM 에 있어야 초점이 간다
     const frame = requestAnimationFrame(() => focusScreenTitle());
     return () => cancelAnimationFrame(frame);
-  }, [pathname]);
+  }, [pathname, wide]);
   return null;
 };
 
@@ -164,7 +171,7 @@ const Shell = () => {
           >
             {/* 스와이프 그룹은 셸에 하나 — "한 번에 한 행" 과 "스크롤하면 닫힘" 을 여기가 맡는다(데스크톱은 행의 enabled 가 통과).
                 화면마다 두면 리스트를 새로 붙일 때 빠뜨려 여러 행이 열린 채 남는다. */}
-            <SwipeActionsProvider>
+            <SwipeActionsProvider closeKey={location.pathname}>
               {/* 폰 페이지의 띠 화면 — 머리 바로 아래 화면 폭 흰 띠(모서리 · 테두리 · 그림자 없음), 시작 틈 없음(I-05 74).
                   그 밖에서는 상자를 만들지 않는다(contents) — 페이지는 main 의 flex 자식 그대로다 */}
               <div

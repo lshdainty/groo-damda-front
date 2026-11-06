@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Target, Trash2 } from "lucide-react";
-import { SwipeActions } from "@/shared/ui/swipe-actions";
+import { SwipeActions } from "@/shared/ds/swipe-actions";
 import { DynamicIcon } from "lucide-react/dynamic";
 import { isIconName } from "@/shared/lib";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
@@ -87,8 +87,6 @@ function GoalRow({
       className="pt-0"
       wrap={(inner) => (
         <SwipeActions
-          rowId={`saving-goal-${goal.rowId}`}
-          groupTag="saving-goal-list"
           rowLabel={goal.title}
           enabled={mobile}
           actions={[
@@ -102,8 +100,7 @@ function GoalRow({
               label: tc("delete"),
               icon: <Trash2 />,
               kind: "destructive",
-              confirm: false,
-              // 밀기의 확인 메시지(옛 ConfirmDialog 경로)는 걷었다 — 화면이 ds Alert Dialog 를 띄운다(삭제 버튼과 같은 확인창)
+              // ds 밀기는 묻지 않는다 — 화면이 ds Alert Dialog 를 띄운다(삭제 버튼 · 수정 폼의 [삭제] 와 같은 확인창)
               onSelect: () => onDelete(goal),
             },
           ]}
@@ -371,6 +368,12 @@ export function SavingGoalManager({ mobile }: { mobile: boolean }) {
         <SavingGoalAddDialog
           goal={editing === "new" ? null : editing}
           onClose={() => setEditing(null)}
+          onDelete={() => {
+            // 밀기의 [삭제] 와 같은 확인창 하나 — 수정 폼을 닫고 확인한다
+            const goal = editing;
+            setEditing(null);
+            if (goal && goal !== "new") setConfirmDelete(goal);
+          }}
         />
       )}
       {confirmDelete && (

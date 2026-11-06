@@ -1,5 +1,6 @@
 import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
+import { useWideSurface } from "@/shared/ds/overlay";
 import { useTranslation } from "react-i18next";
 import { MAX_AMOUNT, parseAmount } from "@/shared/lib/groo/amount";
 import { nameIssue } from "@/shared/lib/groo/name-policy";
@@ -41,6 +42,8 @@ interface SavingGoalAddDialogProps {
   /** null/undefined → 생성 모드, 객체 → 수정 모드 */
   goal?: SavingGoal | null;
   onClose: () => void;
+  /** 수정 모드의 [삭제] — 밀기는 지름길이라 삭제는 들어간 화면에도 있다(swipe-actions.md:76). 확인창은 부르는 쪽이 한 번 띄운다 */
+  onDelete?: () => void;
 }
 
 type Errors = {
@@ -56,10 +59,12 @@ type Errors = {
 export function SavingGoalAddDialog({
   goal,
   onClose,
+  onDelete,
 }: SavingGoalAddDialogProps) {
   const { t } = useTranslation("asset");
   const { t: tc } = useTranslation("common");
   const isEdit = !!goal;
+  const wide = useWideSurface();
 
   // 저장 실패는 전역 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글)이 알린다 — 요청은 silent, 폼은 열린 채 · 쓴 값 그대로
   const createMut = useCreateSavingGoal({ silent: true });
@@ -328,6 +333,19 @@ export function SavingGoalAddDialog({
           </div>
         </ResponsiveDialogBody>
         <ResponsiveDialogFooter>
+          {isEdit && onDelete && (
+            <Button
+              variant="ghost"
+              ghostColor="critical"
+              size={wide ? undefined : "large"}
+              className={wide ? "mr-auto" : "shrink-0"}
+              onClick={() => {
+                if (!saving) onDelete();
+              }}
+            >
+              {tc("delete")}
+            </Button>
+          )}
           <ResponsiveDialogCancel>{tc("cancel")}</ResponsiveDialogCancel>
           <Button loading={saving} onClick={() => handleSubmit()}>
             {isEdit ? tc("save") : tc("add")}

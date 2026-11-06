@@ -5,9 +5,15 @@
 // jsdom 은 레이아웃(offsetParent · scrollHeight)을 재지 않는다 — 실제 스크롤 상자 개수 · 문서 높이는 렌더 하네스 측정이 맡고
 // (1280 · 1440 · 1920 × 라이트 · 다크), 여기서는 그 결과를 만드는 구조(클래스)만 본다.
 import * as React from "react";
-import { act } from "react";
+import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useNavigate,
+  type NavigateFunction,
+} from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 declare global {
@@ -71,7 +77,16 @@ vi.mock("@/widgets/calendar/ui/CalendarEventFormHost", () => ({
 vi.mock("@/features/hide-amounts", () => ({ useHideCardsSync: () => {} }));
 vi.mock("@/features/notification", () => ({ useNotificationSSE: () => {} }));
 
+const titleFocus = vi.hoisted(() => ({ calls: 0 }));
+vi.mock("@/shared/ds/top-navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/top-navigation")>()),
+  focusScreenTitle: () => {
+    titleFocus.calls += 1;
+  },
+}));
+
 const { AppLayout } = await import("./AppLayout");
+const { SwipeActions } = await import("@/shared/ds/swipe-actions");
 
 let container: HTMLDivElement;
 let root: Root;
@@ -234,5 +249,109 @@ describe("셸 한 트리 — 768 을 넘나들어도(단계 6)", () => {
     state.size = "tablet";
     renderPage();
     expect(document.activeElement).toBe(input);
+  });
+});
+
+// ── 고정 정리 주소(/desk/stats/fixed) — 1280 이상은 같은 화면 위 대화상자라 화면 전환 효과(맨 위로 · 제목에 초점)를 건너뛴다 ──
+const nav = { go: (() => {}) as NavigateFunction };
+const Stats = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    nav.go = navigate;
+  });
+  return (
+    <div>
+      <h1 data-screen-title>통계</h1>
+      {/* 두 줄을 밀어 열어 보는 자리 — 셸의 Provider 하나가 한 번에 한 줄만 열리게 한다 */}
+      {["가", "나"].map((n) => (
+        <SwipeActions
+          key={n}
+          rowLabel={n}
+          actions={[{ label: "삭제", kind: "destructive", onSelect: () => {} }]}
+        >
+          <div>{n}</div>
+        </SwipeActions>
+      ))}
+    </div>
+  );
+};
+const renderStats = () =>
+  act(() =>
+    root.render(
+      <MemoryRouter initialEntries={["/desk/stats"]}>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route path="/desk/stats" element={<Stats />}>
+              <Route path="fixed" element={null} />
+            </Route>
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    ),
+  );
+const setWide = (wide: boolean) => {
+  window.matchMedia = ((query: string) => ({
+    matches: wide && query.includes("1280"),
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  })) as unknown as typeof window.matchMedia;
+};
+const frame = () =>
+  act(async () => {
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+  });
+
+describe("고정 정리 주소가 바뀔 때의 셸 효과(I-wrap-b1 δ H1)", () => {
+  it("1280 이상: 열고 닫아도 화면 전환 효과(맨 위로 · 제목 초점)를 부르지 않는다", async () => {
+    setWide(true);
+    titleFocus.calls = 0;
+    renderStats();
+    act(() => nav.go("/desk/stats/fixed"));
+    await frame();
+    act(() => nav.go("/desk/stats"));
+    await frame();
+    expect(titleFocus.calls).toBe(0);
+  });
+
+  it("1280 미만: 고정 정리 페이지는 화면이라 전환 효과를 부른다", async () => {
+    setWide(false);
+    titleFocus.calls = 0;
+    renderStats();
+    act(() => nav.go("/desk/stats/fixed"));
+    await frame();
+    expect(titleFocus.calls).toBe(1);
+  });
+});
+
+describe("셸의 밀기 Provider(I-wrap-b1 δ 3)", () => {
+  const fire = (el: Element, type: string, x: number) =>
+    el.dispatchEvent(
+      new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        clientX: x,
+        clientY: 200,
+      }),
+    );
+  const swipeOpen = (wrapper: Element) =>
+    act(() => {
+      const row = wrapper.querySelector("[data-slot=swipe-actions-row]")!;
+      fire(row, "pointerdown", 200);
+      for (let i = 1; i <= 10; i++) fire(row, "pointermove", 200 - 8 * i);
+      fire(row, "pointerup", 120);
+    });
+  it("두 줄을 차례로 밀어도 열린 줄은 하나다(셸에 Provider 가 있다)", () => {
+    Element.prototype.setPointerCapture ??= () => {};
+    Element.prototype.releasePointerCapture ??= () => {};
+    setWide(false);
+    renderStats();
+    const rows = container.querySelectorAll("[data-slot=swipe-actions]");
+    expect(rows).toHaveLength(2);
+    swipeOpen(rows[0]!);
+    swipeOpen(rows[1]!);
+    expect(
+      container.querySelectorAll("[data-slot=swipe-actions][data-state=open]"),
+    ).toHaveLength(1);
   });
 });
