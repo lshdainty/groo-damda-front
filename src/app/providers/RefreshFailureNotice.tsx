@@ -1,10 +1,14 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { onRefreshFailure } from "@/shared/api/refresh-failure";
+import { referenceNoticeShownWithin } from "@/shared/api/reference";
 import { useSnackbar } from "@/shared/ds/snackbar";
 
 // 액션 없는 스낵바가 떠 있는 시간(snackbar.yaml root.duration 4초) — 이 안에 또 실패가 와도 다시 띄우지 않는다
 const SHOWN_MS = 4000;
+// 참조 알림이 같은 순간의 실패를 모으는 시간(300ms)보다 조금 뒤에 판단한다 — 같은 장애로 참조 알림이 떴으면 이 띠는 띄우지 않는다
+// (한 사건에 critical 띠 둘이 연달아 뜨지 않게, 검수 L9)
+const AFTER_REFERENCE_MS = 400;
 
 /**
  * 내용이 있는 채 다시 받다 실패했을 때 앱 한 자리에서 알린다 — critical 스낵바 "새로 고치지 못했어요." 한 문장, [다시 시도] 없음
@@ -22,19 +26,25 @@ export const RefreshFailureNotice = () => {
 
   useEffect(() => {
     let shownTimer: ReturnType<typeof setTimeout> | undefined;
+    let waitTimer: ReturnType<typeof setTimeout> | undefined;
     const unsubscribe = onRefreshFailure(() => {
-      if (shownTimer !== undefined) return;
-      shownTimer = setTimeout(() => {
-        shownTimer = undefined;
-      }, SHOWN_MS);
-      snackbar.show({
-        message: tRef.current("query.refreshFailed"),
-        tone: "critical",
-      });
+      if (shownTimer !== undefined || waitTimer !== undefined) return;
+      waitTimer = setTimeout(() => {
+        waitTimer = undefined;
+        if (referenceNoticeShownWithin(SHOWN_MS)) return;
+        shownTimer = setTimeout(() => {
+          shownTimer = undefined;
+        }, SHOWN_MS);
+        snackbar.show({
+          message: tRef.current("query.refreshFailed"),
+          tone: "critical",
+        });
+      }, AFTER_REFERENCE_MS);
     });
     return () => {
       unsubscribe();
       if (shownTimer !== undefined) clearTimeout(shownTimer);
+      if (waitTimer !== undefined) clearTimeout(waitTimer);
     };
   }, [snackbar]);
 

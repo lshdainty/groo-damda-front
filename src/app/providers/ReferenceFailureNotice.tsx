@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   isReferenceNoticeHeld,
   isReferenceQuery,
+  markReferenceNoticeShown,
   onReferenceNoticeRelease,
 } from "@/shared/api/reference";
 import { useSnackbar } from "@/shared/ds/snackbar";
@@ -72,6 +73,7 @@ export const ReferenceFailureNotice = () => {
           gatherTimer = setTimeout(show, GATHER_MS);
         }
       }, SHOWN_MS);
+      markReferenceNoticeShown();
       snackbar.show({
         message: tRef.current("query.referenceFailed"),
         tone: "critical",

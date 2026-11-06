@@ -27,6 +27,7 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 
+let clockBase = Date.now();
 let container: HTMLDivElement;
 let root: Root;
 let client: QueryClient;
@@ -34,7 +35,9 @@ const unsubs: Array<() => void> = [];
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  vi.useFakeTimers();
+  // 시험마다 시계를 한 시간씩 앞으로 — 앞 시험이 남긴 "참조 알림을 띄운 시각"(모듈 상태)이 다음 시험의 4초 창에 들지 않게
+  clockBase += 3_600_000;
+  vi.useFakeTimers({ now: clockBase });
   show.mockClear();
   client = createAppQueryClient();
   container = document.createElement("div");
@@ -128,11 +131,15 @@ describe("RefreshFailureNotice — 내용이 있는 채 다시 받다 실패", (
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2000);
       await refetchFails("b");
+      // 참조 알림을 기다리는 시간(400ms) 뒤에 뜬다
+      await vi.advanceTimersByTimeAsync(400);
     });
     expect(show).toHaveBeenCalledTimes(1);
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(2500);
+      await vi.advanceTimersByTimeAsync(2900);
       await refetchFails("c");
+      // 참조 알림을 기다리는 시간(400ms) 뒤에 뜬다
+      await vi.advanceTimersByTimeAsync(400);
     });
     expect(show).toHaveBeenCalledTimes(2);
   });
@@ -195,8 +202,10 @@ describe("RefreshFailureNotice — 내용이 있는 채 다시 받다 실패", (
     await flush();
     expect(show).toHaveBeenCalledTimes(1);
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(4100);
+      await vi.advanceTimersByTimeAsync(4600);
       await refetchFails("missing", { error: httpError(404) });
+      // 참조 알림을 기다리는 시간(400ms) 뒤에 뜬다
+      await vi.advanceTimersByTimeAsync(400);
     });
     expect(show).toHaveBeenCalledTimes(2);
   });
@@ -225,7 +234,7 @@ describe("같은 조회의 연달은 실패 — 첫 실패만, 한 번 성공하
     };
   }
   // 스낵바가 떠 있는 4초 창을 넘긴다 — 연속 실패 규칙만 보려고
-  const past = () => vi.advanceTimersByTimeAsync(4100);
+  const past = () => vi.advanceTimersByTimeAsync(4600);
 
   it("같은 키가 연달아 실패하면 한 번만 — 홈 요약 60초 폴링이 끊긴 동안 1분마다 뜨지 않는다", async () => {
     const q = oneQuery("dashboard-summary");
@@ -236,6 +245,8 @@ describe("같은 조회의 연달은 실패 — 첫 실패만, 한 번 성공하
       await q.fail();
       await past();
       await q.fail();
+      // 참조 알림을 기다리는 시간(400ms) 뒤에 뜬다
+      await vi.advanceTimersByTimeAsync(400);
     });
     expect(show).toHaveBeenCalledTimes(1);
   });
@@ -248,6 +259,8 @@ describe("같은 조회의 연달은 실패 — 첫 실패만, 한 번 성공하
       await past();
       await q.ok();
       await q.fail();
+      // 참조 알림을 기다리는 시간(400ms) 뒤에 뜬다
+      await vi.advanceTimersByTimeAsync(400);
     });
     expect(show).toHaveBeenCalledTimes(2);
   });
@@ -263,7 +276,25 @@ describe("같은 조회의 연달은 실패 — 첫 실패만, 한 번 성공하
       await a.fail();
       await past();
       await b.fail();
+      // 참조 알림을 기다리는 시간(400ms) 뒤에 뜬다
+      await vi.advanceTimersByTimeAsync(400);
     });
     expect(show).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("한 장애에 critical 띠 하나(검수 L9)", () => {
+  it("같은 4초 창 안에 참조 알림이 떴으면 새로 고침 스낵바는 띄우지 않는다", async () => {
+    await act(async () => {
+      await Promise.all([
+        refetchFails("cats-l9", { meta: REFERENCE_META, hasData: false }),
+        refetchFails("ledger-l9"),
+      ]);
+      await vi.advanceTimersByTimeAsync(800);
+    });
+    expect(show).toHaveBeenCalledTimes(1);
+    expect(show.mock.calls[0]?.[0]).toMatchObject({
+      message: "query.referenceFailed",
+    });
   });
 });
