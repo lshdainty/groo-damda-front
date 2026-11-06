@@ -216,6 +216,7 @@ export const SettingsPage = () => {
           <HideAmountsSection
             mobile={m}
             onBack={() => changeSection("account")}
+            onBrowserBack={goBack}
           />
         );
       case "devices":

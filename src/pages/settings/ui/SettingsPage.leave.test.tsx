@@ -3,7 +3,12 @@
 // 폰 ← · 뒤로 → [나가기] 로 떠나지 못함(H3). 1280(두 칸) · 768(태블릿) · 390(폰) 세 폭에서 본다.
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { createMemoryRouter, Outlet, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  createMemoryRouter,
+  Outlet,
+  RouterProvider,
+} from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -13,6 +18,8 @@ declare global {
 
 const env = vi.hoisted(() => ({
   size: "desktop" as "mobile" | "tablet" | "desktop",
+  // 실제 hasPreviousEntry(history.state.idx)를 쓰는가 — 브라우저 라우터 시험(T1)
+  realPrev: false,
 }));
 const store = vi.hoisted(() => ({
   saved: new Set<string>(),
@@ -28,12 +35,16 @@ vi.mock("@/shared/lib/groo/responsive", () => ({
   useDeviceSize: () => env.size,
 }));
 // 앞 화면이 있다 — 폰 ← 는 navigate(-1)(메모리 라우터의 앞 칸)
-vi.mock("@/shared/ds/top-navigation/top-navigation-context", async (orig) => ({
-  ...(await orig<
-    typeof import("@/shared/ds/top-navigation/top-navigation-context")
-  >()),
-  hasPreviousEntry: () => true,
-}));
+vi.mock("@/shared/ds/top-navigation/top-navigation-context", async (orig) => {
+  const real =
+    await orig<
+      typeof import("@/shared/ds/top-navigation/top-navigation-context")
+    >();
+  return {
+    ...real,
+    hasPreviousEntry: () => (env.realPrev ? real.hasPreviousEntry() : true),
+  };
+});
 vi.mock("@/shared/lib/groo/hide-amounts-core", async (orig) => ({
   ...(await orig<typeof import("@/shared/lib/groo/hide-amounts-core")>()),
   useHiddenCards: () => store.saved,
@@ -264,5 +275,174 @@ for (const size of ["desktop", "tablet", "mobile"] as const) {
         expect(where(r)).toBe("?section=account");
         expect(leftover()).toBe(false);
       });
+  });
+}
+
+/**
+ * 검수 3차 T1 — 폰 셋을 실제 window.history 위에서(createBrowserRouter · 실제 hasPreviousEntry) 돌린다.
+ * 메모리 라우터는 라우터의 이동과 뒤로 칸이 다른 스택이라 H3("navigate(-1) 이 같은 주소 칸에 떨어진다")이 생길 수 없었다.
+ * 쌓은 칸: [가계부, 계정, 금액 가리기] — 떠난 뒤 자리는 "계정"(idx 1), 그 뒤 뒤로 한 번이면 가계부여야 한다(헛돌지 않는다).
+ */
+describe("390 — 실제 브라우저 히스토리(createBrowserRouter)", () => {
+  let router: ReturnType<typeof createBrowserRouter>;
+  beforeEach(() => {
+    env.size = "mobile";
+    env.realPrev = true;
+  });
+  afterEach(() => {
+    env.realPrev = false;
+    router?.dispose();
+  });
+
+  async function mountBrowser() {
+    window.history.replaceState(null, "", "/desk/expense");
+    router = createBrowserRouter([
+      {
+        element: <Outlet context={{ onAddTx: () => {}, mobile: true }} />,
+        children: [
+          { path: "/desk/expense", element: <div data-page="expense" /> },
+          { path: "/desk/settings", element: <SettingsPage /> },
+        ],
+      },
+    ]);
+    act(() =>
+      root.render(
+        <QueryClientProvider client={new QueryClient()}>
+          <TopNavigationProvider product="그루 담다">
+            <LeaveGuardProvider>
+              <RouterProvider router={router} />
+            </LeaveGuardProvider>
+          </TopNavigationProvider>
+        </QueryClientProvider>,
+      ),
+    );
+    await act(async () => {
+      await router.navigate("/desk/settings?section=account");
+    });
+    await act(async () => {
+      await router.navigate("/desk/settings?section=hide-amounts");
+    });
+    await settle();
+  }
+  const here = () => window.location.pathname + window.location.search;
+  const idx = () => (window.history.state as { idx?: number } | null)?.idx;
+
+  /** 떠난 뒤 — 계정 칸(idx 1)에 있고, 표식 칸이 아니며, 한 번 뒤로면 가계부(idx 0) */
+  async function expectLeftCleanly(lengthAtStart: number) {
+    expect(here()).toBe("/desk/settings?section=account");
+    expect(idx()).toBe(1);
+    expect(leftover()).toBe(false);
+    expect(asked()).toBe(false);
+    // 칸 개수 — 들어올 때 [가계부, 계정, 금액 가리기] + 바뀐 값의 뒤로 칸(+ 확인창 칸) 을 넘지 않는다(앞쪽 push 없음)
+    expect(window.history.length).toBeLessThanOrEqual(lengthAtStart + 2);
+    browserBack();
+    await settle();
+    expect(here()).toBe("/desk/expense");
+    expect(idx()).toBe(0);
+  }
+
+  it("저장에 성공하면 앞 화면(계정)으로 — 같은 주소 칸에 떨어지지 않는다", async () => {
+    await mountBrowser();
+    const start = window.history.length;
+    touch();
+    await settle();
+    act(() => docBtn("save")!.click());
+    await settle();
+    expect(store.set).toHaveBeenCalledTimes(1);
+    await expectLeftCleanly(start);
+  });
+
+  it("뒤로 가기 → [나가기] 면 앞 화면(계정)으로", async () => {
+    await mountBrowser();
+    const start = window.history.length;
+    touch();
+    await settle();
+    browserBack();
+    await settle();
+    expect(asked()).toBe(true);
+    act(() => docBtn("hideAmounts.discardConfirm")!.click());
+    await settle();
+    await expectLeftCleanly(start);
+  });
+
+  it("머리 ← → [나가기] 면 앞 화면(계정)으로 — 그 뒤 뒤로 칸이 헛돌지 않는다(H3)", async () => {
+    await mountBrowser();
+    const start = window.history.length;
+    touch();
+    await settle();
+    act(() =>
+      document
+        .querySelector<HTMLElement>(
+          '[data-slot="hide-amounts-page"] [data-slot="top-navigation-back"], [data-slot="hide-amounts-page"] a, [data-slot="hide-amounts-page"] button',
+        )!
+        .click(),
+    );
+    await settle();
+    expect(asked()).toBe(true);
+    act(() => docBtn("hideAmounts.discardConfirm")!.click());
+    await settle();
+    await expectLeftCleanly(start);
+  });
+});
+
+/** 검수 3차 L1 — 1280 · 768 도 브라우저 뒤로 → [나가기] 는 앞 칸(계정)으로 되돌아간다. 앞으로 push 해 칸이 늘지 않는다 */
+for (const size of ["desktop", "tablet"] as const) {
+  describe(`${WIDTH[size]} — 실제 브라우저 히스토리, 뒤로 → [나가기]`, () => {
+    let router: ReturnType<typeof createBrowserRouter>;
+    beforeEach(() => {
+      env.size = size;
+      env.realPrev = true;
+    });
+    afterEach(() => {
+      env.realPrev = false;
+      router?.dispose();
+    });
+
+    it("앞 칸(계정)으로 되돌아가고, 그 뒤 뒤로 한 번이면 가계부 — 앞으로 생긴 계정 칸이 없다", async () => {
+      window.history.replaceState(null, "", "/desk/expense");
+      router = createBrowserRouter([
+        {
+          element: <Outlet context={{ onAddTx: () => {}, mobile: false }} />,
+          children: [
+            { path: "/desk/expense", element: <div data-page="expense" /> },
+            { path: "/desk/settings", element: <SettingsPage /> },
+          ],
+        },
+      ]);
+      act(() =>
+        root.render(
+          <QueryClientProvider client={new QueryClient()}>
+            <TopNavigationProvider product="그루 담다">
+              <LeaveGuardProvider>
+                <RouterProvider router={router} />
+              </LeaveGuardProvider>
+            </TopNavigationProvider>
+          </QueryClientProvider>,
+        ),
+      );
+      await act(async () => {
+        await router.navigate("/desk/settings?section=account");
+      });
+      await act(async () => {
+        await router.navigate("/desk/settings?section=hide-amounts");
+      });
+      await settle();
+      touch();
+      await settle();
+      browserBack();
+      await settle();
+      expect(asked()).toBe(true);
+      act(() => docBtn("hideAmounts.discardConfirm")!.click());
+      await settle();
+      const here = () => window.location.pathname + window.location.search;
+      const idx = () => (window.history.state as { idx?: number } | null)?.idx;
+      expect(here()).toBe("/desk/settings?section=account");
+      expect(idx()).toBe(1);
+      expect(leftover()).toBe(false);
+      browserBack();
+      await settle();
+      expect(here()).toBe("/desk/expense");
+      expect(idx()).toBe(0);
+    });
   });
 }

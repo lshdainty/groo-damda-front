@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import { Button } from "@/shared/ds/button";
@@ -57,10 +57,16 @@ import {
 export function HideAmountsSection({
   mobile,
   onBack,
+  onBrowserBack = onBack,
 }: {
   mobile: boolean;
   /** 뒤로 — 이 화면은 계정 > 보안에서 들어온다(눈 버튼도 여기로 직행). */
   onBack: () => void;
+  /**
+   * 브라우저 · 안드로이드 뒤로 → [나가기] 로 떠날 때 — 앞 칸으로 되돌아간다(앞으로 push 하지 않는다, 검수 3차 L1).
+   * 주지 않으면 onBack
+   */
+  onBrowserBack?: () => void;
 }) {
   const { t } = useTranslation("settings");
   const { t: tc } = useTranslation("common");
@@ -163,12 +169,17 @@ export function HideAmountsSection({
     setConfirmDiscard(false);
     setLeaving(true);
   };
+  // 효과는 leaving 만 따른다 — bypass 가 렌더마다 새 함수여도 다시 돌지 않는다(검수 3차 L2). leaving 은 되돌리지 않는다:
+  // 앞으로 가는 이동(navigate(-1))은 popstate 뒤에 끝나 그 사이 가드를 다시 켜면 뒤로 칸이 다시 쌓인다(시험으로 확인)
+  const leaveNow = useEffectEvent((go: () => void) => bypass(go));
   useEffect(() => {
     if (!leaving) return;
     const go = pendingLeave.current;
     pendingLeave.current = null;
-    if (go) whenBackSlotsSettled(() => bypass(go));
-  }, [leaving, bypass]);
+    if (!go) return;
+    // 화면이 내려가면 기다림을 거둔다 — 늦게 온 popstate 가 내려간 화면의 이동을 부르지 않게
+    return whenBackSlotsSettled(() => leaveNow(go));
+  }, [leaving]);
   const guarding = dirty && !leaving;
   useSettingsLeaveGuard(
     guarding
@@ -183,7 +194,7 @@ export function HideAmountsSection({
   useBackClose(guarding, (keep) => {
     keep();
     if (saving) return;
-    leaveTo.current = onBack;
+    leaveTo.current = onBrowserBack;
     setConfirmDiscard(true);
   });
 
@@ -385,6 +396,7 @@ export function HideAmountsSection({
               size="large"
               className="w-full"
               disabled={!dirty}
+              loading={saving}
               onClick={save}
             >
               {tc("save")}
@@ -412,6 +424,7 @@ export function HideAmountsSection({
             variant="neutralSolid"
             size="small"
             disabled={!dirty}
+            loading={saving}
             onClick={save}
           >
             {tc("save")}
