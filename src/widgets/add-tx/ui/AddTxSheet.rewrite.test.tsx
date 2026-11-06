@@ -41,6 +41,8 @@ const st = vi.hoisted(() => ({
   /** 분할 조회 상태 — 불러오는 중·실패. */
   splitsPending: false,
   splitsError: false,
+  /** 분할 [다시 시도] 로 다시 받은 횟수 */
+  splitsRefetched: 0,
   /** 편집 시트가 불러 두는 그 거래의 분할. */
   splits: [] as {
     rowId: number;
@@ -142,12 +144,17 @@ vi.mock("@/features/expense-split", () => ({
     mutateAsync: async () => ({}),
     isPending: false,
   }),
-  useExpenseSplits: (id: number | null) =>
-    id == null || st.splitsPending
+  useExpenseSplits: (id: number | null) => ({
+    ...(id == null || st.splitsPending
       ? { data: undefined, isPending: true, isError: false }
       : st.splitsError
         ? { data: undefined, isPending: false, isError: true }
-        : { data: st.splits, isPending: false, isError: false },
+        : { data: st.splits, isPending: false, isError: false }),
+    isFetching: false,
+    refetch: async () => {
+      st.splitsRefetched += 1;
+    },
+  }),
 }));
 vi.mock("@/features/user", () => ({
   useDefaultCurrencyState: () => ({
@@ -235,6 +242,7 @@ beforeEach(() => {
   st.cardOver = {};
   st.splitsPending = false;
   st.splitsError = false;
+  st.splitsRefetched = 0;
   closed = 0;
   // Radix Select 는 포인터 캡처·스크롤 API 를 쓴다 — jsdom 엔 없어서 채워 준다.
   const proto = window.HTMLElement.prototype as unknown as Record<
@@ -576,5 +584,63 @@ describe("분할을 다 불러오기 전엔 고쳐 쓰기를 못 연다", () => 
     render(locked);
 
     expect(buttons("addTx.rewrite")[0]?.disabled).toBe(true);
+  });
+
+  it("막는 동안에는 까닭 한 줄이 있고, 다 불러오면 없다", () => {
+    st.splitsPending = true;
+    render(locked);
+    expect(bodyText()).toContain("addTx.rewriteNeedsSplits");
+    // 받는 중은 실패가 아니다
+    expect(bodyText()).not.toContain("txDetail.splitLoadFailed");
+    act(() => root.unmount());
+    container.remove();
+
+    st.splitsPending = false;
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    render(locked);
+    expect(buttons("addTx.rewrite")[0]?.disabled).toBe(false);
+    expect(bodyText()).not.toContain("addTx.rewriteNeedsSplits");
+  });
+});
+
+describe("수정 폼 분할 조회 실패 — 그 자리에서 알린다", () => {
+  it("저장을 누르기 전에 실패 + [다시 시도]가 보이고, 누르면 다시 받는다", async () => {
+    st.splitsError = true;
+    render(locked);
+
+    expect(bodyText()).toContain("txDetail.splitLoadFailed");
+    expect(bodyText()).toContain("loadFailedDesc");
+    expect(bodyText()).toContain("addTx.rewriteNeedsSplits");
+    // "불러오는 중" 으로 말하지 않는다
+    expect(bodyText()).not.toContain("addTx.splitsLoading");
+    // 서버 원문을 싣지 않는다 — 고정 글만
+    await click(buttons("retry")[0]!);
+    expect(st.splitsRefetched).toBe(1);
+  });
+
+  it("실패한 채 저장을 누르면 칸 오류도 '불러오지 못했다' 로 말한다", async () => {
+    st.splitsError = true;
+    render(locked);
+    await click(buttons("save")[0]!);
+
+    expect(st.update).toBeNull();
+    expect(bodyText()).not.toContain("addTx.splitsLoading");
+  });
+
+  it("잠기지 않은 거래도 실패를 그 자리에서 알린다", () => {
+    st.splitsError = true;
+    render({ ...locked, moneyLocked: false, replaceable: false });
+
+    expect(bodyText()).toContain("txDetail.splitLoadFailed");
+    expect(buttons("retry")).toHaveLength(1);
+    expect(bodyText()).not.toContain("addTx.rewriteNeedsSplits");
+  });
+
+  it("다 불러오면 실패 자리가 없다", () => {
+    render(locked);
+    expect(bodyText()).not.toContain("txDetail.splitLoadFailed");
+    expect(buttons("retry")).toHaveLength(0);
   });
 });
