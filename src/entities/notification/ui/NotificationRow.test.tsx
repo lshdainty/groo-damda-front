@@ -125,3 +125,24 @@ describe("NotificationRow", () => {
     ).toContain("bg-bg-brand-weak");
   });
 });
+
+describe("읽음으로 바꾸는 중 (I-wrap-b1 ε 8)", () => {
+  it("제목 끝에 ds Progress Circle 24 — 옛 Spinner 가 아니고, 기다리는 일을 이름으로 말한다", () => {
+    act(() =>
+      root.render(
+        <List aria-label="알림">
+          <NotificationRow notification={base} now={0} pending />
+        </List>,
+      ),
+    );
+    const circle = container.querySelector<HTMLElement>(
+      "[data-slot=progress-circle]",
+    );
+    expect(circle).not.toBeNull();
+    expect(circle!.getAttribute("role")).toBe("progressbar");
+    expect(circle!.getAttribute("aria-label")).toBe("row.marking");
+    expect(circle!.style.width).toBe("var(--pc-size)");
+    expect(circle!.getAttribute("class")).toContain("[--pc-size:24px]");
+    expect(container.querySelector("[role=status]")).toBeNull();
+  });
+});

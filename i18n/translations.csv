@@ -3188,6 +3188,7 @@ stats,fixed.bulk.loadFailed,거래를 불러오지 못했어요,Couldn't load tr
 stats,compare.same,지난 기간과 같아요.,Same as the previous period.
 layout,notificationsUnread,"알림, 새 알림 있음","Notifications, new notifications"
 notification,row.unread,안 읽음,Unread
+notification,row.marking,읽음으로 바꾸는 중,Marking as read
 notification,popover.unreadPlain,읽지 않은 알림 {{count}}개,{{count}} unread
 notification,more,{{title}} 더보기,More for {{title}}
 notification,deleteTitle,알림 삭제,Delete notification

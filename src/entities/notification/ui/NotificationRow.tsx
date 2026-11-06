@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ListButtonItem, ListItem, ListTile } from "@/shared/ds/list";
-import { Spinner } from "@/shared/ui/spinner";
+import { ProgressCircle } from "@/shared/ds/progress-circle";
 import { notificationVisual } from "../lib/notificationVisual";
 import { relativeTime } from "../lib/relativeTime";
 import type { Notification } from "../model/types";
@@ -57,8 +57,9 @@ export function NotificationRow({
         <span className="whitespace-nowrap">
           {titleTail}
           {pending ? (
+            // 행동 하나(읽음으로 바꾸기)를 기다리는 작은 자리 — 요소 안 원 24(progress-circle.md · skeleton.md "무엇으로 기다리나")
             <span className="ml-x1_5 inline-block align-middle">
-              <Spinner size="sm" />
+              <ProgressCircle size="24" aria-label={t("row.marking")} />
             </span>
           ) : (
             unread && (
