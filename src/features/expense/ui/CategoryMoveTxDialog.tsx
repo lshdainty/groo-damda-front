@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ds/button";
@@ -58,6 +59,7 @@ export function CategoryMoveTxDialog({
   // 실패는 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글) — 요청은 silent, 폼은 열린 채 · 고른 값 그대로
   const moveMut = useMoveCategoryTransactions({ silent: true });
   const splitMut = useSplitCategoryIntoChild({ silent: true });
+  const sft = useSaveFailureText();
   const snackbar = useSnackbar();
   const moveFailed = moveMut.isError || splitMut.isError;
   const errorRef = useScrollToError<HTMLDivElement>(
@@ -173,7 +175,7 @@ export function CategoryMoveTxDialog({
           {moveFailed && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("moveTx.failed")}
+                {sft(moveMut.error ?? splitMut.error, t("moveTx.failed"))}
               </Callout>
             </div>
           )}

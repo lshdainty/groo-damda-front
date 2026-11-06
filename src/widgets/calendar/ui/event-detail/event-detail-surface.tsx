@@ -122,6 +122,7 @@ export function EventDetailSurface({
     onRetryLabels: () => void labelsQ.refetch(),
     isLoading: updateEvent.isPending,
     saveError: updateEvent.isError,
+    saveErrorDetail: updateEvent.error,
     onSubmit: (data) => {
       if (!snapshot || step.kind !== "edit") return;
       updateEvent.mutate(

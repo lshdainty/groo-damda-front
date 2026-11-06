@@ -298,9 +298,10 @@ function TradeCancelConfirm({
             onClose();
             done();
           },
-          () => {
+          (error) => {
             onClose();
             confirmFail({
+              error,
               message: t("trade.cancelFailed"),
               retry: () => deleteMut.mutateAsync(target.rowId),
               onRetried: done,

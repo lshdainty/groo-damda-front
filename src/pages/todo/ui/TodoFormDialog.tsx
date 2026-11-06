@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -184,6 +185,7 @@ export function TodoFormDialog({
   const titleEmpty = !title.trim();
 
   const errorRef = useScrollToError<HTMLDivElement>(!!saveFailed, saveError);
+  const sft = useSaveFailureText();
   const submit = () => {
     if (submitting) return;
     if (titleEmpty) {
@@ -233,7 +235,7 @@ export function TodoFormDialog({
           {saveFailed && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("saveFailed")}
+                {sft(saveError, t("saveFailed"))}
               </Callout>
             </div>
           )}

@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { PriceFailBand, PriceStaleCallout } from "./price-fail-band";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -253,6 +254,7 @@ export function WatchGroupForm({
   // 저장 실패는 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글) — 요청은 silent, 폼은 열린 채 · 쓴 이름 그대로
   const createMut = useCreateWatchGroup({ silent: true });
   const renameMut = useRenameWatchGroup({ silent: true });
+  const sft = useSaveFailureText();
   const busy = createMut.isPending || renameMut.isPending;
   const canSave = name.trim().length > 0 && !busy;
   const saveFailed = createMut.isError || renameMut.isError;
@@ -305,7 +307,10 @@ export function WatchGroupForm({
           {saveFailed && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("watch.groupSaveFail")}
+                {sft(
+                  createMut.error ?? renameMut.error,
+                  t("watch.groupSaveFail"),
+                )}
               </Callout>
             </div>
           )}

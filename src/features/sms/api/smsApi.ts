@@ -91,7 +91,7 @@ export async function commitSms(
   const resp: ApiResponse<SmsCommitResult> = await apiClient.post(
     "/v1/import/sms/commit",
     request,
-    { silent: opts?.silent, confirmWrite: true } as QuietRequestConfig,
+    { silent: opts?.silent } as QuietRequestConfig,
   );
   return resp.data;
 }

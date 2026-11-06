@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useEffect, useRef } from "react";
 import { Callout } from "@/shared/ds/callout";
 import { ResponsiveDialogBody } from "@/shared/ds/dialog";
@@ -47,6 +48,7 @@ export function FormStep({
 }) {
   const { t, tCommon, isNew, editingGroup, submitTick } = f;
   const bodyRef = useRef<HTMLDivElement>(null);
+  const sft = useSaveFailureText();
   // 본문은 스크롤되고 [저장] 은 바닥이라 내린 채 실패하면 맨 위 Callout 이 가려진다 — 실패하면 올려 보인다
   const errorRef = useScrollToError<HTMLDivElement>(
     !!saveFailed || !!refFailed,
@@ -71,7 +73,7 @@ export function FormStep({
             <Callout tone="critical" role="alert" className="mb-x4">
               {refFailed && !saveFailed
                 ? tCommon("query.referenceSaveFailed")
-                : saveFailedText(t, saveError)}
+                : sft(saveError, saveFailedText(t, saveError))}
             </Callout>
           </div>
         )}

@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useEffect, useRef, useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -48,6 +49,7 @@ export function QuickAddDialog({
   end,
   isLoading,
   saveError = false,
+  saveErrorDetail,
   onClose,
   onDetail,
   onSave,
@@ -57,12 +59,15 @@ export function QuickAddDialog({
   isLoading?: boolean;
   /** 저장 실패 — 맨 위 critical Callout, 값은 그대로 */
   saveError?: boolean;
+  /** 저장 실패의 오류 — 결과를 확인하지 못한 쓰기면 글이 바뀐다 */
+  saveErrorDetail?: unknown;
   onClose: () => void;
   onDetail: (draft: QuickAddDraft) => void;
   onSave: (values: CalendarEventFormValues) => void;
 }) {
   const { t } = useTranslation("calendar");
   const { t: tc } = useTranslation("common");
+  const sft = useSaveFailureText();
   const { data: userCalendars = [] } = useUserCalendars({ reference: true });
   const calendars = userCalendars.filter(isCalendarShown);
   const defaultCalendar = calendars.find((c) => c.isDefault) ?? calendars[0];
@@ -150,7 +155,7 @@ export function QuickAddDialog({
             {saveError && (
               <div ref={errorRef}>
                 <Callout tone="critical" role="alert">
-                  {t("form.saveFailed")}
+                  {sft(saveErrorDetail, t("form.saveFailed"))}
                 </Callout>
               </div>
             )}

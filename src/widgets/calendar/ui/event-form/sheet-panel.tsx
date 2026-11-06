@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -28,6 +29,7 @@ import type { ComponentProps } from "react";
 export function EventFormSheetChildren({ flow }: { flow: EventFormFlow }) {
   const { t } = useTranslation("calendar");
   const { t: tc } = useTranslation("common");
+  const sft = useSaveFailureText();
   const {
     view,
     step,
@@ -40,6 +42,7 @@ export function EventFormSheetChildren({ flow }: { flow: EventFormFlow }) {
     enterStep,
     confirmStep,
     saveError,
+    saveErrorDetail,
     setErrorEl,
     leaveNode,
   } = flow;
@@ -52,7 +55,7 @@ export function EventFormSheetChildren({ flow }: { flow: EventFormFlow }) {
           // 저장 실패 — 서버 글 대신 고정 문구(snackbar.md:75). 폼 맨 위, 나중에 나타나는 위험이라 role=alert
           <div ref={setErrorEl}>
             <Callout tone="critical" role="alert" className="mb-x4">
-              {t("form.saveFailed")}
+              {sft(saveErrorDetail, t("form.saveFailed"))}
             </Callout>
           </div>
         )}

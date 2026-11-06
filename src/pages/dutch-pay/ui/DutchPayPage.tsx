@@ -88,6 +88,7 @@ export const DutchPayPage = () => {
           today={today}
           friendNames={friendsOf(list).map((f) => f.name)}
           saveError={saveError}
+          saveErrorDetail={create.error}
           saveErrorSeq={saveErrorSeq}
           onClose={() => setCreating(false)}
           onCreate={onCreate}

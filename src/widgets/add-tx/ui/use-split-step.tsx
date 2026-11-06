@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { loadFailed } from "@/shared/api";
 import { useRef, useState, type ReactNode } from "react";
 import {
@@ -109,6 +110,7 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
   );
   const categoriesQ = useExpenseCategories({ reference: true });
   const replaceMut = useReplaceExpenseSplits();
+  const sft = useSaveFailureText();
   const deleteAllMut = useDeleteAllExpenseSplits();
   const categories: ExpenseCategory[] = categoriesQ.data ?? [];
 
@@ -461,7 +463,7 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
           {saveFailed && (
             <div className="px-global-gutter pb-x3 pt-x1">
               <Callout tone="critical" role="alert">
-                {t("addTx.saveFailed")}
+                {sft(replaceMut.error, t("addTx.saveFailed"))}
               </Callout>
             </div>
           )}

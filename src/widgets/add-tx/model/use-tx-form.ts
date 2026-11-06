@@ -1620,6 +1620,8 @@ export function useTxForm({
     openPresetSave,
     savePreset,
     presetFailed,
+    // 프리셋 저장 실패의 오류 — 결과를 확인하지 못한 쓰기면 글이 바뀐다
+    presetError: createPresetMut.error,
     presetNameIssue,
     presetSaving: createPresetMut.isPending,
     finishSms,

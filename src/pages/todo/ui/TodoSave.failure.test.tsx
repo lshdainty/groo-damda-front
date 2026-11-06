@@ -82,6 +82,26 @@ describe("할 일 저장 실패", () => {
     );
     expect(document.body.textContent).not.toContain("서버 원문 오류");
   });
+
+  it("쓰기 결과를 확인하지 못했으면(응답을 못 읽음 · 응답 전에 끊김) 실패 글이 아니라 '저장됐는지 확인하지 못했어요'", async () => {
+    const { WriteUnconfirmedError } = await import("@/shared/api/base");
+    act(() =>
+      root.render(
+        <TodoFormDialog
+          todo={null}
+          today="2026-10-29"
+          tags={[]}
+          onClose={() => {}}
+          onSave={() => {}}
+          saveFailed
+          saveError={new WriteUnconfirmedError(200)}
+        />,
+      ),
+    );
+    expect(document.querySelector('[role="alert"]')?.textContent).toBe(
+      "query.saveUnconfirmed",
+    );
+  });
 });
 
 describe("할 일 삭제 실패", () => {

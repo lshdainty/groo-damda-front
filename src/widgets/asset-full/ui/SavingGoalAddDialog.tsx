@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MAX_AMOUNT, parseAmount } from "@/shared/lib/groo/amount";
@@ -108,6 +109,7 @@ export function SavingGoalAddDialog({
   const saving =
     createMut.isPending || updateMut.isPending || contributeMut.isPending;
 
+  const sft = useSaveFailureText();
   const saveFailed =
     createMut.isError || updateMut.isError || contributeMut.isError;
   const saveError =
@@ -261,7 +263,7 @@ export function SavingGoalAddDialog({
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
                 {saveFailed
-                  ? t("savingGoal.saveFailed")
+                  ? sft(saveError, t("savingGoal.saveFailed"))
                   : tc("query.referenceSaveFailed")}
               </Callout>
             </div>

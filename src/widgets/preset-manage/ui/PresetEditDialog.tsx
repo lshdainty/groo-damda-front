@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { refetchMissingRefs } from "@/shared/api";
 import { useRef, useState, type ReactNode } from "react";
 import {
@@ -155,6 +156,7 @@ export function PresetEditDialog({
   // 저장 실패는 전역 서버 원문 토스트 대신 폼 맨 위 Callout(고정 글)이 알린다
   const createMut = useCreateExpenseTemplate({ silent: true });
   const updateMut = useUpdateExpenseTemplate({ silent: true });
+  const sft = useSaveFailureText();
 
   const categories = categoriesQ.data ?? [];
   const assets = assetsQ.data?.assets ?? [];
@@ -618,7 +620,10 @@ export function PresetEditDialog({
                   <div ref={errorRef}>
                     <Callout tone="critical" role="alert" className="mb-x4">
                       {saveError
-                        ? t("preset.saveFailed")
+                        ? sft(
+                            createMut.error ?? updateMut.error,
+                            t("preset.saveFailed"),
+                          )
                         : tc("query.referenceSaveFailed")}
                     </Callout>
                   </div>

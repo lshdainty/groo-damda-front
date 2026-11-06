@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
 import { CalendarDays, Plus } from "lucide-react";
 import { Trans, useTranslation } from "react-i18next";
@@ -133,6 +134,7 @@ export function DutchCreateDialog({
   today,
   friendNames,
   saveError,
+  saveErrorDetail,
   saveErrorSeq,
   onClose,
   onCreate,
@@ -140,6 +142,8 @@ export function DutchCreateDialog({
   today: string;
   friendNames: string[];
   saveError: boolean;
+  /** 저장 실패의 오류 — 결과를 확인하지 못한 쓰기면 글이 "저장됐는지 확인하지 못했어요" 로 바뀐다 */
+  saveErrorDetail?: unknown;
   saveErrorSeq: number;
   onClose: () => void;
   /** 만든다 — 성공이면 호출처가 닫는다. 실패하면 saveError 를 켠다 */
@@ -164,6 +168,7 @@ export function DutchCreateDialog({
   const [busy, setBusy] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const errorRef = useScrollToError<HTMLDivElement>(saveError, saveErrorSeq);
+  const sft = useSaveFailureText();
 
   const total = parseAmount(totalStr);
   const names = [MY_NAME, ...picked];
@@ -316,7 +321,7 @@ export function DutchCreateDialog({
           {saveError && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("createFailed")}
+                {sft(saveErrorDetail, t("createFailed"))}
               </Callout>
             </div>
           )}

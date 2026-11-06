@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
 import { Check, X } from "lucide-react";
 import { useSnackbar } from "@/shared/ds/snackbar";
@@ -38,6 +39,7 @@ export const PasswordChangeDialog = ({
   const { t } = useTranslation("user");
   const { t: tc } = useTranslation("common");
   const changePasswordMutation = useChangePasswordMutation();
+  const sft = useSaveFailureText();
   const snackbar = useSnackbar();
 
   const [current, setCurrent] = useState("");
@@ -116,7 +118,7 @@ export const PasswordChangeDialog = ({
             {failed && (
               <div ref={failedRef}>
                 <Callout tone="critical" role="alert">
-                  {t("passwordChangeError")}
+                  {sft(changePasswordMutation.error, t("passwordChangeError"))}
                 </Callout>
               </div>
             )}

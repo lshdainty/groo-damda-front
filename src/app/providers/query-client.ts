@@ -1,4 +1,5 @@
-import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import { isWriteUnconfirmed } from "@/shared/api/base";
 import { retryDelay, retryOnlyServerErrors } from "@/shared/api/retry";
 import {
   clearRefreshFailure,
@@ -13,6 +14,32 @@ export const createAppQueryClient = () =>
     queryCache: new QueryCache({
       onError: notifyRefreshFailure,
       onSuccess: clearRefreshFailure,
+    }),
+    // 쓰기 결과를 확인하지 못했다(PARSE · 응답 없음 — shared/api/base.ts) — 서버는 처리했을 수 있다. 그 쓰기의 성공 처리기를
+    // 그대로 한 번 불러 성공 때와 같은 범위를 다시 받는다(성공 처리기가 없으면 끝 처리기를 error 없이). 폼은 onError 경로라
+    // 닫히지 않고, 글은 폼이 고른다(useSaveFailureText — "…확인하지 못했어요"). 앱 저장 실패 규칙과 같은 범위
+    mutationCache: new MutationCache({
+      onError: (error, variables, onMutateResult, mutation, context) => {
+        if (!isWriteUnconfirmed(error)) return;
+        const o = mutation.options;
+        // 성공 처리기가 응답 값을 읽다 던지면(동기 · 비동기 모두) 화면이 보는 것을 모두 다시 받는다
+        const everything = () => context.client.invalidateQueries();
+        try {
+          return Promise.resolve(
+            o.onSuccess
+              ? o.onSuccess(undefined, variables, onMutateResult, context)
+              : o.onSettled?.(
+                  undefined,
+                  null,
+                  variables,
+                  onMutateResult,
+                  context,
+                ),
+          ).catch(everything);
+        } catch {
+          return everything();
+        }
+      },
     }),
     defaultOptions: {
       queries: {

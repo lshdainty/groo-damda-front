@@ -1,3 +1,5 @@
+import { isWriteUnconfirmed } from "@/shared/api";
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { loadFailed } from "@/shared/api";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -101,6 +103,7 @@ export function TxDetailDialog({
   const [refundDate, setRefundDate] = useState("");
   const [refundFailed, setRefundFailed] = useState(false);
   const refundMut = useRefundExpense();
+  const sft = useSaveFailureText();
   const cancelRefundMut = useCancelRefund();
   const deleteMut = useDeleteExpense();
   // 부모는 목록에서 집은 **스냅샷**을 넘긴다 — 무효화가 끝나도 그 객체는 안 바뀐다. 그래서 환불 · 환불 취소 · 수정 저장의 응답으로
@@ -377,8 +380,16 @@ export function TxDetailDialog({
           setMarked(updated);
           setConfirmCancelRefund(false);
         },
-        onError: () => {
+        onError: (error) => {
           setConfirmCancelRefund(false);
+          // 결과를 확인하지 못했으면 실패라 하지 않고 [다시 시도] 도 두지 않는다(두 번 될 수 있다)
+          if (isWriteUnconfirmed(error)) {
+            snackbar.show({
+              message: tc("query.saveUnconfirmed"),
+              tone: "critical",
+            });
+            return;
+          }
           snackbar.show({
             message: t("txDetail.refundCancelFailed"),
             tone: "critical",
@@ -568,7 +579,7 @@ export function TxDetailDialog({
             {refundFailed && (
               <div className="px-global-gutter pb-x2 pt-x1">
                 <Callout tone="critical" role="alert">
-                  {t("txDetail.refundFailed")}
+                  {sft(refundMut.error, t("txDetail.refundFailed"))}
                 </Callout>
               </div>
             )}

@@ -185,6 +185,8 @@ export function useMemoScreen() {
     viewing,
     setViewing,
     saveError,
+    // 저장 실패의 오류 — 결과를 확인하지 못한 쓰기면 폼 글이 바뀐다
+    saveErrorDetail: createMemo.error ?? updateMemo.error,
     saveErrorSeq,
     tagsReady,
     tagColors,

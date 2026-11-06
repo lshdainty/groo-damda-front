@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invalidateFor } from "@/shared/config";
-import { isWriteUnconfirmed } from "@/shared/api";
 import { commitSms, type SmsCommitRequest } from "../api/smsApi";
 
 /**
@@ -17,9 +16,5 @@ export const useCommitSms = (opts?: { silent?: boolean }) => {
   return useMutation({
     mutationFn: (request: SmsCommitRequest) => commitSms(request, opts),
     onSuccess: refresh,
-    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
-    onError: (error) => {
-      if (isWriteUnconfirmed(error)) return refresh();
-    },
   });
 };

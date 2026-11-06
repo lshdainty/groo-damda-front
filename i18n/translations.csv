@@ -9,6 +9,7 @@ common,query.referenceFailed,일부 정보를 불러오지 못했어요.,Some in
 common,query.refreshFailed,새로 고치지 못했어요.,Couldn't refresh.
 common,query.saveUnconfirmed,저장됐는지 확인하지 못했어요. 목록에서 확인해주세요.,We couldn't confirm it was saved. Please check the list.
 common,query.payUnconfirmed,결제됐는지 확인하지 못했어요. 청구 내역에서 확인해주세요.,We couldn't confirm the payment. Please check the billing history.
+common,query.withdrawUnconfirmed,해지됐는지 확인하지 못했어요. 앱을 다시 열어 확인해주세요.,We couldn't confirm the cancellation. Please reopen the app to check.
 common,query.referenceSaveFailed,필요한 정보를 불러오지 못해 저장하지 못했어요.,Couldn't save because some information couldn't be loaded.
 common,query.failedNamed,{{name}} 정보를 불러오지 못했어요,Couldn't load the {{name}} info
 common,edit,수정,Edit

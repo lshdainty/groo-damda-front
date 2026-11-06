@@ -40,6 +40,7 @@ export const MemoPage = () => {
           memo={"_new" in editing ? null : editing}
           tags={screen.tagNames}
           saveError={screen.saveError}
+          saveErrorDetail={screen.saveErrorDetail}
           saveErrorSeq={screen.saveErrorSeq}
           tagsReady={screen.tagsReady}
           submitting={screen.saving}

@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { expenseKeys, invalidateFor } from "@/shared/config";
 import {
   isHttpStatus,
-  isWriteUnconfirmed,
   referenceMeta,
   referenceSilent,
   type ReferenceOpts,
@@ -31,10 +30,6 @@ export const useCreateExpense = (opts?: { silent?: boolean }) => {
     mutationFn: (data: ExpenseFormValues) =>
       expenseApi.createExpense(data, opts),
     onSuccess: refresh,
-    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
-    onError: (error) => {
-      if (isWriteUnconfirmed(error)) return refresh();
-    },
   });
 };
 
@@ -69,10 +64,6 @@ export const useUpdateExpense = (opts?: { silent?: boolean }) => {
       expenseApi.updateExpense(id, data, opts),
     // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게
     onSuccess: refresh,
-    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
-    onError: (error) => {
-      if (isWriteUnconfirmed(error)) return refresh();
-    },
   });
 };
 
@@ -128,13 +119,9 @@ export const useReplaceExpense = (opts?: { silent?: boolean }) => {
     // 받은 채 다시 눌렀으면 교체는 앞선 요청에서 끝났다(다른 기기에서 지웠어도 같다). 안
     // 털면 목록에 사라진 옛 행이 남아 보인다(QA 26차 5). 그 밖의 실패는 서버가 아무것도
     // 안 바꿨으므로 그대로 둔다.
-    // 응답을 못 읽었을 때(PARSE)도 턴다 — 서버는 교체했을 수 있다
+    // 확인 못 한 쓰기(PARSE · 응답 없음)는 MutationCache 가 성공처럼(error null) 이 처리기를 한 번 더 부른다
     onSettled: (_data, error) => {
-      if (
-        error == null ||
-        isHttpStatus(error, 404) ||
-        isWriteUnconfirmed(error)
-      ) {
+      if (error == null || isHttpStatus(error, 404)) {
         invalidateFor(queryClient, "ledger");
       }
     },

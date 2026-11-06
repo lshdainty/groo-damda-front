@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Palette } from "lucide-react";
@@ -35,6 +36,7 @@ export function CalendarCreateDialog({
   const { t } = useTranslation("calendar");
   const { t: tc } = useTranslation("common");
   const createMut = useCreateUserCalendar({ silent: true });
+  const sft = useSaveFailureText();
   const [initialColor] = useState(() =>
     nextColorHex(owned.map((c) => c.color)),
   );
@@ -93,7 +95,7 @@ export function CalendarCreateDialog({
           {saveError && (
             <div ref={errorRef}>
               <Callout tone="critical" role="alert" className="mb-x4">
-                {t("shareSection.createFailed")}
+                {sft(createMut.error, t("shareSection.createFailed"))}
               </Callout>
             </div>
           )}

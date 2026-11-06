@@ -260,9 +260,10 @@ export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
             const target = c.payoffTarget!;
             runPayoff(target).then(
               () => c.setPayoffTarget(null),
-              () => {
+              (error) => {
                 c.setPayoffTarget(null);
                 confirmFail({
+                  error,
                   message: t(
                     target.undo
                       ? "assetDetail.installmentUndoFailed"
@@ -292,9 +293,10 @@ export function CardOverlays({ asset, c }: { asset: Asset; c: CardDetail }) {
             const id = c.lastPayment!.rowId;
             c.cancelPayment.mutateAsync(id).then(
               () => c.setConfirmCancelPay(false),
-              () => {
+              (error) => {
                 c.setConfirmCancelPay(false);
                 confirmFail({
+                  error,
                   message: t("assetDetail.cancelPaymentFailed"),
                   retry: () => c.cancelPayment.mutateAsync(id),
                 });

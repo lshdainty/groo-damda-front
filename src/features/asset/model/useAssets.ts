@@ -4,7 +4,6 @@ import {
   referenceSilent,
   type ReferenceOpts,
   type SilentOpts,
-  isWriteUnconfirmed,
 } from "@/shared/api";
 import { assetKeys, invalidateFor } from "@/shared/config";
 import { assetApi } from "../api/assetApi";
@@ -141,10 +140,6 @@ export const usePayCard = () => {
       paymentDate?: string;
     }) => assetApi.payCard(id, amount, paymentDate),
     onSuccess: refresh,
-    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
-    onError: (error) => {
-      if (isWriteUnconfirmed(error)) return refresh();
-    },
   });
 };
 
@@ -200,10 +195,6 @@ export const useCreateTransfer = (opts?: { silent?: boolean }) => {
       assetApi.createTransfer(data, opts),
     // 이자가 있는 이체는 지출 거래를 하나 만든다.
     onSuccess: refresh,
-    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
-    onError: (error) => {
-      if (isWriteUnconfirmed(error)) return refresh();
-    },
   });
 };
 
@@ -216,10 +207,6 @@ export const useUpdateTransfer = (opts?: { silent?: boolean }) => {
     mutationFn: ({ id, data }: { id: number; data: AssetTransferFormValues }) =>
       assetApi.updateTransfer(id, data, opts),
     onSuccess: refresh,
-    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
-    onError: (error) => {
-      if (isWriteUnconfirmed(error)) return refresh();
-    },
   });
 };
 

@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { loadFailed } from "@/shared/api";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -126,6 +127,7 @@ export function WithdrawDialog({
   const verifyCode = useVerifyReauthEmailCodeMutation();
   const verifyPassword = useVerifyReauthPasswordMutation();
   const withdraw = useWithdrawMutation();
+  const sft = useSaveFailureText();
 
   // 해지가 나가 있는 동안 또 눌려도 아무 일이 없어야 한다 — 두 번 불러도 결과는
   // 같지만(서버가 멱등) 그 사이 두 번째 요청이 이미 쓴 티켓을 들고 가 401 이 뜬다.
@@ -198,8 +200,9 @@ export function WithdrawDialog({
     }
     try {
       await doWithdraw(token);
-    } catch {
-      setReauthError(t("withdraw.failed"));
+    } catch (e) {
+      // 결과를 확인하지 못했으면(응답을 못 읽음 · 응답 전에 끊김) 실패라 하지 않는다 — 해지됐을 수 있다(앱 withdrawUnconfirmed)
+      setReauthError(sft(e, t("withdraw.failed"), "withdraw"));
       setBusy(false);
     } finally {
       runningRef.current = false;

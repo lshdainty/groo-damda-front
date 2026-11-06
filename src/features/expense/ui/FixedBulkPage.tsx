@@ -1,3 +1,4 @@
+import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useScrollToError } from "../model/useScrollToError";
 import { Callout } from "@/shared/ds/callout";
 import { createPortal } from "react-dom";
@@ -49,6 +50,7 @@ export function FixedBulkPage({
     groups,
     apply,
   } = useFixedBulk({ startDate, endDate, onClose });
+  const sft = useSaveFailureText();
   // 적용 중에는 ← · Esc · 기기 뒤로 가기로 나가지 않는다 — 나가면 실패 Callout 을 그릴 페이지가 사라진다(뒤로 가기는 칸을 다시 쌓는다)
   const leave = () => {
     if (!mut.isPending) onClose();
@@ -78,7 +80,7 @@ export function FixedBulkPage({
         {mut.isError && (
           <div ref={errorRef} className="px-x6 pt-x2 pb-x2">
             <Callout tone="critical" role="alert">
-              {t("fixed.bulk.failed")}
+              {sft(mut.error, t("fixed.bulk.failed"))}
             </Callout>
           </div>
         )}

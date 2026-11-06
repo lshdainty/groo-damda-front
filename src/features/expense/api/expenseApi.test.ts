@@ -122,11 +122,9 @@ describe("고쳐 쓰기", () => {
       refundedAmount: null,
     });
     // 404 는 전역 토스트 없이 넘긴다 — 재시도의 404 는 교체가 앞서 끝났다는 뜻이다(QA 26 5).
-    // 돈이 움직이는 쓰기라 응답 모양을 확인한다(confirmWrite — 못 읽으면 PARSE)
     expect(post).toHaveBeenCalledWith("/v1/expense/77/replace", body, {
       silentStatuses: [404],
       silent: undefined,
-      confirmWrite: true,
     });
     expect(put).not.toHaveBeenCalled();
   });

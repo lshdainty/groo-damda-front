@@ -63,4 +63,24 @@ describe("showConfirmFail", () => {
     expect(shown).toHaveLength(2);
     expect(shown[1]).toMatchObject({ message: "m", tone: "critical" });
   });
+
+  it("쓰기 결과를 확인하지 못했으면 실패 글 대신 '확인하지 못했어요', [다시 시도] 없음(두 번 될 수 있다)", async () => {
+    const { WriteUnconfirmedError } = await import("@/shared/api/base");
+    const { api, shown } = fakeSnackbar();
+    const retry = vi.fn();
+    showConfirmFail(api, {
+      message: "결제를 취소하지 못했어요.",
+      retry,
+      retryLabel: "다시 시도",
+      error: new WriteUnconfirmedError(0),
+      unconfirmedMessage:
+        "저장됐는지 확인하지 못했어요. 목록에서 확인해주세요.",
+    });
+    expect(shown).toEqual([
+      {
+        message: "저장됐는지 확인하지 못했어요. 목록에서 확인해주세요.",
+        tone: "critical",
+      },
+    ]);
+  });
 });

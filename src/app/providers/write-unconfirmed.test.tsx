@@ -6,7 +6,7 @@
 import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
@@ -18,7 +18,9 @@ const { apiClient, isWriteUnconfirmed } = await import("@/shared/api");
 const { useCreateExpense, useUpdateExpense, useReplaceExpense } =
   await import("@/features/expense/model/useExpenses");
 const { useCreateTransfer, useUpdateTransfer, usePayCard } =
-  await import("./useAssets");
+  await import("@/features/asset/model/useAssets");
+const { useCreateMemo } = await import("@/features/memo/model/useMemos");
+const { createAppQueryClient } = await import("./query-client");
 const { useCommitSms } = await import("@/features/sms");
 
 let body: unknown;
@@ -41,7 +43,8 @@ beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   apiClient.defaults.adapter = async (config) =>
     reply(config as InternalAxiosRequestConfig);
-  client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  // 앱과 같은 설정 — 확인 못 한 쓰기의 다시 받기는 MutationCache 가 맡는다
+  client = createAppQueryClient();
   invalidate = vi.spyOn(client, "invalidateQueries");
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -145,11 +148,27 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
     expect(invalidate).toHaveBeenCalled();
   });
 
-  it("표식이 없는 쓰기는 예전 그대로 — 깨진 본문도 성공으로 넘긴다(돈이 움직이는 쓰기만 확인한다)", async () => {
+  it("모든 쓰기에 같은 규칙 — 돈이 아닌 쓰기(메모)도 깨진 본문이면 확인 못 함 + 다시 받기(앱 저장 실패 규칙과 같은 범위)", async () => {
+    body = BROKEN;
+    const r = await run(() => useCreateMemo({ silent: true }) as AnyMutation, {
+      title: "x",
+      content: "",
+    });
+    expect(isWriteUnconfirmed(r.ok ? null : r.error)).toBe(true);
+    expect(invalidate).toHaveBeenCalled();
+  });
+
+  it("읽기(GET) · 빈 본문(204) · confirmWrite: false 는 확인하지 않는다", async () => {
     body = BROKEN;
     await act(async () => {
-      const data = await apiClient.post("/v1/notification/1/read");
-      expect(data).toBe(BROKEN);
+      expect(await apiClient.get("/v1/expenses")).toBe(BROKEN);
+      expect(
+        await apiClient.post("/v1/x", undefined, {
+          confirmWrite: false,
+        } as never),
+      ).toBe(BROKEN);
+      body = "";
+      expect(await apiClient.post("/v1/notification/1/read")).toBe("");
     });
   });
 

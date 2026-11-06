@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useSnackbar, type SnackbarApi } from "@/shared/ds/snackbar";
+import { isWriteUnconfirmed } from "@/shared/api/base";
 
 /**
  * 확인창 뒤 요청이 실패했을 때의 표시 — 디자인 확정(alert-dialog.md): **확인창 닫기 + critical Snackbar(6초) +
@@ -32,13 +33,31 @@ export interface ConfirmFailOptions {
   retryLabel: string;
   /** 다시 시도가 성공했을 때(목록 정리 · 시트 닫기 …) */
   onRetried?: () => void;
+  /**
+   * 실패의 오류 — 쓰기 결과를 확인하지 못했으면(응답을 못 읽음 · 응답 전에 끊김) 실패 글 대신
+   * "저장됐는지 확인하지 못했어요. 목록에서 확인해주세요." 를 띄우고 [다시 시도] 를 두지 않는다(다시 하면 두 번 될 수 있다)
+   */
+  error?: unknown;
+  /** 확인 못 함 글 — 훅이 `common.query.saveUnconfirmed` 로 채운다 */
+  unconfirmedMessage?: string;
 }
 
 /** critical Snackbar + [다시 시도]. 다시 시도가 또 실패하면 같은 띠를 다시 띄운다 */
 export function showConfirmFail(
   snackbar: SnackbarApi,
-  { message, retry, retryLabel, onRetried }: ConfirmFailOptions,
+  {
+    message,
+    retry,
+    retryLabel,
+    onRetried,
+    error,
+    unconfirmedMessage,
+  }: ConfirmFailOptions,
 ): void {
+  if (isWriteUnconfirmed(error) && unconfirmedMessage) {
+    snackbar.show({ message: unconfirmedMessage, tone: "critical" });
+    return;
+  }
   snackbar.show({
     message,
     tone: "critical",
@@ -62,10 +81,14 @@ export function showConfirmFail(
 
 /** 컴포넌트에서 쓰는 길 — `common.retry` 와 Snackbar 를 알아서 묶는다 */
 export function useConfirmFail(): (
-  options: Omit<ConfirmFailOptions, "retryLabel">,
+  options: Omit<ConfirmFailOptions, "retryLabel" | "unconfirmedMessage">,
 ) => void {
   const snackbar = useSnackbar();
   const { t } = useTranslation("common");
   return (options) =>
-    showConfirmFail(snackbar, { ...options, retryLabel: t("retry") });
+    showConfirmFail(snackbar, {
+      ...options,
+      retryLabel: t("retry"),
+      unconfirmedMessage: t("query.saveUnconfirmed"),
+    });
 }

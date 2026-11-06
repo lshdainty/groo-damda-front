@@ -39,9 +39,11 @@ export type QuietRequestConfig = AxiosRequestConfig & {
   silent?: boolean;
   silentStatuses?: readonly number[];
   /**
-   * 돈이 움직이는 쓰기 — 2xx 인데 응답 본문이 `{ success: true, … }` 모양이 아니면(깨진 JSON 이 문자열로 들어옴 ·
-   * 다른 모양) 성공으로 넘기지 않고 `WriteUnconfirmedError`(PARSE)로 거절한다. 서버는 처리했을 수 있으므로 호출처는
-   * "저장하지 못했어요" 가 아니라 "저장됐는지 확인하지 못했어요" 로 말하고, 성공 때와 같은 범위를 다시 받는다.
+   * 쓰기 결과 확인 — **모든 쓰기(GET 이 아닌 요청)에 기본으로 켜져 있다**(앱 저장 실패 규칙과 같은 범위). 2xx 인데 응답 본문이
+   * `{ success: true, … }` 모양이 아니거나(깨진 JSON 이 문자열로 들어옴 · 다른 모양) 요청은 나갔는데 응답 전에 끊기면
+   * `WriteUnconfirmedError` 로 거절한다 — 서버는 처리했을 수 있으므로 호출처는 "…확인하지 못했어요" 로 말하고, 성공 때와
+   * 같은 범위를 다시 받는다(app/providers/query-client.ts MutationCache). 본문이 비어 있으면(204 · 빈 응답) 성공이다.
+   * false 면 끈다(응답이 껍데기 모양이 아닌 쓰기용 — 지금은 없다).
    */
   confirmWrite?: boolean;
 };
@@ -66,6 +68,16 @@ const isEnvelope = (body: unknown): boolean =>
   typeof body === "object" &&
   body !== null &&
   (body as { success?: unknown }).success === true;
+
+/** 결과를 확인할 쓰기인가 — GET · HEAD · OPTIONS 가 아니고, 파일을 받는 요청이 아니고, 끄지 않았다 */
+const confirmsWrite = (config: QuietRequestConfig | undefined): boolean => {
+  if (!config || config.confirmWrite === false) return false;
+  const method = (config.method ?? "get").toLowerCase();
+  if (method === "get" || method === "head" || method === "options")
+    return false;
+  const rt = config.responseType;
+  return rt !== "blob" && rt !== "arraybuffer" && rt !== "stream";
+};
 
 /**
  * 이 실패가 그 상태 코드인가.
@@ -113,9 +125,12 @@ let isRedirectingToLogin = false;
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     endChain(response.config);
-    // 돈이 움직이는 쓰기는 응답 모양을 확인한다 — 못 읽으면 성공도 실패도 아닌 PARSE
+    // 쓰기는 응답 모양을 확인한다 — 못 읽으면 성공도 실패도 아닌 PARSE
     if (
-      (response.config as QuietRequestConfig).confirmWrite &&
+      confirmsWrite(response.config as QuietRequestConfig) &&
+      response.status !== 204 &&
+      response.data !== "" &&
+      response.data != null &&
       !isEnvelope(response.data)
     )
       return Promise.reject(new WriteUnconfirmedError(response.status));
@@ -135,11 +150,11 @@ apiClient.interceptors.response.use(
       }
       return Promise.reject(error);
     }
-    // 돈이 움직이는 쓰기가 나갔는데 응답 전에 끊겼다(error.request 는 있고 response 가 없다) — 서버는 처리했을 수 있다.
+    // 쓰기가 나갔는데 응답 전에 끊겼다(error.request 는 있고 response 가 없다) — 서버는 처리했을 수 있다.
     // 실패로 말하면 다시 눌러 두 번 들어간다 → PARSE 와 같은 "확인하지 못했어요" 쪽. 요청을 만들지도 못했거나
     // (request 없음) 시간 제한(ECONNABORTED) · 취소는 그대로 실패다(웹은 쓰기에 시간 제한을 걸지 않는다)
     if (
-      (error?.config as QuietRequestConfig | undefined)?.confirmWrite &&
+      confirmsWrite(error?.config as QuietRequestConfig | undefined) &&
       error.request != null &&
       error.response == null &&
       error.code !== "ECONNABORTED" &&
