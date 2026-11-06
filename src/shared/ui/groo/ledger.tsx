@@ -14,19 +14,26 @@ import { cn } from "@/shared/lib/index";
  * 큰 틀(I-07 7 · 8 · 11 · 12 · 14 — ds 값). 위에서 아래로:
  *
  *   <LedgerShell ref={rootRef}>
- *     <LedgerPin ref={pinRef}>                      ds Scroll Auto Hide — 내리면 숨고 올리면 드러난다
+ *     <LedgerBar>                                   늘 고정 — 달 이동 줄(sticky)
  *       <LedgerMonthNav> <MonthTitle/> <LedgerNavBtn/> … </LedgerMonthNav>   달 글은 shared/ui/groo/month-title.tsx
- *       <LedgerHead> <LedgerTotal/> <LedgerSub/> <LedgerSumBtn/> </LedgerHead>
- *       <LedgerCalendar>
- *         <LedgerDow/> <LedgerWeek> <LedgerCell> <LedgerCellNum/> <LedgerCellAmt/> …
- *         <LedgerExpand/> <LedgerCellTip/>
- *       </LedgerCalendar>
- *       <LedgerDivider/>
+ *     </LedgerBar>
+ *     <LedgerPin ref={pinRef}>                      ds Scroll Auto Hide — 달 줄 바로 아래에 붙고, 내리면 Keep 위만 숨는다
+ *       <LedgerHead> <LedgerTotal/> <LedgerSub/> <LedgerSumBtn/> </LedgerHead>   숨는다(총액 · 지난달 비교 · 소비 요약)
+ *       <LedgerKeep>                                남는다 — 주 달력 + 펼침 꺾쇠 + 아래 선
+ *         <LedgerCalendar>
+ *           <LedgerDow/> <LedgerWeek> <LedgerCell> <LedgerCellNum/> <LedgerCellAmt/> …
+ *           <LedgerExpand/> <LedgerCellTip/>
+ *         </LedgerCalendar>
+ *         <LedgerDivider/>
+ *       </LedgerKeep>
  *     </LedgerPin>
  *     <LedgerList> <LedgerDayGroup day> <LedgerDayHead> <LedgerDayDate/> <LedgerDaySum/> … </LedgerList>
  *   </LedgerShell>
  *
- * - 페이지 인셋은 Shell(24)이 담당, 내부 요소 인셋 0. Pin 은 풀블리드(음수 여백).
+ * - 페이지 전체를 조절하는 줄(달 이동 · 주 달력 · 꺾쇠)은 한 덩어리로 남는다 — 목록을 내리면 고른 날이 맨 위 날짜 묶음을 따라간다.
+ *   총액 · 인사이트 · 요약만 Scroll Auto Hide 로 숨는다(07-21 고정 머리 + 총액 접힘을 Scroll Auto Hide 로 다시 — 10-23 에 머리 전체가
+ *   숨어 주 달력까지 사라졌던 것을 되돌린다). 숨는 부분은 높이를 바꾸지 않고 옮기기만 해 짧은 목록에서도 깜빡이지 않는다.
+ * - 페이지 인셋은 Shell(24)이 담당, 내부 요소 인셋 0. Bar · Pin 은 풀블리드(음수 여백).
  * - 행(row)은 도메인별로 다르므로 children 슬롯 — 화면이 소유.
  * - 스크롤 동작(스파이 · lock · 날 누름 이동)은 `use-ledger-scroll.ts` 의 `useLedgerScroll` 훅 공용.
  */
@@ -43,32 +50,102 @@ export const LedgerShell = React.forwardRef<
 ));
 LedgerShell.displayName = "LedgerShell";
 
+/** Bar 높이를 셸에 적는 CSS 변수 — Pin 이 그만큼 아래에 붙는다 */
+const BAR_HEIGHT_VAR = "--ledger-bar-h";
+
 /**
- * 상단 고정 영역 — ds Scroll Auto Hide(sticky · 맨 위, 바탕 `bg-layer-default` · z-2 — 스크롤 상자 안의 겹침 값). 스크롤 상자는
- * 셸의 main 이다 — 자식(ScrollAutoHide)의 효과가 부모보다 먼저 돌아 효과로 집으면 늦으므로 처음 그릴 때 집는다.
+ * 늘 고정되는 달 이동 줄 — sticky · 맨 위(top 은 위 상단 바 높이, 없으면 0), 바탕 `bg-layer-default` · z-3(Pin 의 숨는 부분이 이 아래로
+ * 들어간다 — 스크롤 상자 안의 겹침 값). 제 높이를 셸에 CSS 변수로 적어 Pin 이 바로 아래에 붙게 한다.
+ */
+export function LedgerBar({
+  className,
+  top,
+  style,
+  ...props
+}: React.ComponentProps<"div"> & { top?: number }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    const parent = el?.parentElement;
+    if (!el || !parent) return;
+    const write = () =>
+      parent.style.setProperty(BAR_HEIGHT_VAR, `${el.offsetHeight}px`);
+    write();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(write);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      parent.style.removeProperty(BAR_HEIGHT_VAR);
+    };
+  }, []);
+  return (
+    <div
+      ref={ref}
+      data-ledger-bar=""
+      className={cn(
+        "sticky z-3 -mx-global-gutter bg-bg-layer-default px-global-gutter pt-x2",
+        className,
+      )}
+      style={{ top: top ?? 0, ...style }}
+      {...props}
+    />
+  );
+}
+
+const LedgerKeepContext =
+  React.createContext<React.RefObject<HTMLDivElement | null> | null>(null);
+
+/**
+ * 머리 — ds Scroll Auto Hide(sticky, 바탕 `bg-layer-default` · z-2 — 스크롤 상자 안의 겹침 값). Bar 바로 아래에 붙고(top = 상단 바 +
+ * Bar 높이), 내리면 `LedgerKeep` 위 부분만 Bar 아래로 숨는다 — Keep(주 달력)은 남는다. Keep 이 없으면 전부 숨는다. 거르기 중에는 칩 줄이 Keep 이다(가계부 — 남는다).
+ * 스크롤 상자는 셸의 main 이다 — 자식(ScrollAutoHide)의 효과가 부모보다 먼저 돌아 효과로 집으면 늦으므로, 읽는 순간 main 을 찾는 ref 를
+ * 넘긴다. 처음 그릴 때 집으면 셸과 원장이 한 번에 그려질 때(새로 고침 · 바로 들어옴) main 이 아직 문서에 없어 null 로 굳어 머리가 숨지 않았다.
  */
 export const LedgerPin = React.forwardRef<
   HTMLElement,
   Omit<React.ComponentProps<"div">, "ref"> & { top?: number }
 >(({ className, top, style, ...props }, ref) => {
-  const [scroller] = React.useState<{ current: HTMLElement | null }>(() => ({
-    current:
-      typeof document === "undefined" ? null : document.getElementById("main"),
-  }));
+  const [scroller] = React.useState(
+    () =>
+      ({
+        get current() {
+          return typeof document === "undefined"
+            ? null
+            : document.getElementById("main");
+        },
+      }) as React.RefObject<HTMLElement | null>,
+  );
+  const keepRef = React.useRef<HTMLDivElement>(null);
   return (
-    <ScrollAutoHide
-      ref={ref}
-      scrollContainerRef={scroller}
-      className={cn(
-        "z-2 -mx-global-gutter bg-bg-layer-default px-global-gutter pt-x2",
-        className,
-      )}
-      style={top != null ? { top, ...style } : style}
-      {...props}
-    />
+    <LedgerKeepContext.Provider value={keepRef}>
+      <ScrollAutoHide
+        ref={ref}
+        scrollContainerRef={scroller}
+        keepRef={keepRef}
+        className={cn(
+          "z-2 -mx-global-gutter bg-bg-layer-default px-global-gutter",
+          className,
+        )}
+        style={{
+          top: `calc(${top ?? 0}px + var(${BAR_HEIGHT_VAR}, 0px))`,
+          ...style,
+        }}
+        {...props}
+      />
+    </LedgerKeepContext.Provider>
   );
 });
 LedgerPin.displayName = "LedgerPin";
+
+/** 머리 안에서 숨지 않고 남는 부분(주 달력 + 꺾쇠 + 아래 선) — Pin 안에 하나. */
+export function LedgerKeep({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  const ref = React.useContext(LedgerKeepContext);
+  return <div ref={ref} data-ledger-keep="" className={className} {...props} />;
+}
 
 /** 구분선 — ds Divider 한 줄. 기본은 풀블리드(핀 아래 경계), inset 이면 페이지 인셋 안(행 사이용). */
 export function LedgerDivider({

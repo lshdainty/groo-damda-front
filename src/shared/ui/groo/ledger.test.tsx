@@ -1,4 +1,5 @@
 // 공용 원장 부품(가계부 · 할 일 · 검색이 함께 쓴다) — ds 값: 머리는 Scroll Auto Hide, 오는 날은 불투명도 없이 색, 날짜 머리는 h2.
+import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -11,12 +12,18 @@ import {
   LedgerDayHead,
   LedgerDaySum,
   LedgerExpand,
+  LedgerBar,
   LedgerHead,
+  LedgerKeep,
+  LedgerList,
   LedgerMonthNav,
+  LedgerShell,
   LedgerNavBtn,
   LedgerPin,
   LedgerSumBtn,
 } from "./ledger";
+import { useLedgerScroll } from "./use-ledger-scroll";
+import { SCROLL_AUTO_HIDE_SYNC_EVENT } from "@/shared/ds/scroll-auto-hide";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -208,5 +215,347 @@ describe("칸 · 선", () => {
     );
     expect(lines[0]!.className).toContain("bg-stroke-neutral-subtle");
     expect(lines[1]!.className).not.toContain("-mx-global-gutter");
+  });
+});
+
+describe("원장 머리 — 달 이동 줄 · 주 달력은 남고 총액만 숨는다", () => {
+  function Harness({ days }: { days: string[] }) {
+    const { rootRef, pinRef, selected } = useLedgerScroll({
+      initialSelected: days[0] ?? null,
+    });
+    return (
+      <div className="m-scroll" data-testid="scroll">
+        <LedgerShell ref={rootRef}>
+          <LedgerBar top={56}>
+            <LedgerMonthNav>
+              <LedgerNavBtn aria-label="필터">f</LedgerNavBtn>
+            </LedgerMonthNav>
+          </LedgerBar>
+          <LedgerPin ref={pinRef} top={56}>
+            <LedgerHead>
+              <div>총액</div>
+              <LedgerSumBtn>소비 요약</LedgerSumBtn>
+            </LedgerHead>
+            <LedgerKeep>
+              <output data-testid="sel">{selected}</output>
+              <LedgerExpand aria-label="월 달력" />
+              <LedgerDivider />
+            </LedgerKeep>
+          </LedgerPin>
+          <LedgerList>
+            {days.map((d) => (
+              <LedgerDayGroup key={d} day={d}>
+                {d}
+              </LedgerDayGroup>
+            ))}
+          </LedgerList>
+        </LedgerShell>
+      </div>
+    );
+  }
+
+  it("달 이동 줄은 Pin 밖의 sticky(z-3) 이고, 주 달력 · 꺾쇠는 Pin 안 Keep 에, 총액 · 요약 단추는 Keep 위(숨는 부분)에 있다", () => {
+    render(<Harness days={["2026-10-29"]} />);
+    const bar = container.querySelector<HTMLElement>("[data-ledger-bar]")!;
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    const keep = pin.querySelector<HTMLElement>("[data-ledger-keep]")!;
+    expect(bar.className.split(" ")).toEqual(
+      expect.arrayContaining(["sticky", "z-3", "bg-bg-layer-default"]),
+    );
+    expect(bar.style.top).toBe("56px");
+    expect(pin.contains(bar)).toBe(false);
+    // Pin 은 상단 바 + 달 줄 높이 아래에 붙는다
+    expect(pin.style.top).toBe("calc(56px + var(--ledger-bar-h, 0px))");
+    expect(keep.querySelector('[aria-label="월 달력"]')).not.toBeNull();
+    const sum = Array.from(pin.querySelectorAll("button")).find(
+      (b) => b.textContent === "소비 요약",
+    )!;
+    expect(keep.contains(sum)).toBe(false);
+    // 달 줄 높이를 셸에 적는다(jsdom 은 높이 0)
+    expect(bar.parentElement!.style.getPropertyValue("--ledger-bar-h")).toBe(
+      "0px",
+    );
+  });
+
+  it("목록을 내리면 고른 날이 Pin 아래 맨 위 날짜 묶음을 따라간다(스크롤 스파이)", () => {
+    const days = ["2026-10-29", "2026-10-27", "2026-10-21", "2026-10-15"];
+    render(<Harness days={days} />);
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-testid=scroll]",
+    )!;
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    const groups = Array.from(
+      container.querySelectorAll<HTMLElement>("[data-ledger-day]"),
+    );
+    // 남는 머리(달 줄 + 주 달력)의 아래 끝 200 — 묶음 윗변을 스크롤 거리만큼 올린다
+    pin.getBoundingClientRect = () => ({ bottom: 200 }) as DOMRect;
+    let offset = 0;
+    groups.forEach((g, i) => {
+      g.getBoundingClientRect = () =>
+        ({ top: 240 + i * 300 - offset }) as DOMRect;
+    });
+    const sel = () => container.querySelector("[data-testid=sel]")!.textContent;
+    const scrollBy = (y: number) => {
+      offset = y;
+      act(() => {
+        scroll.dispatchEvent(new Event("scroll"));
+      });
+    };
+    expect(sel()).toBe("2026-10-29");
+    scrollBy(320); // 둘째 묶음 윗변 220 ≤ 200 + 28
+    expect(sel()).toBe("2026-10-27");
+    scrollBy(900); // 넷째 묶음 윗변 240
+    expect(sel()).toBe("2026-10-21");
+    scrollBy(1000);
+    expect(sel()).toBe("2026-10-15");
+    scrollBy(0);
+    expect(sel()).toBe("2026-10-29");
+  });
+
+  it("짧은 목록 — 숨는 부분은 높이를 접지 않고(transform 만) 남는 부분도 그대로라 스크롤 끝이 줄지 않는다(깜빡임 없음)", () => {
+    render(<Harness days={["2026-10-29"]} />);
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-testid=scroll]",
+    )!;
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    act(() => {
+      scroll.dispatchEvent(new Event("scroll"));
+    });
+    expect(pin.style.height).toBe("");
+    expect(pin.style.maxHeight).toBe("");
+    expect(container.querySelector("[data-ledger-collapse]")).toBeNull();
+    expect(pin.querySelector("[data-ledger-keep]")).not.toBeNull();
+    expect(pin.textContent).toContain("총액");
+  });
+});
+
+describe("펼친 월 달력 — 펼친 채 내리기 시작하면 고른 날이 든 주로 접는다", () => {
+  function Harness() {
+    const [expanded, setExpanded] = React.useState(true);
+    const { rootRef, pinRef, selected } = useLedgerScroll({
+      initialSelected: "2026-10-22",
+      expanded,
+      onCollapse: () => setExpanded(false),
+    });
+    return (
+      <div className="m-scroll" data-testid="scroll">
+        <LedgerShell ref={rootRef}>
+          <LedgerPin ref={pinRef}>
+            <LedgerKeep>
+              <output data-testid="sel">{selected}</output>
+              <LedgerExpand
+                aria-label="월 달력"
+                expanded={expanded}
+                onClick={() => setExpanded((v) => !v)}
+              />
+            </LedgerKeep>
+          </LedgerPin>
+          <LedgerList>
+            {["2026-10-29", "2026-10-22"].map((d) => (
+              <LedgerDayGroup key={d} day={d}>
+                {d}
+              </LedgerDayGroup>
+            ))}
+          </LedgerList>
+        </LedgerShell>
+      </div>
+    );
+  }
+
+  function setup() {
+    render(<Harness />);
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-testid=scroll]",
+    )!;
+    let top = 0;
+    Object.defineProperty(scroll, "scrollTop", {
+      configurable: true,
+      get: () => top,
+      set: (v: number) => {
+        top = v;
+      },
+    });
+    // 스파이가 22 를 그대로 고르게 — 22 묶음 윗변이 머리 아래 선 안
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    pin.getBoundingClientRect = () => ({ bottom: 400 }) as DOMRect;
+    const groups = container.querySelectorAll<HTMLElement>("[data-ledger-day]");
+    groups[0]!.getBoundingClientRect = () =>
+      ({ top: 100, bottom: 380 }) as DOMRect;
+    groups[1]!.getBoundingClientRect = () =>
+      ({ top: 380, bottom: 700 }) as DOMRect;
+    const scrollTo = (y: number) => {
+      top = y;
+      act(() => {
+        scroll.dispatchEvent(new Event("scroll"));
+      });
+    };
+    const expanded = () =>
+      container
+        .querySelector('[aria-label="월 달력"]')!
+        .getAttribute("aria-expanded");
+    const sel = () => container.querySelector("[data-testid=sel]")!.textContent;
+    return { scrollTo, expanded, sel };
+  }
+
+  it("맨 위(0)에서는 펼친 채로 있고, 20 미만 내림은 접지 않는다", () => {
+    const { scrollTo, expanded } = setup();
+    expect(expanded()).toBe("true");
+    scrollTo(0);
+    expect(expanded()).toBe("true");
+    scrollTo(19);
+    expect(expanded()).toBe("true");
+  });
+
+  it("20 이상 내리면 접히고(꺾쇠 ∨) 고른 날은 그대로다", () => {
+    const { scrollTo, expanded, sel } = setup();
+    scrollTo(10);
+    scrollTo(30);
+    expect(expanded()).toBe("false");
+    expect(sel()).toBe("2026-10-22");
+  });
+
+  it("접은 뒤 맨 위 묶음의 화면 y 가 바뀌었으면 그만큼 scrollTop 을 당기고, 머리 숨김에 sync 를 알린다", () => {
+    const { scrollTo, expanded } = setup();
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-testid=scroll]",
+    )!;
+    const groups = container.querySelectorAll<HTMLElement>("[data-ledger-day]");
+    // 접히면 달력이 268 줄어 묶음이 268 위로 간다 — 펼침 여부로 rect 를 바꾼다
+    const isOpen = () => expanded() === "true";
+    groups[0]!.getBoundingClientRect = () =>
+      ({ top: isOpen() ? 100 : -168, bottom: isOpen() ? 420 : 152 }) as DOMRect;
+    let synced = 0;
+    scroll.addEventListener(SCROLL_AUTO_HIDE_SYNC_EVENT, () => synced++);
+    scrollTo(300);
+    expect(expanded()).toBe("false");
+    expect(scroll.scrollTop).toBe(300 - 268);
+    expect(synced).toBe(1);
+  });
+
+  it("위로 올렸다가 다시 내리면 가장 위로 간 자리부터 20 을 센다", () => {
+    const { scrollTo, expanded } = setup();
+    scrollTo(500);
+    act(() => {
+      container.querySelector<HTMLElement>('[aria-label="월 달력"]')!.click();
+    });
+    expect(expanded()).toBe("true");
+    scrollTo(450);
+    scrollTo(465);
+    expect(expanded()).toBe("true");
+    scrollTo(470);
+    expect(expanded()).toBe("false");
+  });
+});
+
+describe("날 누름 이동 — 묶음 윗변이 고정 덩어리 아래 끝에 딱 붙는다(틈 0)", () => {
+  type Api = {
+    scrollToDay: (ds: string) => void;
+    setSelected: (ds: string) => void;
+  };
+  function Harness({ onApi }: { onApi: (api: Api) => void }) {
+    const { rootRef, pinRef, selected, setSelected, scrollToDay } =
+      useLedgerScroll({ initialSelected: "2026-10-22" });
+    React.useEffect(() => {
+      onApi({ scrollToDay, setSelected });
+    });
+    return (
+      <div className="m-scroll" data-testid="scroll">
+        <LedgerShell ref={rootRef}>
+          <LedgerPin ref={pinRef}>
+            <LedgerHead>총액</LedgerHead>
+            <LedgerKeep>
+              <output data-testid="sel">{selected}</output>
+            </LedgerKeep>
+          </LedgerPin>
+          <LedgerList>
+            {["2026-10-29", "2026-10-22"].map((d) => (
+              <LedgerDayGroup key={d} day={d}>
+                {d}
+              </LedgerDayGroup>
+            ))}
+          </LedgerList>
+        </LedgerShell>
+      </div>
+    );
+  }
+
+  // 머리: sticky top 0 · 높이 215 · 숨는 높이(Keep 윗변) 65 — 남는 덩어리 150. 상자 맨 위 0.
+  function setup(scrollTop: number) {
+    let api!: Api;
+    render(<Harness onApi={(a) => (api = a)} />);
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-testid=scroll]",
+    )!;
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    const keep = pin.querySelector<HTMLElement>("[data-ledger-keep]")!;
+    let top = scrollTop;
+    const calls: number[] = [];
+    Object.defineProperty(scroll, "scrollTop", {
+      configurable: true,
+      get: () => top,
+      set: (v: number) => {
+        top = v;
+      },
+    });
+    scroll.scrollTo = ((o: ScrollToOptions) => {
+      calls.push(o.top ?? 0);
+      top = Math.max(0, o.top ?? 0);
+    }) as typeof scroll.scrollTo;
+    scroll.getBoundingClientRect = () => ({ top: 0 }) as DOMRect;
+    Object.defineProperty(pin, "offsetHeight", { value: 215 });
+    Object.defineProperty(keep, "offsetTop", { value: 65 });
+    const groups = container.querySelectorAll<HTMLElement>("[data-ledger-day]");
+    // 내용 안 위치: 29 = 215, 22 = 1215 — 화면 y = 내용 위치 − scrollTop
+    const at = [215, 1215];
+    groups.forEach((g, i) => {
+      g.getBoundingClientRect = () =>
+        ({ top: at[i]! - top, bottom: at[i]! - top + 900 }) as DOMRect;
+    });
+    pin.getBoundingClientRect = () =>
+      ({ bottom: top > 0 ? 150 : 215 }) as DOMRect;
+    const sel = () => container.querySelector("[data-testid=sel]")!.textContent;
+    const fire = () =>
+      act(() => {
+        scroll.dispatchEvent(new Event("scroll"));
+      });
+    return { api: () => api, calls, sel, fire, scrollTop: () => top };
+  }
+
+  it("내려갈 때 — 남는 덩어리(150) 아래 끝에 틈 없이", () => {
+    const { api, calls } = setup(0);
+    act(() => api().scrollToDay("2026-10-22"));
+    // 1215 − (215 − 65) = 1065 → 화면 y 1215 − 1065 = 150 = 덩어리 아래 끝
+    expect(calls).toEqual([1065]);
+  });
+
+  it("올라갈 때 — 머리 전체(215) 아래 끝에 틈 없이, 맨 위를 넘으면 0", () => {
+    const { api, calls } = setup(2000);
+    act(() => api().scrollToDay("2026-10-22"));
+    expect(calls).toEqual([1215 - 215]);
+    act(() => api().scrollToDay("2026-10-29"));
+    expect(calls[1]).toBe(0);
+  });
+
+  it("스크롤 0 에서도 고른 날이 맞다 — 맨 위 묶음(29)이 머리 아래 끝에 붙어 스파이 기준선(+28) 안", () => {
+    const { api, sel, fire, scrollTop } = setup(1065);
+    fire();
+    expect(sel()).toBe("2026-10-22");
+    act(() => {
+      api().setSelected("2026-10-29");
+      api().scrollToDay("2026-10-29");
+    });
+    expect(scrollTop()).toBe(0);
+    fire();
+    expect(sel()).toBe("2026-10-29");
   });
 });

@@ -114,11 +114,18 @@ export const formatDateSmart = (
     ? formatMonthDay(input)
     : formatDateLong(input);
 
-export const formatMonthDayDow = (input: Date | string): string => {
+/**
+ * 요일 형식 — International Design 날짜 표 "요일": ko "10월 25일 (일)" / en "Sun, Oct 25"(`E, MMM d`).
+ * 다른 해면 표준에 요일을 붙인다 — ko "2025년 10월 25일 (토)" / en "Sat, Oct 25, 2025". `now` 는 시험용(올해를 고정한다).
+ */
+export const formatMonthDayDow = (
+  input: Date | string,
+  now: Date = new Date(),
+): string => {
   const d = toDate(input);
-  const otherYear = d.getFullYear() !== new Date().getFullYear();
+  const otherYear = d.getFullYear() !== now.getFullYear();
   if (isEnLocale())
-    return format(d, otherYear ? "MMM d, yyyy (EEE)" : "MMM d (EEE)", {
+    return format(d, otherYear ? "EEE, MMM d, yyyy" : "EEE, MMM d", {
       locale: enUS,
     });
   const md = `${d.getMonth() + 1}월 ${d.getDate()}일 (${DOW_KO[d.getDay()]})`;

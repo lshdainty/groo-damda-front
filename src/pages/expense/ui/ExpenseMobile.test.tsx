@@ -298,6 +298,60 @@ describe("머리 — 단추 · 요약 · 달력 (I-07 7 · 8 · 11)", () => {
   });
 });
 
+describe("고정 덩어리 — 달 줄 + (주 달력 또는 칩 줄)", () => {
+  it("평소: 주 달력 · 꺾쇠가 머리 안 남는 부분(Keep)이고 총액 · [소비 요약] 은 숨는 부분이다", () => {
+    render();
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    const keep = pin.querySelector<HTMLElement>("[data-ledger-keep]")!;
+    expect(keep.querySelector('[aria-label="월 달력"]')).not.toBeNull();
+    expect(keep.textContent).not.toContain("소비 요약");
+    expect(pin.textContent).toContain("소비 요약");
+    expect(
+      container.querySelector("[data-ledger-bar]")!.className.split(" "),
+    ).toContain("sticky");
+  });
+
+  it("거르기 중: 칩 줄이 Keep 으로 남고(sticky Pin 안, 위에 숨는 부분 없음) 달 줄도 남는다", () => {
+    st.search = "assetId=1";
+    render();
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    const keep = pin.querySelector<HTMLElement>("[data-ledger-keep]")!;
+    expect(pin.className.split(" ")).toContain("sticky");
+    // 칩 줄 — 걸린 자산 이름이 Keep 안에 있다
+    expect(keep.textContent).toContain("생활비 통장");
+    // 숨는 부분이 없다 — Keep 이 Pin 의 첫 자식
+    expect(pin.firstElementChild).toBe(keep);
+    expect(pin.textContent).not.toContain("소비 요약");
+    expect(container.querySelector("[data-ledger-bar]")).not.toBeNull();
+  });
+
+  it("거르기 중 칩 줄 아래에 여백(pb-x3) 뒤 주 달력 덩어리와 같은 선 하나를 긋는다", () => {
+    st.search = "assetId=1";
+    render();
+    const keep = container.querySelector<HTMLElement>("[data-ledger-keep]")!;
+    const chips = keep.firstElementChild as HTMLElement;
+    expect(chips.className.split(" ")).toEqual(
+      expect.arrayContaining(["pt-x2", "pb-x3"]),
+    );
+    const line = keep.lastElementChild as HTMLElement;
+    expect(line.getAttribute("data-slot")).toBe("divider");
+    expect(keep.querySelectorAll("[data-slot=divider]").length).toBe(1);
+    // 평소 주 달력 덩어리의 선과 같은 부품 · 같은 클래스
+    act(() => root.unmount());
+    root = createRoot(container);
+    st.search = "";
+    render();
+    const calLine = container
+      .querySelector("[data-ledger-keep]")!
+      .querySelector<HTMLElement>("[data-slot=divider]")!;
+    expect(calLine.className).toBe(line.className);
+  });
+});
+
 describe("날짜 묶음 (I-07 14)", () => {
   it("머리는 h2 · List Header(t4 · 500)이고 그날 합계는 머리 안에 있다", () => {
     render();
@@ -309,11 +363,38 @@ describe("날짜 묶음 (I-07 14)", () => {
     const h = headers[0]!;
     expect(h.className).toContain("text-t4");
     expect(h.className).toContain("font-medium");
-    expect(h.querySelector("h2")?.textContent).toContain("26. 10. 15(목)");
+    expect(h.querySelector("h2")?.textContent).toContain("10월 15일 (목)");
     expect(h.querySelector("h2")?.textContent).toContain("오늘");
     // 합계는 h2 밖이라 머리말 이름에 섞이지 않는다
     expect(h.querySelector("h2")?.textContent).not.toContain("12,000");
     expect(h.textContent).toContain("12,000");
+  });
+
+  it("날짜 글은 요일 형식이다 — 올해 '10월 14일 (수)' + 어제, 할 일 원장과 같은 꼴(옛 '26. 10. 14(수)' 이 아니다)", () => {
+    render();
+    const h2 = Array.from(container.querySelectorAll("h2")).map(
+      (e) => e.textContent ?? "",
+    );
+    expect(h2[1]).toContain("10월 14일 (수)");
+    expect(h2[1]).toContain("어제");
+    expect(h2.join(" ")).not.toMatch(/\d{2}\. \d+\. \d+\(/);
+  });
+
+  it("다른 해면 표준 + 요일 '2026년 10월 15일 (목)' — 오늘 · 어제는 붙지 않는다", () => {
+    vi.setSystemTime(new Date("2027-01-05T12:00:00"));
+    st.search = "month=2026-10";
+    render();
+    const h2 = Array.from(container.querySelectorAll("h2")).map(
+      (e) => e.textContent ?? "",
+    );
+    expect(h2[0]).toContain("2026년 10월 15일 (목)");
+    expect(h2[0]).not.toContain("오늘");
+  });
+
+  it("영어는 'E, MMM d' — 'Thu, Oct 15'", async () => {
+    await i18n.changeLanguage("en");
+    render();
+    expect(container.querySelector("h2")?.textContent).toContain("Thu, Oct 15");
   });
 
   it("지출 합계는 fg-neutral · 수입은 fg-brand + '+' 다", () => {

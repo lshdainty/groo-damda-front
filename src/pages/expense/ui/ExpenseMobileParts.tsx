@@ -205,7 +205,8 @@ export function FilterChipsRow({
       layout="scroll"
       bleed
       aria-label={t("filter.appliedGroup")}
-      className="py-x2"
+      // 아래 12 — 고정 덩어리 아래 선 앞 여백을 주 달력 덩어리(꺾쇠 아이콘 아래 11 = (40 − 18) ÷ 2)에 가장 가까운 토큰으로 맞춘다
+      className="pt-x2 pb-x3"
     >
       {chips.map((c) => (
         <InputChip key={c.key} size="medium" onRemove={c.onRemove}>

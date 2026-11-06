@@ -8,6 +8,7 @@ import { ResultSection } from "@/shared/ds/result-section";
 import { SwipeActionsProvider } from "@/shared/ds/swipe-actions";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
+import { formatMonthDayDow } from "@/shared/lib/date";
 import { KRW, MINUS, formatDay, isEn, minusOf } from "@/shared/lib/groo/format";
 import {
   INSIGHT_SAME_MAX,
@@ -68,6 +69,7 @@ import {
   LedgerCellAmt,
   LedgerCellNum,
   LedgerCellTip,
+  LedgerBar,
   LedgerCalendar,
   LedgerDayDate,
   LedgerDayGroup,
@@ -77,6 +79,7 @@ import {
   LedgerDow,
   LedgerExpand,
   LedgerHead,
+  LedgerKeep,
   LedgerList,
   LedgerMonthNav,
   LedgerNavBtn,
@@ -236,6 +239,9 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
     scrollToTop,
   } = useLedgerScroll({
     initialSelected: todayStr.startsWith(initialMonth) ? todayStr : null,
+    // 펼친 월 달력은 펼친 채 내리기 시작하면 고른 날이 든 주로 접힌다
+    expanded,
+    onCollapse: () => setExpanded(false),
   });
   // 상세→편집 flow — EditableList 패턴 인라인(dayhead 형식이 달라 리스트 자체 렌더).
   const [detail, setDetail] = useState<Expense | null>(null);
@@ -414,7 +420,7 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
     }
   }, [focusTxId, isLoadingList, expenses.length]);
 
-  // 필터 활성 시 — 월선택/총액/캘린더/divider 숨기고 온전히 리스트만(사용자 결정).
+  // 필터 활성 시 — 월선택/총액/캘린더 숨기고 온전히 리스트만(사용자 결정). 칩 줄 + 아래 선이 주 달력 자리에 고정된다.
   const filterActive = activeCount > 0 || !!asset;
   // 요약을 받는 중이거나 불러오지 못했다 — 0 원 줄을 그리지 않고 [소비 요약] 을 막는다
   const summaryWaiting = isLoadingSummary || isError;
@@ -455,8 +461,6 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
     );
   } else {
     body = grouped.map(([d, items]) => {
-      const [yy, mm, dd] = d.split("-");
-      const dow = formatDay(d).dow;
       const rel = relOf(d);
       // 일별 합계 — 이체는 자산 간 이동이라 지출/수입 어느 쪽에도 넣지 않는다.
       const dayExpenses = items.flatMap((i) =>
@@ -467,9 +471,8 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
       return (
         <LedgerDayGroup key={d} day={d}>
           <LedgerDayHead gutter>
-            <LedgerDayDate relative={rel}>
-              {(yy ?? "").slice(2)}. {Number(mm)}. {Number(dd)}({dow})
-            </LedgerDayDate>
+            {/* 날짜 머리 — 요일 형식(올해 "10월 25일 (일)" · 다른 해 "2025년 10월 25일 (토)" · en "Sun, Oct 25"), 할 일 원장과 같은 유틸 */}
+            <LedgerDayDate relative={rel}>{formatMonthDayDow(d)}</LedgerDayDate>
             {(dOut > 0 || dIn > 0) && (
               <LedgerDaySum className="num">
                 {dOut > 0 && (
@@ -536,8 +539,9 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
   return (
     <SwipeActionsProvider>
       <LedgerShell ref={rootRef}>
-        {/* 머리 — 월 이동 + 총액 · 인사이트 + 주 달력. 스크롤 상자 맨 위에서 내리면 숨고 올리면 드러난다(Scroll Auto Hide) */}
-        <LedgerPin ref={pinRef}>
+        {/* 머리 — 월 이동 줄 · 주 달력은 늘 남고(페이지 전체를 조절하는 줄 — 한 덩어리), 총액 · 인사이트 · 소비 요약만 내리면 숨고
+            올리면 드러난다(Scroll Auto Hide). 목록을 내리면 고른 날이 맨 위 날짜 묶음을 따라간다(스크롤 스파이) */}
+        <LedgerBar>
           {/* 월 네비 + 필터/추가 */}
           <LedgerMonthNav>
             {!filterActive && (
@@ -561,20 +565,28 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
               <Plus />
             </LedgerNavBtn>
           </LedgerMonthNav>
-
+        </LedgerBar>
+        <LedgerPin ref={pinRef}>
+          {/* 거르기 중 칩 줄은 주 달력 자리에서 남는다(Keep) — 무엇이 걸러져 보이는지 말하는 페이지 전체 조절 줄이라, 숨기면 거른 채라는
+              걸 잊고 "거래가 이것뿐" 으로 읽는다. 이때 총액 · 요약 · 달력은 그리지 않으므로 숨는 부분이 없다.
+              거르기 중에 달 이름을 숨기는 건 이번 변경 전부터다(필터 활성 시 리스트만 — 사용자 결정, 아래 filterActive 주석) */}
           {filterActive && (
-            <FilterChipsRow
-              filterValue={filterValue}
-              onChange={(v) =>
-                setFilterValue(
-                  v && filterActiveCount(v, viewPeriod) > 0 ? v : null,
-                )
-              }
-              assetName={asset?.assetName}
-              onClearAsset={clear}
-              categories={categoriesQ.data ?? []}
-              assets={assetsQ.data?.assets ?? []}
-            />
+            <LedgerKeep>
+              <FilterChipsRow
+                filterValue={filterValue}
+                onChange={(v) =>
+                  setFilterValue(
+                    v && filterActiveCount(v, viewPeriod) > 0 ? v : null,
+                  )
+                }
+                assetName={asset?.assetName}
+                onClearAsset={clear}
+                categories={categoriesQ.data ?? []}
+                assets={assetsQ.data?.assets ?? []}
+              />
+              {/* 고정 덩어리 아래 선은 하나로 — 주 달력 덩어리와 같은 선(칩 줄 아래 여백 뒤) */}
+              <LedgerDivider />
+            </LedgerKeep>
           )}
 
           {/* 총액 + 인사이트 + 소비 요약. 필터 활성 시 숨김. 불러오지 못했어도 틀(머리 · 주 달력)은 그린다 */}
@@ -621,144 +633,150 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
                 />
               )}
 
-              {/* 캘린더 — 접힘: 선택 주 1줄 / 펼침: 월 전체. 필터 적용 시 숨김(리스트만, 사용자 결정). */}
-              <LedgerCalendar ref={calRef}>
-                <LedgerDow labels={dowLabels} />
-                {(expanded ? weeks : [weeks[selWeek] ?? []]).map((w, wi) => (
-                  <LedgerWeek key={wi}>
-                    {w.map((c, i) => {
-                      if (!c) return <LedgerCell key={`e${i}`} empty />;
-                      const isSel = c.ds === selected;
-                      const data = byDay[c.ds];
-                      return (
-                        <LedgerCell
-                          key={c.ds}
-                          selected={isSel}
-                          onClick={() => {
-                            setSelected(c.ds);
-                            if (data) {
-                              lock(800);
-                              scrollToDay(c.ds);
-                            }
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!data || !calRef.current) return;
-                            const cell =
-                              e.currentTarget.getBoundingClientRect();
-                            const cal = calRef.current.getBoundingClientRect();
-                            // 툴팁은 칸 가운데 위에 뜨되 달력 밖으로 잘리지 않게 양 끝에서 반 폭만큼 들인다
-                            const center =
-                              cell.left - cal.left + cell.width / 2;
-                            setCellTip({
-                              ds: c.ds,
-                              left: Math.min(
-                                Math.max(center, TIP_HALF_WIDTH),
-                                cal.width - TIP_HALF_WIDTH,
-                              ),
-                              top: cell.top - cal.top,
-                            });
-                          }}
-                          onMouseLeave={() => setCellTip(null)}
-                        >
-                          <LedgerCellNum
-                            dow={i % 7}
-                            future={c.ds > todayStr}
-                            today={c.ds === todayStr}
+              {/* 캘린더 — 접힘: 선택 주 1줄 / 펼침: 월 전체. 필터 적용 시 숨김(리스트만, 사용자 결정). 숨지 않고 남는다(Keep) — 펼친 달력도 */}
+              <LedgerKeep>
+                <LedgerCalendar ref={calRef}>
+                  <LedgerDow labels={dowLabels} />
+                  {(expanded ? weeks : [weeks[selWeek] ?? []]).map((w, wi) => (
+                    <LedgerWeek key={wi}>
+                      {w.map((c, i) => {
+                        if (!c) return <LedgerCell key={`e${i}`} empty />;
+                        const isSel = c.ds === selected;
+                        const data = byDay[c.ds];
+                        return (
+                          <LedgerCell
+                            key={c.ds}
                             selected={isSel}
+                            onClick={() => {
+                              setSelected(c.ds);
+                              if (data) {
+                                lock(800);
+                                scrollToDay(c.ds);
+                              }
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!data || !calRef.current) return;
+                              const cell =
+                                e.currentTarget.getBoundingClientRect();
+                              const cal =
+                                calRef.current.getBoundingClientRect();
+                              // 툴팁은 칸 가운데 위에 뜨되 달력 밖으로 잘리지 않게 양 끝에서 반 폭만큼 들인다
+                              const center =
+                                cell.left - cal.left + cell.width / 2;
+                              setCellTip({
+                                ds: c.ds,
+                                left: Math.min(
+                                  Math.max(center, TIP_HALF_WIDTH),
+                                  cal.width - TIP_HALF_WIDTH,
+                                ),
+                                top: cell.top - cal.top,
+                              });
+                            }}
+                            onMouseLeave={() => setCellTip(null)}
                           >
-                            {c.d}
-                          </LedgerCellNum>
-                          {/* 지출·수입 병기(각 줄) — 색은 아래 리스트와 동일(사용자 결정). 빼기는 U+2212. */}
-                          {data && data.out > 0 && (
-                            <LedgerCellAmt tone="expense">
+                            <LedgerCellNum
+                              dow={i % 7}
+                              future={c.ds > todayStr}
+                              today={c.ds === todayStr}
+                              selected={isSel}
+                            >
+                              {c.d}
+                            </LedgerCellNum>
+                            {/* 지출·수입 병기(각 줄) — 색은 아래 리스트와 동일(사용자 결정). 빼기는 U+2212. */}
+                            {data && data.out > 0 && (
+                              <LedgerCellAmt tone="expense">
+                                <MaskAmount
+                                  card={CALENDAR_CELL_CARDS}
+                                  kind="expense"
+                                  mask="••"
+                                >
+                                  {MINUS}
+                                  {KRW(data.out)}
+                                </MaskAmount>
+                              </LedgerCellAmt>
+                            )}
+                            {data && data.inn > 0 && (
+                              <LedgerCellAmt tone="income">
+                                <MaskAmount
+                                  card={CALENDAR_CELL_CARDS}
+                                  kind="income"
+                                  mask="••"
+                                >
+                                  +{KRW(data.inn)}
+                                </MaskAmount>
+                              </LedgerCellAmt>
+                            )}
+                            {!data &&
+                              (isLoadingList ? (
+                                <Skeleton text="t1" className="w-x8" />
+                              ) : (
+                                <LedgerCellAmt />
+                              ))}
+                          </LedgerCell>
+                        );
+                      })}
+                    </LedgerWeek>
+                  ))}
+                  <LedgerExpand
+                    aria-label={t("txm.monthCalendar")}
+                    expanded={expanded}
+                    onClick={toggleCalendar}
+                  />
+                  {/* 차트형 셀 툴팁 — chart 툴팁 값 그대로(지출 chart-red · 수입 chart-blue, 머리는 날짜 "10월 21일 (목)"). */}
+                  {cellTip && tipDay && (
+                    <LedgerCellTip
+                      left={cellTip.left}
+                      top={cellTip.top}
+                      title={`${formatDay(cellTip.ds).md} (${formatDay(cellTip.ds).dow})`}
+                      rows={[
+                        {
+                          name: t("expense"),
+                          color: "var(--color-chart-red)",
+                          value: tipDay.out,
+                          node: (
+                            <>
                               <MaskAmount
                                 card={CALENDAR_CELL_CARDS}
                                 kind="expense"
-                                mask="••"
                               >
-                                {MINUS}
-                                {KRW(data.out)}
+                                {minusOf(tipDay.out)}
+                                {wonPre()}
+                                {KRW(Math.abs(tipDay.out))}
                               </MaskAmount>
-                            </LedgerCellAmt>
-                          )}
-                          {data && data.inn > 0 && (
-                            <LedgerCellAmt tone="income">
+                              <WonUnit
+                                card={CALENDAR_CELL_CARDS}
+                                kind="expense"
+                              />
+                            </>
+                          ),
+                        },
+                        {
+                          name: t("income"),
+                          color: "var(--color-chart-blue)",
+                          value: tipDay.inn,
+                          node: (
+                            <>
                               <MaskAmount
                                 card={CALENDAR_CELL_CARDS}
                                 kind="income"
-                                mask="••"
                               >
-                                +{KRW(data.inn)}
+                                +{wonPre()}
+                                {KRW(tipDay.inn)}
                               </MaskAmount>
-                            </LedgerCellAmt>
-                          )}
-                          {!data &&
-                            (isLoadingList ? (
-                              <Skeleton text="t1" className="w-x8" />
-                            ) : (
-                              <LedgerCellAmt />
-                            ))}
-                        </LedgerCell>
-                      );
-                    })}
-                  </LedgerWeek>
-                ))}
-                <LedgerExpand
-                  aria-label={t("txm.monthCalendar")}
-                  expanded={expanded}
-                  onClick={toggleCalendar}
-                />
-                {/* 차트형 셀 툴팁 — chart 툴팁 값 그대로(지출 chart-red · 수입 chart-blue, 머리는 날짜 "10월 21일 (목)"). */}
-                {cellTip && tipDay && (
-                  <LedgerCellTip
-                    left={cellTip.left}
-                    top={cellTip.top}
-                    title={`${formatDay(cellTip.ds).md} (${formatDay(cellTip.ds).dow})`}
-                    rows={[
-                      {
-                        name: t("expense"),
-                        color: "var(--color-chart-red)",
-                        value: tipDay.out,
-                        node: (
-                          <>
-                            <MaskAmount
-                              card={CALENDAR_CELL_CARDS}
-                              kind="expense"
-                            >
-                              {minusOf(tipDay.out)}
-                              {wonPre()}
-                              {KRW(Math.abs(tipDay.out))}
-                            </MaskAmount>
-                            <WonUnit
-                              card={CALENDAR_CELL_CARDS}
-                              kind="expense"
-                            />
-                          </>
-                        ),
-                      },
-                      {
-                        name: t("income"),
-                        color: "var(--color-chart-blue)",
-                        value: tipDay.inn,
-                        node: (
-                          <>
-                            <MaskAmount
-                              card={CALENDAR_CELL_CARDS}
-                              kind="income"
-                            >
-                              +{wonPre()}
-                              {KRW(tipDay.inn)}
-                            </MaskAmount>
-                            <WonUnit card={CALENDAR_CELL_CARDS} kind="income" />
-                          </>
-                        ),
-                      },
-                    ]}
-                  />
-                )}
-              </LedgerCalendar>
+                              <WonUnit
+                                card={CALENDAR_CELL_CARDS}
+                                kind="income"
+                              />
+                            </>
+                          ),
+                        },
+                      ]}
+                    />
+                  )}
+                </LedgerCalendar>
 
-              <LedgerDivider />
+                <LedgerDivider />
+              </LedgerKeep>
             </>
           )}
         </LedgerPin>
