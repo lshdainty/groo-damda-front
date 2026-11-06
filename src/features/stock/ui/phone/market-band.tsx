@@ -3,7 +3,7 @@ import { List, ListItem } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
-import { PriceFailBand } from "./price-fail-band";
+import { PriceStaleCallout } from "./price-fail-band";
 import { BandTitle, PctDelta } from "./phone-parts";
 
 /*
@@ -106,7 +106,7 @@ export function MarketBand({
     <section aria-labelledby="stocks-market-title" data-section="market">
       <BandTitle id="stocks-market-title">{t("market.title")}</BandTitle>
       {!failed && priceFailed && (
-        <PriceFailBand
+        <PriceStaleCallout
           onRetry={onRetryPrice ?? onRetry ?? (() => {})}
           className="pb-x2"
         />

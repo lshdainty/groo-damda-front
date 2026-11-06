@@ -42,6 +42,12 @@ vi.mock("@/features/stock/model/useLivePrices", () => ({
     prevUnitKrw: () => null,
     currencyOf: () => "KRW",
     failed: st.failed,
+    failedShows: st.failed
+      ? st.price == null
+        ? "lastBalance"
+        : "lastPrice"
+      : null,
+    retrying: false,
     retry: st.retry,
   }),
 }));
@@ -94,14 +100,15 @@ describe("보유 종목 — 시세 실패", () => {
     expect(st.retry).toHaveBeenCalled();
   });
 
-  it("받아 둔 시세가 있는 채 실패: 금액은 그대로(70,000 × 3) 두고 띠 한 줄", () => {
+  it("받아 둔 시세가 있는 채 실패: 금액은 그대로(70,000 × 3), Result Section 이 아니라 Callout '마지막으로 받은 시세'", () => {
     st.failed = true;
     st.price = 70_000;
     draw();
     expect(container.textContent).toContain("210,000");
+    expect(container.querySelector("[data-slot=price-fail-band]")).toBeNull();
     expect(
-      container.querySelector("[data-slot=price-fail-band]"),
-    ).not.toBeNull();
+      container.querySelector("[data-slot=price-stale-callout]")?.textContent,
+    ).toContain("detail.priceStale");
   });
 
   it("실패가 아니면 띠가 없다(받는 중에는 Skeleton 그대로)", () => {

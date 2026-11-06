@@ -33,6 +33,8 @@ export function useAssetLiveValuation(asset: Asset, isInv: boolean) {
     investVal: isInv ? (v.map.get(asset.rowId) ?? null) : null,
     // 시세를 못 받았다 — 평가액이 DB 잔액 · 옛 시세로 남는다(단계 4). 금액 카드가 띠 한 줄로 말한다
     priceFailed: isInv && v.priceFailed,
+    priceFailShows: v.priceFailShows,
+    pricesRetrying: v.pricesRetrying,
     retryPrices: v.retryPrices,
   };
 }
@@ -138,6 +140,8 @@ export function useAssetDetailModel(asset: Asset) {
   const {
     investVal,
     priceFailed: investPriceFailed,
+    priceFailShows: investPriceFailShows,
+    pricesRetrying,
     retryPrices,
   } = useAssetLiveValuation(asset, isInv);
   // 라이브 평가는 '보유분'(원화)만 — 예수금을 더해야 계좌 총액이다. 투자도 예수금이 마이너스일 수 있다(부호를 살린다).
@@ -163,6 +167,8 @@ export function useAssetDetailModel(asset: Asset) {
     isCheckLinked,
     investVal,
     investPriceFailed,
+    investPriceFailShows,
+    pricesRetrying,
     retryPrices,
     investCash,
     investCashKrw,

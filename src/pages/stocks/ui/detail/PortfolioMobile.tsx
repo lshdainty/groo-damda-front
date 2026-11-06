@@ -1,5 +1,5 @@
 import { isHardError, isStaleError } from "@/features/stock/lib/query-state";
-import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
+import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -68,7 +68,7 @@ function TossComposition() {
     <>
       {/* 받아 둔 보유가 있는 채 다시 받기가 실패했다 — 구성은 두고 띠 한 줄(단계 4) */}
       {!failed && (isStaleError(accountsQ) || isStaleError(holdingsQ)) && (
-        <PriceFailBand onRetry={retry} className="pb-x2" />
+        <PriceStaleCallout onRetry={retry} className="pb-x2" />
       )}
       <CompositionBody
         data={data}
@@ -96,7 +96,7 @@ function NamuComposition() {
   return (
     <>
       {partial && (
-        <PriceFailBand
+        <PriceStaleCallout
           onRetry={() => {
             if (krwQ.isError) void krwQ.refetch();
             if (usdQ.isError) void usdQ.refetch();

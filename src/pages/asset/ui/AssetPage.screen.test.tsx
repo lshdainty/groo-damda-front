@@ -66,6 +66,8 @@ vi.mock("@/features/asset", () => ({
   useInvestValuationState: () => ({
     map: state.invest,
     priceFailed: state.priceFailed ?? false,
+    priceFailShows: state.priceFailed ? "lastBalance" : null,
+    pricesRetrying: false,
     retryPrices: () => {},
   }),
   holdingsOf: (a: { rowId: number }) =>
@@ -343,13 +345,18 @@ describe("저축 목표(60)", () => {
 });
 
 describe("카드마다 따로 불러오고 실패한다(62)", () => {
-  it("연동 투자 자산의 시세를 못 받으면 그 자산이 든 카드에만 '시세를 불러오지 못했어요' 띠 — 금액은 그대로(단계 4)", () => {
+  it("연동 투자 자산의 시세를 못 받으면 그 자산이 든 카드에만 Callout '시세를 불러오지 못했어요 · 보이는 값은 시세가 아닌 마지막 잔액' — 금액은 그대로(단계 4)", () => {
     state.linked = new Set([2]);
     state.priceFailed = true;
     render();
-    const bands = [...document.querySelectorAll("[data-slot=price-fail-band]")];
+    const bands = [
+      ...document.querySelectorAll("[data-slot=price-stale-callout]"),
+    ];
     expect(bands).toHaveLength(1);
     expect(bands[0]!.textContent).toContain("detail.priceFail");
+    expect(bands[0]!.textContent).toContain("detail.priceStaleBalance");
+    // 보이는 내용이 있으면 실패 Result Section 을 쓰지 않는다(result-section.md:53)
+    expect(document.querySelector("[data-slot=price-fail-band]")).toBeNull();
     expect(text()).toContain("증권");
     state.priceFailed = false;
     state.linked = new Set();
@@ -358,7 +365,9 @@ describe("카드마다 따로 불러오고 실패한다(62)", () => {
   it("시세 실패여도 연동 자산이 없으면 띠를 두지 않는다", () => {
     state.priceFailed = true;
     render();
-    expect(document.querySelector("[data-slot=price-fail-band]")).toBeNull();
+    expect(
+      document.querySelector("[data-slot=price-stale-callout]"),
+    ).toBeNull();
     state.priceFailed = false;
   });
 

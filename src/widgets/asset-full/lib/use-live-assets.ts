@@ -17,6 +17,8 @@ export function useLiveAssets(assets: Asset[]) {
   const {
     map: investValMap,
     priceFailed,
+    priceFailShows,
+    pricesRetrying,
     retryPrices,
   } = useInvestValuationState(linked);
   const valMap = useMemo(() => {
@@ -31,5 +33,14 @@ export function useLiveAssets(assets: Asset[]) {
       ),
     [assets, valMap],
   );
-  return { list, linked, investValMap, valMap, priceFailed, retryPrices };
+  return {
+    list,
+    linked,
+    investValMap,
+    valMap,
+    priceFailed,
+    priceFailShows,
+    pricesRetrying,
+    retryPrices,
+  };
 }

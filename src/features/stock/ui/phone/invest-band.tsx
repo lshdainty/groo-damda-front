@@ -7,7 +7,7 @@ import { List, ListButtonItem, ListTile } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { KvListItem } from "./phone-parts";
-import { PriceFailBand } from "./price-fail-band";
+import { PriceStaleCallout } from "./price-fail-band";
 
 /*
  * 띠 ① 내 투자(I-13 7 · 8) — 지표(라벨 · 금액 · 증감) + 키-값 줄 + 포트폴리오 구성 줄.
@@ -103,7 +103,7 @@ export function InvestBand({
             )}
           </div>
           {!loading && priceFailed && (
-            <PriceFailBand
+            <PriceStaleCallout
               onRetry={onRetryPrice ?? onRetry ?? (() => {})}
               className="pt-x4"
             />

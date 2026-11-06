@@ -1,4 +1,4 @@
-import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
+import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle } from "@/shared/ds/card";
@@ -67,7 +67,7 @@ export function CompositionCard({
         {t("portfolio.title")}
       </BandTitle>
       {!failed && !loading && priceFailed && (
-        <PriceFailBand
+        <PriceStaleCallout
           onRetry={onRetryPrice ?? onRetry ?? (() => {})}
           className="pb-x2"
         />

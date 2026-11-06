@@ -1,4 +1,4 @@
-import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
+import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
 import { useTranslation } from "react-i18next";
 import { Delta } from "@/shared/ds/card";
 import { List } from "@/shared/ds/list";
@@ -62,8 +62,10 @@ export function AssetAmount({
       )}
       {model.investPriceFailed && (
         // 시세를 못 받아 평가액이 DB 잔액 · 옛 시세다 — 숫자는 두고 지금 시세가 아님을 띠 한 줄로(단계 4)
-        <PriceFailBand
+        <PriceStaleCallout
           band={false}
+          shows={model.investPriceFailShows ?? "lastPrice"}
+          retrying={model.pricesRetrying}
           onRetry={model.retryPrices}
           className="pt-x3"
         />

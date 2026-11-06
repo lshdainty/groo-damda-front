@@ -1,4 +1,4 @@
-import { PriceFailBand } from "./price-fail-band";
+import { PriceFailBand, PriceStaleCallout } from "./price-fail-band";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EllipsisVertical, Pencil, Plus, Trash2 } from "lucide-react";
@@ -54,6 +54,7 @@ export function WatchGroups({
   onRenameGroup,
   onDeleteGroup,
   quotesFailed,
+  quotesRetrying,
   onRetryQuotes,
 }: {
   groups: WatchGroup[];
@@ -66,8 +67,12 @@ export function WatchGroups({
   onAddGroup: () => void;
   onRenameGroup: (g: WatchGroup) => void;
   onDeleteGroup: (g: WatchGroup) => void;
-  /** 관심 시세를 못 받았다(처음 · 받아 둔 값이 있어도) — 줄은 그대로("—" 또는 받아 둔 값) 두고 맨 위 띠 한 줄(단계 4) */
-  quotesFailed?: boolean;
+  /**
+   * 관심 시세를 못 받았다 — load(보이는 시세가 하나도 없다): 맨 위 Result Section + [다시 시도], 줄은 "—" /
+   * stale(받아 둔 시세가 있다): 맨 위 Callout, 줄은 받아 둔 값(단계 4)
+   */
+  quotesFailed?: "load" | "stale" | null;
+  quotesRetrying?: boolean;
   onRetryQuotes?: () => void;
 }) {
   const { t } = useTranslation("stocks");
@@ -103,9 +108,17 @@ export function WatchGroups({
     );
   return (
     <div data-slot="watch-groups">
-      {quotesFailed && (
+      {quotesFailed === "load" && (
         <PriceFailBand
           onRetry={onRetryQuotes ?? (() => {})}
+          retrying={quotesRetrying}
+          className="pt-x2"
+        />
+      )}
+      {quotesFailed === "stale" && (
+        <PriceStaleCallout
+          onRetry={onRetryQuotes ?? (() => {})}
+          retrying={quotesRetrying}
           className="pt-x2"
         />
       )}

@@ -1,4 +1,4 @@
-import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
+import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
 import { loadFailed } from "@/shared/api";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -818,8 +818,10 @@ export function GroupSection({
     <>
       {head}
       {priceFail && (
-        <PriceFailBand
+        <PriceStaleCallout
           band={band}
+          shows={g.priceFailShows ?? "lastPrice"}
+          retrying={g.pricesRetrying}
           onRetry={g.retryPrices}
           className={band ? "pb-x2" : "px-x6 pb-x2"}
         />

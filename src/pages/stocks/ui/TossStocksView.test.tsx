@@ -385,15 +385,21 @@ describe("토스 폰 화면", () => {
     expect(container.textContent).not.toContain("holdings.failTitle");
     expect(container.textContent).toContain("$6,185.55");
     expect(container.textContent).toContain("한국종목");
-    // 조용히 옛 값으로 두지 않는다 — 내 투자 · 보유 목록에 "시세를 불러오지 못했어요" 띠(I-wrap-b2b 단계 4)
-    const bands = container.querySelectorAll("[data-slot=price-fail-band]");
+    // 조용히 옛 값으로 두지 않는다 — 내 투자 · 보유 목록에 Callout "시세를 불러오지 못했어요 · 마지막으로 받은 시세"(단계 4).
+    // 보이는 내용이 있으니 실패 Result Section 은 아니다
+    const bands = container.querySelectorAll("[data-slot=price-stale-callout]");
     expect(bands.length).toBeGreaterThanOrEqual(1);
     expect(bands[0]!.textContent).toContain("detail.priceFail");
+    expect(bands[0]!.textContent).toContain("detail.priceStale");
+    expect(container.querySelector("[data-slot=price-fail-band]")).toBeNull();
   });
 
-  it("폴링이 모두 정상이면 시세 실패 띠가 없다", () => {
+  it("폴링이 모두 정상이면 시세 실패 Callout · 띠가 없다", () => {
     render();
     expect(container.querySelector("[data-slot=price-fail-band]")).toBeNull();
+    expect(
+      container.querySelector("[data-slot=price-stale-callout]"),
+    ).toBeNull();
   });
 
   it("금액 가리기를 켜면 내 투자 · 보유 줄의 금액이 모두 가려진다", () => {

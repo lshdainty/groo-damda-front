@@ -66,6 +66,9 @@ export function useInvestValuation(
 export function useInvestValuationState(investAssets: Asset[]): {
   map: Map<number, InvestValuation>;
   priceFailed: boolean;
+  /** 실패 때 보이는 값 — lastBalance(DB 잔액으로 대체) · lastPrice(옛 시세) */
+  priceFailShows: "lastPrice" | "lastBalance" | null;
+  pricesRetrying: boolean;
   retryPrices: () => void;
 } {
   const { data: features } = useMyFeatures({ reference: true });
@@ -126,7 +129,13 @@ export function useInvestValuationState(investAssets: Asset[]): {
     }
     return map;
   }, [active, investAssets, live]);
-  return { map, priceFailed: live.failed, retryPrices: live.retry };
+  return {
+    map,
+    priceFailed: live.failed,
+    priceFailShows: live.failedShows,
+    pricesRetrying: live.retrying,
+    retryPrices: live.retry,
+  };
 }
 
 /**

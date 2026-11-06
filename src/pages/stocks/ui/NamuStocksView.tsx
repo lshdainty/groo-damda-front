@@ -1,5 +1,5 @@
 import { isHardError, isStaleError } from "@/features/stock/lib/query-state";
-import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
+import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
 import { useMemo, useState, type ReactNode } from "react";
 import { amountText } from "@/features/stock/lib/amount-text";
 import { useTranslation } from "react-i18next";
@@ -280,7 +280,7 @@ export function NamuStocksView({
   ) : (
     <>
       {holdingsStale && (
-        <PriceFailBand onRetry={retryStale} className="pt-x2" />
+        <PriceStaleCallout onRetry={retryStale} className="pt-x2" />
       )}
       {summary.mixed && (
         <div className="px-x6 pb-x2 pt-x1">
@@ -433,6 +433,7 @@ export function NamuStocksView({
             onRetry={() => void watchQ.refetch()}
             priceOf={quotes.priceOf}
             quotesFailed={quotes.failed}
+            quotesRetrying={quotes.retrying}
             onRetryQuotes={quotes.retry}
             track={track}
             onOpen={open}

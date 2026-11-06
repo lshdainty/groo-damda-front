@@ -37,7 +37,7 @@ import { useVisibleIds } from "@/features/stock/model/useVisibleIds";
 import type { WatchGroup } from "@/features/stock/api/stockApi";
 import { Card } from "@/shared/ds/card";
 import { InvestBand } from "@/features/stock/ui/phone/invest-band";
-import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
+import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
 import {
   MarketBand,
   type IndexLine,
@@ -327,7 +327,7 @@ export function TossStocksView({
     <BandFailure band title={t("holdings.failTitle")} onRetry={retryInvest} />
   ) : holdingsStale ? (
     <>
-      <PriceFailBand onRetry={retryInvest} className="pt-x2" />
+      <PriceStaleCallout onRetry={retryInvest} className="pt-x2" />
       {holdingsBody()}
     </>
   ) : (
@@ -401,6 +401,7 @@ export function TossStocksView({
             onRetry={() => void watchQ.refetch()}
             priceOf={quotes.priceOf}
             quotesFailed={quotes.failed}
+            quotesRetrying={quotes.retrying}
             onRetryQuotes={quotes.retry}
             track={track}
             onOpen={open}

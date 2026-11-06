@@ -38,6 +38,13 @@ export interface LivePrices {
    * 화면이 그 카드에 "시세를 불러오지 못했어요" 띠를 둔다(단계 4)
    */
   failed: boolean;
+  /**
+   * 실패했을 때 보이는 값 — 시세 · 환율 중 값이 하나도 없는 것이 있으면 lastBalance(그 자산은 DB 잔액으로 대체 —
+   * 보유 줄은 "—"), 모두 받아 둔 값이 있으면 lastPrice(옛 시세). 실패가 아니면 null
+   */
+  failedShows: "lastPrice" | "lastBalance" | null;
+  /** 다시 받는 중 — 다시 시도의 진행 원 · 다시 누름 무시 */
+  retrying: boolean;
   /** 못 받은 시세 · 환율만 다시 받는다 */
   retry: () => void;
 }
@@ -104,6 +111,13 @@ export function useLivePrices(symbols: string[], enabled: boolean): LivePrices {
 
   const failed =
     active && (pricesQ.isError || rateQueries.some((r) => r.isError));
+  const failedShows = !failed
+    ? null
+    : pricesQ.data === undefined ||
+        rateQueries.some((r) => r.isError && r.data === undefined)
+      ? ("lastBalance" as const)
+      : ("lastPrice" as const);
+  const retrying = pricesQ.isFetching || rateQueries.some((r) => r.isFetching);
   // 다시 받기는 부르는 순간의 질의를 본다 — 함수 자체는 늘 같아 아래 묶음이 렌더마다 새로 만들어지지 않는다
   const retryRef = useRef(() => {});
   useEffect(() => {
@@ -143,7 +157,17 @@ export function useLivePrices(symbols: string[], enabled: boolean): LivePrices {
       },
       currencyOf: (symbol) => bySymbol.get(symbol)?.currency,
       failed,
+      failedShows,
+      retrying,
       retry: retryFailed,
     };
-  }, [quotes, rateByCurrency, candlePrevCloses, failed, retryFailed]);
+  }, [
+    quotes,
+    rateByCurrency,
+    candlePrevCloses,
+    failed,
+    failedShows,
+    retrying,
+    retryFailed,
+  ]);
 }

@@ -1,5 +1,5 @@
 import { isHardError, isStaleError } from "@/features/stock/lib/query-state";
-import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
+import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
 import { Fragment, useId, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { LineChart, Star } from "lucide-react";
@@ -179,6 +179,8 @@ export function HeadBand({
   approx,
   unavailable,
   failed,
+  stale,
+  retrying,
   onRetry,
   warnings,
   loading,
@@ -199,6 +201,10 @@ export function HeadBand({
   unavailable?: string;
   /** 시세 조회가 실패했다(받아 둔 값 없음) — "미지원" 이 아니라 실패 한 벌 + 다시 시도(검수 H4) */
   failed?: boolean;
+  /** 받아 둔 시세가 있는 채 다시 받기(폴링)가 실패했다 — 값은 두고 Callout 한 줄(단계 4) */
+  stale?: boolean;
+  /** 다시 받는 중 — 실패 [다시 시도] 진행 원 · Callout 다시 누름 무시 */
+  retrying?: boolean;
   onRetry?: () => void;
   warnings?: string[];
   loading?: boolean;
@@ -262,6 +268,14 @@ export function HeadBand({
           <BandFailure
             title={t("detail.priceFail")}
             onRetry={onRetry ?? (() => {})}
+            retrying={retrying}
+          />
+        ) : stale ? (
+          <PriceStaleCallout
+            band={false}
+            onRetry={onRetry ?? (() => {})}
+            retrying={retrying}
+            className="mt-x3"
           />
         ) : (
           unavailable && (
@@ -376,7 +390,7 @@ export function KvBand({
   return (
     <section aria-labelledby={id}>
       <BandTitle id={id}>{title}</BandTitle>
-      {stale && <PriceFailBand onRetry={stale.onRetry} className="pb-x2" />}
+      {stale && <PriceStaleCallout onRetry={stale.onRetry} className="pb-x2" />}
       <List aria-labelledby={id} className="pb-x6">
         {rows.map((r) => (
           <KvListItem
@@ -576,7 +590,7 @@ export function QuotesBand({
         <div className="mt-x3">
           {/* 받아 둔 호가 · 체결이 있는 채 다시 받기(5초)가 실패했다 — 표는 두고 위에 띠 한 줄(단계 4) */}
           {(tab === "book" ? isStaleError(bookQ) : isStaleError(tradesQ)) && (
-            <PriceFailBand
+            <PriceStaleCallout
               band={false}
               onRetry={() =>
                 void (tab === "book" ? bookQ.refetch() : tradesQ.refetch())

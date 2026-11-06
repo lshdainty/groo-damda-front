@@ -45,7 +45,7 @@ afterEach(() => {
   container.remove();
 });
 
-const draw = (quotesFailed: boolean, onRetryQuotes = vi.fn()) =>
+const draw = (quotesFailed: "load" | "stale" | null, onRetryQuotes = vi.fn()) =>
   act(() =>
     root.render(
       <WatchGroups
@@ -64,9 +64,9 @@ const draw = (quotesFailed: boolean, onRetryQuotes = vi.fn()) =>
   );
 
 describe("관심 시세 실패", () => {
-  it("처음부터 실패: 맨 위 띠 한 줄 + [다시 시도], 종목 줄은 그대로", () => {
+  it("처음부터 실패(보이는 시세 없음): 맨 위 Result Section + [다시 시도], 종목 줄은 그대로", () => {
     const retry = vi.fn();
-    draw(true, retry);
+    draw("load", retry);
     const band = container.querySelector("[data-slot=price-fail-band]");
     expect(band?.textContent).toContain("detail.priceFail");
     expect(container.textContent).toContain("숲길전자");
@@ -74,8 +74,22 @@ describe("관심 시세 실패", () => {
     expect(retry).toHaveBeenCalled();
   });
 
-  it("실패가 아니면 띠가 없다", () => {
-    draw(false);
+  it("받아 둔 시세가 있는 채 실패: Result Section 이 아니라 Callout(상자 전체가 다시 시도) — '마지막으로 받은 시세'", () => {
+    const retry = vi.fn();
+    draw("stale", retry);
     expect(container.querySelector("[data-slot=price-fail-band]")).toBeNull();
+    const callout = container.querySelector("[data-slot=price-stale-callout]");
+    expect(callout?.textContent).toContain("detail.priceFail");
+    expect(callout?.textContent).toContain("detail.priceStale");
+    act(() => callout!.querySelector("button")!.click());
+    expect(retry).toHaveBeenCalled();
+  });
+
+  it("실패가 아니면 둘 다 없다", () => {
+    draw(null);
+    expect(container.querySelector("[data-slot=price-fail-band]")).toBeNull();
+    expect(
+      container.querySelector("[data-slot=price-stale-callout]"),
+    ).toBeNull();
   });
 });

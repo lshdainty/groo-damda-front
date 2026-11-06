@@ -430,8 +430,10 @@ function TossBody({ symbol, desk }: { symbol: string; desk: boolean }) {
           ? t("detail.priceUnavailable")
           : undefined
       }
-      // 처음 실패든 받아 둔 값이 있는 채 다시 받기 실패든 — 값은 두고 띠 한 줄(단계 4)
-      failed={pricesQ.isError}
+      // 처음 실패는 그 자리 Result Section, 받아 둔 값이 있는 채 다시 받기 실패는 값을 두고 Callout(단계 4)
+      failed={isHardError(pricesQ)}
+      stale={isStaleError(pricesQ)}
+      retrying={pricesQ.isFetching}
       onRetry={() => void pricesQ.refetch()}
       loading={pricesQ.isLoading}
       warnings={(warningsQ.data ?? []).map((w) =>
@@ -802,8 +804,10 @@ function NamuBody({ symbol, desk }: { symbol: string; desk: boolean }) {
           : undefined
       }
       loading={quoteQ.isPending}
-      // 처음 실패든 받아 둔 값이 있는 채 다시 받기 실패든 — 값은 두고 띠 한 줄(단계 4)
-      failed={quoteQ.isError}
+      // 처음 실패는 그 자리 Result Section, 받아 둔 값이 있는 채 다시 받기 실패는 값을 두고 Callout(단계 4)
+      failed={quoteFailed}
+      stale={isStaleError(quoteQ)}
+      retrying={quoteQ.isFetching}
       onRetry={() => void quoteQ.refetch()}
       warnings={(q?.warnings ?? []).map((w) =>
         t(`warning.${w.warningType}`, { defaultValue: w.warningType }),

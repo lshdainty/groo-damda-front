@@ -362,9 +362,12 @@ describe("시세 질의 실패 — 머리에 한 번, 그 질의에 기대는 �
     // 숫자 · 오늘 시세는 그대로
     expect(container.textContent).toContain("110");
     expect(section("today")).not.toBeNull();
-    // 조용히 옛 값으로 두지 않는다 — 머리와 오늘 시세에 "시세를 불러오지 못했어요"
+    // 조용히 옛 값으로 두지 않는다 — 머리와 오늘 시세에 Callout "시세를 불러오지 못했어요 · 마지막으로 받은 시세"
+    // (보이는 값이 있으니 실패 Result Section 이 아니다)
     expect(container.textContent).toContain("detail.priceFail");
-    expect(section("today")!.textContent).toContain("detail.priceFail");
+    expect(section("today")!.textContent).toContain("detail.priceStale");
+    expect(container.querySelector("[data-slot=price-fail-band]")).toBeNull();
+    expect(container.querySelector("[data-slot=result-section]")).toBeNull();
   });
   it("값을 기다리는 동안(isPending)은 머리 · 오늘 시세가 Skeleton 이고 '없어요' 가 없다", () => {
     st.quote = "pending";
