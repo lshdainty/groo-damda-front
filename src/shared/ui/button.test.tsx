@@ -185,3 +185,24 @@ describe("flush ghost 는 텍스트 버튼이다", () => {
     expect(cls()).not.toContain("text-text-secondary");
   });
 });
+
+describe("로딩 원 (I-wrap-b1 ε 8)", () => {
+  it("옛 Spinner 대신 ds Progress Circle — 16 · 글자색을 따르고 버튼이 aria-busy 로 알린다", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const r = createRoot(host);
+    act(() => r.render(<Button loading>저장</Button>));
+    const circle = host.querySelector<HTMLElement>(
+      "[data-slot=progress-circle]",
+    );
+    expect(circle).not.toBeNull();
+    expect(circle!.getAttribute("aria-hidden")).toBe("true");
+    expect(circle!.getAttribute("data-tone")).toBe("inherit");
+    expect(circle!.getAttribute("class")).toContain("[--progress-size:16px]");
+    expect(host.querySelector("button")!.getAttribute("aria-busy")).toBe(
+      "true",
+    );
+    act(() => r.unmount());
+    host.remove();
+  });
+});

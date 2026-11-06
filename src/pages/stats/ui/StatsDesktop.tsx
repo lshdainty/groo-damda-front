@@ -27,16 +27,16 @@ import {
   SavingsRateSection,
   TrendSection,
 } from "./stats-trend-parts";
-import { useStatsModel } from "./stats-model";
+import { useStatsModel, type StatsState } from "./stats-model";
 import type { TabKey } from "./stats-range";
 
 /**
  * 데스크톱 통계(768 이상) — 카드 그대로, 구조 그대로(I-08 40). 카테고리 탭 두 칸은 minmax(0,1.4fr) minmax(0,1fr) · 칸 사이 24 · 쌓은 카드 사이 8.
  * 768 ~ 1279 는 한 칸 720 가운데(왼쪽 칸 다음 오른쪽 칸 차례), 1280 이상 최대 1040(Q4-A). 폰과 같은 부품 · 값 · 글이다.
  */
-export function StatsDesktop() {
+export function StatsDesktop({ state }: { state?: StatsState } = {}) {
   const { t } = useTranslation("stats");
-  const m = useStatsModel();
+  const m = useStatsModel(state);
   const TAB_ITEMS: { v: TabKey; l: string }[] = [
     { v: "cat", l: t("tab.category") },
     { v: "trend", l: t("tab.trend") },

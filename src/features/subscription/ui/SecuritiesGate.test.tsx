@@ -121,15 +121,19 @@ describe("SecuritiesGate", () => {
   it("모바일은 뒤로 헤더를 붙인다 — 풀스크린이라 없으면 갇힌다", () => {
     state.features = [];
     renderGate(<div data-stocks />, true);
-    // 공용 MobileBackHeader 의 ← 버튼. 이게 없으면 전역 헤더·탭바가 없는 화면이라
+    // ds 상단 바의 ← 버튼(44 — top-navigation.md). 이게 없으면 전역 헤더·탭바가 없는 화면이라
     // 나갈 길이 사라진다.
-    expect(container.querySelector('button[aria-label="back"]')).not.toBeNull();
+    expect(
+      container.querySelector("[data-slot=top-navigation-back-button]"),
+    ).not.toBeNull();
   });
 
   it("데스크톱은 전역 셸이 있으니 뒤로 헤더를 붙이지 않는다", () => {
     state.features = [];
     renderGate(<div data-stocks />, false);
-    expect(container.querySelector('button[aria-label="back"]')).toBeNull();
+    expect(
+      container.querySelector("[data-slot=top-navigation-back-button]"),
+    ).toBeNull();
   });
 
   it("아직 모르는 동안엔 아무것도 그리지 않는다", () => {
@@ -165,5 +169,32 @@ describe("SecuritiesGate", () => {
     state.isError = true;
     renderGate(<div data-stocks />);
     expect(container.querySelector("[data-stocks]")).not.toBeNull();
+  });
+});
+
+// 폰 본문은 흰 면이다 — 셸 바닥(basement) 위에 안내 · 단추를 두지 않는다(ConnectGate 와 같은 면, I-wrap-b1 ε 검수 M1).
+// 옛 `.m-back-header + …` 흰 띠 CSS 는 머리를 ds 상단 바로 바꾸며 짝을 잃었다 — 면은 본문이 직접 칠한다.
+// 실제 계산 색은 하네스(sec-gate 장면)가 잰다. 여기서는 상단 바 바로 뒤 본문이 흰 면 클래스와 남는 높이를 갖는지 본다.
+describe("폰 본문 바탕 (I-wrap-b1 ε M1)", () => {
+  const bodyAfterBar = () => {
+    const bar = container.querySelector("[data-slot=top-navigation]");
+    return bar?.nextElementSibling as HTMLElement | null;
+  };
+  it("미구독 안내 — 상단 바 아래 본문이 흰 면(bg-layer-default) · 남는 높이", () => {
+    state.features = [];
+    renderGate(<div data-stocks />, true);
+    const body = bodyAfterBar();
+    expect(body?.className).toContain("bg-bg-layer-default");
+    expect(body?.className).toContain("min-h-[calc(100dvh-3.5rem)]");
+  });
+  it("불러오기 실패 — 상단 바 아래 본문이 흰 면 · [다시 시도]도 그 위", () => {
+    state.isError = true;
+    state.noData = true;
+    renderGate(<div data-stocks />, true);
+    const body = bodyAfterBar();
+    expect(body?.className).toContain("bg-bg-layer-default");
+    expect(
+      body?.querySelector("[data-slot=result-section] button"),
+    ).not.toBeNull();
   });
 });

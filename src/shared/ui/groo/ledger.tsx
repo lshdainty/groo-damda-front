@@ -6,6 +6,11 @@ import { Divider } from "@/shared/ds/divider";
 import { ListHeader } from "@/shared/ds/list";
 import { ScrollAutoHide } from "@/shared/ds/scroll-auto-hide";
 import { cn } from "@/shared/lib/index";
+import { withCommaBreaks } from "@/shared/ds/i18n";
+import { KRW, MINUS } from "@/shared/lib/groo/format";
+import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
+import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
+import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
 
 /*
  * Groo Ledger — 모바일 "원장" 레이아웃 공용 컴포넌트.
@@ -558,6 +563,48 @@ export function LedgerDaySum({
       className={cn("text-t4 font-medium tabular-nums", className)}
       {...props}
     />
+  );
+}
+
+/**
+ * 그날 지출 · 수입 — 가계부 원장과 거래 검색의 날짜 머리 오른쪽이 같은 부품을 쓴다(I-wrap-b1 ε).
+ * 지출 "−3,000원"(fg-neutral) · 수입 "+5,000원"(fg-brand)을 따로, 둘 다 있으면 사이 8. 금액은 자르지 않고(쉼표에서만 줄을 바꿀 수 있다)
+ * 금액 가리기는 `card`(기본 가계부 거래 목록)를 따른다. 둘 다 0 이면 그리지 않는다.
+ */
+export function LedgerDayTotals({
+  out,
+  inn,
+  card = "ledger.txList",
+}: {
+  /** 그날 지출 합 */
+  out: number;
+  /** 그날 수입 합 */
+  inn: number;
+  card?: HideCardKey;
+}) {
+  if (out <= 0 && inn <= 0) return null;
+  return (
+    <LedgerDaySum className="num" data-slot="ledger-day-totals">
+      {out > 0 && (
+        <span className="text-fg-neutral">
+          <MaskAmount card={card} kind="expense">
+            {MINUS}
+            {wonPre()}
+            {withCommaBreaks(KRW(out))}
+          </MaskAmount>
+          <WonUnit card={card} kind="expense" />
+        </span>
+      )}
+      {inn > 0 && (
+        <span className={cn("text-fg-brand", out > 0 && "ml-x2")}>
+          <MaskAmount card={card} kind="income">
+            +{wonPre()}
+            {withCommaBreaks(KRW(inn))}
+          </MaskAmount>
+          <WonUnit card={card} kind="income" />
+        </span>
+      )}
+    </LedgerDaySum>
   );
 }
 

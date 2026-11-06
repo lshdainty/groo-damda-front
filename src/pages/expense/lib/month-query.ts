@@ -1,5 +1,7 @@
 /** `yyyy-MM`, 달은 01~12. */
 const MONTH_KEY = /^\d{4}-(0[1-9]|1[0-2])$/;
+/** 달 고르기 휠의 연 범위(오늘 ± 100년) */
+const YEAR_SPAN = 100;
 
 function currentMonthKey(now: Date): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -17,5 +19,10 @@ export function monthFromQuery(
   raw: string | null | undefined,
   now: Date = new Date(),
 ): string {
-  return raw && MONTH_KEY.test(raw) ? raw : currentMonthKey(now);
+  if (!raw || !MONTH_KEY.test(raw)) return currentMonthKey(now);
+  // 달 고르기 휠이 닿는 해(오늘 ± 100년 — month-picker.tsx yearRange 기본) 밖은 손으로 고친 주소다 — 이번 달로(I-wrap-b1 ε 9)
+  const year = Number(raw.slice(0, 4));
+  return Math.abs(year - now.getFullYear()) > YEAR_SPAN
+    ? currentMonthKey(now)
+    : raw;
 }

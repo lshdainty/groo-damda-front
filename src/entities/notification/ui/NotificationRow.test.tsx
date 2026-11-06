@@ -125,3 +125,37 @@ describe("NotificationRow", () => {
     ).toContain("bg-bg-brand-weak");
   });
 });
+
+describe("읽음으로 바꾸는 중 (I-wrap-b1 ε 8 · 검수 L7)", () => {
+  it("제목 끝에 ds Progress Circle 24(장식) — 기다림은 줄 버튼 aria-busy, 원은 줄 높이를 늘리지 않는 자리(폭 24 · 높이 1em) 안에", () => {
+    act(() =>
+      root.render(
+        <List aria-label="알림">
+          <NotificationRow
+            notification={base}
+            now={0}
+            pending
+            onClick={() => {}}
+          />
+        </List>,
+      ),
+    );
+    const circle = container.querySelector<HTMLElement>(
+      "[data-slot=progress-circle]",
+    );
+    expect(circle).not.toBeNull();
+    expect(circle!.getAttribute("aria-hidden")).toBe("true");
+    expect(circle!.getAttribute("class")).toContain("[--pc-size:24px]");
+    const slot = circle!.closest("[data-slot=notification-row-progress]")!;
+    expect(slot.className).toContain("h-[1em]");
+    expect(slot.className).toContain("w-6");
+    const button = circle!.closest("button")!;
+    expect(button.getAttribute("aria-busy")).toBe("true");
+    // 버튼 이름에 "읽음으로 바꾸는 중" 이 섞이지 않는다
+    expect(button.getAttribute("aria-label") ?? "").not.toContain(
+      "row.marking",
+    );
+    expect(container.querySelector("[aria-label='row.marking']")).toBeNull();
+    expect(container.querySelector("[role=status]")).toBeNull();
+  });
+});

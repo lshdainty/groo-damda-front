@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatChangeRate, isEn } from "@/shared/lib/groo/format";
 import { assignChartColors, type ChartColored } from "@/shared/ds/chart";
+import type { DateRange } from "@/shared/ds/date-picker";
 import { chartColorOf, type ChartKey } from "@/shared/lib/groo/chart-palette";
 import { amountFor, countableTx, splitFixed } from "@/entities/expense";
 import type {
@@ -144,9 +145,12 @@ export function colorDonut(
 
 const dayMs = 86400000;
 
-export function useStatsModel() {
-  const { t } = useTranslation("stats");
-  const { t: te } = useTranslation("expense");
+/**
+ * 화면이 고른 것(탭 · 기간 · 드릴다운 · 도넛 보기 · 열린 고정 정리 · 기간 고르기와 그 안의 고르던 기간).
+ * 폰 · 데스크톱 갈림 밖(StatsPage)에서 든다 — 폭이 768 을 넘나들어도 탭이 "카테고리" 로, 기간이 이번 달로,
+ * 열린 기간 고르기 · 고정 정리가 닫힘으로 돌아가지 않는다(I-wrap-b1 ε 9).
+ */
+export function useStatsState() {
   const [tab, setTabState] = useState<TabKey>("cat");
   const [period, setPeriodState] = useState<RangeState>(() =>
     monthRangeOf(new Date()),
@@ -157,6 +161,50 @@ export function useStatsModel() {
   // 거래를 고정으로 정리하는 화면(고정·변동 탭과 카테고리 탭이 함께 연다).
   const [manageOpen, setManageOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  // 기간 고르기 안에서 고르던 기간 — 시트가 폰 · 데스크톱 어느 쪽 구역에 붙든 같은 값을 잇는다
+  const [pickerDraft, setPickerDraft] = useState<DateRange | undefined>(
+    undefined,
+  );
+  return {
+    tab,
+    setTabState,
+    period,
+    setPeriodState,
+    activeParentId,
+    setActiveParentId,
+    fixedView,
+    setFixedViewState,
+    manageOpen,
+    setManageOpen,
+    pickerOpen,
+    setPickerOpen,
+    pickerDraft,
+    setPickerDraft,
+  };
+}
+export type StatsState = ReturnType<typeof useStatsState>;
+
+export function useStatsModel(lifted?: StatsState) {
+  const { t } = useTranslation("stats");
+  const { t: te } = useTranslation("expense");
+  // 페이지가 상태를 건네지 않으면(단독으로 그릴 때) 제 것을 쓴다 — 훅은 늘 부른다
+  const own = useStatsState();
+  const {
+    tab,
+    setTabState,
+    period,
+    setPeriodState,
+    activeParentId,
+    setActiveParentId,
+    fixedView,
+    setFixedViewState,
+    manageOpen,
+    setManageOpen,
+    pickerOpen,
+    setPickerOpen,
+    pickerDraft,
+    setPickerDraft,
+  } = lifted ?? own;
 
   // 기간 · 탭 · 보기를 바꾸면 드릴다운을 푼다
   const setTab = (next: TabKey) => {
@@ -589,6 +637,8 @@ export function useStatsModel() {
     setManageOpen,
     pickerOpen,
     setPickerOpen,
+    pickerDraft,
+    setPickerDraft,
     startDate,
     endDate,
     periodLbl,

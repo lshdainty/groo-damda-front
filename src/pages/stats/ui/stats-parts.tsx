@@ -123,6 +123,8 @@ export function PeriodButton({ m }: { m: StatsModel }) {
       onOpenChange={m.setPickerOpen}
       initial={period}
       onConfirm={m.setPeriod}
+      draft={m.pickerDraft}
+      onDraftChange={m.setPickerDraft}
       trigger={({ onClick }) => (
         <Button
           type="button"

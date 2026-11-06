@@ -5,7 +5,7 @@ import { type VariantProps } from "class-variance-authority";
 import { buttonVariants } from "@/shared/ui/button-variants";
 
 import { cn } from "@/shared/lib/index";
-import { Spinner } from "@/shared/ui/spinner";
+import { ProgressCircle } from "@/shared/ds/progress-circle";
 
 /*
  * Groo Button — groo-design SoT(specs/components/button.md) 기반.
@@ -121,15 +121,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading && (
-          <Spinner
-            size="sm"
+          // 옛 Spinner sm(16) 자리 — 원 · 트랙은 버튼 글자색과 그 30%(variant 마다 글자색을 따른다)
+          <ProgressCircle
+            size="inherit"
+            tone="inherit"
             aria-hidden
-            // 버튼 내부 spinner는 버튼 텍스트 색(currentColor) 상속해 모든 variant 일관 시각.
-            // default/destructive(filled bg-primary/bg-error)에선 white spinner, outline/ghost(흰 bg)에선 primary spinner.
-            style={{
-              borderColor: "color-mix(in srgb, currentColor 30%, transparent)",
-              borderTopColor: "currentColor",
-            }}
+            className="[--progress-size:16px]"
           />
         )}
         {children}

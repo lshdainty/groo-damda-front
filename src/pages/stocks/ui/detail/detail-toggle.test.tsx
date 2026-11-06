@@ -150,8 +150,8 @@ describe("포트폴리오 구성", () => {
       <CompositionBody
         data={{
           items: [
-            { key: "a", name: "가", pct: 98.949 },
-            { key: "b", name: "나", pct: 1.051 },
+            { key: "a", name: "가", pct: 98.949, krwValue: 123_456_789 },
+            { key: "b", name: "나", pct: 1.051, krwValue: 1_311_689 },
           ],
         }}
       />,

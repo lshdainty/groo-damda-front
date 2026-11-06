@@ -154,3 +154,25 @@ describe("가림 카드(I-06 29)", () => {
     expect(container.textContent).not.toContain("••••");
   });
 });
+
+describe("아래 줄 — 계좌가 없으면 그 조각을 뺀다 (I-wrap-b1 ε · 앱 α 검수)", () => {
+  const items = () =>
+    [...container.querySelectorAll("[data-slot=tag-group-item-label]")].map(
+      (e) => e.textContent,
+    );
+  it('계좌가 있으면 "식비 · 통장 · 시각"', () => {
+    render(base);
+    expect(items()).toHaveLength(3);
+    expect(items()[1]).toBe("통장");
+  });
+  it.each([null, "", "  "])(
+    '계좌가 %j 이면 "식비 · 시각" — "-" · 빈 조각을 찍지 않는다',
+    (assetName) => {
+      render({ ...base, assetName: assetName as string | null });
+      expect(items()).toHaveLength(2);
+      expect(items()[0]).toBe("식비");
+      expect(items()).not.toContain("-");
+      expect(container.textContent).not.toMatch(/·\s*-\s*·/);
+    },
+  );
+});

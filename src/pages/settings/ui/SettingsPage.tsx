@@ -1,5 +1,6 @@
 import { useLeaveGuard } from "@/shared/ui/groo/leave-guard-context";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useDeviceSize } from "@/shared/lib/groo/responsive";
 import { useOutletContext, useSearchParams } from "react-router-dom";
@@ -42,6 +43,12 @@ import { SettingsDesktopFrame } from "./SettingsDesktopFrame";
 import { SettingsMobileMenu } from "./SettingsMobileMenu";
 import { SettingsTabletFrame } from "./SettingsTabletFrame";
 import { SettingsSubpageMobile } from "./SettingsSubpageMobile";
+import { SettingsBodySlot } from "./SettingsBodySlot";
+import {
+  createSettingsBodyHost,
+  SettingsHeadSlotReportContext,
+} from "../model/settings-body-host";
+import { SettingsFrameContext } from "@/shared/ui/groo/settings-frame-context";
 
 type OutletCtx = { onAddTx: () => void; mobile: boolean };
 
@@ -212,9 +219,12 @@ export const SettingsPage = () => {
           />
         );
       case "hide-amounts":
-        return (
+        // 폰은 자기 셸(← 는 들어온 화면으로), 넓은 화면은 틀 안 패널(‹ 계정) — 같은 부품 · 같은 자리라 폭이 바뀌어도 고르던 값이 남는다
+        return m ? (
+          <HideAmountsSection mobile onBack={goBack} />
+        ) : (
           <HideAmountsSection
-            mobile={m}
+            mobile={false}
             onBack={() => changeSection("account")}
             onBrowserBack={goBack}
           />
@@ -222,65 +232,90 @@ export const SettingsPage = () => {
       case "devices":
         return <DevicesSection mobile={m} />;
       case "subscription":
-        return <SubscriptionSection mobile={m} />;
+        // 폰은 바닥 고정 버튼이 있는 자기 셸(I-14 27)
+        return m ? (
+          <SubscriptionSection mobile onBack={goBack} />
+        ) : (
+          <SubscriptionSection mobile={false} />
+        );
       default:
         return <PlaceholderSection section={activeSection} />;
     }
   };
 
-  if (mobile) {
-    if (section === "menu") {
+  // ── 본문은 틀 밖에서 한 번만 그린다(I-wrap-b1 ε 9) ──
+  // 틀(폰 하위 화면 · 태블릿 · 두 칸)은 서로 다른 부품이라, 본문을 틀 안에서 그리면 폭이 768 · 1280 을 넘나들 때
+  // 본문이 다시 붙으며 열린 시트 · 쓰던 값이 사라진다. 본문은 떨어진 상자에 포털로 그리고, 지금 틀의 자리가 상자를 끼운다.
+  const [bodyHost] = useState(createSettingsBodyHost);
+  const [headSlot, setHeadSlot] = useState<HTMLElement | null>(null);
+  // 폰은 제목 줄 자리가 없다(위젯 머리를 제자리에 그린다) — 넓은 화면은 틀이 둔 자리로 보낸다
+  const frame = mobile ? null : { headSlot };
+  const slot = <SettingsBodySlot host={bodyHost} />;
+  const body = createPortal(
+    <SettingsFrameContext.Provider value={frame}>
+      {renderBody(mobile)}
+    </SettingsFrameContext.Provider>,
+    bodyHost,
+  );
+
+  return (
+    <SettingsHeadSlotReportContext.Provider value={setHeadSlot}>
+      {renderFrame()}
+      {body}
+    </SettingsHeadSlotReportContext.Provider>
+  );
+
+  function renderFrame() {
+    if (mobile) {
+      if (section === "menu") {
+        return (
+          <SettingsMobileMenu
+            changeSection={changeSection}
+            openSection={openSection}
+            goBack={goBack}
+          />
+        );
+      }
+
+      // 금액 가리기는 아래 고정 [저장] 띠가 있어 공용 서브페이지 셸을
+      // 쓰지 않는다 — 앱 화면처럼 자기 셸을 직접 그린다.
+      if (section === "hide-amounts") return slot;
+
+      // 구독 관리도 바닥 고정 버튼이 있어 제 껍데기(Top Navigation + 흰 면 스크롤 + 바닥 띠)를 그린다(I-14 27)
+      if (section === "subscription") return slot;
+
       return (
-        <SettingsMobileMenu
-          changeSection={changeSection}
-          openSection={openSection}
+        <SettingsSubpageMobile
+          activeSection={activeSection}
           goBack={goBack}
+          onHeadAction={(id) =>
+            setAddRequests((r) => ({ ...r, [id]: (r[id] ?? 0) + 1 }))
+          }
+          title={section === "calendar-manage" ? manageName : undefined}
+          body={slot}
         />
       );
     }
 
-    // 금액 가리기는 아래 고정 [저장] 띠가 있어 공용 서브페이지 셸을
-    // 쓰지 않는다 — 앱 화면처럼 자기 셸을 직접 그린다.
-    if (section === "hide-amounts") {
-      return <HideAmountsSection mobile onBack={goBack} />;
-    }
-
-    // 구독 관리도 바닥 고정 버튼이 있어 제 껍데기(Top Navigation + 흰 면 스크롤 + 바닥 띠)를 그린다(I-14 27)
-    if (section === "subscription") {
-      return <SubscriptionSection mobile onBack={goBack} />;
+    if (!twoColumn) {
+      return (
+        <SettingsTabletFrame
+          activeSection={activeSection}
+          onSelect={changeSection}
+          renderBody={() => slot}
+        />
+      );
     }
 
     return (
-      <SettingsSubpageMobile
-        activeSection={activeSection}
-        goBack={goBack}
-        onHeadAction={(id) =>
-          setAddRequests((r) => ({ ...r, [id]: (r[id] ?? 0) + 1 }))
-        }
-        title={section === "calendar-manage" ? manageName : undefined}
-        body={renderBody(true)}
-      />
-    );
-  }
-
-  if (!twoColumn) {
-    return (
-      <SettingsTabletFrame
+      <SettingsDesktopFrame
+        section={section}
         activeSection={activeSection}
         onSelect={changeSection}
-        renderBody={renderBody}
+        renderBody={() => slot}
       />
     );
   }
-
-  return (
-    <SettingsDesktopFrame
-      section={section}
-      activeSection={activeSection}
-      onSelect={changeSection}
-      renderBody={renderBody}
-    />
-  );
 };
 
 /** 캘린더 관리의 제목 = 그 캘린더의 이름. 이름을 받기 전(불러오는 중 · 못 찾음)은 빈 글 — 그 구역일 때만 목록을 받는다 */

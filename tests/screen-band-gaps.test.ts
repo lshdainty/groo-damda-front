@@ -25,12 +25,6 @@ describe("띠 화면 시작 · 끝 틈", () => {
     expect(r).not.toMatch(/padding/);
   });
 
-  it("풀스크린 본문 띠는 ← 머리 바로 아래다 — margin-top 이 없다", () => {
-    const r = rule(css, ".m-fullscreen > .m-back-header + :not(.screen-bands)");
-    expect(r).not.toMatch(/margin/);
-    expect(r).toContain("background");
-  });
-
   it("마지막 띠 아래 padding · margin 이 없다", () => {
     const bands = css
       .replace(/\/\*[\s\S]*?\*\//g, "")

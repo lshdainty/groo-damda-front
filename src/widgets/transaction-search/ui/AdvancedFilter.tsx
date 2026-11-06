@@ -63,7 +63,8 @@ export function AdvancedFilter({
       </ResponsiveDialogTrigger>
       <ResponsiveDialogContent title={label}>
         <ResponsiveDialogBody>
-          <div className="flex flex-col gap-x5">
+          {/* Field 사이 24(field.md "폼 간격") */}
+          <div className="flex flex-col gap-x6">
             <Field
               label={t("searchAmountRange")}
               invalid={badAmount}

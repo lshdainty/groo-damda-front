@@ -17,8 +17,17 @@ const currentMonthKey = () => {
  * 예산 화면의 질의 · 계산 — 폰(BudgetMobile)과 데스크톱(BudgetDesktop)이 같은 코드를 쓴다(I-08 3 — 동작 변화 없는 파일 나누기).
  * 상한 · 페이스 · 상태 집계는 여기서 한 번만 센다.
  */
-export function useBudgetModel() {
-  const [monthKey, setMonthKey] = useState<string>(currentMonthKey());
+/** 고른 달 — 폰 · 데스크톱 갈림 밖(BudgetPage)에서 든다. 폭이 768 을 넘나들어도 고른 달이 이번 달로 돌아가지 않는다(I-wrap-b1 ε 9) */
+export function useBudgetMonth() {
+  const [monthKey, setMonthKey] = useState<string>(currentMonthKey);
+  return { monthKey, setMonthKey };
+}
+export type BudgetMonth = ReturnType<typeof useBudgetMonth>;
+
+export function useBudgetModel(lifted?: BudgetMonth) {
+  // 페이지가 달을 건네지 않으면(단독으로 그릴 때) 제 달을 쓴다 — 훅은 늘 부른다
+  const own = useBudgetMonth();
+  const { monthKey, setMonthKey } = lifted ?? own;
   const [year, month] = monthKey.split("-").map(Number) as [number, number];
 
   const budgetsQ = useExpenseBudgets({ year, month });

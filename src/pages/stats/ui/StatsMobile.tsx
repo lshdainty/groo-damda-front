@@ -26,7 +26,7 @@ import {
   SavingsRateSection,
   TrendSection,
 } from "./stats-trend-parts";
-import { useStatsModel } from "./stats-model";
+import { useStatsModel, type StatsState } from "./stats-model";
 import type { TabKey } from "./stats-range";
 
 /**
@@ -34,9 +34,9 @@ import type { TabKey } from "./stats-range";
  * 칩 탭은 눌러서만 바뀐다(2차 탭은 밀어 넘기지 않는다 — Tabs 7A). 기간 버튼은 첫 띠 머리 오른쪽에 있다(따로 띠를 두지 않는다). 머리 없는 띠(요약 · 지표 · 저축률)는 위 24 에서 첫 글이 시작한다.
  * 네 탭 모두 같은 규칙이고 앱 `stats_screen.dart` 와 같은 구조 · 같은 값이다(짝 1).
  */
-export function StatsMobile() {
+export function StatsMobile({ state }: { state?: StatsState } = {}) {
   const { t } = useTranslation("stats");
-  const m = useStatsModel();
+  const m = useStatsModel(state);
   const TAB_ITEMS: { v: TabKey; l: string }[] = [
     { v: "cat", l: t("tab.category") },
     { v: "trend", l: t("tab.trend") },

@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PageHead } from "@/shared/ui/groo/page-head";
 import { SettingsFrameContext } from "@/shared/ui/groo/settings-frame-context";
 import { NEEDS_DESKTOP_HEAD, type SectionDef } from "../model/sections";
+import { useReportHeadSlot } from "../model/settings-body-host";
 import { SettingsBackLink } from "./SettingsBackLink";
 
 interface Props {
@@ -19,7 +20,15 @@ interface Props {
  */
 export const SettingsContent = ({ activeSection, back, renderBody }: Props) => {
   const { t } = useTranslation("settings");
-  const [headSlot, setHeadSlot] = useState<HTMLElement | null>(null);
+  const [headSlot, setOwnHeadSlot] = useState<HTMLElement | null>(null);
+  // 본문을 페이지가 틀 밖(포털)에서 그릴 때는 제목 줄 자리를 페이지에도 알린다(I-wrap-b1 ε 9)
+  // ref 는 안정된 setter 로 받고, 알리기는 자리가 바뀔 때만(렌더마다 새 ref 함수를 주면 null → 자리를 다시 알려 페이지가 한 번 더 그린다 — 검수 L3)
+  const report = useReportHeadSlot();
+  useLayoutEffect(() => {
+    if (!report || !headSlot) return;
+    report(headSlot);
+    return () => report(null);
+  }, [report, headSlot]);
   const frame = useMemo(() => ({ headSlot }), [headSlot]);
   const ownHead = NEEDS_DESKTOP_HEAD.includes(activeSection.id);
   // 제목 줄 ↔ 첫 내용 24(T7). 예산 설정만 그 사이에 도구 줄이 들어 16 — 도구 줄 ↔ 첫 카드도 16(F 36)
@@ -32,7 +41,7 @@ export const SettingsContent = ({ activeSection, back, renderBody }: Props) => {
         </div>
       )}
       {/* PageHead 자신의 아래 20 은 이 자리가 대신 갖는다(.settings-head-slot — groo.css) */}
-      <div ref={setHeadSlot} className={`settings-head-slot ${gap}`}>
+      <div ref={setOwnHeadSlot} className={`settings-head-slot ${gap}`}>
         {ownHead && (
           <PageHead
             title={t(activeSection.labelKey)}

@@ -212,6 +212,9 @@ vi.mock("@/widgets/expense-detail/ui/TransferDetailDialog", () => ({
 }));
 
 const { ExpenseDesktop } = await import("./ExpenseDesktop");
+const { ExpenseOverlays } = await import("./ExpenseOverlays");
+const { useExpenseScreen } =
+  await import("@/pages/expense/model/expense-screen");
 const { BulkBar } = await import("./desktop/BulkBar");
 const { i18n } = await import("@/shared/i18n/config");
 
@@ -303,7 +306,17 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const render = () => act(() => root.render(<ExpenseDesktop />));
+/** 페이지처럼 — 연 것은 갈림 밖이 들고 상세도 거기서 그린다(I-wrap-b1 ε 9) */
+function Host() {
+  const screen = useExpenseScreen();
+  return (
+    <>
+      <ExpenseDesktop screen={screen} />
+      <ExpenseOverlays screen={screen} mobile={false} />
+    </>
+  );
+}
+const render = () => act(() => root.render(<Host />));
 const buttons = () =>
   Array.from(document.body.querySelectorAll<HTMLElement>("button"));
 const byName = (name: string) =>

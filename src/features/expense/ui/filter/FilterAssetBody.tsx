@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { ListCheckGroup, ListCheckItem } from "@/shared/ds/list";
-import { AssetLogo, type Asset } from "@/entities/asset";
+import { LogoTile } from "@/shared/ds/logo-tile";
+import type { Asset } from "@/entities/asset";
 import type { IncludeExclude } from "../../model/filter";
 import { PickModeChips } from "./FilterIncludeExclude";
 import { useIncludeExclude } from "./use-include-exclude";
@@ -34,7 +35,8 @@ export function FilterAssetBody({
             <ListCheckItem
               key={a.rowId}
               markPosition="suffix"
-              prefix={<AssetLogo asset={a} size={40} />}
+              // 자산 목록 줄(AssetRow)과 같은 Logo Tile 40 — 기관이 있으면 기관 색, 없으면 이름 색(logo-tile.md)
+              prefix={<AssetTile asset={a} />}
               title={a.assetName}
               checked={pick.ids.includes(a.rowId)}
               onCheckedChange={(on) => pick.toggle(a.rowId, on === true)}
@@ -43,5 +45,17 @@ export function FilterAssetBody({
         </ListCheckGroup>
       </div>
     </div>
+  );
+}
+
+/** 줄 앞 Logo Tile 40 — 기관 이름은 trim 한 뒤 비면 자산 이름 면, 둘 다 비면 글자 없는 기본 타일(logo-tile.md · 검수 L8) */
+function AssetTile({ asset }: { asset: Asset }) {
+  const institution = asset.institution?.trim() ?? "";
+  return (
+    <LogoTile
+      name={institution || (asset.assetName?.trim() ?? "")}
+      face={institution ? "institution" : "name"}
+      size={40}
+    />
   );
 }

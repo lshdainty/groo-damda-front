@@ -71,9 +71,26 @@ vi.mock("react-i18next", () => ({
   Trans: ({ i18nKey }: { i18nKey: string }) => <span>{i18nKey}</span>,
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("react-router-dom", () => ({
-  useSearchParams: () => [new URLSearchParams(st.search), () => {}],
-}));
+// 폰도 고른 달을 주소(`?month=`)에 적는다(I-wrap-b1 ε 9) — 바꾸면 다시 그린다
+vi.mock("react-router-dom", async () => {
+  const { useReducer } = await import("react");
+  return {
+    useSearchParams: () => {
+      const [, rerender] = useReducer((n: number) => n + 1, 0);
+      return [
+        new URLSearchParams(st.search),
+        (next: URLSearchParams | ((p: URLSearchParams) => URLSearchParams)) => {
+          const n =
+            typeof next === "function"
+              ? next(new URLSearchParams(st.search))
+              : next;
+          st.search = n.toString();
+          rerender();
+        },
+      ];
+    },
+  };
+});
 
 const query = (data: unknown, loading = false) => ({
   // react-query 처럼 — 처음 불러오기 실패면 값이 없다
@@ -117,6 +134,9 @@ vi.mock("@/widgets/expense-detail/ui/TransferDetailDialog", () => ({
 
 const { ExpenseMobile, ExpenseMobileSkeleton } =
   await import("./ExpenseMobile");
+const { ExpenseOverlays } = await import("./ExpenseOverlays");
+const { useExpenseScreen } =
+  await import("@/pages/expense/model/expense-screen");
 const { i18n } = await import("@/shared/i18n/config");
 
 const tx = (
@@ -194,12 +214,22 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
+/** 페이지처럼 — 연 것은 갈림 밖이 들고 시트 · 확인창도 거기서 그린다(I-wrap-b1 ε 9) */
+function Host() {
+  const screen = useExpenseScreen();
+  return (
+    <>
+      <ExpenseMobile onAddTx={() => {}} screen={screen} />
+      <ExpenseOverlays screen={screen} mobile />
+    </>
+  );
+}
 const render = () =>
   act(() =>
     // 줄 밀기 확인창이 useConfirmFail(스낵바)을 쓴다 — 앱 맨 위처럼 공급자를 둔다
     root.render(
       <SnackbarProvider>
-        <ExpenseMobile onAddTx={() => {}} />
+        <Host />
       </SnackbarProvider>,
     ),
   );
@@ -586,5 +616,48 @@ describe("첫 진입 스켈레톤 — 실제 달력과 같은 주 · 같은 칸"
       c.querySelector("span")?.className.includes("text-fg-neutral-subtle"),
     );
     expect(subtle).toEqual(Array(7).fill(true));
+  });
+});
+
+describe("고른 달은 주소에 (I-wrap-b1 ε 9)", () => {
+  it("달을 옮기면 `?month=` 에 적는다 — 폭이 768 을 넘나들어 넓은 화면이 같은 주소를 읽어도 보던 달이 남는다", () => {
+    st.search = "month=2026-10&txId=2";
+    render();
+    click(byName("이전 달"));
+    const p = new URLSearchParams(st.search);
+    expect(p.get("month")).toBe("2026-09");
+    // 다른 달로 옮기면 들어온 줄 강조는 남기지 않는다(넓은 화면과 같다)
+    expect(p.get("txId")).toBeNull();
+    expect(container.textContent).toContain("9월");
+  });
+});
+
+describe("주소의 달이 이상하면 이번 달 (I-wrap-b1 ε 9)", () => {
+  it.each(["abc", "2026-13", "", "9999-01"])(
+    "?month=%s — 이번 달(2026년 10월)과 그 달 거래를 그린다",
+    (raw) => {
+      st.search = `month=${raw}`;
+      render();
+      expect(container.textContent).toContain("10월");
+      expect(container.textContent).not.toMatch(/9999|NaN/);
+      expect(container.textContent).toContain("12,000원");
+    },
+  );
+});
+
+describe("주소가 달을 바꿔도 같은 정리 (I-wrap-b1 ε 검수 L4)", () => {
+  it("뒤로 · 앞으로 · 링크로 ?month= 가 바뀌면 펼친 달력을 접고 새 달을 보인다 — ‹ › 와 같은 길", () => {
+    st.search = "month=2026-10";
+    render();
+    const month = () => byName("월 달력")!;
+    click(month());
+    expect(month().getAttribute("aria-expanded")).toBe("true");
+
+    // 주소만 바뀐다(브라우저 뒤로 · 같은 화면 링크) — ‹ › 를 누르지 않았다
+    st.search = "month=2026-09";
+    render();
+
+    expect(container.textContent).toContain("9월");
+    expect(month().getAttribute("aria-expanded")).toBe("false");
   });
 });

@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { ProtectedRoute } from "./ProtectedRoute";
-import { Spinner } from "@/shared/ui/spinner";
 
 const AppLayout = lazy(() =>
   import("@/widgets/layout/ui/AppLayout").then((m) => ({
@@ -121,11 +120,9 @@ const DsCatalogPage = import.meta.env.DEV
     )
   : null;
 
-const Loading = () => (
-  <div className="flex h-screen items-center justify-center">
-    <Spinner size="lg" />
-  </div>
-);
+// 화면 코드를 받는 동안은 빈 틀(높이만) — 틀 없는 가운데 원은 걷는다(DESIGN.desk.md "첫 진입" · skeleton.md "무엇으로 기다리나").
+// 코드가 오면 셸 · 머리가 먼저 그려지고 데이터 자리만 스켈레톤이다
+const Loading = () => <div data-slot="route-loading" className="min-h-dvh" />;
 
 export const AppRouter = () => {
   return (

@@ -140,7 +140,7 @@ const Shell = () => {
           {/* 데스크톱: relative — 본문 안의 absolute 요소(sr-only 등)가 기댈 자리를 여기로 잡는다. 없으면 위에 positioned 조상이 없는
               요소는 문서 첫 상자에 기대 본문 스크롤 높이만큼 문서를 늘려 창 스크롤이 하나 더 생긴다(카드 혜택 쪽 넘김의 sr-only).
               폰 페이지: 아래 여백은 떠 있는 탭 바가 마지막 줄을 덮지 않게 한다(바가 줄어도 그대로).
-              풀스크린도 띠 화면이다 — 바닥은 basement, 머리 바로 아래 흰 띠(I-01 결정 4B · I-05 74 · groo.css .m-fullscreen) */}
+              풀스크린도 띠 화면이다 — 바닥은 basement, 머리 바로 아래 흰 띠는 본문이 직접 칠한다(I-01 결정 4B · I-05 74 · I-wrap-b1 ε M1) */}
           <main
             id="main"
             tabIndex={-1}

@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/shared/lib/index";
 import { registerOverlay } from "@/shared/lib/groo/pointer-block";
 import { buttonVariants } from "@/shared/ui/button-variants";
-import { Spinner } from "@/shared/ui/spinner";
+import { ProgressCircle } from "@/shared/ds/progress-circle";
 
 /**
  * footer 버튼 크기 — 데스크탑·태블릿 `default`(36 · 좌우 **양쪽 16** · 14px), 모바일만
@@ -24,7 +24,7 @@ type FooterButtonSize = "default" | "lg";
  *   - sizes 추가(sm/md/lg) — desk-front 기존 max-w-lg는 default md(480)와 유사
  *   - AlertDialogAction: buttonVariants() default(primary) 유지 + loading prop 보존
  *     (사용처에서 destructive 필요 시 className 또는 variant override)
- *   - Loader2 → groo Spinner 교체
+ *   - Loader2 → groo Spinner → ds ProgressCircle(inherit) 교체
  *
  * 동작 차이(Dialog 대비):
  *   - overlay click 무시 / close button(X) 없음 / default focus = Cancel
@@ -212,13 +212,12 @@ const AlertDialogAction = React.forwardRef<
       {...props}
     >
       {loading && (
-        <Spinner
-          size="sm"
+        // 옛 Spinner sm(16) 자리 — 원 · 트랙은 버튼 글자색과 그 30%(variant 마다 글자색을 따른다)
+        <ProgressCircle
+          size="inherit"
+          tone="inherit"
           aria-hidden
-          style={{
-            borderColor: "color-mix(in srgb, currentColor 30%, transparent)",
-            borderTopColor: "currentColor",
-          }}
+          className="[--progress-size:16px]"
         />
       )}
       {children}
