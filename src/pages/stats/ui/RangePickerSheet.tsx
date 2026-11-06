@@ -46,6 +46,8 @@ export function RangePickerSheet({
   onOpenChange,
   initial,
   onConfirm,
+  draft: liftedDraft,
+  onDraftChange,
 }: {
   /** 여는 기간 버튼 — 시트일 땐 onClick 이 연다, 팝오버일 땐 이 버튼 아래에 붙는다(열기는 팝오버가 맡는다) */
   trigger: (opener: { onClick?: () => void }) => ReactNode;
@@ -53,11 +55,22 @@ export function RangePickerSheet({
   onOpenChange: (open: boolean) => void;
   initial: RangeState;
   onConfirm: (range: RangeState) => void;
+  /**
+   * 고르던 기간을 바깥이 들 때(선택) — 시트가 다시 붙어도(폭이 768 을 넘나들어 구역이 옮겨 그려짐) 고르던 값이 남는다(I-wrap-b1 ε 9).
+   * 둘 다 줘야 바깥 값을 쓴다. 안 주면 이 부품이 제 값을 든다.
+   */
+  draft?: DateRange | undefined;
+  onDraftChange?: (next: DateRange | undefined) => void;
 }) {
   const { t } = useTranslation("stats");
   const surface = useInputButtonSurface();
   const sheet = surface === "sheet";
-  const [draft, setDraft] = useState<DateRange | undefined>(toRange(initial));
+  const [ownDraft, setOwnDraft] = useState<DateRange | undefined>(
+    toRange(initial),
+  );
+  const controlled = onDraftChange != null;
+  const draft = controlled ? liftedDraft : ownDraft;
+  const setDraft = controlled ? onDraftChange : setOwnDraft;
   const label = t("picker.title");
   // 필수 값이라 비었거나(초기화 뒤) 끝을 아직 안 골랐으면 완료를 막는다
   const canApply = !!draft?.start && !!draft.end;
