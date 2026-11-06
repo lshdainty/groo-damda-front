@@ -2,6 +2,7 @@ export {
   apiClient,
   isHttpStatus,
   isWriteUnconfirmed,
+  NOT_A_SAVE,
   WriteUnconfirmedError,
   setToken,
   getToken,

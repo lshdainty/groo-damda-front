@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, NOT_A_SAVE } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 
 // ─── 타입 (백엔드 dataimport 미러) ─────────────────────────────
@@ -86,7 +86,7 @@ export async function analyzeImport(
   const resp: ApiResponse<ImportAnalyzeResult> = await apiClient.post(
     "/v1/import/analyze",
     fd,
-    { silent: true } as import("axios").AxiosRequestConfig & {
+    { silent: true, ...NOT_A_SAVE } as import("axios").AxiosRequestConfig & {
       silent?: boolean;
     },
   );
@@ -112,7 +112,8 @@ export async function executeImport(
   const resp: ApiResponse<ImportExecuteResult> = await apiClient.post(
     "/v1/import/execute",
     fd,
-    { silent: true } as import("axios").AxiosRequestConfig & {
+    // 파일 올리기 — 저장 확인 처리에서 뺀다(판단 (2) 예외). 실패는 가져오기 화면이 자리에서 말한다
+    { silent: true, ...NOT_A_SAVE } as import("axios").AxiosRequestConfig & {
       silent?: boolean;
     },
   );

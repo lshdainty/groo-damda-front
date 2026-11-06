@@ -1,4 +1,9 @@
-import { apiClient, silentConfig, type SilentOpts } from "@/shared/api";
+import {
+  apiClient,
+  NOT_A_SAVE,
+  silentConfig,
+  type SilentOpts,
+} from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
   TokenExchangeResponse,
@@ -14,6 +19,7 @@ export const authApi = {
     const resp: ApiResponse<TokenExchangeResponse> = await apiClient.post(
       "/v1/auth/exchange-code",
       params,
+      NOT_A_SAVE,
     );
     return resp.data;
   },
@@ -25,6 +31,6 @@ export const authApi = {
     return resp.data;
   },
   logout: async (): Promise<void> => {
-    await apiClient.post("/v1/auth/logout");
+    await apiClient.post("/v1/auth/logout", undefined, NOT_A_SAVE);
   },
 };

@@ -250,4 +250,98 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
       );
     }
   });
+
+  it("저장이 아닌 POST(로그인 · 로그아웃 · 본인 확인 · 파일 올리기 · 미리보기 · 문자 해석 · 건수 · 연결 시작)는 깨진 본문 · 끊긴 응답 · 502 에도 확인 못 함으로 가지 않는다 — 같은 조건의 일반 쓰기는 간다(판단 (2) 예외)", async () => {
+    const { authApi } = await import("@/features/auth/api/authApi");
+    const { userApi } = await import("@/features/user/api/userApi");
+    const { analyzeImport, executeImport } =
+      await import("@/features/import/api/importApi");
+    const { parseSms } = await import("@/features/sms/api/smsApi");
+    const { fetchExportCounts, fetchExportPreview } =
+      await import("@/features/export/api/exportApi");
+    const { assetApi } = await import("@/features/asset/api/assetApi");
+    const { oauthLinkApi } =
+      await import("@/features/oauth-link/api/oauthLinkApi");
+    const { memoApi } = await import("@/features/memo/api/memoApi");
+    const file = new File(["a"], "a.csv");
+    const notSaves: [string, () => Promise<unknown>][] = [
+      [
+        "login",
+        () =>
+          authApi.exchangeCode({
+            code: "c",
+            codeVerifier: "v",
+            redirectUri: "r",
+          }),
+      ],
+      ["logout", () => authApi.logout()],
+      ["verifyPassword", () => userApi.verifyPassword("p")],
+      ["reauth code send", () => userApi.sendReauthEmailCode()],
+      ["reauth code verify", () => userApi.verifyReauthEmailCode("123456")],
+      ["reauth password", () => userApi.verifyReauthPassword("p")],
+      ["import analyze", () => analyzeImport(file, "BANKSALAD" as never)],
+      [
+        "import execute",
+        () =>
+          executeImport(file, {
+            source: "BANKSALAD" as never,
+            mapping: {} as never,
+            dupSkip: true,
+            autoCat: true,
+          }),
+      ],
+      ["sms parse", () => parseSms("x")],
+      ["export counts", () => fetchExportCounts({} as never)],
+      ["export preview", () => fetchExportPreview({} as never)],
+      ["trade preview", () => assetApi.previewTrade({} as never)],
+      ["oauth link start", () => oauthLinkApi.startLink("google", "http://x")],
+    ];
+    const outcomes: Record<string, () => void> = {
+      깨진본문: () => {
+        body = "{not json";
+        apiClient.defaults.adapter = async (config) =>
+          reply(config as InternalAxiosRequestConfig);
+      },
+      끊긴응답: () => {
+        apiClient.defaults.adapter = async (config) => {
+          throw new AxiosError(
+            "Network Error",
+            "ERR_NETWORK",
+            config as InternalAxiosRequestConfig,
+            {},
+          );
+        };
+      },
+      게이트웨이502: () => {
+        apiClient.defaults.adapter = async (config) => {
+          const c = config as InternalAxiosRequestConfig;
+          throw new AxiosError("x", "ERR_BAD_RESPONSE", c, {}, {
+            data: "",
+            status: 502,
+            statusText: "",
+            headers: {},
+            config: c,
+          } as AxiosResponse);
+        };
+      },
+    };
+    for (const [outcome, arrange] of Object.entries(outcomes)) {
+      arrange();
+      for (const [name, call] of notSaves) {
+        const error = await call().then(
+          () => null,
+          (e: unknown) => e,
+        );
+        expect(isWriteUnconfirmed(error), `${outcome} · ${name}`).toBe(false);
+      }
+      // 같은 조건의 일반 쓰기는 확인 못 함
+      const error = await memoApi
+        .createMemo({ title: "t", content: "c" } as never)
+        .then(
+          () => null,
+          (e: unknown) => e,
+        );
+      expect(isWriteUnconfirmed(error), `${outcome} · memo`).toBe(true);
+    }
+  });
 });

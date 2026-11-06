@@ -43,10 +43,19 @@ export type QuietRequestConfig = AxiosRequestConfig & {
    * `{ success: true, … }` 모양이 아니거나(깨진 JSON 이 문자열로 들어옴 · 다른 모양) 요청은 나갔는데 응답 전에 끊기면
    * `WriteUnconfirmedError` 로 거절한다 — 서버는 처리했을 수 있으므로 호출처는 "…확인하지 못했어요" 로 말하고, 성공 때와
    * 같은 범위를 다시 받는다(app/providers/query-client.ts MutationCache). 본문이 비어 있으면(204 · 빈 응답) 성공이다.
-   * false 면 끈다(응답이 껍데기 모양이 아닌 쓰기용 — 지금은 없다).
+   * false 면 끈다 — 저장이 아닌 POST(로그인 · 로그아웃 · 본인 확인 · 파일 올리기 · 검색 · 미리보기 · 문자 해석 등)는
+   * "저장됐는지 확인하지 못했어요" 가 맞지 않아 `NOT_A_SAVE` 를 넘긴다(I-wrap-b2b 판단 (2) 예외).
    */
   confirmWrite?: boolean;
 };
+
+/**
+ * 저장이 아닌 요청 표식 — 응답이 깨지거나 응답 전에 끊겨도 "확인하지 못함" 으로 바꾸지 않고 그대로 실패다.
+ * 로그인 · 로그아웃 · 본인 확인 · 파일 올리기 · 읽기용 POST(검색 · 미리보기 · 문자 해석 · 건수)에 쓴다.
+ */
+export const NOT_A_SAVE: Readonly<QuietRequestConfig> = Object.freeze({
+  confirmWrite: false,
+});
 
 /**
  * 쓰기 결과를 확인하지 못했다 — 응답을 풀지 못했거나(PARSE, 2xx) 요청은 나갔는데 응답 전에 끊겼다(status 0).

@@ -1,4 +1,4 @@
-import { apiClient } from "@/shared/api";
+import { apiClient, NOT_A_SAVE } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 
 export interface ChangePasswordReq {
@@ -127,7 +127,7 @@ export const userApi = {
     const resp: ApiResponse = await apiClient.post(
       "/v1/users/me/verify-password",
       { password },
-      { silent: true } as import("axios").AxiosRequestConfig & {
+      { silent: true, ...NOT_A_SAVE } as import("axios").AxiosRequestConfig & {
         silent?: boolean;
       },
     );
@@ -152,7 +152,7 @@ export const userApi = {
     const resp: ApiResponse = await apiClient.post(
       "/v1/users/me/reauth/email-code",
       {},
-      { silent: true } as import("axios").AxiosRequestConfig & {
+      { silent: true, ...NOT_A_SAVE } as import("axios").AxiosRequestConfig & {
         silent?: boolean;
       },
     );
@@ -169,7 +169,7 @@ export const userApi = {
     const resp: ApiResponse<{ reauthToken: string }> = await apiClient.post(
       "/v1/users/me/reauth/email-code/verify",
       { code },
-      { silent: true } as import("axios").AxiosRequestConfig & {
+      { silent: true, ...NOT_A_SAVE } as import("axios").AxiosRequestConfig & {
         silent?: boolean;
       },
     );
@@ -182,7 +182,7 @@ export const userApi = {
     const resp: ApiResponse<{ reauthToken: string }> = await apiClient.post(
       "/v1/users/me/reauth/password",
       { password },
-      { silent: true } as import("axios").AxiosRequestConfig & {
+      { silent: true, ...NOT_A_SAVE } as import("axios").AxiosRequestConfig & {
         silent?: boolean;
       },
     );

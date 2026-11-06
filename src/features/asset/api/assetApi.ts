@@ -1,4 +1,4 @@
-import { apiClient, type QuietRequestConfig } from "@/shared/api";
+import { apiClient, NOT_A_SAVE, type QuietRequestConfig } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type {
   Asset,
@@ -247,7 +247,7 @@ export const assetApi = {
     const resp: ApiResponse<AssetTradePreview> = await apiClient.post(
       "/v1/asset-trade/preview",
       data,
-      silentConfig(opts),
+      { ...silentConfig(opts), ...NOT_A_SAVE },
     );
     return resp.data;
   },

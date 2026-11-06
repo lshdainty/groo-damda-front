@@ -4,7 +4,7 @@
  * SSO→Google→연동 후 다시 설정 페이지로 ?linked=<provider> / ?linkError=<msg> 를 달고 복귀한다.
  * 전부 desk 쿠키 인증(apiClient withCredentials).
  */
-import { apiClient } from "@/shared/api";
+import { apiClient, NOT_A_SAVE } from "@/shared/api";
 import type { ApiResponse } from "@/shared/types";
 import type { AxiosRequestConfig } from "axios";
 
@@ -41,7 +41,8 @@ export const oauthLinkApi = {
     const resp: ApiResponse<{ startUrl: string }> = await apiClient.post(
       `/v1/oauth/link/${provider}`,
       { returnUrl },
-      QUIET,
+      // 연결 시작 주소를 받을 뿐 저장이 아니다 — 확인 처리에서 뺀다(판단 (2) 예외)
+      { ...QUIET, ...NOT_A_SAVE },
     );
     return resp.data;
   },

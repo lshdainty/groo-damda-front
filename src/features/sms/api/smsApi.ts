@@ -1,4 +1,4 @@
-import { apiClient, type QuietRequestConfig } from "@/shared/api";
+import { apiClient, NOT_A_SAVE, type QuietRequestConfig } from "@/shared/api";
 import type { ExpenseType } from "@/entities/expense";
 import type { ApiResponse } from "@/shared/types";
 
@@ -76,9 +76,7 @@ export async function parseSms(
   const resp: ApiResponse<SmsParseResult> = await apiClient.post(
     "/v1/import/sms/parse",
     { text },
-    { silent: opts?.silent } as import("axios").AxiosRequestConfig & {
-      silent?: boolean;
-    },
+    { silent: opts?.silent, ...NOT_A_SAVE } as QuietRequestConfig,
   );
   return resp.data;
 }
