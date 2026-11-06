@@ -458,53 +458,49 @@ export function NamuStocksView({
     </>
   );
 
-  if (desk)
-    return (
-      <>
-        <DeskFrame
-          slot="stocks-desktop"
-          title={t("nav.title")}
-          source={t("namu.dataNotice")}
-        >
-          <DeskColumns
-            left={
-              <>
-                <DeskSlot order={1} slot="invest">
-                  <Card className="p-0">{investBand(true)}</Card>
-                </DeskSlot>
-                <DeskSlot order={4} slot="stocks">
-                  <StocksCard onPick={open}>{stocksTabs}</StocksCard>
-                </DeskSlot>
-              </>
-            }
-            right={
-              <>
-                <DeskSlot order={2} slot="market">
-                  <Card className="p-0">{marketBand}</Card>
-                </DeskSlot>
-                <DeskSlot order={3} slot="composition">
-                  <CompositionCard
-                    data={{
-                      items: comp.items,
-                      notice:
-                        view.fxMissing || comp.fxMissing
-                          ? t("namu.donutNeedsFx")
-                          : undefined,
-                    }}
-                    loading={loading}
-                    failed={bothFailed}
-                    onRetry={retryInvest}
-                  />
-                </DeskSlot>
-              </>
-            }
-          />
-        </DeskFrame>
-        {dialogs}
-      </>
-    );
-
-  return (
+  // 폭으로 갈리는 건 몸통(폰 띠 · 넓은 화면 카드)뿐이다 — 관심 그룹 폼 · 삭제 확인은 갈림 밖 한 자리에 둔다.
+  // 두 갈래에 따로 두면 폭이 768 을 넘나들 때 폼이 다시 붙으며 쓰던 이름이 빈다(I-wrap-b1 ε 9)
+  const body = desk ? (
+    <DeskFrame
+      slot="stocks-desktop"
+      title={t("nav.title")}
+      source={t("namu.dataNotice")}
+    >
+      <DeskColumns
+        left={
+          <>
+            <DeskSlot order={1} slot="invest">
+              <Card className="p-0">{investBand(true)}</Card>
+            </DeskSlot>
+            <DeskSlot order={4} slot="stocks">
+              <StocksCard onPick={open}>{stocksTabs}</StocksCard>
+            </DeskSlot>
+          </>
+        }
+        right={
+          <>
+            <DeskSlot order={2} slot="market">
+              <Card className="p-0">{marketBand}</Card>
+            </DeskSlot>
+            <DeskSlot order={3} slot="composition">
+              <CompositionCard
+                data={{
+                  items: comp.items,
+                  notice:
+                    view.fxMissing || comp.fxMissing
+                      ? t("namu.donutNeedsFx")
+                      : undefined,
+                }}
+                loading={loading}
+                failed={bothFailed}
+                onRetry={retryInvest}
+              />
+            </DeskSlot>
+          </>
+        }
+      />
+    </DeskFrame>
+  ) : (
     <>
       <TopNavigation type="standard">
         <TopNavigationBackButton fallbackHref="/desk/more" />
@@ -528,6 +524,12 @@ export function NamuStocksView({
           <SourceLine>{t("namu.dataNotice")}</SourceLine>
         </div>
       </ScreenBands>
+    </>
+  );
+
+  return (
+    <>
+      {body}
       {dialogs}
     </>
   );

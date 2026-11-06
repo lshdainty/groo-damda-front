@@ -393,3 +393,41 @@ describe("나무 주문 가능 · 예수금 줄 (I-13b 18)", () => {
     expect(row).toContain("—");
   });
 });
+
+// 폭이 768 을 넘나들어도(phone ↔ desk) 쓰던 관심 그룹 이름이 남는다 — "폼은 갈림 밖"(I-wrap-b1 ε 9).
+// 종전엔 두 return 이 {dialogs} 를 다른 자리(폰 넷째 · 넓은 화면 둘째)에 두어 폼이 다시 붙으며 칸이 비었다.
+describe("폭이 바뀌어도 관심 그룹 폼이 남는다 (I-wrap-b1 ε 9)", () => {
+  const renderAt = (layout: "phone" | "desk") =>
+    act(() =>
+      root.render(
+        <MemoryRouter initialEntries={["/desk/stocks/namu?tab=watch"]}>
+          <NamuStocksView layout={layout} />
+        </MemoryRouter>,
+      ),
+    );
+  const nameInput = () =>
+    document.body.querySelector<HTMLInputElement>("[role=dialog] input");
+  it("폰에서 쓰던 이름이 넓은 화면 · 다시 폰에서도 그대로다", () => {
+    renderAt("phone");
+    const add = [...container.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("watch.groupAdd"),
+    );
+    if (!add) throw new Error("그룹 추가 줄을 찾지 못했다");
+    act(() => add.click());
+    const input = nameInput();
+    if (!input) throw new Error("그룹 이름 칸을 찾지 못했다");
+    const setter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      "value",
+    )?.set;
+    act(() => {
+      setter?.call(input, "배당주 모음");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    renderAt("desk");
+    expect(nameInput()?.value).toBe("배당주 모음");
+    renderAt("phone");
+    expect(nameInput()?.value).toBe("배당주 모음");
+  });
+});
