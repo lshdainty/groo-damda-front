@@ -50,6 +50,7 @@ export function CompositionBody({
   titled?: boolean;
 }) {
   const { t } = useTranslation("stocks");
+  const { t: tc } = useTranslation("common");
   const legendId = useId();
   if (failed)
     return (
@@ -93,14 +94,22 @@ export function CompositionBody({
         />
       </div>
     );
-  const colored = assignChartColors(data.items);
+  // 10개를 넘으면 상위 9 + "그 밖" 하나(회색) — 자산 구성 도넛과 같다(assignChartColors · chart.md). 항목은 큰 순서로 온다(composition())
+  const colored = assignChartColors(data.items, {
+    groupOthers: (rest) => ({
+      key: "others",
+      name: tc("others"),
+      pct: rest.reduce((a, c) => a + c.pct, 0),
+      krwValue: rest.reduce((a, c) => a + c.krwValue, 0),
+    }),
+  });
   const size = side ? 120 : 112;
-  const count = t("unit.stocksCount", { count: colored.length });
+  const count = t("unit.stocksCount", { count: data.items.length });
   const donut = (
     <Chart
-      label={`${t("portfolio.title")} — ${colored
-        .map((c) => `${c.name} ${pctText(c.pct)}`)
-        .join(" · ")}`}
+      // 이름은 제목만 — 비중 · 금액은 금액 가리기를 따르는 범례가 aria-describedby 로 읽는다(통계 도넛과 같다).
+      // 이름에 원값을 넣으면 가리기를 켜도 화면 읽기가 비중을 읽는다(I-wrap-b1 ε 검수 M2)
+      label={t("portfolio.title")}
       legendId={legendId}
       height={size}
       style={{ width: size }}
