@@ -87,6 +87,7 @@ export function MarketBand({
   failed,
   onRetry,
   priceFailed,
+  priceRetrying,
   onRetryPrice,
 }: {
   markets: MarketState[];
@@ -99,6 +100,8 @@ export function MarketBand({
   onRetry?: () => void;
   /** 받아 둔 지수 · 시세가 있는 채 다시 받기(폴링)가 실패했다 — 값은 두고 제목 아래 띠 한 줄(단계 4) */
   priceFailed?: boolean;
+  /** 다시 받는 중 — Callout 다시 누름을 무시한다 */
+  priceRetrying?: boolean;
   onRetryPrice?: () => void;
 }) {
   const { t } = useTranslation("stocks");
@@ -108,6 +111,7 @@ export function MarketBand({
       {!failed && priceFailed && (
         <PriceStaleCallout
           onRetry={onRetryPrice ?? onRetry ?? (() => {})}
+          retrying={priceRetrying}
           className="pb-x2"
         />
       )}

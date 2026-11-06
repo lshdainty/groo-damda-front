@@ -390,7 +390,10 @@ function TossBody({ symbol, desk }: { symbol: string; desk: boolean }) {
         loading={todayLoading}
         stale={
           !todayFailed && isStaleError(todayQ)
-            ? { onRetry: () => void todayQ.refetch() }
+            ? {
+                onRetry: () => void todayQ.refetch(),
+                retrying: todayQ.isFetching,
+              }
             : undefined
         }
         failed={
@@ -461,6 +464,7 @@ function TossBody({ symbol, desk }: { symbol: string; desk: boolean }) {
                 void accountsQ.refetch();
                 void holdingsQ.refetch();
               },
+              retrying: accountsQ.isFetching || holdingsQ.isFetching,
             }
           : undefined
       }
@@ -837,6 +841,7 @@ function NamuBody({ symbol, desk }: { symbol: string; desk: boolean }) {
                 if (krwQ.isError) void krwQ.refetch();
                 if (usdQ.isError) void usdQ.refetch();
               },
+              retrying: krwQ.isFetching || usdQ.isFetching,
             }
           : undefined
       }
@@ -859,7 +864,10 @@ function NamuBody({ symbol, desk }: { symbol: string; desk: boolean }) {
         loading={quoteQ.isPending}
         stale={
           isStaleError(quoteQ)
-            ? { onRetry: () => void quoteQ.refetch() }
+            ? {
+                onRetry: () => void quoteQ.refetch(),
+                retrying: quoteQ.isFetching,
+              }
             : undefined
         }
       />

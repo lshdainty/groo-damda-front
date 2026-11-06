@@ -1,7 +1,4 @@
-import {
-  PriceFailBand,
-  PriceStaleCallout,
-} from "@/features/stock/ui/phone/price-fail-band";
+import { PriceFailBand } from "@/features/stock/ui/phone/price-fail-band";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Delta } from "@/shared/ds/card";
@@ -45,6 +42,7 @@ export function HoldingRow({
   prevUnitKrw,
   live,
   priceFailed = false,
+  pricesPending = false,
   onTrade,
 }: {
   asset: Asset;
@@ -58,6 +56,8 @@ export function HoldingRow({
   live: boolean;
   /** 시세 · 환율을 못 받았다 — 값을 기다리는 Skeleton 이 아니라 "—"(섹션 위 띠가 실패를 말한다, 단계 4) */
   priceFailed?: boolean;
+  /** 시세를 받는 중이다 — 이때만 금액 자리가 Skeleton. 받았는데 이 종목이 없거나 종목 코드가 없으면 "—"(검수 2차 L3) */
+  pricesPending?: boolean;
   onTrade?: (type: TradeType) => void;
 }) {
   const { t } = useTranslation("asset");
@@ -119,7 +119,11 @@ export function HoldingRow({
             {value != null ? withCommaBreaks(m(won(value))) : null}
             {value == null &&
               (holding.linked &&
-              (!live || priceFailed || (price != null && unitKrw == null)) ? (
+              (!live ||
+                priceFailed ||
+                !holding.tossSymbol ||
+                !pricesPending ||
+                (price != null && unitKrw == null)) ? (
                 "—"
               ) : (
                 <Skeleton text="t5" className="w-x10" />
@@ -360,13 +364,7 @@ export function HoldingsSection({ asset }: { asset: Asset }) {
           className="pb-x2"
         />
       )}
-      {prices.failedShows === "lastPrice" && (
-        <PriceStaleCallout
-          onRetry={prices.retry}
-          retrying={prices.retrying}
-          className="pb-x2"
-        />
-      )}
+      {/* 받아 둔 시세가 있는 채 실패는 맨 위 금액 카드의 Callout 하나가 말한다(같은 실패에 하나 — 검수 2차 L5) */}
       {hs.length > 0 ? (
         <List aria-labelledby={titleId}>
           {hs.map((h, i) => (
@@ -389,6 +387,7 @@ export function HoldingsSection({ asset }: { asset: Asset }) {
               }
               live={live}
               priceFailed={prices.failed}
+              pricesPending={prices.retrying}
               onTrade={(type) => setTrade({ type, holding: h })}
             />
           ))}

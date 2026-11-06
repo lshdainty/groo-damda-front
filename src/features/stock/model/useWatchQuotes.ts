@@ -81,14 +81,15 @@ export function useTossWatchQuotes(symbols: string[]) {
     isLoading: results.some((r) => r.isLoading),
     isError: results.length > 0 && results.every((r) => r.isError),
     /**
-     * 한 묶음이라도 못 받았다 — 보이는 시세가 하나도 없으면 "load"(그 자리 Result Section), 받아 둔 시세가 있으면 "stale"
-     * (Callout — 보이는 값은 마지막으로 받은 시세). 아니면 null(단계 4)
+     * 못 받은 묶음이 있다 — 값 없이 처음 실패한 묶음이 있으면 "load"(그 자리 Result Section), 실패한 묶음이 모두 받아 둔
+     * 값이 있으면 "stale"(Callout — 보이는 값은 마지막으로 받은 시세). 아니면 null(단계 4)
      */
-    failed: results.some((r) => r.isError)
-      ? prices.size === 0
-        ? ("load" as const)
-        : ("stale" as const)
-      : null,
+    // 값 없이 처음 실패한 묶음이 있으면 그 자리 Result Section(값이 없을 때의 규칙 — 검수 2차 L4)
+    failed: results.some((r) => r.isError && r.data === undefined)
+      ? ("load" as const)
+      : results.some((r) => r.isError)
+        ? ("stale" as const)
+        : null,
     retrying: results.some((r) => r.isFetching),
     retry: () => {
       for (const r of results) if (r.isError) void r.refetch();
@@ -132,14 +133,15 @@ export function useNamuWatchQuotes(symbols: string[]) {
     isLoading: results.some((r) => r.isLoading),
     isError: results.length > 0 && results.every((r) => r.isError),
     /**
-     * 한 묶음이라도 못 받았다 — 보이는 시세가 하나도 없으면 "load"(그 자리 Result Section), 받아 둔 시세가 있으면 "stale"
-     * (Callout — 보이는 값은 마지막으로 받은 시세). 아니면 null(단계 4)
+     * 못 받은 묶음이 있다 — 값 없이 처음 실패한 묶음이 있으면 "load"(그 자리 Result Section), 실패한 묶음이 모두 받아 둔
+     * 값이 있으면 "stale"(Callout — 보이는 값은 마지막으로 받은 시세). 아니면 null(단계 4)
      */
-    failed: results.some((r) => r.isError)
-      ? kept.size === 0
-        ? ("load" as const)
-        : ("stale" as const)
-      : null,
+    // 값 없이 처음 실패한 묶음이 있으면 그 자리 Result Section(값이 없을 때의 규칙 — 검수 2차 L4)
+    failed: results.some((r) => r.isError && r.data === undefined)
+      ? ("load" as const)
+      : results.some((r) => r.isError)
+        ? ("stale" as const)
+        : null,
     retrying: results.some((r) => r.isFetching),
     retry: () => {
       for (const r of results) if (r.isError) void r.refetch();

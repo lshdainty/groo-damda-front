@@ -86,7 +86,11 @@ export function TossDiscoverMobile({
       </div>
       {/* 받아 둔 순위가 있는 채 다시 받기(60초)가 실패했다 — 순위는 두고 띠 한 줄(단계 4) */}
       {isStaleError(q) && (
-        <PriceStaleCallout onRetry={() => void q.refetch()} className="pb-x2" />
+        <PriceStaleCallout
+          onRetry={() => void q.refetch()}
+          retrying={q.isFetching}
+          className="pb-x2"
+        />
       )}
       {q.isLoading ? (
         <LineSkeletons rows={10} label={t("discover.loading")} />

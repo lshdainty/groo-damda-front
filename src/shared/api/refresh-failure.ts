@@ -57,6 +57,9 @@ const failing = new Set<string>();
 
 /** QueryCache onError 에 건다 */
 export const notifyRefreshFailure = (error: unknown, query: QueryLike) => {
+  // 값이 없거나(처음 불러오기 실패) 보는 화면이 없는(관찰자 0) 실패는 연속 실패로 세지 않는다 — 알릴 대상이 아니었으니
+  // 다음에 값이 있는 채 실패하면 그게 첫 번째다(검수 2차 L1)
+  if (query.state.data === undefined || query.getObserversCount() === 0) return;
   const again = failing.has(query.queryHash);
   failing.add(query.queryHash);
   if (again || !shouldNotifyRefreshFailure(error, query)) return;

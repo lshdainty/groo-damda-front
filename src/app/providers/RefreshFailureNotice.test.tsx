@@ -298,3 +298,38 @@ describe("한 장애에 critical 띠 하나(검수 L9)", () => {
     });
   });
 });
+
+describe("연속 실패로 세지 않는 실패(검수 2차 L1)", () => {
+  it("화면을 떠난 동안(관찰자 0) 실패한 것은 세지 않는다 — 돌아와 다시 받다 실패하면 알린다", async () => {
+    let fail = false;
+    const opts = {
+      queryKey: ["l1-left-screen"],
+      queryFn: () =>
+        fail ? Promise.reject(httpError(500)) : Promise.resolve({ rows: [1] }),
+      retry: false,
+    };
+    const first = new QueryObserver(client, opts);
+    const unsub = first.subscribe(() => undefined);
+    await act(async () => {
+      await first.refetch();
+    });
+    unsub();
+    fail = true;
+    // 화면을 떠난 동안 다시 받기가 실패한다(알리지 않는다)
+    await act(async () => {
+      await client
+        .refetchQueries({ queryKey: ["l1-left-screen"], type: "all" })
+        .catch(() => undefined);
+      await vi.advanceTimersByTimeAsync(400);
+    });
+    expect(show).not.toHaveBeenCalled();
+    // 돌아와서 다시 받다 실패 — 이게 첫 번째다
+    const again = new QueryObserver(client, opts);
+    unsubs.push(again.subscribe(() => undefined));
+    await act(async () => {
+      await again.refetch().catch(() => undefined);
+      await vi.advanceTimersByTimeAsync(400);
+    });
+    expect(show).toHaveBeenCalledTimes(1);
+  });
+});

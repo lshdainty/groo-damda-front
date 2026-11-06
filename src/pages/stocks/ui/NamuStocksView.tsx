@@ -1,5 +1,4 @@
 import { isHardError, isStaleError } from "@/features/stock/lib/query-state";
-import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
 import { useMemo, useState, type ReactNode } from "react";
 import { amountText } from "@/features/stock/lib/amount-text";
 import { useTranslation } from "react-i18next";
@@ -279,9 +278,7 @@ export function NamuStocksView({
     <BandFailure band title={t("holdings.failTitle")} onRetry={retryInvest} />
   ) : (
     <>
-      {holdingsStale && (
-        <PriceStaleCallout onRetry={retryStale} className="pt-x2" />
-      )}
+      {/* 한 통화 실패 · 받아 둔 값이 있는 채 실패는 맨 위 내 투자 띠의 Callout 하나가 말한다(검수 2차 L5) */}
       {summary.mixed && (
         <div className="px-x6 pb-x2 pt-x1">
           <SegmentedControl
@@ -343,6 +340,7 @@ export function NamuStocksView({
       failDescription={t("namu.failDesc")}
       onRetry={retryInvest}
       priceFailed={holdingsStale}
+      priceRetrying={krwQ.isFetching || usdQ.isFetching}
       onRetryPrice={retryStale}
       columns={columns}
       emptyNote={
@@ -404,6 +402,7 @@ export function NamuStocksView({
         void repQ.refetch();
       }}
       priceFailed={isStaleError(repQ)}
+      priceRetrying={repQ.isFetching}
       onRetryPrice={() => void repQ.refetch()}
     />
   );
@@ -495,8 +494,6 @@ export function NamuStocksView({
                     loading={loading}
                     failed={bothFailed}
                     onRetry={retryInvest}
-                    priceFailed={holdingsStale}
-                    onRetryPrice={retryStale}
                   />
                 </DeskSlot>
               </>

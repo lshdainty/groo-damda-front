@@ -1,4 +1,3 @@
-import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle } from "@/shared/ds/card";
@@ -48,16 +47,11 @@ export function CompositionCard({
   loading,
   failed,
   onRetry,
-  priceFailed,
-  onRetryPrice,
 }: {
   data: CompositionView;
   loading?: boolean;
   failed?: boolean;
   onRetry?: () => void;
-  /** 받아 둔 보유가 있는 채 다시 받기가 실패했다 — 구성은 두고 제목 아래 띠 한 줄(단계 4) */
-  priceFailed?: boolean;
-  onRetryPrice?: () => void;
 }) {
   const { t } = useTranslation("stocks");
   const wide = useWideSurface();
@@ -66,12 +60,6 @@ export function CompositionCard({
       <BandTitle id="stocks-composition-title">
         {t("portfolio.title")}
       </BandTitle>
-      {!failed && !loading && priceFailed && (
-        <PriceStaleCallout
-          onRetry={onRetryPrice ?? onRetry ?? (() => {})}
-          className="pb-x2"
-        />
-      )}
       <CompositionBody
         titled
         side={!wide}

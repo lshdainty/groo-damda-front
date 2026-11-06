@@ -37,7 +37,6 @@ import { useVisibleIds } from "@/features/stock/model/useVisibleIds";
 import type { WatchGroup } from "@/features/stock/api/stockApi";
 import { Card } from "@/shared/ds/card";
 import { InvestBand } from "@/features/stock/ui/phone/invest-band";
-import { PriceStaleCallout } from "@/features/stock/ui/phone/price-fail-band";
 import {
   MarketBand,
   type IndexLine,
@@ -325,12 +324,8 @@ export function TossStocksView({
     <LineSkeletons label={t("holdings.loading")} />
   ) : investFailed ? (
     <BandFailure band title={t("holdings.failTitle")} onRetry={retryInvest} />
-  ) : holdingsStale ? (
-    <>
-      <PriceStaleCallout onRetry={retryInvest} className="pt-x2" />
-      {holdingsBody()}
-    </>
   ) : (
+    // 받아 둔 보유가 있는 채 실패는 맨 위 내 투자 띠의 Callout 하나가 말한다(같은 실패에 하나 — 검수 2차 L5)
     holdingsBody()
   );
 
@@ -344,6 +339,12 @@ export function TossStocksView({
       failed={investFailed}
       onRetry={retryInvest}
       priceFailed={investStale}
+      priceRetrying={
+        accountsQ.isFetching ||
+        holdingsQ.isFetching ||
+        bpKrwQ.isFetching ||
+        bpUsdQ.isFetching
+      }
       onRetryPrice={retryInvestStale}
       columns={columns}
       onOpenPortfolio={
@@ -363,6 +364,7 @@ export function TossStocksView({
       loading={idxQ.isLoading}
       failed={marketFailed}
       priceFailed={isStaleError(idxQ)}
+      priceRetrying={idxQ.isFetching}
       onRetryPrice={() => void idxQ.refetch()}
       onRetry={() => {
         void idxQ.refetch();
@@ -464,7 +466,6 @@ export function TossStocksView({
                     loading={investLoading}
                     failed={investFailed}
                     onRetry={retryInvest}
-                    priceFailed={holdingsStale}
                   />
                 </DeskSlot>
               </>

@@ -36,6 +36,7 @@ export function InvestBand({
   emptyNote,
   columns,
   priceFailed,
+  priceRetrying,
   onRetryPrice,
 }: {
   label: string;
@@ -62,6 +63,8 @@ export function InvestBand({
   columns?: boolean;
   /** 받아 둔 숫자가 있는 채 다시 받기(폴링)가 실패했다 — 숫자는 두고 지표 아래 띠 한 줄(단계 4) */
   priceFailed?: boolean;
+  /** 다시 받는 중 — Callout 다시 누름을 무시한다 */
+  priceRetrying?: boolean;
   onRetryPrice?: () => void;
 }) {
   const { t } = useTranslation("stocks");
@@ -85,6 +88,7 @@ export function InvestBand({
           {!loading && priceFailed && (
             <PriceStaleCallout
               onRetry={onRetryPrice ?? onRetry ?? (() => {})}
+              retrying={priceRetrying}
               className="pb-x4"
             />
           )}

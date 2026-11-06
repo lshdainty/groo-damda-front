@@ -12,6 +12,7 @@ declare global {
 const st = vi.hoisted(() => ({
   failed: false,
   price: null as number | null,
+  pending: false,
   retry: vi.fn(),
 }));
 
@@ -47,7 +48,7 @@ vi.mock("@/features/stock/model/useLivePrices", () => ({
         ? "lastBalance"
         : "lastPrice"
       : null,
-    retrying: false,
+    retrying: st.pending,
     retry: st.retry,
   }),
 }));
@@ -72,6 +73,7 @@ beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   st.failed = false;
   st.price = null;
+  st.pending = false;
   st.retry.mockClear();
   container = document.createElement("div");
   document.body.appendChild(container);
@@ -100,18 +102,26 @@ describe("보유 종목 — 시세 실패", () => {
     expect(st.retry).toHaveBeenCalled();
   });
 
-  it("받아 둔 시세가 있는 채 실패: 금액은 그대로(70,000 × 3), Result Section 이 아니라 Callout '마지막으로 받은 시세'", () => {
+  it("받아 둔 시세가 있는 채 실패: 금액은 그대로(70,000 × 3) — Callout 은 맨 위 금액 카드 하나가 말하고 여기엔 두지 않는다(검수 2차 L5)", () => {
     st.failed = true;
     st.price = 70_000;
     draw();
     expect(container.textContent).toContain("210,000");
     expect(container.querySelector("[data-slot=price-fail-band]")).toBeNull();
     expect(
-      container.querySelector("[data-slot=price-stale-callout]")?.textContent,
-    ).toContain("detail.priceStale");
+      container.querySelector("[data-slot=price-stale-callout]"),
+    ).toBeNull();
+  });
+
+  it("받는 중에만 Skeleton — 받았는데 이 종목 시세가 없으면 끝없이 돌지 않고 '—'(검수 2차 L3)", () => {
+    st.pending = false;
+    draw();
+    expect(skeletons()).toHaveLength(0);
+    expect(container.textContent).toContain("—");
   });
 
   it("실패가 아니면 띠가 없다(받는 중에는 Skeleton 그대로)", () => {
+    st.pending = true;
     draw();
     expect(container.querySelector("[data-slot=price-fail-band]")).toBeNull();
     expect(skeletons().length).toBeGreaterThan(0);

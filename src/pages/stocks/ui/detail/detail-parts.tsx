@@ -380,7 +380,7 @@ export function KvBand({
   /** 실패 한 벌 — 제목 · 설명 · [다시 시도]. 오류 원문은 그리지 않는다 */
   failed?: { title: string; onRetry: () => void };
   /** 받아 둔 값이 있는 채 다시 받기(폴링)가 실패했다 — 줄은 두고 제목 아래 띠 한 줄(단계 4) */
-  stale?: { onRetry: () => void };
+  stale?: { onRetry: () => void; retrying?: boolean };
 }) {
   if (failed)
     return (
@@ -392,7 +392,13 @@ export function KvBand({
   return (
     <section aria-labelledby={id}>
       <BandTitle id={id}>{title}</BandTitle>
-      {stale && <PriceStaleCallout onRetry={stale.onRetry} className="pb-x2" />}
+      {stale && (
+        <PriceStaleCallout
+          onRetry={stale.onRetry}
+          retrying={stale.retrying}
+          className="pb-x2"
+        />
+      )}
       <List aria-labelledby={id} className="pb-x6">
         {rows.map((r) => (
           <KvListItem
@@ -427,6 +433,8 @@ export interface BookQuery {
   /** 아직 값도 오류도 없다(꺼져 있어 시작 전인 질의 포함) — 이때 "없어요" 를 보이지 않는다 */
   isPending: boolean;
   isError: boolean;
+  /** 다시 받는 중 — 실패 Callout 다시 누름을 무시한다 */
+  isFetching?: boolean;
   refetch: () => unknown;
 }
 
@@ -594,6 +602,7 @@ export function QuotesBand({
           {(tab === "book" ? isStaleError(bookQ) : isStaleError(tradesQ)) && (
             <PriceStaleCallout
               band={false}
+              retrying={tab === "book" ? bookQ.isFetching : tradesQ.isFetching}
               onRetry={() =>
                 void (tab === "book" ? bookQ.refetch() : tradesQ.refetch())
               }

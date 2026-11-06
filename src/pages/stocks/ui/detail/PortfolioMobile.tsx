@@ -68,7 +68,11 @@ function TossComposition() {
     <>
       {/* 받아 둔 보유가 있는 채 다시 받기가 실패했다 — 구성은 두고 띠 한 줄(단계 4) */}
       {!failed && (isStaleError(accountsQ) || isStaleError(holdingsQ)) && (
-        <PriceStaleCallout onRetry={retry} className="pb-x2" />
+        <PriceStaleCallout
+          onRetry={retry}
+          retrying={accountsQ.isFetching || holdingsQ.isFetching}
+          className="pb-x2"
+        />
       )}
       <CompositionBody
         data={data}
@@ -97,6 +101,7 @@ function NamuComposition() {
     <>
       {partial && (
         <PriceStaleCallout
+          retrying={krwQ.isFetching || usdQ.isFetching}
           onRetry={() => {
             if (krwQ.isError) void krwQ.refetch();
             if (usdQ.isError) void usdQ.refetch();
