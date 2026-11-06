@@ -15,10 +15,7 @@ import {
   insightDiffAmount,
 } from "@/pages/expense/lib/insight";
 import { monthFromQuery } from "@/pages/expense/lib/month-query";
-import {
-  useExpenseSwipeActions,
-  type ExpenseSwipeAction,
-} from "@/pages/expense/lib/use-expense-swipe-actions";
+import { useExpenseSwipeActions } from "@/pages/expense/lib/use-expense-swipe-actions";
 import {
   dayKeyOf,
   monthWeeks,
@@ -32,19 +29,11 @@ import {
 } from "@/shared/lib/groo/hide-amounts-core";
 import { useLedgerScroll } from "@/shared/ui/groo/use-ledger-scroll";
 import { TransferRow } from "@/entities/asset";
-import { TransferDetailDialog } from "@/widgets/expense-detail/ui/TransferDetailDialog";
 import { useRangeSummary, useExpenseCategories } from "@/features/expense";
 import { useAssetCurrencyOf, useAssets } from "@/features/asset";
-import type { AssetTransfer } from "@/entities/asset";
 import type { Expense } from "@/entities/expense";
-import { FilterDialog } from "@/features/expense/ui/FilterDialog";
-import {
-  monthPeriodOf,
-  type FilterValue,
-} from "@/features/expense/model/filter";
+import { monthPeriodOf } from "@/features/expense/model/filter";
 import { countableTx, expenseSum, incomeSum } from "@/entities/expense";
-import { AddTxSheet } from "@/widgets/add-tx";
-import { TxDetailDialog } from "@/widgets/expense-detail/ui/TxDetailDialog";
 import {
   CALENDAR_CELL_CARDS,
   INSIGHT_CARDS,
@@ -58,7 +47,8 @@ import {
   useAssetFilter,
   useExpenseData,
 } from "@/pages/expense/model/ledger-data";
-import { ExpenseSwipeRow, SwipeConfirmDialog } from "./ExpenseSwipeRow";
+import { ExpenseSwipeRow } from "./ExpenseSwipeRow";
+import type { ExpenseScreen } from "@/pages/expense/model/expense-screen";
 import {
   DayGroupSkeleton,
   FilterChipsRow,
@@ -196,18 +186,37 @@ export function ExpenseMobileSkeleton({ month }: { month?: string }) {
   );
 }
 
-export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
+export function ExpenseMobile({
+  onAddTx,
+  screen,
+}: {
+  onAddTx: () => void;
+  /** 연 것 · 고른 것 — 갈림 밖(ExpensePage)이 들고, 시트 · 대화상자도 거기서 그린다(I-wrap-b1 ε 9) */
+  screen: ExpenseScreen;
+}) {
   const { t } = useTranslation("expense");
   // 이체 줄은 보내는 · 받는 계좌 통화로 찍는다(I-13)
   const currencyOf = useAssetCurrencyOf();
   const dsT = useDsText();
-  const [searchParams] = useSearchParams();
-  const initialMonth = monthFromQuery(searchParams.get("month"));
+  const [searchParams, setSearchParams] = useSearchParams();
+  // 고른 달은 주소에 — 넓은 화면과 같은 `?month=` 를 읽어 폭이 768 을 넘나들어도 보던 달이 남는다(I-wrap-b1 ε 9).
+  // 폰은 달을 옮겨도 기록을 남기지 않는다(replace) — 종전처럼 뒤로 가기는 가계부 앞 화면으로 간다
+  const month = monthFromQuery(searchParams.get("month"));
+  // 처음 고른 날(오늘)을 정할 때만 쓰는 첫 달
+  const [initialMonth] = useState(month);
+  const setMonth = (next: string) =>
+    setSearchParams(
+      (prev) => {
+        const n = new URLSearchParams(prev);
+        n.set("month", next);
+        n.delete("txId");
+        return n;
+      },
+      { replace: true },
+    );
   const focusTxId = Number(searchParams.get("txId")) || null;
-  const [month, setMonth] = useState<string>(initialMonth);
   const { assetId, asset, clear } = useAssetFilter();
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [filterValue, setFilterValue] = useState<FilterValue | null>(null);
+  const { setFilterOpen, filterValue, setFilterValue } = screen;
   // "소비 요약" 과 "월 달력" 은 하나만 펼친다(DESIGN.desk "원장 머리")
   const [expanded, setExpanded] = useState(false);
   const [sumOpen, setSumOpen] = useState(false);
@@ -244,8 +253,7 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
     onCollapse: () => setExpanded(false),
   });
   // 상세→편집 flow — EditableList 패턴 인라인(dayhead 형식이 달라 리스트 자체 렌더).
-  const [detail, setDetail] = useState<Expense | null>(null);
-  const [editing, setEditing] = useState<Expense | null>(null);
+  const { setDetail, setEditing, setTransferDetail, setPendingAction } = screen;
   // 스와이프 액션 — 상세 다이얼로그와 같은 뮤테이션·같은 확인 문구를 쓴다(아래
   // `useExpenseSwipeActions`). 행의 접근명만 여기서 만든다.
   const { t: tc } = useTranslation("common");
@@ -255,13 +263,6 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
 
   // 지출 상세 → '환불' → 원거래를 승계한 환불 입력(수입 + 원거래 연결).
   // 이체는 지출과 별개 엔티티라 상세도 별도(수정 없이 삭제만).
-  const [transferDetail, setTransferDetail] = useState<AssetTransfer | null>(
-    null,
-  );
-  // 밀기 · ⋮ 의 삭제 — 확인창을 기다리는 동작
-  const [pendingAction, setPendingAction] = useState<ExpenseSwipeAction | null>(
-    null,
-  );
 
   const categoriesQ = useExpenseCategories({ reference: true });
   const assetsQ = useAssets({ reference: true });
@@ -791,45 +792,6 @@ export function ExpenseMobile({ onAddTx }: { onAddTx: () => void }) {
             })}
           </LedgerPrevBtn>
         )}
-
-        {detail && !editing && (
-          <TxDetailDialog
-            expense={detail}
-            mobile
-            onClose={() => setDetail(null)}
-          />
-        )}
-        {editing && (
-          <AddTxSheet
-            expense={editing}
-            mobile
-            onClose={() => setEditing(null)}
-          />
-        )}
-        {transferDetail && (
-          <TransferDetailDialog
-            transfer={transferDetail}
-            mobile
-            onClose={() => setTransferDetail(null)}
-          />
-        )}
-        {filterOpen && (
-          <FilterDialog
-            initial={filterValue}
-            defaultPeriod={viewPeriod}
-            categories={categoriesQ.data ?? []}
-            assets={assetsQ.data?.assets ?? []}
-            onClose={() => setFilterOpen(false)}
-            onApply={(v) => {
-              setFilterValue(v);
-              setFilterOpen(false);
-            }}
-          />
-        )}
-        <SwipeConfirmDialog
-          action={pendingAction}
-          onClose={() => setPendingAction(null)}
-        />
       </LedgerShell>
     </SwipeActionsProvider>
   );

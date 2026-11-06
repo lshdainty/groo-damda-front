@@ -28,7 +28,7 @@ import {
   incomeSum,
   type ClosedCycleSpan,
 } from "@/entities/expense";
-import { editAssetPath, type AssetTransfer } from "@/entities/asset";
+import { editAssetPath } from "@/entities/asset";
 import {
   useBulkDeleteExpenses,
   useBulkMarkFixed,
@@ -42,8 +42,6 @@ import {
   periodMonthBounds,
   type FilterValue,
 } from "@/features/expense/model/filter";
-import { TxDetailDialog } from "@/widgets/expense-detail/ui/TxDetailDialog";
-import { TransferDetailDialog } from "@/widgets/expense-detail/ui/TransferDetailDialog";
 import { monthFromQuery } from "@/pages/expense/lib/month-query";
 import {
   clampMonth,
@@ -57,6 +55,7 @@ import {
 } from "@/pages/expense/model/ledger-data";
 import { BulkBar } from "./desktop/BulkBar";
 import { BulkDeleteDialog } from "./desktop/BulkDeleteDialog";
+import type { ExpenseScreen } from "@/pages/expense/model/expense-screen";
 import { ListCard } from "./desktop/ListCard";
 import { MiniCalendar } from "./desktop/MiniCalendar";
 import { SummaryCard } from "./desktop/SummaryCard";
@@ -122,7 +121,12 @@ export function ExpenseDesktopSkeleton() {
  * 같은 트리에서 폭만 다르다(짝 2 — I-07 24 ~ 39). 달 하나 = 한 쪽: 달 이동이 쪽 넘김이고 주소의 `?month=` 에 적는다(뒤로 가기로 앞 달).
  * 필터 기간이 걸리면(Q5-C) 작은 달력은 기간의 첫 달을 보이고 ‹ › 는 기간 안에서만 — 목록 · 요약은 기간 전체다.
  */
-export function ExpenseDesktop() {
+export function ExpenseDesktop({
+  screen,
+}: {
+  /** 연 것 · 고른 것 — 갈림 밖(ExpensePage)이 들고, 상세 · 이체 상세도 거기서 그린다(I-wrap-b1 ε 9) */
+  screen: ExpenseScreen;
+}) {
   const { t } = useTranslation("expense");
   const { t: tc } = useTranslation("common");
   const navigate = useNavigate();
@@ -130,7 +134,7 @@ export function ExpenseDesktop() {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlMonth = monthFromQuery(searchParams.get("month"));
   const focusTxId = Number(searchParams.get("txId")) || null;
-  const [filterValue, setFilterValue] = useState<FilterValue | null>(null);
+  const { filterValue, setFilterValue } = screen;
   const { assetId, asset, clear: clearAsset } = useAssetFilter();
   const categoriesQ = useExpenseCategories({ reference: true });
   const assetsQ = useAssets({ reference: true });
@@ -231,10 +235,7 @@ export function ExpenseDesktop() {
   }, [focusTxId, data.isLoadingList, data.expenses.length]);
 
   // ── 상세 · 수정 · 이체 상세 (여는 자리만 — 시트 안 모양은 거래 시트 몫) ──
-  const [detail, setDetail] = useState<Expense | null>(null);
-  const [transferDetail, setTransferDetail] = useState<AssetTransfer | null>(
-    null,
-  );
+  const { setDetail, setTransferDetail } = screen;
 
   // ── 일괄 동작 ──
   // 바가 사라지면 초점이 갈 곳을 잃는다 — [완료](고르기 모드 단추)로 보낸다(I-07 34)
@@ -483,20 +484,6 @@ export function ExpenseDesktop() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {transferDetail && (
-        <TransferDetailDialog
-          transfer={transferDetail}
-          mobile={false}
-          onClose={() => setTransferDetail(null)}
-        />
-      )}
-      {detail && (
-        <TxDetailDialog
-          expense={detail}
-          mobile={false}
-          onClose={() => setDetail(null)}
-        />
-      )}
     </Frame>
   );
 }
