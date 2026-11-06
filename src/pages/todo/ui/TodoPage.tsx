@@ -201,68 +201,68 @@ const TodoPageInner = ({
     </>
   );
 
-  // ── 모바일 — 흰 면 하나: 상단 바 + 원장(머리 · 선 · 날짜 묶음) + 떠 있는 [+] ──────
-  if (mobile) {
-    return (
-      <>
-        <TopNavigation type="standard">
-          <TopNavigationBackButton fallbackHref="/desk/more" />
-          <TopNavigationTitle>{t("pageTitle")}</TopNavigationTitle>
-        </TopNavigation>
-        {/* 목록이 짧아도 흰 면이 화면 아래 끝까지 닿는다 — 아래 96 은 [+] 가 마지막 줄을 가리지 않게 하는 흰 면 안 여백 */}
-        <div className="relative flex-1 bg-bg-layer-default pb-[96px]">
-          <TodoMobileLedger
-            todos={todos}
-            tags={tagNames}
-            constellationToday={constellationTodayQ.data}
-            sky={skyQ.data ?? []}
-            doneToday={doneToday}
-            pinTop={56}
-            loading={loading}
-            failed={failed}
-            onRetry={() => void todosQ.refetch()}
-            onToggle={onToggleTodo}
-            holdIds={toggleStatus.holdIds}
-            onRowClick={setViewing}
-            // 밀기 액션 — 상세 footer 의 수정·삭제와 같은 목적지·같은 뮤테이션.
-            onEdit={setEditing}
-            onDelete={(td) => deleteTodo.mutateAsync(td.rowId)}
-            openNightSky={openNightSky}
-            openReport={openReport}
-          />
-          <FloatingActionButton
-            icon={<Plus />}
-            aria-label={t("addTodoLabel")}
-            onClick={() => setEditing({ _new: true })}
-          />
-          {dialog}
-          {overlays}
-        </div>
-      </>
-    );
-  }
+  // 폭으로 갈리는 건 몸통(폰 원장 · 넓은 화면)뿐이다 — 상세 · 폼 · 토스트는 갈림 밖 한 자리에 둔다.
+  // 두 return 에 따로 두면 폭이 768 을 넘나들 때 창은 열린 채 다시 붙으며 쓰던 값이 빈다(I-wrap-b1 ε 9)
+  const body = mobile ? (
+    // ── 모바일 — 흰 면 하나: 상단 바 + 원장(머리 · 선 · 날짜 묶음) + 떠 있는 [+] ──────
+    <>
+      <TopNavigation type="standard">
+        <TopNavigationBackButton fallbackHref="/desk/more" />
+        <TopNavigationTitle>{t("pageTitle")}</TopNavigationTitle>
+      </TopNavigation>
+      {/* 목록이 짧아도 흰 면이 화면 아래 끝까지 닿는다 — 아래 96 은 [+] 가 마지막 줄을 가리지 않게 하는 흰 면 안 여백 */}
+      <div className="relative flex-1 bg-bg-layer-default pb-[96px]">
+        <TodoMobileLedger
+          todos={todos}
+          tags={tagNames}
+          constellationToday={constellationTodayQ.data}
+          sky={skyQ.data ?? []}
+          doneToday={doneToday}
+          pinTop={56}
+          loading={loading}
+          failed={failed}
+          onRetry={() => void todosQ.refetch()}
+          onToggle={onToggleTodo}
+          holdIds={toggleStatus.holdIds}
+          onRowClick={setViewing}
+          // 밀기 액션 — 상세 footer 의 수정·삭제와 같은 목적지·같은 뮤테이션.
+          onEdit={setEditing}
+          onDelete={(td) => deleteTodo.mutateAsync(td.rowId)}
+          openNightSky={openNightSky}
+          openReport={openReport}
+        />
+        <FloatingActionButton
+          icon={<Plus />}
+          aria-label={t("addTodoLabel")}
+          onClick={() => setEditing({ _new: true })}
+        />
+      </div>
+    </>
+  ) : (
+    // ── 데스크톱 · 태블릿 ─────────────────────────────────────────────────────
+    <TodoDesktop
+      todos={todos}
+      tagNames={tagNames}
+      tagColors={tagColors}
+      today={today}
+      holdIds={toggleStatus.holdIds}
+      loading={loading}
+      failed={failed}
+      onRetry={() => void todosQ.refetch()}
+      onToggle={onToggleTodo}
+      onOpen={setViewing}
+      onAdd={() => setEditing({ _new: true })}
+      sky={skyQ.data ?? []}
+      constellationToday={constellationTodayQ.data}
+      doneToday={doneToday}
+      openNightSky={openNightSky}
+      openReport={openReport}
+    />
+  );
 
-  // ── 데스크톱 · 태블릿 ─────────────────────────────────────────────────────
   return (
     <>
-      <TodoDesktop
-        todos={todos}
-        tagNames={tagNames}
-        tagColors={tagColors}
-        today={today}
-        holdIds={toggleStatus.holdIds}
-        loading={loading}
-        failed={failed}
-        onRetry={() => void todosQ.refetch()}
-        onToggle={onToggleTodo}
-        onOpen={setViewing}
-        onAdd={() => setEditing({ _new: true })}
-        sky={skyQ.data ?? []}
-        constellationToday={constellationTodayQ.data}
-        doneToday={doneToday}
-        openNightSky={openNightSky}
-        openReport={openReport}
-      />
+      {body}
       {dialog}
       {overlays}
     </>
