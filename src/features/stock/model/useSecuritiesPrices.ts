@@ -1,6 +1,7 @@
 /**
  * 증권사 무관 시세 훅. 자산 화면이 쓴다 — 증권사를 몰라도 된다.
  */
+import { POLL_META } from "@/shared/api";
 import { useQuery } from "@tanstack/react-query";
 import { securitiesApi } from "../api/securitiesApi";
 
@@ -30,6 +31,8 @@ export const useSecuritiesPrices = (
     enabled: symbols.length > 0,
     ...COMMON,
     refetchInterval,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 /**

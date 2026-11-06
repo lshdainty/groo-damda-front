@@ -5,6 +5,7 @@
  * 아니라 `/v1/namu/**` 로. 되풀이 호출(10초 시세 · 5초 체결)은 화면이 보일 때만 돈다 —
  * react-query 의 `refetchIntervalInBackground` 기본값(false)이 그 일을 한다. 한 사람의 키로 그 사람 것만 부른다.
  */
+import { POLL_META } from "@/shared/api";
 import { useQuery } from "@tanstack/react-query";
 import {
   namuApi,
@@ -42,6 +43,8 @@ export const namuPricesQuery = (
   queryFn: () => namuApi.getPrices(symbols),
   ...COMMON,
   refetchInterval,
+  // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+  meta: POLL_META,
 });
 
 export const useNamuPrices = (
@@ -79,6 +82,8 @@ export const useNamuQuote = (
     ...COMMON,
     staleTime: 5_000,
     refetchInterval: 10_000,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 /** 체결 — 5초마다. **체결 탭이 골라져 있을 때만**(`enabled`) 부른다 */
@@ -94,6 +99,8 @@ export const useNamuExecutions = (
     ...COMMON,
     staleTime: 3_000,
     refetchInterval: 5_000,
+    // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+    meta: POLL_META,
   });
 
 /** 투자자별 매매동향(국내 종목) — 상세를 열 때 한 번, 5분 안에는 다시 안 묻는다 */

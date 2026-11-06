@@ -4,6 +4,7 @@
  * 심볼 목록은 부르는 쪽이 만든다(보이는 그룹의 합 — `visibleSymbols`). 여기서는 나누어 부르고 모은다.
  * 한 사람의 키로 그 사람 것만 부른다 — 공유 캐시 · 묶음 조회를 만들지 않는다.
  */
+import { POLL_META } from "@/shared/api";
 import { useMemo, useState } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { stockKeys } from "@/shared/config";
@@ -50,6 +51,8 @@ export function useTossWatchQuotes(symbols: string[]) {
       refetchOnWindowFocus: false,
       staleTime: 15_000,
       refetchInterval: 10_000,
+      // 되풀이해 받는 시세 — 다시 받기 실패는 공용 스낵바가 아니라 그 자리가 알린다
+      meta: POLL_META,
     })),
   });
   // 전일 종가는 시장 날짜로 가른다 — 시세 응답의 통화로 시장을 정한다(미국은 뉴욕). 통화를 모르는 심볼(시세 전)은 아직 부르지 않아

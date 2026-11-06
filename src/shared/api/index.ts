@@ -12,6 +12,13 @@ export {
 export type { QuietRequestConfig } from "./base";
 export { silentConfig, type SilentOpts } from "./silent-config";
 export { loadFailed } from "./query-state";
+export {
+  POLL_META,
+  isPollQuery,
+  notifyRefreshFailure,
+  onRefreshFailure,
+  shouldNotifyRefreshFailure,
+} from "./refresh-failure";
 
 export { hideCardsApi } from "./hideCardsApi";
 export {

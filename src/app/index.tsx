@@ -1,4 +1,8 @@
-import { QueryProvider, ReferenceFailureNotice } from "./providers";
+import {
+  QueryProvider,
+  ReferenceFailureNotice,
+  RefreshFailureNotice,
+} from "./providers";
 import { AppRouter } from "./router";
 import { SnackbarProvider } from "@/shared/ds/snackbar";
 import { Toaster } from "@/shared/ui/sonner";
@@ -14,6 +18,7 @@ export const AppRoot = () => {
         <Toaster position="top-center" />
         <SnackbarProvider>
           <ReferenceFailureNotice />
+          <RefreshFailureNotice />
           <AppRouter />
         </SnackbarProvider>
       </QueryProvider>
