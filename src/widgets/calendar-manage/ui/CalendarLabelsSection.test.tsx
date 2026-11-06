@@ -116,7 +116,8 @@ describe("라벨 화면", () => {
     expect(container.textContent).toContain("labelsSection.loadFailed");
     expect(container.textContent).not.toContain("noLabels");
     const retry = [...container.querySelectorAll("button")].find(
-      (b) => b.textContent?.trim() === "retry",
+      // BandFailure 의 [다시 시도] 는 ds 고정 글이다(react-i18next 목을 타지 않는다)
+      (b) => b.textContent?.trim() === "다시 시도",
     );
     expect(retry, "다시 시도 단추").not.toBeUndefined();
     act(() => retry!.click());
@@ -201,6 +202,14 @@ describe("라벨 화면", () => {
         data: { labelName: "열세 글자짜리 아주 긴 옛 라벨", color: "#3b82f6" },
       },
     ]);
+    // 저장이 성공하면 폼이 닫힌다 — 같은 라벨을 다시 연다
+    act(() =>
+      (
+        container.querySelector(
+          "[data-slot=list-item] button",
+        ) as HTMLButtonElement
+      ).click(),
+    );
     // 옛 긴 이름은 고치기 시작해도 잘리지 않는다 — 한 글자만 지우면 그만큼만 줄고, 12 초과면 칸 오류로 [저장] 이 나가지 않는다
     const input = document.body.querySelector("input") as HTMLInputElement;
     const setter = Object.getOwnPropertyDescriptor(
