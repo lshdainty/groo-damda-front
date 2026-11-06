@@ -73,9 +73,27 @@ vi.mock("@/features/user", () => ({
   WithdrawDialog: () => null,
 }));
 vi.mock("@/features/auth", () => ({ useAuth: () => ({ logout: () => {} }) }));
-vi.mock("@/features/subscription/ui/SecuritiesLinkDialog", () => ({
-  SecuritiesLinkDialog: () => null,
+const sec = vi.hoisted(() => ({
+  wide: false,
+  mounts: 0,
+  mobile: [] as boolean[],
 }));
+vi.mock("@/shared/ds/overlay", async (orig) => ({
+  ...(await orig<typeof import("@/shared/ds/overlay")>()),
+  useWideSurface: () => sec.wide,
+}));
+vi.mock("@/features/subscription/ui/SecuritiesLinkDialog", async () => {
+  const { useEffect } = await import("react");
+  return {
+    SecuritiesLinkDialog: ({ mobile }: { mobile: boolean }) => {
+      sec.mobile.push(mobile);
+      useEffect(() => {
+        sec.mounts += 1;
+      }, []);
+      return <div data-sec-dialog />;
+    },
+  };
+});
 vi.mock("@/features/subscription/model/useSubscription", () => ({
   useMyFeatures: () =>
     state.featuresQ ?? { data: { features: state.features } },
@@ -379,5 +397,23 @@ describe("Google 줄 상태", () => {
     expect(toasts.opts[0]?.action?.label).toBe("common.retry");
     act(() => toasts.opts[0]!.action!.onClick());
     expect(toasts.error).toHaveLength(2);
+  });
+});
+
+describe("증권사 연동 시트의 표면 (I-wrap-b1 ε 9)", () => {
+  it("표면은 1280 으로 가른다 — 폰 · 768 ~ 1279 모두 시트, 셸이 768 을 넘나들어도 다시 붙지 않는다", () => {
+    sec.wide = false;
+    sec.mounts = 0;
+    sec.mobile.length = 0;
+    render(true);
+    const open = buttons().find((b) =>
+      b.textContent?.includes("account.securities.label"),
+    );
+    if (!open) throw new Error("증권사 연동 줄을 찾지 못했다");
+    act(() => open.click());
+    expect(container.querySelector("[data-sec-dialog]")).not.toBeNull();
+    render(false);
+    expect(sec.mobile[sec.mobile.length - 1]).toBe(true);
+    expect(sec.mounts).toBe(1);
   });
 });

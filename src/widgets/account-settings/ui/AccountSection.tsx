@@ -19,6 +19,7 @@ import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
 import { Card, CardHeader, CardTitle } from "@/shared/ds/card";
 import { List, ListButtonItem, ListHeader, ListItem } from "@/shared/ds/list";
+import { useWideSurface } from "@/shared/ds/overlay";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
@@ -84,6 +85,7 @@ export function AccountSection({
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
   const [securitiesOpen, setSecuritiesOpen] = useState(false);
+  const wide = useWideSurface();
 
   const hiddenCount = useHiddenCards().size;
 
@@ -337,7 +339,9 @@ export function AccountSection({
       {securitiesOpen && (
         <SecuritiesLinkDialog
           onClose={() => setSecuritiesOpen(false)}
-          mobile={mobile}
+          // 표면 경계는 1280(시트 ↔ 대화상자 — dialog.md:3)이다. 768(셸)로 가르면 폭이 768 을 넘나들 때
+          // 시트가 대화상자로 바뀌며 다시 붙어 쓰던 키가 빈다(I-wrap-b1 ε 9). 안 모양 정리는 β 묶음
+          mobile={!wide}
         />
       )}
     </div>
