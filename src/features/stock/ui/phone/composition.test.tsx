@@ -44,8 +44,8 @@ describe("구성 도넛 (I-wrap-b1 ε 8)", () => {
         <CompositionBody
           data={{
             items: [
-              { key: "A", name: "가나전자", pct: 60 },
-              { key: "B", name: "다라바이오", pct: 40 },
+              { key: "A", name: "가나전자", pct: 60, krwValue: 123_456_789 },
+              { key: "B", name: "다라바이오", pct: 40, krwValue: 82_304_526 },
             ],
           }}
         />,
@@ -54,7 +54,7 @@ describe("구성 도넛 (I-wrap-b1 ε 8)", () => {
     const chart = container.querySelector<HTMLElement>("[role=img]");
     expect(chart).not.toBeNull();
     expect(chart!.getAttribute("aria-label")).toContain("가나전자 60.00%");
-    const legend = container.querySelector("ul[id]");
+    const legend = container.querySelector("[data-slot=chart-donut-legend]");
     expect(chart!.getAttribute("aria-describedby")).toBe(legend?.id);
     expect(
       container.querySelector("[data-slot=chart-donut-center-amount]")
@@ -63,25 +63,33 @@ describe("구성 도넛 (I-wrap-b1 ε 8)", () => {
     expect(container.querySelector(".donut-wrap")).toBeNull();
   });
 
-  it("범례 색 칸은 차트 색 배정 순서 — 첫째 blue · 둘째 green", () => {
+  it("범례는 자산 구성과 같은 ds ChartDonutLegend — 색 칸 차트 색 순서(blue · green) · 비중 두 자리 · 평가액 원까지(자르지 않음)", () => {
     act(() =>
       root.render(
         <CompositionBody
           data={{
             items: [
-              { key: "A", name: "가나전자", pct: 60 },
-              { key: "B", name: "다라바이오", pct: 40 },
+              { key: "A", name: "가나전자", pct: 60, krwValue: 123_456_789 },
+              { key: "B", name: "다라바이오", pct: 40, krwValue: 82_304_526 },
             ],
           }}
         />,
       ),
     );
-    const swatches = [
-      ...container.querySelectorAll<HTMLElement>("ul span[aria-hidden]"),
-    ].filter((e) => e.style.background);
-    expect(swatches.map((e) => e.style.background)).toEqual([
-      "var(--color-chart-blue)",
-      "var(--color-chart-green)",
-    ]);
+    const rows = [
+      ...container.querySelectorAll("[data-slot=chart-donut-legend-item]"),
+    ];
+    expect(rows).toHaveLength(2);
+    const swatch = (r: Element) =>
+      r.querySelector("[data-slot=chart-donut-swatch]")!.className;
+    expect(swatch(rows[0]!)).toContain("blue");
+    expect(swatch(rows[1]!)).toContain("green");
+    const cell = (r: Element, slot: string) =>
+      r.querySelector(`[data-slot=chart-donut-${slot}]`)!.textContent;
+    expect(cell(rows[0]!, "label")).toBe("가나전자");
+    expect(cell(rows[0]!, "percent")).toBe("60.00%");
+    expect(cell(rows[0]!, "amount")).toMatch(/^123,456,789/);
+    // 옛 손 범례(List 줄 · 인라인 색 칸)가 없다
+    expect(container.querySelector("[data-slot=list-item]")).toBeNull();
   });
 });

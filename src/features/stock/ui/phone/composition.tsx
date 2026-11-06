@@ -4,11 +4,11 @@ import { Pie, PieChart } from "recharts";
 import {
   Chart,
   ChartDonutCenter,
+  ChartDonutLegend,
   assignChartColors,
   chartDonutRadii,
+  formatWon,
 } from "@/shared/ds/chart";
-import { withCommaBreaks } from "@/shared/ds/i18n";
-import { List, ListItem } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { ChartPie } from "lucide-react";
@@ -18,13 +18,13 @@ import { MaskAmount } from "@/shared/lib/groo/hide-amounts";
 
 /*
  * 포트폴리오 구성 본문(I-13 19) — 도넛 112 가운데(가운데 글 "{n}종목") + 아래 12 에 범례 줄.
- * 범례는 List 키-값 줄: 앞 색 칸 10(모서리 2) + 종목 이름(줄바꿈) · 값 비중 "98.95%".
+ * 범례는 자산 구성 도넛과 같은 ds ChartDonutLegend — 색 칸 10 · 종목 이름 · 비중 "98.95%" · 원화 환산 평가액(원까지, 자르지 않음).
  * 도넛은 ds Chart(자산 구성 도넛과 같은 길 — Pie + chartDonutRadii · 가운데 ChartDonutCenter, chart.md). 두께는 지름을 따른다(112 → 17 · 120 → 18).
  * 색은 차트 색 배정 순서(assignChartColors). 환율이 없어 비중을 못 내면 도넛 대신 Result Section empty small.
  */
 
 export interface CompositionView {
-  items: { key: string; name: string; pct: number }[];
+  items: { key: string; name: string; pct: number; krwValue: number }[];
   /** 비중을 낼 수 없는 이유(환율 없음) — 있으면 도넛 대신 이 글 */
   notice?: string;
 }
@@ -116,34 +116,24 @@ export function CompositionBody({
       <ChartDonutCenter amount={count} />
     </Chart>
   );
+  // 자산 구성 도넛과 같은 범례 한 벌(chart.md 도넛 범례) — 비중 · 금액은 금액 가리기를 따른다
   const legend = (
-    <List
+    <ChartDonutLegend
       id={legendId}
-      className={side ? "min-w-0 flex-1" : "mt-x3"}
       aria-label={t("portfolio.title")}
-    >
-      {colored.map((c) => (
-        <ListItem
-          key={c.key}
-          className="[&_[data-slot=list-content]]:py-x2"
-          prefix={
-            <span
-              aria-hidden
-              className="block size-2.5 rounded-[2px]"
-              style={{ background: c.fill }}
-            />
-          }
-          title={c.name}
-          suffix={
-            <span className="text-end text-t5 font-bold tabular-nums text-fg-neutral">
-              <MaskAmount card="stocks.summary">
-                {withCommaBreaks(pctText(c.pct))}
-              </MaskAmount>
-            </span>
-          }
-        />
-      ))}
-    </List>
+      className={side ? "min-w-0 flex-1 pr-x6" : "mt-x3 px-x6"}
+      items={colored.map((c) => ({
+        key: c.key,
+        label: c.name,
+        color: c.color,
+        percent: (
+          <MaskAmount card="stocks.summary">{pctText(c.pct)}</MaskAmount>
+        ),
+        amount: (
+          <MaskAmount card="stocks.summary">{formatWon(c.krwValue)}</MaskAmount>
+        ),
+      }))}
+    />
   );
   if (side)
     return (
