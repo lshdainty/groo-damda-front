@@ -8,7 +8,8 @@ import { ResultSection } from "@/shared/ds/result-section";
 import { ScrollAutoHide } from "@/shared/ds/scroll-auto-hide";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
-import { KRW, formatDay, minusOf } from "@/shared/lib/groo/format";
+import { formatMonthDayDow, todayLocalKey } from "@/shared/lib/date";
+import { KRW, minusOf } from "@/shared/lib/groo/format";
 import {
   LedgerDayDate,
   LedgerDayGroup,
@@ -51,6 +52,7 @@ function useDebounced<T>(value: T, ms: number): T {
 export function SearchPage() {
   const { t } = useTranslation("common");
   const { t: tl } = useTranslation("layout");
+  const { t: te } = useTranslation("expense");
   const { mobile } = useOutletContext<{ mobile: boolean }>();
   const { condition, update } = useSearchCondition();
   const debounced = useDebounced(condition, 350);
@@ -73,6 +75,18 @@ export function SearchPage() {
     }
     return [...by.entries()].sort(([a], [b]) => (a < b ? 1 : -1));
   }, [query.data]);
+
+  // 오늘 · 어제 붙임 — 가계부 원장(ExpenseMobile relOf)과 같은 규칙 · 같은 글
+  const today = todayLocalKey();
+  const yest = new Date();
+  yest.setDate(yest.getDate() - 1);
+  const yesterday = `${yest.getFullYear()}-${String(yest.getMonth() + 1).padStart(2, "0")}-${String(yest.getDate()).padStart(2, "0")}`;
+  const relOf = (d: string) =>
+    d === today
+      ? te("txm.today")
+      : d === yesterday
+        ? te("txm.yesterday")
+        : null;
 
   const body = (() => {
     if (idle)
@@ -103,15 +117,14 @@ export function SearchPage() {
     return (
       <LedgerList>
         {groups.map(([d, items]) => {
-          const { dow } = formatDay(d);
-          const [yy, mm, dd] = d.split("-");
           const dOut = expenseSum(items);
           const dIn = incomeSum(items);
           return (
             <LedgerDayGroup key={d} day={d}>
               <LedgerDayHead>
-                <LedgerDayDate>
-                  {(yy ?? "").slice(2)}. {Number(mm)}. {Number(dd)}({dow})
+                {/* 날짜 머리 — 가계부 원장과 같은 요일 형식(올해 "11월 5일 (목)" · 다른 해 "2025년 11월 5일 (수)") + " · 오늘 · 어제" */}
+                <LedgerDayDate relative={relOf(d)}>
+                  {formatMonthDayDow(d)}
                 </LedgerDayDate>
                 <LedgerDaySum className="num">
                   {dOut > 0 && (
