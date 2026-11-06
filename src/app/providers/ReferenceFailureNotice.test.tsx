@@ -11,7 +11,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { REFERENCE_META } from "@/shared/api/reference";
 
 const show = vi.fn();
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show, dismiss: vi.fn() }),
 }));
 vi.mock("react-i18next", () => ({

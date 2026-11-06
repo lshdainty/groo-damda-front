@@ -23,7 +23,8 @@ const mocks = vi.hoisted(() => ({
   snack: [] as Array<{ message: string; action?: { onClick: () => void } }>,
   del: vi.fn(),
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: { message: string; action?: { onClick: () => void } }) =>
       mocks.snack.push(o),

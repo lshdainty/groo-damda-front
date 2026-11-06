@@ -39,7 +39,8 @@ function koCopy(): Record<string, string> {
 }
 const COPY = koCopy();
 
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
 }));
 vi.mock(

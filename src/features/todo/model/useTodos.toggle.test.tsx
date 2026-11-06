@@ -14,7 +14,8 @@ const h = vi.hoisted(() => ({
   toasts: [] as string[],
   config: undefined as unknown,
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: { message: string; tone?: string; action?: unknown }) =>
       h.toasts.push(`${o.tone}:${o.message}${o.action ? " +다시 시도" : ""}`),

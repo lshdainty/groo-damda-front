@@ -104,7 +104,8 @@ vi.mock("@/shared/lib/groo/hide-amounts-core", async (orig) => ({
   ...(await orig<typeof import("@/shared/lib/groo/hide-amounts-core")>()),
   useHideAmounts: () => hide.on,
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({
     show: (o: (typeof st.snacks)[number]) => st.snacks.push(o),
     dismiss: () => {},

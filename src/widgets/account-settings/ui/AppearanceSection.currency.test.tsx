@@ -25,7 +25,8 @@ const state = vi.hoisted(() => ({
   patched: [] as Record<string, unknown>[],
 }));
 
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
 }));
 vi.mock("react-i18next", () => ({

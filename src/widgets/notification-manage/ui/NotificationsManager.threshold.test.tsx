@@ -15,7 +15,8 @@ vi.mock("react-i18next", () => ({
 }));
 
 const snackbarShow = vi.hoisted(() => vi.fn());
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show: snackbarShow }),
 }));
 

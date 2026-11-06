@@ -47,7 +47,8 @@ vi.mock("@/features/expense", () => ({
   }),
   useReorderExpenseTemplates: () => ({ mutate: () => {}, isPending: false }),
 }));
-vi.mock("@/shared/ds/snackbar", () => ({
+vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/snackbar")>()),
   useSnackbar: () => ({ show: () => {}, dismiss: () => {} }),
 }));
 vi.mock("./PresetEditDialog", () => ({ PresetEditDialog: () => null }));
