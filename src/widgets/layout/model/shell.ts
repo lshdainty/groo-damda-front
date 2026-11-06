@@ -14,6 +14,8 @@
 import { ChartPie, FilePen, ReceiptText, Wallet } from "lucide-react";
 import type { ComponentType } from "react";
 
+import { isFixedBulkPath } from "@/shared/lib/groo/fixed-bulk-path";
+
 import { NAV } from "./nav";
 
 /** 가계부 묶음 — 위 Line Tabs 의 칸(순서 = 화면 순서). labelKey 는 layout ns */
@@ -54,6 +56,7 @@ export const isMoneyPath = (pathname: string) =>
   !isAssetDetailPath(pathname) && MONEY_PATHS.some((p) => under(pathname, p));
 export const isFullscreenPath = (pathname: string) =>
   isAssetDetailPath(pathname) ||
+  isFixedBulkPath(pathname) ||
   FULLSCREEN_PATHS.some((p) => under(pathname, p));
 
 /**

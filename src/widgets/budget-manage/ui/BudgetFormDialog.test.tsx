@@ -252,3 +252,38 @@ describe("표면 경계", () => {
     expect(document.querySelector("[role=alertdialog]")).not.toBeNull();
   });
 });
+
+describe("수정 폼의 [삭제] — 밀기는 지름길이라 삭제는 들어간 화면에도 있다(swipe-actions.md:76)", () => {
+  it("카테고리 예산 수정에는 [삭제] 가 있고 누르면 onDelete 만 부른다(저장 아님)", () => {
+    const onDelete = vi.fn();
+    const { onSave } = mount({
+      kind: "category",
+      budget: budget(9, 2, 100_000),
+      onDelete,
+    });
+    click(byText("delete"));
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("추가 · 총 예산에는 [삭제] 가 없다", () => {
+    mount({ kind: "category", budget: null, onDelete: vi.fn() });
+    expect(
+      Array.from(document.querySelectorAll("button")).some(
+        (b) => b.textContent === "delete",
+      ),
+    ).toBe(false);
+    act(() => root.unmount());
+    root = createRoot(container);
+    mount({
+      kind: "total",
+      budget: budget(1, null, 500_000),
+      onDelete: vi.fn(),
+    });
+    expect(
+      Array.from(document.querySelectorAll("button")).some(
+        (b) => b.textContent === "delete",
+      ),
+    ).toBe(false);
+  });
+});

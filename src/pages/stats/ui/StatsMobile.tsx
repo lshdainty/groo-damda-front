@@ -1,8 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Tabs, ChipTabsList, ChipTabsTrigger } from "@/shared/ds/tabs";
 import { ScreenBands } from "@/shared/ui/groo/screen-bands";
-import { HideCard } from "@/shared/lib/groo/hide-amounts";
-import { FixedBulkDialog } from "@/features/expense/ui/FixedBulkDialog";
 import {
   CompareCategorySection,
   CompareMetricsSection,
@@ -106,16 +104,6 @@ export function StatsMobile({ state }: { state?: StatsState } = {}) {
           )}
         </ScreenBands>
       </div>
-      {m.manageOpen && (
-        <HideCard card="stats.fixed">
-          <FixedBulkDialog
-            mobile
-            startDate={m.startDate}
-            endDate={m.endDate}
-            onClose={() => m.setManageOpen(false)}
-          />
-        </HideCard>
-      )}
     </div>
   );
 }

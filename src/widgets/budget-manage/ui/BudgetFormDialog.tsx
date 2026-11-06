@@ -1,6 +1,7 @@
 import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { useRef, useState } from "react";
 import { Check } from "lucide-react";
+import { useWideSurface } from "@/shared/ds/overlay";
 import { useTranslation } from "react-i18next";
 import { MAX_AMOUNT, parseAmount } from "@/shared/lib/groo/amount";
 import { Button } from "@/shared/ds/button";
@@ -50,6 +51,8 @@ export interface BudgetFormDialogProps {
   existing: ExpenseBudget[];
   onClose: () => void;
   onSave: (draft: BudgetDraft) => void;
+  /** 카테고리 예산 수정의 [삭제] — 밀기는 지름길이라 삭제는 들어간 화면에도 있다(swipe-actions.md:76). 확인창은 부르는 쪽이 한 번 띄운다 */
+  onDelete?: () => void;
   submitting?: boolean;
   /** 저장 요청이 실패했다 — 폼 맨 위 critical Callout(고정 글), 폼은 열린 채 · 쓴 값 그대로 */
   saveFailed?: boolean;
@@ -70,6 +73,7 @@ export function BudgetFormDialog({
   existing,
   onClose,
   onSave,
+  onDelete,
   submitting,
   saveFailed,
   saveError,
@@ -78,6 +82,7 @@ export function BudgetFormDialog({
   const { t: tc } = useTranslation("common");
   const isTotal = kind === "total";
   const isNew = budget == null;
+  const wide = useWideSurface();
 
   // 선택 가능한 카테고리 = EXPENSE 타입의 부모 카테고리(top-level) 만. 자식의 지출은 부모로 roll-up 되어 집계된다.
   const selectable = categories.filter(
@@ -293,6 +298,19 @@ export function BudgetFormDialog({
           </ChipGroup>
         </ResponsiveDialogBody>
         <ResponsiveDialogFooter>
+          {!isTotal && !isNew && onDelete && (
+            <Button
+              variant="ghost"
+              ghostColor="critical"
+              size={wide ? undefined : "large"}
+              className={wide ? "mr-auto" : "shrink-0"}
+              onClick={() => {
+                if (!submitting) onDelete();
+              }}
+            >
+              {tc("delete")}
+            </Button>
+          )}
           <ResponsiveDialogCancel>{tc("cancel")}</ResponsiveDialogCancel>
           <Button loading={submitting} onClick={submit}>
             {submitLabel}

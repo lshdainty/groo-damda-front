@@ -1,4 +1,9 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  FIXED_BULK_PATH,
+  isFixedBulkPath,
+} from "@/shared/lib/groo/fixed-bulk-path";
 import { useTranslation } from "react-i18next";
 import { formatChangeRate, isEn } from "@/shared/lib/groo/format";
 import { assignChartColors, type ChartColored } from "@/shared/ds/chart";
@@ -158,8 +163,18 @@ export function useStatsState() {
   const [activeParentId, setActiveParentId] = useState<number | null>(null);
   // 카테고리 탭 도넛의 보기 — 전체 / 고정 제외 / 고정만. 고정·변동 탭은 이 값과 무관하게 셋을 다 보여 준다.
   const [fixedView, setFixedViewState] = useState<FixedView>("all");
-  // 거래를 고정으로 정리하는 화면(고정·변동 탭과 카테고리 탭이 함께 연다).
-  const [manageOpen, setManageOpen] = useState(false);
+  // 거래를 고정으로 정리하는 화면(고정·변동 탭과 카테고리 탭이 함께 연다) — 열림은 주소(/desk/stats/fixed)가 든다.
+  // 1280 미만은 그 주소의 페이지, 이상은 통계 위 대화상자다. 열 때 state 를 달아 두면 닫을 때 한 걸음 뒤로, 주소로 바로 왔으면 통계로 바꿔 간다
+  const navigate = useNavigate();
+  const location = useLocation();
+  const manageOpen = isFixedBulkPath(location.pathname);
+  const setManageOpen = (open: boolean) => {
+    if (open === manageOpen) return;
+    if (open) navigate(FIXED_BULK_PATH, { state: { fromStats: true } });
+    else if ((location.state as { fromStats?: boolean } | null)?.fromStats)
+      navigate(-1);
+    else navigate("/desk/stats", { replace: true });
+  };
   const [pickerOpen, setPickerOpen] = useState(false);
   // 기간 고르기 안에서 고르던 기간 — 시트가 폰 · 데스크톱 어느 쪽 구역에 붙든 같은 값을 잇는다
   const [pickerDraft, setPickerDraft] = useState<DateRange | undefined>(

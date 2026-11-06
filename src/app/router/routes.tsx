@@ -191,7 +191,10 @@ export const AppRouter = () => {
                 }
               />
               <Route path="/desk/expense" element={<ExpensePage />} />
-              <Route path="/desk/stats" element={<StatsPage />} />
+              {/* 고정 정리는 통계의 자식 주소 — 같은 StatsPage 가 이어져 고른 탭 · 기간이 남고, 화면은 1280 미만 페이지 · 이상 대화상자 */}
+              <Route path="/desk/stats" element={<StatsPage />}>
+                <Route path="fixed" element={null} />
+              </Route>
               <Route path="/desk/budget" element={<BudgetPage />} />
               <Route path="/desk/calendar" element={<CalendarPage />} />
               <Route path="/desk/todo" element={<TodoPage />} />

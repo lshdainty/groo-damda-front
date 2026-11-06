@@ -2,8 +2,6 @@ import { useTranslation } from "react-i18next";
 import { Card } from "@/shared/ds/card";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ds/tabs";
 import { PageHead } from "@/shared/ui/groo/page-head";
-import { HideCard } from "@/shared/lib/groo/hide-amounts";
-import { FixedBulkDialog } from "@/features/expense/ui/FixedBulkDialog";
 import {
   CompareCategorySection,
   CompareMetricsSection,
@@ -130,16 +128,6 @@ export function StatsDesktop({ state }: { state?: StatsState } = {}) {
           )}
         </div>
       </div>
-      {m.manageOpen && (
-        <HideCard card="stats.fixed">
-          <FixedBulkDialog
-            mobile={false}
-            startDate={m.startDate}
-            endDate={m.endDate}
-            onClose={() => m.setManageOpen(false)}
-          />
-        </HideCard>
-      )}
     </div>
   );
 }

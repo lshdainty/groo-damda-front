@@ -21,7 +21,7 @@ import { Callout } from "@/shared/ds/callout";
 import { Card, CardContent } from "@/shared/ds/card";
 import { List, ListButtonItem, ListItem, ListTile } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
-import { SwipeActions, type SwipeAction } from "@/shared/ui/swipe-actions";
+import { SwipeActions, type SwipeAction } from "@/shared/ds/swipe-actions";
 import { ManagerHead, ManagerShell } from "@/shared/ui/groo/manager-layout";
 import { MonthBar, MonthControls } from "@/shared/ui/groo/month-bar";
 import {
@@ -471,6 +471,13 @@ export function BudgetManager({ mobile }: { mobile: boolean }) {
             setEditing(null);
           }}
           onSave={saveCategoryBudget}
+          onDelete={() => {
+            // 밀기의 [삭제] 와 같은 확인창 하나 — 수정 폼을 닫고 확인한다
+            const budget = editing;
+            clearSaveError();
+            setEditing(null);
+            if (budget && budget !== "new") setConfirmDelete(budget);
+          }}
           submitting={submitting}
           saveFailed={saveFailed}
           saveError={saveError}
@@ -695,8 +702,7 @@ function CategoryArea({
               label: tCommon("delete"),
               icon: <Trash2 />,
               kind: "destructive",
-              confirm: false,
-              // 밀기의 확인 메시지(옛 ConfirmDialog 경로)는 걷었다 — 화면이 ds Alert Dialog 를 띄운다(삭제 버튼과 같은 확인창)
+              // ds 밀기는 묻지 않는다 — 화면이 ds Alert Dialog 를 띄운다(삭제 버튼 · 수정 폼의 [삭제] 와 같은 확인창)
               onSelect: () => onDelete(b),
             },
           ];
@@ -733,8 +739,6 @@ function CategoryArea({
               key={b.rowId}
               wrap={(inner) => (
                 <SwipeActions
-                  rowId={`budget-${b.rowId}`}
-                  groupTag="budget-manager-list"
                   rowLabel={label}
                   enabled={mobile}
                   actions={swipeActions}

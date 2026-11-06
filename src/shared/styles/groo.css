@@ -345,36 +345,6 @@
   }
 }
 
-/* 별빛 획득 토스트 — design budget-toast (bottom-center 다크 필). */
-.star-toast {
-  position: fixed;
-  left: 50%;
-  bottom: 32px;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: var(--fg-primary);
-  color: var(--bg-surface);
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: var(--shadow-s3);
-  z-index: 300;
-  animation: starToastIn 220ms var(--motion-ease-out);
-}
-@keyframes starToastIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 12px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-}
-
 /* 기관 색 면 위 짙은 글자 — 라이트 fg-neutral · 다크 fg-neutral-inverted(institution-colors.yaml text dark) */
 :root {
   --institution-ink: var(--color-fg-neutral);

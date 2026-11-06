@@ -5,6 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FloatingActionButton } from ".";
+import { SnackbarProvider } from "@/shared/ds/snackbar";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -173,5 +174,47 @@ describe("FloatingActionButton", () => {
     );
     expect(className).toContain("custom");
     expect(className).toContain("size-[56px]");
+  });
+});
+
+describe("FloatingActionButton — 스낵바 피하기(L6)", () => {
+  it("스낵바 띠는 이 버튼 윗변 위 8 에 선다 — 감싼 요소가 버튼이라 ref 가 버튼에 닿는다", () => {
+    vi.spyOn(document.documentElement, "clientHeight", "get").mockReturnValue(
+      800,
+    );
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: HTMLElement) {
+        return (
+          this.dataset.slot === "floating-action-button"
+            ? { top: 724, width: 56, height: 56 }
+            : { top: 800, width: 0, height: 0 }
+        ) as DOMRect;
+      },
+    );
+    const ref = createRef<HTMLButtonElement>();
+    act(() =>
+      root.render(
+        <SnackbarProvider>
+          <FloatingActionButton
+            ref={ref}
+            icon={<Icon />}
+            aria-label="할 일 추가"
+          />
+        </SnackbarProvider>,
+      ),
+    );
+    // 사용자가 넘긴 ref 도 버튼에 그대로 닿는다
+    expect(ref.current).toBe(container.querySelector("button"));
+    const region = document.querySelector<HTMLElement>(
+      "[data-slot=snackbar-region]",
+    )!;
+    expect(region.style.getPropertyValue("--snackbar-avoid")).toBe("76px");
+  });
+
+  it("Provider 밖에서도 그냥 그려진다", () => {
+    const button = render(
+      <FloatingActionButton icon={<Icon />} aria-label="할 일 추가" />,
+    );
+    expect(button).not.toBeNull();
   });
 });

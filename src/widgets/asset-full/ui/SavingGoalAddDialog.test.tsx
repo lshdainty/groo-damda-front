@@ -108,10 +108,19 @@ afterEach(async () => {
   await new Promise((r) => setTimeout(r, 50));
 });
 
-const mount = (goal: Record<string, unknown> | null = null) => {
+const mount = (
+  goal: Record<string, unknown> | null = null,
+  onDelete?: () => void,
+) => {
   const onClose = vi.fn();
   act(() =>
-    root.render(<SavingGoalAddDialog goal={goal as never} onClose={onClose} />),
+    root.render(
+      <SavingGoalAddDialog
+        goal={goal as never}
+        onClose={onClose}
+        onDelete={onDelete}
+      />,
+    ),
   );
   return { onClose };
 };
@@ -353,5 +362,24 @@ describe("저장 실패(I-28-5 3b)", () => {
       data: { amount: 100000 },
     });
     expect(state.create).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("수정 폼의 [삭제] — 밀기는 지름길이라 삭제는 들어간 화면에도 있다(swipe-actions.md:76)", () => {
+  it("수정에는 [삭제] 가 있고 누르면 onDelete 만 부른다(저장 아님)", () => {
+    const onDelete = vi.fn();
+    mount(saved, onDelete);
+    click(byText("delete"));
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(state.update).not.toHaveBeenCalled();
+  });
+
+  it("추가에는 [삭제] 가 없다", () => {
+    mount(null, vi.fn());
+    expect(
+      Array.from(document.querySelectorAll("button")).some(
+        (b) => b.textContent === "delete",
+      ),
+    ).toBe(false);
   });
 });

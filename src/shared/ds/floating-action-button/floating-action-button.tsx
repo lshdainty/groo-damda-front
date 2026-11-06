@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/shared/lib/cn";
+import { SnackbarAvoidOverlap } from "@/shared/ds/snackbar";
 
 import { ROOT } from "./floating-action-button-variants";
 
@@ -47,26 +48,29 @@ const FloatingActionButton = React.forwardRef<
   HTMLButtonElement,
   FloatingActionButtonProps
 >(({ icon, offsetBottom = 0, className, style, ...props }, ref) => (
-  <button
-    ref={ref}
-    type="button"
-    data-slot="floating-action-button"
-    className={cn(ROOT, className)}
-    style={
-      offsetBottom
-        ? ({
-            "--fab-offset-bottom": `${offsetBottom}px`,
-            ...style,
-          } as React.CSSProperties)
-        : style
-    }
-    {...props}
-  >
-    {/* 아이콘은 장식 — 이름은 aria-label */}
-    {React.isValidElement<{ "aria-hidden"?: unknown }>(icon)
-      ? React.cloneElement(icon, { "aria-hidden": true })
-      : icon}
-  </button>
+  // 스낵바는 이 버튼 윗변 위 8 에 선다 — 감싸면 ref 가 버튼에 닿는다(Provider 밖이면 아무것도 하지 않는다)
+  <SnackbarAvoidOverlap>
+    <button
+      ref={ref}
+      type="button"
+      data-slot="floating-action-button"
+      className={cn(ROOT, className)}
+      style={
+        offsetBottom
+          ? ({
+              "--fab-offset-bottom": `${offsetBottom}px`,
+              ...style,
+            } as React.CSSProperties)
+          : style
+      }
+      {...props}
+    >
+      {/* 아이콘은 장식 — 이름은 aria-label */}
+      {React.isValidElement<{ "aria-hidden"?: unknown }>(icon)
+        ? React.cloneElement(icon, { "aria-hidden": true })
+        : icon}
+    </button>
+  </SnackbarAvoidOverlap>
 ));
 FloatingActionButton.displayName = "FloatingActionButton";
 

@@ -1,6 +1,7 @@
 // 폰 통계 — 구역마다 띠 · 칩 탭 · 금액 원까지 · 도넛(가운데 글 없음 + 합계 줄) · 열지도 칸 글(112 규칙) · 구역별 실패(I-08 29 ~ 42)
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 declare global {
@@ -18,8 +19,8 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/shared/ui/groo/primitives", () => ({
   Icon: () => <svg />,
 }));
-vi.mock("@/features/expense/ui/FixedBulkDialog", () => ({
-  FixedBulkDialog: () => null,
+vi.mock("@/features/expense/ui/FixedBulk", () => ({
+  FixedBulk: () => null,
 }));
 
 type Q = {
@@ -159,7 +160,14 @@ afterEach(() => {
   act(() => root.unmount());
   container.remove();
 });
-const render = () => act(() => root.render(<StatsMobile />));
+const render = () =>
+  act(() =>
+    root.render(
+      <MemoryRouter>
+        <StatsMobile />
+      </MemoryRouter>,
+    ),
+  );
 const bands = () => container.querySelectorAll(".screen-bands > *");
 const clickTab = (name: string) => {
   const tab = Array.from(container.querySelectorAll("[role=tab]")).find((e) =>
