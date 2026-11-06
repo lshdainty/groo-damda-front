@@ -76,16 +76,6 @@
 .screen-bands > :empty {
   display: none;
 }
-/* 풀스크린 띠 화면 — 바닥 basement 위, ← 머리 바로 아래 화면 폭 흰 띠 한 장(I-01 결정 4B, 시작 틈 없음 — I-05 74).
-   본문이 묶음마다 띠를 그리면(.screen-bands) 셸은 띠를 깔지 않는다 */
-.m-fullscreen > .m-back-header + :not(.screen-bands) {
-  background: var(--color-bg-layer-default);
-}
-/* 셸이 한 트리라 본문은 상자 없는 감싸개(contents) 아래에 놓인다(단계 6) — 같은 띠 */
-.m-fullscreen > .contents > .m-back-header + :not(.screen-bands) {
-  background: var(--color-bg-layer-default);
-}
-
 /* 플랫 섹션 헤드 — 모바일 카드 다이어트 (design app.css .sec-head 미러).
    카드 없이 배경 위에 [라벨 + 우측 액션] 헤드를 얹고, 아래 12px 로 콘텐츠와 한 덩어리. */
 .sec-head {

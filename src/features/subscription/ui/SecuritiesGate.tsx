@@ -39,6 +39,13 @@ export function SecuritiesGate({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * 폰 본문 면 — ConnectGate 와 같은 흰 면(bg-layer-default) · 상단 바(56) 아래 화면 끝까지 · 세로 가운데.
+ * 셸 바닥(basement) 위에 안내 · 단추를 두면 neutralWeak 단추의 채움이 사라진다(button.md "놓는 바탕", I-wrap-b1 ε M1)
+ */
+const MOBILE_FACE =
+  "flex min-h-[calc(100dvh-3.5rem)] flex-col justify-center bg-bg-layer-default";
+
 /** 기능 조회 실패 — 그 자리 Result Section + [다시 시도](서버 글을 내지 않는다) */
 function GateLoadFailed({
   onRetry,
@@ -70,7 +77,7 @@ function GateLoadFailed({
       <TopNavigation type="standard">
         <TopNavigationBackButton fallbackHref="/desk/more" />
       </TopNavigation>
-      {result}
+      <div className={MOBILE_FACE}>{result}</div>
     </>
   ) : (
     <div style={{ padding: 24 }}>{result}</div>
@@ -134,7 +141,9 @@ function SecuritiesUpsell() {
         <TopNavigationBackButton fallbackHref="/desk/more" />
         <TopNavigationTitle>{t("gate.title")}</TopNavigationTitle>
       </TopNavigation>
-      <div style={{ padding: "16px 24px 24px" }}>{gate}</div>
+      <div className={MOBILE_FACE}>
+        <div style={{ padding: "16px 24px 24px" }}>{gate}</div>
+      </div>
     </>
   ) : (
     <div style={{ padding: 24 }}>{gate}</div>
