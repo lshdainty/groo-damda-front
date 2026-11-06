@@ -201,7 +201,7 @@ export function WithdrawDialog({
     try {
       await doWithdraw(token);
     } catch (e) {
-      // 결과를 확인하지 못했으면(응답을 못 읽음 · 응답 전에 끊김) 실패라 하지 않는다 — 해지됐을 수 있다(앱 withdrawUnconfirmed)
+      // 결과를 확인하지 못했으면(응답을 못 읽음 · 응답 전에 끊김) 실패라 하지 않는다 — 해지됐을 수 있다(앱 withdrawUnconfirmed 와 같은 자리, 글은 웹 전용 — 새로 고침)
       setReauthError(sft(e, t("withdraw.failed"), "withdraw"));
       setBusy(false);
     } finally {
