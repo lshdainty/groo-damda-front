@@ -121,15 +121,19 @@ describe("SecuritiesGate", () => {
   it("모바일은 뒤로 헤더를 붙인다 — 풀스크린이라 없으면 갇힌다", () => {
     state.features = [];
     renderGate(<div data-stocks />, true);
-    // 공용 MobileBackHeader 의 ← 버튼. 이게 없으면 전역 헤더·탭바가 없는 화면이라
+    // ds 상단 바의 ← 버튼(44 — top-navigation.md). 이게 없으면 전역 헤더·탭바가 없는 화면이라
     // 나갈 길이 사라진다.
-    expect(container.querySelector('button[aria-label="back"]')).not.toBeNull();
+    expect(
+      container.querySelector("[data-slot=top-navigation-back-button]"),
+    ).not.toBeNull();
   });
 
   it("데스크톱은 전역 셸이 있으니 뒤로 헤더를 붙이지 않는다", () => {
     state.features = [];
     renderGate(<div data-stocks />, false);
-    expect(container.querySelector('button[aria-label="back"]')).toBeNull();
+    expect(
+      container.querySelector("[data-slot=top-navigation-back-button]"),
+    ).toBeNull();
   });
 
   it("아직 모르는 동안엔 아무것도 그리지 않는다", () => {

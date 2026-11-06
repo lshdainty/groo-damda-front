@@ -4,7 +4,11 @@ import { useTranslation } from "react-i18next";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
-import { MobileBackHeader } from "@/shared/ui/groo/mobile-back-header";
+import {
+  TopNavigation,
+  TopNavigationBackButton,
+  TopNavigationTitle,
+} from "@/shared/ds/top-navigation";
 import { useMyFeatures } from "../model/useSubscription";
 
 /**
@@ -62,8 +66,10 @@ function GateLoadFailed({
   // 전체 화면 라우트라 폰에는 전역 헤더가 없다 — 나갈 길(뒤로)을 붙인다(미구독 안내와 같다)
   return mobile ? (
     <>
-      {/* 실패 화면이라 "구독이 필요해요" 제목은 달지 않는다 — 뒤로 길만 */}
-      <MobileBackHeader title="" />
+      {/* 실패 화면이라 "구독이 필요해요" 제목은 달지 않는다 — 뒤로 길만. ds 상단 바(56 · 뒤로 44 — top-navigation.md) */}
+      <TopNavigation type="standard">
+        <TopNavigationBackButton fallbackHref="/desk/more" />
+      </TopNavigation>
       {result}
     </>
   ) : (
@@ -123,7 +129,11 @@ function SecuritiesUpsell() {
   );
   return mobile ? (
     <>
-      <MobileBackHeader title={t("gate.title")} />
+      {/* ds 상단 바(56 · 뒤로 44 — top-navigation.md), StocksPage ConnectGate 와 같은 머리 */}
+      <TopNavigation type="standard">
+        <TopNavigationBackButton fallbackHref="/desk/more" />
+        <TopNavigationTitle>{t("gate.title")}</TopNavigationTitle>
+      </TopNavigation>
       <div style={{ padding: "16px 24px 24px" }}>{gate}</div>
     </>
   ) : (
