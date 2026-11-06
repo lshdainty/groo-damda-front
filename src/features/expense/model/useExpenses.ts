@@ -25,14 +25,15 @@ export const useExpenses = (
 
 export const useCreateExpense = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger");
 
   return useMutation({
     mutationFn: (data: ExpenseFormValues) =>
       expenseApi.createExpense(data, opts),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
-    // 응답을 못 읽었다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 범위를 다시 받아 목록이 진실을 보이게 한다
+    onSuccess: refresh,
+    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
     onError: (error) => {
-      if (isWriteUnconfirmed(error)) invalidateFor(queryClient, "ledger");
+      if (isWriteUnconfirmed(error)) return refresh();
     },
   });
 };
@@ -61,16 +62,16 @@ export const useBulkMarkFixed = () => {
 
 export const useUpdateExpense = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger", { wait: true });
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: ExpenseFormValues }) =>
       expenseApi.updateExpense(id, data, opts),
     // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게
-    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
-    // 응답을 못 읽었다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 범위를 다시 받아 목록이 진실을 보이게 한다
+    onSuccess: refresh,
+    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
     onError: (error) => {
-      if (isWriteUnconfirmed(error))
-        return invalidateFor(queryClient, "ledger", { wait: true });
+      if (isWriteUnconfirmed(error)) return refresh();
     },
   });
 };

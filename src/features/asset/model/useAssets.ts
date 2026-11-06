@@ -127,6 +127,7 @@ export const useCardBilling = (id: number, opts?: { silent?: boolean }) => {
 
 export const usePayCard = () => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger");
 
   return useMutation({
     mutationFn: ({
@@ -139,10 +140,10 @@ export const usePayCard = () => {
       /** 결제할 회차의 결제일 — 다음 회차를 미리 낼 때 넘긴다. 없으면 다가오는 회차. */
       paymentDate?: string;
     }) => assetApi.payCard(id, amount, paymentDate),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
-    // 응답을 못 읽었다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 범위를 다시 받아 목록이 진실을 보이게 한다
+    onSuccess: refresh,
+    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
     onError: (error) => {
-      if (isWriteUnconfirmed(error)) invalidateFor(queryClient, "ledger");
+      if (isWriteUnconfirmed(error)) return refresh();
     },
   });
 };
@@ -192,15 +193,16 @@ export const useAssetTransfers = (
 
 export const useCreateTransfer = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger");
 
   return useMutation({
     mutationFn: (data: AssetTransferFormValues) =>
       assetApi.createTransfer(data, opts),
     // 이자가 있는 이체는 지출 거래를 하나 만든다.
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
-    // 응답을 못 읽었다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 범위를 다시 받아 목록이 진실을 보이게 한다
+    onSuccess: refresh,
+    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
     onError: (error) => {
-      if (isWriteUnconfirmed(error)) invalidateFor(queryClient, "ledger");
+      if (isWriteUnconfirmed(error)) return refresh();
     },
   });
 };
@@ -208,15 +210,15 @@ export const useCreateTransfer = (opts?: { silent?: boolean }) => {
 /** 이체 수정 — 서버가 이자 지출·잔액 이력을 다시 만든다. */
 export const useUpdateTransfer = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger", { wait: true });
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: AssetTransferFormValues }) =>
       assetApi.updateTransfer(id, data, opts),
-    onSuccess: () => invalidateFor(queryClient, "ledger", { wait: true }),
-    // 응답을 못 읽었다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 범위를 다시 받아 목록이 진실을 보이게 한다
+    onSuccess: refresh,
+    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
     onError: (error) => {
-      if (isWriteUnconfirmed(error))
-        return invalidateFor(queryClient, "ledger", { wait: true });
+      if (isWriteUnconfirmed(error)) return refresh();
     },
   });
 };

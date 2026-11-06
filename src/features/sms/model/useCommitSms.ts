@@ -12,13 +12,14 @@ import { commitSms, type SmsCommitRequest } from "../api/smsApi";
  */
 export const useCommitSms = (opts?: { silent?: boolean }) => {
   const queryClient = useQueryClient();
+  const refresh = () => invalidateFor(queryClient, "ledger");
 
   return useMutation({
     mutationFn: (request: SmsCommitRequest) => commitSms(request, opts),
-    onSuccess: () => invalidateFor(queryClient, "ledger"),
-    // 응답을 못 읽었다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 범위를 다시 받아 목록이 진실을 보이게 한다
+    onSuccess: refresh,
+    // 응답을 못 읽었거나 응답 전에 끊겼다(PARSE) — 서버는 처리했을 수 있다. 성공 때와 같은 다시 받기를 그대로 부른다
     onError: (error) => {
-      if (isWriteUnconfirmed(error)) invalidateFor(queryClient, "ledger");
+      if (isWriteUnconfirmed(error)) return refresh();
     },
   });
 };
