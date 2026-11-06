@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { PageHead } from "@/shared/ui/groo/page-head";
 import { SettingsFrameContext } from "@/shared/ui/groo/settings-frame-context";
 import { NEEDS_DESKTOP_HEAD, type SectionDef } from "../model/sections";
+import { useReportHeadSlot } from "../model/settings-body-host";
 import { SettingsBackLink } from "./SettingsBackLink";
 
 interface Props {
@@ -19,7 +20,13 @@ interface Props {
  */
 export const SettingsContent = ({ activeSection, back, renderBody }: Props) => {
   const { t } = useTranslation("settings");
-  const [headSlot, setHeadSlot] = useState<HTMLElement | null>(null);
+  const [headSlot, setOwnHeadSlot] = useState<HTMLElement | null>(null);
+  // 본문을 페이지가 틀 밖(포털)에서 그릴 때는 제목 줄 자리를 페이지에도 알린다(I-wrap-b1 ε 9)
+  const report = useReportHeadSlot();
+  const setHeadSlot = (el: HTMLElement | null) => {
+    setOwnHeadSlot(el);
+    report?.(el);
+  };
   const frame = useMemo(() => ({ headSlot }), [headSlot]);
   const ownHead = NEEDS_DESKTOP_HEAD.includes(activeSection.id);
   // 제목 줄 ↔ 첫 내용 24(T7). 예산 설정만 그 사이에 도구 줄이 들어 16 — 도구 줄 ↔ 첫 카드도 16(F 36)
