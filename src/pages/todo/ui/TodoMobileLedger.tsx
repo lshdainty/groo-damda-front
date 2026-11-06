@@ -25,6 +25,7 @@ import { SwipeActions } from "@/shared/ds/swipe-actions";
 import { useDsText } from "@/shared/ds/i18n";
 import { formatMonthDayDow } from "@/shared/lib/date";
 import {
+  LedgerBar,
   LedgerCalendar,
   LedgerCell,
   LedgerCellAmt,
@@ -38,6 +39,7 @@ import {
   LedgerDrop,
   LedgerExpand,
   LedgerHead,
+  LedgerKeep,
   LedgerList,
   LedgerMonthNav,
   LedgerNavBtn,
@@ -157,7 +159,7 @@ export function TodoMobileLedger({
     lock,
     scrollToDay,
     scrollToTop,
-  } = useLedgerScroll({ pinTop, initialSelected: today });
+  } = useLedgerScroll({ initialSelected: today });
 
   // 월 + 필터 적용 목록. 마감일 없는 할 일은 월과 무관하게 꼬리 묶음으로 낸다(모델 — 데스크톱과 같은 셈).
   const monthTodos = selectMonthTodos(todos, ym, filter, holdIds);
@@ -324,7 +326,8 @@ export function TodoMobileLedger({
 
   return (
     <LedgerShell ref={rootRef}>
-      <LedgerPin ref={pinRef} top={pinTop}>
+      {/* 머리 — 월 이동 줄 · 주 달력은 늘 남고, 오늘 상태 · 별빛 · 밤하늘만 내리면 숨는다(가계부 원장과 같은 부품) */}
+      <LedgerBar top={pinTop}>
         {/* 월 네비 + 거르기 */}
         <LedgerMonthNav>
           <MonthTitle month={ym} onChange={pickMonth} className="text-t6" />
@@ -339,7 +342,8 @@ export function TodoMobileLedger({
             </NotificationBadge>
           </LedgerNavBtn>
         </LedgerMonthNav>
-
+      </LedgerBar>
+      <LedgerPin ref={pinRef} top={pinTop}>
         {/* 오늘 상태 + 별빛 한 줄 + [밤하늘] */}
         <LedgerHead>
           <div className="min-w-0 flex-auto">
@@ -405,66 +409,68 @@ export function TodoMobileLedger({
           </LedgerDrop>
         )}
 
-        {/* 캘린더 — 접힘: 선택 주 1줄 / 펼침: 월 전체 */}
-        <LedgerCalendar>
-          <LedgerDow labels={dowLabels} />
-          {(expanded ? weeks : [weeks[selWeek] ?? []]).map((w, wi) => (
-            <LedgerWeek key={wi}>
-              {w.map((c, i) => {
-                if (!c) return <LedgerCell key={`e${i}`} empty />;
-                const isSel = c.ds === selected;
-                const items = byDay.get(c.ds);
-                return (
-                  <LedgerCell
-                    key={c.ds}
-                    selected={isSel}
-                    aria-label={cellName(c.ds)}
-                    onClick={() => {
-                      setSelected(c.ds);
-                      if (items) {
-                        lock(800);
-                        scrollToDay(c.ds);
-                      }
-                    }}
-                  >
-                    <LedgerCellNum
+        {/* 캘린더 — 접힘: 선택 주 1줄 / 펼침: 월 전체. 숨지 않고 남는다(Keep) */}
+        <LedgerKeep>
+          <LedgerCalendar>
+            <LedgerDow labels={dowLabels} />
+            {(expanded ? weeks : [weeks[selWeek] ?? []]).map((w, wi) => (
+              <LedgerWeek key={wi}>
+                {w.map((c, i) => {
+                  if (!c) return <LedgerCell key={`e${i}`} empty />;
+                  const isSel = c.ds === selected;
+                  const items = byDay.get(c.ds);
+                  return (
+                    <LedgerCell
+                      key={c.ds}
                       selected={isSel}
-                      dow={i % 7}
-                      future={c.ds > today}
-                      today={c.ds === today}
+                      aria-label={cellName(c.ds)}
+                      onClick={() => {
+                        setSelected(c.ds);
+                        if (items) {
+                          lock(800);
+                          scrollToDay(c.ds);
+                        }
+                      }}
                     >
-                      {c.d}
-                    </LedgerCellNum>
-                    {/* 표시는 장식 — 뜻은 칸 이름이 읽는다. 높이 15(t1 줄 높이) */}
-                    <LedgerCellAmt
-                      aria-hidden
-                      className={
-                        isTodayLeft(c.ds)
-                          ? "inline-flex min-h-[1lh] items-center justify-center font-bold text-fg-brand"
-                          : "inline-flex min-h-[1lh] items-center justify-center font-normal text-fg-neutral-subtle"
-                      }
-                    >
-                      {loading ? (
-                        <Skeleton text="t1" className="w-x8" />
-                      ) : (
-                        cellMark(c.ds)
-                      )}
-                    </LedgerCellAmt>
-                  </LedgerCell>
-                );
-              })}
-            </LedgerWeek>
-          ))}
-          <LedgerExpand
-            expanded={expanded}
-            onClick={() => {
-              setExpanded((v) => !v);
-              setSkyOpen(false);
-            }}
-            aria-label={t("tdm.monthCalendar")}
-          />
-        </LedgerCalendar>
-        <LedgerDivider />
+                      <LedgerCellNum
+                        selected={isSel}
+                        dow={i % 7}
+                        future={c.ds > today}
+                        today={c.ds === today}
+                      >
+                        {c.d}
+                      </LedgerCellNum>
+                      {/* 표시는 장식 — 뜻은 칸 이름이 읽는다. 높이 15(t1 줄 높이) */}
+                      <LedgerCellAmt
+                        aria-hidden
+                        className={
+                          isTodayLeft(c.ds)
+                            ? "inline-flex min-h-[1lh] items-center justify-center font-bold text-fg-brand"
+                            : "inline-flex min-h-[1lh] items-center justify-center font-normal text-fg-neutral-subtle"
+                        }
+                      >
+                        {loading ? (
+                          <Skeleton text="t1" className="w-x8" />
+                        ) : (
+                          cellMark(c.ds)
+                        )}
+                      </LedgerCellAmt>
+                    </LedgerCell>
+                  );
+                })}
+              </LedgerWeek>
+            ))}
+            <LedgerExpand
+              expanded={expanded}
+              onClick={() => {
+                setExpanded((v) => !v);
+                setSkyOpen(false);
+              }}
+              aria-label={t("tdm.monthCalendar")}
+            />
+          </LedgerCalendar>
+          <LedgerDivider />
+        </LedgerKeep>
       </LedgerPin>
 
       {/* 날짜 묶음 — 목록 제목 + 줄(줄이 제 좌우 24 를 갖는다) */}

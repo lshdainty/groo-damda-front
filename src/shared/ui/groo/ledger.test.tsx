@@ -11,12 +11,17 @@ import {
   LedgerDayHead,
   LedgerDaySum,
   LedgerExpand,
+  LedgerBar,
   LedgerHead,
+  LedgerKeep,
+  LedgerList,
   LedgerMonthNav,
+  LedgerShell,
   LedgerNavBtn,
   LedgerPin,
   LedgerSumBtn,
 } from "./ledger";
+import { useLedgerScroll } from "./use-ledger-scroll";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -208,5 +213,122 @@ describe("칸 · 선", () => {
     );
     expect(lines[0]!.className).toContain("bg-stroke-neutral-subtle");
     expect(lines[1]!.className).not.toContain("-mx-global-gutter");
+  });
+});
+
+describe("원장 머리 — 달 이동 줄 · 주 달력은 남고 총액만 숨는다", () => {
+  function Harness({ days }: { days: string[] }) {
+    const { rootRef, pinRef, selected } = useLedgerScroll({
+      initialSelected: days[0] ?? null,
+    });
+    return (
+      <div className="m-scroll" data-testid="scroll">
+        <LedgerShell ref={rootRef}>
+          <LedgerBar top={56}>
+            <LedgerMonthNav>
+              <LedgerNavBtn aria-label="필터">f</LedgerNavBtn>
+            </LedgerMonthNav>
+          </LedgerBar>
+          <LedgerPin ref={pinRef} top={56}>
+            <LedgerHead>
+              <div>총액</div>
+              <LedgerSumBtn>소비 요약</LedgerSumBtn>
+            </LedgerHead>
+            <LedgerKeep>
+              <output data-testid="sel">{selected}</output>
+              <LedgerExpand aria-label="월 달력" />
+              <LedgerDivider />
+            </LedgerKeep>
+          </LedgerPin>
+          <LedgerList>
+            {days.map((d) => (
+              <LedgerDayGroup key={d} day={d}>
+                {d}
+              </LedgerDayGroup>
+            ))}
+          </LedgerList>
+        </LedgerShell>
+      </div>
+    );
+  }
+
+  it("달 이동 줄은 Pin 밖의 sticky(z-3) 이고, 주 달력 · 꺾쇠는 Pin 안 Keep 에, 총액 · 요약 단추는 Keep 위(숨는 부분)에 있다", () => {
+    render(<Harness days={["2026-10-29"]} />);
+    const bar = container.querySelector<HTMLElement>("[data-ledger-bar]")!;
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    const keep = pin.querySelector<HTMLElement>("[data-ledger-keep]")!;
+    expect(bar.className.split(" ")).toEqual(
+      expect.arrayContaining(["sticky", "z-3", "bg-bg-layer-default"]),
+    );
+    expect(bar.style.top).toBe("56px");
+    expect(pin.contains(bar)).toBe(false);
+    // Pin 은 상단 바 + 달 줄 높이 아래에 붙는다
+    expect(pin.style.top).toBe("calc(56px + var(--ledger-bar-h, 0px))");
+    expect(keep.querySelector('[aria-label="월 달력"]')).not.toBeNull();
+    const sum = Array.from(pin.querySelectorAll("button")).find(
+      (b) => b.textContent === "소비 요약",
+    )!;
+    expect(keep.contains(sum)).toBe(false);
+    // 달 줄 높이를 셸에 적는다(jsdom 은 높이 0)
+    expect(bar.parentElement!.style.getPropertyValue("--ledger-bar-h")).toBe(
+      "0px",
+    );
+  });
+
+  it("목록을 내리면 고른 날이 Pin 아래 맨 위 날짜 묶음을 따라간다(스크롤 스파이)", () => {
+    const days = ["2026-10-29", "2026-10-27", "2026-10-21", "2026-10-15"];
+    render(<Harness days={days} />);
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-testid=scroll]",
+    )!;
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    const groups = Array.from(
+      container.querySelectorAll<HTMLElement>("[data-ledger-day]"),
+    );
+    // 남는 머리(달 줄 + 주 달력)의 아래 끝 200 — 묶음 윗변을 스크롤 거리만큼 올린다
+    pin.getBoundingClientRect = () => ({ bottom: 200 }) as DOMRect;
+    let offset = 0;
+    groups.forEach((g, i) => {
+      g.getBoundingClientRect = () =>
+        ({ top: 240 + i * 300 - offset }) as DOMRect;
+    });
+    const sel = () => container.querySelector("[data-testid=sel]")!.textContent;
+    const scrollBy = (y: number) => {
+      offset = y;
+      act(() => {
+        scroll.dispatchEvent(new Event("scroll"));
+      });
+    };
+    expect(sel()).toBe("2026-10-29");
+    scrollBy(320); // 둘째 묶음 윗변 220 ≤ 200 + 28
+    expect(sel()).toBe("2026-10-27");
+    scrollBy(900); // 넷째 묶음 윗변 240
+    expect(sel()).toBe("2026-10-21");
+    scrollBy(1000);
+    expect(sel()).toBe("2026-10-15");
+    scrollBy(0);
+    expect(sel()).toBe("2026-10-29");
+  });
+
+  it("짧은 목록 — 숨는 부분은 높이를 접지 않고(transform 만) 남는 부분도 그대로라 스크롤 끝이 줄지 않는다(깜빡임 없음)", () => {
+    render(<Harness days={["2026-10-29"]} />);
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-testid=scroll]",
+    )!;
+    const pin = container.querySelector<HTMLElement>(
+      "[data-scroll-auto-hide]",
+    )!;
+    act(() => {
+      scroll.dispatchEvent(new Event("scroll"));
+    });
+    expect(pin.style.height).toBe("");
+    expect(pin.style.maxHeight).toBe("");
+    expect(container.querySelector("[data-ledger-collapse]")).toBeNull();
+    expect(pin.querySelector("[data-ledger-keep]")).not.toBeNull();
+    expect(pin.textContent).toContain("총액");
   });
 });
