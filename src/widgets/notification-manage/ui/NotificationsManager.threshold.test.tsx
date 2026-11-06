@@ -20,22 +20,34 @@ vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
   useSnackbar: () => ({ show: snackbarShow }),
 }));
 
+// 진짜 usePreferenceEditor 는 키 하나씩 즉시(낙관적으로) 반영한다(ca52fa25) — 목도 저장한 값을 상태로 다시 그린다
+// (손을 떼면 drag 를 비우고 pref 를 보이므로, 목이 값을 안 실으면 서버 값 85 로 돌아간다)
 const save = vi.fn();
 let onFail: (() => void) | null = null;
-vi.mock("@/features/user", () => ({
-  usePreferenceEditor: (fail: () => void) => {
-    onFail = fail;
-    return {
-      pref: { budgetAlertThreshold: 85, pushEnabled: true },
-      query: { isLoading: false, isError: false },
-      save,
-    };
-  },
-  useCurrentUser: () => ({
-    data: { userEmail: "a@example.com" },
-    isLoading: false,
-  }),
-}));
+vi.mock("@/features/user", async () => {
+  const { useState } = await import("react");
+  return {
+    usePreferenceEditor: (fail: () => void) => {
+      onFail = fail;
+      const [pref, setPref] = useState<Record<string, unknown>>({
+        budgetAlertThreshold: 85,
+        pushEnabled: true,
+      });
+      return {
+        pref,
+        query: { isLoading: false, isError: false },
+        save: (patch: Record<string, unknown>) => {
+          save(patch);
+          setPref((p) => ({ ...p, ...patch }));
+        },
+      };
+    },
+    useCurrentUser: () => ({
+      data: { userEmail: "a@example.com" },
+      isLoading: false,
+    }),
+  };
+});
 
 const { NotificationsManager } = await import("./NotificationsManager");
 
