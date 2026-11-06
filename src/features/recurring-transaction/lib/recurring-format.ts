@@ -122,7 +122,7 @@ export function endSentence(it: RecurringTransaction, t: TFunction): string {
 
 /**
  * 금액의 부호와 색 — 이체는 지출도 수입도 아니다. 지출은 `fg-neutral`(빨강으로 칠하지 않는다 · C 15 와 같은 규칙),
- * 수입은 `fg-brand`, 이체는 부호 없이 중립. 반복 목록에는 볼 기준 계좌가 없으므로 이체는 언제나 중립이다.
+ * 수입은 `fg-brand`, 이체는 부호 없이 중립. 금액 0 은 부호 없이 "0원". 반복 목록에는 볼 기준 계좌가 없으므로 이체는 언제나 중립이다.
  */
 export function recurringAmountTone(it: RecurringTransaction): {
   sign: string;
@@ -130,7 +130,9 @@ export function recurringAmountTone(it: RecurringTransaction): {
 } {
   if (it.expenseType === "TRANSFER")
     return { sign: "", className: "text-fg-neutral" };
+  // 0 은 부호 없이 "0원"(앱 recAmountText 와 같다 — 서버가 금액을 안 주면 0 으로 온다). 색은 종류를 따른다.
+  const zero = it.amount === 0;
   return it.expenseType === "EXPENSE"
-    ? { sign: "−", className: "text-fg-neutral" }
-    : { sign: "+", className: "text-fg-brand" };
+    ? { sign: zero ? "" : "−", className: "text-fg-neutral" }
+    : { sign: zero ? "" : "+", className: "text-fg-brand" };
 }

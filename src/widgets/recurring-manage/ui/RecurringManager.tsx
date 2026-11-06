@@ -272,7 +272,8 @@ export function RecurringManager({
         <span className="shrink-0 whitespace-nowrap text-end tabular-nums">
           {t("monthLead")}{" "}
           <MaskAmount card="etc.recurring">
-            {`${g.kind === "EXPENSE" ? MINUS : "+"}${money(g.total)}`}
+            {/* 0 은 부호 없이 "0원"(앱 _MonthTotal 과 같다) */}
+            {`${g.total === 0 ? "" : g.kind === "EXPENSE" ? MINUS : "+"}${money(g.total)}`}
           </MaskAmount>
         </span>
       )}

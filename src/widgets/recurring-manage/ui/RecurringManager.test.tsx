@@ -185,7 +185,9 @@ describe.each([
       named(1, { description: "쉬는줄", amount: 9_999, isActive: "N" }),
     ];
     const out = render(mobile);
-    expect(out).toContain(`monthLead ${MINUS}0원`);
+    // 합이 0 이면 부호 없이 "0원"(앱과 같다)
+    expect(out).toContain("monthLead 0원");
+    expect(out).not.toContain(`${MINUS}0원`);
     expect(out).toContain("paused");
     const row = container.querySelector<HTMLElement>("[data-slot=list-item]")!;
     expect(row.style.opacity).toBe("");
@@ -240,5 +242,20 @@ describe("줄", () => {
       [true, false],
     );
     expect(amounts[1]!.className).toContain("text-fg-brand");
+  });
+
+  it("금액이 0 이면 부호 없이 '0원' — 지출 · 수입 모두(색은 종류를 따른다)", () => {
+    state.items = [
+      named(1, { description: "지출영", amount: 0 }),
+      named(2, { expenseType: "INCOME", description: "수입영", amount: 0 }),
+    ];
+    render(true);
+    const amounts = [...container.querySelectorAll<HTMLElement>("span")].filter(
+      (el) =>
+        /0원$/.test(el.textContent ?? "") && el.className.includes("font-bold"),
+    );
+    expect(amounts.map((a) => a.textContent)).toEqual(["0원", "0원"]);
+    expect(amounts[1]!.className).toContain("text-fg-brand");
+    expect(container.textContent).not.toMatch(/[−+]0원/);
   });
 });

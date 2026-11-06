@@ -131,6 +131,19 @@ describe("반복 거래 상세", () => {
     expect(document.body.textContent).not.toContain("nextDatesTitle");
   });
 
+  it("금액은 지출 '−' · 수입 '+' · 0 이면 부호 없이 '0원'", () => {
+    const amountText = () =>
+      document.body.querySelector("p.text-t9")?.textContent ?? "";
+    show(item());
+    expect(amountText()).toBe("−234,560원");
+    show(item({ expenseType: "INCOME" }));
+    expect(amountText()).toBe("+234,560원");
+    show(item({ amount: 0 }));
+    expect(amountText()).toBe("0원");
+    show(item({ expenseType: "INCOME", amount: 0 }));
+    expect(amountText()).toBe("0원");
+  });
+
   it("[일시정지] 를 누르면 onToggle", () => {
     const toggle = vi.fn();
     show(item(), { toggle });
