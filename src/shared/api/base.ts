@@ -6,6 +6,7 @@ import type {
   AxiosResponse,
 } from "axios";
 import { rememberCurrentPath } from "@/shared/lib/groo/login-redirect";
+import { allowUnload } from "@/shared/lib/before-unload";
 import { beginAttempt, endChain } from "./request-budget";
 
 const AUTH_FLAG_KEY = "authenticated";
@@ -47,6 +48,8 @@ export type QuietRequestConfig = AxiosRequestConfig & {
    * "저장됐는지 확인하지 못했어요" 가 맞지 않아 `NOT_A_SAVE` 를 넘긴다(I-wrap-b2b 판단 (2) 예외).
    */
   confirmWrite?: boolean;
+  /** 보낼 때 기기가 오프라인이었나 — 요청 인터셉터가 적는다(검수 3차 M1). 오류가 난 때가 아니라 보낸 때로 가른다 */
+  sentOffline?: boolean;
 };
 
 /**
@@ -138,6 +141,9 @@ apiClient.interceptors.request.use(
     config.headers["Accept-Language"] = lang;
     // 불러오기는 처음 요청부터 다시 시도까지 합쳐 10초 안에 끝낸다(request-budget.ts)
     beginAttempt(config);
+    // 보내는 순간의 망 상태 — 응답 전에 끊겼을 때 "보내지도 못했다"(실패)와 "보냈는데 응답이 없다"(확인 못 함)를 가른다(검수 3차 M1)
+    (config as QuietRequestConfig).sentOffline =
+      typeof navigator !== "undefined" && navigator.onLine === false;
     return config;
   },
   (error) => Promise.reject(error),
@@ -152,6 +158,8 @@ apiClient.interceptors.request.use(
 
 // 401 동시 발생 시 redirect 1회만 — 병렬 query 가 401 로 떨어질 때 리다이렉트 중복 방지
 let isRedirectingToLogin = false;
+/** 로그인 이동이 이만큼 지나도 이 페이지에 남아 있으면 취소된 것으로 본다 */
+export const LOGIN_REDIRECT_SETTLE_MS = 3_000;
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -180,9 +188,16 @@ apiClient.interceptors.response.use(
         // 보던 자리를 적어 둔다 — 무음 재인증으로 돌아왔는데 늘 /desk 로 떨어지면
         // 세션이 끊긴 줄도 모르고 하던 일만 잃는다(QA #131).
         rememberCurrentPath();
+        // 의도한 이동이라 "사이트에서 나가시겠습니까?" 를 묻지 않는다 — 물어서 [취소] 하면 다시는 로그인으로 못 간다(검수 3차 M3)
+        const restoreUnload = allowUnload();
         // expired=1 — 로그인 페이지가 버튼 대기 없이 곧장 SSO 로 넘어가게 하는 신호.
         // SSO 에 Refresh 쿠키(7일)가 살아 있으면 무음 재인증으로 비밀번호 없이 돌아온다.
         window.location.href = "/login?expired=1";
+        // 이동이 취소돼 이 페이지에 남았으면(떠났다면 이 타이머는 돌지 않는다) 표식을 되돌린다 — 다음 401 이 다시 로그인으로 보낸다
+        window.setTimeout(() => {
+          isRedirectingToLogin = false;
+          restoreUnload();
+        }, LOGIN_REDIRECT_SETTLE_MS);
       }
       return Promise.reject(error);
     }
@@ -195,14 +210,15 @@ apiClient.interceptors.response.use(
         return Promise.reject(new WriteUnconfirmedError(status, kind));
       // 쓰기가 나갔는데 응답 전에 끊겼다(error.request 는 있고 response 가 없다) — 서버는 처리했을 수 있다.
       // 실패로 말하면 다시 눌러 두 번 들어간다 → PARSE 와 같은 "확인하지 못했어요" 쪽. 요청을 만들지도 못했거나
-      // (request 없음) 시간 제한(ECONNABORTED) · 취소, 그리고 **기기가 오프라인**이면(보내지도 못했다 — M2) 그대로 실패다.
+      // (request 없음) 시간 제한(ECONNABORTED) · 취소, 그리고 **보낼 때 이미 오프라인**이었으면(보내지도 못했다) 그대로 실패다.
+      // 보낼 땐 온라인이었는데 응답 전에 망이 끊기면(지하철) 서버에 닿았을 수 있어 확인 못 함이다(검수 3차 M1).
       // 서버 꺼짐 · CORS 는 오프라인과 구분이 안 돼 확인 쪽으로 둔다
       if (
         error.request != null &&
         error.response == null &&
         error.code !== "ECONNABORTED" &&
         error.code !== "ERR_CANCELED" &&
-        !(typeof navigator !== "undefined" && navigator.onLine === false)
+        !(error?.config as QuietRequestConfig | undefined)?.sentOffline
       )
         return Promise.reject(new WriteUnconfirmedError(0, kind));
     }

@@ -207,7 +207,7 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
     }
   });
 
-  it("기기가 오프라인이면(보내지도 못했다) 응답 없이 끊겨도 그대로 실패(검수 2차 M2)", async () => {
+  it("보낼 때 이미 오프라인이었으면(보내지도 못했다) 응답 없이 끊겨도 그대로 실패", async () => {
     const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
     apiClient.defaults.adapter = async (config) => {
       throw new AxiosError(
@@ -221,6 +221,28 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
     const r = await run(cases[0]![1], cases[0]![2]);
     expect(isWriteUnconfirmed(r.ok ? null : r.error)).toBe(false);
     expect(invalidate).not.toHaveBeenCalled();
+    online.mockRestore();
+  });
+
+  it("보낼 땐 온라인이었는데 응답 전에 망이 끊겼으면(오류 때 오프라인) 확인 못 함 + 다시 받기 — 서버에 닿았을 수 있다(검수 3차 M1)", async () => {
+    let offline = false;
+    const online = vi
+      .spyOn(navigator, "onLine", "get")
+      .mockImplementation(() => !offline);
+    apiClient.defaults.adapter = async (config) => {
+      // 보낸 뒤 망이 끊긴다
+      offline = true;
+      throw new AxiosError(
+        "Network Error",
+        "ERR_INTERNET_DISCONNECTED",
+        config as InternalAxiosRequestConfig,
+        {},
+      );
+    };
+    invalidate.mockClear();
+    const r = await run(cases[0]![1], cases[0]![2]);
+    expect(isWriteUnconfirmed(r.ok ? null : r.error)).toBe(true);
+    expect(invalidate).toHaveBeenCalled();
     online.mockRestore();
   });
 
