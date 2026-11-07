@@ -80,3 +80,18 @@ export function focusOpener(
       : null;
   target?.focus({ preventScroll: true });
 }
+
+/**
+ * 닫힌 뒤인데 `open` 이 아직 참이면 둘 중 하나다 — (a) 폭이 1280 을 넘나들어 다른 표면(시트 ↔ 대화상자)이 대신 떴다,
+ * (b) 부모가 `open` 을 그대로 둔 채 표면을 통째로 지웠다(상세 시트처럼 `{detail && <Sheet open />}`).
+ * (a) 는 새 표면이 초점을 가져가 초점이 표면 안에 있고, (b) 는 초점이 문서로 떨어진다. 그래서 초점이 다른 표면 안에 있을 때만
+ * 새 표면에 맡기고, 아니면 연 자리로 돌려준다(I-wrap-b5 1-b).
+ */
+export function surfaceTookOver(stillOpen: boolean) {
+  if (!stillOpen) return false;
+  const active = document.activeElement;
+  return (
+    active instanceof Element &&
+    active.closest('[role="dialog"],[role="alertdialog"]') !== null
+  );
+}

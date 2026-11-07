@@ -1,4 +1,5 @@
 // Bottom Sheet 의 동작 — 모양 · 색은 scripts/check-ds-spec.mjs 가 크로미움에서 스펙 값과 맞춘다.
+import * as React from "react";
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -324,6 +325,45 @@ describe("초점 · 모달", () => {
     await settle();
     await tick();
     expect(document.activeElement).toBe(byText("열기"));
+  });
+
+  it("부모가 open 을 둔 채 시트를 통째로 지워 닫아도 연 줄로 초점이 돌아온다(가계부 상세 — I-wrap-b5 1-b)", async () => {
+    const Host = () => {
+      const [shown, setShown] = React.useState(false);
+      return (
+        <>
+          <button
+            type="button"
+            data-testid="row"
+            onClick={() => setShown(true)}
+          >
+            줄
+          </button>
+          {shown && (
+            <BottomSheet open onOpenChange={(o) => !o && setShown(false)}>
+              <BottomSheetContent title="상세">
+                <BottomSheetBody>본문</BottomSheetBody>
+              </BottomSheetContent>
+            </BottomSheet>
+          )}
+        </>
+      );
+    };
+    render(<Host />);
+    const row = document.querySelector<HTMLElement>("[data-testid=row]")!;
+    act(() => row.focus());
+    act(() => row.click());
+    await tick();
+    expect(document.activeElement).toBe(sheet());
+    act(() => {
+      sheet()!.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+      );
+    });
+    await settle();
+    await tick();
+    await tick();
+    expect(document.activeElement).toBe(row);
   });
 
   it("뒤 화면을 보조 기술에서 숨기고 스크롤을 잠근다", async () => {

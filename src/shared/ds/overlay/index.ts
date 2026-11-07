@@ -1,5 +1,6 @@
 export {
   focusOpener,
+  surfaceTookOver,
   mergeRefs,
   useOpenState,
   withButtonSize,

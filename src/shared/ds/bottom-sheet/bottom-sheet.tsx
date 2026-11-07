@@ -9,6 +9,7 @@ import { useBeforeUnloadWhile } from "@/shared/lib/before-unload";
 import { useLeaveConfirm } from "@/shared/ds/alert-dialog";
 import {
   focusOpener,
+  surfaceTookOver,
   mergeRefs,
   useBackClose,
   useOpenState,
@@ -409,7 +410,7 @@ const BottomSheetSurface = React.forwardRef<
             if (e.defaultPrevented) return;
             e.preventDefault();
             // 아직 열려 있다 — 폭이 1280 을 넘어 대화상자로 바뀌어 다시 뜬다(ResponsiveDialog). 초점은 새 표면이 가져간다
-            if (refs.openRef.current) return;
+            if (surfaceTookOver(refs.openRef.current)) return;
             focusOpener(refs.triggerRef.current, openerRef.current);
           }}
           // Esc 는 늘 닫는다(바뀐 값이 있으면 먼저 묻는다) — vaul 을 거치지 않고 직접 청한다
