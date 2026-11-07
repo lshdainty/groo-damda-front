@@ -53,12 +53,14 @@ const SearchEntryButton = forwardRef<
       aria-haspopup="dialog"
       aria-label={t("search.label")}
       {...props}
+      // 보이는 높이 40(밑줄 입력 large — input.md 가 받아들인 값)은 그대로, 누르는 영역만 ::before 로 44 까지 넓힌다.
+      // 아래는 바로 밑 칩 탭이 맞닿아 있어 위쪽으로만 넓힌다(밑줄 아래 칸이 없다)
       // 트리거가 넘기는 data-slot(popover-trigger)에 덮이지 않게 펼친 뒤에 둔다 — 폭과 상관없이 같은 이름
       data-slot="stock-search-entry"
       className={cn(
         compact
-          ? "flex min-h-[40px] w-full cursor-pointer items-center gap-x2_5 py-x2 text-t6 text-fg-placeholder shadow-[inset_0_-1px_0_0_var(--color-stroke-neutral-weak)] lg:min-h-[34px] lg:gap-x2 lg:py-x1_5 lg:text-t5"
-          : "flex min-h-[40px] w-full cursor-pointer items-center gap-x2_5 py-x2 text-t6 text-fg-placeholder shadow-[inset_0_-1px_0_0_var(--color-stroke-neutral-weak)]",
+          ? "relative flex min-h-[40px] w-full cursor-pointer items-center gap-x2_5 py-x2 text-t6 text-fg-placeholder shadow-[inset_0_-1px_0_0_var(--color-stroke-neutral-weak)] before:absolute before:bottom-0 before:left-0 before:h-full before:min-h-[44px] before:w-full before:content-[''] lg:min-h-[34px] lg:gap-x2 lg:py-x1_5 lg:text-t5"
+          : "relative flex min-h-[40px] w-full cursor-pointer items-center gap-x2_5 py-x2 text-t6 text-fg-placeholder shadow-[inset_0_-1px_0_0_var(--color-stroke-neutral-weak)] before:absolute before:bottom-0 before:left-0 before:h-full before:min-h-[44px] before:w-full before:content-['']",
         className,
       )}
     >

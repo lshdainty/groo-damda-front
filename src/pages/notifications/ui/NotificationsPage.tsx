@@ -92,9 +92,10 @@ export function NotificationsPage() {
   };
 
   // 목록 위 상태 줄(머리말이 아니다 — h2 를 주지 않는다). 안 읽은 것이 0 이면 줄 전체를 두지 않는다.
+  // mt-x1: 상단 바 바로 아래라 "모두 읽음" 글 버튼(보이는 36)의 누르는 영역 44 가 바에 가렸다 — 위 여백 4 를 더한다
   const head =
     !isLoading && !loadFailed({ isError, data }) && unreadCount > 0 ? (
-      <ListHeader as="div" className="pt-x2">
+      <ListHeader as="div" className="mt-x1 pt-x2">
         <span>
           {t("popover.unreadPlain", { count: formatCount(unreadCount) })}
         </span>

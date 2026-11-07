@@ -66,7 +66,9 @@ export const ITEM = [
   "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-stroke-focus-ring",
 ].join(" ");
 // 접힘 — 40(56 − 좌우 8) · 좌우 10, 아이콘이 화면 끝에서 18
-export const ITEM_COLLAPSED = "w-[40px] px-x2_5";
+// 보이는 폭 40 은 스펙(56 − 안쪽 8 × 2) 그대로 — 누르는 영역만 ::before 로 가로 44 까지 넓힌다(높이는 이미 44)
+export const ITEM_COLLAPSED =
+  "w-[40px] px-x2_5 before:absolute before:inset-y-0 before:left-1/2 before:w-[44px] before:-translate-x-1/2 before:content-['']";
 export const ITEM_HOVER =
   "cursor-pointer hover:bg-bg-layer-default-pressed active:bg-bg-layer-default-pressed";
 // 지금 항목 — 한 단계 짙은 옅은 회색, 마우스를 올리거나 눌러도 그대로
