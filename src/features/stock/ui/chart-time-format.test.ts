@@ -39,10 +39,18 @@ describe("증권 차트 시각 표기 — 12시간, 0 을 채우지 않는다", 
     expect(fmtTick(sec(year, 11, 5, 9, 0), "1m")).toBe("오전 9:00");
   });
 
-  it("영어는 'Nov 5 9:05 AM'", async () => {
+  it("일봉 축은 해가 바뀌는 첫 눈금에만 연도를 붙인다", async () => {
+    await i18n.changeLanguage("ko");
+    expect(fmtTick(sec(year, 1, 2, 0, 0), "1d", true)).toBe(`${year}. 1. 2.`);
+    expect(fmtTick(sec(year, 1, 2, 0, 0), "1d", false)).toBe("1. 2.");
+    await i18n.changeLanguage("en");
+    expect(fmtTick(sec(year, 1, 2, 0, 0), "1d", true)).toBe(`Jan 2, ${year}`);
+  });
+
+  it("영어는 'Nov 5, 9:05 AM'(날짜 뒤 쉼표)", async () => {
     await i18n.changeLanguage("en");
     expect(fmtCrosshairTime(sec(year, 11, 5, 9, 5), "1m")).toBe(
-      "Nov 5 9:05 AM",
+      "Nov 5, 9:05 AM",
     );
     expect(fmtTick(sec(year, 11, 5, 9, 0), "1m")).toBe("9:00 AM");
   });

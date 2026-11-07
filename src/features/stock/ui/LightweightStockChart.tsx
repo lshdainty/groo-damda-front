@@ -18,6 +18,7 @@ import {
   ColorType,
   CrosshairMode,
   LineStyle,
+  TickMarkType,
   type IChartApi,
   type ISeriesApi,
   type CandlestickData,
@@ -296,7 +297,8 @@ export function LightweightStockChart({
           fmtCrosshairTime(time, intervalRef.current),
       },
       timeScale: {
-        tickMarkFormatter: (time: Time) => fmtTick(time, intervalRef.current),
+        tickMarkFormatter: (time: Time, type: TickMarkType) =>
+          fmtTick(time, intervalRef.current, type === TickMarkType.Year),
       },
     });
     chartRef.current = chart;
