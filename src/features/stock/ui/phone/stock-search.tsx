@@ -2,6 +2,7 @@ import { loadFailed } from "@/shared/api";
 import {
   forwardRef,
   useEffect,
+  useRef,
   useState,
   type ComponentPropsWithoutRef,
   type ReactNode,
@@ -85,6 +86,7 @@ export function StockSearchEntry({
 }) {
   const { t } = useTranslation("stocks");
   const surface = useInputButtonSurface();
+  const entryRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const body: ReactNode = open ? (
     <SearchBody
@@ -98,6 +100,7 @@ export function StockSearchEntry({
     <BottomSheet open={open} onOpenChange={setOpen}>
       <div className={className}>
         <SearchEntryButton
+          ref={entryRef}
           compact={compact}
           aria-expanded={open}
           onClick={() => setOpen(true)}
@@ -106,6 +109,11 @@ export function StockSearchEntry({
       <BottomSheetContent
         title={t("search.label")}
         onOpenAutoFocus={focusSearchableList}
+        // 닫으면 초점은 입구로(B3 3A) — 시트에는 트리거가 없어 Radix 가 돌려줄 곳을 모른다
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          entryRef.current?.focus({ preventScroll: true });
+        }}
       >
         <div className="flex min-h-0 flex-1 flex-col">{body}</div>
       </BottomSheetContent>

@@ -67,7 +67,7 @@ describe("구성 도넛 (I-wrap-b1 ε 8)", () => {
     expect(container.querySelector(".donut-wrap")).toBeNull();
   });
 
-  it("범례는 자산 구성과 같은 ds ChartDonutLegend — 색 칸 차트 색 순서(blue · green) · 비중 두 자리 · 평가액 원까지(자르지 않음)", () => {
+  it("범례는 자산 구성과 같은 ds ChartDonutLegend — 색 칸 차트 색 순서(blue · green) · 비중 한 자리 · 평가액 원까지(자르지 않음)", () => {
     act(() =>
       root.render(
         <CompositionBody
@@ -91,7 +91,7 @@ describe("구성 도넛 (I-wrap-b1 ε 8)", () => {
     const cell = (r: Element, slot: string) =>
       r.querySelector(`[data-slot=chart-donut-${slot}]`)!.textContent;
     expect(cell(rows[0]!, "label")).toBe("가나전자");
-    expect(cell(rows[0]!, "percent")).toBe("60.00%");
+    expect(cell(rows[0]!, "percent")).toBe("60.0%");
     expect(cell(rows[0]!, "amount")).toMatch(/^123,456,789/);
     // 옛 손 범례(List 줄 · 인라인 색 칸)가 없다
     expect(container.querySelector("[data-slot=list-item]")).toBeNull();
@@ -116,7 +116,7 @@ describe("구성 도넛 (I-wrap-b1 ε 8)", () => {
       .getAttribute("aria-label")!;
     expect(label).not.toMatch(/\d/);
     const legend = container.querySelector("[data-slot=chart-donut-legend]")!;
-    expect(legend.textContent).not.toMatch(/60\.00%|123,456,789/);
+    expect(legend.textContent).not.toMatch(/60\.0%|123,456,789/);
   });
 
   it('종목이 10개를 넘으면 상위 9 + "기타" 하나(회색) — 가운데 종목 수는 전체(I-wrap-b1 ε 검수 L1)', () => {

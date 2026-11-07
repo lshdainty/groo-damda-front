@@ -45,6 +45,7 @@ common,income,수입,Income
 common,expenseLabel,지출,Expense
 common,savings,저축,Savings
 common,others,기타,Others
+common,percentBelowShare,0.1% 미만,<0.1%
 common,transaction,거래,Transaction
 common,scheduled,예정,Scheduled
 common,refunded,환불됨,Refunded
@@ -1464,7 +1465,7 @@ budget,categoryAllocated,카테고리 할당,Category allocated
 budget,spendingPace,지출 페이스,Spending pace
 budget,paceNormal,정상 속도,On pace
 budget,paceFast,빠른 속도,Fast pace
-budget,monthElapsed,이번 달 {{percent}}% 경과 ↑,{{percent}}% of month elapsed ↑
+budget,monthElapsed,이번 달 {{percent}} 경과 ↑,{{percent}} of month elapsed ↑
 budget,dailyAvg,일평균 지출,Daily average
 budget,recommendedDaily,남은 일 권장 지출,Recommended daily spend
 budget,status,예산 현황,Budget status
@@ -1480,13 +1481,13 @@ budget,settings,설정,Settings
 budget,capUnset,"총 예산이 아직 없어요. 설정에서 이번 달 최대 지출 한도를 정할 수 있어요.",There is no total budget yet. You can set this month's spending limit in settings.
 budget,categorySumNow,현재 카테고리 한도 합계: {{amount}},Current category limit total: {{amount}}
 budget,manager.overCap,카테고리 한도 합이 총 예산을 {{amount}} 초과했어요. 총 예산을 올리거나 카테고리 한도를 줄여주세요.,Category limits exceed the total budget by {{amount}}. Raise the total budget or lower the category limits.
-budget,usedPct,{{percent}}% 사용,{{percent}}% used
+budget,usedPct,{{percent}} 사용,{{percent}} used
 budget,remainingAmt,남은 예산 {{amount}},{{amount}} left
 budget,overAmt,한도 {{amount}} 초과,Over the limit by {{amount}}
 budget,categoryCount,{{count}} 카테고리,{{count}} categories
 budget,budgetName,{{name}} 예산,{{name}} budget
 budget,paceName,이번 달 지출 페이스,Spending pace this month
-budget,paceValue,{{used}}% 사용 · 이번 달 {{elapsed}}% 지남,{{used}}% used · {{elapsed}}% of the month passed
+budget,paceValue,{{used}} 사용 · 이번 달 {{elapsed}} 지남,{{used}} used · {{elapsed}} of the month passed
 budget,complianceName,최근 6개월 예산 이행률,Budget compliance over the last 6 months
 budget,complianceTable.month,달,Month
 budget,complianceTable.percent,한도 대비,Vs limit
@@ -2598,7 +2599,7 @@ constellation,collection.todayBadge,오늘의 목표,Today's goal
 constellation,collection.timesCollected,{{count}}회,{{count}}×
 constellation,collection.notCollected,미수집,Not yet
 constellation,detail.notMet,아직 만나지 못한 별자리예요,A constellation you haven't met yet
-stats,trend.savingsInsight,월 평균 수입의 {{pct}}%를 저축하고 있어요,You're saving {{pct}}% of your average income
+stats,trend.savingsInsight,월 평균 수입의 {{pct}}를 저축하고 있어요,You're saving {{pct}} of your average income
 stats,compare.weekdayTitle,요일별 지출 비교,Spending by weekday
 stats,compare.weekdayInsightDown,{{dow}}요일 지출이 {{prev}}보다 {{amt}}원 줄었어요.,{{dow}} spending fell {{amt}} vs {{prev}}
 stats,compare.weekdayInsightSame,{{prev}}{{josa}} 비슷해요.,Similar to {{prev}}.
@@ -2721,6 +2722,7 @@ expense,txm.emptyMonthDesc,다른 달을 살펴보거나 첫 거래를 추가해
 expense,txm.today,오늘,Today
 expense,txm.yesterday,어제,Yesterday
 expense,txm.monthCalendar,월 달력,Month calendar
+expense,txm.cellHidden,금액 가림,Amounts hidden
 expense,txm.loadFailed,거래를 불러오지 못했어요,Couldn't load transactions
 expense,txm.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
 expense,txm.emptyFiltered,조건에 맞는 거래가 없어요,No transactions match
@@ -3139,9 +3141,9 @@ stats,fixed.fixed.expense,고정 지출,Fixed spending
 stats,fixed.fixed.income,고정 수입,Fixed income
 stats,fixed.variable.expense,고정 제외 지출,Spending excl. fixed
 stats,fixed.variable.income,고정 제외 수입,Income excl. fixed
-stats,fixed.bar.aria,"{{kind}} 중 고정 {{fixed}}%, 변동 {{variable}}%","{{fixed}}% fixed, {{variable}}% variable of {{kind}}"
-stats,fixed.insight.expense,지출의 {{pct}}%가 고정이에요. 고정을 뺀 지출은,{{pct}}% of spending is fixed. Spending excluding fixed is
-stats,fixed.insight.income,수입의 {{pct}}%가 고정이에요. 고정을 뺀 수입은,{{pct}}% of income is fixed. Income excluding fixed is
+stats,fixed.bar.aria,"{{kind}} 중 고정 {{fixed}}, 변동 {{variable}}","{{fixed}} fixed, {{variable}} variable of {{kind}}"
+stats,fixed.insight.expense,지출의 {{pct}}{{josa}} 고정이에요. 고정을 뺀 지출은,{{pct}} of spending is fixed. Spending excluding fixed is
+stats,fixed.insight.income,수입의 {{pct}}{{josa}} 고정이에요. 고정을 뺀 수입은,{{pct}} of income is fixed. Income excluding fixed is
 stats,fixed.empty.desc,월세·통신비·월급처럼 매달 정해진 거래를 고정으로 표시하면 여기서 따로 볼 수 있어요.,Mark monthly items like rent or salary as fixed to see them separately here
 stats,fixed.manage,거래를 고정으로 정리하기,Organize fixed items
 stats,fixed.manageHint,매달 같은 이름으로 나가는 돈은 한 번에 정리할 수 있어요,Items with the same name every month can be set in one go
@@ -3153,7 +3155,7 @@ stats,fixed.kind.income,수입,Income
 stats,fixed.legend.fixed,고정,Fixed
 stats,fixed.legend.variable,변동,Variable
 stats,fixed.category.title,카테고리별 고정·변동,Fixed vs. variable by category
-stats,fixed.category.fixedPart,그중 고정 {{pct}}%,Fixed {{pct}}%
+stats,fixed.category.fixedPart,그중 고정 {{pct}},Fixed {{pct}}
 stats,fixed.bulk.title,거래를 고정으로 정리하기,Organize fixed items
 stats,fixed.bulk.parent,통계,Stats
 stats,fixed.bulk.desc,{{start}} ~ {{end}} 기간의 거래예요. 매달 같은 이름으로 나가는 돈은 한 줄로 묶여 있어요. 돈이나 잔액은 달라지지 않고 통계의 분류만 바뀌어요.,"Transactions from {{start}} to {{end}}. Items with the same name are grouped. Balances don't change, only how statistics classify them."

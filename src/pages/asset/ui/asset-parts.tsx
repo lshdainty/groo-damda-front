@@ -49,7 +49,11 @@ import {
   chartColorOf,
   getPaletteByColor,
 } from "@/shared/lib/groo/chart-palette";
-import { MINUS, formatChangeRate } from "@/shared/lib/groo/format";
+import {
+  MINUS,
+  formatChangeRate,
+  formatPercent,
+} from "@/shared/lib/groo/format";
 import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
 import { useHideAmounts } from "@/shared/lib/groo/hide-amounts-core";
 import { useOpenHideAmountsSettings } from "@/shared/lib/groo/hide-amounts-nav";
@@ -429,7 +433,8 @@ export function AssetCompositionCard({
   const total = slices.reduce((s, x) => s + x.amount, 0);
   const totalLabel = active ? groupLabel(active) : t("assetTotal");
   const totalText = m(won(total));
-  const pct = (v: number) => `${Math.round((v / Math.max(1, total)) * 100)}%`;
+  const pct = (v: number) =>
+    formatPercent((v / Math.max(1, total)) * 100, "share");
 
   const debts = active
     ? []
@@ -905,7 +910,7 @@ export function SavingGoalItem({ goal }: { goal: SavingGoal }) {
           detail={`${formatDeadline(goal.deadlineDate) ?? t("savingGoal.noDeadline")} · ${m(amounts)}`}
           suffix={
             <span className="text-t5 font-bold tabular-nums text-fg-neutral">
-              {pct.toFixed(0)}%
+              {formatPercent(pct, "progress")}
             </span>
           }
         />

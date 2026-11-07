@@ -31,7 +31,11 @@ import { Badge } from "@/shared/ds/badge";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { formatDateSmart } from "@/shared/lib/date";
-import { MINUS, formatChangeRate } from "@/shared/lib/groo/format";
+import {
+  MINUS,
+  formatChangeRate,
+  formatPercent,
+} from "@/shared/lib/groo/format";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { useHideAmounts } from "@/shared/lib/groo/hide-amounts-core";
 import { ExpenseRow, type Expense } from "@/entities/expense";
@@ -442,7 +446,7 @@ export function CategoryBody({
   const showCenter = center && decisionFits;
   const showRow = !showCenter || !dsFits;
   const legendId = `home-cat-legend-${size}`;
-  const pct = (v: number) => `${Math.round((v / total) * 100)}%`;
+  const pct = (v: number) => formatPercent((v / total) * 100, "share");
   return (
     <div className="relative flex flex-col">
       {center && (

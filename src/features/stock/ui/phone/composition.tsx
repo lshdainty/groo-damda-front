@@ -15,6 +15,7 @@ import { ChartPie } from "lucide-react";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { cn } from "@/shared/lib/cn";
 import { MaskAmount } from "@/shared/lib/groo/hide-amounts";
+import { formatPercent } from "@/shared/lib/groo/format";
 
 /*
  * 포트폴리오 구성 본문(I-13 19) — 도넛 112 가운데(가운데 글 "{n}종목") + 아래 12 에 범례 줄.
@@ -29,8 +30,7 @@ export interface CompositionView {
   notice?: string;
 }
 
-const pctText = (n: number) =>
-  `${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+const pctText = (n: number) => formatPercent(n, "share");
 
 export function CompositionBody({
   data,

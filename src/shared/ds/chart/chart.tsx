@@ -516,7 +516,7 @@ function DonutLegendBody({ item }: { item: ChartDonutLegendItem }) {
       <span
         data-slot="chart-donut-percent"
         className={cn(
-          "tabular-nums text-fg-neutral-subtle",
+          "whitespace-nowrap tabular-nums text-fg-neutral-subtle",
           DONUT_NARROW.percent,
         )}
       >

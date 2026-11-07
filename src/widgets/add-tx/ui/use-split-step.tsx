@@ -560,6 +560,7 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
               const p = parentOf(c);
               const pal = getPaletteByColor(c?.color);
               const amt = Number(r.amount) || 0;
+              // 분할 비율은 사용자가 정한 값이라 비중이 아니다 — 정수 그대로
               const pct =
                 targetTotal > 0 ? Math.round((amt / targetTotal) * 100) : 0;
               return (

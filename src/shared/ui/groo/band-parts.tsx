@@ -8,6 +8,7 @@ import { Skeleton } from "@/shared/ds/skeleton";
 import { ProgressBar, type ProgressMeaning } from "@/shared/ds/progress";
 import { useDsText, withCommaBreaks } from "@/shared/ds/i18n";
 import { cn } from "@/shared/lib/cn";
+import { formatPercent } from "@/shared/lib/groo/format";
 
 /*
  * 폰 띠 · 흰 면 안 구역 부품 — 예산 · 예산 설정 · 저축 목표(I-08 공통 값)가 같이 쓴다. 홈(I-06)의 HomeHead 와 같은 값이다.
@@ -326,7 +327,7 @@ export function MeterBar({
     ? dsT("progress.over", { value: formatValue(current - max) })
     : reached
       ? dsT("progress.reached")
-      : `${Math.round(Math.min(ratio, 1) * 100)}%`;
+      : formatPercent(Math.min(ratio, 1) * 100, "progress");
   return (
     <ProgressBar
       className={className}

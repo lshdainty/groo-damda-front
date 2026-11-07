@@ -145,7 +145,7 @@ describe("차트 기간", () => {
 });
 
 describe("포트폴리오 구성", () => {
-  it("범례 줄 비중이 두 자리로 나오고 도넛 가운데에 종목 수", () => {
+  it("범례 줄 비중이 소수 한 자리로 나오고 도넛 가운데에 종목 수", () => {
     mount(
       <CompositionBody
         data={{
@@ -156,7 +156,7 @@ describe("포트폴리오 구성", () => {
         }}
       />,
     );
-    expect(host.textContent).toContain("98.95%");
+    expect(host.textContent).toContain("98.9%");
     expect(host.textContent).toContain("unit.stocksCount");
   });
   it("환율이 없으면 도넛 대신 안내", () => {

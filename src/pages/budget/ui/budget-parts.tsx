@@ -27,7 +27,7 @@ import { cn } from "@/shared/lib/cn";
 import { formatMonthShort } from "@/shared/lib/date";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
-import { MINUS } from "@/shared/lib/groo/format";
+import { MINUS, formatPercent } from "@/shared/lib/groo/format";
 import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
 import {
   BandEmpty,
@@ -142,7 +142,9 @@ export function TotalSection({
                 formatValue={(n) => mask(won(n))}
               />
               <BarCaption
-                left={t("usedPct", { percent: m.pct.toFixed(0) })}
+                left={t("usedPct", {
+                  percent: formatPercent(m.pct, "progress"),
+                })}
                 right={
                   left >= 0
                     ? t("remainingAmt", { amount: mask(won(left)) })
@@ -291,8 +293,8 @@ export function PaceSection({
             max={Math.max(m.totalLimit, 0)}
             formatValue={(n) => mask(won(n))}
             valueText={t("paceValue", {
-              used: m.pct.toFixed(0),
-              elapsed: elapsed.toFixed(0),
+              used: formatPercent(m.pct, "progress"),
+              elapsed: formatPercent(elapsed, "progress"),
             })}
           />
           {/* 오늘 표시선 2 × 14 — 막대 위로 3, 장식(aria-hidden) */}
@@ -304,8 +306,10 @@ export function PaceSection({
           />
         </div>
         <BarCaption
-          left={t("usedPct", { percent: m.pct.toFixed(0) })}
-          right={t("monthElapsed", { percent: elapsed.toFixed(0) })}
+          left={t("usedPct", { percent: formatPercent(m.pct, "progress") })}
+          right={t("monthElapsed", {
+            percent: formatPercent(elapsed, "progress"),
+          })}
         />
       </Body>
       {place === "band" ? (
@@ -609,7 +613,9 @@ function ComplianceTip({
         ] as never
       }
       valueFormatter={(v, key) =>
-        key === "percent" ? `${Number(v).toFixed(1)}%` : mask(won(Number(v)))
+        key === "percent"
+          ? formatPercent(Number(v), "progress")
+          : mask(won(Number(v)))
       }
     />
   );
@@ -713,7 +719,7 @@ export function ComplianceSection({
                     dataKey="percent"
                     position="top"
                     formatter={(v: unknown) =>
-                      v == null ? "" : `${Math.round(Number(v))}%`
+                      v == null ? "" : formatPercent(Number(v), "progress")
                     }
                     style={{
                       fontSize: 12,
@@ -734,7 +740,7 @@ export function ComplianceSection({
               ]}
               rows={data.map((d) => [
                 d.label,
-                d.percent == null ? "-" : `${d.percent.toFixed(1)}%`,
+                d.percent == null ? "-" : formatPercent(d.percent, "progress"),
                 mask(won(d.spent)),
                 mask(won(d.limit)),
               ])}

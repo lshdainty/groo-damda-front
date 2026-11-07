@@ -25,6 +25,7 @@ import { withCommaBreaks } from "@/shared/ds/i18n";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthTicks } from "@/shared/lib/date";
 import { niceCeil } from "@/shared/lib/groo/chartAxis";
+import { formatPercent } from "@/shared/lib/groo/format";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
 import {
   BandEmpty,
@@ -32,7 +33,11 @@ import {
   BandHead,
   Desc,
 } from "@/shared/ui/groo/band-parts";
-import { splitFixed, type FixedSplit } from "@/entities/expense";
+import {
+  fixedShareTexts,
+  splitFixed,
+  type FixedSplit,
+} from "@/entities/expense";
 import type {
   CategoryBreakdown,
   ExpenseCategory,
@@ -74,6 +79,7 @@ function RatioBar({
   ariaLabel: string;
 }) {
   const fixedPct = split.total === 0 ? 0 : (split.fixed / split.total) * 100;
+  const shares = fixedShareTexts(split);
   const cell =
     "flex h-full items-center justify-center overflow-hidden whitespace-nowrap text-t2 font-bold text-fg-neutral-inverted";
   return (
@@ -87,7 +93,7 @@ function RatioBar({
           className={cell}
           style={{ width: `${fixedPct}%`, background: FIXED_COLOR }}
         >
-          {fixedPct >= 14 ? `${split.fixedPercent}%` : ""}
+          {fixedPct >= 14 ? shares.fixed : ""}
         </div>
       )}
       {split.variable > 0 && (
@@ -95,7 +101,7 @@ function RatioBar({
           className={cn(cell, "flex-1")}
           style={{ background: VARIABLE_COLOR }}
         >
-          {100 - fixedPct >= 14 ? `${100 - split.fixedPercent}%` : ""}
+          {100 - fixedPct >= 14 ? shares.variable : ""}
         </div>
       )}
     </div>
@@ -179,6 +185,7 @@ export function FixedOverviewSection({
       </>
     );
   }
+  const shares = fixedShareTexts(split);
   const noFixed = split.fixed === 0;
   const figures = [
     {
@@ -193,14 +200,14 @@ export function FixedOverviewSection({
       label: t(`fixed.fixed.${kind}`),
       value: split.fixed,
       swatch: true,
-      sub: `${split.fixedPercent}%`,
+      sub: shares.fixed,
     },
     {
       key: "variable",
       label: t(`fixed.variable.${kind}`),
       value: split.variable,
       swatch: false,
-      sub: `${100 - split.fixedPercent}%`,
+      sub: shares.variable,
     },
   ];
   const label = (f: (typeof figures)[number]) => (
@@ -219,8 +226,8 @@ export function FixedOverviewSection({
             split={split}
             ariaLabel={t("fixed.bar.aria", {
               kind: t(`fixed.total.${kind}`),
-              fixed: split.fixedPercent,
-              variable: 100 - split.fixedPercent,
+              fixed: shares.fixed,
+              variable: shares.variable,
             })}
           />
         </div>
@@ -269,7 +276,14 @@ export function FixedOverviewSection({
             </>
           ) : (
             <Desc>
-              {t(`fixed.insight.${kind}`, { pct: split.fixedPercent })}{" "}
+              {t(`fixed.insight.${kind}`, {
+                pct: shares.fixed,
+                // "0.1% 미만이" / "33.2%가" — 값 끝 글자에 따라(0.05% 미만이면 글이 "미만" 으로 끝난다)
+                josa:
+                  split.fixedPercent > 0 && split.fixedPercent < 0.05
+                    ? "이"
+                    : "가",
+              })}{" "}
               <strong className="font-bold text-fg-neutral">
                 {mask(won(split.variable))}
               </strong>
@@ -649,7 +663,9 @@ export function FixedCategorySection({
                 </div>
                 {s.fixed > 0 && (
                   <p className="m-0 mt-x1 text-t3 text-fg-neutral-subtle">
-                    {t("fixed.category.fixedPart", { pct: s.fixedPercent })}
+                    {t("fixed.category.fixedPart", {
+                      pct: formatPercent(s.fixedPercent, "share"),
+                    })}
                     {place === "card" && ` · ${mask(won(s.fixed))}`}
                   </p>
                 )}

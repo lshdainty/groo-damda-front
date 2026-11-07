@@ -36,6 +36,7 @@ import { downloadBlob } from "@/shared/lib/download";
 import { PeriodField } from "@/widgets/transaction-search/ui/PeriodField";
 import { DataImportSection } from "./DataImportSection";
 import { ActionBar, DataSection } from "./DataTransferParts";
+import { TYPE_SLUG, buildFilename, iso, resolveRange } from "./export-range";
 import {
   downloadExport,
   ExportStalledError,
@@ -104,69 +105,6 @@ const PERIODS: { v: ExportPeriod; labelKey: string }[] = [
   { v: "THIS_YEAR", labelKey: "section.period.thisYear" },
   { v: "CUSTOM", labelKey: "section.period.custom" },
 ];
-
-const SLUG_TO_EXT: Record<ExportFormat, string> = {
-  CSV: "csv",
-  EXCEL: "xlsx",
-  JSON: "json",
-};
-const TYPE_SLUG: Record<ExportDataType, string> = {
-  EXPENSE: "expense",
-  ASSET: "asset",
-  BUDGET: "budget",
-  CATEGORY: "category",
-  MEMO: "memo",
-  CALENDAR: "calendar",
-  TODO: "todo",
-};
-
-// ─── 날짜 유틸 (백엔드 PeriodResolver 와 동일 규칙) ───────────────
-
-const pad = (n: number) => String(n).padStart(2, "0");
-const iso = (d: Date) =>
-  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
-interface Range {
-  start: string;
-  end: string;
-}
-
-function resolveRange(
-  period: ExportPeriod,
-  customFrom: string,
-  customTo: string,
-): Range {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const firstOf = (yy: number, mm: number) => new Date(yy, mm, 1);
-  const lastOf = (yy: number, mm: number) => new Date(yy, mm + 1, 0);
-  switch (period) {
-    case "THIS_MONTH":
-      return { start: iso(firstOf(y, m)), end: iso(lastOf(y, m)) };
-    case "LAST_MONTH":
-      return { start: iso(firstOf(y, m - 1)), end: iso(lastOf(y, m - 1)) };
-    case "LAST_3_MONTHS":
-      return { start: iso(firstOf(y, m - 2)), end: iso(lastOf(y, m)) };
-    case "THIS_YEAR":
-      return { start: iso(new Date(y, 0, 1)), end: iso(lastOf(y, m)) };
-    case "CUSTOM":
-      return { start: customFrom, end: customTo };
-  }
-}
-
-function buildFilename(
-  format: ExportFormat,
-  types: ExportDataType[],
-  range: Range,
-): string {
-  const ext = SLUG_TO_EXT[format];
-  const rangePart = `${range.start}_${range.end}`;
-  if (format !== "EXCEL" && types.length > 1)
-    return `groo-export-${rangePart}.zip`;
-  const namePart = types.length === 1 ? TYPE_SLUG[types[0]!] : "export";
-  return `groo-${namePart}-${rangePart}.${ext}`;
-}
 
 // ─── 메인 섹션 ─────────────────────────────────────────────────
 

@@ -209,6 +209,39 @@ describe("목록 짜임 · 페이스 값 글 · 한 줄 금액 쌓기(검수 12 
     expect(meter.getAttribute("aria-valuetext")).toContain("paceValue");
   });
 
+  it("예산 이행률 — 표 · 사용률 글이 같은 정수다(B3 1A 진행률: 76.43 → 76%, 한 자리 아님)", () => {
+    state.compliance = q(
+      months([100, 100, 100, 100, 100, 100]).map((r) => ({
+        ...r,
+        compliancePercent: 76.43,
+      })),
+    );
+    render();
+    const cells = Array.from(section("compliance").querySelectorAll("td")).map(
+      (td) => td.textContent,
+    );
+    expect(cells).toContain("76%");
+    expect(cells.join("|")).not.toMatch(/76\.4/);
+    const meter = section("pace").querySelector("[role=meter]")!;
+    expect(meter.getAttribute("aria-valuetext")).toMatch(/"used":"\d+%"/);
+  });
+
+  it("이행률 100 을 넘으면 글에서 사라지지 않는다 — 100.3 → 101%, 99.6 → 99%", () => {
+    state.compliance = q(
+      months([100, 100, 100, 100, 100, 100]).map((r, i) => ({
+        ...r,
+        compliancePercent: i === 0 ? 100.3 : 99.6,
+      })),
+    );
+    render();
+    const cells = Array.from(section("compliance").querySelectorAll("td")).map(
+      (td) => td.textContent,
+    );
+    expect(cells).toContain("101%");
+    expect(cells).toContain("99%");
+    expect(cells).not.toContain("100%");
+  });
+
   it("키-값 스켈레톤 줄은 실제 줄(38 = py-x2)과 같고 달 줄 위는 12(pt-x3)", () => {
     state.summary = q(undefined);
     render();

@@ -26,7 +26,7 @@ import {
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { cn } from "@/shared/lib/cn";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
-import { formatChangeRate } from "@/shared/lib/groo/format";
+import { formatChangeRate, formatPercent } from "@/shared/lib/groo/format";
 import { RangePickerSheet } from "./RangePickerSheet";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
 import { Icon } from "@/shared/ui/groo/primitives";
@@ -286,7 +286,7 @@ function DonutBody({ m, place }: { m: StatsModel; place: Placement }) {
   );
 }
 
-function DonutChartBody({
+export function DonutChartBody({
   m,
   place,
   size,
@@ -311,7 +311,7 @@ function DonutChartBody({
   const showRow = !showCenter || !dsFits;
   const legendId = `stats-donut-legend-${place}`;
   const pct = (v: number) =>
-    total > 0 ? `${((v / total) * 100).toFixed(1)}%` : "0.0%";
+    formatPercent(total > 0 ? (v / total) * 100 : 0, "share");
   const name = t("chart.donutName", {
     period: m.periodLbl,
     total: totalText,

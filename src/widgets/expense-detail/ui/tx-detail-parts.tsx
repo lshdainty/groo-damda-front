@@ -351,6 +351,7 @@ export function SplitSection({
         {splits.map((s) => {
           const { cat, parent } = splitTone(categories, s.categoryRowId);
           const pal = getPaletteByColor(cat?.color);
+          // 분할 비율은 사용자가 정한 값이라 비중이 아니다 — 정수 그대로
           const pct = total > 0 ? Math.round((s.amount / total) * 100) : 0;
           return (
             <ListItem

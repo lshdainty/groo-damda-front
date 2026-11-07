@@ -8,7 +8,14 @@ import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthDayDow } from "@/shared/lib/date";
-import { KRW, MINUS, formatDay, isEn, minusOf } from "@/shared/lib/groo/format";
+import {
+  KRW,
+  MINUS,
+  formatDay,
+  isEn,
+  minusOf,
+  money,
+} from "@/shared/lib/groo/format";
 import {
   INSIGHT_SAME_MAX,
   insightDiffAmount,
@@ -56,6 +63,7 @@ import {
 import {
   LedgerCell,
   LedgerCellAmt,
+  LedgerCellMoney,
   LedgerCellNum,
   LedgerCellTip,
   LedgerBar,
@@ -309,6 +317,23 @@ export function ExpenseMobile({
   );
 
   const insightHidden = useHideAmounts(INSIGHT_CARDS, "expense");
+  const cellOutHidden = useHideAmounts(CALENDAR_CELL_CARDS, "expense");
+  const cellInHidden = useHideAmounts(CALENDAR_CELL_CARDS, "income");
+  // 날 칸 이름 — 칸의 금액은 점일 수 있어 화면 낭독은 칸 이름에 원까지 넣는다(B3 2A). 가린 금액은 이름에도 없다.
+  const cellName = (ds: string, data?: { out: number; inn: number }) => {
+    const d = formatDay(ds);
+    const parts = [`${d.md} (${d.dow})`];
+    const showOut = !!data && data.out > 0;
+    const showIn = !!data && data.inn > 0;
+    if (showOut && !cellOutHidden)
+      parts.push(`${t("expense")} ${MINUS}${money(data.out)}`);
+    if (showIn && !cellInHidden)
+      parts.push(`${t("income")} +${money(data.inn)}`);
+    // 가린 금액은 값 대신 "금액 가림" 한 번(앱과 같은 이름)
+    if ((showOut && cellOutHidden) || (showIn && cellInHidden))
+      parts.push(t("txm.cellHidden"));
+    return parts.join(", ");
+  };
   const insight = useMemo(() => {
     if (isLoadingList || isLoadingSummary) return null;
     if (expenses.length === 0) return <>{t("txm.insightNone")}</>;
@@ -638,6 +663,7 @@ export function ExpenseMobile({
                         <LedgerCell
                           key={c.ds}
                           selected={isSel}
+                          aria-label={cellName(c.ds, data)}
                           onClick={() => {
                             setSelected(c.ds);
                             if (data) {
@@ -674,7 +700,7 @@ export function ExpenseMobile({
                           </LedgerCellNum>
                           {/* 지출·수입 병기(각 줄) — 색은 아래 리스트와 동일(사용자 결정). 빼기는 U+2212. */}
                           {data && data.out > 0 && (
-                            <LedgerCellAmt tone="expense">
+                            <LedgerCellMoney tone="expense">
                               <MaskAmount
                                 card={CALENDAR_CELL_CARDS}
                                 kind="expense"
@@ -683,10 +709,10 @@ export function ExpenseMobile({
                                 {MINUS}
                                 {KRW(data.out)}
                               </MaskAmount>
-                            </LedgerCellAmt>
+                            </LedgerCellMoney>
                           )}
                           {data && data.inn > 0 && (
-                            <LedgerCellAmt tone="income">
+                            <LedgerCellMoney tone="income">
                               <MaskAmount
                                 card={CALENDAR_CELL_CARDS}
                                 kind="income"
@@ -694,7 +720,7 @@ export function ExpenseMobile({
                               >
                                 +{KRW(data.inn)}
                               </MaskAmount>
-                            </LedgerCellAmt>
+                            </LedgerCellMoney>
                           )}
                           {!data &&
                             (isLoadingList ? (

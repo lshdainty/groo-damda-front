@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { amountFor, splitFixed } from "./fixed-split";
+import { amountFor, fixedShareTexts, splitFixed } from "./fixed-split";
 
 describe("splitFixed — 전체 · 고정 · 변동", () => {
   it("변동은 전체에서 고정을 뺀 값이다", () => {
@@ -7,7 +7,7 @@ describe("splitFixed — 전체 · 고정 · 변동", () => {
     expect(s.total).toBe(1_530_000);
     expect(s.fixed).toBe(1_400_000);
     expect(s.variable).toBe(130_000);
-    expect(s.fixedPercent).toBe(92);
+    expect(s.fixedPercent).toBeCloseTo(91.5, 1);
   });
 
   it("옛 서버가 고정을 안 보내면 전부 변동이다 — 기존 화면 그대로", () => {
@@ -35,9 +35,9 @@ describe("splitFixed — 전체 · 고정 · 변동", () => {
     expect(splitFixed(null, null).total).toBe(0);
   });
 
-  it("비율은 반올림한 정수다 — 1/3 은 33", () => {
-    expect(splitFixed(3, 1).fixedPercent).toBe(33);
-    expect(splitFixed(3, 2).fixedPercent).toBe(67);
+  it("비율은 반올림하지 않는다 — 자리수는 화면의 비중 규칙이 정한다", () => {
+    expect(splitFixed(3, 1).fixedPercent).toBeCloseTo(33.3333, 3);
+    expect(splitFixed(3, 2).fixedPercent).toBeCloseTo(66.6667, 3);
   });
 });
 
@@ -47,5 +47,23 @@ describe("amountFor — 보기에 맞는 금액", () => {
     expect(amountFor(s, "all")).toBe(1_000);
     expect(amountFor(s, "variable")).toBe(300);
     expect(amountFor(s, "fixed")).toBe(700);
+  });
+});
+
+describe("fixedShareTexts — 앱(ds/b3-b-app 477421ff)과 같은 입력 표", () => {
+  // [전체, 고정, 고정 글, 변동 글] — 변동 = 100 − 반올림한 고정, 한쪽이 0 초과 0.05 미만이면 "0.1% 미만", 전체 0 이면 0.0 / 0.0
+  it.each([
+    [3, 1, "33.3%", "66.7%"],
+    [3, 2, "66.7%", "33.3%"],
+    [10_000, 4, "0.1% 미만", "100.0%"],
+    [10_000, 9_996, "100.0%", "0.1% 미만"],
+    [1_000, 1_000, "100.0%", "0.0%"],
+    [1_000, 0, "0.0%", "100.0%"],
+    [0, 0, "0.0%", "0.0%"],
+    [800, 245, "30.6%", "69.4%"],
+    [10_000, 1_225, "12.3%", "87.7%"], // 옛 계산은 87.75 → 87.8 로 합이 100.1
+  ])("전체 %i · 고정 %i → 고정 %s · 변동 %s", (total, fixed, f, v) => {
+    const r = fixedShareTexts(splitFixed(total, fixed));
+    expect(r).toEqual({ fixed: f, variable: v });
   });
 });
