@@ -24,10 +24,9 @@ common,search,검색,Search
 common,confirm,확인,Confirm
 common,loading,로딩 중...,Loading...
 common,noData,데이터가 없어요.,No data
-common,apiError,문제가 생겼어요. 잠시 후 다시 시도해주세요,Something went wrong. Please try again.
+common,apiError,문제가 생겼어요. 잠시 뒤 다시 시도해주세요.,Something went wrong. Please try again.
 common,close,닫기,Close
 common,add,추가,Add
-common,newTab,새 탭,new tab
 common,next,다음,Next
 common,prev,이전,Previous
 common,loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
@@ -636,7 +635,7 @@ asset,savingGoal.deleteNamed,{{name}} 목표 삭제,Delete {{name}} goal
 asset,savingGoal.remaining,남은 금액,Remaining
 asset,savingGoal.achievedAt,달성일,Achieved on
 asset,savingGoal.saveFailed,저축 목표를 저장하지 못했어요.,Couldn't save the saving goal.
-asset,savingGoal.firstContributeFailed,목표는 만들었지만 첫 납입을 기록하지 못했어요.,Created the goal, but couldn't record the first deposit.
+asset,savingGoal.firstContributeFailed,목표는 만들었지만 첫 납입을 기록하지 못했어요.,"Created the goal, but couldn't record the first deposit."
 asset,savingGoal.errName,목표 이름을 입력해주세요.,Enter a goal name.
 asset,savingGoal.errAmount,목표 금액을 입력해주세요.,Enter a goal amount.
 asset,savingGoal.errCurrentExceeds,현재 모은 금액이 목표 금액보다 클 수 없어요.,The amount saved can't exceed the target amount.
@@ -1500,7 +1499,6 @@ category,name,이름,Name
 category,namePlaceholder,"예: 반려동물, 부수입","e.g. Pets, Side income"
 dutchPay,fromTx.title,더치페이 시작,Start Dutch Pay
 dutchPay,detailTitle,정산 상세,Settlement details
-dutchPay,fromTx.description,"이 거래를 기준으로 더치페이 정산을 만듭니다. 참여자에게 송금 요청을 보내고, 정산 진행 상황을 추적할 수 있어요.",Create a Dutch Pay settlement based on this transaction. Send payment requests to participants and track settlement progress.
 dutchPay,fromTx.me,나,Me
 dutchPay,fromTx.perPerson,1인당,Per person
 dutchPay,fromTx.createSettlement,정산 만들기,Create settlement
