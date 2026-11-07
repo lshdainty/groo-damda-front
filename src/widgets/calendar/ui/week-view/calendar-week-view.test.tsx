@@ -242,7 +242,7 @@ describe("주 보기 이름 · 차례 · 처음 스크롤", () => {
 
   it("처음 스크롤 — 일정이 없으면 오전 8시", () => {
     render([]);
-    expect(scroller().scrollTop).toBe(8 * 96);
+    expect(scroller().scrollTop).toBe(8 * 96 - 12);
   });
 
   it("처음 스크롤 — 그 주 가장 이른 일정이 8시보다 이르면 그 시각", () => {
@@ -252,12 +252,22 @@ describe("주 보기 이름 · 차례 · 처음 스크롤", () => {
         endDate: "2026-10-20T07:30:00",
       }),
     ]);
-    expect(scroller().scrollTop).toBe(6 * 96);
+    expect(scroller().scrollTop).toBe(6 * 96 - 12);
+  });
+
+  it("처음 스크롤 — 0시가 첫 시각이고 일정이 0시면 0 아래로 가지 않는다", () => {
+    render([
+      event(1, {
+        startDate: "2026-10-20T00:00:00",
+        endDate: "2026-10-20T01:00:00",
+      }),
+    ]);
+    expect(scroller().scrollTop).toBe(0);
   });
 
   it("처음 스크롤 — 일정이 8시 이후면 8시", () => {
     render([event(1)]);
-    expect(scroller().scrollTop).toBe(8 * 96);
+    expect(scroller().scrollTop).toBe(8 * 96 - 12);
   });
 
   it("지난주에 시작한 여러 날 일정의 이번 주 첫 조각이 제목을 단 button 이다", () => {

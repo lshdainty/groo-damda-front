@@ -364,7 +364,8 @@ const CalendarWeekView = ({
   const weekKey = weekStart.getTime();
   useLayoutEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = Math.max(0, startHour - firstHour) * 96;
+    // 시간 라벨이 칸선보다 12px 위에 있어 그만큼 더 올린다(글자가 요일 머리에 가리지 않게). 0 아래로는 가지 않는다
+    if (el) el.scrollTop = Math.max(0, (startHour - firstHour) * 96 - 12);
   }, [weekKey, startHour, firstHour]);
 
   return (
