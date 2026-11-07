@@ -2144,7 +2144,7 @@ stocks,trade.sell,매도,Sell
 stocks,trade.buy,매수,Buy
 stocks,trade.pending,주문은 곧 열려요.,Orders are coming soon.
 stocks,fee.us,미국주식 매매수수료 0.1% · 환전 수수료 별도 적용,US stocks: 0.1% trading fee · FX fee applies separately
-stocks,fee.kr,국내주식 매매수수료 무료 (2026.6까지) · 이후 KRX 0.015% / NXT 0.014%,Korean stocks: free trading (until Jun 2026) · then KRX 0.015% / NXT 0.014%
+stocks,fee.kr,국내주식 매매수수료 무료 (2026년 6월까지) · 이후 KRX 0.015% / NXT 0.014%,Korean stocks: free trading (until Jun 2026) · then KRX 0.015% / NXT 0.014%
 stocks,disclaimer.line1,토스증권 Open API 연동 시 실시간 호가 · 체결가가 반영돼요.,Real-time quotes and trades appear when Toss Securities Open API is connected.
 stocks,disclaimer.line2,시세는 투자 참고용이에요. 실제 주문은 약관에 동의한 뒤 할 수 있어요.,Quotes are for reference only. Actual orders require agreeing to the terms.
 stocks,chart.brokerRequired,차트는 증권사를 연결하면 볼 수 있어요,Connect a brokerage to see the chart
@@ -2267,17 +2267,17 @@ stats,dow.fri,금,Fri
 stats,dow.sat,토,Sat
 stats,dow.sun,일,Sun
 stats,heatRow.morning,아침,Morning
-stats,heatRow.morningSub,06–10시,6–10am
+stats,heatRow.morningSub,06~10시,6–10am
 stats,heatRow.lunch,점심,Lunch
-stats,heatRow.lunchSub,10–14시,10am–2pm
+stats,heatRow.lunchSub,10~14시,10am–2pm
 stats,heatRow.afternoon,오후,Afternoon
-stats,heatRow.afternoonSub,14–18시,2–6pm
+stats,heatRow.afternoonSub,14~18시,2–6pm
 stats,heatRow.evening,저녁,Evening
-stats,heatRow.eveningSub,18–22시,6–10pm
+stats,heatRow.eveningSub,18~22시,6–10pm
 stats,heatRow.night,심야,Late night
-stats,heatRow.nightSub,22–02시,10pm–2am
+stats,heatRow.nightSub,22~02시,10pm–2am
 stats,heatRow.dawn,새벽,Dawn
-stats,heatRow.dawnSub,02–06시,2–6am
+stats,heatRow.dawnSub,02~06시,2–6am
 stats,trend.title,수입 · 지출 추이,Income & expense trend
 stats,trend.savings,순저축,Net savings
 stats,trend.avgIncome,평균 수입,Avg. income
@@ -3095,7 +3095,7 @@ stats,fixed.category.title,카테고리별 고정 · 변동,Fixed vs. variable b
 stats,fixed.category.fixedPart,그중 고정 {{pct}},Fixed {{pct}}
 stats,fixed.bulk.title,거래를 고정으로 정리하기,Organize fixed items
 stats,fixed.bulk.parent,통계,Stats
-stats,fixed.bulk.desc,{{start}} ~ {{end}} 기간의 거래예요. 매달 같은 이름으로 나가는 돈은 한 줄로 묶여 있어요. 돈이나 잔액은 달라지지 않고 통계의 분류만 바뀌어요.,"Transactions from {{start}} to {{end}}. Items with the same name are grouped. Balances don't change, only how statistics classify them."
+stats,fixed.bulk.desc,{{range}} 기간의 거래예요. 매달 같은 이름으로 나가는 돈은 한 줄로 묶여 있어요. 돈이나 잔액은 달라지지 않고 통계의 분류만 바뀌어요.,"Transactions for {{range}}. Items with the same name are grouped. Balances don't change, only how statistics classify them."
 stats,fixed.bulk.untitled,이름 없는 거래,Untitled
 stats,fixed.bulk.targetAria,바꿀 방향,Change to
 stats,fixed.bulk.toFixed,고정으로 표시,Mark as fixed
@@ -3332,7 +3332,7 @@ expense,filter.assetClear,{{name}} 지우기,Remove {{name}}
 expense,filter.amountChip,금액,Amount
 expense,filter.chipMore,{{first}} 외 {{count}}개,{{first}} +{{count}} more
 expense,filter.chipExcludeMore,{{first}} 외 {{count}}개 빼고,Excluding {{first}} +{{count}} more
-expense,filter.chipRange,{{min}} ~ {{max}},{{min}} – {{max}}
+expense,filter.chipRange,{{min}}~{{max}},{{min}}–{{max}}
 expense,list.title,거래,Transactions
 calendar,sourceChipLabel,캘린더 {{count}}개 보는 중,Showing {{count}} calendars
 calendar,header.prevWeek,이전 주,Previous week

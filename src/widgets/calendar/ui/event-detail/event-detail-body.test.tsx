@@ -128,7 +128,7 @@ describe("줄 차례 · 없는 값", () => {
     expect(rowText("form.recurrence")).toContain("recurrence.weekly");
   });
 
-  it("종일이면 시작 · 종료 대신 종일 줄 하나 — 여러 날이면 ~ 끝 날짜가 붙는다", () => {
+  it("종일이면 시작 · 종료 대신 종일 줄 하나 — 여러 날이면 ~ 로 붙은 한 글이다", () => {
     render(
       event({
         isAllDay: true,
@@ -141,7 +141,14 @@ describe("줄 차례 · 없는 값", () => {
       "form.allDay",
       "form.recurrence",
     ]);
-    expect(rowText("form.allDay")).toMatch(/10월 22일.*~ 10월 24일/);
+    expect(rowText("form.allDay")).toMatch(/10월 22일 \(목\)~10월 24일 \(토\)/);
+    // 줄은 "~" 뒤에서만 바뀐다 — 앞 조각은 "~" 로 끝나 한 덩어리, 뒤 조각도 한 덩어리, 사이는 wbr 하나
+    const range = container.querySelector("[data-slot=event-detail-range]")!;
+    const [head, , tail] = [...range.children] as HTMLElement[];
+    expect(head!.textContent).toMatch(/\(목\)~$/);
+    expect(head!.className).toContain("whitespace-nowrap");
+    expect(tail!.className).toContain("whitespace-nowrap");
+    expect(range.querySelector("wbr")).not.toBeNull();
   });
 
   it("꺾쇠가 없다 — 보기만 하는 줄이고 누르는 버튼도 없다", () => {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { dsText } from "@/shared/ds/i18n";
 import { Button } from "@/shared/ds/button";
 import {
   ResponsiveDialog,
@@ -81,7 +82,7 @@ export function AdvancedFilter({
                     setDraft({ ...draft, min: digits(e.target.value) })
                   }
                 />
-                <span aria-hidden>~</span>
+                <span aria-hidden>{dsText("datePicker.rangeSeparator")}</span>
                 <Input
                   inputMode="numeric"
                   aria-label={t("searchMax")}

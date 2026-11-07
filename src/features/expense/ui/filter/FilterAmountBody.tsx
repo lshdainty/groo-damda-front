@@ -2,6 +2,7 @@ import { Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ds/button";
 import { Input } from "@/shared/ds/input";
+import { dsText } from "@/shared/ds/i18n";
 import {
   blockNonDigitKey,
   sanitizeAmountInput,
@@ -40,7 +41,7 @@ export function FilterAmountBody({
               onKeyDown={blockNonDigitKey}
             />
             <span aria-hidden className="text-fg-neutral-subtle">
-              ~
+              {dsText("datePicker.rangeSeparator")}
             </span>
             <Input
               inputMode="numeric"

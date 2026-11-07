@@ -9,11 +9,11 @@ import { MINUS, money } from "@/shared/lib/groo/format";
 import { MaskAmount } from "@/shared/lib/groo/hide-amounts";
 import { won } from "@/shared/lib/groo/money-text";
 import { withCommaBreaks } from "@/shared/ds/i18n";
+import { formatDateRange } from "@/shared/lib/date";
 import { BandFailure, BigAmount, ListTitle } from "@/shared/ui/groo/band-parts";
 import type { Asset } from "@/entities/asset";
 import { useAssetMask } from "../../lib/asset-groups";
 import type { CardDetail } from "./use-card-detail";
-import { fmtBillingDate } from "./detail-shared";
 import { PeriodPicker } from "./CardOverlays";
 
 const NOTE = "m-0 px-global-gutter pt-x1 text-t3 text-fg-neutral-subtle";
@@ -61,7 +61,7 @@ export function CardBilling({
   const noCycle = st == null;
   const period =
     st?.periodStart && st?.periodEnd
-      ? `${fmtBillingDate(st.periodStart)} ~ ${fmtBillingDate(st.periodEnd)}`
+      ? formatDateRange(st.periodStart, st.periodEnd)
       : null;
   const mix = st?.scheduled && (st.installments?.length ?? 0) > 0;
   const closedMix = closed && (st.installments?.length ?? 0) > 0;

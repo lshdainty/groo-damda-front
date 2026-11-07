@@ -144,7 +144,7 @@ describe("목록 보기 줄", () => {
     expect(lists[0]!.textContent).toContain("개천절");
     const row = lists[1]!.querySelector<HTMLButtonElement>("button")!;
     expect(row.textContent).toContain("회의");
-    expect(row.textContent).toContain("오후 2:00 ~ 오후 3:00");
+    expect(row.textContent).toContain("오후 2:00~오후 3:00");
     expect(
       row.closest("li")!.querySelector("[data-slot=list-tile]"),
     ).not.toBeNull();
@@ -164,7 +164,7 @@ describe("목록 보기 줄", () => {
     expect(rows).toHaveLength(3);
     for (const r of rows) {
       expect(r.textContent).toContain("출장");
-      expect(r.textContent).toContain("종일 · 10월 10일 ~ 12일");
+      expect(r.textContent).toContain("종일 · 10월 10일~12일");
     }
   });
 

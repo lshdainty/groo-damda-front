@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/shared/ds/badge";
 import { formatDateValue } from "@/shared/ds/date-picker";
+import { dsText } from "@/shared/ds/i18n";
 import { List, ListItem } from "@/shared/ds/list";
 import { formatTimeValue } from "@/shared/ds/time-picker";
 import { cn } from "@/shared/lib/cn";
@@ -46,6 +47,23 @@ function Piece({ muted, children }: { muted?: boolean; children: ReactNode }) {
       className={cn("whitespace-nowrap", muted && "text-fg-neutral-subtle")}
     >
       {children}
+    </span>
+  );
+}
+
+/**
+ * 여러 날 값 — "10월 25일 (토)~10월 27일 (월)" 한 글. 구간 기호는 앞뒤를 붙여 쓰고(로케일 문구),
+ * 줄은 구간 기호 뒤에서만 바꾼다(통계 기간 버튼과 같은 규칙) — 날짜 안에서는 자르지 않는다.
+ */
+function RangePiece({ start, end }: { start: string; end: string }) {
+  return (
+    <span data-slot="event-detail-range">
+      <span className="whitespace-nowrap">
+        {start}
+        {dsText("datePicker.rangeSeparator")}
+      </span>
+      <wbr />
+      <span className="whitespace-nowrap">{end}</span>
     </span>
   );
 }
@@ -185,8 +203,11 @@ export function EventDetailBody({
             suffixText
             suffix={
               <Pieces>
-                <Piece>{dayText(start)}</Piece>
-                {!sameDay && <Piece>{`~ ${dayText(end)}`}</Piece>}
+                {sameDay ? (
+                  <Piece>{dayText(start)}</Piece>
+                ) : (
+                  <RangePiece start={dayText(start)} end={dayText(end)} />
+                )}
               </Pieces>
             }
           />

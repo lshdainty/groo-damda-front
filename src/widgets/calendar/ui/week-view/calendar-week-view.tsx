@@ -26,6 +26,7 @@ import {
 import { eventLineDetail } from "@/widgets/calendar/lib/event-line";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthDayDow } from "@/shared/lib/date";
+import { dsText } from "@/shared/ds/i18n";
 
 import type { IEvent } from "@/widgets/calendar/model/interfaces";
 
@@ -324,7 +325,8 @@ const EventBlock = ({
 
       {durationInMinutes > 25 && (
         <span className="block">
-          {format(start, timeFormat, { locale })} ~{" "}
+          {format(start, timeFormat, { locale })}
+          {dsText("datePicker.rangeSeparator")}
           {format(end, timeFormat, { locale })}
         </span>
       )}

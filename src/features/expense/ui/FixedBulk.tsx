@@ -31,6 +31,7 @@ import { ParentLink } from "@/shared/ui/groo/parent-link";
 import { PageHead } from "@/shared/ui/groo/page-head";
 import { useRegisterLeaveGuard } from "@/shared/ui/groo/leave-guard-context";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
+import { formatDateRange } from "@/shared/lib/date";
 import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import type { ExpenseType } from "@/entities/expense";
 import { groupCheck, toggleGroup } from "../lib/fixed-groups";
@@ -356,7 +357,9 @@ function FixedBulkBody({
         id={descId}
         className={`m-0 ${px} pt-x2 text-t3 text-fg-neutral-muted`}
       >
-        {t("fixed.bulk.desc", { start: startDate, end: endDate })}
+        {t("fixed.bulk.desc", {
+          range: formatDateRange(startDate, endDate),
+        })}
       </p>
       <div className={`flex flex-col gap-x2_5 ${px} pt-x4`}>
         <SegmentedControl

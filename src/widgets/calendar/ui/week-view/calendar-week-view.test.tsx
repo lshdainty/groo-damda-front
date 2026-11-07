@@ -88,14 +88,14 @@ describe("주 보기 일정 칩", () => {
     expect(chip.tagName).toBe("BUTTON");
     expect(chip.type).toBe("button");
     expect(chip.getAttribute("aria-label")).toMatch(
-      /^10월 20일 \(화\) · 팀 회의 · 오전 10:00 ~ 오전 11:30/,
+      /^10월 20일 \(화\) · 팀 회의 · 오전 10:00~오전 11:30/,
     );
   });
 
-  it('칩 안 시각은 하루 패널과 같이 "오전 10:00 ~ 오전 11:30"(~ 앞뒤 띄움)이다', () => {
+  it('칩 안 시각은 하루 패널과 같이 "오전 10:00~오전 11:30"(~ 앞뒤 붙임)이다', () => {
     render([event(1)]);
     const chip = container.querySelector("button")!;
-    expect(chip.textContent).toContain("오전 10:00 ~ 오전 11:30");
+    expect(chip.textContent).toContain("오전 10:00~오전 11:30");
     expect(chip.textContent).not.toMatch(/ - /);
   });
 
@@ -141,7 +141,7 @@ describe("주 보기 일정 칩", () => {
     const buttons = [...container.querySelectorAll("button")];
     expect(buttons).toHaveLength(1);
     expect(buttons[0]!.getAttribute("aria-label")).toMatch(
-      /^10월 19일 \(월\) · 출장 · 종일 · 10월 19일 ~ 21일/,
+      /^10월 19일 \(월\) · 출장 · 종일 · 10월 19일~21일/,
     );
     expect(container.querySelectorAll("[data-part]").length).toBe(3);
     expect(container.querySelectorAll("[data-part][aria-hidden]").length).toBe(

@@ -11,16 +11,6 @@ export const groupOf = (asset: Asset): AssetGroup => {
   return "account";
 };
 
-/** 'yyyy-MM-dd' → 'M.d' 표기 — app _fmtDate 미러. */
-export function fmtBillingDate(iso: string): string {
-  const [, mm, dd] = iso.split("-");
-  if (mm == null || dd == null) return iso;
-  const m = parseInt(mm, 10);
-  const d = parseInt(dd, 10);
-  if (!Number.isFinite(m) || !Number.isFinite(d)) return iso;
-  return `${m}.${d}`;
-}
-
 export function currentYearMonth(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;

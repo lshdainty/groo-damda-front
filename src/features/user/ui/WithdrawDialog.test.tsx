@@ -26,7 +26,9 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (k: string) => k }),
+  useTranslation: () => ({
+    t: (k: string, o?: { date?: string }) => (o?.date ? `${k}|${o.date}` : k),
+  }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 vi.mock("sonner", () => ({ toast: { success: () => {}, error: () => {} } }));
@@ -246,6 +248,13 @@ describe("구독이 막을 때", () => {
     expect(document.body.textContent).toContain(
       "withdraw.blockedSubscriptionUntil",
     );
+  });
+
+  // 날짜는 화면 규칙대로 쓴다("10월 1일") — 서버 키 그대로 "2026-10-01" 을 보이지 않는다(2026-11-07 B4)
+  it("날짜를 규칙대로 쓴다 — ISO 가 아니라 '10월 1일'", () => {
+    const text = document.body.textContent ?? "";
+    expect(text).toMatch(/blockedSubscriptionUntil\|(\d{4}년 )?10월 1일/);
+    expect(text).not.toContain("2026-10-01");
   });
 });
 
