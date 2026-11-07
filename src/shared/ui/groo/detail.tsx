@@ -55,48 +55,6 @@ export function DetailHero({
   );
 }
 
-/** 기준 거래 플랫 행 — 서브 다이얼로그(분할·더치·반복) 상단 공통. 하단 구분선 포함. */
-export function DetailSourceTx({
-  icon,
-  title,
-  sub,
-  amount,
-  className,
-}: {
-  /** 좌측 카테고리 아이콘 노드 (CategoryChip sm 등). */
-  icon?: React.ReactNode;
-  title: React.ReactNode;
-  /** 하단 보조 줄 (날짜 · 용도 설명 등). */
-  sub?: React.ReactNode;
-  /** 우측 금액 슬롯 — 색·부호는 사용처가 지정. */
-  amount: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "mb-4 flex items-center gap-3 border-b border-[var(--border-subtle)] px-0.5 pt-0.5 pb-4",
-        className,
-      )}
-    >
-      {icon}
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[length:var(--text-body-sm)] font-semibold text-[var(--fg-primary)]">
-          {title}
-        </div>
-        {sub && (
-          <div className="mt-0.5 truncate text-[length:var(--text-caption)] text-[var(--fg-tertiary)]">
-            {sub}
-          </div>
-        )}
-      </div>
-      <div className="num shrink-0 text-[length:var(--text-body-lg)] font-extrabold text-[var(--fg-primary)]">
-        {amount}
-      </div>
-    </div>
-  );
-}
-
 /** 필드 묶음 — 히어로와 border-top 으로 구분되는 플랫 영역. */
 export function DetailFieldGroup({
   className,

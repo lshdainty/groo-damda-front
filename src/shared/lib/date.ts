@@ -324,15 +324,6 @@ export const toLocalDateKey = (
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 };
 
-/** 서버 `[UTC]` 시각 → 로컬 'YYYY-MM-DD HH:mm'. 못 읽으면 null. [toLocalDateKey] 와 같은 이유. */
-export const toLocalDateTime = (
-  iso: string | null | undefined,
-): string | null => {
-  const d = parseServerUtc(iso);
-  if (!d) return null;
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-};
-
 /**
  * **로컬** 달력 기준 오늘 'YYYY-MM-DD'.
  *

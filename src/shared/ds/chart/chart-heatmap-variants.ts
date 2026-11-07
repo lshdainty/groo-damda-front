@@ -1,5 +1,3 @@
-import { formatWon } from "./chart-variants";
-
 /*
  * 열지도의 값 — 세기 다섯 단계와 단계마다 글자색. 수치 원본은 groo-design specs/components/chart.yaml 의 heatmapCell · heatmapValue.
  */
@@ -60,9 +58,6 @@ export function heatStep(
           ? 3
           : 4;
 }
-
-/** 칸 값 — 기본 원까지 */
-export const defaultHeatValue = formatWon;
 
 // ── 단계마다 글자색 ───────────────────────────────────────────
 type Rgb = [number, number, number];

@@ -56,12 +56,6 @@ export const useCancelSubscription = () => {
   });
 };
 
-/** 증권사를 하나라도 연결했는지 — 자산 연동·증권 화면 노출 판정. */
-export const useHasBrokerConnection = (): boolean => {
-  const { data } = useMyFeatures({ reference: true });
-  return (data?.connectedBrokers?.length ?? 0) > 0;
-};
-
 /**
  * 전 증권사 연결 상태(미연결 포함). 설정 화면이 목록을 그리는 소스이자,
  * 사이드바·증권 화면이 표시명(`displayName`)을 가져오는 곳.

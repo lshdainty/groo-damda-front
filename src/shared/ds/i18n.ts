@@ -66,7 +66,3 @@ export const withCommaBreaks = (text: ReactNode): ReactNode => {
 /** 돈 — {@link dsMoney} 와 같은 글, 쉼표 뒤마다 줄바꿈 자리(`<wbr>`)를 넣어 돌려준다. 이름 · 복사에는 {@link dsMoney}(글)를 쓴다 */
 export const dsMoneyText = (n: number): ReactNode =>
   withCommaBreaks(dsMoney(n));
-
-/** 숫자를 지금 로케일로 */
-export const dsNumber = (n: number, opts?: Intl.NumberFormatOptions) =>
-  n.toLocaleString(dsLocale(), opts);

@@ -1,8 +1,5 @@
-import type { ComponentProps, CSSProperties, ReactNode } from "react";
-import { Card, CardContent } from "@/shared/ui/card";
+import type { ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
-
-type CardProps = ComponentProps<typeof Card>;
 
 /**
  * ScreenBands — Desk 폰 구역 화면의 바탕(groo-design DESIGN Layout "화면 바탕" — 2026-10-21 I-01 결정 3).
@@ -30,28 +27,5 @@ export function ScreenBands({
     >
       {children}
     </div>
-  );
-}
-
-/**
- * BandSurface — 폰은 구역 띠가 면이라 껍데기 없이, 데스크톱은 카드(옛 Card)로 같은 내용을 감싼다.
- * 폰 구역 화면에서 카드를 띠 안에 두지 않기 위한 것이다(I-01 결정 3 — "한 화면은 한 방식만").
- */
-export function BandSurface({
-  mobile,
-  children,
-  variant,
-  style,
-}: {
-  mobile: boolean;
-  children: ReactNode;
-  variant?: CardProps["variant"];
-  style?: CSSProperties;
-}) {
-  if (mobile) return <div>{children}</div>;
-  return (
-    <Card variant={variant} style={style}>
-      <CardContent>{children}</CardContent>
-    </Card>
   );
 }

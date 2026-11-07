@@ -19,12 +19,6 @@ export function todayISO(): string {
   return `${d.getFullYear()}-${PAD(d.getMonth() + 1)}-${PAD(d.getDate())}`;
 }
 
-export function shiftYm(ym: string, dir: -1 | 1): string {
-  const [y = 0, m = 1] = ym.split("-").map(Number);
-  const d = new Date(y, m - 1 + dir, 1);
-  return `${d.getFullYear()}-${PAD(d.getMonth() + 1)}`;
-}
-
 export function isDone(t: Todo): boolean {
   return t.status === "COMPLETED";
 }

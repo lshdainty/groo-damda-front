@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { PageHead } from "@/shared/ui/groo/page-head";
@@ -11,39 +11,6 @@ import { useSettingsFrame } from "@/shared/ui/groo/settings-frame-context";
  */
 
 const SHELL_CLS = "flex flex-col gap-4";
-
-export const MANAGER_LAYOUT = {
-  shellClassName: SHELL_CLS,
-  toolbarStyle: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    flexWrap: "wrap",
-  } as CSSProperties,
-  searchWrapStyle: {
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-  } as CSSProperties,
-  searchIconStyle: {
-    position: "absolute",
-    left: 10,
-    color: "var(--fg-tertiary)",
-    pointerEvents: "none" as const,
-  } as CSSProperties,
-  searchInputStyle: {
-    padding: "8px 12px 8px 30px",
-    border: "1px solid var(--border-subtle)",
-    borderRadius: "var(--radius-md)",
-    font: "13px/1 var(--font-sans)",
-    background: "var(--bg-surface)",
-    color: "var(--fg-primary)",
-    minWidth: 220,
-    outline: "none",
-    fontFamily: "inherit",
-  } as CSSProperties,
-} as const;
 
 export function ManagerShell({
   className = "",

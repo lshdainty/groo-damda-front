@@ -4,4 +4,3 @@ export {
   transferPartiesReady,
   transferPartiesLabel,
 } from "./model/rules";
-export { TransferAccountFields } from "./ui/TransferAccountFields";
