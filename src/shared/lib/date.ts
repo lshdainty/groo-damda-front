@@ -69,18 +69,11 @@ export const getWeekDays = (): string[] => (isEnLocale() ? DOW_EN : DOW_KO);
 export const weekdayShort = (input: Date | string): string =>
   getWeekDays()[toDate(input).getDay()] ?? "";
 
-/** ko "M월 D일"(pad 시 "07월 08일") / en "Jul 8". */
-export const formatMonthDay = (
-  input: Date | string,
-  opts: { pad?: boolean } = {},
-): string => {
+/** ko "M월 D일"(0 을 채우지 않는다) / en "Jul 8". */
+export const formatMonthDay = (input: Date | string): string => {
   const d = toDate(input);
   if (isEnLocale()) return format(d, "MMM d", { locale: enUS });
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  return opts.pad
-    ? `${String(m).padStart(2, "0")}월 ${String(day).padStart(2, "0")}일`
-    : `${m}월 ${day}일`;
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
 };
 
 /**
@@ -165,7 +158,7 @@ export const formatYearMonthDot = (input: Date | string): string => {
 };
 
 /**
- * 기간 줄 — ko "11월 2일~11월 8일" / en "Nov 2~Nov 8"(올해 줄임, 0 채움 없음, 물결표는 앞뒤를 붙인다 — DESIGN.desk.md 구간).
+ * 기간 줄 — ko "11월 2일~11월 8일" / en "Nov 2–8"(올해 줄임, 0 채움 없음, 구간 기호는 앞뒤를 붙인다 — DESIGN.desk.md 구간 · 영어는 en dash, 같은 달이면 끝은 날짜만).
  * 두 끝 중 하나라도 올해가 아니면 두 끝 모두 연도를 붙인다("2025년 12월 29일~2026년 1월 4일") — 연도 없이 끝만 달라 보이는 것을 막는다.
  * 앱 `dateRange` 와 같다. `now` 는 시험용(올해를 고정한다).
  */
@@ -174,13 +167,21 @@ export const formatDateRange = (
   to: Date | string,
   now: Date = new Date(),
 ): string => {
+  const a = toDate(from);
+  const b = toDate(to);
   const thisYear = now.getFullYear();
-  const withYear =
-    toDate(from).getFullYear() !== thisYear ||
-    toDate(to).getFullYear() !== thisYear;
-  const one = (x: Date | string) =>
-    withYear ? formatDateLong(x) : formatMonthDay(x);
-  return `${one(from)}~${one(to)}`;
+  const withYear = a.getFullYear() !== thisYear || b.getFullYear() !== thisYear;
+  if (isEnLocale()) {
+    // 영어 — 같은 달이면 끝은 날짜만("Nov 2–8"), 구간 기호는 en dash 를 붙여 쓴다
+    const sameMonth =
+      a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+    const one = (x: Date) =>
+      format(x, withYear ? "MMM d, yyyy" : "MMM d", { locale: enUS });
+    if (sameMonth && !withYear) return `${one(a)}–${b.getDate()}`;
+    return `${one(a)}–${one(b)}`;
+  }
+  const one = (x: Date) => (withYear ? formatDateLong(x) : formatMonthDay(x));
+  return `${one(a)}~${one(b)}`;
 };
 
 /**
@@ -213,18 +214,15 @@ export const formatYearQuarter = (input: Date | string): string => {
     : `${d.getFullYear()}년 ${q}분기`;
 };
 
-/** 단월 라벨 — ko "M월"(pad 시 "07월") / en "MMM"(Jul). 월 number(1~12) 직접 허용. */
-export const formatMonthShort = (
-  input: Date | string | number,
-  opts: { pad?: boolean } = {},
-): string => {
+/** 단월 라벨 — ko "M월"(0 을 채우지 않는다) / en "MMM"(Jul). 월 number(1~12) 직접 허용. */
+export const formatMonthShort = (input: Date | string | number): string => {
   if (isEnLocale()) {
     const d =
       typeof input === "number" ? new Date(2000, input - 1, 1) : toDate(input);
     return format(d, "MMM", { locale: enUS });
   }
   const m = typeof input === "number" ? input : toDate(input).getMonth() + 1;
-  return opts.pad ? `${String(m).padStart(2, "0")}월` : `${m}월`;
+  return `${m}월`;
 };
 
 /**

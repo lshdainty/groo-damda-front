@@ -30,6 +30,7 @@ import { toggleVariants } from "@/shared/ds/toggle";
 import { Badge } from "@/shared/ds/badge";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
+import { formatDateSmart } from "@/shared/lib/date";
 import { MINUS, formatChangeRate } from "@/shared/lib/groo/format";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { useHideAmounts } from "@/shared/lib/groo/hide-amounts-core";
@@ -716,7 +717,7 @@ export function TodoRows({
                     isOver && "text-fg-critical",
                   )}
                 >
-                  {td.dueDate.slice(5, 10)}
+                  {formatDateSmart(td.dueDate.slice(0, 10))}
                 </span>
               ) : undefined
             }

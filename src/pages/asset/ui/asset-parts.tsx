@@ -648,7 +648,7 @@ export function UpcomingBillsSection() {
         title: r.description || r.merchant || r.categoryName,
         amount: r.amount,
         daysLeft,
-        dateLabel: `${String(next.getMonth() + 1).padStart(2, "0")}/${String(next.getDate()).padStart(2, "0")}`,
+        dateLabel: formatMonthDay(next),
       };
     });
 

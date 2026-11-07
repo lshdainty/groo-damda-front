@@ -1,7 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import { i18n } from "@/shared/i18n/config";
-import { formatDateRange, formatMonthTicks, formatYearMonthDot } from "./date";
+import {
+  formatDateRange,
+  formatMonthDay,
+  formatMonthShort,
+  formatMonthTicks,
+  formatYearMonthDot,
+} from "./date";
 
 afterEach(async () => {
   await i18n.changeLanguage("ko");
@@ -22,6 +28,20 @@ describe("날짜 규칙 — 기간 줄 · 월 눈금 · 점 연월 (웹 B3 가.5
     expect(formatDateRange("2025-03-01", "2025-03-05", now)).toBe(
       "2025년 3월 1일~2025년 3월 5일",
     );
+  });
+  it("기간 줄 영어 — 같은 달이면 'Nov 2–8'(en dash 붙임), 달이 다르면 양끝, 다른 해면 양끝 연도", async () => {
+    await i18n.changeLanguage("en");
+    expect(formatDateRange("2026-11-02", "2026-11-08", now)).toBe("Nov 2–8");
+    expect(formatDateRange("2026-10-29", "2026-11-04", now)).toBe(
+      "Oct 29–Nov 4",
+    );
+    expect(formatDateRange("2025-12-29", "2026-01-04", now)).toBe(
+      "Dec 29, 2025–Jan 4, 2026",
+    );
+  });
+  it("0 을 채운 날짜가 나오지 않는다 — 7월 8일 · 5월", () => {
+    expect(formatMonthDay("2026-07-08")).toBe("7월 8일");
+    expect(formatMonthShort(5)).toBe("5월");
   });
   it("월 눈금 — 한 해 안이면 '1월'(0 을 채우지 않는다), 섞이면 '2026. 1.'", () => {
     expect(
