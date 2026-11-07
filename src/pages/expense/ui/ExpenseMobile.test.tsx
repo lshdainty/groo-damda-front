@@ -565,6 +565,17 @@ describe("검수 고침 — 요약 0 원 · 실패 틀 · 빼기 부호", () => 
     expect(container.textContent).toContain("−5,000");
     expect(cell).toBeTruthy();
   });
+
+  it("날 칸 이름에 그날 지출 · 수입이 원까지 든다 — 칸 금액이 점이어도 낭독은 같다(B3 2A)", () => {
+    render();
+    const names = Array.from(
+      container.querySelectorAll<HTMLElement>("button[data-sel]"),
+    ).map((b) => b.getAttribute("aria-label") ?? "");
+    expect(names.length).toBeGreaterThan(0);
+    expect(names.some((n) => /지출 −5,000원/.test(n))).toBe(true);
+    // 금액이 없는 날은 날짜만
+    expect(names.some((n) => !/지출|수입/.test(n) && n.length > 0)).toBe(true);
+  });
 });
 
 describe("첫 진입 스켈레톤 — 실제 달력과 같은 주 · 같은 칸", () => {

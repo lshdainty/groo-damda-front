@@ -425,6 +425,71 @@ export function LedgerCellAmt({
   );
 }
 
+/**
+ * 칸 금액(금액이 있는 날) — 원까지 쓴 금액이 **칸에 들어가면 그대로**, 안 들어가면 금액 대신 점 `•`(B3 2A).
+ * 말줄임 `…` 는 쓰지 않는다 — 잘린 값은 틀린 값처럼 읽히므로 줄이지 않고 글을 뺀다(10-08 규칙).
+ *
+ * - 들어가는지는 **실제 폭**으로 잰다: 금액 글(점일 때도 눈에 안 보이게 남겨 둔다)의 폭 ↔ 칸 폭.
+ *   자리수 규칙이 아니다 — 글자 200% 에서는 여섯 자리도 안 들어간다. ResizeObserver 가 칸 · 글 둘 다 지켜 폭 · 글자 크기가 바뀌면 다시 잰다.
+ * - 점은 금액 글과 같은 줄(t1)이라 줄 높이가 안 바뀐다. 색은 지출 fg-neutral · 수입 fg-brand 그대로.
+ * - 점은 aria-hidden — 금액은 부르는 쪽이 날 칸 이름(aria-label)에 원까지 넣는다. 금액 가림(MaskAmount)은 children 안에서 그대로 걸린다.
+ */
+export function LedgerCellMoney({
+  className,
+  tone,
+  children,
+}: {
+  className?: string;
+  tone?: "expense" | "income";
+  children: React.ReactNode;
+}) {
+  const wrapRef = React.useRef<HTMLSpanElement>(null);
+  const textRef = React.useRef<HTMLSpanElement>(null);
+  const [fits, setFits] = React.useState(true);
+  React.useLayoutEffect(() => {
+    const wrap = wrapRef.current;
+    const text = textRef.current;
+    const cell = wrap?.parentElement;
+    if (!wrap || !text || !cell) return;
+    // 소수 폭까지 잰다(scrollWidth · clientWidth 는 정수로 반올림돼 0.4 넘침을 놓친다). 글 span 은 inline-block 이라야 폭이 잡힌다
+    const measure = () =>
+      setFits(
+        text.getBoundingClientRect().width <=
+          cell.getBoundingClientRect().width,
+      );
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(cell);
+    observer.observe(text);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <span
+      ref={wrapRef}
+      data-slot="ledger-cell-money"
+      data-dot={!fits || undefined}
+      className={cn(
+        "num relative max-w-full overflow-hidden whitespace-nowrap text-t1 font-bold tabular-nums",
+        "min-h-x3",
+        tone === "income" ? "text-fg-brand" : "text-fg-neutral",
+        className,
+      )}
+    >
+      <span
+        ref={textRef}
+        aria-hidden={!fits || undefined}
+        className={cn(
+          "inline-block",
+          !fits && "invisible absolute left-0 top-0",
+        )}
+      >
+        {children}
+      </span>
+      {!fits && <span aria-hidden>{"\u2022"}</span>}
+    </span>
+  );
+}
+
 /** 주 1줄 ↔ 월 전체 토글 — Button ghost medium iconOnly. 이름은 부르는 쪽이 aria-label("월 달력") + aria-expanded 로. */
 export function LedgerExpand({
   expanded = false,
