@@ -277,6 +277,30 @@ const ENTER =
 // 원 모드 — 영역 가운데 세로 묶음. 부모가 세로 flex 면 남는 높이를 채운다
 const CIRCLE_REGION = "flex grow flex-col items-center justify-center";
 
+// 5초 글은 한 화면에 한 번 — 떠 있는 묶음 중 문서 순서로 맨 위 하나만 글을 보인다(나머지는 aria-busy 만, 보조 기술 알림은 상태 글 하나라 한 번).
+// 같은 ready 를 나눠 쓰는 영역 묶음도 한 줄이다. 묶음의 상자를 모듈에 모아 두고 맨 위를 가른다
+const waitingBoxes = new Set<HTMLElement>();
+const waitingListeners = new Set<() => void>();
+const notifyWaiting = () => {
+  for (const l of waitingListeners) l();
+};
+const subscribeWaiting = (l: () => void) => {
+  waitingListeners.add(l);
+  return () => {
+    waitingListeners.delete(l);
+  };
+};
+const topWaitingBox = (): HTMLElement | null => {
+  let top: HTMLElement | null = null;
+  for (const el of waitingBoxes)
+    if (
+      !top ||
+      el.compareDocumentPosition(top) & Node.DOCUMENT_POSITION_FOLLOWING
+    )
+      top = el;
+  return top;
+};
+
 let warnedNoAnnouncer = false;
 
 export interface LoadingRegionProps extends Omit<
@@ -293,6 +317,8 @@ export interface LoadingRegionProps extends Omit<
   failure?: React.ReactNode;
   /** 내용 */
   children?: React.ReactNode;
+  /** 오래 걸림 글의 덧입힘 — 채움(순자산 카드) 위에서는 흰 글자 */
+  noteClassName?: string;
 }
 
 const LoadingRegion = React.forwardRef<HTMLDivElement, LoadingRegionProps>(
@@ -303,6 +329,7 @@ const LoadingRegion = React.forwardRef<HTMLDivElement, LoadingRegionProps>(
       fallback,
       failure,
       className,
+      noteClassName,
       children,
       ...props
     },
@@ -313,6 +340,28 @@ const LoadingRegion = React.forwardRef<HTMLDivElement, LoadingRegionProps>(
     const id = React.useId();
     const announcer = React.useContext(LoadingAnnouncerContext);
     const circle = fallback === "circle";
+
+    // 5초 글은 한 화면에 한 번 — 기다리는 영역 가운데 문서 순서로 맨 위 하나만 글을 보인다(나머지는 aria-busy 만, 알림은 상태 글 하나라 한 번)
+    const [box, setBox] = React.useState<HTMLDivElement | null>(null);
+    const top = React.useSyncExternalStore(
+      subscribeWaiting,
+      topWaitingBox,
+      () => null,
+    );
+    React.useEffect(() => {
+      if (!waiting || !box) return;
+      waitingBoxes.add(box);
+      notifyWaiting();
+      return () => {
+        waitingBoxes.delete(box);
+        notifyWaiting();
+      };
+    }, [waiting, box]);
+    const setRefs = (el: HTMLDivElement | null) => {
+      setBox(el);
+      if (typeof ref === "function") ref(el);
+      else if (ref) ref.current = el;
+    };
 
     // 기다리는 모습을 그린 적이 있다 — 내용이 오면 투명도로 나타난다. 처음부터 내용이 있었으면(받아 둔 것) 그대로 보인다
     const [waited, setWaited] = React.useState(waiting || failed);
@@ -342,7 +391,7 @@ const LoadingRegion = React.forwardRef<HTMLDivElement, LoadingRegionProps>(
     }, [waiting, announcer]);
 
     const state = failed ? "failed" : waiting ? phase : "ready";
-    const slow = waiting && phase === "slow";
+    const slow = waiting && phase === "slow" && box !== null && top === box;
 
     let body: React.ReactNode;
     if (failed) body = failure;
@@ -352,21 +401,25 @@ const LoadingRegion = React.forwardRef<HTMLDivElement, LoadingRegionProps>(
         <>
           <ProgressCircle size="40" />
           {slow && (
-            <p className={cn(SLOW, "mt-x4 text-center")}>{slowText()}</p>
+            <p className={cn(SLOW, "mt-x4 text-center", noteClassName)}>
+              {slowText()}
+            </p>
           )}
         </>
       );
     else
       body = (
         <>
-          {slow && <p className={cn(SLOW, "mb-x4")}>{slowText()}</p>}
+          {slow && (
+            <p className={cn(SLOW, "mb-x4", noteClassName)}>{slowText()}</p>
+          )}
           {fallback}
         </>
       );
 
     return (
       <div
-        ref={ref}
+        ref={setRefs}
         data-slot="loading-region"
         data-state={state}
         data-fallback={circle ? "circle" : undefined}
@@ -387,40 +440,4 @@ const LoadingRegion = React.forwardRef<HTMLDivElement, LoadingRegionProps>(
 );
 LoadingRegion.displayName = "LoadingRegion";
 
-/**
- * 스켈레톤 묶음 — 화면이 `isLoading ? <스켈레톤 …/> : 내용` 으로 직접 가르는 자리의 껍데기(LoadingRegion 은 내용까지 받는 영역이라
- * 이 자리에 못 쓴다). 기다리는 동안 aria-busy="true" 를 알리고, 5초부터 오래 걸림 글 한 줄을 첫 스켈레톤 위에 둔다(skeleton.md 5초).
- * 1초 전 틀만 · "불러오는 중…" 낭독은 안쪽 Skeleton 이 맡는다 — 여기서 다시 알리지 않는다.
- * 껍데기는 기존 `<div aria-hidden className>` 자리를 그대로 대신한다(className 이 곧 레이아웃). 주지 않으면 상자를 만들지 않는다(contents).
- * 오래 걸림 글은 상자 밖 바로 위 형제다 — 상자가 가로 줄이어도 글이 칸이 되지 않는다.
- */
-function SkeletonGroup({
-  className,
-  noteClassName,
-  children,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-  /** 오래 걸림 글의 색 같은 덧입힘 — 채움(순자산 카드) 위에서는 흰 글자 */
-  noteClassName?: string;
-}) {
-  const phase = useWaitPhase(true);
-  return (
-    <>
-      {phase === "slow" && (
-        <p className={cn(SLOW, "mb-x4", noteClassName)}>{slowText()}</p>
-      )}
-      <div
-        data-slot="loading-region"
-        data-state={phase}
-        aria-busy="true"
-        className={className ?? "contents"}
-        {...props}
-      >
-        {children}
-      </div>
-    </>
-  );
-}
-SkeletonGroup.displayName = "SkeletonGroup";
-
-export { Skeleton, SkeletonGroup, LoadingRegion, LoadingAnnouncer };
+export { Skeleton, LoadingRegion, LoadingAnnouncer };

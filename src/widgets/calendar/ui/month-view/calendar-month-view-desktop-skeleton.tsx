@@ -1,7 +1,7 @@
 import { useCalendar } from "@/widgets/calendar/model/calendar-context";
 import { getCalendarCells } from "@/widgets/calendar/lib/helpers";
 import { Card } from "@/shared/ds/card";
-import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
+import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 
 import { WeekdayHead } from "./calendar-month-view-desktop";
@@ -16,32 +16,41 @@ export function CalendarMonthViewDesktopSkeleton() {
   return (
     <Card data-slot="calendar-month-grid" className="p-0">
       <WeekdayHead />
-      <SkeletonGroup className="grid grid-cols-7">
-        {cells.map((_, i) => (
-          <div
-            key={i}
-            className={cn(
-              "flex flex-col gap-x0_5 pt-x1",
-              "h-[104px]",
-              i < cells.length - 7 && "border-b border-stroke-neutral-subtle",
-              i % 7 !== 6 && "border-r border-stroke-neutral-subtle",
-            )}
-          >
-            <Skeleton
-              radius="full"
-              className="mb-x0_5 ml-x1_5 size-[26px] shrink-0"
-            />
-            <div className="mx-x1 flex flex-col gap-x0_5">
-              {i % 7 === 0 || i % 5 === 0 ? (
-                <Skeleton radius="4" className="h-x5 w-full" />
-              ) : null}
-              {i % 7 === 0 ? (
-                <Skeleton radius="4" className="h-x5 w-full" />
-              ) : null}
+      <LoadingRegion
+        pending
+        className="contents"
+        fallback={
+          <>
+            <div className="grid grid-cols-7">
+              {cells.map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "flex flex-col gap-x0_5 pt-x1",
+                    "h-[104px]",
+                    i < cells.length - 7 &&
+                      "border-b border-stroke-neutral-subtle",
+                    i % 7 !== 6 && "border-r border-stroke-neutral-subtle",
+                  )}
+                >
+                  <Skeleton
+                    radius="full"
+                    className="mb-x0_5 ml-x1_5 size-[26px] shrink-0"
+                  />
+                  <div className="mx-x1 flex flex-col gap-x0_5">
+                    {i % 7 === 0 || i % 5 === 0 ? (
+                      <Skeleton radius="4" className="h-x5 w-full" />
+                    ) : null}
+                    {i % 7 === 0 ? (
+                      <Skeleton radius="4" className="h-x5 w-full" />
+                    ) : null}
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        ))}
-      </SkeletonGroup>
+          </>
+        }
+      />
     </Card>
   );
 }

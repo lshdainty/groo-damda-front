@@ -7,7 +7,7 @@ import { Button } from "@/shared/ds/button";
 import { Card } from "@/shared/ds/card";
 import { ListHeader } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
-import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
+import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
 import {
   TopNavigation,
   TopNavigationActions,
@@ -39,29 +39,40 @@ const SETTINGS_PATH = "/desk/settings?section=notifications";
 /** 알림 목록 skeleton — 머리 줄 · 날짜 머리 · 줄(타일 40 · 제목 · 본문 두 줄 · 시각) 자리만. */
 function NotificationsPageSkeleton() {
   return (
-    <SkeletonGroup>
-      <div className="px-global-gutter py-x2">
-        <Skeleton radius="4" text="t4" className="w-32" />
-      </div>
-      <div className="px-global-gutter pb-x2 pt-x2">
-        <Skeleton radius="4" text="t4" className="w-28" />
-      </div>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-start gap-x3 px-global-gutter py-x3">
-          <Skeleton className="size-10 shrink-0 rounded-r3" />
-          <div className="min-w-0 flex-1">
-            <Skeleton
-              radius="4"
-              text="t5"
-              className={i % 3 === 0 ? "w-36" : i % 3 === 1 ? "w-28" : "w-40"}
-            />
-            <Skeleton radius="4" text="t4" className="mt-x1 w-full" />
-            <Skeleton radius="4" text="t4" className="mt-x1 w-2/3" />
+    <LoadingRegion
+      pending
+      className="contents"
+      fallback={
+        <>
+          <div className="px-global-gutter py-x2">
+            <Skeleton radius="4" text="t4" className="w-32" />
           </div>
-          <Skeleton radius="4" text="t3" className="w-8 shrink-0" />
-        </div>
-      ))}
-    </SkeletonGroup>
+          <div className="px-global-gutter pb-x2 pt-x2">
+            <Skeleton radius="4" text="t4" className="w-28" />
+          </div>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-x3 px-global-gutter py-x3"
+            >
+              <Skeleton className="size-10 shrink-0 rounded-r3" />
+              <div className="min-w-0 flex-1">
+                <Skeleton
+                  radius="4"
+                  text="t5"
+                  className={
+                    i % 3 === 0 ? "w-36" : i % 3 === 1 ? "w-28" : "w-40"
+                  }
+                />
+                <Skeleton radius="4" text="t4" className="mt-x1 w-full" />
+                <Skeleton radius="4" text="t4" className="mt-x1 w-2/3" />
+              </div>
+              <Skeleton radius="4" text="t3" className="w-8 shrink-0" />
+            </div>
+          ))}
+        </>
+      }
+    />
   );
 }
 

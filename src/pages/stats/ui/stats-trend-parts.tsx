@@ -25,7 +25,7 @@ import {
   chartVar,
   formatAxisWon,
 } from "@/shared/ds/chart";
-import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
+import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { chartColorOf } from "@/shared/lib/groo/chart-palette";
 import { niceAxis, niceCeil } from "@/shared/lib/groo/chartAxis";
@@ -55,9 +55,15 @@ const chartHeight = (place: Placement, band: number, card: number) =>
 
 function ChartSkeleton({ height }: { height: number }) {
   return (
-    <SkeletonGroup>
-      <Skeleton className="w-full" radius="16" style={{ height }} />
-    </SkeletonGroup>
+    <LoadingRegion
+      pending
+      className="contents"
+      fallback={
+        <>
+          <Skeleton className="w-full" radius="16" style={{ height }} />
+        </>
+      }
+    />
   );
 }
 
@@ -283,13 +289,21 @@ export function SavingsRateSection({
   if (m.rangeQ.isLoading) {
     return (
       <HeadlessBody place={place}>
-        <SkeletonGroup className="flex items-center gap-x4">
-          <Skeleton radius="full" className="size-[6.75rem] shrink-0" />
-          <div className="flex-1">
-            <Skeleton text="t5" className="w-2/3" />
-            <Skeleton className="mt-x3 h-2 w-full" radius="full" />
-          </div>
-        </SkeletonGroup>
+        <LoadingRegion
+          pending
+          className="contents"
+          fallback={
+            <>
+              <div className="flex items-center gap-x4">
+                <Skeleton radius="full" className="size-[6.75rem] shrink-0" />
+                <div className="flex-1">
+                  <Skeleton text="t5" className="w-2/3" />
+                  <Skeleton className="mt-x3 h-2 w-full" radius="full" />
+                </div>
+              </div>
+            </>
+          }
+        />
       </HeadlessBody>
     );
   }

@@ -21,7 +21,7 @@ import {
 } from "@/shared/ds/chart";
 import { List, ListItem, ListTile } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
-import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
+import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
 import { Button } from "@/shared/ds/button";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthShort } from "@/shared/lib/date";
@@ -205,16 +205,22 @@ export function TotalSection({
 export function TotalSkeleton({ place }: { place: Placement }) {
   return (
     <Body place={place}>
-      <SkeletonGroup>
-        <Skeleton text="t3" className="w-1/4" />
-        <Skeleton text="t3" className="mt-x1 w-3/4" />
-        <Skeleton text="t9" radius="8" className="mt-x3 w-1/2" />
-        <Skeleton className="mt-x4 h-2 w-full" radius="full" />
-        <Skeleton text="t3" className="mt-x2 w-1/2" />
-        <div className="mt-x3">
-          <KeyValueSkeleton rows={3} />
-        </div>
-      </SkeletonGroup>
+      <LoadingRegion
+        pending
+        className="contents"
+        fallback={
+          <>
+            <Skeleton text="t3" className="w-1/4" />
+            <Skeleton text="t3" className="mt-x1 w-3/4" />
+            <Skeleton text="t9" radius="8" className="mt-x3 w-1/2" />
+            <Skeleton className="mt-x4 h-2 w-full" radius="full" />
+            <Skeleton text="t3" className="mt-x2 w-1/2" />
+            <div className="mt-x3">
+              <KeyValueSkeleton rows={3} />
+            </div>
+          </>
+        }
+      />
     </Body>
   );
 }
@@ -262,13 +268,19 @@ export function PaceSection({
       <>
         {head}
         <Body place={place}>
-          <SkeletonGroup>
-            <Skeleton className="h-2 w-full" radius="full" />
-            <Skeleton text="t3" className="mt-x2 w-1/2" />
-            <div className="mt-x3">
-              <KeyValueSkeleton rows={2} />
-            </div>
-          </SkeletonGroup>
+          <LoadingRegion
+            pending
+            className="contents"
+            fallback={
+              <>
+                <Skeleton className="h-2 w-full" radius="full" />
+                <Skeleton text="t3" className="mt-x2 w-1/2" />
+                <div className="mt-x3">
+                  <KeyValueSkeleton rows={2} />
+                </div>
+              </>
+            }
+          />
         </Body>
       </>
     );
@@ -430,23 +442,31 @@ export function CategorySection({
     return (
       <>
         {head}
-        <SkeletonGroup className={tail}>
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i}>
-              <div className="flex items-center gap-x3 px-x6 py-x3">
-                <Skeleton radius="12" className="size-x10 shrink-0" />
-                <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
-                  <Skeleton text="t5" className="w-1/2" />
-                  <Skeleton text="t3" className="w-1/3" />
-                </div>
-                <Skeleton text="t5" className="w-x10 shrink-0" />
+        <LoadingRegion
+          pending
+          className="contents"
+          fallback={
+            <>
+              <div className={tail}>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i}>
+                    <div className="flex items-center gap-x3 px-x6 py-x3">
+                      <Skeleton radius="12" className="size-x10 shrink-0" />
+                      <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
+                        <Skeleton text="t5" className="w-1/2" />
+                        <Skeleton text="t3" className="w-1/3" />
+                      </div>
+                      <Skeleton text="t5" className="w-x10 shrink-0" />
+                    </div>
+                    <div className="px-x6 pb-x3 pt-x1">
+                      <Skeleton className="h-2 w-full" radius="full" />
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="px-x6 pb-x3 pt-x1">
-                <Skeleton className="h-2 w-full" radius="full" />
-              </div>
-            </div>
-          ))}
-        </SkeletonGroup>
+            </>
+          }
+        />
       </>
     );
   }
@@ -659,9 +679,15 @@ export function ComplianceSection({
       <>
         {head}
         <Body place={place}>
-          <SkeletonGroup>
-            <Skeleton className="h-[180px] w-full" radius="16" />
-          </SkeletonGroup>
+          <LoadingRegion
+            pending
+            className="contents"
+            fallback={
+              <>
+                <Skeleton className="h-[180px] w-full" radius="16" />
+              </>
+            }
+          />
         </Body>
       </>
     );

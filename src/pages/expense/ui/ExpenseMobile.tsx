@@ -5,7 +5,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { FunnelX, Plus, ReceiptText, SlidersHorizontal } from "lucide-react";
 import { useDsText, withCommaBreaks } from "@/shared/ds/i18n";
 import { ResultSection } from "@/shared/ds/result-section";
-import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
+import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthDayDow } from "@/shared/lib/date";
 import {
@@ -186,10 +186,16 @@ export function ExpenseMobileSkeleton({ month }: { month?: string }) {
         <LedgerDivider />
       </div>
       <LedgerList className="-mx-global-gutter">
-        <SkeletonGroup>
-          <DayGroupSkeleton rows={3} />
-          <DayGroupSkeleton rows={2} />
-        </SkeletonGroup>
+        <LoadingRegion
+          pending
+          className="contents"
+          fallback={
+            <>
+              <DayGroupSkeleton rows={3} />
+              <DayGroupSkeleton rows={2} />
+            </>
+          }
+        />
       </LedgerList>
     </LedgerShell>
   );
@@ -479,10 +485,16 @@ export function ExpenseMobile({
     );
   } else if (isLoadingList) {
     body = (
-      <SkeletonGroup>
-        <DayGroupSkeleton rows={3} />
-        <DayGroupSkeleton rows={2} />
-      </SkeletonGroup>
+      <LoadingRegion
+        pending
+        className="contents"
+        fallback={
+          <>
+            <DayGroupSkeleton rows={3} />
+            <DayGroupSkeleton rows={2} />
+          </>
+        }
+      />
     );
   } else if (isEmpty) {
     // 걸러서 0건 · 이 달 0건 — 버튼은 없다(거래 추가는 탭 바의 + 가 맡는다)

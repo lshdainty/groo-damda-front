@@ -12,12 +12,7 @@ import {
   type MockInstance,
 } from "vitest";
 
-import {
-  LoadingAnnouncer,
-  LoadingRegion,
-  Skeleton,
-  SkeletonGroup,
-} from "./skeleton";
+import { LoadingAnnouncer, LoadingRegion, Skeleton } from "./skeleton";
 import { LOADING_TIMING } from "./skeleton-variants";
 import { useWaitPhase } from "./use-wait-phase";
 
@@ -168,37 +163,70 @@ describe("LoadingRegion 없이 그린 Skeleton(화면 82곳 — I-wrap-b5 3-a)",
   });
 });
 
-describe("SkeletonGroup(화면이 직접 가르는 스켈레톤의 껍데기)", () => {
-  it("기다리는 동안 aria-busy, 상자는 className 이 곧 레이아웃 — 없으면 상자를 만들지 않는다(contents)", () => {
+describe("스켈레톤만 그리는 영역(pending · fallback — 화면 82곳, I-wrap-b5)", () => {
+  const area = (id: string) => (
+    <LoadingRegion
+      pending
+      className="contents"
+      fallback={<Skeleton data-testid={id} />}
+    />
+  );
+
+  it("기다리는 동안 aria-busy, className 을 주면 그 상자가 곧 레이아웃 — contents 로 상자를 만들지 않을 수 있다", () => {
     render(
       <>
-        <SkeletonGroup data-testid="a">
-          <Skeleton />
-        </SkeletonGroup>
-        <SkeletonGroup data-testid="b" className="flex gap-x3">
-          <Skeleton />
-        </SkeletonGroup>
+        <LoadingRegion
+          pending
+          className="contents"
+          data-testid="a"
+          fallback={<Skeleton />}
+        />
+        <LoadingRegion
+          pending
+          data-testid="b"
+          className="flex gap-x3"
+          fallback={<Skeleton />}
+        />
       </>,
     );
     const a = document.querySelector<HTMLElement>("[data-testid=a]")!;
     const b = document.querySelector<HTMLElement>("[data-testid=b]")!;
     expect(a.getAttribute("aria-busy")).toBe("true");
-    expect(a.className).toBe("contents");
-    expect(b.className).toBe("flex gap-x3");
+    expect(a.className).toContain("contents");
+    expect(b.className).toContain("flex gap-x3");
   });
 
-  it("5초부터 오래 걸림 글 한 줄이 상자 바로 위에 — 그 전에는 없다", () => {
+  it("5초 글은 한 화면에 한 번 — 영역이 여럿이어도 문서 순서로 맨 위 영역에만 글이 뜬다(나머지는 aria-busy 만)", () => {
     render(
-      <SkeletonGroup>
-        <Skeleton />
-      </SkeletonGroup>,
+      <>
+        <section>{area("a")}</section>
+        <section>{area("b")}</section>
+        <section>{area("c")}</section>
+      </>,
     );
     advance(LOADING_TIMING.slowAfter - 1);
-    expect(container.textContent).toBe("");
+    expect(container.querySelectorAll("p")).toHaveLength(0);
     advance(1);
-    const note = container.querySelector("p")!;
-    expect(note.textContent).toBe(SLOW_TEXT);
-    expect(note.nextElementSibling?.getAttribute("aria-busy")).toBe("true");
+    const notes = container.querySelectorAll("p");
+    expect(notes).toHaveLength(1);
+    expect(notes[0]!.textContent).toBe(SLOW_TEXT);
+    expect(container.querySelector("section")!.contains(notes[0]!)).toBe(true);
+    expect(container.querySelectorAll("[aria-busy=true]")).toHaveLength(3);
+  });
+
+  it("맨 위 영역이 끝나면 다음 영역이 글을 이어받는다", () => {
+    const tree = (first: boolean) => (
+      <>
+        {first && <section>{area("a")}</section>}
+        <section>{area("b")}</section>
+      </>
+    );
+    render(tree(true));
+    advance(LOADING_TIMING.slowAfter);
+    expect(container.querySelectorAll("p")).toHaveLength(1);
+    render(tree(false));
+    advance(1);
+    expect(container.querySelectorAll("p")).toHaveLength(1);
   });
 });
 
