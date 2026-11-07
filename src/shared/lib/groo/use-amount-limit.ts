@@ -4,27 +4,34 @@ import { MAX_AMOUNT, readAmountInput } from "./amount";
 
 /**
  * 금액 칸의 상한 오류 — 넘는 입력은 받지 않고(값은 그대로) 칸 아래에 critical 오류를 보인다.
- * 오류는 **다음 유효한 입력에서 사라진다**(`read` 가 상한 안의 값을 읽으면 지운다).
+ * 오류는 **지금 값에서 나온다**: 값이 상한 위면 보이고(상한 전에 저장된 옛 값을 열었을 때 포함), 거절한 입력이면 그 값이
+ * 그대로인 동안 보이며, 칸 밖에서 값이 바뀌면(프리셋 칩 · 비우기 · 초기화) 다시 계산해 상한 안이면 지운다.
+ * 값을 줄이는 입력은 늘 받는다(`readAmountInput`) — 줄여 나가다 상한 안이 되면 사라진다.
  *
  * 글은 기존 `amountTooLarge`("금액은 100억원까지 입력할 수 있어요.")를 쓴다. 상한이 100억이 아닌 칸(잔액 1,000억)은
  * 숫자만 갈아 끼운 `amountTooLargeAt` — 같은 문장 틀이다.
  *
- * - `read(raw, prev)` — 칸의 onChange 에서. 받을 값을 돌려주고, 받지 않았으면 `accepted` 가 false 다
+ * - `read(raw, prev)` — 칸의 onChange 에서. 받을 값(`value`)과 받았는지(`accepted`)를 돌려준다
  * - `message` — 지금 보일 오류 글(없으면 null)
+ * - `tick` — 거절한 횟수. Field 가 "최근 일이 이긴다" 를 가를 때 쓴다(거절한 순간엔 상한 오류가 폼 오류를 이긴다)
  */
-export function useAmountLimit(max: number = MAX_AMOUNT) {
+export function useAmountLimit(value: string, max: number = MAX_AMOUNT) {
   const { t, i18n } = useTranslation("common");
-  const [over, setOver] = useState(false);
-  // 같은 오류가 이어져도(over 가 true 로 그대로) 다시 그리게 한다 — 받지 않은 값을 칸이 원래 글로 되돌려야 한다
-  const [, setTick] = useState(0);
+  // 거절했을 때의 값 — 그 값이 그대로인 동안만 오류를 보인다(null 이면 거절한 적 없음)
+  const [rejectedAt, setRejectedAt] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
 
-  const read = (raw: string, prev: string) => {
-    const r = readAmountInput(raw, prev, max);
-    setOver(r.tooLarge);
-    if (r.tooLarge) setTick((n) => n + 1);
-    return { value: r.value, accepted: !r.tooLarge };
+  const read = (raw: string) => {
+    const r = readAmountInput(raw, value, max);
+    if (r.accepted) setRejectedAt(null);
+    else {
+      setRejectedAt(value);
+      setTick((n) => n + 1);
+    }
+    return { value: r.value, accepted: r.accepted };
   };
 
+  const over = Number(value || 0) > max || rejectedAt === value;
   const message = over
     ? max === MAX_AMOUNT
       ? t("amountTooLarge")
@@ -33,7 +40,7 @@ export function useAmountLimit(max: number = MAX_AMOUNT) {
         })
     : null;
 
-  return { read, message, clear: () => setOver(false) };
+  return { read, message, tick };
 }
 
 /** 상한을 글로 — ko "100억원" · "1,000억원" / en "10 billion won" · "100 billion won". 억 단위로 떨어지는 상한만 다룬다 */

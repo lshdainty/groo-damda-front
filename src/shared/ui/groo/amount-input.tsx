@@ -11,11 +11,13 @@ import { AmountLimitError } from "./amount-limit-error";
  * ("1,500,000"). 뒤 글자 "원"(suffix — 칸 이름과 함께 읽힌다) · 숫자 키보드 · 부호 · 소수점 키 막기는 지금 금액 칸 규칙 그대로다.
  *
  * 상한(`max`, 기본 100억)을 넘는 입력은 **받지 않고 값은 그대로** 둔다(2026-11-07). 칸 아래에 critical 오류
- * "금액은 100억원까지 입력할 수 있어요." 를 보이고, 다음 유효한 입력에서 사라진다. Field 안이면 Field 의 꼬리(오류가
+ * "금액은 100억원까지 입력할 수 있어요." 를 보이고, 지금 값이 상한 안이 되면 사라진다(다음 유효한 입력 · 칸 밖에서 값이 바뀜).
+ * 값을 줄이는 입력은 늘 받는다 — 상한 전에 저장된 옛 값을 열어도 한 자리씩 줄여 나갈 수 있다(오류는 상한 안이 될 때까지 보이고,
+ * 그 값으로 저장은 호출처가 막는다). Field 안이면 Field 의 꼬리(오류가
  * 설명을 대신하고 polite 로 한 번 읽힌다)가, 밖이면 이 칸이 바로 아래에 같은 모양으로 그린다.
  *
  * 쉼표가 끼면 글자 위치가 밀리므로 캐럿을 "캐럿 앞의 숫자 개수" 로 되돌린다 — 중간에 지우거나 끼워도 커서가 끝으로 튀지 않는다.
- * 저장된 옛 값이 상한을 넘어도 열 때는 그대로 보인다(QA #48 — 몰래 고쳐 넣지 않는다). 쓰기 시작하면 상한으로 깎는다.
+ * 저장된 옛 값이 상한을 넘어도 열 때는 그대로 보인다(QA #48 — 몰래 고쳐 넣지 않는다). 깎지 않고 오류로 알린다.
  */
 
 const comma = (digits: string) =>
@@ -50,7 +52,7 @@ export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
     const { t } = useTranslation("common");
     const field = useField();
     const setControlError = field?.setControlError;
-    const limit = useAmountLimit(max);
+    const limit = useAmountLimit(value, max);
     const errorId = React.useId();
     const own = React.useRef<HTMLInputElement>(null);
     const caret = React.useRef<number | null>(null);
@@ -77,7 +79,7 @@ export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
       if (!setControlError) return;
       setControlError(limit.message);
       return () => setControlError(null);
-    }, [setControlError, limit.message]);
+    }, [setControlError, limit.message, limit.tick]);
 
     // Field 밖이면 이 칸이 직접 이어 준다
     const ownError = !field && limit.message != null;
@@ -101,7 +103,7 @@ export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
           const raw = e.target.value;
           const at = e.target.selectionStart ?? raw.length;
           const before = raw.slice(0, at).replace(/\D/g, "").length;
-          const next = limit.read(raw, value);
+          const next = limit.read(raw);
           if (!next.accepted) {
             // 받지 않은 입력 — 값은 그대로, 캐럿은 친 글자 앞에 둔다
             const added = raw.replace(/\D/g, "").length - value.length;

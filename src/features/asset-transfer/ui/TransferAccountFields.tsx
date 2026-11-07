@@ -73,8 +73,8 @@ export function TransferAccountFields({
 
   const uid = useId();
   // 상한을 넘는 입력은 받지 않고 값은 그대로 — 칸 아래에 오류(다음 유효한 입력에서 사라진다)
-  const feeLimit = useAmountLimit();
-  const interestLimit = useAmountLimit();
+  const feeLimit = useAmountLimit(fee);
+  const interestLimit = useAmountLimit(interest);
   const label = (a: Asset) =>
     a.institution ? `${a.institution} · ${a.assetName}` : a.assetName;
 
@@ -134,7 +134,7 @@ export function TransferAccountFields({
           className="num"
           value={fee}
           onChange={(e) => {
-            const r = feeLimit.read(e.target.value, fee);
+            const r = feeLimit.read(e.target.value);
             if (r.accepted) onFeeChange(r.value);
           }}
           onKeyDown={blockNonDigitKey}
@@ -154,7 +154,7 @@ export function TransferAccountFields({
             className="num"
             value={interest}
             onChange={(e) => {
-              const r = interestLimit.read(e.target.value, interest);
+              const r = interestLimit.read(e.target.value);
               if (r.accepted) onInterestChange(r.value);
             }}
             onKeyDown={blockNonDigitKey}

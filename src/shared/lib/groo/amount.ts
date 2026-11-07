@@ -25,8 +25,11 @@ function digitsOf(raw: string): string {
  * 칸에 쳐 넣은 글 → 칸이 받을 값. **상한을 넘는 입력은 받지 않고 값을 그대로 둔다**(2026-11-07 디자인시스템 결정).
  *
  * 예전엔 `slice(0, 11)` 로 자리수만 잘라 안내는 "100억까지" 인데 999억이 타이핑됐다(QA #12). 그 뒤엔 상한으로 깎고
- * 토스트를 띄웠는데, 토스트가 입력 중인 칸에서 멀고(화면 맨 위) 값이 몰래 바뀌었다. 지금은 받지 않고(`value` = `prev`)
- * `tooLarge` 로 알려 칸 아래에 오류를 보인다 — 순수 함수라 알리는 곳은 호출처 몫이다(`useAmountLimit`).
+ * 토스트를 띄웠는데, 토스트가 입력 중인 칸에서 멀고(화면 맨 위) 값이 몰래 바뀌었다. 지금은 받지 않고(`accepted` false,
+ * `value` = `prev`) 칸 아래에 오류를 보인다 — 순수 함수라 알리는 곳은 호출처 몫이다(`useAmountLimit`).
+ *
+ * **값을 줄이는 입력은 늘 받는다**(지우기 · 자리 줄임). 상한 전에 저장된 옛 값이 상한 위여도 열어서 줄여 나갈 수 있어야
+ * 한다(QA #48). 받은 값이 아직 상한 위면 `tooLarge` 가 true 라 오류는 계속 보이고, 그 값으로 저장은 호출처가 막는다.
  *
  * 12자리를 붙여넣어도 마찬가지다 — 통째로 받지 않는다. 선행 0 제거는 기본값 `0` 이 남아 `0500` 이 되던
  * 잔액 칸(QA #18)까지 같이 덮는다.
@@ -35,23 +38,12 @@ export function readAmountInput(
   raw: string,
   prev: string,
   max: number = MAX_AMOUNT,
-): { value: string; tooLarge: boolean } {
+): { value: string; accepted: boolean; tooLarge: boolean } {
   const digits = digitsOf(raw);
-  if (Number(digits) > max) return { value: prev, tooLarge: true };
-  return { value: digits, tooLarge: false };
-}
-
-/**
- * 입력 문자열 → 자릿수만 남긴 문자열, `max` 를 넘으면 `max` 로 깎는다. **알림이 없는 순수 정리**다 —
- * 저장 직전에 쓰는 자리(저장된 옛 값이 상한을 넘을 수 있다)에서만 쓴다. 칸에 치는 동안은 `readAmountInput`.
- */
-export function sanitizeAmountInput(
-  raw: string,
-  max: number = MAX_AMOUNT,
-): string {
-  const digits = digitsOf(raw);
-  if (!digits) return "";
-  return Number(digits) > max ? String(max) : digits;
+  const next = Number(digits);
+  if (next > max && next > Number(prev || 0))
+    return { value: prev, accepted: false, tooLarge: Number(prev || 0) > max };
+  return { value: digits, accepted: true, tooLarge: next > max };
 }
 
 /**
@@ -59,7 +51,7 @@ export function sanitizeAmountInput(
  *
  * **클램프하지 않는다.** 상한 판정은 호출부의 몫이다 — 여기서 100억으로 깎으면
  * `parseAmount(x) > MAX_AMOUNT` 같은 게이트가 영원히 거짓이 된다. 실제로 거래 시트의
- * 외화 자동 환산(`setAmount(String(Math.round(원금 × 환율)))`)은 sanitize 를 거치지
+ * 외화 자동 환산(`setAmount(String(Math.round(원금 × 환율)))`)은 readAmountInput 을 거치지
  * 않는 유일한 경로라, 그 게이트가 죽으면 100억 초과 금액이 그대로 서버로 나간다.
  */
 export function parseAmount(raw: string): number {
@@ -70,11 +62,11 @@ export function parseAmount(raw: string): number {
 /**
  * 원화 칸 keystroke 가드 — 숫자가 아닌 한 글자(`.` `-` `e` `+` 공백)를 아예 못 찍게 한다.
  *
- * `sanitizeAmountInput` 이 어차피 지우지만, 지워지는 걸 보고 나서야 아는 것과
+ * `readAmountInput` 이 어차피 지우지만, 지워지는 걸 보고 나서야 아는 것과
  * 애초에 안 찍히는 건 다르다(QA #10 은 '타이핑 자체를 막을 것', #47·#52·#54 의
- * '음수 차단' 도 같은 자리다 — sanitize 는 부호를 조용히 삼켜 절대값으로 바꿔 버린다).
+ * '음수 차단' 도 같은 자리다 — readAmountInput 은 부호를 조용히 삼켜 절대값으로 바꿔 버린다).
  *
- * 붙여넣기·IME 는 막지 않는다 — `sanitizeAmountInput` 이 그물이다. 안드로이드 소프트
+ * 붙여넣기·IME 는 막지 않는다 — `readAmountInput` 이 그물이다. 안드로이드 소프트
  * 키보드는 `key: "Unidentified"` 로 와서 여기서 못 거른다(그래서 그물이 필요하다).
  *
  * **외화 금액·환율·보유 수량·비율 칸에는 붙이지 마라** — 거기선 `.` 가 유효하다.

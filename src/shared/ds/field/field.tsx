@@ -100,8 +100,20 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
     const [controlIdOverride, setControlId] = React.useState<string>();
     const [group, setGroup] = React.useState(false);
     const [count, setGraphemeCount] = React.useState(0);
-    const [controlError, setControlError] =
-      React.useState<React.ReactNode | null>(null);
+    // 칸이 스스로 알린 오류 — seq 는 알린 횟수(같은 글을 다시 알려도 오른다)
+    const [control, setControl] = React.useState<{
+      message: React.ReactNode | null;
+      seq: number;
+    }>({ message: null, seq: 0 });
+    const setControlError = React.useCallback(
+      (message: React.ReactNode | null) =>
+        setControl((c) => ({
+          message,
+          seq: message != null ? c.seq + 1 : c.seq,
+        })),
+      [],
+    );
+    const controlError = control.message;
     const controlId = id ?? controlIdOverride ?? `${auto}control`;
     const labelId = `${auto}label`;
     const descriptionId = `${auto}description`;
@@ -111,9 +123,32 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
     const hasText = (node: React.ReactNode) =>
       node != null && node !== false && node !== "";
     const ownError = invalid && hasText(errorMessage);
-    // 호출처가 준 오류가 먼저, 없으면 칸이 스스로 알린 오류(controlError)
-    const showError = ownError || hasText(controlError);
-    const shownError = ownError ? errorMessage : controlError;
+    // 둘 다 있으면 **최근 일이 이긴다** — 칸이 입력을 거절한 순간엔 칸 오류가, 폼이 오류를 세운 순간(저장을 누름)엔
+    // 폼 오류가 보인다. 폼 오류가 떠 있다는 이유로 거절이 말없이 일어나지 않게 한다.
+    const ownSig = ownError
+      ? typeof errorMessage === "string" || typeof errorMessage === "number"
+        ? String(errorMessage)
+        : "•"
+      : null;
+    const [latest, setLatest] = React.useState<{
+      seq: number;
+      own: string | null;
+      controlWins: boolean;
+    }>({ seq: 0, own: null, controlWins: false });
+    let now = latest;
+    if (control.seq !== latest.seq)
+      now = { seq: control.seq, own: ownSig, controlWins: true };
+    else if (ownSig !== latest.own)
+      now = {
+        ...latest,
+        own: ownSig,
+        controlWins: ownSig == null ? latest.controlWins : false,
+      };
+    if (now !== latest) setLatest(now);
+    const controlShown =
+      hasText(controlError) && (!ownError || now.controlWins);
+    const showError = ownError || controlShown;
+    const shownError = controlShown ? controlError : errorMessage;
     const isInvalid = invalid || hasText(controlError);
     const showDescription =
       !showError &&

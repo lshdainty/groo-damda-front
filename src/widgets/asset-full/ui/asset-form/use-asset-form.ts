@@ -4,7 +4,7 @@ import { useAssets } from "@/features/asset";
 import { useDefaultCurrencyState } from "@/features/user";
 import { todayLocalKey } from "@/shared/lib/date";
 import { pendingBillWindow } from "@/entities/expense";
-import { parseAmount } from "@/shared/lib/groo/amount";
+import { MAX_BALANCE, parseAmount } from "@/shared/lib/groo/amount";
 import {
   DEFAULT_CURRENCY,
   currencyUnit,
@@ -388,13 +388,21 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
       cardType === "CREDIT" && editingGroup === "card" && !paymentDay.trim(),
     // 외화 자산은 환율이 필수다(서버 AST_036) — 비면 원화로 그대로 더해져 합계가 틀린다
     exchangeRate: isForeign && !(Number(exchangeRate.replace(/,/g, "")) > 0),
+    // 상한(1,000억) 위의 값 — 상한 전에 저장된 옛 값을 열어도 깎아서 저장하지 않는다(QA #48 "몰래 고쳐 넣지 않는다").
+    // 칸이 오류를 보이고(AmountInput), 줄여서 상한 안이 돼야 저장된다
+    amountTooLarge:
+      parseAmount(balanceStr) > MAX_BALANCE ||
+      parseAmount(creditLimit) > MAX_BALANCE ||
+      parseAmount(dueStr) > MAX_BALANCE ||
+      holdings.some((h) => !h.linked && (h.holdingValue ?? 0) > MAX_BALANCE),
   };
   const canSubmit =
     !nameErr &&
     !issues.name &&
     !issues.card &&
     !issues.paymentDay &&
-    !issues.exchangeRate;
+    !issues.exchangeRate &&
+    !issues.amountTooLarge;
   // 누르고도 못 보낸 적이 있으면 오류 글을 세운다 — 고치면 저절로 걷힌다
   const [showErrors, setShowErrors] = useState(false);
   // 못 보낸 횟수 — 첫 오류 칸에 초점을 옮기는 신호

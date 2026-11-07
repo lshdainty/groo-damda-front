@@ -11,6 +11,7 @@ import {
   ResponsiveDialogTrigger,
 } from "@/shared/ds/dialog";
 import { Field } from "@/shared/ds/field";
+import { useAmountLimit } from "@/shared/lib/groo/use-amount-limit";
 import { Input } from "@/shared/ds/input";
 import { TopNavigationIconButton } from "@/shared/ds/top-navigation";
 import { hasAdvanced, type SearchCondition } from "../model/search-state";
@@ -36,6 +37,15 @@ export function AdvancedFilter({
   const active = hasAdvanced(condition);
 
   const badAmount = !!draft.min && !!draft.max && +draft.min > +draft.max;
+  // 금액 칸 상한 — 넘는 입력은 받지 않고 값은 그대로, 칸 아래에 오류(금액 필터와 같다)
+  const minLimit = useAmountLimit(draft.min);
+  const maxLimit = useAmountLimit(draft.max);
+  const limitMessage =
+    minLimit.message && maxLimit.message
+      ? minLimit.tick >= maxLimit.tick
+        ? minLimit.message
+        : maxLimit.message
+      : (minLimit.message ?? maxLimit.message);
   const digits = (v: string) => v.replace(/\D/g, "");
 
   const label = t("searchAdvanced");
@@ -68,8 +78,8 @@ export function AdvancedFilter({
           <div className="flex flex-col gap-x6">
             <Field
               label={t("searchAmountRange")}
-              invalid={badAmount}
-              errorMessage={t("searchBadAmount")}
+              invalid={badAmount || limitMessage != null}
+              errorMessage={limitMessage ?? t("searchBadAmount")}
             >
               <div className="flex items-center gap-x2">
                 <Input
@@ -78,9 +88,10 @@ export function AdvancedFilter({
                   placeholder={t("searchMin")}
                   suffix={t("searchWon")}
                   value={draft.min}
-                  onChange={(e) =>
-                    setDraft({ ...draft, min: digits(e.target.value) })
-                  }
+                  onChange={(e) => {
+                    const r = minLimit.read(digits(e.target.value));
+                    if (r.accepted) setDraft({ ...draft, min: r.value });
+                  }}
                 />
                 <span aria-hidden>{dsText("datePicker.rangeSeparator")}</span>
                 <Input
@@ -89,9 +100,10 @@ export function AdvancedFilter({
                   placeholder={t("searchMax")}
                   suffix={t("searchWon")}
                   value={draft.max}
-                  onChange={(e) =>
-                    setDraft({ ...draft, max: digits(e.target.value) })
-                  }
+                  onChange={(e) => {
+                    const r = maxLimit.read(digits(e.target.value));
+                    if (r.accepted) setDraft({ ...draft, max: r.value });
+                  }}
                 />
               </div>
             </Field>
