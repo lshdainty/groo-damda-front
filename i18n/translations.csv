@@ -23,8 +23,7 @@ common,create,생성,Create
 common,search,검색,Search
 common,confirm,확인,Confirm
 common,loading,로딩 중...,Loading...
-common,noData,데이터가 없습니다,No data
-common,error,오류가 발생했습니다,An error occurred
+common,noData,데이터가 없어요.,No data
 common,apiError,문제가 생겼어요. 잠시 후 다시 시도해주세요,Something went wrong. Please try again.
 common,close,닫기,Close
 common,add,추가,Add
@@ -58,7 +57,7 @@ common,themeLight,라이트,Light
 common,themeDark,다크,Dark
 common,themeSystem,시스템,System
 common,none,없음,None
-common,noSearchResults,검색 결과가 없습니다,No results found
+common,noSearchResults,검색 결과가 없어요.,No results found
 common,amountTooLarge,금액은 100억원까지 입력할 수 있어요.,Amount can be up to 10 billion won.
 common,amountTooLargeAt,금액은 {{max}}까지 입력할 수 있어요.,Amount can be up to {{max}}.
 common,recordOnly,기록만,Record only
@@ -157,7 +156,6 @@ todo,editTodo,할일 수정,Edit Todo
 todo,deleteTodo,할일 삭제,Delete Todo
 todo,addTodo,새 할일 추가,Add new todo
 todo,createFirst,첫 번째 할일을 만들어보세요,Create your first todo
-todo,empty,할일이 없습니다,No todos yet
 todo,status.PENDING,대기,Pending
 todo,status.IN_PROGRESS,진행 중,In Progress
 todo,status.COMPLETED,완료,Completed
@@ -166,13 +164,10 @@ todo,priority.HIGH,높음,High
 todo,priority.MEDIUM,보통,Medium
 todo,priority.LOW,낮음,Low
 todo,form.title,제목,Title
-todo,form.titlePlaceholder,할일 제목을 입력하세요,Enter todo title
 todo,form.titleRequired,제목을 입력해주세요.,Title is required.
 todo,form.content,내용,Content
-todo,form.contentPlaceholder,상세 내용을 입력하세요,Enter details
 todo,form.priority,우선순위,Priority
 todo,form.category,카테고리,Category
-todo,form.categoryPlaceholder,카테고리를 입력하세요,Enter category
 todo,form.dueDate,마감일,Due Date
 todo,deleteConfirm.title,할 일 삭제,Delete todo
 todo,deleteConfirm.message,"""{{name}}"" 할 일을 삭제할까요? 되돌릴 수 없어요.","Delete the ""{{name}}"" to-do? This can't be undone."
@@ -184,12 +179,10 @@ todo,addProject,프로젝트 추가,Add Project
 todo,editProject,프로젝트 수정,Edit Project
 todo,allProjects,전체 프로젝트,All Projects
 todo,form.projectName,프로젝트 이름,Project Name
-todo,form.projectNamePlaceholder,프로젝트 이름을 입력하세요,Enter project name
 todo,form.project,프로젝트,Project
 todo,form.icon,아이콘,Icon
 todo,form.color,색상,Color
 todo,form.description,설명,Description
-todo,form.descriptionPlaceholder,설명을 입력하세요,Enter description
 todo,tag,태그,Tag
 todo,noTag,태그 없음,No tag
 todo,tagEmptyHint,태그는 설정 › 할 일 태그에서 만들어요.,Create tags in Settings › Todo tags.
@@ -197,7 +190,6 @@ todo,tags,태그 관리,Manage Tags
 todo,addTag,태그 추가,Add Tag
 todo,editTag,태그 수정,Edit Tag
 todo,form.tagName,태그 이름,Tag Name
-todo,form.tagNamePlaceholder,태그 이름을 입력하세요,Enter tag name
 todo,form.tags,태그,Tags
 todo,subtask,서브태스크,Subtask
 todo,subtasks,서브태스크,Subtasks
@@ -272,7 +264,6 @@ calendar,addLabel,라벨 추가,Add label
 calendar,editLabel,라벨 수정,Edit label
 calendar,noLabels,라벨이 없어요.,No labels yet
 calendar,form.labelName,라벨 이름,Label Name
-calendar,form.labelNamePlaceholder,라벨 이름을 입력하세요,Enter label name
 calendar,form.label,라벨,Label
 calendar,form.location,장소,Location
 calendar,form.locationPlaceholder,예: 본사 3층 회의실,e.g. 3rd floor meeting room
@@ -295,7 +286,6 @@ memo,editMemo,메모 수정,Edit memo
 memo,deleteMemo,메모 삭제,Delete Memo
 memo,newMemo,메모 추가,Add memo
 memo,untitled,제목 없음,Untitled
-memo,empty,메모가 없습니다,No memos yet
 memo,createFirst,첫 번째 메모를 작성해보세요,Create your first memo
 memo,pin,고정,Pin
 memo,unpin,고정 해제,Unpin
@@ -347,7 +337,6 @@ timer,work,작업,Work
 timer,break,휴식,Break
 timer,completed,완료!,Completed!
 timer,deleteConfirm.title,세션 삭제,Delete Session
-timer,deleteConfirm.message,이 세션을 삭제하시겠습니까?,Are you sure you want to delete this session?
 timer,deleteConfirm.cancel,취소,Cancel
 timer,deleteConfirm.confirm,삭제,Delete
 expense,title,가계부,Expense
@@ -371,9 +360,7 @@ expense,addCategory,카테고리 추가,Add category
 expense,editCategory,카테고리 수정,Edit Category
 expense,categoryName,카테고리 이름,Category Name
 expense,form.amount,금액,Amount
-expense,form.amountPlaceholder,금액을 입력하세요,Enter amount
 expense,form.description,설명,Description
-expense,form.descriptionPlaceholder,설명을 입력하세요,Enter description
 expense,form.date,날짜,Date
 expense,form.paymentMethod,결제 방법,Payment Method
 expense,form.paymentMethod.CASH,현금,Cash
@@ -390,7 +377,6 @@ expense,deleteConfirm.title,거래 삭제,Delete transaction
 expense,deleteConfirm.cancel,취소,Cancel
 expense,deleteConfirm.confirm,삭제,Delete
 expense,form.merchant,거래처,Merchant
-expense,form.merchantPlaceholder,거래처를 입력하세요,Enter merchant name
 expense,form.asset,자산,Asset
 expense,weekly,주간,Weekly
 expense,yearly,연간,Yearly
@@ -413,7 +399,7 @@ expense,nextExecution,다음 실행일,Next Execution
 expense,active,활성,Active
 expense,inactive,비활성,Inactive
 expense,searchExpenses,거래 검색,Search Transactions
-expense,searchPlaceholder,검색어를 입력하세요,Enter search keyword
+expense,searchPlaceholder,검색어를 입력해주세요,Enter search keyword
 expense,linkedEvent,연결된 일정,Linked Event
 expense,linkedTodo,연결된 할일,Linked Todo
 expense,form.calendarEvent,일정 연결,Link Event
@@ -427,7 +413,6 @@ asset,editAsset,자산 수정,Edit asset
 asset,addTransfer,이체 추가,Add transfer
 asset,totalBalance,총 자산,Total Balance
 asset,count,개,
-asset,noAssets,등록된 자산이 없습니다,No assets registered
 asset,createFirst,첫 번째 자산을 등록해보세요,Register your first asset
 asset,fee,수수료,Fee
 asset,loading,로딩 중...,Loading...
@@ -458,7 +443,6 @@ asset,investAdd.newProduct,새 투자 상품,New investment
 asset,investAdd.productPlaceholder,"예: KODEX 200, 해외 ETF 포트폴리오","e.g. KODEX 200, overseas ETF portfolio"
 asset,investAdd.valuation,평가액 (원),Valuation (KRW)
 asset,form.assetName,자산명,Asset Name
-asset,form.assetNamePlaceholder,자산명을 입력하세요,Enter asset name
 asset,form.assetType,자산 유형,Asset Type
 asset,form.balance,잔액,Balance
 asset,form.currency,통화,Currency
@@ -467,21 +451,16 @@ asset,form.exchangeRatePlaceholder,{{code}} 1당 원화,KRW per 1 {{code}}
 asset,form.exchangeRateHint,외화 잔액 · 예수금을 원화로 바꿀 때 써요.,Converts the foreign balance or cash to KRW.
 asset,form.exchangeRateRequired,환율을 입력해주세요.,Enter the exchange rate.
 asset,form.institution,금융기관,Institution
-asset,form.institutionPlaceholder,금융기관명을 입력하세요,Enter institution name
 asset,form.icon,아이콘,Icon
 asset,form.color,색상,Color
 asset,form.memo,메모,Memo
-asset,form.memoPlaceholder,메모를 입력하세요,Enter memo
 asset,form.fromAsset,출금 자산,From Asset
 asset,form.toAsset,입금 자산,To Asset
 asset,form.amount,금액,Amount
-asset,form.amountPlaceholder,금액을 입력하세요,Enter amount
 asset,form.fee,수수료,Fee
 asset,form.date,날짜,Date
 asset,form.description,설명,Description
-asset,form.descriptionPlaceholder,설명을 입력하세요,Enter description
 asset,form.cardCatalog,카드 카탈로그,Card Catalog
-asset,form.cardCatalogHint,카드를 선택하면 전월 실적 트래킹과 혜택 자동 매칭이 활성화됩니다.,Selecting a card enables last-month spending tracking and automatic benefit matching.
 asset,form.creditLimit,신용한도,Credit Limit
 asset,form.creditLimitPlaceholder,예: 3000000,e.g. 3000000
 asset,form.paymentDay,결제일,Payment Day
@@ -492,9 +471,7 @@ asset,form.noBankAccount,입출금 계좌가 없어요,No checking account
 asset,form.paymentAccountSelect,결제 출금계좌 선택,Select payment account
 asset,form.colorN,색상 {{n}},Color {{n}}
 asset,form.includeInTotal,전체 자산 합계에 포함,Include in total assets
-asset,form.includeInTotalDesc,순자산 · 총자산 계산에 반영됩니다,Reflected in net worth and total asset calculations
 asset,deleteConfirm.title,자산 삭제,Delete asset
-asset,deleteConfirm.message,"""{{name}}""을(를) 삭제할까요? 이 작업은 되돌릴 수 없습니다.","Delete ""{{name}}""? This action cannot be undone."
 asset,deleteConfirm.failed,자산을 삭제하지 못했어요.,Couldn't delete the asset.
 asset,assetDetail.installmentPayoffFailed,할부를 정리하지 못했어요.,Couldn't pay off the installment.
 asset,assetDetail.installmentUndoFailed,할부 정리를 되돌리지 못했어요.,Couldn't undo the installment payoff.
@@ -611,7 +588,7 @@ asset,editDialog.cardBalanceHelp,아직 결제되지 않은 사용액을 적어�
 asset,editDialog.currentUnpaid,지금 미결제 잔액 {{balance}},Unpaid now: {{balance}}
 asset,editDialog.carryoverLocked,결제가 끝나 고칠 수 없어요.,"Already paid, so it can't be changed."
 asset,editDialog.dueCarryoverLabel,{{date}}에 결제될 금액,Due on {{date}}
-asset,editDialog.dueCarryoverHelp,카드사 앱에 '결제 예정 금액'으로 보이는 금액이에요. 그날 결제계좌에서 빠져요.,The amount your card app shows as due. It leaves your payment account that day.
+asset,editDialog.dueCarryoverHelp,"카드사 앱에 ""결제 예정 금액""으로 보이는 금액이에요. 그날 결제계좌에서 빠져요.",The amount your card app shows as due. It leaves your payment account that day.
 asset,editDialog.carryoverAfterLabel,그 뒤 쓴 금액,Spent since then
 asset,editDialog.carryoverAfterHelp,지난 청구 뒤로 쓴 금액이에요. {{date}}에 결제돼요.,Spent after the last statement. Paid on {{date}}.
 asset,editDialog.carryoverAfterHelpNoDate,지난 청구 뒤로 쓴 금액이에요.,Spent after the last statement.
@@ -652,7 +629,7 @@ asset,savingGoal.deleteConfirm,삭제한 저축 목표는 되돌릴 수 없어�
 asset,savingGoal.deleteFailed,저축 목표를 삭제하지 못했어요.,Couldn't delete the saving goal.
 asset,savingGoal.overallProgress,전체 진행률,Overall progress
 asset,savingGoal.goalCount,목표 목록 · {{n}}개,Goals · {{n}}
-asset,savingGoal.emptyManager,아직 저축 목표가 없어요. ‘목표 추가’로 시작해보세요.,No saving goals yet. Start with ‘Add goal’.
+asset,savingGoal.emptyManager,아직 저축 목표가 없어요. [목표 추가]로 시작해보세요.,No saving goals yet. Start with [Add goal].
 asset,savingGoal.loadFailed,저축 목표를 불러오지 못했어요,Couldn't load the saving goals
 asset,savingGoal.editNamed,{{name}} 목표 수정,Edit {{name}} goal
 asset,savingGoal.deleteNamed,{{name}} 목표 삭제,Delete {{name}} goal
@@ -876,7 +853,6 @@ dashboard,chart.expense,지출,Expense
 dutchPay,title,더치페이,Dutch Pay
 dutchPay,addDutchPay,더치페이 추가,Add Dutch Pay
 dutchPay,editDutchPay,더치페이 수정,Edit Dutch Pay
-dutchPay,empty,더치페이 내역이 없습니다,No dutch pay records
 dutchPay,settled,정산 완료,Settled
 dutchPay,participants,명,
 dutchPay,count,건,
@@ -890,10 +866,8 @@ dutchPay,splitMethod.EQUAL,균등 분할,Equal Split
 dutchPay,splitMethod.CUSTOM,직접 입력,Custom
 dutchPay,splitMethod.RATIO,비율 분할,Ratio
 dutchPay,form.title,제목,Title
-dutchPay,form.titlePlaceholder,더치페이 제목을 입력하세요,Enter title
 dutchPay,form.titleRequired,제목을 입력해주세요,Title is required
 dutchPay,form.description,설명,Description
-dutchPay,form.descriptionPlaceholder,설명을 입력하세요,Enter description
 dutchPay,form.totalAmount,총 금액,Total Amount
 dutchPay,form.date,날짜,Date
 dutchPay,form.splitMethod,분할 방식,Split Method
@@ -909,7 +883,6 @@ group,title,그룹,Groups
 group,addGroup,그룹 추가,Add Group
 group,editGroup,그룹 수정,Edit Group
 group,joinGroup,그룹 참가,Join Group
-group,empty,그룹이 없습니다,No groups yet
 group,createFirst,첫 번째 그룹을 만들어보세요,Create your first group
 group,backToList,목록으로,Back to list
 group,inviteCode,초대 코드,Invite Code
@@ -924,12 +897,9 @@ group,role.OWNER,소유자,Owner
 group,role.ADMIN,관리자,Admin
 group,role.MEMBER,멤버,Member
 group,form.groupName,그룹 이름,Group Name
-group,form.groupNamePlaceholder,그룹 이름을 입력하세요,Enter group name
 group,form.description,설명,Description
-group,form.descriptionPlaceholder,설명을 입력하세요,Enter description
 group,form.groupType,그룹 유형,Group Type
 group,deleteConfirm.title,그룹 삭제,Delete Group
-group,deleteConfirm.message,이 그룹을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.,Are you sure you want to delete this group? This action cannot be undone.
 group,comment,댓글,Comment
 group,comments,댓글,Comments
 group,addComment,댓글 추가,Add Comment
@@ -966,7 +936,6 @@ dashboard,noData,데이터 없음,No data
 dashboard,save,저장,Save
 dashboard,edit,편집,Edit
 dashboard,cancel,취소,Cancel
-dashboard,saveError,대시보드 저장에 실패했습니다,Failed to save dashboard
 dashboard,hideWidget,위젯 숨기기,Hide widget
 dashboard,widgetSettings,위젯 설정,Widget Settings
 dashboard,closeSettings,설정 닫기,Close Settings
@@ -1089,8 +1058,6 @@ calendar,delete,삭제,Delete
 calendar,default,기본,Default
 calendar,manageShare,캘린더 관리 · 공유 설정,Calendar & Share Settings
 calendar,name,이름,Name
-calendar,namePlaceholder,캘린더 이름을 입력하세요,Enter calendar name
-calendar,deleteConfirm,이 캘린더를 삭제하시겠습니까? 캘린더의 모든 일정이 삭제됩니다.,Are you sure you want to delete this calendar? All events will be deleted.
 calendar,cannotHideDefault,기본 캘린더는 숨길 수 없어요,The default calendar cannot be hidden
 calendar,otherSources,기타 소스,Other Sources
 calendar,source.holiday,공휴일,Holidays
@@ -1169,7 +1136,7 @@ calendar,labelsSection.title,캘린더 라벨,Calendar labels
 calendar,labelsSection.description,모든 캘린더에서 공용으로 사용되는 라벨이에요. 일정 등록 시 선택할 수 있어요.,These labels are shared across all calendars. You can select them when creating an event.
 calendar,labelsSection.infoDesc,모든 캘린더에서 같이 쓰는 라벨이에요. 일정을 만들 때 골라요.,Labels are shared across all calendars. Pick one when you create an event.
 calendar,labelsSection.allLabels,전체 라벨,All Labels
-calendar,labelsSection.emptyHint,위 '{{label}}' 로 만들어요.,Use '{{label}}' above to create one
+calendar,labelsSection.emptyHint,위 [{{label}}]로 만들어요.,Use [{{label}}] above to create one
 calendar,labelsSection.loadFailed,라벨을 불러오지 못했어요,Couldn't load labels
 calendar,labelsSection.deleteTitle,라벨 삭제,Delete label
 calendar,labelsSection.deleteMessage,"""{{name}}"" 라벨을 삭제할까요? 이 라벨이 붙은 일정은 라벨 없이 남아요. 삭제한 라벨은 되돌릴 수 없어요.","Delete the ""{{name}}"" label? Events with this label stay, without a label. This action cannot be undone."
@@ -1200,7 +1167,7 @@ memo,colorLabel,색상,Color
 memo,noTag,태그 없음,No tag
 memo,tagEmptyHint,태그는 설정 › 메모 태그에서 만들어요.,Create tags in Settings › Memo tags.
 memo,tags.title,메모 태그,Memo tags
-memo,tags.desc,"메모에 붙이는 태그예요. 메모 화면의 거르기에 쓰여요. 태그를 지우면 그 메모는 '태그 없음' 으로 남아요.","Tags you attach to memos. They are used to filter the memo screen. If you delete a tag, its memos stay as 'No tag'."
+memo,tags.desc,"메모에 붙이는 태그예요. 메모 화면의 거르기에 쓰여요. 태그를 지우면 그 메모는 ""태그 없음""으로 남아요.","Tags you attach to memos. They are used to filter the memo screen. If you delete a tag, its memos stay as ""No tag""."
 memo,tags.new,태그 추가,Add tag
 memo,tags.usage,{{count}}건에 사용 중,Used by {{count}} memos
 memo,tags.empty,태그가 없어요,No tags yet
@@ -1602,7 +1569,7 @@ expense,addTx.saveSplitAndSave,나눈 내역 맞추고 저장,Adjust split items
 expense,addTx.presetLoad,프리셋,Presets
 expense,addTx.presetApplied,{{name}} 적용됨,{{name}} applied
 expense,addTx.saveCurrentInput,현재 입력값 저장,Save current input
-expense,addTx.noPresets,저장된 프리셋이 없어요. 값을 넣고 “현재 입력값 저장” 을 누르면 만들어져요.,No saved presets yet. Enter values and tap “Save current input” to create one.
+expense,addTx.noPresets,저장된 프리셋이 없어요. 값을 넣고 [현재 입력값 저장]을 누르면 만들어져요.,No saved presets yet. Enter values and tap [Save current input] to create one.
 expense,addTx.splitMismatchTitle,나눈 내역과 금액이 달라요,The split items don't match the amount
 expense,addTx.matchSplits,나눈 내역 맞추기,Adjust split items
 expense,addTx.subCategoryPlaceholder,세부 카테고리,Subcategory
@@ -1648,7 +1615,7 @@ expense,addTx.entryRequired,금액을 입력해주세요.,Enter an amount.
 expense,addTx.currencyChip,"통화, {{code}}","Currency, {{code}}"
 expense,addTx.currencyTitle,통화,Currency
 expense,addTx.presetLoadFailed,프리셋을 불러오지 못했어요.,Couldn't load presets.
-expense,addTx.emptyPresetHint,“{{name}}” 프리셋은 금액이 비어 있어요. 금액을 넣고 [다음]을 눌러주세요.,The “{{name}}” preset has no amount. Enter one and press Next.
+expense,addTx.emptyPresetHint,"""{{name}}"" 프리셋은 금액이 비어 있어요. 금액을 넣고 [다음]을 눌러주세요.","The ""{{name}}"" preset has no amount. Enter one and press [Next]."
 expense,addTx.presetAllTitle,프리셋 고르기,Choose a preset
 expense,addTx.showAll,모두 보기,See all
 expense,addTx.category,카테고리,Category
@@ -1963,7 +1930,7 @@ settings,sections.appearance.label,표시 설정,Display settings
 settings,sections.appearance.desc,테마 · 언어 · 기준 지역 · 기본 통화,"Theme · language · region · default currency"
 settings,region.label,기준 지역,Region
 settings,region.placeholder,지역 선택,Select a region
-settings,region.desc,'오늘'과 통계의 하루를 이 지역 기준으로 계산해요. 화면의 시간은 기기 시간대로 보여요.,"Days for 'today' and statistics are calculated in this region. On-screen times follow your device's time zone."
+settings,region.desc,"""오늘""과 통계의 하루를 이 지역 기준으로 계산해요. 화면의 시간은 기기 시간대로 보여요.","Days for ""today"" and statistics are calculated in this region. On-screen times follow your device's time zone."
 settings,sections.notifications.label,알림 설정,Notification settings
 settings,sections.notifications.desc,결제 예정 · 예산 초과 알림,Payment due and budget overage alerts
 settings,sections.data.label,데이터 내보내기,Export data
@@ -2060,7 +2027,6 @@ stocks,watch.emptyTitle,관심 종목이 없어요,No watchlist stocks
 stocks,watch.emptyDesc,종목을 찾아 ☆ 를 눌러보세요.,Find a stock and tap the star.
 stocks,search.label,종목 검색,Search stocks
 stocks,search.placeholder,종목 검색,Search stocks
-stocks,search.noResults,'{{query}}'에 대한 검색 결과가 없어요,No results for '{{query}}'
 stocks,connect.title,증권 계정을 연결해주세요,Connect a brokerage account
 stocks,connect.holdingsDesc,토스증권 키를 연결하면 보유 종목과 평가손익을 실시간으로 볼 수 있어요.,Connect your Toss Securities key to see holdings and P&L in real time.
 stocks,connect.action,설정에서 연결하기,Connect in settings
@@ -2710,7 +2676,7 @@ todo,tdm.emptyMonthDesc,오른쪽 아래 + 버튼으로 추가해보세요.,Add 
 todo,tdm.hideDone,완료한 할 일 숨기기,Hide completed
 todo,tdm.reset,초기화,Reset
 todo,tdm.apply,완료,Done
-todo,tdm.emptyMonthDescWide,오른쪽 위 '할 일 추가' 버튼으로 추가해보세요.,Add one with the 'Add todo' button at the top right.
+todo,tdm.emptyMonthDescWide,오른쪽 위 [할 일 추가]로 추가해보세요.,Add one with [Add todo] at the top right.
 todo,tdm.miniCalendar,할 일 달력,To-do calendar
 todo,tdm.legend,숫자 = 남은 할 일 · ★ 수집 · 구름 = 놓친 날 — 날을 누르면 목록이 그 날로,Number = to-dos left · ★ collected · cloud = missed day — tap a day to jump the list there
 todo,tdm.filterBar,할 일 거르기,To-do filters
@@ -2723,7 +2689,7 @@ todo,remain.count,{{count}}개,{{count}}
 todo,starToast.collected,별빛 {{gain}}개를 받아 오늘의 별자리를 수집했어요.,You got {{gain}} starlight and collected today's constellation.
 todo,starToast.progress,별빛 {{gain}}개를 받아 별자리까지 {{left}}개 남았어요.,You got {{gain}} starlight. {{left}} to go for the constellation.
 todo,tags.title,할 일 태그,Todo tags
-todo,tags.desc,할 일에 붙이는 태그예요. 할 일 화면의 거르기와 태그별 개수에 쓰여요. 태그를 지우면 그 할 일은 '태그 없음'으로 남아요.,"Tags you attach to to-dos. They are used for filtering and counts on the to-do screen. If you delete a tag, its to-dos stay as 'No tag'."
+todo,tags.desc,"할 일에 붙이는 태그예요. 할 일 화면의 거르기와 태그별 개수에 쓰여요. 태그를 지우면 그 할 일은 ""태그 없음""으로 남아요.","Tags you attach to to-dos. They are used for filtering and counts on the to-do screen. If you delete a tag, its to-dos stay as ""No tag""."
 todo,tags.new,태그 추가,Add tag
 todo,tags.usage,{{count}}건에 사용 중,Used by {{count}} todos
 todo,tags.empty,태그가 없어요,No tags yet
@@ -2836,7 +2802,7 @@ asset,trade.settlementAccountHelp,예수금이 모자라면 이 계좌에서 부
 asset,trade.settlementDelta,결제 계좌 변동,Settlement account change
 asset,trade.realizedPreview,실현손익,Realized P/L
 asset,trade.fundingNotice,예수금이 모자라 결제 계좌에서 {{amount}}만큼 옮겨요,{{amount}} moves from the settlement account to cover the shortfall
-asset,trade.insufficientCash,예수금이 마이너스가 돼요. 그대로 기록됩니다.,Cash will go negative. It is recorded as is.
+asset,trade.insufficientCash,예수금이 마이너스가 돼요. 그대로 기록돼요.,Cash will go negative. It is recorded as is.
 asset,trade.insufficientQty,보유 수량보다 많이 팔 수 없어요.,Cannot sell more than you hold.
 asset,trade.saveFailed,매매를 처리하지 못했어요.,Couldn't process the trade.
 asset,trade.saveInsufficientQty,보유 수량이 부족해요.,Not enough shares held.
@@ -3182,7 +3148,6 @@ ds,infiniteList.end,모두 봤어요.,You've reached the end.
 ds,quantityPicker.decrease,줄이기,Decrease
 ds,quantityPicker.increase,늘리기,Increase
 ds,searchableList.label,검색,Search
-ds,searchableList.emptyFor,'{{query}}'에 대한 검색 결과가 없어요,No results for '{{query}}'
 ds,searchableList.empty,검색 결과가 없어요,No results
 ds,searchableList.error,검색 결과를 불러오지 못했어요,Couldn't load the results
 ds,common.retry,다시 시도,Try again
@@ -3251,7 +3216,6 @@ ds,skeleton.slow,평소보다 오래 걸리고 있어요.,This is taking longer 
 ds,iconPicker.results,검색 결과 {{count}}개,{{count}} results
 ds,iconPicker.searchPlaceholder,아이콘 이름 검색,Search icon name
 ds,iconPicker.searchLabel,아이콘 검색,Search icons
-ds,iconPicker.emptyTitle,'{{query}}'에 대한 아이콘이 없어요,No icons for '{{query}}'
 ds,iconPicker.emptyDescription,다른 말로 찾거나 묶음에서 골라주세요.,Try other words or browse the groups.
 ds,iconPicker.label,아이콘,Icon
 ds,iconPicker.current,지금 아이콘,Current icon
@@ -3285,6 +3249,8 @@ ds,attachment.defaultName,파일 {{suffix}},"Files, {{suffix}}"
 ds,attachment.dropHere,파일을 여기로 끌어다 놓으세요,Drag files here
 ds,attachment.pick,파일 선택,Choose files
 ds,topNavigation.searchTitle,검색,Search
+ds,iconPicker.emptyTitle,"""{{query}}""에 대한 아이콘이 없어요","No icons for ""{{query}}"""
+ds,searchableList.emptyFor,"""{{query}}""에 대한 검색 결과가 없어요","No results for ""{{query}}"""
 common,searchField,거래 검색,Search transactions
 common,searchTypeGroup,거래 종류,Transaction type
 common,searchTypeAll,전체,All
