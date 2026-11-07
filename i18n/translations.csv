@@ -2178,7 +2178,7 @@ stocks,securityType.STOCK,주식,Stock
 stocks,securityType.ETF,ETF,ETF
 stocks,securityType.INDEX,지수,Index
 stocks,securityType.WARRANT,워런트,Warrant
-stocks,search.hint,종목명 · 심볼로 검색하세요 (국내 + 미국 · 중국 · 일본 · 홍콩 · 베트남),Search by name or symbol (KR + US · CN · JP · HK · VN)
+stocks,search.hint,종목 이름이나 코드 (국내 + 미국 · 중국 · 일본 · 홍콩 · 베트남),Name or symbol (KR + US · CN · JP · HK · VN)
 stocks,detail.priceUnavailable,토스 시세 미지원 종목이에요 (국내 · 미국만 제공),Price unavailable via Toss (KR · US only)
 stocks,detail.priceFail,시세를 불러오지 못했어요,Couldn't load the price
 stocks,detail.priceStale,보이는 값은 마지막으로 받은 시세예요.,The values shown are the last prices received.

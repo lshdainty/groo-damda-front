@@ -105,7 +105,7 @@ export function TransferAccountFields({
       </Field>
 
       <Field style={{ marginBottom: 14 }}>
-        <FieldLabel id={`${uid}to-label`}>{t("addTx.depositAccount")}</FieldLabel>
+        <FieldLabel id={`${uid}to-label`}>{t("addTx.toAccount")}</FieldLabel>
         <Select
           value={toAssetRowId != null ? String(toAssetRowId) : ""}
           onValueChange={(v) => onToChange(v ? Number(v) : null)}
