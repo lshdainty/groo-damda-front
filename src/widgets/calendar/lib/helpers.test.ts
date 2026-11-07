@@ -1,8 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { i18n } from "@/shared/i18n/config";
+import { describe, it, expect } from "vitest";
 import {
   convertCalendarEventToIEvent,
-  convertExpenseToIEvent,
   eventBadgeTone,
   eventColorKey,
   withOpenedOccurrence,
@@ -11,75 +9,6 @@ import type {
   CalendarEvent,
   CalendarEventFormValues,
 } from "@/entities/calendar";
-import type { Expense } from "@/entities/expense";
-
-/**
- * 캘린더 일별 합계는 title 이 아니라 expenseAmount 를 쓴다.
- *
- * 예전엔 title 을 `([+-])?([\d,]+)` 로 되파싱했는데,
- *  - en 로케일 `-₩50,000` 은 부호와 숫자 사이 ₩ 때문에 부호를 놓쳐
- *    지출이 전부 환불(양수)로 뒤집혔고,
- *  - `2차회식 -50,000원` 은 카테고리명의 `2` 를 금액으로 읽었다.
- * 그래서 converter 가 부호 값을 직접 실어 준다 — 지출 음수 / 수입·환불 양수.
- */
-function tx(over: Partial<Expense>): Expense {
-  return {
-    rowId: 1,
-    categoryRowId: 1,
-    categoryName: "식비",
-    assetRowId: null,
-    assetName: null,
-    expenseType: "EXPENSE",
-    amount: 50000,
-    merchant: "가맹점",
-    description: "",
-    expenseDate: "2026-09-01T12:00:00",
-    ...over,
-  } as Expense;
-}
-
-describe("convertExpenseToIEvent.expenseAmount", () => {
-  const orig = i18n.language;
-  beforeEach(async () => {
-    await i18n.changeLanguage("en");
-  });
-  afterEach(async () => {
-    await i18n.changeLanguage(orig);
-  });
-
-  it("지출은 음수 — en 로케일 ₩ 가 부호를 가리지 않는다", () => {
-    const ev = convertExpenseToIEvent(tx({}));
-    // 부호는 U+2212(−) — 하이픈과 섞이면 tabular-nums 정렬이 어긋난다(QA #22).
-    expect(ev.title).toContain("−₩50,000");
-    expect(ev.expenseAmount).toBe(-50000);
-  });
-
-  it("수입은 양수", () => {
-    const ev = convertExpenseToIEvent(tx({ expenseType: "INCOME" }));
-    expect(ev.expenseAmount).toBe(50000);
-  });
-
-  it("환불된 지출은 합계 기여가 0 — 칩은 제 금액·색으로 남는다", () => {
-    // 마크 모델에서는 환불이 수입 행을 만들지 않는다. 그 거래는 여전히 지출이라
-    // 셀에 남아 있어야 "환불한 그 건" 을 찾을 수 있고, 일별 합계에서는 삭제와
-    // 똑같이 빠져야 한다. 그래서 칩(title)과 합계(expenseAmount)가 갈린다.
-    const ev = convertExpenseToIEvent(
-      tx({
-        expenseType: "EXPENSE",
-        refundedAt: "2026-09-18T12:00:00",
-        amount: 3000,
-      }),
-    );
-    expect(ev.expenseAmount).toBe(0);
-    expect(ev.title).toContain("₩3,000");
-    expect(ev.color).toBe("#c73838");
-  });
-
-  it("숫자로 시작하는 카테고리명도 금액과 섞이지 않는다", () => {
-    const ev = convertExpenseToIEvent(tx({ categoryName: "2차회식" }));
-    expect(ev.expenseAmount).toBe(-50000);
-  });
-});
 
 /**
  * 종류(eventType)는 화면까지 살아서 가야 한다.
@@ -111,10 +40,6 @@ describe("convertCalendarEventToIEvent.eventType", () => {
       calEvent({ eventType: "BIRTHDAY" }),
     );
     expect(ev.eventType).toBe("BIRTHDAY");
-  });
-
-  it("일정이 아닌 소스(지출)는 종류가 없다 — 지어내지 않는다", () => {
-    expect(convertExpenseToIEvent(tx({})).eventType).toBeNull();
   });
 });
 

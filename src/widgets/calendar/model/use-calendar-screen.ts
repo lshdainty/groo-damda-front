@@ -146,10 +146,6 @@ export function useCalendarScreen(events: IEvent[]) {
       // Source filtering
       if (event.sourceType === "holiday" && !isBuiltinSourceEnabled("holiday"))
         return false;
-      if (event.sourceType === "expense" && !isBuiltinSourceEnabled("expense"))
-        return false;
-      if (event.sourceType === "todo" && !isBuiltinSourceEnabled("todo"))
-        return false;
       if (
         event.sourceType === "calendar" &&
         event.calendarRowId &&
