@@ -376,33 +376,6 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
         ? t("editDialog.nameDuplicate")
         : null;
 
-  // 유효성
-  //
-  // 필수가 빈 칸(issues)은 [추가] · [저장] 을 막지 않는다 — 누르면 칸마다 오류가 서고 첫 칸에 초점이 간다(field.md "저장 버튼은 켜 둔다").
-  // 신용카드는 결제일 필수 — 없으면 청구 사이클(이용기간·예정액·할부 회차)을 세울 수 없다(체크카드는 즉시 출금이라 결제일이 없다).
-  // 편집 모드: 카드 카탈로그 재선택 없이 별칭/금액만 바꿀 수 있어야 한다. 새 계좌 · 투자는 별칭이 필수다.
-  const issues = {
-    name: editingGroup !== "card" && nameTrim.length === 0,
-    card: editingGroup === "card" && isNew && !selectedCard,
-    paymentDay:
-      cardType === "CREDIT" && editingGroup === "card" && !paymentDay.trim(),
-    // 외화 자산은 환율이 필수다(서버 AST_036) — 비면 원화로 그대로 더해져 합계가 틀린다
-    exchangeRate: isForeign && !(Number(exchangeRate.replace(/,/g, "")) > 0),
-    // 상한(1,000억) 위의 값 — 상한 전에 저장된 옛 값을 열어도 깎아서 저장하지 않는다(QA #48 "몰래 고쳐 넣지 않는다").
-    // 칸이 오류를 보이고(AmountInput), 줄여서 상한 안이 돼야 저장된다
-    amountTooLarge:
-      parseAmount(balanceStr) > MAX_BALANCE ||
-      parseAmount(creditLimit) > MAX_BALANCE ||
-      parseAmount(dueStr) > MAX_BALANCE ||
-      holdings.some((h) => !h.linked && (h.holdingValue ?? 0) > MAX_BALANCE),
-  };
-  const canSubmit =
-    !nameErr &&
-    !issues.name &&
-    !issues.card &&
-    !issues.paymentDay &&
-    !issues.exchangeRate &&
-    !issues.amountTooLarge;
   // 누르고도 못 보낸 적이 있으면 오류 글을 세운다 — 고치면 저절로 걷힌다
   const [showErrors, setShowErrors] = useState(false);
   // 못 보낸 횟수 — 첫 오류 칸에 초점을 옮기는 신호
@@ -482,6 +455,46 @@ export function useAssetForm({ item, kind: kindArg = null }: UseAssetFormArgs) {
     : parseAmount(balanceStr) + dueAmount;
   const overLimitBy =
     limitAmount > 0 ? Math.max(0, usageForLimit - limitAmount) : 0;
+
+  // 지금 그려지는 금액 칸 — BalanceField · LimitField · DueField 의 "그리지 않는다" 조건과 같다.
+  // 잠긴 칸(이월 회차 닫힘)은 저장에 실리지 않고 고칠 수도 없어 세지 않는다
+  const balanceShown =
+    kind !== "체크카드" &&
+    !(editingGroup === "invest" && holdings.length > 0) &&
+    !carryoverLocked;
+  const limitShown = isOverdraft || isCreditCardEdit;
+  const dueShown = dueField != null && !dueField.locked;
+
+  // 유효성
+  //
+  // 필수가 빈 칸(issues)은 [추가] · [저장] 을 막지 않는다 — 누르면 칸마다 오류가 서고 첫 칸에 초점이 간다(field.md "저장 버튼은 켜 둔다").
+  // 신용카드는 결제일 필수 — 없으면 청구 사이클(이용기간·예정액·할부 회차)을 세울 수 없다(체크카드는 즉시 출금이라 결제일이 없다).
+  // 편집 모드: 카드 카탈로그 재선택 없이 별칭/금액만 바꿀 수 있어야 한다. 새 계좌 · 투자는 별칭이 필수다.
+  const issues = {
+    name: editingGroup !== "card" && nameTrim.length === 0,
+    card: editingGroup === "card" && isNew && !selectedCard,
+    paymentDay:
+      cardType === "CREDIT" && editingGroup === "card" && !paymentDay.trim(),
+    // 외화 자산은 환율이 필수다(서버 AST_036) — 비면 원화로 그대로 더해져 합계가 틀린다
+    exchangeRate: isForeign && !(Number(exchangeRate.replace(/,/g, "")) > 0),
+    // 상한(1,000억) 위의 값 — 상한 전에 저장된 옛 값을 열어도 깎아서 저장하지 않는다(QA #48 "몰래 고쳐 넣지 않는다").
+    // 칸이 오류를 보이고(AmountInput), 줄여서 상한 안이 돼야 저장된다.
+    // **지금 보이는 칸만 센다** — 종류가 바뀌거나 보유 종목이 생겨 사라진 칸의 옛 값은 오류 칸도 없이 저장만 막는다
+    // (그 값은 저장 요청에도 실리지 않는다: AssetEditDialog 가 종류마다 쓰는 칸만 싣는다)
+    amountTooLarge:
+      (balanceShown && parseAmount(balanceStr) > MAX_BALANCE) ||
+      (limitShown && parseAmount(creditLimit) > MAX_BALANCE) ||
+      (dueShown && parseAmount(dueStr) > MAX_BALANCE) ||
+      (editingGroup === "invest" &&
+        holdings.some((h) => !h.linked && (h.holdingValue ?? 0) > MAX_BALANCE)),
+  };
+  const canSubmit =
+    !nameErr &&
+    !issues.name &&
+    !issues.card &&
+    !issues.paymentDay &&
+    !issues.exchangeRate &&
+    !issues.amountTooLarge;
 
   // 바뀐 값 — 닫기 · 뒤로 가기 전에 "작성한 내용이 사라져요" 를 묻는다. 종류는 따로 본다(1단계가 고른 종류만으로는 쓴 글이 아니다).
   // 찾기 글(query · stockQ · cardKeyword)은 쓴 값이 아니라 빼고, 보유 줄의 react key 도 뺀다.
