@@ -16,7 +16,7 @@ import {
   formatAxisWon,
 } from "@/shared/ds/chart";
 import { List, ListItem } from "@/shared/ds/list";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -162,11 +162,17 @@ export function FixedOverviewSection({
       <>
         {head}
         <Body place={place}>
-          <div aria-hidden>
-            <Skeleton className="h-7 w-full" radius="8" />
-            <Skeleton text="t5" className="mt-x4 w-1/2" />
-            <Skeleton text="t5" className="mt-x2 w-2/3" />
-          </div>
+          <LoadingRegion
+            pending
+            className="contents"
+            fallback={
+              <>
+                <Skeleton className="h-7 w-full" radius="8" />
+                <Skeleton text="t5" className="mt-x4 w-1/2" />
+                <Skeleton text="t5" className="mt-x2 w-2/3" />
+              </>
+            }
+          />
         </Body>
       </>
     );
@@ -599,14 +605,22 @@ export function FixedCategorySection({
       <>
         {head}
         <Body place={place}>
-          <div aria-hidden className="flex flex-col gap-x4">
-            {[0, 1, 2].map((i) => (
-              <div key={i}>
-                <Skeleton text="t4" className="w-1/2" />
-                <Skeleton className="mt-x1_5 h-2 w-full" radius="full" />
-              </div>
-            ))}
-          </div>
+          <LoadingRegion
+            pending
+            className="contents"
+            fallback={
+              <>
+                <div className="flex flex-col gap-x4">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i}>
+                      <Skeleton text="t4" className="w-1/2" />
+                      <Skeleton className="mt-x1_5 h-2 w-full" radius="full" />
+                    </div>
+                  ))}
+                </div>
+              </>
+            }
+          />
         </Body>
       </>
     );

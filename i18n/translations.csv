@@ -3466,3 +3466,4 @@ expense,splitStep.errCategory,카테고리를 골라주세요.,Select a category
 expense,splitStep.errAmount,금액을 입력해주세요.,Enter an amount.
 expense,txDetail.recurringLoadFailed,반복 설정을 열지 못했어요.,Couldn't open the repeat settings.
 expense,splitStep.optional,선택,Optional
+calendar,weekView.timeGridLabel,주간 시간표,Weekly timetable

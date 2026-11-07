@@ -34,7 +34,7 @@ import {
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { List, ListButtonItem, ListItem, ListTile } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { isIconName } from "@/shared/lib";
 import {
@@ -134,7 +134,17 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
   const axisWidth = useAxisWidth(yAxis.ticks.map(tick));
 
   if (trendQ.isLoading) {
-    return <Skeleton className="w-full" radius="8" style={{ height }} />;
+    return (
+      <LoadingRegion
+        pending
+        className="contents"
+        fallback={
+          <>
+            <Skeleton className="w-full" radius="8" style={{ height }} />
+          </>
+        }
+      />
+    );
   }
   if (loadFailed(trendQ)) {
     return (
@@ -323,16 +333,22 @@ export function SummarySkeleton({ place }: { place: Placement }) {
   return (
     <>
       <Body place={place} className={band ? "pb-0 pt-x6" : undefined}>
-        <div aria-hidden>
-          <Skeleton text="t3" className="w-1/4" />
-          <Skeleton text="t12" radius="8" className="mt-x2 w-1/2" />
-          <Skeleton text="t3" className="mt-x2 w-1/3" />
-          <Skeleton
-            className="mt-x4 w-full"
-            radius="8"
-            style={{ height: band ? 140 : 180 }}
-          />
-        </div>
+        <LoadingRegion
+          pending
+          className="contents"
+          fallback={
+            <>
+              <Skeleton text="t3" className="w-1/4" />
+              <Skeleton text="t12" radius="8" className="mt-x2 w-1/2" />
+              <Skeleton text="t3" className="mt-x2 w-1/3" />
+              <Skeleton
+                className="mt-x4 w-full"
+                radius="8"
+                style={{ height: band ? 140 : 180 }}
+              />
+            </>
+          }
+        />
       </Body>
       {band ? (
         <div className="mt-x3 pb-x4">
@@ -340,14 +356,22 @@ export function SummarySkeleton({ place }: { place: Placement }) {
         </div>
       ) : (
         <CardContent className="gap-0 pt-0">
-          <div aria-hidden className="mt-x5 grid grid-cols-3 gap-x3">
-            {[0, 1, 2].map((i) => (
-              <div key={i}>
-                <Skeleton text="t3" className="w-1/2" />
-                <Skeleton text="t5" className="mt-x0_5 w-3/4" />
-              </div>
-            ))}
-          </div>
+          <LoadingRegion
+            pending
+            className="contents"
+            fallback={
+              <>
+                <div className="mt-x5 grid grid-cols-3 gap-x3">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i}>
+                      <Skeleton text="t3" className="w-1/2" />
+                      <Skeleton text="t5" className="mt-x0_5 w-3/4" />
+                    </div>
+                  ))}
+                </div>
+              </>
+            }
+          />
         </CardContent>
       )}
     </>
@@ -614,18 +638,29 @@ export function CompositionSection({ g }: { g: AssetGroups }) {
           }
         />
         <CardContent className="gap-0">
-          <div aria-hidden className="flex items-start gap-x8">
-            <Skeleton radius="full" className="size-[180px] shrink-0" />
-            <div className="flex min-w-0 flex-1 flex-col">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="flex min-h-11 items-center gap-x2">
-                  <Skeleton radius="4" className="size-2.5 shrink-0" />
-                  <Skeleton text="t4" className="min-w-0 flex-1" />
-                  <Skeleton text="t4" className="w-x10 shrink-0" />
+          <LoadingRegion
+            pending
+            className="contents"
+            fallback={
+              <>
+                <div className="flex items-start gap-x8">
+                  <Skeleton radius="full" className="size-[180px] shrink-0" />
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="flex min-h-11 items-center gap-x2"
+                      >
+                        <Skeleton radius="4" className="size-2.5 shrink-0" />
+                        <Skeleton text="t4" className="min-w-0 flex-1" />
+                        <Skeleton text="t4" className="w-x10 shrink-0" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </>
+            }
+          />
         </CardContent>
       </>
     );
@@ -697,17 +732,23 @@ export function UpcomingBillsSection() {
     return (
       <>
         {head}
-        <div aria-hidden>
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="flex items-center gap-x3 px-x6 py-x3">
-              <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
-                <Skeleton text="t5" className="w-1/2" />
-                <Skeleton text="t3" className="w-1/3" />
-              </div>
-              <Skeleton text="t5" className="w-x10 shrink-0" />
-            </div>
-          ))}
-        </div>
+        <LoadingRegion
+          pending
+          className="contents"
+          fallback={
+            <>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-x3 px-x6 py-x3">
+                  <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
+                    <Skeleton text="t5" className="w-1/2" />
+                    <Skeleton text="t3" className="w-1/3" />
+                  </div>
+                  <Skeleton text="t5" className="w-x10 shrink-0" />
+                </div>
+              ))}
+            </>
+          }
+        />
       </>
     );
   }
@@ -964,23 +1005,31 @@ export function SavingGoalsSection({ place }: { place: Placement }) {
     return (
       <>
         {head}
-        <div aria-hidden className={band ? "pb-x3" : undefined}>
-          {[0, 1].map((i) => (
-            <div key={i}>
-              <div className="flex items-center gap-x3 px-x6 py-x3">
-                <Skeleton radius="12" className="size-x10 shrink-0" />
-                <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
-                  <Skeleton text="t5" className="w-1/2" />
-                  <Skeleton text="t3" className="w-1/3" />
-                </div>
-                <Skeleton text="t5" className="w-x10 shrink-0" />
+        <LoadingRegion
+          pending
+          className="contents"
+          fallback={
+            <>
+              <div className={band ? "pb-x3" : undefined}>
+                {[0, 1].map((i) => (
+                  <div key={i}>
+                    <div className="flex items-center gap-x3 px-x6 py-x3">
+                      <Skeleton radius="12" className="size-x10 shrink-0" />
+                      <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
+                        <Skeleton text="t5" className="w-1/2" />
+                        <Skeleton text="t3" className="w-1/3" />
+                      </div>
+                      <Skeleton text="t5" className="w-x10 shrink-0" />
+                    </div>
+                    <div className="px-x6 pb-x3 pt-x1">
+                      <Skeleton className="h-2 w-full" radius="full" />
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="px-x6 pb-x3 pt-x1">
-                <Skeleton className="h-2 w-full" radius="full" />
-              </div>
-            </div>
-          ))}
-        </div>
+            </>
+          }
+        />
       </>
     );
   }

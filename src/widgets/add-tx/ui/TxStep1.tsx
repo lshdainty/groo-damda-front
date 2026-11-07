@@ -83,7 +83,8 @@ function PresetBlock({ f }: { f: TxForm }) {
   const applied = f.templates.find((p) => p.rowId === f.activePresetId);
   return (
     <section aria-label={t("addTx.presetLoad")}>
-      <ListHeader as="div">
+      {/* mb-x1: [현재 입력값 저장](보이는 36)의 누르는 영역 44 가 바로 아래 프리셋 칩 줄에 4 가려졌다 — 아래 여백 4 */}
+      <ListHeader as="div" className="mb-x1">
         <h3>
           {applied
             ? t("addTx.presetApplied", { name: applied.templateName })

@@ -30,6 +30,10 @@ let warn: MockInstance<typeof console.warn>;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   vi.useFakeTimers();
+  // jsdom 은 레이아웃이 없어 getClientRects 가 늘 비어 있다 — 보이는 것으로 둔다(숨은 스켈레톤 시험만 비운다)
+  vi.spyOn(Element.prototype, "getClientRects").mockImplementation(
+    () => [{}] as unknown as DOMRectList,
+  );
   // 개발 중 알림(LoadingAnnouncer 없음 · 10초 넘김)은 여기서 받아 둔다 — 알림을 보는 테스트만 꺼내 본다
   warn = vi.spyOn(console, "warn").mockImplementation(() => {});
   container = document.createElement("div");
@@ -106,6 +110,173 @@ describe("Skeleton", () => {
     expect(el.className).toContain("h-(--text-t5--line-height)");
     // span 이라 p 안에 둬도 잘못 넣었다는 경고가 없다
     expect(error).not.toHaveBeenCalled();
+  });
+});
+
+describe("LoadingRegion 없이 그린 Skeleton(화면 82곳 — I-wrap-b5 3-a)", () => {
+  it("0 ~ 1초는 보이지 않게(높이는 그대로) 두고 1초에 보인다", () => {
+    render(<Skeleton className="h-[20px] w-[100px]" />);
+    const el = container.querySelector<HTMLElement>("[data-slot=skeleton]")!;
+    expect(el.className).toContain("opacity-0");
+    expect(el.getAttribute("data-wait")).toBe("quiet");
+    advance(LOADING_TIMING.showAfter - 1);
+    expect(el.className).toContain("opacity-0");
+    advance(1);
+    expect(el.className).not.toContain("opacity-0");
+    expect(el.getAttribute("data-wait")).toBe("waiting");
+  });
+
+  it("앱의 상태 글이 1초 '불러오는 중…' · 5초 오래 걸림 글을 읽고 사라지면 비운다", () => {
+    const tree = (shown: boolean) => (
+      <LoadingAnnouncer>{shown && <Skeleton />}</LoadingAnnouncer>
+    );
+    render(tree(true));
+    const el = status()!;
+    advance(LOADING_TIMING.showAfter - 1);
+    expect(el.textContent).toBe("");
+    advance(1);
+    expect(el.textContent).toBe(WAITING_TEXT);
+    advance(LOADING_TIMING.slowAfter - LOADING_TIMING.showAfter);
+    expect(el.textContent).toBe(SLOW_TEXT);
+    render(tree(false));
+    expect(el.textContent).toBe("");
+  });
+
+  it("1초 안에 사라지면 아무것도 읽지 않는다", () => {
+    const tree = (shown: boolean) => (
+      <LoadingAnnouncer>{shown && <Skeleton />}</LoadingAnnouncer>
+    );
+    render(tree(true));
+    advance(200);
+    render(tree(false));
+    advance(LOADING_TIMING.slowAfter);
+    expect(status()!.textContent).toBe("");
+  });
+
+  it("스켈레톤이 열 개여도 같은 글은 한 번만 넣는다", () => {
+    render(
+      <LoadingAnnouncer>
+        {Array.from({ length: 10 }, (_, i) => (
+          <Skeleton key={i} />
+        ))}
+      </LoadingAnnouncer>,
+    );
+    const el = status()!;
+    advance(LOADING_TIMING.showAfter);
+    expect(el.textContent).toBe(WAITING_TEXT);
+  });
+});
+
+describe("Skeleton 의 시간표 — 예외와 한 시계", () => {
+  it('wait="none"(이미지 자리)은 처음부터 보이고 상태 글에 알리지 않는다', () => {
+    render(
+      <LoadingAnnouncer>
+        <Skeleton wait="none" data-testid="img" />
+      </LoadingAnnouncer>,
+    );
+    const el = container.querySelector<HTMLElement>("[data-testid=img]")!;
+    expect(el.className).not.toContain("opacity-0");
+    advance(LOADING_TIMING.slowAfter);
+    expect(status()!.textContent).toBe("");
+  });
+
+  it("보이지 않는 스켈레톤(숨은 탭 칸 · display none)은 알리지 않는다", () => {
+    vi.spyOn(Element.prototype, "getClientRects").mockImplementation(
+      () => [] as unknown as DOMRectList,
+    );
+    render(
+      <LoadingAnnouncer>
+        <Skeleton />
+      </LoadingAnnouncer>,
+    );
+    advance(LOADING_TIMING.slowAfter);
+    expect(status()!.textContent).toBe("");
+  });
+
+  it("같은 LoadingRegion 안의 스켈레톤은 영역의 한 시계를 쓴다 — 늦게 붙어도 다시 투명 1초를 세지 않는다", () => {
+    const tree = (late: boolean) => (
+      <LoadingRegion
+        pending
+        fallback={
+          <>
+            <Skeleton data-testid="a" />
+            {late && <Skeleton data-testid="b" />}
+          </>
+        }
+      />
+    );
+    render(tree(false));
+    advance(LOADING_TIMING.showAfter);
+    render(tree(true));
+    const b = container.querySelector<HTMLElement>("[data-testid=b]")!;
+    expect(b.className).not.toContain("opacity-0");
+  });
+});
+
+describe("스켈레톤만 그리는 영역(pending · fallback — 화면 82곳, I-wrap-b5)", () => {
+  const area = (id: string) => (
+    <LoadingRegion
+      pending
+      className="contents"
+      fallback={<Skeleton data-testid={id} />}
+    />
+  );
+
+  it("기다리는 동안 aria-busy, className 을 주면 그 상자가 곧 레이아웃 — contents 로 상자를 만들지 않을 수 있다", () => {
+    render(
+      <>
+        <LoadingRegion
+          pending
+          className="contents"
+          data-testid="a"
+          fallback={<Skeleton />}
+        />
+        <LoadingRegion
+          pending
+          data-testid="b"
+          className="flex gap-x3"
+          fallback={<Skeleton />}
+        />
+      </>,
+    );
+    const a = document.querySelector<HTMLElement>("[data-testid=a]")!;
+    const b = document.querySelector<HTMLElement>("[data-testid=b]")!;
+    expect(a.getAttribute("aria-busy")).toBe("true");
+    expect(a.className).toContain("contents");
+    expect(b.className).toContain("flex gap-x3");
+  });
+
+  it("5초 글은 한 화면에 한 번 — 영역이 여럿이어도 문서 순서로 맨 위 영역에만 글이 뜬다(나머지는 aria-busy 만)", () => {
+    render(
+      <>
+        <section>{area("a")}</section>
+        <section>{area("b")}</section>
+        <section>{area("c")}</section>
+      </>,
+    );
+    advance(LOADING_TIMING.slowAfter - 1);
+    expect(container.querySelectorAll("p")).toHaveLength(0);
+    advance(1);
+    const notes = container.querySelectorAll("p");
+    expect(notes).toHaveLength(1);
+    expect(notes[0]!.textContent).toBe(SLOW_TEXT);
+    expect(container.querySelector("section")!.contains(notes[0]!)).toBe(true);
+    expect(container.querySelectorAll("[aria-busy=true]")).toHaveLength(3);
+  });
+
+  it("맨 위 영역이 끝나면 다음 영역이 글을 이어받는다", () => {
+    const tree = (first: boolean) => (
+      <>
+        {first && <section>{area("a")}</section>}
+        <section>{area("b")}</section>
+      </>
+    );
+    render(tree(true));
+    advance(LOADING_TIMING.slowAfter);
+    expect(container.querySelectorAll("p")).toHaveLength(1);
+    render(tree(false));
+    advance(1);
+    expect(container.querySelectorAll("p")).toHaveLength(1);
   });
 });
 

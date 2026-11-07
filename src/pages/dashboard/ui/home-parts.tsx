@@ -28,7 +28,7 @@ import { Progress } from "@/shared/ds/progress";
 import { ResultSection } from "@/shared/ds/result-section";
 import { toggleVariants } from "@/shared/ds/toggle";
 import { Badge } from "@/shared/ds/badge";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { formatDateSmart } from "@/shared/lib/date";
 import {
@@ -143,32 +143,38 @@ export function RowsSkeleton({
   kind?: "plain" | "dot" | "tx";
 }) {
   return (
-    <div aria-hidden>
-      {Array.from({ length: rows }, (_, i) => (
-        <div key={i} className="flex items-center gap-x3 px-x6 py-x3">
-          {kind === "dot" && (
-            <Skeleton radius="full" className="size-x5 shrink-0" />
-          )}
-          {kind === "tx" && (
-            <Skeleton radius="12" className="size-x10 shrink-0" />
-          )}
-          {kind === "tx" ? (
-            <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
-              <Skeleton text="t5" className="w-3/4" />
-              <Skeleton text="t3" className="w-1/2" />
+    <LoadingRegion
+      pending
+      className="contents"
+      fallback={
+        <>
+          {Array.from({ length: rows }, (_, i) => (
+            <div key={i} className="flex items-center gap-x3 px-x6 py-x3">
+              {kind === "dot" && (
+                <Skeleton radius="full" className="size-x5 shrink-0" />
+              )}
+              {kind === "tx" && (
+                <Skeleton radius="12" className="size-x10 shrink-0" />
+              )}
+              {kind === "tx" ? (
+                <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
+                  <Skeleton text="t5" className="w-3/4" />
+                  <Skeleton text="t3" className="w-1/2" />
+                </div>
+              ) : (
+                <Skeleton
+                  text="t5"
+                  className={kind === "plain" ? "w-3/4" : "min-w-0 flex-1"}
+                />
+              )}
+              {kind !== "plain" && (
+                <Skeleton text="t5" className="w-x10 shrink-0" />
+              )}
             </div>
-          ) : (
-            <Skeleton
-              text="t5"
-              className={kind === "plain" ? "w-3/4" : "min-w-0 flex-1"}
-            />
-          )}
-          {kind !== "plain" && (
-            <Skeleton text="t5" className="w-x10 shrink-0" />
-          )}
-        </div>
-      ))}
-    </div>
+          ))}
+        </>
+      }
+    />
   );
 }
 
@@ -227,20 +233,36 @@ export function HeroCard({ data, band }: { data: HeroData; band?: boolean }) {
         </button>
       </div>
       {data.loading ? (
-        <div aria-hidden>
-          <Skeleton
-            text="t12"
-            radius="8"
-            className={cn("mt-x1_5 w-3/4", HERO_SKELETON)}
-          />
-          <Skeleton text="t3" className={cn("mt-x1 w-1/2", HERO_SKELETON)} />
-          <div
-            className={cn("mt-x5 grid grid-cols-2 border-t pt-x4", HERO_LINE)}
-          >
-            <Skeleton text="t5" className={cn("w-2/3", HERO_SKELETON)} />
-            <Skeleton text="t5" className={cn("ml-x4 w-2/3", HERO_SKELETON)} />
-          </div>
-        </div>
+        <LoadingRegion
+          pending
+          className="contents"
+          noteClassName="text-static-white"
+          fallback={
+            <>
+              <Skeleton
+                text="t12"
+                radius="8"
+                className={cn("mt-x1_5 w-3/4", HERO_SKELETON)}
+              />
+              <Skeleton
+                text="t3"
+                className={cn("mt-x1 w-1/2", HERO_SKELETON)}
+              />
+              <div
+                className={cn(
+                  "mt-x5 grid grid-cols-2 border-t pt-x4",
+                  HERO_LINE,
+                )}
+              >
+                <Skeleton text="t5" className={cn("w-2/3", HERO_SKELETON)} />
+                <Skeleton
+                  text="t5"
+                  className={cn("ml-x4 w-2/3", HERO_SKELETON)}
+                />
+              </div>
+            </>
+          }
+        />
       ) : (
         <>
           <CardHeroAmount>{m(won(data.netWorth))}</CardHeroAmount>
@@ -523,21 +545,29 @@ export function CategoryBody({
 
 export function CategorySkeleton({ size }: { size: number }) {
   return (
-    <div aria-hidden className="flex flex-col">
-      <div className="flex justify-center">
-        <Skeleton radius="full" style={{ width: size, height: size }} />
-      </div>
-      {/* 범례 줄 높이 = 실제 줄(min-h-11 — 44) */}
-      <div className="mt-x4 flex flex-col">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="flex min-h-11 items-center gap-x2">
-            <Skeleton radius="4" className="size-2.5 shrink-0" />
-            <Skeleton text="t4" className="min-w-0 flex-1" />
-            <Skeleton text="t4" className="w-x10 shrink-0" />
+    <LoadingRegion
+      pending
+      className="contents"
+      fallback={
+        <>
+          <div className="flex flex-col">
+            <div className="flex justify-center">
+              <Skeleton radius="full" style={{ width: size, height: size }} />
+            </div>
+            {/* 범례 줄 높이 = 실제 줄(min-h-11 — 44) */}
+            <div className="mt-x4 flex flex-col">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="flex min-h-11 items-center gap-x2">
+                  <Skeleton radius="4" className="size-2.5 shrink-0" />
+                  <Skeleton text="t4" className="min-w-0 flex-1" />
+                  <Skeleton text="t4" className="w-x10 shrink-0" />
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
-    </div>
+        </>
+      }
+    />
   );
 }
 
@@ -573,15 +603,23 @@ export function BudgetBody({ items }: { items: BudgetItem[] }) {
 
 export function BudgetSkeleton() {
   return (
-    <div aria-hidden className="flex flex-col gap-x5">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="flex flex-col gap-x1_5">
-          <Skeleton text="t4" className="w-1/3" />
-          <Skeleton className="h-2 w-full" radius="full" />
-          <Skeleton text="t2" className="w-1/2" />
-        </div>
-      ))}
-    </div>
+    <LoadingRegion
+      pending
+      className="contents"
+      fallback={
+        <>
+          <div className="flex flex-col gap-x5">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex flex-col gap-x1_5">
+                <Skeleton text="t4" className="w-1/3" />
+                <Skeleton className="h-2 w-full" radius="full" />
+                <Skeleton text="t2" className="w-1/2" />
+              </div>
+            ))}
+          </div>
+        </>
+      }
+    />
   );
 }
 

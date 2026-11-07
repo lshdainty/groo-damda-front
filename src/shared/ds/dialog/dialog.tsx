@@ -16,6 +16,7 @@ import {
 } from "@/shared/ds/bottom-sheet";
 import {
   focusOpener,
+  surfaceTookOver,
   mergeRefs,
   useOpenState,
   useRefocusAfterBusy,
@@ -288,8 +289,8 @@ const DialogContent = React.forwardRef<
             onCloseAutoFocus?.(e);
             if (e.defaultPrevented) return;
             e.preventDefault();
-            // 아직 열려 있다 — 폭이 1280 아래로 내려가 시트로 바뀌어 다시 뜬다(ResponsiveDialog). 초점은 새 표면이 가져간다
-            if (ctx?.openRef.current) return;
+            // 폭이 1280 을 넘나들어 다른 표면이 대신 떴으면 초점은 새 표면이 가져간다. 부모가 표면을 지워 닫은 것이면 연 자리로(surfaceTookOver)
+            if (surfaceTookOver(ctx?.openRef.current ?? false)) return;
             focusOpener(ctx?.triggerRef.current ?? null, openerRef.current);
           }}
           // 입력 폼은 바깥(딤)을 눌러도 닫히지 않는다 — Radix 는 바깥 누르기 · 바깥 초점 모두 이 자리를 지나 닫을지 정한다

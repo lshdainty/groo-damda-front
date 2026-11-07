@@ -1,6 +1,6 @@
 import { LeaveGuardProvider } from "@/shared/ui/groo/leave-guard";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigationType } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/lib/utils";
 import { BOTTOM_NAVIGATION_INSET } from "@/shared/ds/bottom-navigation";
@@ -15,6 +15,7 @@ import { DesktopSidebar } from "./DesktopSidebar";
 import { MobileHeader } from "./MobileHeader";
 import { MoneyTabs } from "./MoneyTabs";
 import { TabMemory } from "./TabMemory";
+import { enterScreen, restoreScreen, watchScreen } from "../lib/screen-memory";
 import { AppTabBar } from "./AppTabBar";
 import { useDeviceSize } from "@/shared/lib/groo/responsive";
 import { useWideSurface } from "@/shared/ds/overlay";
@@ -38,15 +39,22 @@ const CalendarEventAddForm = ({ onClose }: { onClose: () => void }) => (
 );
 
 /**
- * 화면을 옮길 때의 셸 몫 — 문서 제목 "{제목} - 그루 담다" 와, 옮긴 뒤 본문을 맨 위로 + 제목에 초점.
+ * 화면을 옮길 때의 셸 몫 — 문서 제목 "{제목} - 그루 담다" 와, 옮긴 뒤 본문 스크롤 · 초점.
+ * 앞으로(PUSH)는 본문을 맨 위로 + 제목에 초점, 뒤로(POP)는 떠날 때의 스크롤 · 누른 요소를 돌려놓는다(기억이 없으면 PUSH 와 같다).
  * TopNavigationProvider 안에 둔다(제품 이름을 거기서 읽는다). 처음 열 때는 초점을 훔치지 않는다.
  */
 const ScreenEffects = () => {
   const { t } = useTranslation("layout");
-  const { pathname } = useLocation();
+  const { pathname, key } = useLocation();
+  const navType = useNavigationType();
   useScreenTitle(t(screenTitleKey(pathname)));
   const last = useRef(pathname);
   const wide = useWideSurface();
+  // 스크롤 · 누른 요소를 화면(location.key)마다 적어 둔다 — 뒤로 오면 돌려주려고(top-navigation.md:230)
+  useEffect(() => watchScreen(), []);
+  useLayoutEffect(() => {
+    enterScreen(key);
+  }, [key]);
   useEffect(() => {
     if (last.current === pathname) return;
     const from = last.current;
@@ -54,10 +62,15 @@ const ScreenEffects = () => {
     // 1280 이상의 고정 정리(/desk/stats/fixed)는 주소만 있는 같은 화면 위 대화상자다 — 화면을 옮긴 게 아니므로 뒤 통계를 맨 위로
     // 보내지 않고 초점도 제목으로 옮기지 않는다(닫으면 초점은 Dialog 가 연 단추로 돌려놓는다, dialog.md:179)
     if (wide && (isFixedBulkPath(from) || isFixedBulkPath(pathname))) return;
+    // 뒤로(POP) 왔다 — 떠날 때의 스크롤(맨 위였으면 0)로 돌리고 누른 요소에 초점. 적어 둔 게 없으면(새로 고침 뒤 등) 앞으로 갈 때와 같다
+    if (navType === "POP") {
+      const stop = restoreScreen(key);
+      if (stop) return stop;
+    }
     // 새 화면이 그려진 다음 프레임에 — 제목(data-screen-title)이 DOM 에 있어야 초점이 간다
     const frame = requestAnimationFrame(() => focusScreenTitle());
     return () => cancelAnimationFrame(frame);
-  }, [pathname, wide]);
+  }, [pathname, wide, key, navType]);
   return null;
 };
 

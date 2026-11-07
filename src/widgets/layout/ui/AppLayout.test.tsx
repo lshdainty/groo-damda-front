@@ -82,10 +82,14 @@ vi.mock("@/shared/ds/top-navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/ds/top-navigation")>()),
   focusScreenTitle: () => {
     titleFocus.calls += 1;
+    // 진짜는 본문을 맨 위로도 보낸다 — 앞으로 가는 시험이 "맨 위" 를 실제로 본다
+    const main = document.querySelector("main");
+    if (main) main.scrollTop = 0;
   },
 }));
 
 const { AppLayout } = await import("./AppLayout");
+const { resetScreenMemory } = await import("../lib/screen-memory");
 const { SwipeActions } = await import("@/shared/ds/swipe-actions");
 
 let container: HTMLDivElement;
@@ -93,6 +97,8 @@ let root: Root;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  // MemoryRouter 첫 항목 key 는 늘 "default" — 앞 시험의 화면 기억을 끊는다
+  resetScreenMemory();
   state.size = "desktop";
   window.matchMedia = ((query: string) => ({
     matches: false,
@@ -353,5 +359,159 @@ describe("셸의 밀기 Provider(I-wrap-b1 δ 3)", () => {
     expect(
       container.querySelectorAll("[data-slot=swipe-actions][data-state=open]"),
     ).toHaveLength(1);
+  });
+});
+
+// ── 뒤로(POP)는 떠날 때 스크롤 · 누른 요소로 돌아온다(I-wrap-b5 1-a, top-navigation.md:230) ──
+const NavHolder = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    nav.go = navigate;
+  });
+  return <h1 data-screen-title>정리</h1>;
+};
+
+describe("화면을 옮길 때 PUSH 와 POP 을 가른다", () => {
+  const Stats2 = () => {
+    const navigate = useNavigate();
+    useEffect(() => {
+      nav.go = navigate;
+    });
+    return (
+      <div>
+        <h1 data-screen-title tabIndex={-1}>
+          통계
+        </h1>
+        <button type="button" data-testid="to-bulk">
+          거래를 고정으로 정리하기
+        </button>
+      </div>
+    );
+  };
+  const renderTwoScreens = () =>
+    act(() =>
+      root.render(
+        <MemoryRouter initialEntries={["/desk/stats"]}>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/desk/stats" element={<Stats2 />} />
+              <Route
+                path="/desk/stats/fixed"
+                element={<h1 data-screen-title>정리</h1>}
+              />
+            </Route>
+          </Routes>
+        </MemoryRouter>,
+      ),
+    );
+  const growMain = () => {
+    const main = container.querySelector<HTMLElement>("main#main")!;
+    Object.defineProperty(main, "scrollHeight", {
+      configurable: true,
+      value: 3000,
+    });
+    Object.defineProperty(main, "clientHeight", {
+      configurable: true,
+      value: 600,
+    });
+    return main;
+  };
+  const scrollTo = (main: HTMLElement, y: number) =>
+    act(() => {
+      main.scrollTop = y;
+      main.dispatchEvent(new Event("scroll"));
+    });
+
+  it("앞으로(PUSH)는 제목 초점 + 맨 위, 뒤로(POP)는 제목을 부르지 않고 스크롤 400 · 누른 단추 초점을 돌려준다", async () => {
+    setWide(false);
+    titleFocus.calls = 0;
+    renderTwoScreens();
+    const main = growMain();
+    scrollTo(main, 400);
+    const btn = q("to-bulk")!;
+    act(() => {
+      btn.focus();
+    });
+    act(() => nav.go("/desk/stats/fixed"));
+    await frame();
+    expect(titleFocus.calls).toBe(1);
+    // 새 화면이 본문을 깎았다
+    act(() => {
+      main.scrollTop = 0;
+    });
+    act(() => nav.go(-1 as unknown as string));
+    await frame();
+    await frame();
+    expect(titleFocus.calls).toBe(1);
+    expect(main.scrollTop).toBe(400);
+    expect(document.activeElement).toBe(q("to-bulk"));
+  });
+
+  it("맨 위에서 떠난 화면은 뒤로 오면 0 이다 — 상세에서 내린 800 이 셸 스크롤 상자에 남지 않는다", async () => {
+    setWide(false);
+    titleFocus.calls = 0;
+    renderTwoScreens();
+    const main = growMain();
+    // 맨 위에서 단추를 눌러 떠난다(스크롤 없음)
+    act(() => {
+      q("to-bulk")!.focus();
+    });
+    act(() => nav.go("/desk/stats/fixed"));
+    await frame();
+    scrollTo(main, 800);
+    act(() => nav.go(-1 as unknown as string));
+    await frame();
+    await frame();
+    expect(main.scrollTop).toBe(0);
+  });
+
+  it("기억이 없는 뒤로(새로 고침 뒤)는 앞으로 갈 때처럼 제목 초점 + 맨 위다", async () => {
+    setWide(false);
+    titleFocus.calls = 0;
+    act(() =>
+      root.render(
+        <MemoryRouter
+          initialEntries={["/desk/stats", "/desk/stats/fixed"]}
+          initialIndex={1}
+        >
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/desk/stats" element={<Stats2 />} />
+              <Route path="/desk/stats/fixed" element={<NavHolder />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>,
+      ),
+    );
+    const main = growMain();
+    main.scrollTop = 500;
+    act(() => nav.go(-1 as unknown as string));
+    await frame();
+    await frame();
+    expect(titleFocus.calls).toBe(1);
+    expect(main.scrollTop).toBe(0);
+  });
+
+  it("누른 단추가 새로 그려져도 이름과 자리로 다시 찾아 초점을 돌려준다", async () => {
+    vi.useFakeTimers({ toFake: ["requestAnimationFrame", "performance"] });
+    try {
+      setWide(false);
+      titleFocus.calls = 0;
+      renderTwoScreens();
+      growMain();
+      act(() => {
+        q("to-bulk")!.focus();
+      });
+      act(() => nav.go("/desk/stats/fixed"));
+      act(() => nav.go(-1 as unknown as string));
+      // 되돌아온 화면의 단추는 새로 그려진 요소 — 이름이 같아 다시 찾는다
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100);
+      });
+      expect(titleFocus.calls).toBe(1); // PUSH 한 번뿐
+      expect(document.activeElement).toBe(q("to-bulk"));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

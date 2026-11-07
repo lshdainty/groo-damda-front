@@ -81,6 +81,17 @@ const render = (
 };
 
 describe("주 보기 일정 칩", () => {
+  it("시간 격자 스크롤 상자는 이름 있는 region 이다 — 일정이 없는 주에 이름 없는 Tab 정류장이 되지 않는다(I-wrap-b5 5-a)", () => {
+    render([]);
+    const grid = container.querySelector<HTMLElement>(
+      '[role="region"][aria-label="주간 시간표"]',
+    );
+    expect(grid).not.toBeNull();
+    expect(grid!.className).toContain("overflow-y-auto");
+    // 칩이 있어도 상자에 tabindex 를 따로 주지 않는다 — 정류장은 칩 쪽이다
+    expect(grid!.hasAttribute("tabindex")).toBe(false);
+  });
+
   it('div role=button 이 아니라 button 이고 이름이 "제목 · 시간" 이다', () => {
     render([event(1, { title: "팀 회의" })]);
     expect(container.querySelector("[role=button]")).toBeNull();
