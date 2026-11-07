@@ -341,7 +341,7 @@ const CalendarWeekView = ({
   multiDayEvents,
   onEventClick,
 }: IProps) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation("calendar");
   const { selectedDate, workingHours, visibleHours } = useCalendar();
 
   const locale = i18n.language.startsWith("ko") ? ko : enUS;
@@ -412,7 +412,13 @@ const CalendarWeekView = ({
           </div>
         </div>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        {/* 일정이 없는 주에는 이 스크롤 상자가 Tab 정류장이 된다(안에 초점 갈 곳이 없으면 Chrome 이 상자에 준다) — 이름을 준다 */}
+        <div
+          ref={scrollRef}
+          role="region"
+          aria-label={t("weekView.timeGridLabel")}
+          className="flex-1 overflow-y-auto"
+        >
           <div className="flex overflow-hidden">
             {/* Hours column */}
             <div className="relative w-[72px]">
