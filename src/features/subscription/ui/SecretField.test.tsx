@@ -111,11 +111,11 @@ describe("SecretField", () => {
     expect(onChange).toHaveBeenCalledWith("SEabcdef0123456789");
   });
 
-  it("라벨과 placeholder 는 서버가 준 값 그대로다", () => {
+  it("라벨은 서버가 준 값 그대로고 자리 글(placeholder)은 없다", () => {
     // 토스는 "Client ID", 나무는 "App Key" — 프론트에 박지 않는다.
     render(<Harness label="Client ID" />);
     expect(container.textContent).toContain("Client ID");
-    expect(input().placeholder).toBe("Client ID");
+    expect(input().placeholder).toBe("");
     expect(toggle("Client ID 보기")).toBeTruthy();
   });
 });

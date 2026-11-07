@@ -23,7 +23,7 @@ export function SecretField({
   onRevealedChange,
   toggleAriaLabel,
 }: {
-  /** 서버가 준 라벨. 라벨이자 placeholder 다. */
+  /** 서버가 준 라벨 — 칸의 이름이다(자리 글은 두지 않는다). */
   label: string;
   value: string;
   onChange: (v: string) => void;
@@ -34,19 +34,14 @@ export function SecretField({
 }) {
   return (
     <Field label={label}>
-      <div className="relative">
-        <Input
-          type={revealed ? "text" : "password"}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={label}
-          // 브라우저·확장에 자격증명이 남지 않게 — 붙여넣기는 그대로 둔다.
-          autoComplete="off"
-          spellCheck={false}
-          // 오른쪽 눈 단추(40)가 얹히는 자리만큼 비운다 — 글이 단추 밑으로 들어가지 않게
-          className="last:pr-[52px]"
-        />
-        <span className="absolute inset-y-0 right-x1 flex items-center">
+      <Input
+        type={revealed ? "text" : "password"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        // 브라우저·확장에 자격증명이 남지 않게 — 붙여넣기는 그대로 둔다. 자리 글은 두지 않는다(라벨이 이름)
+        autoComplete="off"
+        spellCheck={false}
+        suffixAction={
           <Toggle
             aria-label={toggleAriaLabel}
             pressed={revealed}
@@ -54,8 +49,8 @@ export function SecretField({
             icon={<EyeOff aria-hidden />}
             pressedIcon={<Eye aria-hidden />}
           />
-        </span>
-      </div>
+        }
+      />
     </Field>
   );
 }

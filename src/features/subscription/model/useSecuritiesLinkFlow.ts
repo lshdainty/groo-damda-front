@@ -57,6 +57,11 @@ export function useSecuritiesLinkFlow(
   const [drafts, setDrafts] = useState<Record<string, BrokerDraft>>({});
   const [tokenName, setTokenName] = useState("");
   const [issued, setIssued] = useState<IssuedApiToken | null>(null);
+  // 발급 직후 원문을 한 번이라도 복사했는가 — 안 했으면 나가기 전에 한 번 묻는다(어느 길로 나가는지는 부르는 쪽이 정한다)
+  const [copied, setCopied] = useState(false);
+  const [copyAsk, setCopyAsk] = useState<"close" | "back" | "done" | null>(
+    null,
+  );
   // 확인창이 묻는 대상 — 해제 · 폐기는 확인창 한 번 뒤에 간다
   const [disconnectAsk, setDisconnectAsk] = useState<BrokerConnection | null>(
     null,
@@ -129,7 +134,7 @@ export function useSecuritiesLinkFlow(
             message: t("broker.toastConnected", {
               broker: connection.displayName,
             }),
-            tone: "neutral",
+            tone: "positive",
           });
           clearDraft(connection.broker);
         },
@@ -152,13 +157,15 @@ export function useSecuritiesLinkFlow(
   // ── 연결 해제 · 기본 지정 — 실패는 critical 스낵바 + [다시 시도](묻지 않고 같은 요청)
   const runDisconnect = (connection: BrokerConnection) => {
     const run = () => disconnect.mutateAsync(connection.broker);
-    const done = () =>
+    // 해제가 끝나면 첫 단계로 — 이 증권사의 조회 화면은 더 보일 게 없다
+    const done = () => {
+      clearDraft(connection.broker);
+      go({ kind: "list" });
       snackbar.show({
-        message: t("broker.toastDisconnected", {
-          broker: connection.displayName,
-        }),
+        message: t("broker.toastDisconnected"),
         tone: "neutral",
       });
+    };
     return run().then(done, (error: unknown) =>
       confirmFail({
         error,
@@ -197,6 +204,7 @@ export function useSecuritiesLinkFlow(
     issue.mutate(tokenName.trim(), {
       onSuccess: (data) => {
         setIssued(data);
+        setCopied(false);
         setTokenName("");
       },
       onSettled: () => {
@@ -244,6 +252,12 @@ export function useSecuritiesLinkFlow(
     setTokenName,
     issued,
     setIssued,
+    copied,
+    setCopied,
+    copyAsk,
+    setCopyAsk,
+    /** 원문을 아직 복사하지 않았다 — 나가기 전에 묻는다 */
+    needCopyAsk: issued != null && !copied,
     canIssue,
     issue,
     issueToken,

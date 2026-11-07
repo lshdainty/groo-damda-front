@@ -88,13 +88,21 @@ export function SecuritiesLinkDialog({ onClose }: { onClose: () => void }) {
         dirty={flow.brokerDirty || flow.tokenDirty}
         busy={flow.busy}
         onOpenChange={(next) => {
-          if (!next) onClose();
+          if (next) return;
+          // 발급 직후 원문을 복사하지 않았으면 닫기(✕ · Esc · 바깥) 전에 한 번 묻는다
+          if (flow.needCopyAsk) flow.setCopyAsk("close");
+          else onClose();
         }}
       >
         <ResponsiveDialogContent
           ref={contentRef}
           title={title}
-          onBack={kind === "list" ? undefined : () => backAsk.request()}
+          onBack={
+            kind === "list"
+              ? undefined
+              : () =>
+                  flow.needCopyAsk ? flow.setCopyAsk("back") : backAsk.request()
+          }
         >
           {kind === "list" ? (
             <ListStep
@@ -144,6 +152,35 @@ export function SecuritiesLinkDialog({ onClose }: { onClose: () => void }) {
               }}
             >
               {t("broker.disconnect")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 발급 직후 원문을 복사하지 않고 나간다 — 한 번이라도 복사했으면 묻지 않는다 */}
+      <AlertDialog
+        open={flow.copyAsk != null}
+        onOpenChange={(open) => {
+          if (!open) flow.setCopyAsk(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogTitle>{t("apiToken.copyAskTitle")}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t("apiToken.copyAskDesc")}
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="criticalSolid"
+              onClick={() => {
+                const how = flow.copyAsk;
+                if (how === "close") onClose();
+                else if (how === "back") flow.backToList();
+                else flow.setIssued(null);
+              }}
+            >
+              {t("apiToken.copyAskClose")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -285,6 +285,34 @@ describe("Input", () => {
     expect(clearButton()).toBeNull();
   });
 
+  it("뒤 단추 슬롯 — 맨 뒤면 오른쪽 여백을 바깥 여백으로 갖고 입력 글은 슬롯만큼 비는다", () => {
+    render(
+      <Input
+        aria-label="키"
+        defaultValue="abc"
+        suffixAction={<button type="button">보기</button>}
+      />,
+    );
+    const action = slot("action")!;
+    expect(action).not.toBeNull();
+    expect(action.querySelector("button")?.textContent).toBe("보기");
+    expect(classes(action)).toContain("last:mr-[var(--text-input-px)]");
+    // 입력은 더 이상 맨 뒤가 아니라 안쪽 오른쪽 여백을 갖지 않는다 — 슬롯이 그 자리를 비운다
+    expect(input().nextElementSibling).toBe(action);
+  });
+
+  it("뒤 단추 슬롯은 지우기 버튼 뒤에 놓인다", () => {
+    render(
+      <Input
+        aria-label="키"
+        clearable
+        defaultValue="abc"
+        suffixAction={<button type="button">보기</button>}
+      />,
+    );
+    expect(clearButton()!.nextElementSibling).toBe(slot("action"));
+  });
+
   it("막혔거나 읽기 전용이면 지우기가 없다", () => {
     render(
       <Input aria-label="검색" clearable disabled defaultValue="회의록" />,

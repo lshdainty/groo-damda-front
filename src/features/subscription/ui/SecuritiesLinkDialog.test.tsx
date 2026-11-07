@@ -252,10 +252,9 @@ describe("다음 단계 — 증권사", () => {
   it("미연결 줄을 누르면 키 폼, ← 로 첫 단계에 돌아온다", () => {
     open();
     click(rowNamed("나무증권")!);
-    expect(inputs().map((i) => i.placeholder)).toEqual([
-      "App Key",
-      "App Secret",
-    ]);
+    expect(inputs().map((i) => i.placeholder)).toEqual(["", ""]);
+    expect(document.body.textContent).toContain("App Key");
+    expect(document.body.textContent).toContain("App Secret");
     expect(buttonNamed("broker.connect")!.disabled).toBe(true);
     click(back()!);
     expect(inputs()).toHaveLength(0);
@@ -273,6 +272,7 @@ describe("다음 단계 — 증권사", () => {
       apiKey: "AK",
       apiSecret: "SK",
     });
+    expect(state.toasts).toContain("broker.toastConnected(나무증권)");
   });
 
   it("눈 단추는 고정 이름 + aria-pressed, 켜면 보인다", () => {
@@ -299,6 +299,13 @@ describe("다음 단계 — 증권사", () => {
     );
     await act(async () => click(confirm[confirm.length - 1]!));
     expect(state.disconnected).toBe("TOSS");
+    // 해제가 끝나면 첫 단계로 — 스낵바는 증권사 이름 없이
+    expect(state.toasts).toContain("broker.toastDisconnected");
+    expect(
+      document.body.querySelector("[data-slot=dialog-back]") ??
+        document.body.querySelector("[data-slot=bottom-sheet-back]"),
+    ).toBeNull();
+    expect(rowNamed("나무증권")).toBeDefined();
   });
 
   it("이미 기본이면 [기본으로 쓰기] 버튼이 없다", () => {
@@ -346,20 +353,31 @@ describe("API 토큰 단계", () => {
     );
   });
 
-  it("확인을 누르면 원문이 사라진다", () => {
+  const copyIt = async () => {
+    Object.assign(navigator, { clipboard: { writeText: async () => {} } });
+    await act(async () => {
+      document.body
+        .querySelector('button[aria-label="apiToken.copy"]')!
+        .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+  };
+
+  it("복사한 뒤 확인을 누르면 원문이 사라진다", async () => {
     open();
     goTokens();
     type(inputs()[0]!, "보고서");
     click(buttonNamed("apiToken.issue")!);
+    await copyIt();
     click(buttonNamed("apiToken.done")!);
     expect(document.body.innerHTML).not.toContain(RAW);
   });
 
-  it("← 로 나가도 원문이 남지 않는다", () => {
+  it("복사한 뒤 ← 로 나가면 원문이 남지 않는다", async () => {
     open();
     goTokens();
     type(inputs()[0]!, "보고서");
     click(buttonNamed("apiToken.issue")!);
+    await copyIt();
     click(back()!);
     goTokens();
     expect(document.body.innerHTML).not.toContain(RAW);
@@ -405,6 +423,69 @@ describe("API 토큰 단계", () => {
     );
     await act(async () => click(confirm[confirm.length - 1]!));
     expect(state.revoked).toBe(3);
+  });
+
+  const issue = () => {
+    goTokens();
+    type(inputs()[0]!, "보고서");
+    click(buttonNamed("apiToken.issue")!);
+  };
+  const confirmClose = () =>
+    buttons()
+      .filter((b) => b.textContent === "apiToken.copyAskClose")
+      .pop();
+
+  it("복사하지 않고 확인 · ← · ✕ 로 나가면 한 번 묻는다", () => {
+    open();
+    issue();
+    click(buttonNamed("apiToken.done")!);
+    expect(document.body.textContent).toContain("apiToken.copyAskTitle");
+    expect(inputs().find((i) => i.readOnly)).toBeDefined();
+    click(
+      buttons()
+        .filter((b) => b.textContent === "cancel")
+        .pop()!,
+    );
+    click(back()!);
+    expect(document.body.textContent).toContain("apiToken.copyAskTitle");
+  });
+
+  it("묻는 말에서 [닫기] 를 누르면 원문을 버리고 나간다", () => {
+    open();
+    issue();
+    click(buttonNamed("apiToken.done")!);
+    click(confirmClose()!);
+    expect(document.body.innerHTML).not.toContain(RAW);
+  });
+
+  it("✕ 로 닫으려 해도 묻고, 닫기 전엔 onClose 가 안 불린다", () => {
+    open();
+    issue();
+    click(
+      document.body.querySelector<HTMLButtonElement>(
+        "[data-slot=bottom-sheet-close], [data-slot=dialog-close]",
+      )!,
+    );
+    expect(closed).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain("apiToken.copyAskTitle");
+    click(confirmClose()!);
+    expect(closed).toHaveBeenCalledTimes(1);
+  });
+
+  it("한 번이라도 복사했으면 묻지 않는다", async () => {
+    Object.assign(navigator, {
+      clipboard: { writeText: async () => {} },
+    });
+    open();
+    issue();
+    await act(async () => {
+      document.body
+        .querySelector('button[aria-label="apiToken.copy"]')!
+        .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    click(buttonNamed("apiToken.done")!);
+    expect(document.body.textContent).not.toContain("apiToken.copyAskTitle");
+    expect(document.body.innerHTML).not.toContain(RAW);
   });
 
   it("목록 실패는 [다시 시도] 를 둔다", () => {

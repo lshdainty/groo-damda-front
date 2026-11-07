@@ -78,6 +78,7 @@ export function ApiTokenStep({ flow }: { flow: SecuritiesLinkFlow }) {
       document.execCommand("copy");
       document.body.removeChild(ta);
     }
+    flow.setCopied(true);
     snackbar.show({ message: t("apiToken.toastCopied"), tone: "neutral" });
   };
 
@@ -108,15 +109,12 @@ export function ApiTokenStep({ flow }: { flow: SecuritiesLinkFlow }) {
               {t("apiToken.issuedDesc")}
             </Callout>
             <Field label={t("apiToken.tokenLabel")}>
-              <div className="relative">
-                <Input
-                  readOnly
-                  value={issued.token}
-                  onFocus={(e) => e.currentTarget.select()}
-                  spellCheck={false}
-                  className="last:pr-[52px]"
-                />
-                <span className="absolute inset-y-0 right-x1 flex items-center">
+              <Input
+                readOnly
+                value={issued.token}
+                onFocus={(e) => e.currentTarget.select()}
+                spellCheck={false}
+                suffixAction={
                   <Button
                     variant="neutralWeak"
                     size="xsmall"
@@ -126,8 +124,8 @@ export function ApiTokenStep({ flow }: { flow: SecuritiesLinkFlow }) {
                   >
                     <Copy aria-hidden />
                   </Button>
-                </span>
-              </div>
+                }
+              />
             </Field>
             <Field label={t("apiToken.exampleLabel")}>
               <Textarea
@@ -147,7 +145,9 @@ export function ApiTokenStep({ flow }: { flow: SecuritiesLinkFlow }) {
           <Button
             size={wide ? "small" : "large"}
             className={wide ? undefined : "flex-1"}
-            onClick={() => flow.setIssued(null)}
+            onClick={() =>
+              flow.needCopyAsk ? flow.setCopyAsk("done") : flow.setIssued(null)
+            }
           >
             {t("apiToken.done")}
           </Button>
@@ -220,7 +220,6 @@ export function ApiTokenStep({ flow }: { flow: SecuritiesLinkFlow }) {
                 if (e.key === "Enter" && !e.nativeEvent.isComposing)
                   flow.issueToken();
               }}
-              placeholder={t("apiToken.namePlaceholder")}
               maxLength={TOKEN_NAME_MAX_LENGTH}
             />
           </Field>

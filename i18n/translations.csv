@@ -2513,7 +2513,7 @@ subscription,broker.rowDisconnected,연결 안 됨,Not connected
 subscription,broker.verifiedOn,{{date}} 확인,Checked {{date}}
 subscription,broker.programGroup,내 프로그램에서 쓰기,Use in your programs
 subscription,broker.disconnectAsk,{{broker}} 연결을 해제할까요?,Disconnect {{broker}}?
-subscription,broker.disconnectDesc,해제하면 이 증권사의 시세와 보유 주식을 더 이상 가져오지 않아요. 다시 연결하려면 키를 새로 입력해야 해요.,"Once disconnected, we stop importing prices and holdings from this provider. To connect again, you'll need to enter your key again."
+subscription,broker.disconnectDesc,해제하면 이 증권사의 보유 주식과 시세를 더 이상 가져오지 않아요. 다시 연결하려면 키를 새로 입력해야 해요.,"Once disconnected, we stop importing holdings and prices from this provider. To connect again, you'll need to enter your key again."
 subscription,broker.keyConnected,{{broker}} API 키 연결됨,{{broker}} API key connected
 subscription,broker.lastVerified,마지막 검증 · {{date}},Last verified · {{date}}
 subscription,broker.autoCollecting,보유 주식·시세 자동 수집 중,Auto-collecting holdings and prices
@@ -2524,10 +2524,10 @@ subscription,broker.useAsPrimary,기본으로 쓰기,Use as primary
 subscription,broker.primaryHint,가계부 자산은 여기서 고른 증권사 시세로 계산해요.,Your assets are valued using the provider selected here.
 subscription,broker.keyHint,키는 서버에 암호화되어 저장되며 본인만 사용합니다. 발급은 {{broker}} 개발자센터에서 받을 수 있어요.,Your key is stored encrypted on the server and used only by you. Get yours from the {{broker}} developer center.
 subscription,broker.loadFailed,증권사 목록을 불러오지 못했어요,Couldn't load the securities list
-subscription,broker.toastConnected,{{broker}} 계정을 연결했어요.,Connected your {{broker}} account.
+subscription,broker.toastConnected,{{broker}} 연결을 마쳤어요.,Connected {{broker}}.
 subscription,broker.toastInvalid,인증정보가 올바르지 않아요.,The credentials are not valid.
 subscription,broker.connectFailed,증권사를 연결하지 못했어요.,Couldn't connect to the broker.
-subscription,broker.toastDisconnected,{{broker}} 연결을 해제했어요.,Disconnected from {{broker}}.
+subscription,broker.toastDisconnected,연결을 해제했어요.,Disconnected.
 subscription,broker.toastDisconnectFailed,연결을 해제하지 못했어요.,Couldn't disconnect.
 subscription,broker.toastPrimaryChanged,이제 {{broker}} 시세로 자산을 평가해요.,Assets are now valued with {{broker}}.
 subscription,broker.toastPrimaryFailed,기본 증권사를 바꾸지 못했어요.,Couldn't change the primary broker.
@@ -2536,10 +2536,12 @@ subscription,apiToken.desc,내 증권사 키로 시세·차트를 내 프로그�
 subscription,apiToken.scopeHint,"토큰으로는 시세·차트·환율 조회만 할 수 있어요. 잔고와 가계부는 열리지 않고, 구독이 끝나면 토큰도 함께 멈춰요.","Tokens can only read prices, candles and exchange rates. Holdings and your ledger stay closed, and tokens stop working when your subscription ends."
 subscription,apiToken.empty,아직 만든 토큰이 없어요,No tokens yet
 subscription,apiToken.nameLabel,토큰 이름,Token name
-subscription,apiToken.namePlaceholder,예: 보고서 차트,e.g. Report chart
 subscription,apiToken.issue,토큰 만들기,Create token
 subscription,apiToken.created,발급 {{date}},Created {{date}}
 subscription,apiToken.lastUsed,마지막 사용 {{date}},Last used {{date}}
+subscription,apiToken.copyAskTitle,토큰을 복사하지 않았어요,You haven't copied the token
+subscription,apiToken.copyAskDesc,닫으면 이 토큰을 다시 볼 수 없어요.,You won't be able to see this token again once you close it.
+subscription,apiToken.copyAskClose,닫기,Close
 subscription,apiToken.count,{{n}}개,{{n}}
 subscription,apiToken.countNone,없음,None
 subscription,apiToken.revokeAsk,{{name}} 토큰을 폐기할까요?,Revoke the token {{name}}?
