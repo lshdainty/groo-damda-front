@@ -48,7 +48,7 @@ export const useBulkMarkFixed = () => {
     }: {
       ids: number[];
       isFixed: boolean;
-      /** 실패를 호출처가 자기 스낵바로 알리면 true — 기본(생략)은 전역 오류 토스트 */
+      /** 실패를 호출처가 자기 스낵바로 알린다는 표식(true) — 전역 토스트는 없다 */
       silent?: boolean;
     }) => expenseApi.bulkMarkFixed(ids, isFixed, { silent }),
     onSuccess: () => invalidateFor(queryClient, "ledger"),
@@ -86,7 +86,7 @@ export const useRefundExpense = () => {
     }: {
       id: number;
       refundedAt?: string;
-      /** 실패를 호출처가 자기 자리에서 알리면 true — 기본(생략)은 전역 오류 토스트 */
+      /** 실패를 호출처가 자기 자리에서 알린다는 표식(true) — 전역 토스트는 없다 */
       silent?: boolean;
     }) => expenseApi.refund(id, refundedAt, { silent }),
     // 다시 받기를 기다린 뒤 호출처 콜백이 불린다 — 저장 · 삭제 · 환불 뒤 상세가 옛 값을 보이거나 지운 거래의 버튼이 남지 않게

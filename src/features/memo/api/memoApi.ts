@@ -14,8 +14,8 @@ const mapMemo = (m: Memo): Memo => ({
 });
 
 /**
- * `silent` 는 **호출처가 고른다**(기본은 전역 토스트가 서버 원문으로 실패를 알린다) — 실패를 자기 자리
- * (폼 Callout · 스낵바)로 고정 글로 알리는 화면만 true 로 넘겨 두 알림이 겹치지 않게 한다.
+ * `silent` 는 이 요청의 실패를 호출처가 자기 자리에서 알린다는 **표식**이다(동작은 없다 — base.ts `QuietRequestConfig`) — 실패를 자기 자리
+ * (폼 Callout · 스낵바)로 고정 글로 알리는 화면이 true 로 넘긴다. 전역 서버 원문 토스트는 없다.
  */
 export type MemoRequestOptions = { silent?: boolean };
 

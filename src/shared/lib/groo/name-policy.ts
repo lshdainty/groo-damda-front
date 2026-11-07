@@ -18,7 +18,7 @@ export type NameIssue = "required" | "tooLong" | "duplicate" | null;
  *
  * 비교는 trim 후 완전 일치다 — 서버 중복 판정(라벨 `existsActiveByUserAndName`)이
  * 대소문자를 어떻게 보는지 확인 전이라 여기서 더 넓게 잡으면 **거짓 차단**이 된다.
- * 서버가 더 넓게 막는 경우는 409 + 전역 토스트가 받는다.
+ * 서버가 더 넓게 막는 경우는 409 로 답하고, 호출처가 자기 자리에서 알린다(전역 알림은 없다).
  */
 export function nameIssue(
   raw: string,
