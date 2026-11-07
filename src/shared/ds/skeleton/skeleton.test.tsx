@@ -109,6 +109,60 @@ describe("Skeleton", () => {
   });
 });
 
+describe("LoadingRegion 없이 그린 Skeleton(화면 82곳 — I-wrap-b5 3-a)", () => {
+  it("0 ~ 1초는 보이지 않게(높이는 그대로) 두고 1초에 보인다", () => {
+    render(<Skeleton className="h-[20px] w-[100px]" />);
+    const el = container.querySelector<HTMLElement>("[data-slot=skeleton]")!;
+    expect(el.className).toContain("opacity-0");
+    expect(el.getAttribute("data-wait")).toBe("quiet");
+    advance(LOADING_TIMING.showAfter - 1);
+    expect(el.className).toContain("opacity-0");
+    advance(1);
+    expect(el.className).not.toContain("opacity-0");
+    expect(el.getAttribute("data-wait")).toBe("waiting");
+  });
+
+  it("앱의 상태 글이 1초 '불러오는 중…' · 5초 오래 걸림 글을 읽고 사라지면 비운다", () => {
+    const tree = (shown: boolean) => (
+      <LoadingAnnouncer>{shown && <Skeleton />}</LoadingAnnouncer>
+    );
+    render(tree(true));
+    const el = status()!;
+    advance(LOADING_TIMING.showAfter - 1);
+    expect(el.textContent).toBe("");
+    advance(1);
+    expect(el.textContent).toBe(WAITING_TEXT);
+    advance(LOADING_TIMING.slowAfter - LOADING_TIMING.showAfter);
+    expect(el.textContent).toBe(SLOW_TEXT);
+    render(tree(false));
+    expect(el.textContent).toBe("");
+  });
+
+  it("1초 안에 사라지면 아무것도 읽지 않는다", () => {
+    const tree = (shown: boolean) => (
+      <LoadingAnnouncer>{shown && <Skeleton />}</LoadingAnnouncer>
+    );
+    render(tree(true));
+    advance(200);
+    render(tree(false));
+    advance(LOADING_TIMING.slowAfter);
+    expect(status()!.textContent).toBe("");
+  });
+
+  it("스켈레톤이 열 개여도 같은 글은 한 번만 넣는다", () => {
+    render(
+      <LoadingAnnouncer>
+        {Array.from({ length: 10 }, (_, i) => (
+          <Skeleton key={i} />
+        ))}
+      </LoadingAnnouncer>,
+    );
+    const el = status()!;
+    advance(LOADING_TIMING.showAfter);
+    expect(el.textContent).toBe(WAITING_TEXT);
+  });
+});
+
 describe("useWaitPhase", () => {
   const Probe = ({ pending }: { pending: boolean }) => (
     <span>{useWaitPhase(pending)}</span>

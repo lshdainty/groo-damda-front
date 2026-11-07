@@ -146,24 +146,43 @@ export interface SkeletonProps extends Omit<
 }
 
 const Skeleton = React.forwardRef<HTMLSpanElement, SkeletonProps>(
-  ({ radius = "8", text, className, ...props }, ref) => (
-    <span
-      ref={ref}
-      data-slot="skeleton"
-      data-radius={radius}
-      data-text={text}
-      className={cn(ROOT, RADIUS[radius], text && TEXT_HEIGHT[text], className)}
-      {...props}
-      // 늘 숨긴다 — 회색 면에는 읽을 것이 없다
-      aria-hidden="true"
-    >
+  ({ radius = "8", text, className, ...props }, ref) => {
+    // 붙어 있는 동안이 곧 기다림이다 — 앱의 상태 글에 알리고(1초 "불러오는 중…" · 5초 "평소보다 오래 걸리고 있어요."),
+    // 0 ~ 1초는 면을 보이지 않게 둔다(틀과 높이는 지킨다 — 1초 안에 오면 아무것도 깜빡이지 않는다, skeleton.md 시간표).
+    // 화면마다 LoadingRegion 으로 감싸지 않은 82개 파일의 스켈레톤이 이 한 자리에서 같은 시간표를 따른다
+    const phase = useWaitPhase(true);
+    const id = React.useId();
+    const announcer = React.useContext(LoadingAnnouncerContext);
+    React.useEffect(() => {
+      announcer?.report(id, phase);
+    }, [announcer, id, phase]);
+    React.useEffect(() => () => announcer?.report(id, null), [announcer, id]);
+    return (
       <span
-        data-slot="skeleton-shimmer"
-        className={SHIMMER}
-        onAnimationStart={alignShimmer}
-      />
-    </span>
-  ),
+        ref={ref}
+        data-slot="skeleton"
+        data-radius={radius}
+        data-text={text}
+        data-wait={phase}
+        className={cn(
+          ROOT,
+          RADIUS[radius],
+          text && TEXT_HEIGHT[text],
+          phase === "quiet" && "opacity-0",
+          className,
+        )}
+        {...props}
+        // 늘 숨긴다 — 회색 면에는 읽을 것이 없다
+        aria-hidden="true"
+      >
+        <span
+          data-slot="skeleton-shimmer"
+          className={SHIMMER}
+          onAnimationStart={alignShimmer}
+        />
+      </span>
+    );
+  },
 );
 Skeleton.displayName = "Skeleton";
 
