@@ -133,11 +133,11 @@ more,desc.appDownload,안드로이드 앱을 내려받아 설치해요,Download 
 more,desc.expense,지출 · 수입 · 이체,Spending · income · transfers
 more,desc.asset,계좌 · 카드 · 투자 · 부채,Accounts · cards · investments · debt
 more,desc.stocks,시세 · 보유 · 관심 · 호가,Quotes · holdings · watchlist · order book
-more,desc.budget,월간 · 카테고리별,Monthly · by category
+more,desc.budget,월간 예산 · 카테고리별 한도,Monthly budget · per-category limits
 more,desc.savingGoal,목표 · 진행률,Goals · Progress
 more,desc.stats,카테고리 · 트렌드 · 비교,Category · trends · comparison
 more,desc.recurring,구독 · 고정비,Subscriptions · fixed costs
-more,desc.accounts,연결된 계좌 · 카드 관리,Manage linked accounts and cards
+more,desc.accounts,계좌 · 카드 관리,Manage accounts and cards
 more,desc.calendar,일정 · 반복 · 알림,Events · recurring · alerts
 more,desc.todo,마감 · 우선순위 · 태그,Due dates · priority · tags
 more,desc.memo,분류 · 고정 · 검색,Tags · pin · search
@@ -730,7 +730,7 @@ asset,assetDetail.editQty,수량 수정,Edit quantity
 asset,assetDetail.unlink,연결 해제,Unlink
 asset,assetDetail.tossRealtimeTitle,토스 시세로 실시간 평가,Real-time valuation via Toss
 asset,assetDetail.change,변경,Change
-asset,assetDetail.symbolSearchPlaceholder,"종목명 또는 코드 검색 (예: 삼성전자, 005930)","Search by name or code (e.g. Samsung, 005930)"
+asset,assetDetail.symbolSearchPlaceholder,종목 이름이나 코드,Name or symbol
 asset,assetDetail.linkByCode,「{{code}}」 종목코드로 연결,Link by code 「{{code}}」
 asset,assetDetail.link,연결,Link
 asset,assetDetail.weekLabel,{{n}}주,{{n}}w
@@ -1912,9 +1912,9 @@ settings,page.subtitle,카테고리 · 계좌 · 알림 등,Categories · accoun
 settings,sections.categories.label,카테고리 관리,Manage categories
 settings,sections.categories.desc,지출 · 수입 카테고리 추가 · 수정 · 삭제,Add · edit · delete expense and income categories
 settings,sections.accounts.label,계좌 · 카드 관리,Manage accounts & cards
-settings,sections.accounts.desc,연결된 계좌와 카드 관리,Manage linked accounts and cards
+settings,sections.accounts.desc,계좌 · 카드 관리,Manage accounts and cards
 settings,sections.budget.label,예산 설정,Budget settings
-settings,sections.budget.desc,월간 예산 및 카테고리별 한도,Monthly budget and per-category limits
+settings,sections.budget.desc,월간 예산 · 카테고리별 한도,Monthly budget · per-category limits
 settings,sections.goals.label,저축 목표,Saving goals
 settings,sections.goals.desc,목표 추가 · 수정 · 삭제 및 진행률 관리,Manage goals and track progress
 settings,sections.goals.managerDescription,목표를 추가하고 진행률을 관리해요. 자산 화면에서는 진행 상황을 확인할 수 있어요.,Add goals and manage progress — view status on the Assets screen.
@@ -2193,7 +2193,7 @@ stocks,namu.holdingsError,보유 정보를 불러오지 못했어요. 계좌가 
 stocks,namu.failDesc,계좌가 없거나 조회 권한이 없을 수 있어요.,There may be no account or no query permission.
 stats,page.title,통계,Statistics
 stats,uncategorized,미분류,Uncategorized
-stats,page.subtitle,카테고리 · 추이 · 인사이트,Categories · Trends · Insights
+stats,page.subtitle,카테고리 · 추이 · 비교,Categories · Trends · Compare
 stats,tab.category,카테고리,Category
 stats,tab.trend,추이,Trends
 stats,tab.compare,비교,Compare
@@ -2823,7 +2823,7 @@ asset,holdings.manualSub,직접 입력,Manual entry
 asset,holdings.todayChange,오늘 {{sign}}{{amount}}원,Today {{sign}}₩{{amount}}
 asset,holdings.editSummary,{{n}}종목 · {{total}}원,{{n}} holdings · ₩{{total}}
 asset,holdings.editSummaryUnknown,{{n}}종목 · —,{{n}} holdings · —
-asset,holdings.searchPlaceholder,종목 이름 검색,Search stock name
+asset,holdings.searchPlaceholder,종목 이름이나 코드,Name or symbol
 asset,holdings.addStock,종목 추가,Add stock
 asset,holdings.addStockTitle,종목 추가,Add stock
 asset,holdings.addManual,"""{{name}}"" 직접 추가 — 평가액 입력","Add ""{{name}}"" manually — enter value"
