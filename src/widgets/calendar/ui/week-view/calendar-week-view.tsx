@@ -315,7 +315,7 @@ const EventBlock = ({
 
       {durationInMinutes > 25 && (
         <span className="block">
-          {format(start, timeFormat, { locale })} -{" "}
+          {format(start, timeFormat, { locale })} ~{" "}
           {format(end, timeFormat, { locale })}
         </span>
       )}

@@ -92,6 +92,32 @@ describe("주 보기 일정 칩", () => {
     );
   });
 
+  it('칩 안 시각은 하루 패널과 같이 "오전 10:00 ~ 오전 11:30"(~ 앞뒤 띄움)이다', () => {
+    render([event(1)]);
+    const chip = container.querySelector("button")!;
+    expect(chip.textContent).toContain("오전 10:00 ~ 오전 11:30");
+    expect(chip.textContent).not.toMatch(/ - /);
+  });
+
+  it("월 칩과 같은 초점 링 · 글 · 모서리 · 색이다(같은 eventBadgeTone)", async () => {
+    const { eventBadgeTone } = await import("@/widgets/calendar/lib/helpers");
+    const e = event(1);
+    render([e]);
+    const chip = container.querySelector<HTMLElement>("button")!;
+    for (const c of [
+      "focus-visible:outline-2",
+      "focus-visible:outline-offset-2",
+      "focus-visible:outline-stroke-focus-ring",
+      "rounded-sm",
+      "text-t2",
+      "font-medium",
+    ])
+      expect(chip.classList.contains(c)).toBe(true);
+    const tone = eventBadgeTone(e);
+    expect(chip.style.background).toBe(tone.bg);
+    expect(chip.style.color).toBe(tone.fg);
+  });
+
   it("누르면 일정과 누른 요소를 넘긴다", () => {
     const e = event(1);
     const onClick = render([e]);
