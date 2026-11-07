@@ -177,6 +177,28 @@ describe("종목 찾기 입구", () => {
     ).not.toBeNull();
     wide = false;
   });
+  it("시트(1279 이하): 누르면 시트 안 진짜 입력칸에 초점이 간다(B3 3A)", async () => {
+    wide = false;
+    render(<StockSearchEntry onPick={() => {}} />);
+    const entry = container.querySelector<HTMLButtonElement>(
+      "[data-slot=stock-search-entry]",
+    )!;
+    // 입구는 입력칸이 아니라 단추 — 이름은 placeholder 가 아니라 aria-label
+    expect(entry.tagName).toBe("BUTTON");
+    expect(entry.getAttribute("aria-label")).toBe("search.label");
+    expect(container.querySelector("input")).toBeNull();
+    entry.focus();
+    await act(async () => {
+      entry.click();
+    });
+    expect(dlg()?.getAttribute("data-slot")).toMatch(/bottom-sheet/);
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-slot="searchable-list-field"] input',
+    );
+    expect(input).not.toBeNull();
+    expect(document.activeElement).toBe(input);
+    // 닫을 때 초점이 입구로 돌아오는 것은 jsdom 에 시트 퇴장 애니메이션이 없어 못 본다 — 브라우저 하네스에서 실측(결과 문서)
+  });
   it("1280 이상: 입구 단추가 트리거라 열린 동안 aria-expanded 가 켜지고, Esc 로 닫으면 초점이 입구로 돌아온다(M8)", async () => {
     wide = true;
     render(<StockSearchEntry compact onPick={() => {}} />);
