@@ -13,10 +13,10 @@
 // 분할도 없다** 는 판단을 조회하는 자리 하나에 두었다(`expenseSplitApi.getSplits`).
 //
 // 여기서는 진짜 배선으로 잠근다 — 실제 인터셉터 · 실제 QueryClient · 실제 훅. 어댑터만
-// 서버 자리에 세운다. 잠그는 것은 **삭제 뒤 `toast.error` 호출 0**.
+// 서버 자리에 세운다. 잠그는 것은 **삭제 뒤 분할 조회가 실패 상태로 남지 않는 것**.
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
@@ -24,11 +24,6 @@ import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
-
-const spies = vi.hoisted(() => ({ toastError: vi.fn() }));
-vi.mock("sonner", () => ({
-  toast: { error: spies.toastError, success: vi.fn(), message: vi.fn() },
-}));
 
 const { apiClient } = await import("@/shared/api");
 const { useExpenseSplits } = await import("./useExpenseSplits");
@@ -115,7 +110,6 @@ beforeEach(() => {
   calls = [];
   deleted = false;
   splitsFailure = "gone";
-  spies.toastError.mockClear();
   installAdapter();
   client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -161,7 +155,7 @@ const openThenDelete = async () => {
 };
 
 describe("지운 거래의 분할 조회", () => {
-  it("삭제 뒤 오류 토스트가 뜨지 않는다", async () => {
+  it("삭제 뒤 지운 아이디로 한 번 더 물어도 실패 상태가 되지 않는다", async () => {
     await openThenDelete();
 
     // 무효화는 그대로 둔다 — 지운 아이디로 한 번 더 묻는 건 사실이고, 그게 문제가
@@ -171,7 +165,7 @@ describe("지운 거래의 분할 조회", () => {
       `DELETE /v1/expense/${TX_ID}`,
       `GET ${SPLITS_URL}`,
     ]);
-    expect(spies.toastError).not.toHaveBeenCalled();
+    expect(btn().dataset.failed).toBe("false");
   });
 
   it("404 는 오류가 아니라 빈 목록이다 — 화면이 실패 상태로 남지 않는다", async () => {
@@ -188,7 +182,6 @@ describe("지운 거래의 분할 조회", () => {
 
     await openThenDelete();
 
-    expect(spies.toastError).not.toHaveBeenCalled();
     expect(btn().dataset.failed).toBe("true");
     expect(btn().dataset.splits).not.toBe("0");
   });

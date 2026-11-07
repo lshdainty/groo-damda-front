@@ -7,8 +7,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
-const toastInfo = vi.hoisted(() => vi.fn());
-vi.mock("sonner", () => ({ toast: { info: toastInfo, error: vi.fn() } }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (k: string, o?: Record<string, unknown>) =>
@@ -22,7 +20,6 @@ const { TradeTail, NamuNotice, InvestorBand, QuotesBand } =
 let host: HTMLDivElement | null = null;
 afterEach(() => {
   host?.remove();
-  toastInfo.mockClear();
 });
 function mount(n: React.ReactNode) {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -60,10 +57,12 @@ describe("매매 단추 — 국내 통념 색 + 주문 전이라 막힘(D3 B)", 
     const reason = el.querySelector(`[id="${ids[0]}"]`)!;
     expect(reason.textContent).toBe("trade.pending");
   });
-  it("눌러도 토스트가 뜨지 않는다", () => {
+  it("눌러도 화면이 바뀌지 않는다 — 이유 줄은 늘 그 자리에 있다", () => {
     const el = mount(<TradeTail isUs />);
+    const before = el.innerHTML;
     for (const b of el.querySelectorAll("button")) act(() => b.click());
-    expect(toastInfo).not.toHaveBeenCalled();
+    expect(el.innerHTML).toBe(before);
+    expect(el.textContent).toContain("trade.pending");
   });
   it("수수료 안내는 시장에 따라 다르고 안내 두 줄이 있다", () => {
     const kr = mount(<TradeTail isUs={false} />).textContent!;

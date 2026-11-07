@@ -35,7 +35,6 @@ vi.mock("react-i18next", () => ({
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("sonner", () => ({ toast: { info: vi.fn(), error: vi.fn() } }));
 vi.mock("@/features/stock/model/useWatchlist", () => ({
   useWatchlist: () => ({
     groups: [],

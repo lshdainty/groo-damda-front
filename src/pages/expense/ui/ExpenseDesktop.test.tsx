@@ -54,9 +54,7 @@ const st = vi.hoisted(() => ({
   deleteFails: false,
   fixedFails: false,
   refund: null as number | null,
-  toastOpts: [] as unknown[],
   detail: [] as number[],
-  toasts: [] as string[],
   snacks: [] as {
     message: string;
     tone?: string;
@@ -111,16 +109,6 @@ vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
     show: (o: (typeof st.snacks)[number]) => st.snacks.push(o),
     dismiss: () => {},
   }),
-}));
-vi.mock("sonner", () => ({
-  toast: {
-    success: (m: string, o?: unknown) => {
-      st.toasts.push(m);
-      st.toastOpts.push(o);
-    },
-    info: (m: string) => st.toasts.push(m),
-    error: (m: string) => st.toasts.push(m),
-  },
 }));
 
 // react-query 처럼 — 처음 불러오기 실패면 값이 없다(st.stale 이면 받아 둔 값이 있는 채 다시 받기 실패)
@@ -267,9 +255,7 @@ beforeEach(async () => {
   st.deleteFails = false;
   st.fixedFails = false;
   st.refund = null;
-  st.toastOpts = [];
   st.detail = [];
-  st.toasts = [];
   st.snacks = [];
   st.closedCard = false;
   st.navigated = [];
@@ -701,7 +687,6 @@ describe("고르기 모드 · 일괄 작업 바 (I-07 33 ~ 36)", () => {
       { ids: [1, 2], isFixed: true, silent: true },
     ]);
     expect(st.snacks).toEqual([{ message: "2건을 고정으로 바꿨어요." }]);
-    expect(st.toasts).toEqual([]);
     expect(bulk()).toBeNull();
   });
 
@@ -794,7 +779,6 @@ describe("고르기 모드 · 일괄 작업 바 (I-07 33 ~ 36)", () => {
     expect(buttons[0]!.className).not.toContain("bg-bg-critical-solid");
     expect(dialog.textContent).not.toContain("삭제할까요");
     expect(st.snacks).toEqual([]);
-    expect(st.toasts).toEqual([]);
   });
 
   it('알림 창의 [확인] 을 누르면 닫히고 그때 스낵바 "N건을 삭제했어요." 가 뜬다', async () => {
@@ -871,7 +855,6 @@ describe("고르기 모드 · 일괄 작업 바 (I-07 33 ~ 36)", () => {
     await act(async () => byName("고정으로 표시")!.click());
 
     expect(bulk()).not.toBeNull();
-    expect(st.toasts).toEqual([]);
     expect(st.snacks).toHaveLength(1);
     expect(st.snacks[0]).toMatchObject({
       message: "고정으로 표시하지 못했어요.",
@@ -894,7 +877,6 @@ describe("고르기 모드 · 일괄 작업 바 (I-07 33 ~ 36)", () => {
 
     expect(st.deleteCalls).toEqual([[1]]);
     expect(document.querySelector("[role=alertdialog]")).toBeNull();
-    expect(st.toasts).toEqual([]);
     // 아무것도 지워지지 않았다 — 고른 것은 그대로, 서버 글이 아니라 고정 문구
     expect(bulk()).not.toBeNull();
     expect(st.snacks).toHaveLength(1);
