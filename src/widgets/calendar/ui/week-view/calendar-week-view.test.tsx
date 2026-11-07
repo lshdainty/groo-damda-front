@@ -88,7 +88,7 @@ describe("주 보기 일정 칩", () => {
     expect(chip.tagName).toBe("BUTTON");
     expect(chip.type).toBe("button");
     expect(chip.getAttribute("aria-label")).toMatch(
-      /^팀 회의 · 오전 10:00 ~ 오전 11:30/,
+      /^10월 20일 \(화\) · 팀 회의 · 오전 10:00 ~ 오전 11:30/,
     );
   });
 
@@ -141,7 +141,7 @@ describe("주 보기 일정 칩", () => {
     const buttons = [...container.querySelectorAll("button")];
     expect(buttons).toHaveLength(1);
     expect(buttons[0]!.getAttribute("aria-label")).toMatch(
-      /^출장 · 종일 · 10월 19일 ~ 21일/,
+      /^10월 19일 \(월\) · 출장 · 종일 · 10월 19일 ~ 21일/,
     );
     expect(container.querySelectorAll("[data-part]").length).toBe(3);
     expect(container.querySelectorAll("[data-part][aria-hidden]").length).toBe(
@@ -149,7 +149,7 @@ describe("주 보기 일정 칩", () => {
     );
   });
 
-  it("이어지는 띠 조각 사이에 틈이 없다 — 조각마다 가로 여백 클래스가 하나뿐이다(mx-x1 과 mx-0 이 겹치면 사이가 4px 벌어진다)", () => {
+  it("이어지는 띠 조각 사이에 틈이 없다 — 사이 조각은 가로 여백이 0 이고 -ml-px 로 이웃에 겹친다", () => {
     render(
       [],
       [
@@ -187,6 +187,98 @@ describe("주 보기 일정 칩", () => {
     const chip = container.querySelector<HTMLElement>("button")!;
     expect(chip.style.background).toMatch(/chart-\w+-weak/);
     expect(chip.style.color).toMatch(/chart-\w+-contrast/);
+  });
+});
+
+describe("주 보기 이름 · 차례 · 처음 스크롤", () => {
+  it("칩 이름 맨 앞에 날짜가 있다 — 같은 제목이 다른 날이면 이름이 다르다", () => {
+    render([
+      event(1, { title: "회의" }),
+      event(2, {
+        title: "회의",
+        startDate: "2026-10-22T10:00:00",
+        endDate: "2026-10-22T11:00:00",
+      }),
+    ]);
+    const names = [...container.querySelectorAll("button")].map((b) =>
+      b.getAttribute("aria-label"),
+    );
+    expect(names[0]).toMatch(/^10월 20일 \(화\) · 회의/);
+    expect(names[1]).toMatch(/^10월 22일 \(목\) · 회의/);
+  });
+
+  it("Tab 차례는 날 → 시작 시각 순이다(겹침 묶음 차례가 아니다)", () => {
+    render([
+      // 한 날에 겹치는 셋 — groupEvents 는 묶음 차례로 돌려준다
+      event(1, {
+        title: "B",
+        startDate: "2026-10-20T10:30:00",
+        endDate: "2026-10-20T12:00:00",
+      }),
+      event(2, {
+        title: "A",
+        startDate: "2026-10-20T10:00:00",
+        endDate: "2026-10-20T11:00:00",
+      }),
+      event(3, {
+        title: "C",
+        startDate: "2026-10-20T10:45:00",
+        endDate: "2026-10-20T11:30:00",
+      }),
+      event(4, {
+        title: "D",
+        startDate: "2026-10-19T15:00:00",
+        endDate: "2026-10-19T16:00:00",
+      }),
+    ]);
+    const titles = [...container.querySelectorAll("button")].map(
+      (b) => b.getAttribute("aria-label")!.split(" · ")[1],
+    );
+    expect(titles).toEqual(["D", "A", "B", "C"]);
+  });
+
+  const scroller = () =>
+    container.querySelector<HTMLElement>(".overflow-y-auto")!;
+
+  it("처음 스크롤 — 일정이 없으면 오전 8시", () => {
+    render([]);
+    expect(scroller().scrollTop).toBe(8 * 96);
+  });
+
+  it("처음 스크롤 — 그 주 가장 이른 일정이 8시보다 이르면 그 시각", () => {
+    render([
+      event(1, {
+        startDate: "2026-10-20T06:30:00",
+        endDate: "2026-10-20T07:30:00",
+      }),
+    ]);
+    expect(scroller().scrollTop).toBe(6 * 96);
+  });
+
+  it("처음 스크롤 — 일정이 8시 이후면 8시", () => {
+    render([event(1)]);
+    expect(scroller().scrollTop).toBe(8 * 96);
+  });
+
+  it("지난주에 시작한 여러 날 일정의 이번 주 첫 조각이 제목을 단 button 이다", () => {
+    render(
+      [],
+      [
+        event(5, {
+          title: "긴 출장",
+          isAllDay: true,
+          startDate: "2026-10-15T00:00:00",
+          endDate: "2026-10-20T23:59:59",
+        }),
+      ],
+    );
+    const buttons = [...container.querySelectorAll("button")];
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]!.textContent).toBe("긴 출장");
+    expect(buttons[0]!.getAttribute("aria-label")).toMatch(
+      /^10월 18일 \(일\) · 긴 출장/,
+    );
+    expect(buttons[0]!.dataset.part).toBe("first");
   });
 });
 

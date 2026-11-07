@@ -105,3 +105,59 @@ describe("CalendarProvider 의 보기", () => {
     expect(viewOf()).toBe("month");
   });
 });
+
+describe("폰 폭(768 미만)", () => {
+  const listeners = new Set<() => void>();
+  let width = 1024;
+  const original = window.matchMedia;
+  beforeEach(() => {
+    width = 1024;
+    window.matchMedia = ((q: string) => {
+      const min = Number(/min-width: (\d+)px/.exec(q)?.[1] ?? 0);
+      return {
+        get matches() {
+          return width >= min;
+        },
+        addEventListener: (_: string, l: () => void) => listeners.add(l),
+        removeEventListener: (_: string, l: () => void) => listeners.delete(l),
+      };
+    }) as unknown as typeof window.matchMedia;
+  });
+  afterEach(() => {
+    window.matchMedia = original;
+    listeners.clear();
+  });
+  const resize = (w: number) => {
+    width = w;
+    act(() => listeners.forEach((l) => l()));
+  };
+
+  it("1024 에서 주 → 390 에서는 월(저장값은 주) → 다시 1024 에서 주", () => {
+    act(() =>
+      root.render(
+        <CalendarProvider events={[]} initialView="week">
+          <Probe />
+        </CalendarProvider>,
+      ),
+    );
+    expect(viewOf()).toBe("week");
+    resize(390);
+    expect(viewOf()).toBe("month");
+    resize(1024);
+    expect(viewOf()).toBe("week");
+  });
+
+  it("390 에서 고른 보기도 저장값으로 남는다(넓히면 나타난다)", () => {
+    width = 390;
+    act(() =>
+      root.render(
+        <CalendarProvider events={[]} initialView="agenda">
+          <Probe />
+        </CalendarProvider>,
+      ),
+    );
+    expect(viewOf()).toBe("month");
+    resize(1024);
+    expect(viewOf()).toBe("agenda");
+  });
+});

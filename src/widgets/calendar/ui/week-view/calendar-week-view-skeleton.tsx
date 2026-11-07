@@ -17,7 +17,7 @@ const CalendarWeekViewSkeleton = () => {
 
   return (
     <div aria-busy="true" className="h-full w-full">
-      <div className="flex h-full flex-col">
+      <div aria-hidden className="flex h-full flex-col">
         {/* 여러 날 일정 줄 */}
         <div className="border-b border-stroke-neutral-subtle">
           <div className="flex">

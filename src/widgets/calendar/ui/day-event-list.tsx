@@ -15,12 +15,15 @@ import type { IEvent } from "@/widgets/calendar/model/interfaces";
 export function DayEventList({
   events,
   label,
+  labelledBy,
   onTapEvent,
   className,
 }: {
   events: IEvent[];
   /** 목록 이름(보조 기술) — 보통 날짜 */
   label: string;
+  /** 목록 위 제목 요소의 id — 주면 이름을 그 제목에서 얻는다(aria-labelledby, 같은 글을 두 번 달지 않는다) */
+  labelledBy?: string;
   onTapEvent: (event: IEvent, el: HTMLElement) => void;
   className?: string;
 }) {
@@ -31,7 +34,11 @@ export function DayEventList({
       Number(b.sourceType === "holiday") - Number(a.sourceType === "holiday"),
   );
   return (
-    <List className={className} aria-label={label}>
+    <List
+      className={className}
+      aria-label={labelledBy ? undefined : label}
+      aria-labelledby={labelledBy}
+    >
       {sorted.map((e) => {
         const tone = eventBadgeTone(e);
         const holiday = e.sourceType === "holiday";

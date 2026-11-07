@@ -1149,7 +1149,10 @@ calendar,otherSources,기타 소스,Other Sources
 calendar,source.holiday,공휴일,Holidays
 calendar,source.expense,가계부,Expenses
 calendar,source.todo,할 일,Todos
-calendar,agenda.noEvents,일정이 없어요,No events
+calendar,agenda.emptyMonth,{{month}}월 일정이 없어요,No events in {{month}}
+calendar,agenda.emptyMonthDesc,일정을 추가하면 여기에 모여요.,Add an event and it will show up here.
+calendar,agenda.emptyFiltered,조건에 맞는 일정이 없어요,No events match
+calendar,agenda.emptyFilteredDesc,보일 캘린더를 골라보세요.,Choose which calendars to show.
 calendar,close,닫기,Close
 calendar,eventDetail,일정 상세,Event details
 calendar,sourceCount,{{count}}개,{{count}}

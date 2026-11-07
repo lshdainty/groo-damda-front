@@ -1,11 +1,13 @@
 import { endOfDay, format, isSameMonth, parseISO, startOfDay } from "date-fns";
-import { CalendarX2 } from "lucide-react";
-import { useMemo } from "react";
+import { enUS } from "date-fns/locale";
+import { Calendar, FunnelX, Plus } from "lucide-react";
+import { useId, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ListHeader } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
 import { formatMonthDayDow } from "@/shared/lib/date";
+import { eventsOnDay } from "@/widgets/calendar/lib/helpers";
 import { useCalendar } from "@/widgets/calendar/model/calendar-context";
 import { DayEventList } from "@/widgets/calendar/ui/day-event-list";
 
@@ -15,16 +17,14 @@ interface IProps {
   singleDayEvents: IEvent[];
   multiDayEvents: IEvent[];
   onEventClick?: (event: IEvent, el: HTMLElement) => void;
+  /**
+   * 비어 있는 까닭 — "month": 이 달에 일정이 없다(일정을 추가하면 모인다). "filtered": 거르느라 0건(캘린더를 모두 숨겼거나,
+   * 숨긴 캘린더에 이 달 일정이 있다) — 추가 버튼을 두지 않는다(result-section.md "비어 있는 까닭마다")
+   */
+  emptyReason?: "month" | "filtered";
+  /** 일정 추가 — 머리의 [+ 일정 추가] 와 같은 일 */
+  onAdd?: () => void;
 }
-
-/** 그 날과 겹치는 일정 — 시작 시각 차례(공휴일을 먼저 두는 것은 DayEventList 가 한다) */
-const overlapping = (events: IEvent[], date: Date): IEvent[] => {
-  const ds = startOfDay(date);
-  const de = endOfDay(date);
-  return events
-    .filter((e) => parseISO(e.startDate) <= de && parseISO(e.endDate) >= ds)
-    .sort((a, b) => a.startDate.localeCompare(b.startDate));
-};
 
 /**
  * 목록 보기 (I-wrap-b1 γ) — 일정이 있는 날마다 List 머리(원장 · 검색과 같은 `formatMonthDayDow`: 올해 "10월 5일 (월)",
@@ -35,8 +35,11 @@ const CalendarAgendaView = ({
   singleDayEvents,
   multiDayEvents,
   onEventClick,
+  emptyReason = "month",
+  onAdd,
 }: IProps) => {
-  const { t } = useTranslation("calendar");
+  const { t, i18n } = useTranslation("calendar");
+  const uid = useId();
   const { selectedDate } = useCalendar();
 
   const days = useMemo(() => {
@@ -61,37 +64,63 @@ const CalendarAgendaView = ({
 
     return [...keys.values()]
       .sort((a, b) => a.getTime() - b.getTime())
-      .map((date) => ({ date, events: overlapping(all, date) }));
+      .map((date) => ({ date, events: eventsOnDay(all, date) }));
   }, [singleDayEvents, multiDayEvents, selectedDate]);
 
+  const isKo = i18n.language.startsWith("ko");
+  const month = isKo
+    ? String(selectedDate.getMonth() + 1)
+    : format(selectedDate, "MMMM", { locale: enUS });
+
   return (
-    <div data-slot="agenda-view" className="h-full w-full overflow-y-auto">
+    // 날짜 머리가 위에 붙어 있으니(sticky) 초점 줄이 머리 아래에 깔리지 않게 스크롤 여백을 머리 높이만큼 둔다
+    <div
+      data-slot="agenda-view"
+      className="h-full w-full scroll-pt-[40px] overflow-y-auto"
+    >
       {days.length === 0 ? (
-        <ResultSection
-          size="medium"
-          icon={<CalendarX2 />}
-          title={t("agenda.noEvents")}
-          className="h-full"
-        />
+        emptyReason === "filtered" ? (
+          <ResultSection
+            size="medium"
+            icon={<FunnelX />}
+            title={t("agenda.emptyFiltered")}
+            description={t("agenda.emptyFilteredDesc")}
+            className="h-full"
+          />
+        ) : (
+          <ResultSection
+            size="medium"
+            icon={<Calendar />}
+            title={t("agenda.emptyMonth", { month })}
+            description={t("agenda.emptyMonthDesc")}
+            primaryAction={
+              onAdd
+                ? { label: t("addEvent"), onClick: onAdd, icon: <Plus /> }
+                : undefined
+            }
+            className="h-full"
+          />
+        )
       ) : (
         <div className="flex flex-col gap-x3 pb-x4 pt-x2">
           {days.map(({ date, events }) => {
             const label = formatMonthDayDow(date);
+            const headId = `${uid}-${format(date, "yyyyMMdd")}`;
             return (
-              <section
-                key={format(date, "yyyy-MM-dd")}
-                data-slot="agenda-day"
-                aria-label={label}
-              >
-                <ListHeader className="sticky top-0 z-10 bg-bg-layer-default">
+              <div key={format(date, "yyyy-MM-dd")} data-slot="agenda-day">
+                <ListHeader
+                  id={headId}
+                  className="sticky top-0 z-10 bg-bg-layer-default"
+                >
                   {label}
                 </ListHeader>
                 <DayEventList
                   events={events}
                   label={label}
+                  labelledBy={headId}
                   onTapEvent={(e, el) => onEventClick?.(e, el)}
                 />
-              </section>
+              </div>
             );
           })}
         </div>

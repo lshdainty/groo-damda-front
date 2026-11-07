@@ -12,6 +12,7 @@ import {
   startOfWeek,
 } from "date-fns";
 import { enUS, ko } from "date-fns/locale";
+import { useLayoutEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCalendar } from "@/widgets/calendar/model/calendar-context";
@@ -24,6 +25,7 @@ import {
 } from "@/widgets/calendar/lib/helpers";
 import { eventLineDetail } from "@/widgets/calendar/lib/event-line";
 import { cn } from "@/shared/lib/cn";
+import { formatMonthDayDow } from "@/shared/lib/date";
 
 import type { IEvent } from "@/widgets/calendar/model/interfaces";
 
@@ -36,11 +38,12 @@ interface IProps {
 // ---- 일정 칩 — 월 칩과 같은 색(eventBadgeTone: 바탕 chart-{hue}-weak · 글 chart-{hue}-contrast) ---- //
 
 /**
- * 누르는 일정 칩. button 이고 이름은 "제목 · 시간 · 캘린더 …"(그날 패널 줄의 설명과 같은 글)이다.
+ * 누르는 일정 칩. button 이고 이름은 "10월 26일 (월) · 제목 · 시간 · 캘린더 …"(날짜 규칙 + 그날 패널 줄의 설명과 같은 글)이다.
  * 안 글은 보이는 만큼만(제목 · 시각)이라 칩이 좁아도 이름은 온전하다.
  */
 function EventChipButton({
   event,
+  day,
   onEventClick,
   className,
   style,
@@ -48,6 +51,8 @@ function EventChipButton({
   children,
 }: {
   event: IEvent;
+  /** 칩이 놓인 날 — 이름 맨 앞에 붙는다(주 격자에서는 어느 날 일정인지가 이름에 있어야 한다) */
+  day: Date;
   onEventClick?: (event: IEvent, el: HTMLElement) => void;
   /** 이어지는 일정의 조각 자리(첫 · 사이 · 끝 · 하나) */
   part?: string;
@@ -60,7 +65,7 @@ function EventChipButton({
   return (
     <button
       type="button"
-      aria-label={`${event.title} · ${eventLineDetail(event, t, i18n.language)}`}
+      aria-label={`${formatMonthDayDow(day)} · ${event.title} · ${eventLineDetail(event, t, i18n.language)}`}
       data-slot="week-chip"
       data-part={part}
       className={cn(
@@ -193,7 +198,7 @@ const WeekViewMultiDayEventsRow = ({
 
               const positionClasses = {
                 // 멀티데이 바: 시작/종료만 round, 중간 full-bleed 연속. divide-x(1px) 는 -ml-px 로 bridge.
-                // 가장자리 바깥 여백은 4px(px 임의값 — 간격 토큰은 tailwind-merge 가 margin 으로 알아보지 못해 mx-0 과 겹친다)
+                // 가장자리 바깥 여백 4px. 이어지는 조각은 모서리가 각져야 하므로 둥근 모서리는 기본(rounded-sm) 뒤에 rounded-r-none 같은 방향 클래스로 덮는다
                 first: "relative z-10 ml-[4px] mr-0 rounded-r-none",
                 middle: "relative z-10 mx-0 -ml-px rounded-none",
                 last: "relative z-10 -ml-px mr-[4px] rounded-l-none",
@@ -212,6 +217,7 @@ const WeekViewMultiDayEventsRow = ({
                 <EventChipButton
                   key={`${event.id}-${dayIndex}`}
                   event={event}
+                  day={day}
                   onEventClick={onEventClick}
                   part={position}
                   className={bar}
@@ -280,9 +286,11 @@ const CalendarTimeline = ({
 
 const EventBlock = ({
   event,
+  day,
   onEventClick,
 }: {
   event: IEvent;
+  day: Date;
   onEventClick?: (event: IEvent, el: HTMLElement) => void;
 }) => {
   const { i18n } = useTranslation();
@@ -298,6 +306,7 @@ const EventBlock = ({
   return (
     <EventChipButton
       event={event}
+      day={day}
       onEventClick={onEventClick}
       part="block"
       className={cn(
@@ -344,6 +353,20 @@ const CalendarWeekView = ({
   const weekStart = startOfWeek(selectedDate, { locale });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
+  // 처음 스크롤 — 0시부터 열면 빈 칸만 보인다. 그 주 가장 이른 일정과 오전 8시 중 이른 쪽에서 연다
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const firstEventHour = singleDayEvents.reduce(
+    (min, e) => Math.min(min, parseISO(e.startDate).getHours()),
+    8,
+  );
+  const startHour = Math.min(firstEventHour, 8);
+  const firstHour = hours[0] ?? 0;
+  const weekKey = weekStart.getTime();
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = Math.max(0, startHour - firstHour) * 96;
+  }, [weekKey, startHour, firstHour]);
+
   return (
     <div className="h-full w-full">
       <div className="flex h-full flex-col">
@@ -386,7 +409,7 @@ const CalendarWeekView = ({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto">
           <div className="flex overflow-hidden">
             {/* Hours column */}
             <div className="relative w-[72px]">
@@ -440,8 +463,17 @@ const CalendarWeekView = ({
                         );
                       })}
 
-                      {groupedEvents.map((group, groupIndex) =>
-                        group.map((event) => {
+                      {/* Tab 차례는 겹침 묶음이 아니라 시작 시각 순 — 놓는 자리는 style 이 정한다 */}
+                      {groupedEvents
+                        .flatMap((group, groupIndex) =>
+                          group.map((event) => ({ event, groupIndex })),
+                        )
+                        .sort(
+                          (a, b) =>
+                            parseISO(a.event.startDate).getTime() -
+                            parseISO(b.event.startDate).getTime(),
+                        )
+                        .map(({ event, groupIndex }) => {
                           let style = getEventBlockStyle(
                             event,
                             day,
@@ -477,12 +509,12 @@ const CalendarWeekView = ({
                             >
                               <EventBlock
                                 event={event}
+                                day={day}
                                 onEventClick={onEventClick}
                               />
                             </div>
                           );
-                        }),
-                      )}
+                        })}
                     </div>
                   );
                 })}

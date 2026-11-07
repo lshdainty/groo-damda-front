@@ -241,6 +241,8 @@ export function useCalendarScreen(events: IEvent[]) {
     dayEvents,
     singleDayEvents,
     multiDayEvents,
+    // 거르기 전 — 이 범위에 일정이 있는데 거른 결과가 0건인지 알아볼 때
+    allEvents: events,
   };
 }
 

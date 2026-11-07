@@ -678,7 +678,7 @@ describe("태블릿 480 시트 (18) — 돌아갈 목록이 없다", () => {
   });
 });
 
-describe("1280 이상 주 · 일 · 목록 보기 — 가운데 대화상자 480 (17)", () => {
+describe("1280 이상 주 · 목록 보기 — 가운데 대화상자 480 (17)", () => {
   const wideOpen = (
     over: Partial<IEvent> = {},
     wideDetail: "dialog" | "none" = "dialog",

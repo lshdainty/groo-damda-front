@@ -104,11 +104,18 @@ describe("도구 줄", () => {
     mocks.view = "month";
   });
 
-  it("옛 일 보기 값이 들어와도 ‹ › 는 주 보기에만 있다(이전 날 · 다음 날 이름이 없다)", () => {
-    mocks.view = "day";
+  it("목록 보기에도 ‹ › 는 없다 — 주 보기에만 한 주씩 옮긴다", () => {
+    mocks.view = "agenda";
     act(() => root.render(<CalendarHeaderDesktop />));
-    expect(container.querySelector("[aria-label='header.prevDay']")).toBeNull();
-    expect(container.querySelector("[aria-label='header.nextDay']")).toBeNull();
+    expect(
+      container.querySelector("[aria-label='header.prevWeek']"),
+    ).toBeNull();
+    expect(
+      container.querySelector("[aria-label='header.nextWeek']"),
+    ).toBeNull();
+    // 고른 보기 칩은 목록
+    const checked = container.querySelector("[role=radio][aria-checked=true]");
+    expect(checked?.textContent).toBe("view.agenda");
     mocks.view = "month";
   });
 });

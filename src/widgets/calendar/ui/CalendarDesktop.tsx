@@ -8,6 +8,7 @@ import { Card } from "@/shared/ds/card";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { PageHead } from "@/shared/ui/groo/page-head";
 import { eventKey, findEvent } from "@/widgets/calendar/lib/event-key";
+import { agendaEmptyReason } from "@/widgets/calendar/lib/agenda-empty";
 import { eventsOnDay } from "@/widgets/calendar/lib/helpers";
 import { useCanEditEvent } from "@/widgets/calendar/model/use-can-edit-event";
 import { dayKey } from "@/widgets/calendar/model/use-calendar-screen";
@@ -47,7 +48,8 @@ interface IProps {
 const CalendarDesktop = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
   const { t } = useTranslation("calendar");
   const { t: tl } = useTranslation("layout");
-  const { view, selectedDate } = useCalendar();
+  const { view, selectedDate, userCalendars, isCalendarVisible } =
+    useCalendar();
   const wide = useWideSurface();
   const canEdit = useCanEditEvent();
   const {
@@ -59,10 +61,18 @@ const CalendarDesktop = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
     filteredEvents,
     singleDayEvents,
     multiDayEvents,
+    allEvents,
     setCreatingDate,
   } = screen;
 
   const dayEvents = eventsOnDay(filteredEvents, selectedDate);
+  // 목록 보기가 비었을 때 까닭 — 거르느라 0건이면 "걸러서 0건", 아니면 "이 달에 없음"
+  const emptyReason = agendaEmptyReason(
+    allEvents,
+    selectedDate,
+    userCalendars.map((c) => c.rowId),
+    isCalendarVisible,
+  );
   // 1280 이상 월 보기 — 그날 패널이 상세를 그린다. 보던 날을 바꾸면 패널은 그 날의 목록으로 돌아간다
   const panelMode = wide && view === "month";
   const panelEvent =
@@ -181,6 +191,8 @@ const CalendarDesktop = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
                     singleDayEvents={singleDayEvents}
                     multiDayEvents={multiDayEvents}
                     onEventClick={openDetail}
+                    emptyReason={emptyReason}
+                    onAdd={() => setCreatingDate(new Date())}
                   />
                 ),
               )}

@@ -74,13 +74,19 @@ const trip = event(3, {
   endDate: "2026-10-12T23:59:59",
 });
 
-const render = (single: IEvent[], multi: IEvent[], onEventClick = vi.fn()) => {
+const render = (
+  single: IEvent[],
+  multi: IEvent[],
+  onEventClick = vi.fn(),
+  extra: { emptyReason?: "month" | "filtered"; onAdd?: () => void } = {},
+) => {
   act(() =>
     root.render(
       <CalendarAgendaView
         singleDayEvents={single}
         multiDayEvents={multi}
         onEventClick={onEventClick}
+        {...extra}
       />,
     ),
   );
@@ -129,7 +135,10 @@ describe("목록 보기 줄", () => {
     render([event(1, { title: "회의" })], [holiday]);
     const lists = container.querySelectorAll("[data-slot=list]");
     expect(lists).toHaveLength(2);
-    expect(lists[0]!.getAttribute("aria-label")).toBe("10월 3일 (토)");
+    // 이름은 위 날짜 머리에서 얻는다(aria-labelledby) — 같은 글을 두 번 달지 않는다
+    const head = container.querySelector("[data-slot=list-header]")!;
+    expect(lists[0]!.getAttribute("aria-labelledby")).toBe(head.id);
+    expect(lists[0]!.hasAttribute("aria-label")).toBe(false);
     // 공휴일 줄은 button 이 아니다
     expect(lists[0]!.querySelector("button")).toBeNull();
     expect(lists[0]!.textContent).toContain("개천절");
@@ -184,12 +193,60 @@ describe("목록 보기 줄", () => {
 });
 
 describe("목록 보기 빈 상태 · 클래스", () => {
-  it("빈 상태는 Result Section empty — 해요체, 손 <p> 가 아니다", () => {
-    render([], []);
+  it('이 달에 없음 — 제목 "10월 일정이 없어요" · 설명 · [일정 추가] 가 머리와 같은 일을 부른다', () => {
+    const onAdd = vi.fn();
+    render([], [], vi.fn(), { emptyReason: "month", onAdd });
     const status = container.querySelector("[role=status]")!;
-    expect(status).not.toBeNull();
-    expect(status.textContent).toBe("일정이 없어요");
-    expect(container.querySelector("p")).toBeNull();
+    expect(status.textContent).toContain("10월 일정이 없어요");
+    expect(status.textContent).toContain("일정을 추가하면 여기에 모여요.");
+    const btn = [...container.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("일정 추가"),
+    )!;
+    act(() => btn.click());
+    expect(onAdd).toHaveBeenCalledTimes(1);
+  });
+
+  it("보는 달을 제목에 말한다 — 11월이면 11월", () => {
+    mocks.selected = new Date(2026, 10, 3);
+    render([], [], vi.fn(), { onAdd: vi.fn() });
+    expect(container.textContent).toContain("11월 일정이 없어요");
+  });
+
+  it('걸러서 0건 — "조건에 맞는 일정이 없어요" · "보일 캘린더를 골라보세요." · 버튼 없음', () => {
+    render([], [], vi.fn(), { emptyReason: "filtered", onAdd: vi.fn() });
+    const status = container.querySelector("[role=status]")!;
+    expect(status.textContent).toContain("조건에 맞는 일정이 없어요");
+    expect(status.textContent).toContain("보일 캘린더를 골라보세요.");
+    expect(container.querySelector("button")).toBeNull();
+  });
+
+  it("날마다 region 랜드마크가 생기지 않는다(section aria-label 없음)", () => {
+    render([event(1)], [holiday, trip]);
+    expect(container.querySelectorAll("section, [role=region]")).toHaveLength(
+      0,
+    );
+  });
+
+  it("달 경계를 넘는 여러 날 일정은 이 달의 날만 나온다(9/29 ~ 10/2 → 10월 1 · 2일)", () => {
+    render(
+      [],
+      [
+        event(7, {
+          title: "걸친 일정",
+          isAllDay: true,
+          startDate: "2026-09-29T00:00:00",
+          endDate: "2026-10-02T23:59:59",
+        }),
+      ],
+    );
+    expect(headers()).toEqual(["10월 1일 (목)", "10월 2일 (금)"]);
+  });
+
+  it("스크롤 칸에 scroll-padding-top 이 있다(붙은 날짜 머리가 초점 줄을 가리지 않는다)", () => {
+    render([event(1)], []);
+    expect(
+      container.querySelector("[data-slot=agenda-view]")!.className,
+    ).toMatch(/scroll-pt-/);
   });
 
   it("옛 색 · 글자 · 모서리 클래스와 손 role=button 이 없다", () => {

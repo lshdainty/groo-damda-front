@@ -3,7 +3,6 @@ import { i18n } from "@/shared/i18n/config";
 import {
   convertCalendarEventToIEvent,
   convertExpenseToIEvent,
-  eventBadgeColor,
   eventBadgeTone,
   eventColorKey,
   withOpenedOccurrence,
@@ -208,6 +207,5 @@ describe("일정 색 고르기", () => {
       bg: "var(--color-chart-red-weak)",
       fg: "var(--color-chart-red-contrast)",
     });
-    expect(eventBadgeColor(holiday)).toBe("var(--color-chart-red)");
   });
 });
