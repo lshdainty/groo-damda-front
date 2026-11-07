@@ -33,7 +33,11 @@ import {
   BandHead,
   Desc,
 } from "@/shared/ui/groo/band-parts";
-import { splitFixed, type FixedSplit } from "@/entities/expense";
+import {
+  fixedShareTexts,
+  splitFixed,
+  type FixedSplit,
+} from "@/entities/expense";
 import type {
   CategoryBreakdown,
   ExpenseCategory,
@@ -75,6 +79,7 @@ function RatioBar({
   ariaLabel: string;
 }) {
   const fixedPct = split.total === 0 ? 0 : (split.fixed / split.total) * 100;
+  const shares = fixedShareTexts(split);
   const cell =
     "flex h-full items-center justify-center overflow-hidden whitespace-nowrap text-t2 font-bold text-fg-neutral-inverted";
   return (
@@ -88,7 +93,7 @@ function RatioBar({
           className={cell}
           style={{ width: `${fixedPct}%`, background: FIXED_COLOR }}
         >
-          {fixedPct >= 14 ? formatPercent(split.fixedPercent, "share") : ""}
+          {fixedPct >= 14 ? shares.fixed : ""}
         </div>
       )}
       {split.variable > 0 && (
@@ -96,9 +101,7 @@ function RatioBar({
           className={cn(cell, "flex-1")}
           style={{ background: VARIABLE_COLOR }}
         >
-          {100 - fixedPct >= 14
-            ? formatPercent(100 - split.fixedPercent, "share")
-            : ""}
+          {100 - fixedPct >= 14 ? shares.variable : ""}
         </div>
       )}
     </div>
@@ -182,6 +185,7 @@ export function FixedOverviewSection({
       </>
     );
   }
+  const shares = fixedShareTexts(split);
   const noFixed = split.fixed === 0;
   const figures = [
     {
@@ -196,14 +200,14 @@ export function FixedOverviewSection({
       label: t(`fixed.fixed.${kind}`),
       value: split.fixed,
       swatch: true,
-      sub: formatPercent(split.fixedPercent, "share"),
+      sub: shares.fixed,
     },
     {
       key: "variable",
       label: t(`fixed.variable.${kind}`),
       value: split.variable,
       swatch: false,
-      sub: formatPercent(100 - split.fixedPercent, "share"),
+      sub: shares.variable,
     },
   ];
   const label = (f: (typeof figures)[number]) => (
@@ -222,8 +226,8 @@ export function FixedOverviewSection({
             split={split}
             ariaLabel={t("fixed.bar.aria", {
               kind: t(`fixed.total.${kind}`),
-              fixed: formatPercent(split.fixedPercent, "share"),
-              variable: formatPercent(100 - split.fixedPercent, "share"),
+              fixed: shares.fixed,
+              variable: shares.variable,
             })}
           />
         </div>
@@ -276,7 +280,7 @@ export function FixedOverviewSection({
               {split.fixedPercent > 0 && split.fixedPercent < 0.05
                 ? t(`fixed.insight.${kind}None`)
                 : t(`fixed.insight.${kind}`, {
-                    pct: formatPercent(split.fixedPercent, "share"),
+                    pct: shares.fixed,
                   })}{" "}
               <strong className="font-bold text-fg-neutral">
                 {mask(won(split.variable))}
