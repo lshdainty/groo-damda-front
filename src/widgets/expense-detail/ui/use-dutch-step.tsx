@@ -87,14 +87,14 @@ const METHODS: { v: SplitMethod; title: string; sub: string }[] = [
 const FIELD_ROW =
   "@max-[calc(16rem+48px)]/list-item:[&_[data-slot=list-suffix]:has(input)]:col-start-3! @max-[calc(16rem+48px)]/list-item:[&_[data-slot=list-suffix]:has(input)]:row-start-2! @max-[calc(16rem+48px)]/list-item:[&_[data-slot=list-suffix]:has(input)]:w-full @max-[calc(16rem+48px)]/list-item:[&_[data-slot=list-suffix]:has(input)]:pt-x2";
 const RATIO_FIELD = "w-[96px] @max-[calc(16rem+48px)]/list-item:w-full";
-// 직접 입력 칸 — 한 사람 몫 최대값(100억 미만 9,999,999,999원)이 보통 글자에서 칸 안에 다 보이는 폭 168(실측: 숫자 13자 · 16px 입력 폭 125 +
-// 칸의 안쪽 여백 · 단위 "원" 40 + 여유 3 — 128 은 "912,345,6" 로 잘렸다). 앱도 같은 168. 비율 칸(0~100)은 96 그대로다.
-// 문턱 438 아래에서는 List 의 narrow 격자(앞 · 본문 · 뒤 3열)를 이 줄에도 직접 건다 — List 자체의 문턱(16rem + 48px)은 더 좁다.
-// 문턱 438: List 는 공백 없는 긴 이름의 본문을 (줄 안 폭 − 앞 붙이개 54) ÷ 2 까지 줄이므로, 그 이름에서도 칸 168 이 줄 안에 남으려면
-// 줄 안 폭 ≥ 54 + 2 × 168 = 390(줄 438)이어야 한다 — 이보다 좁은 줄(모든 폰 · 큰 글자)은 칸을 본문 아래 전폭으로 내려 이름이 눌리거나 칸이 넘치지 않게 한다
-const CUSTOM_FIELD = "w-[168px] @max-[438px]/list-item:w-full";
+// 직접 입력 칸 — 한 사람 몫 최대값(100억 미만 9,999,999,999원)이 보통 글자에서 칸 안에 다 보이는 폭 172(실측: 숫자 13자 · 16px 입력 폭 125 +
+// 칸의 안쪽 여백 · 단위 "원" 40 + 여유 3 — 128 은 "912,345,6" 로 잘렸다). 앱도 같은 172. 비율 칸(0~100)은 96 그대로다.
+// 문턱 446 아래에서는 List 의 narrow 격자(앞 · 본문 · 뒤 3열)를 이 줄에도 직접 건다 — List 자체의 문턱(16rem + 48px)은 더 좁다.
+// 문턱 446: List 는 공백 없는 긴 이름의 본문을 (줄 안 폭 − 앞 붙이개 54) ÷ 2 까지 줄이므로, 그 이름에서도 칸 172 이 줄 안에 남으려면
+// 줄 안 폭 ≥ 54 + 2 × 172 = 398(줄 446)이어야 한다 — 이보다 좁은 줄(모든 폰 · 큰 글자)은 칸을 본문 아래 전폭으로 내려 이름이 눌리거나 칸이 넘치지 않게 한다
+const CUSTOM_FIELD = "w-[172px] @max-[446px]/list-item:w-full";
 const FIELD_ROW_CUSTOM =
-  "@max-[438px]/list-item:[&_[data-slot=list-content]]:grid @max-[438px]/list-item:[&_[data-slot=list-content]]:grid-cols-[auto_auto_minmax(0,1fr)_auto] @max-[438px]/list-item:[&_[data-slot=list-content]]:items-start @max-[438px]/list-item:[&_[data-slot=list-body]]:min-w-0 @max-[438px]/list-item:[&_[data-slot=list-body]]:pr-0 @max-[438px]/list-item:[&_[data-slot=list-suffix]:has(input)]:col-start-3! @max-[438px]/list-item:[&_[data-slot=list-suffix]:has(input)]:row-start-2! @max-[438px]/list-item:[&_[data-slot=list-suffix]:has(input)]:w-full @max-[438px]/list-item:[&_[data-slot=list-suffix]:has(input)]:pt-x2";
+  "@max-[446px]/list-item:[&_[data-slot=list-content]]:grid @max-[446px]/list-item:[&_[data-slot=list-content]]:grid-cols-[auto_auto_minmax(0,1fr)_auto] @max-[446px]/list-item:[&_[data-slot=list-content]]:items-start @max-[446px]/list-item:[&_[data-slot=list-body]]:min-w-0 @max-[446px]/list-item:[&_[data-slot=list-body]]:pr-0 @max-[446px]/list-item:[&_[data-slot=list-suffix]:has(input)]:col-start-3! @max-[446px]/list-item:[&_[data-slot=list-suffix]:has(input)]:row-start-2! @max-[446px]/list-item:[&_[data-slot=list-suffix]:has(input)]:w-full @max-[446px]/list-item:[&_[data-slot=list-suffix]:has(input)]:pt-x2";
 
 export interface DutchStepOptions {
   enabled: boolean;

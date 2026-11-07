@@ -14,20 +14,20 @@ describe("더치페이 참여자 줄 편집 칸", () => {
   it("칸 폭은 px 다 — rem 클래스(w-24 · w-32)는 글자 배율을 따라 커져 이름을 눌렀다", () => {
     expect(src).not.toMatch(/rootClassName="w-(24|32)"/);
     expect(src).toContain('RATIO_FIELD = "w-[96px] ');
-    expect(src).toContain('CUSTOM_FIELD = "w-[168px] ');
+    expect(src).toContain('CUSTOM_FIELD = "w-[172px] ');
   });
 
-  it("직접 입력 칸은 168 — 9,999,999,999원(한 사람 몫 최대)이 보통 글자에서 안 잘리는 실측 폭이고, 문턱은 긴 이름(본문 절반)에서도 칸이 줄 안에 남는 438px 다", () => {
+  it("직접 입력 칸은 172 — 9,999,999,999원(한 사람 몫 최대)이 보통 글자에서 안 잘리는 실측 폭이고, 문턱은 긴 이름(본문 절반)에서도 칸이 줄 안에 남는 446px 다", () => {
     expect(src).toContain(
-      'CUSTOM_FIELD = "w-[168px] @max-[438px]/list-item:w-full"',
+      'CUSTOM_FIELD = "w-[172px] @max-[446px]/list-item:w-full"',
     );
     expect(src).toContain(
-      "@max-[438px]/list-item:[&_[data-slot=list-suffix]:has(input)]:col-start-3!",
+      "@max-[446px]/list-item:[&_[data-slot=list-suffix]:has(input)]:col-start-3!",
     );
     expect(src).toContain('method === "CUSTOM" ? FIELD_ROW_CUSTOM : FIELD_ROW');
     // 문턱이 List 자체(16rem + 48px)보다 넓으므로 격자도 이 줄에서 직접 건다
     expect(src).toContain(
-      "@max-[438px]/list-item:[&_[data-slot=list-content]]:grid-cols-[auto_auto_minmax(0,1fr)_auto]",
+      "@max-[446px]/list-item:[&_[data-slot=list-content]]:grid-cols-[auto_auto_minmax(0,1fr)_auto]",
     );
   });
 
