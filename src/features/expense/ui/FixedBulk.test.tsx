@@ -24,7 +24,6 @@ vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
     dismiss: () => {},
   }),
 }));
-vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 const mutateAsync = vi.fn();
 const mState = { isError: false, isPending: false, error: null as unknown };
 const reset = vi.fn();

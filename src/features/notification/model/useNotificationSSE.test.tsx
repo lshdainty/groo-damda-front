@@ -10,9 +10,6 @@ declare global {
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-const toast = vi.hoisted(() => vi.fn());
-vi.mock("sonner", () => ({ toast }));
-
 class FakeEventSource {
   static all: FakeEventSource[] = [];
   closed = false;
@@ -74,7 +71,6 @@ const mounted: (() => void)[] = [];
 describe("useNotificationSSE", () => {
   beforeEach(() => {
     FakeEventSource.all = [];
-    toast.mockClear();
     vi.stubGlobal("EventSource", FakeEventSource);
     vi.useFakeTimers();
     fetchMock.mockReset();
@@ -101,11 +97,10 @@ describe("useNotificationSSE", () => {
     expect(open()).toHaveLength(1);
   });
 
-  it("알림이 오면 알림 질의를 다시 받고 띠(토스트)는 띄우지 않는다", () => {
+  it("알림이 오면 알림 질의를 다시 받는다", () => {
     const { spy } = setup();
     act(() => first().emit("NOTIFICATION", '{"title":"t","message":"m"}'));
     expect(spy).toHaveBeenCalledWith({ queryKey: notificationKeys.all });
-    expect(toast).not.toHaveBeenCalled();
   });
 
   it("글이 깨져 와도 점은 갱신한다", () => {

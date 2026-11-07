@@ -31,7 +31,6 @@ vi.mock("react-i18next", () => ({
   }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-vi.mock("sonner", () => ({ toast: { success: () => {}, error: () => {} } }));
 vi.mock("../model/useWithdrawal", () => ({
   useWithdrawalCheck: () => ({
     // react-query 처럼 — 처음 불러오기 실패면 값이 없다

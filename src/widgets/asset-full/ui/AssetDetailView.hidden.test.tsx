@@ -20,7 +20,6 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 vi.mock("react-router-dom", () => ({ useNavigate: () => () => {} }));
-vi.mock("sonner", () => ({ toast: { success: () => {}, error: () => {} } }));
 
 // 화면 카드 가리기는 **꺼 둔다** — 자산 플래그만으로 가려지는지를 본다.
 vi.mock("@/shared/lib/groo/hide-amounts-core", async (orig) => ({
