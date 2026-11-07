@@ -34,6 +34,12 @@ export interface AmountInputProps extends Omit<
   max?: number;
   /** 뒤 글자 — 기본 "원" */
   unit?: React.ReactNode;
+  /**
+   * 상한 오류를 호출처가 그린다 — 칸이 Field 밖 좁은 자리(목록 줄의 뒤쪽 `w-32` 칸)라 바로 아래에 그리면 줄 모양이 깨질 때.
+   * 주면 이 칸은 오류 줄을 그리지 않고(`aria-invalid` 만) 글이 바뀔 때마다 알린다. 호출처는 칸 이름과 이어 줄 안 다른 자리에
+   * 같은 오류 모양(critical)으로 보인다
+   */
+  onLimitMessage?: (message: string | null) => void;
 }
 
 export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
@@ -43,6 +49,7 @@ export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
       onValueChange,
       max = MAX_AMOUNT,
       unit,
+      onLimitMessage,
       onKeyDown,
       placeholder = "0",
       ...props
@@ -81,7 +88,17 @@ export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
       return () => setControlError(null);
     }, [setControlError, limit.message, limit.tick]);
 
-    // Field 밖이면 이 칸이 직접 이어 준다
+    // 호출처 콜백은 ref 로 든다 — 줄마다 새로 만든 함수가 효과를 다시 돌려 서로를 부르는 일이 없게
+    const limitCb = React.useRef(onLimitMessage);
+    React.useLayoutEffect(() => {
+      limitCb.current = onLimitMessage;
+    });
+    React.useEffect(() => {
+      limitCb.current?.(limit.message);
+    }, [limit.message]);
+    React.useEffect(() => () => limitCb.current?.(null), []);
+
+    // Field 밖이면 이 칸이 직접 이어 준다(호출처가 그리면 aria-invalid 만)
     const ownError = !field && limit.message != null;
     const input = (
       <Input
@@ -117,14 +134,18 @@ export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
         {...(ownError
           ? {
               "aria-invalid": true,
-              "aria-describedby": [props["aria-describedby"], errorId]
-                .filter(Boolean)
-                .join(" "),
+              "aria-describedby":
+                [
+                  props["aria-describedby"],
+                  onLimitMessage ? undefined : errorId,
+                ]
+                  .filter(Boolean)
+                  .join(" ") || undefined,
             }
           : {})}
       />
     );
-    if (field) return input;
+    if (field || onLimitMessage) return input;
     return (
       <>
         {input}

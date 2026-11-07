@@ -210,3 +210,29 @@ describe("AmountInput 상한 — 옛 값 · 칸 밖 변경 · 폼 오류와의 �
     expect(texts()).toEqual(["amountTooLarge"]);
   });
 });
+
+describe("AmountInput onLimitMessage — 호출처가 오류를 그린다", () => {
+  it("오류 줄을 그리지 않고 글을 호출처에 알리며, 값이 상한 안이 되면 null 을 알린다", () => {
+    const seen: (string | null)[] = [];
+    function Row() {
+      const [v, setV] = useState("");
+      return (
+        <AmountInput
+          aria-label="금액"
+          value={v}
+          onValueChange={setV}
+          onLimitMessage={(m) => seen.push(m)}
+        />
+      );
+    }
+    mount(<Row />);
+    type("999999999999999");
+    expect(container.querySelectorAll("p")).toHaveLength(0);
+    expect(seen[seen.length - 1]).toBe("amountTooLarge");
+    expect(field().getAttribute("aria-invalid")).toBe("true");
+    type("5");
+    expect(seen[seen.length - 1]).toBeNull();
+    // 렌더마다 새 함수를 줘도 서로를 부르는 되돌이가 없다(알린 횟수가 작다)
+    expect(seen.length).toBeLessThan(8);
+  });
+});
