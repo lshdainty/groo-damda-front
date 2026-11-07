@@ -83,7 +83,10 @@ export function AccountSection({
   // 다시 로그인해야 돌아올 수 있다 — 앱은 이미 한 번 더 묻는다.
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
-  const [securitiesOpen, setSecuritiesOpen] = useState(false);
+  // 증권사 연동 시트 — closed → open → closing(닫힘 모션 중, open=false) → closed. 닫으면 연 줄로 초점이 돌아오고, 내리면 쓰던 키가 사라진다
+  const [securities, setSecurities] = useState<"closed" | "open" | "closing">(
+    "closed",
+  );
 
   const hiddenCount = useHiddenCards().size;
 
@@ -281,7 +284,7 @@ export function AccountSection({
             title={t("account.securities.label")}
             detail={t("account.securities.desc")}
             suffix={<ChevronRight aria-hidden />}
-            onClick={() => setSecuritiesOpen(true)}
+            onClick={() => setSecurities("open")}
           />
         </AccountGroup>
       )}
@@ -334,8 +337,12 @@ export function AccountSection({
         </Suspense>
       )}
 
-      {securitiesOpen && (
-        <SecuritiesLinkDialog onClose={() => setSecuritiesOpen(false)} />
+      {securities !== "closed" && (
+        <SecuritiesLinkDialog
+          open={securities === "open"}
+          onClose={() => setSecurities("closing")}
+          onClosed={() => setSecurities("closed")}
+        />
       )}
     </div>
   );

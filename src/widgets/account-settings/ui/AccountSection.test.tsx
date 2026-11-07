@@ -84,11 +84,24 @@ vi.mock("@/shared/ds/overlay", async (orig) => ({
 vi.mock("@/features/subscription/ui/SecuritiesLinkDialog", async () => {
   const { useEffect } = await import("react");
   return {
-    SecuritiesLinkDialog: () => {
+    SecuritiesLinkDialog: ({
+      open,
+      onClose,
+      onClosed,
+    }: {
+      open: boolean;
+      onClose: () => void;
+      onClosed: () => void;
+    }) => {
       useEffect(() => {
         sec.mounts += 1;
       }, []);
-      return <div data-sec-dialog />;
+      return (
+        <div data-sec-dialog data-open={open}>
+          <button data-sec-close onClick={onClose} />
+          <button data-sec-closed onClick={onClosed} />
+        </div>
+      );
     },
   };
 });
@@ -411,5 +424,27 @@ describe("증권사 연동 시트의 표면 (I-wrap-b1 ε 9)", () => {
     expect(container.querySelector("[data-sec-dialog]")).not.toBeNull();
     render(false);
     expect(sec.mounts).toBe(1);
+  });
+
+  it("닫으면 open=false 로 먼저 내려 모션 · 초점 복귀를 하게 하고, 끝났다고 알린 뒤에야 내린다", () => {
+    sec.wide = false;
+    sec.mounts = 0;
+    render(true);
+    const open = buttons().find((b) =>
+      b.textContent?.includes("account.securities.label"),
+    );
+    if (!open) throw new Error("증권사 연동 줄을 찾지 못했다");
+    act(() => open.click());
+    const dialog = () => container.querySelector("[data-sec-dialog]");
+    expect(dialog()?.getAttribute("data-open")).toBe("true");
+    act(() =>
+      (container.querySelector("[data-sec-close]") as HTMLElement).click(),
+    );
+    // 닫는 중 — 아직 달려 있고 open 만 false(통째 언마운트하면 초점이 body 로 떨어졌다)
+    expect(dialog()?.getAttribute("data-open")).toBe("false");
+    act(() =>
+      (container.querySelector("[data-sec-closed]") as HTMLElement).click(),
+    );
+    expect(dialog()).toBeNull();
   });
 });

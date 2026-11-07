@@ -116,7 +116,8 @@ export function ApiTokenStep({ flow }: { flow: SecuritiesLinkFlow }) {
                 spellCheck={false}
                 suffixAction={
                   <Button
-                    variant="neutralWeak"
+                    variant="ghost"
+                    ghostColor="neutralSubtle"
                     size="xsmall"
                     layout="iconOnly"
                     aria-label={t("apiToken.copy")}
@@ -162,7 +163,9 @@ export function ApiTokenStep({ flow }: { flow: SecuritiesLinkFlow }) {
         <div className="flex flex-col gap-x5">
           {flow.issue.isError && (
             <Callout tone="critical" role="alert">
-              {t("apiToken.issueFailed")}
+              {flow.issueUnconfirmed
+                ? t("apiToken.issueUnconfirmed")
+                : t("apiToken.issueFailed")}
             </Callout>
           )}
           {isLoading && (

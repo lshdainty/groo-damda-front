@@ -2504,8 +2504,6 @@ subscription,featureNo,없음,Not included
 subscription,cycleAria,결제 주기,Billing cycle
 subscription,broker.title,증권사 연동,Securities links
 subscription,broker.pageDesc,본인 API 키를 등록하면 보유 주식·시세를 자동으로 가져와요. 키는 서버에 암호화되어 저장되고 본인만 사용해요.,Register your own API key to auto-import holdings and prices. Keys are stored encrypted on the server and used only by you.
-subscription,broker.connectDesc,본인 API 키를 등록하면 보유 주식·시세를 가져와요,Register your API key to import holdings and prices
-subscription,broker.connected,연결됨,Connected
 subscription,broker.primary,기본,Primary
 subscription,broker.rowConnected,연결됨 · {{date}} 확인,Connected · Checked {{date}}
 subscription,broker.rowConnectedNoDate,연결됨,Connected
@@ -2513,9 +2511,9 @@ subscription,broker.rowDisconnected,연결 안 됨,Not connected
 subscription,broker.verifiedOn,{{date}} 확인,Checked {{date}}
 subscription,broker.programGroup,내 프로그램에서 쓰기,Use in your programs
 subscription,broker.disconnectAsk,{{broker}} 연결을 해제할까요?,Disconnect {{broker}}?
+subscription,broker.disconnectUnconfirmed,해제됐는지 확인하지 못했어요.,We couldn't confirm it was disconnected.
 subscription,broker.disconnectDesc,해제하면 이 증권사의 보유 주식과 시세를 더 이상 가져오지 않아요. 다시 연결하려면 키를 새로 입력해야 해요.,"Once disconnected, we stop importing holdings and prices from this provider. To connect again, you'll need to enter your key again."
 subscription,broker.keyConnected,{{broker}} API 키 연결됨,{{broker}} API key connected
-subscription,broker.lastVerified,마지막 검증 · {{date}},Last verified · {{date}}
 subscription,broker.autoCollecting,보유 주식·시세 자동 수집 중,Auto-collecting holdings and prices
 subscription,broker.disconnect,연결 해제,Disconnect
 subscription,broker.connect,연결하기,Connect
@@ -2532,7 +2530,6 @@ subscription,broker.toastDisconnectFailed,연결을 해제하지 못했어요.,C
 subscription,broker.toastPrimaryChanged,이제 {{broker}} 시세로 자산을 평가해요.,Assets are now valued with {{broker}}.
 subscription,broker.toastPrimaryFailed,기본 증권사를 바꾸지 못했어요.,Couldn't change the primary broker.
 subscription,apiToken.title,API 토큰,API tokens
-subscription,apiToken.desc,내 증권사 키로 시세·차트를 내 프로그램에서 불러올 수 있어요,Read prices and charts from your own programs with your securities key
 subscription,apiToken.scopeHint,"토큰으로는 시세·차트·환율 조회만 할 수 있어요. 잔고와 가계부는 열리지 않고, 구독이 끝나면 토큰도 함께 멈춰요.","Tokens can only read prices, candles and exchange rates. Holdings and your ledger stay closed, and tokens stop working when your subscription ends."
 subscription,apiToken.empty,아직 만든 토큰이 없어요,No tokens yet
 subscription,apiToken.nameLabel,토큰 이름,Token name
@@ -2542,7 +2539,7 @@ subscription,apiToken.lastUsed,마지막 사용 {{date}},Last used {{date}}
 subscription,apiToken.copyAskTitle,토큰을 복사하지 않았어요,You haven't copied the token
 subscription,apiToken.copyAskDesc,닫으면 이 토큰을 다시 볼 수 없어요.,You won't be able to see this token again once you close it.
 subscription,apiToken.copyAskClose,닫기,Close
-subscription,apiToken.count,{{n}}개,{{n}}
+subscription,apiToken.count,{{n}}개,{{n}} tokens
 subscription,apiToken.countNone,없음,None
 subscription,apiToken.revokeAsk,{{name}} 토큰을 폐기할까요?,Revoke the token {{name}}?
 subscription,apiToken.revokeDesc,이 토큰을 쓰던 프로그램은 바로 시세를 불러오지 못해요. 되돌릴 수 없어요.,"Programs using this token will stop getting prices right away. This can't be undone."
@@ -2558,6 +2555,7 @@ subscription,apiToken.done,확인,Done
 subscription,apiToken.toastCopied,복사했어요.,Copied.
 subscription,apiToken.toastRevoked,토큰을 폐기했어요.,Revoked the token.
 subscription,apiToken.revokeFailed,토큰을 폐기하지 못했어요.,Couldn't revoke the token.
+subscription,apiToken.issueUnconfirmed,토큰이 만들어졌는지 확인하지 못했어요. 목록에서 확인해주세요.,We couldn't confirm the token was created. Please check the list.
 subscription,apiToken.issueFailed,토큰을 만들지 못했어요.,Couldn't create the token.
 subscription,apiToken.loadFailed,토큰 목록을 불러오지 못했어요,Couldn't load your tokens
 subscription,gate.title,증권 구독이 필요해요,Securities needs a subscription

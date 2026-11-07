@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { CircleCheck } from "lucide-react";
-import { Badge } from "@/shared/ds/badge";
 import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
 import { List, ListItem } from "@/shared/ds/list";
@@ -11,6 +10,7 @@ import {
 } from "@/shared/ds/dialog";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { FormFooter } from "@/shared/ui/groo/form-footer";
+import { BrokerTitle } from "@/features/subscription/ui/BrokerTitle";
 import { SecretField } from "@/features/subscription/ui/SecretField";
 import { verifiedDate } from "@/features/subscription/lib/verified-date";
 import type { BrokerConnection } from "@/features/subscription/api/subscriptionApi";
@@ -120,18 +120,10 @@ function ConnectedView({
             <ListItem
               prefix={<LogoTile name={displayName} />}
               title={
-                <>
-                  {t("broker.keyConnected", { broker: displayName })}
-                  {primary && (
-                    <Badge
-                      variant="weak"
-                      tone="brand"
-                      className="ml-x1_5 align-middle"
-                    >
-                      {t("broker.primary")}
-                    </Badge>
-                  )}
-                </>
+                <BrokerTitle
+                  name={t("broker.keyConnected", { broker: displayName })}
+                  primary={primary}
+                />
               }
               detail={
                 date

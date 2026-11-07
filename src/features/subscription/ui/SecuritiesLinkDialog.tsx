@@ -1,8 +1,9 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, KeyRound } from "lucide-react";
 import { loadFailed } from "@/shared/api";
-import { Badge } from "@/shared/ds/badge";
+import { useWideSurface } from "@/shared/ds/overlay";
+import { useStepBack } from "@/shared/ui/groo/use-step-back";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +23,7 @@ import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
 import { LogoTile } from "@/shared/ds/logo-tile";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
+import { BrokerTitle } from "@/features/subscription/ui/BrokerTitle";
 import { ApiTokenStep } from "@/features/subscription/ui/ApiTokenStep";
 import { BrokerStep } from "@/features/subscription/ui/BrokerStep";
 import { verifiedDate } from "@/features/subscription/lib/verified-date";
@@ -43,7 +45,17 @@ import {
  * 표면(시트 ↔ 대화상자)은 1280 에서 `ResponsiveDialog` 가 가른다. 단계 · 쓰던 키 · 요청은 `useSecuritiesLinkFlow` 가
  * 표면 위에서 들고 있어 폭을 넘나들어도 입력한 키가 남는다. 앱은 같은 흐름이 `/settings/securities/:broker` 라우트다.
  */
-export function SecuritiesLinkDialog({ onClose }: { onClose: () => void }) {
+export function SecuritiesLinkDialog({
+  open,
+  onClose,
+  onClosed,
+}: {
+  open: boolean;
+  /** 닫기를 청한다(✕ · Esc · 바깥 · 확인) — 부르는 쪽이 `open` 을 false 로 */
+  onClose: () => void;
+  /** 닫힘 모션(시트 ~500ms)이 끝났다 — 부르는 쪽이 이 시트를 내린다(상태 · 쓰던 키가 함께 사라진다) */
+  onClosed: () => void;
+}) {
   const { t } = useTranslation("subscription");
   const { t: tc } = useTranslation("common");
   const connectionsQ = useBrokerConnections();
@@ -51,6 +63,19 @@ export function SecuritiesLinkDialog({ onClose }: { onClose: () => void }) {
   const connections = connectionsQ.data;
   const flow = useSecuritiesLinkFlow(connections);
   const contentRef = useRef<HTMLDivElement>(null);
+  const wide = useWideSurface();
+
+  // 닫기 = open 을 먼저 내려 닫힘 모션 · 초점 복귀(연 줄)를 ds 가 하게 하고, 모션이 끝난 뒤 통째로 내린다.
+  // 내리면 단계 · 쓰던 키 · 발급 원문(훅 상태)이 함께 사라진다 — 다시 열면 늘 처음이다
+  const onClosedRef = useRef(onClosed);
+  useEffect(() => {
+    onClosedRef.current = onClosed;
+  });
+  useEffect(() => {
+    if (open) return;
+    const id = window.setTimeout(() => onClosedRef.current(), 800);
+    return () => window.clearTimeout(id);
+  }, [open]);
 
   const step = flow.step;
   const brokerStep =
@@ -60,10 +85,41 @@ export function SecuritiesLinkDialog({ onClose }: { onClose: () => void }) {
   // 목록에서 사라진 증권사의 단계는 첫 단계로 본다
   const kind = step.kind === "broker" && !brokerStep ? "list" : step.kind;
 
+  // 단계가 바뀔 때 초점 — 들어가면 새 단계 제목, 첫 단계로 돌아오면 누른 줄(누른 줄 · ← 가 사라지며 초점이 표면으로 떨어지지 않게)
+  const lastRow = useRef<string | null>(null);
+  const focusKey = `${kind}:${step.kind === "broker" ? step.broker : ""}:${brokerStep?.connected ?? ""}:${flow.issued ? "issued" : ""}`;
+  const prevFocusKey = useRef(focusKey);
+  useEffect(() => {
+    if (prevFocusKey.current === focusKey) return;
+    prevFocusKey.current = focusKey;
+    const root = contentRef.current;
+    if (!root) return;
+    if (kind === "list") {
+      root
+        .querySelector<HTMLElement>(`[data-sec-row="${lastRow.current}"]`)
+        ?.focus({ preventScroll: true });
+    } else {
+      const title = root.querySelector<HTMLElement>('[data-slot$="-title"]');
+      if (title) {
+        title.tabIndex = -1;
+        title.focus({ preventScroll: true });
+      }
+    }
+  }, [focusKey, kind]);
+
   const backAsk = useLeaveConfirm({
     dirty: flow.brokerDirty || flow.tokenDirty,
     contentRef,
     leave: flow.backToList,
+  });
+
+  // 기기 뒤로 가기(1280 미만) = 한 단계 뒤 — 첫 단계에서만 시트가 닫힌다. 묻고만 끝났으면 칸을 다시 쌓는다
+  useStepBack(open && !wide && kind !== "list", () => {
+    if (flow.needCopyAsk) {
+      flow.setCopyAsk("back");
+      return false;
+    }
+    return backAsk.request();
   });
 
   const tokenFormShown =
@@ -83,7 +139,7 @@ export function SecuritiesLinkDialog({ onClose }: { onClose: () => void }) {
   return (
     <>
       <ResponsiveDialog
-        open
+        open={open}
         form={form}
         dirty={flow.brokerDirty || flow.tokenDirty}
         busy={flow.busy}
@@ -116,6 +172,9 @@ export function SecuritiesLinkDialog({ onClose }: { onClose: () => void }) {
               onRetry={() => void connectionsQ.refetch()}
               tokenCount={tokensQ.data?.length}
               tokenLoading={tokensQ.isLoading}
+              onOpenRow={(key) => {
+                lastRow.current = key;
+              }}
             />
           ) : kind === "broker" && brokerStep ? (
             <BrokerStep connection={brokerStep} flow={flow} />
@@ -227,6 +286,7 @@ function ListStep({
   onRetry,
   tokenCount,
   tokenLoading,
+  onOpenRow,
 }: {
   flow: SecuritiesLinkFlow;
   loading: boolean;
@@ -235,6 +295,7 @@ function ListStep({
   onRetry: () => void;
   tokenCount: number | undefined;
   tokenLoading: boolean;
+  onOpenRow: (key: string) => void;
 }) {
   const { t } = useTranslation("subscription");
   const { t: tDs } = useTranslation("ds");
@@ -276,18 +337,7 @@ function ListStep({
                   key={c.broker}
                   prefix={<LogoTile name={c.displayName} />}
                   title={
-                    <>
-                      {c.displayName}
-                      {c.primary && (
-                        <Badge
-                          variant="weak"
-                          tone="brand"
-                          className="ml-x1_5 align-middle"
-                        >
-                          {t("broker.primary")}
-                        </Badge>
-                      )}
-                    </>
+                    <BrokerTitle name={c.displayName} primary={c.primary} />
                   }
                   detail={
                     c.connected
@@ -297,7 +347,11 @@ function ListStep({
                       : t("broker.rowDisconnected")
                   }
                   suffix={<ChevronRight aria-hidden />}
-                  onClick={() => flow.go({ kind: "broker", broker: c.broker })}
+                  data-sec-row={c.broker}
+                  onClick={() => {
+                    onOpenRow(c.broker);
+                    flow.go({ kind: "broker", broker: c.broker });
+                  }}
                 />
               );
             })}
@@ -326,7 +380,11 @@ function ListStep({
                   <ChevronRight aria-hidden />
                 </>
               }
-              onClick={() => flow.go({ kind: "tokens" })}
+              data-sec-row="tokens"
+              onClick={() => {
+                onOpenRow("tokens");
+                flow.go({ kind: "tokens" });
+              }}
             />
           </List>
         </>

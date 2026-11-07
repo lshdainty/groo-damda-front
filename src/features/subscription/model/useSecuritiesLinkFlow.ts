@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidateFor } from "@/shared/config/invalidation";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { isWriteUnconfirmed } from "@/shared/api";
@@ -52,6 +54,7 @@ export function useSecuritiesLinkFlow(
   const { t: tc } = useTranslation("common");
   const snackbar = useSnackbar();
   const confirmFail = useConfirmFail();
+  const queryClient = useQueryClient();
 
   const [step, setStep] = useState<LinkStep>({ kind: "list" });
   const [drafts, setDrafts] = useState<Record<string, BrokerDraft>>({});
@@ -76,6 +79,8 @@ export function useSecuritiesLinkFlow(
 
   // 이중 제출 가드 — 같은 프레임의 두 번째 누름은 렌더 전 클로저라 isPending 이 아직 false 다. 누르는 순간 켜고 끝나면 끈다
   const connectingRef = useRef(false);
+  const primaryingRef = useRef(false);
+  const disconnectingRef = useRef(false);
   const issuingRef = useRef(false);
 
   const draftOf = (broker: string): BrokerDraft =>
@@ -154,8 +159,26 @@ export function useSecuritiesLinkFlow(
       ? t("broker.toastInvalid")
       : t("broker.connectFailed");
 
-  // ── 연결 해제 · 기본 지정 — 실패는 critical 스낵바 + [다시 시도](묻지 않고 같은 요청)
+  // ── 연결 해제 · 기본 지정 — 실패는 critical 스낵바 + [다시 시도](묻지 않고 같은 요청).
+  // 응답을 못 받았으면(확인 못 함) 실패가 아니다 — 문장은 그대로 알리고 [다시 시도] 없이 연결 상태를 다시 받는다
+  const failOrUnconfirmed = (
+    error: unknown,
+    message: string,
+    unconfirmed: string,
+    retry: () => Promise<unknown>,
+    onRetried: () => void,
+  ) => {
+    if (isWriteUnconfirmed(error)) {
+      snackbar.show({ message: unconfirmed, tone: "critical" });
+      invalidateFor(queryClient, "broker-connection");
+      return;
+    }
+    confirmFail({ error, message, retry, onRetried });
+  };
+
   const runDisconnect = (connection: BrokerConnection) => {
+    if (disconnectingRef.current) return Promise.resolve();
+    disconnectingRef.current = true;
     const run = () => disconnect.mutateAsync(connection.broker);
     // 해제가 끝나면 첫 단계로 — 이 증권사의 조회 화면은 더 보일 게 없다
     const done = () => {
@@ -166,17 +189,24 @@ export function useSecuritiesLinkFlow(
         tone: "neutral",
       });
     };
-    return run().then(done, (error: unknown) =>
-      confirmFail({
-        error,
-        message: t("broker.toastDisconnectFailed"),
-        retry: run,
-        onRetried: done,
-      }),
-    );
+    return run()
+      .then(done, (error: unknown) =>
+        failOrUnconfirmed(
+          error,
+          t("broker.toastDisconnectFailed"),
+          t("broker.disconnectUnconfirmed"),
+          run,
+          done,
+        ),
+      )
+      .finally(() => {
+        disconnectingRef.current = false;
+      });
   };
 
   const makePrimary = (connection: BrokerConnection) => {
+    if (primaryingRef.current) return;
+    primaryingRef.current = true;
     const run = () => setPrimary.mutateAsync(connection.broker);
     const done = () =>
       snackbar.show({
@@ -185,14 +215,19 @@ export function useSecuritiesLinkFlow(
         }),
         tone: "neutral",
       });
-    run().then(done, (error: unknown) =>
-      confirmFail({
-        error,
-        message: t("broker.toastPrimaryFailed"),
-        retry: run,
-        onRetried: done,
-      }),
-    );
+    run()
+      .then(done, (error: unknown) =>
+        failOrUnconfirmed(
+          error,
+          t("broker.toastPrimaryFailed"),
+          tc("query.unconfirmedToggle"),
+          run,
+          done,
+        ),
+      )
+      .finally(() => {
+        primaryingRef.current = false;
+      });
   };
 
   // ── API 토큰
@@ -202,6 +237,10 @@ export function useSecuritiesLinkFlow(
     issuingRef.current = true;
     issue.reset();
     issue.mutate(tokenName.trim(), {
+      // 확인 못 함이면 만들어졌을 수 있다 — 목록을 다시 받는다(Callout 이 그 문장을 말한다)
+      onError: (error) => {
+        if (isWriteUnconfirmed(error)) invalidateFor(queryClient, "api-token");
+      },
       onSuccess: (data) => {
         setIssued(data);
         setCopied(false);
@@ -229,6 +268,8 @@ export function useSecuritiesLinkFlow(
       }),
     );
   };
+
+  const issueUnconfirmed = isWriteUnconfirmed(issue.error);
 
   return {
     step,
@@ -260,6 +301,7 @@ export function useSecuritiesLinkFlow(
     needCopyAsk: issued != null && !copied,
     canIssue,
     issue,
+    issueUnconfirmed,
     issueToken,
     revoke,
     runRevoke,

@@ -301,6 +301,19 @@ describe("Input", () => {
     expect(input().nextElementSibling).toBe(action);
   });
 
+  it("뒤 단추 슬롯 안 단추는 호버 · 누름 바탕을 그리지 않는다 — 지우기 버튼과 같다(상태는 아이콘으로만)", () => {
+    render(
+      <Input
+        aria-label="키"
+        defaultValue="abc"
+        suffixAction={<button type="button">보기</button>}
+      />,
+    );
+    const cls = classes(slot("action")!);
+    expect(cls).toContain("[&_button]:hover:bg-transparent");
+    expect(cls).toContain("[&_button]:active:bg-transparent");
+  });
+
   it("뒤 단추 슬롯은 지우기 버튼 뒤에 놓인다", () => {
     render(
       <Input
