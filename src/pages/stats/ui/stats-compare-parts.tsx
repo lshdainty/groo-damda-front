@@ -17,7 +17,7 @@ import {
   formatAxisWon,
 } from "@/shared/ds/chart";
 import { List, ListItem, ListTile } from "@/shared/ds/list";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { KRW, MINUS, formatChangeRate } from "@/shared/lib/groo/format";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
@@ -82,13 +82,13 @@ export function CompareSummarySection({
   if (compareLoading(m)) {
     return (
       <HeadlessBody place={place}>
-        <div aria-hidden>
+        <SkeletonGroup>
           <Skeleton text="t3" className="w-1/3" />
           <Skeleton text="t9" className="mt-x1 w-2/3" />
           <Skeleton text="t4" className="mt-x3 w-3/4" />
           <Skeleton className="mt-x4 h-2 w-full" radius="full" />
           <Skeleton className="mt-x2_5 h-2 w-full" radius="full" />
-        </div>
+        </SkeletonGroup>
       </HeadlessBody>
     );
   }
@@ -199,11 +199,11 @@ export function CompareMetricsSection({
     );
   });
   const skeleton = (
-    <div aria-hidden>
+    <SkeletonGroup>
       <Skeleton text="t3" className="w-1/3" />
       <Skeleton text="t9" className="mt-x1 w-1/2" />
       <Skeleton text="t3" className="mt-x1 w-2/3" />
-    </div>
+    </SkeletonGroup>
   );
   // 폰은 지표 한 줄에 하나(머리 없는 띠 하나), 데스크톱은 카드 셋 한 줄 그대로(구조 그대로)
   if (place === "card") {
@@ -261,7 +261,7 @@ export function CompareCategorySection({
     return (
       <>
         {head}
-        <div aria-hidden className={place === "band" ? "pb-x3" : undefined}>
+        <SkeletonGroup className={place === "band" ? "pb-x3" : undefined}>
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-x3 px-x6 py-x3">
               <Skeleton radius="12" className="size-x10 shrink-0" />
@@ -272,7 +272,7 @@ export function CompareCategorySection({
               <Skeleton text="t5" className="w-x16 shrink-0" />
             </div>
           ))}
-        </div>
+        </SkeletonGroup>
       </>
     );
   }

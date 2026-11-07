@@ -1,5 +1,6 @@
 export {
   Skeleton,
+  SkeletonGroup,
   LoadingRegion,
   LoadingAnnouncer,
   type SkeletonProps,

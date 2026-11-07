@@ -1,6 +1,6 @@
 import { useCalendar } from "@/widgets/calendar/model/calendar-context";
 import { getCalendarCells } from "@/widgets/calendar/lib/helpers";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 
 /**
  * 폰 월 격자의 첫 불러오기 자리 (I-09 12) — 요일 줄은 처음부터 그리고, 칸(103 × 주 수)만 ds Skeleton 이다.
@@ -10,11 +10,7 @@ export function CalendarMonthViewMobileSkeleton() {
   const { selectedDate } = useCalendar();
   const count = getCalendarCells(selectedDate).length;
   return (
-    <div
-      data-slot="calendar-month-grid"
-      aria-busy="true"
-      className="flex flex-col"
-    >
+    <SkeletonGroup data-slot="calendar-month-grid" className="flex flex-col">
       <div className="grid grid-cols-7 px-[2px]" aria-hidden>
         {Array.from({ length: count }, (_, i) => (
           <div
@@ -34,6 +30,6 @@ export function CalendarMonthViewMobileSkeleton() {
           </div>
         ))}
       </div>
-    </div>
+    </SkeletonGroup>
   );
 }

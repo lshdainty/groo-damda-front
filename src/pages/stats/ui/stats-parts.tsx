@@ -18,7 +18,7 @@ import {
   chartVar,
 } from "@/shared/ds/chart";
 import { List, ListItem, ListTile } from "@/shared/ds/list";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -243,7 +243,7 @@ function DonutBody({ m, place }: { m: StatsModel; place: Placement }) {
     return (
       <Body place={place}>
         {segmented}
-        <div aria-hidden className="mt-x5 flex flex-col gap-x4">
+        <SkeletonGroup className="mt-x5 flex flex-col gap-x4">
           <div
             className={cn(
               "flex items-center gap-x8",
@@ -266,7 +266,7 @@ function DonutBody({ m, place }: { m: StatsModel; place: Placement }) {
               ))}
             </div>
           </div>
-        </div>
+        </SkeletonGroup>
       </Body>
     );
   }
@@ -445,7 +445,7 @@ export function MerchantsSection({
     return (
       <>
         {head}
-        <div aria-hidden className={place === "band" ? "pb-x3" : undefined}>
+        <SkeletonGroup className={place === "band" ? "pb-x3" : undefined}>
           {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} className="flex items-start gap-x2_5 px-x6 py-x2">
               <Skeleton text="t4" className="w-x4 shrink-0" />
@@ -458,7 +458,7 @@ export function MerchantsSection({
               </div>
             </div>
           ))}
-        </div>
+        </SkeletonGroup>
       </>
     );
   }
@@ -755,13 +755,13 @@ export function HighlightsSection({
           {b.label}
         </p>
         {loading ? (
-          <div aria-hidden className="flex items-center gap-x3 px-x6">
+          <SkeletonGroup className="flex items-center gap-x3 px-x6">
             <Skeleton radius="12" className="size-x10 shrink-0" />
             <div className="flex-1">
               <Skeleton text="t5" className="w-1/2" />
               <Skeleton text="t3" className="mt-x0_5 w-1/3" />
             </div>
-          </div>
+          </SkeletonGroup>
         ) : (
           <List>
             <ListItem

@@ -15,7 +15,7 @@ import {
   formatAxisWon,
 } from "@/shared/ds/chart";
 import { List, ListItem, ListTile } from "@/shared/ds/list";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import {
   formatMonthDay,
@@ -518,7 +518,9 @@ function IncomeExpenseChart({
       {trendFailed ? (
         <SectionFailure title={t("loadFailed.trend")} onRetry={onRetryTrend} />
       ) : loading ? (
-        <Skeleton className="h-[280px] w-full" radius="8" />
+        <SkeletonGroup>
+          <Skeleton className="h-[280px] w-full" radius="8" />
+        </SkeletonGroup>
       ) : data.length === 0 ? (
         <EmptyLine>{tc("noData")}</EmptyLine>
       ) : (

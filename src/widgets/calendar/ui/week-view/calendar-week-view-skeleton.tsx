@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 
 const WEEK_DAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEK_DAYS_KO = ["일", "월", "화", "수", "목", "금", "토"];
@@ -16,7 +16,7 @@ const CalendarWeekViewSkeleton = () => {
   const hours = Array.from({ length: 11 }, (_, i) => i + 8);
 
   return (
-    <div aria-busy="true" className="h-full w-full">
+    <SkeletonGroup className="h-full w-full">
       <div aria-hidden className="flex h-full flex-col">
         {/* 여러 날 일정 줄 */}
         <div className="border-b border-stroke-neutral-subtle">
@@ -110,7 +110,7 @@ const CalendarWeekViewSkeleton = () => {
           </div>
         </div>
       </div>
-    </div>
+    </SkeletonGroup>
   );
 };
 

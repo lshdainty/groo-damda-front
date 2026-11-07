@@ -7,7 +7,7 @@ import { Button } from "@/shared/ds/button";
 import { Card } from "@/shared/ds/card";
 import { ListHeader } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 import {
   TopNavigation,
   TopNavigationActions,
@@ -39,7 +39,7 @@ const SETTINGS_PATH = "/desk/settings?section=notifications";
 /** 알림 목록 skeleton — 머리 줄 · 날짜 머리 · 줄(타일 40 · 제목 · 본문 두 줄 · 시각) 자리만. */
 function NotificationsPageSkeleton() {
   return (
-    <div aria-hidden>
+    <SkeletonGroup>
       <div className="px-global-gutter py-x2">
         <Skeleton radius="4" text="t4" className="w-32" />
       </div>
@@ -61,7 +61,7 @@ function NotificationsPageSkeleton() {
           <Skeleton radius="4" text="t3" className="w-8 shrink-0" />
         </div>
       ))}
-    </div>
+    </SkeletonGroup>
   );
 }
 

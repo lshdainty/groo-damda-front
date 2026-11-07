@@ -4,7 +4,7 @@ import { CardAction, CardHeader, CardTitle } from "@/shared/ds/card";
 import { List, ListHeader, ListItem } from "@/shared/ds/list";
 import { Button } from "@/shared/ds/button";
 import { ResultSection } from "@/shared/ds/result-section";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 import { ProgressBar, type ProgressMeaning } from "@/shared/ds/progress";
 import { useDsText, withCommaBreaks } from "@/shared/ds/i18n";
 import { cn } from "@/shared/lib/cn";
@@ -284,14 +284,14 @@ export function BarCaption({
 /** 스켈레톤 키-값 줄 — 실제 줄(38 = 8 + 22 + 8)과 같은 높이 */
 export function KeyValueSkeleton({ rows = 2 }: { rows?: number }) {
   return (
-    <div aria-hidden>
+    <SkeletonGroup>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-x3 px-x6 py-x2">
           <Skeleton text="t5" className="w-1/3" />
           <Skeleton text="t5" className="ml-auto w-1/4" />
         </div>
       ))}
-    </div>
+    </SkeletonGroup>
   );
 }
 

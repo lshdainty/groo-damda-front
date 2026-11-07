@@ -1,7 +1,7 @@
 import { useCalendar } from "@/widgets/calendar/model/calendar-context";
 import { getCalendarCells } from "@/widgets/calendar/lib/helpers";
 import { Card } from "@/shared/ds/card";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 
 import { WeekdayHead } from "./calendar-month-view-desktop";
@@ -14,9 +14,9 @@ export function CalendarMonthViewDesktopSkeleton() {
   const { selectedDate } = useCalendar();
   const cells = getCalendarCells(selectedDate);
   return (
-    <Card data-slot="calendar-month-grid" aria-busy="true" className="p-0">
+    <Card data-slot="calendar-month-grid" className="p-0">
       <WeekdayHead />
-      <div className="grid grid-cols-7" aria-hidden>
+      <SkeletonGroup className="grid grid-cols-7">
         {cells.map((_, i) => (
           <div
             key={i}
@@ -41,7 +41,7 @@ export function CalendarMonthViewDesktopSkeleton() {
             </div>
           </div>
         ))}
-      </div>
+      </SkeletonGroup>
     </Card>
   );
 }

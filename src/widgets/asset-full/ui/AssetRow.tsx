@@ -7,7 +7,7 @@ import { Delta } from "@/shared/ds/card";
 import { withCommaBreaks, dsLocale, useDsText } from "@/shared/ds/i18n";
 import { ListButtonItem } from "@/shared/ds/list";
 import { LogoTile } from "@/shared/ds/logo-tile";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
 import {
   formatAssetAmount,
@@ -281,7 +281,7 @@ export function GroupRowsSkeleton({
   band?: boolean;
 }) {
   return (
-    <div aria-hidden className={band ? "pb-x3" : undefined}>
+    <SkeletonGroup className={band ? "pb-x3" : undefined}>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-x3 px-x6 py-x3">
           <Skeleton radius="12" className="size-x10 shrink-0" />
@@ -292,7 +292,7 @@ export function GroupRowsSkeleton({
           <Skeleton text="t5" className="w-x10 shrink-0" />
         </div>
       ))}
-    </div>
+    </SkeletonGroup>
   );
 }
 

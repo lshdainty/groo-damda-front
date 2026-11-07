@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/shared/ds/card";
 import { useWideSurface } from "@/shared/ds/overlay";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { useUnconfirmedSnack } from "@/shared/lib/confirm-fail";
 import {
@@ -101,17 +101,19 @@ export function ExpenseDesktopSkeleton() {
   );
   return (
     <Frame>
-      {wide ? (
-        <div className="grid grid-cols-[336px_minmax(0,1fr)] gap-x6">
-          {side}
-          {list}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-x4">
-          {side}
-          {list}
-        </div>
-      )}
+      <SkeletonGroup>
+        {wide ? (
+          <div className="grid grid-cols-[336px_minmax(0,1fr)] gap-x6">
+            {side}
+            {list}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-x4">
+            {side}
+            {list}
+          </div>
+        )}
+      </SkeletonGroup>
     </Frame>
   );
 }

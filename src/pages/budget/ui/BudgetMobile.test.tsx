@@ -245,7 +245,7 @@ describe("목록 짜임 · 페이스 값 글 · 한 줄 금액 쌓기(검수 12 
   it("키-값 스켈레톤 줄은 실제 줄(38 = py-x2)과 같고 달 줄 위는 12(pt-x3)", () => {
     state.summary = q(undefined);
     render();
-    const skel = section("pace").querySelector("[aria-hidden] .py-x2");
+    const skel = section("pace").querySelector("[aria-busy] .py-x2");
     expect(skel).not.toBeNull();
     expect(
       container.querySelector("[data-slot=month-bar]")!.className,
@@ -309,7 +309,7 @@ describe("불러오는 중 · 실패 · 예산 없음(I-08 15 · 17)", () => {
       section("pace").querySelector("[data-slot=card-title]"),
     ).not.toBeNull();
     expect(
-      container.querySelector("[aria-hidden] [data-slot=skeleton]"),
+      container.querySelector("[aria-busy] [data-slot=skeleton]"),
     ).not.toBeNull();
   });
 

@@ -21,7 +21,7 @@ import {
 } from "@/shared/ds/chart";
 import { List, ListItem, ListTile } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 import { Button } from "@/shared/ds/button";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthShort } from "@/shared/lib/date";
@@ -205,7 +205,7 @@ export function TotalSection({
 export function TotalSkeleton({ place }: { place: Placement }) {
   return (
     <Body place={place}>
-      <div aria-hidden>
+      <SkeletonGroup>
         <Skeleton text="t3" className="w-1/4" />
         <Skeleton text="t3" className="mt-x1 w-3/4" />
         <Skeleton text="t9" radius="8" className="mt-x3 w-1/2" />
@@ -214,7 +214,7 @@ export function TotalSkeleton({ place }: { place: Placement }) {
         <div className="mt-x3">
           <KeyValueSkeleton rows={3} />
         </div>
-      </div>
+      </SkeletonGroup>
     </Body>
   );
 }
@@ -262,13 +262,13 @@ export function PaceSection({
       <>
         {head}
         <Body place={place}>
-          <div aria-hidden>
+          <SkeletonGroup>
             <Skeleton className="h-2 w-full" radius="full" />
             <Skeleton text="t3" className="mt-x2 w-1/2" />
             <div className="mt-x3">
               <KeyValueSkeleton rows={2} />
             </div>
-          </div>
+          </SkeletonGroup>
         </Body>
       </>
     );
@@ -430,7 +430,7 @@ export function CategorySection({
     return (
       <>
         {head}
-        <div aria-hidden className={tail}>
+        <SkeletonGroup className={tail}>
           {[0, 1, 2, 3].map((i) => (
             <div key={i}>
               <div className="flex items-center gap-x3 px-x6 py-x3">
@@ -446,7 +446,7 @@ export function CategorySection({
               </div>
             </div>
           ))}
-        </div>
+        </SkeletonGroup>
       </>
     );
   }
@@ -659,7 +659,9 @@ export function ComplianceSection({
       <>
         {head}
         <Body place={place}>
-          <Skeleton className="h-[180px] w-full" radius="16" />
+          <SkeletonGroup>
+            <Skeleton className="h-[180px] w-full" radius="16" />
+          </SkeletonGroup>
         </Body>
       </>
     );

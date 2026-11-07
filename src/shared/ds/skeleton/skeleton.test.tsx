@@ -12,7 +12,12 @@ import {
   type MockInstance,
 } from "vitest";
 
-import { LoadingAnnouncer, LoadingRegion, Skeleton } from "./skeleton";
+import {
+  LoadingAnnouncer,
+  LoadingRegion,
+  Skeleton,
+  SkeletonGroup,
+} from "./skeleton";
 import { LOADING_TIMING } from "./skeleton-variants";
 import { useWaitPhase } from "./use-wait-phase";
 
@@ -160,6 +165,40 @@ describe("LoadingRegion 없이 그린 Skeleton(화면 82곳 — I-wrap-b5 3-a)",
     const el = status()!;
     advance(LOADING_TIMING.showAfter);
     expect(el.textContent).toBe(WAITING_TEXT);
+  });
+});
+
+describe("SkeletonGroup(화면이 직접 가르는 스켈레톤의 껍데기)", () => {
+  it("기다리는 동안 aria-busy, 상자는 className 이 곧 레이아웃 — 없으면 상자를 만들지 않는다(contents)", () => {
+    render(
+      <>
+        <SkeletonGroup data-testid="a">
+          <Skeleton />
+        </SkeletonGroup>
+        <SkeletonGroup data-testid="b" className="flex gap-x3">
+          <Skeleton />
+        </SkeletonGroup>
+      </>,
+    );
+    const a = document.querySelector<HTMLElement>("[data-testid=a]")!;
+    const b = document.querySelector<HTMLElement>("[data-testid=b]")!;
+    expect(a.getAttribute("aria-busy")).toBe("true");
+    expect(a.className).toBe("contents");
+    expect(b.className).toBe("flex gap-x3");
+  });
+
+  it("5초부터 오래 걸림 글 한 줄이 상자 바로 위에 — 그 전에는 없다", () => {
+    render(
+      <SkeletonGroup>
+        <Skeleton />
+      </SkeletonGroup>,
+    );
+    advance(LOADING_TIMING.slowAfter - 1);
+    expect(container.textContent).toBe("");
+    advance(1);
+    const note = container.querySelector("p")!;
+    expect(note.textContent).toBe(SLOW_TEXT);
+    expect(note.nextElementSibling?.getAttribute("aria-busy")).toBe("true");
   });
 });
 

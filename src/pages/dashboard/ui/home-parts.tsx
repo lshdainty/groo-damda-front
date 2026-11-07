@@ -28,7 +28,7 @@ import { Progress } from "@/shared/ds/progress";
 import { ResultSection } from "@/shared/ds/result-section";
 import { toggleVariants } from "@/shared/ds/toggle";
 import { Badge } from "@/shared/ds/badge";
-import { Skeleton } from "@/shared/ds/skeleton";
+import { Skeleton, SkeletonGroup } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { formatDateSmart } from "@/shared/lib/date";
 import {
@@ -143,7 +143,7 @@ export function RowsSkeleton({
   kind?: "plain" | "dot" | "tx";
 }) {
   return (
-    <div aria-hidden>
+    <SkeletonGroup>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-x3 px-x6 py-x3">
           {kind === "dot" && (
@@ -168,7 +168,7 @@ export function RowsSkeleton({
           )}
         </div>
       ))}
-    </div>
+    </SkeletonGroup>
   );
 }
 
@@ -227,7 +227,7 @@ export function HeroCard({ data, band }: { data: HeroData; band?: boolean }) {
         </button>
       </div>
       {data.loading ? (
-        <div aria-hidden>
+        <SkeletonGroup noteClassName="text-static-white">
           <Skeleton
             text="t12"
             radius="8"
@@ -240,7 +240,7 @@ export function HeroCard({ data, band }: { data: HeroData; band?: boolean }) {
             <Skeleton text="t5" className={cn("w-2/3", HERO_SKELETON)} />
             <Skeleton text="t5" className={cn("ml-x4 w-2/3", HERO_SKELETON)} />
           </div>
-        </div>
+        </SkeletonGroup>
       ) : (
         <>
           <CardHeroAmount>{m(won(data.netWorth))}</CardHeroAmount>
@@ -523,7 +523,7 @@ export function CategoryBody({
 
 export function CategorySkeleton({ size }: { size: number }) {
   return (
-    <div aria-hidden className="flex flex-col">
+    <SkeletonGroup className="flex flex-col">
       <div className="flex justify-center">
         <Skeleton radius="full" style={{ width: size, height: size }} />
       </div>
@@ -537,7 +537,7 @@ export function CategorySkeleton({ size }: { size: number }) {
           </div>
         ))}
       </div>
-    </div>
+    </SkeletonGroup>
   );
 }
 
@@ -573,7 +573,7 @@ export function BudgetBody({ items }: { items: BudgetItem[] }) {
 
 export function BudgetSkeleton() {
   return (
-    <div aria-hidden className="flex flex-col gap-x5">
+    <SkeletonGroup className="flex flex-col gap-x5">
       {[0, 1, 2].map((i) => (
         <div key={i} className="flex flex-col gap-x1_5">
           <Skeleton text="t4" className="w-1/3" />
@@ -581,7 +581,7 @@ export function BudgetSkeleton() {
           <Skeleton text="t2" className="w-1/2" />
         </div>
       ))}
-    </div>
+    </SkeletonGroup>
   );
 }
 
