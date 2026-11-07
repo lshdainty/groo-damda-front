@@ -1149,10 +1149,7 @@ calendar,otherSources,기타 소스,Other Sources
 calendar,source.holiday,공휴일,Holidays
 calendar,source.expense,가계부,Expenses
 calendar,source.todo,할 일,Todos
-calendar,event.dayOfTotal,{{current}}/{{total}}일,Day {{current}} of {{total}}
-calendar,dayView.happeningNow,진행 중,Happening Now
-calendar,dayView.noAppointments,진행 중인 일정이 없습니다,No appointments right now
-calendar,agenda.noEvents,일정이 없습니다,No events
+calendar,agenda.noEvents,일정이 없어요,No events
 calendar,close,닫기,Close
 calendar,eventDetail,일정 상세,Event details
 calendar,sourceCount,{{count}}개,{{count}}
@@ -3386,14 +3383,10 @@ expense,list.title,거래,Transactions
 calendar,sourceChipLabel,캘린더 {{count}}개 보는 중,Showing {{count}} calendars
 calendar,header.prevWeek,이전 주,Previous week
 calendar,header.nextWeek,다음 주,Next week
-calendar,header.prevDay,이전 날,Previous day
-calendar,header.nextDay,다음 날,Next day
 calendar,monthView.moreCount,+{{count}}개,+{{count}}
 calendar,monthView.cellLabel,"{{date}}, 일정 {{count}}개","{{date}}, {{count}} events"
 calendar,monthView.cellLabelEmpty,"{{date}}, 일정 없음","{{date}}, no events"
 calendar,view.label,보기,View
-calendar,view.day,일,Day
-calendar,view.year,연,Year
 calendar,view.agenda,목록,List
 calendar,panel.count,일정 {{count}}개,{{count}} events
 calendar,panel.today,오늘,Today

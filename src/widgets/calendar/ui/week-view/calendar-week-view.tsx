@@ -22,7 +22,8 @@ import {
   groupEvents,
   isWorkingHour,
 } from "@/widgets/calendar/lib/helpers";
-import { cn } from "@/shared/lib";
+import { eventLineDetail } from "@/widgets/calendar/lib/event-line";
+import { cn } from "@/shared/lib/cn";
 
 import type { IEvent } from "@/widgets/calendar/model/interfaces";
 
@@ -30,6 +31,48 @@ interface IProps {
   singleDayEvents: IEvent[];
   multiDayEvents: IEvent[];
   onEventClick?: (event: IEvent, el: HTMLElement) => void;
+}
+
+// ---- 일정 칩 — 월 칩과 같은 색(eventBadgeTone: 바탕 chart-{hue}-weak · 글 chart-{hue}-contrast) ---- //
+
+/**
+ * 누르는 일정 칩. button 이고 이름은 "제목 · 시간 · 캘린더 …"(그날 패널 줄의 설명과 같은 글)이다.
+ * 안 글은 보이는 만큼만(제목 · 시각)이라 칩이 좁아도 이름은 온전하다.
+ */
+function EventChipButton({
+  event,
+  onEventClick,
+  className,
+  style,
+  part,
+  children,
+}: {
+  event: IEvent;
+  onEventClick?: (event: IEvent, el: HTMLElement) => void;
+  /** 이어지는 일정의 조각 자리(첫 · 사이 · 끝 · 하나) */
+  part?: string;
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  const { t, i18n } = useTranslation("calendar");
+  const tone = eventBadgeTone(event);
+  return (
+    <button
+      type="button"
+      aria-label={`${event.title} · ${eventLineDetail(event, t, i18n.language)}`}
+      data-slot="week-chip"
+      data-part={part}
+      className={cn(
+        "block cursor-pointer select-none overflow-hidden whitespace-nowrap rounded-sm text-left text-t2 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
+        className,
+      )}
+      style={{ background: tone.bg, color: tone.fg, ...style }}
+      onClick={(e) => onEventClick?.(event, e.currentTarget)}
+    >
+      {children}
+    </button>
+  );
 }
 
 // ---- Multi-day events row for week view ---- //
@@ -114,13 +157,13 @@ const WeekViewMultiDayEventsRow = ({
   if (!hasEventsInWeek) return null;
 
   return (
-    <div className="hidden overflow-hidden sm:flex">
-      <div className="w-18 border-b" />
-      <div className="grid flex-1 grid-cols-7 divide-x border-b border-l">
+    <div className="flex overflow-hidden">
+      <div className="w-[72px] border-b border-stroke-neutral-subtle" />
+      <div className="grid flex-1 grid-cols-7 divide-x divide-stroke-neutral-subtle border-b border-l border-stroke-neutral-subtle">
         {weekDays.map((day, dayIndex) => (
           <div
             key={day.toISOString()}
-            className="flex h-full flex-col gap-1 py-1"
+            className="flex h-full flex-col gap-x1 py-x1"
           >
             {eventRows.map((row, rowIndex) => {
               const event = row.find(
@@ -129,7 +172,7 @@ const WeekViewMultiDayEventsRow = ({
 
               if (!event) {
                 return (
-                  <div key={`${rowIndex}-${dayIndex}`} className="h-6.5" />
+                  <div key={`${rowIndex}-${dayIndex}`} className="h-[26px]" />
                 );
               }
 
@@ -150,41 +193,41 @@ const WeekViewMultiDayEventsRow = ({
 
               const positionClasses = {
                 // 멀티데이 바: 시작/종료만 round, 중간 full-bleed 연속. divide-x(1px) 는 -ml-px 로 bridge.
-                first: "relative z-10 mr-0 rounded-r-none",
+                // 가장자리 바깥 여백은 4px(px 임의값 — 간격 토큰은 tailwind-merge 가 margin 으로 알아보지 못해 mx-0 과 겹친다)
+                first: "relative z-10 ml-[4px] mr-0 rounded-r-none",
                 middle: "relative z-10 mx-0 -ml-px rounded-none",
-                last: "relative z-10 ml-0 -ml-px rounded-l-none",
-                none: "",
+                last: "relative z-10 -ml-px mr-[4px] rounded-l-none",
+                none: "mx-[4px]",
               };
 
               const showText = ["first", "none"].includes(position);
               const tone = eventBadgeTone(event);
+              const bar = cn(
+                "flex h-[26px] items-center px-x2",
+                positionClasses[position],
+              );
 
-              return (
+              // 제목 조각 하나만 button — 이어지는 나머지 조각은 보이기만 하고(누르면 같은 일정) 보조 기술에서는 숨긴다
+              return showText ? (
+                <EventChipButton
+                  key={`${event.id}-${dayIndex}`}
+                  event={event}
+                  onEventClick={onEventClick}
+                  part={position}
+                  className={bar}
+                >
+                  <span className="truncate">{event.title}</span>
+                </EventChipButton>
+              ) : (
                 <div
                   key={`${event.id}-${dayIndex}`}
-                  role="button"
-                  tabIndex={0}
-                  className={cn(
-                    "mx-1 flex size-auto h-6.5 cursor-pointer select-none items-center gap-1.5 truncate whitespace-nowrap rounded-md border px-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
-                    positionClasses[position],
-                  )}
-                  style={{
-                    background: tone.bg,
-                    borderColor: "transparent",
-                    color: tone.fg,
-                  }}
+                  aria-hidden
+                  data-part={position}
+                  data-slot="week-chip"
+                  className={cn("cursor-pointer select-none rounded-sm", bar)}
+                  style={{ background: tone.bg, color: tone.fg }}
                   onClick={(e) => onEventClick?.(event, e.currentTarget)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      onEventClick?.(event, e.currentTarget);
-                    }
-                  }}
-                >
-                  {showText && (
-                    <p className="truncate font-semibold">{event.title}</p>
-                  )}
-                </div>
+                />
               );
             })}
           </div>
@@ -225,8 +268,8 @@ const CalendarTimeline = ({
       className="pointer-events-none absolute inset-x-0 z-50 border-t border-stroke-brand-solid"
       style={{ top: `${position}%` }}
     >
-      <div className="absolute left-0 top-0 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-bg-brand-solid" />
-      <div className="absolute -left-18 flex w-16 -translate-y-1/2 justify-end bg-background pr-1 text-xs font-medium text-fg-brand">
+      <div className="absolute left-0 top-0 size-[12px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-bg-brand-solid" />
+      <div className="absolute -left-[72px] flex w-[64px] -translate-y-1/2 justify-end bg-bg-layer-default pr-x1 text-t2 font-medium text-fg-brand">
         {format(now, timeFormat, { locale })}
       </div>
     </div>
@@ -253,41 +296,30 @@ const EventBlock = ({
   const tone = eventBadgeTone(event);
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <EventChipButton
+      event={event}
+      onEventClick={onEventClick}
+      part="block"
       className={cn(
-        "flex cursor-pointer select-none flex-col gap-0.5 truncate whitespace-nowrap rounded-md border px-2 py-1.5 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
-        durationInMinutes < 35 && "py-0 justify-center",
+        "flex w-full flex-col gap-x0_5 px-x2 py-x1_5",
+        durationInMinutes < 35 && "justify-center py-0",
       )}
-      style={{
-        height: `${heightInPixels}px`,
-        background: tone.bg,
-        borderColor: "transparent",
-        color: tone.fg,
-      }}
-      onClick={(e) => onEventClick?.(event, e.currentTarget)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onEventClick?.(event, e.currentTarget);
-        }
-      }}
+      style={{ height: `${heightInPixels}px` }}
     >
-      <div className="flex items-center gap-1.5 truncate">
+      <span className="flex items-center gap-x1_5 truncate">
         <svg width="8" height="8" viewBox="0 0 8 8" className="shrink-0">
           <circle cx="4" cy="4" r="4" fill={tone.color} />
         </svg>
-        <p className="truncate font-semibold">{event.title}</p>
-      </div>
+        <span className="truncate font-bold">{event.title}</span>
+      </span>
 
       {durationInMinutes > 25 && (
-        <p>
+        <span className="block">
           {format(start, timeFormat, { locale })} -{" "}
           {format(end, timeFormat, { locale })}
-        </p>
+        </span>
       )}
-    </div>
+    </EventChipButton>
   );
 };
 
@@ -298,11 +330,12 @@ const CalendarWeekView = ({
   multiDayEvents,
   onEventClick,
 }: IProps) => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const { selectedDate, workingHours, visibleHours } = useCalendar();
 
   const locale = i18n.language.startsWith("ko") ? ko : enUS;
-  const hourFormat = i18n.language.startsWith("ko") ? "a hh시" : "hh a";
+  // 날짜 · 시각 규칙 — 시각에 0 을 붙이지 않는다("오전 1시")
+  const hourFormat = i18n.language.startsWith("ko") ? "a h시" : "h a";
   const { hours, earliestEventHour, latestEventHour } = getVisibleHours(
     visibleHours,
     singleDayEvents,
@@ -312,13 +345,8 @@ const CalendarWeekView = ({
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
-    <div className="w-full h-full">
-      <div className="flex flex-col items-center justify-center border-b py-4 text-sm text-muted-foreground sm:hidden">
-        <p>{t("calendar:weekView.notAvailable")}</p>
-        <p>{t("calendar:weekView.switchView")}</p>
-      </div>
-
-      <div className="hidden h-full flex-col sm:flex">
+    <div className="h-full w-full">
+      <div className="flex h-full flex-col">
         <div>
           <WeekViewMultiDayEventsRow
             selectedDate={selectedDate}
@@ -327,27 +355,27 @@ const CalendarWeekView = ({
           />
 
           {/* Week header */}
-          <div className="relative z-20 flex border-b">
-            <div className="w-18" />
-            <div className="grid flex-1 grid-cols-7 divide-x border-l">
+          <div className="relative z-20 flex border-b border-stroke-neutral-subtle">
+            <div className="w-[72px]" />
+            <div className="grid flex-1 grid-cols-7 divide-x divide-stroke-neutral-subtle border-l border-stroke-neutral-subtle">
               {weekDays.map((day, index) => {
                 const dayOfWeek = day.getDay();
                 const isSunday = dayOfWeek === 0;
                 const isSaturday = dayOfWeek === 6;
                 const textColor = isSunday
-                  ? "var(--color-fg-critical)"
+                  ? "text-fg-critical"
                   : isSaturday
-                    ? "var(--fg-brand)"
-                    : undefined;
+                    ? "text-fg-brand"
+                    : "text-fg-neutral";
 
                 return (
                   <div
                     key={index}
-                    className="py-2 text-center text-xs font-medium"
+                    className="py-x2 text-center text-t2 font-medium"
                   >
-                    <div style={{ color: textColor }}>
+                    <div className={textColor}>
                       {format(day, "EE", { locale })}{" "}
-                      <span className="ml-1 font-semibold">
+                      <span className="ml-x1 font-bold">
                         {format(day, "d")}
                       </span>
                     </div>
@@ -361,12 +389,12 @@ const CalendarWeekView = ({
         <div className="flex-1 overflow-y-auto">
           <div className="flex overflow-hidden">
             {/* Hours column */}
-            <div className="relative w-18">
+            <div className="relative w-[72px]">
               {hours.map((hour, index) => (
                 <div key={hour} className="relative" style={{ height: "96px" }}>
-                  <div className="absolute -top-3 right-2 flex h-6 items-center">
+                  <div className="absolute -top-[12px] right-x2 flex h-[24px] items-center">
                     {index !== 0 && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-t2 text-fg-neutral-subtle">
                         {format(
                           new Date().setHours(hour, 0, 0, 0),
                           hourFormat,
@@ -380,8 +408,8 @@ const CalendarWeekView = ({
             </div>
 
             {/* Week grid */}
-            <div className="relative flex-1 border-l">
-              <div className="grid grid-cols-7 divide-x">
+            <div className="relative flex-1 border-l border-stroke-neutral-subtle">
+              <div className="grid grid-cols-7 divide-x divide-stroke-neutral-subtle">
                 {weekDays.map((day, dayIndex) => {
                   const dayEvents = singleDayEvents.filter(
                     (event) =>
@@ -400,14 +428,14 @@ const CalendarWeekView = ({
                             key={hour}
                             className={cn(
                               "relative",
-                              isDisabled && "bg-muted/30",
+                              isDisabled && "bg-bg-neutral-weak/30",
                             )}
                             style={{ height: "96px" }}
                           >
                             {index !== 0 && (
-                              <div className="pointer-events-none absolute inset-x-0 top-0 border-b" />
+                              <div className="pointer-events-none absolute inset-x-0 top-0 border-b border-stroke-neutral-subtle" />
                             )}
-                            <div className="pointer-events-none absolute inset-x-0 top-1/2 border-b border-dashed" />
+                            <div className="pointer-events-none absolute inset-x-0 top-1/2 border-b border-dashed border-stroke-neutral-subtle" />
                           </div>
                         );
                       })}
@@ -444,7 +472,7 @@ const CalendarWeekView = ({
                           return (
                             <div
                               key={event.id}
-                              className="absolute p-1"
+                              className="absolute p-x1"
                               style={style}
                             >
                               <EventBlock

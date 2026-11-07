@@ -4,8 +4,6 @@ import {
   endOfWeek,
   startOfMonth,
   endOfMonth,
-  startOfYear,
-  endOfYear,
   format,
 } from "date-fns";
 
@@ -37,13 +35,8 @@ const CalendarContent = () => {
         end = endOfMonth(selectedDate);
         break;
       case "week":
-      case "day":
         start = startOfWeek(selectedDate);
         end = endOfWeek(selectedDate);
-        break;
-      case "year":
-        start = startOfYear(selectedDate);
-        end = endOfYear(selectedDate);
         break;
       default:
         start = startOfMonth(selectedDate);

@@ -9,7 +9,7 @@ import type {
   IBuiltinSource,
 } from "./types";
 import type { IEvent } from "./interfaces";
-import { BUILTIN_SOURCES } from "./types";
+import { BUILTIN_SOURCES, normalizeCalendarView } from "./types";
 import {
   useUserCalendars,
   useToggleCalendarVisibility,
@@ -35,7 +35,13 @@ export const CalendarProvider = ({
   const [selectedDate, setSelectedDate] = useState<Date>(
     initialDate ?? new Date(),
   );
-  const [view, setView] = useState<TCalendarView>(initialView);
+  const [view, setViewState] = useState<TCalendarView>(() =>
+    normalizeCalendarView(initialView),
+  );
+  const setView = useCallback(
+    (next: TCalendarView) => setViewState(normalizeCalendarView(next)),
+    [],
+  );
   const [badgeVariant, setBadgeVariant] = useState<TBadgeVariant>("dot");
   const [workingHours, setWorkingHours] = useState<TWorkingHours>({
     start: 9,
@@ -130,6 +136,7 @@ export const CalendarProvider = ({
     [
       selectedDate,
       view,
+      setView,
       badgeVariant,
       workingHours,
       visibleHours,

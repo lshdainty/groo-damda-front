@@ -26,7 +26,7 @@ const CalendarHeaderMobile = () => {
 
   const handlePrevious = () =>
     setSelectedDate(navigateDate(selectedDate, view, "previous"));
-  const stepUnit = view === "week" || view === "day";
+  const stepUnit = view === "week";
   const handleNext = () =>
     setSelectedDate(navigateDate(selectedDate, view, "next"));
 
@@ -62,9 +62,7 @@ const CalendarHeaderMobile = () => {
         {stepUnit && (
           <>
             <Button
-              aria-label={t(
-                view === "week" ? "header.prevWeek" : "header.prevDay",
-              )}
+              aria-label={t("header.prevWeek")}
               variant="ghost"
               size="medium"
               layout="iconOnly"
@@ -74,9 +72,7 @@ const CalendarHeaderMobile = () => {
               <ChevronLeft />
             </Button>
             <Button
-              aria-label={t(
-                view === "week" ? "header.nextWeek" : "header.nextDay",
-              )}
+              aria-label={t("header.nextWeek")}
               variant="ghost"
               size="medium"
               layout="iconOnly"

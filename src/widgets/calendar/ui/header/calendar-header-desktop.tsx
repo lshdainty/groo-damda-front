@@ -11,19 +11,17 @@ import { ChipRadio, ChipRadioGroup } from "@/shared/ds/chip";
 import { MonthPicker } from "@/shared/ds/month-picker";
 import { CalendarSourceToggle } from "@/widgets/calendar/ui/header/calendar-source-toggle";
 
-/** 보기 고르기 차례 — 월 · 주 · 일 · 연 · 목록(I-09 15) */
+/** 보기 고르기 차례 — 월 · 주 · 목록(I-09 15, 일 · 연은 걷었다 — I-wrap-b1 γ) */
 const VIEWS: { value: TCalendarView; key: string }[] = [
   { value: "month", key: "view.month" },
   { value: "week", key: "view.week" },
-  { value: "day", key: "view.day" },
-  { value: "year", key: "view.year" },
   { value: "agenda", key: "view.agenda" },
 ];
 
 /**
  * 데스크톱 · 태블릿 도구 줄 (I-09 14 · 15) — 제목 줄 아래 16, 카드 밖 회색 바닥 위 한 줄.
  * 왼쪽: 달 글 t7 700 + 꺾쇠(누르면 연 | 월 휠 — 1280 이상 팝오버, 미만 시트). ‹ › · "오늘" 은 두지 않는다(사용자 10-29 — 연 · 월은 휠로만).
- * 주 · 일 보기만 한 주 · 하루씩 옮기는 ‹ › 를 달 글 뒤에 둔다.
+ * 주 보기만 한 주씩 옮기는 ‹ › 를 달 글 뒤에 둔다.
  * 오른쪽: 캘린더 고르기 칩 · 보기 고르기(Chip 하나 고르기 — 이름이 보이는 글). 좁으면 오른쪽 묶음이 다음 줄로.
  */
 const CalendarHeaderDesktop = () => {
@@ -40,7 +38,7 @@ const CalendarHeaderDesktop = () => {
     setSelectedDate(navigateDate(selectedDate, view, "previous"));
   const handleNext = () =>
     setSelectedDate(navigateDate(selectedDate, view, "next"));
-  const stepUnit = view === "week" || view === "day";
+  const stepUnit = view === "week";
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-x3">
@@ -69,13 +67,11 @@ const CalendarHeaderDesktop = () => {
             </button>
           }
         />
-        {/* 주 · 일 보기는 단위가 달이 아니라 한 주 · 하루라 ‹ › 를 남긴다 — 연 · 월은 휠로만 옮긴다(I-27) */}
+        {/* 주 보기는 단위가 달이 아니라 한 주라 ‹ › 를 남긴다 — 연 · 월은 휠로만 옮긴다(I-27) */}
         {stepUnit && (
           <>
             <Button
-              aria-label={t(
-                view === "week" ? "header.prevWeek" : "header.prevDay",
-              )}
+              aria-label={t("header.prevWeek")}
               variant="neutralOutline"
               size="small"
               layout="iconOnly"
@@ -85,9 +81,7 @@ const CalendarHeaderDesktop = () => {
               <ChevronLeft />
             </Button>
             <Button
-              aria-label={t(
-                view === "week" ? "header.nextWeek" : "header.nextDay",
-              )}
+              aria-label={t("header.nextWeek")}
               variant="neutralOutline"
               size="small"
               layout="iconOnly"

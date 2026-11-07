@@ -1,21 +1,16 @@
 import {
-  addDays,
   addMonths,
   addWeeks,
-  addYears,
   differenceInDays,
   differenceInMinutes,
   eachDayOfInterval,
   endOfMonth,
   isSameDay,
-  isWithinInterval,
   parseISO,
   startOfDay,
   startOfMonth,
-  subDays,
   subMonths,
   subWeeks,
-  subYears,
 } from "date-fns";
 
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
@@ -49,28 +44,14 @@ export function navigateDate(
 ): Date {
   const operations = {
     agenda: direction === "next" ? addMonths : subMonths,
-    year: direction === "next" ? addYears : subYears,
     month: direction === "next" ? addMonths : subMonths,
     week: direction === "next" ? addWeeks : subWeeks,
-    day: direction === "next" ? addDays : subDays,
   };
 
   return operations[view](date, 1);
 }
 
 // ================ Week and day view helper functions ================ //
-
-export function getCurrentEvents(events: IEvent[]) {
-  const now = new Date();
-  return (
-    events.filter((event) =>
-      isWithinInterval(now, {
-        start: parseISO(event.startDate),
-        end: parseISO(event.endDate),
-      }),
-    ) || null
-  );
-}
 
 export function groupEvents(dayEvents: IEvent[]) {
   const sortedEvents = dayEvents.sort(
