@@ -14,13 +14,6 @@ export const memoSwatch = (color: string | null | undefined): string =>
   getPaletteByColor(color || DEFAULT_MEMO_COLOR).color;
 
 /**
- * 메모가 목록 · 상세 · 삭제 확인창에서 불릴 이름.
- * 편집기가 빈 제목을 막지만 서버에 이미 빈 것이 있으면 화면이 빈칸으로 뜬다 — 그때 부를 이름을 한 군데서 정한다.
- */
-export const memoLabel = (title: string, untitled: string): string =>
-  title || untitled;
-
-/**
  * 수정 시각 — 올해는 줄임 날짜 + 시각 "10월 22일 오후 5:10", 다른 해는 표준 날짜 "2025년 12월 3일"(웹 · 앱 한 벌).
  *
  * modifyAt 은 서버가 시간대 없이 주는 `[UTC]` 라 [parseServerUtc] 로 읽고 로컬로 옮긴다. 못 읽는 값은 ""

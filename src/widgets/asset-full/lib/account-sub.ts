@@ -10,25 +10,6 @@ import type { AssetType } from "@/entities/asset";
 export type AccountSub =
   "입출금" | "마이너스통장" | "적금" | "예금" | "현금" | "대출";
 
-export const ACCOUNT_SUBS: AccountSub[] = [
-  "입출금",
-  "마이너스통장",
-  "적금",
-  "예금",
-  "현금",
-  "대출",
-];
-
-/** AccountSub(타입 판별자, 한글 리터럴)의 표시 라벨 i18n 키 매핑 */
-export const ACCOUNT_SUB_KEY: Record<AccountSub, string> = {
-  입출금: "checking",
-  마이너스통장: "overdraft",
-  적금: "savings",
-  예금: "deposit",
-  현금: "cash",
-  대출: "loan",
-};
-
 /**
  * 잔액을 **음수(빚)** 로 들고 있는 계좌 종류.
  *

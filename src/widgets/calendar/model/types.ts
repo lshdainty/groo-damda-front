@@ -11,9 +11,9 @@ export function normalizeCalendarView(value: unknown): TCalendarView {
   return CALENDAR_VIEWS.find((v) => v === value) ?? "month";
 }
 
-// ================ Builtin Sources (가계부, 할일) ================ //
+// ================ Builtin Sources (공휴일) ================ //
 
-export type TCalendarSourceType = "expense" | "todo" | "holiday";
+export type TCalendarSourceType = "holiday";
 
 export interface IBuiltinSource {
   id: TCalendarSourceType;
@@ -28,18 +28,6 @@ export const BUILTIN_SOURCES: IBuiltinSource[] = [
     labelKey: "calendar.source.holiday",
     color: "#c73838",
     enabled: true,
-  },
-  {
-    id: "expense",
-    labelKey: "calendar.source.expense",
-    color: "#0147ad",
-    enabled: false,
-  },
-  {
-    id: "todo",
-    labelKey: "calendar.source.todo",
-    color: "#8b4dba",
-    enabled: false,
   },
 ];
 

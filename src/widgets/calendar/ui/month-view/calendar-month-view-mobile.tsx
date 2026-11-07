@@ -65,10 +65,7 @@ export function CalendarMonthViewMobile({
   const { selectedDate } = useCalendar();
   const { metrics, stackRef, chipRef, moreRef } = useChipMetrics(PHONE_METRICS);
 
-  // 금액 합계(가계부) 같은 가짜 일정은 칸에 그리지 않는다 — 일정과 공휴일만
-  const single = singleDayEvents.filter((e) => e.sourceType !== "expense");
-  const multi = multiDayEvents.filter((e) => e.sourceType !== "expense");
-  const all = [...multi, ...single];
+  const all = [...multiDayEvents, ...singleDayEvents];
 
   const holidays = new Set<string>();
   for (const e of all)
@@ -77,8 +74,8 @@ export function CalendarMonthViewMobile({
 
   const cells = getCalendarCells(selectedDate);
   const positions = calculateMonthEventPositions(
-    [...multi],
-    [...single],
+    [...multiDayEvents],
+    [...singleDayEvents],
     selectedDate,
   );
   const model = buildMonthModel(cells, all, positions, metrics);

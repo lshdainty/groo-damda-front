@@ -7,4 +7,3 @@ export type {
 } from "./api/smsApi";
 export { looksLikePaymentSms } from "./model/smsPrefilter";
 export { useCommitSms } from "./model/useCommitSms";
-export { SmsPasteField } from "./ui/SmsPasteField";

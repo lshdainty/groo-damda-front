@@ -151,17 +151,6 @@ export function getPaletteByColor(color: string | null | undefined): {
 }
 
 /**
- * 색상 picker grid 표시용 entries.
- * - `color` / `bg`: UI 에 보여줄 alias var (다크 자동 swap)
- * - `baseHex`: 사용자가 swatch 를 선택했을 때 DB 에 저장할 값
- */
-export const CAT_PALETTE = CHART_PAIRS.map((p) => ({
-  color: `var(${p.cssVar})`,
-  bg: `var(${p.cssVar}-weak)`,
-  baseHex: p.base,
-}));
-
-/**
  * 저장된 hex 가 차트 10색의 기본 값이면 그 색 이름 — ds `assignChartColors` 의 `colorOf` 에 쓴다.
  * 저장된 hex 는 이름표다(DESIGN v110). 팔레트 밖 hex · 색 없음은 null — 그 차트에서 쓰지 않은 색이 배정된다.
  */

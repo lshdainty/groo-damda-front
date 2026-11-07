@@ -73,9 +73,7 @@ function MonthGrid({ singleDayEvents, multiDayEvents, onEventClick }: IProps) {
   const { metrics, stackRef, chipRef, moreRef } =
     useChipMetrics(DESKTOP_METRICS);
 
-  const single = singleDayEvents.filter((e) => e.sourceType !== "expense");
-  const multi = multiDayEvents.filter((e) => e.sourceType !== "expense");
-  const all = [...multi, ...single];
+  const all = [...multiDayEvents, ...singleDayEvents];
 
   const holidays = new Set<string>();
   for (const e of all)
@@ -84,8 +82,8 @@ function MonthGrid({ singleDayEvents, multiDayEvents, onEventClick }: IProps) {
 
   const cells = getCalendarCells(selectedDate);
   const positions = calculateMonthEventPositions(
-    [...multi],
-    [...single],
+    [...multiDayEvents],
+    [...singleDayEvents],
     selectedDate,
   );
   const model = buildMonthModel(cells, all, positions, metrics);

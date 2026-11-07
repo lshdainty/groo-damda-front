@@ -39,7 +39,6 @@ describe("canEditEvent", () => {
         roleOf,
       ),
     ).toBe(false);
-    expect(canEditEvent(ev({ sourceType: "expense" }), ME, roleOf)).toBe(false);
   });
   it("권한을 아직 모르면(목록 불러오는 중) 남의 일정에는 없고 내 일정에는 있다", () => {
     const unknown = () => undefined;

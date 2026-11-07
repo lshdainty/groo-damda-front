@@ -1,6 +1,5 @@
 export { cn } from "./cn";
 export { formatDate, getLocale, isCompleteDate } from "./date";
-export { formatDuration, formatTimer } from "./format";
 export { renderIcon, isIconName, iconNames } from "./icon-map";
 export type { IconName } from "./icon-map";
 export { decodeHtml } from "./html";

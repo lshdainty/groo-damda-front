@@ -43,9 +43,6 @@ vi.mock("@/widgets/calendar/model/useCalendarEvents", () => ({
 vi.mock("@/widgets/calendar/model/useCalendarHolidays", () => ({
   useCalendarHolidays: () => mocks.holidays,
 }));
-vi.mock("@/widgets/calendar/model/useCalendarExpenses", () => ({
-  useCalendarExpenses: () => ({ data: undefined, isLoading: false }),
-}));
 vi.mock("@/widgets/calendar/ui/CalendarContainer", () => ({
   CalendarContainer: (p: unknown) => {
     mocks.props = p;
