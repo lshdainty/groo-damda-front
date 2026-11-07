@@ -1,21 +1,13 @@
-import {
-  differenceInDays,
-  endOfDay,
-  format,
-  isSameMonth,
-  parseISO,
-  startOfDay,
-} from "date-fns";
-import { enUS, ko } from "date-fns/locale";
-import { CalendarX2, Clock, Text } from "lucide-react";
+import { endOfDay, format, isSameMonth, parseISO, startOfDay } from "date-fns";
+import { CalendarX2 } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import { ListHeader } from "@/shared/ds/list";
+import { ResultSection } from "@/shared/ds/result-section";
+import { formatMonthDayDow } from "@/shared/lib/date";
 import { useCalendar } from "@/widgets/calendar/model/calendar-context";
-import {
-  eventBadgeColor,
-  eventBadgeTone,
-} from "@/widgets/calendar/lib/helpers";
+import { DayEventList } from "@/widgets/calendar/ui/day-event-list";
 
 import type { IEvent } from "@/widgets/calendar/model/interfaces";
 
@@ -25,157 +17,20 @@ interface IProps {
   onEventClick?: (event: IEvent, el: HTMLElement) => void;
 }
 
-// ---- Agenda event card ---- //
-
-const AgendaEventCard = ({
-  event,
-  eventCurrentDay,
-  eventTotalDays,
-  onEventClick,
-}: {
-  event: IEvent;
-  eventCurrentDay?: number;
-  eventTotalDays?: number;
-  onEventClick?: (event: IEvent, el: HTMLElement) => void;
-}) => {
-  const { t, i18n } = useTranslation("calendar");
-  const locale = i18n.language.startsWith("ko") ? ko : enUS;
-  const timeFormat = i18n.language.startsWith("ko") ? "a h:mm" : "h:mm a";
-
-  const startDate = parseISO(event.startDate);
-  const endDate = parseISO(event.endDate);
-
-  const badgeColor = eventBadgeColor(event);
-
-  const tone = eventBadgeTone(event);
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      className="flex cursor-pointer select-none items-center justify-between gap-3 rounded-md border p-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring"
-      style={{
-        backgroundColor: tone.bg,
-        borderColor: "transparent",
-        color: tone.fg,
-      }}
-      onClick={(e) => onEventClick?.(event, e.currentTarget)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onEventClick?.(event, e.currentTarget);
-        }
-      }}
-    >
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-1.5">
-          <svg width="8" height="8" viewBox="0 0 8 8" className="shrink-0">
-            <circle cx="4" cy="4" r="4" fill={badgeColor} />
-          </svg>
-
-          <p className="font-medium">
-            {eventCurrentDay && eventTotalDays && (
-              <span className="mr-1 text-xs">
-                {t("event.dayOfTotal", {
-                  current: eventCurrentDay,
-                  total: eventTotalDays,
-                })}{" "}
-                &#8226;{" "}
-              </span>
-            )}
-            {event.title}
-          </p>
-        </div>
-
-        {!event.isAllDay && (
-          <div className="flex items-center gap-1">
-            <Clock className="size-3 shrink-0" />
-            <p className="text-xs text-foreground">
-              {format(startDate, timeFormat, { locale })} -{" "}
-              {format(endDate, timeFormat, { locale })}
-            </p>
-          </div>
-        )}
-
-        {event.description && (
-          <div className="flex items-center gap-1">
-            <Text className="size-3 shrink-0" />
-            <p className="text-xs text-foreground">{event.description}</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+/** 그 날과 겹치는 일정 — 시작 시각 차례(공휴일을 먼저 두는 것은 DayEventList 가 한다) */
+const overlapping = (events: IEvent[], date: Date): IEvent[] => {
+  const ds = startOfDay(date);
+  const de = endOfDay(date);
+  return events
+    .filter((e) => parseISO(e.startDate) <= de && parseISO(e.endDate) >= ds)
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
 };
 
-// ---- Agenda day group ---- //
-
-const AgendaDayGroup = ({
-  date,
-  events,
-  multiDayEvents,
-  onEventClick,
-}: {
-  date: Date;
-  events: IEvent[];
-  multiDayEvents: IEvent[];
-  onEventClick?: (event: IEvent, el: HTMLElement) => void;
-}) => {
-  const { i18n } = useTranslation();
-  const sortedEvents = [...events].sort(
-    (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-  );
-
-  const dateFormat = i18n.language.startsWith("ko")
-    ? "yyyy년 M월 dd일 EEEE"
-    : "EEEE, MMMM d, yyyy";
-  const locale = i18n.language.startsWith("ko") ? ko : enUS;
-
-  return (
-    <div className="space-y-4">
-      <div className="sticky top-0 flex items-center gap-4 bg-background py-2">
-        <p className="text-sm font-semibold">
-          {format(date, dateFormat, { locale })}
-        </p>
-      </div>
-
-      <div className="space-y-2">
-        {multiDayEvents.length > 0 &&
-          multiDayEvents.map((event) => {
-            const eventStart = startOfDay(parseISO(event.startDate));
-            const eventEnd = startOfDay(parseISO(event.endDate));
-            const currentDate = startOfDay(date);
-
-            const eventTotalDays = differenceInDays(eventEnd, eventStart) + 1;
-            const eventCurrentDay =
-              differenceInDays(currentDate, eventStart) + 1;
-            return (
-              <AgendaEventCard
-                key={`${event.id}-${event.startDate}`}
-                event={event}
-                eventCurrentDay={
-                  eventTotalDays > 1 ? eventCurrentDay : undefined
-                }
-                eventTotalDays={eventTotalDays > 1 ? eventTotalDays : undefined}
-                onEventClick={onEventClick}
-              />
-            );
-          })}
-
-        {sortedEvents.length > 0 &&
-          sortedEvents.map((event) => (
-            <AgendaEventCard
-              key={`${event.id}-${event.startDate}`}
-              event={event}
-              onEventClick={onEventClick}
-            />
-          ))}
-      </div>
-    </div>
-  );
-};
-
-// ---- Main agenda view ---- //
-
+/**
+ * 목록 보기 (I-wrap-b1 γ) — 일정이 있는 날마다 List 머리(원장 · 검색과 같은 `formatMonthDayDow`: 올해 "10월 5일 (월)",
+ * 다른 해 "2025년 10월 5일 (일)") + 그날 패널과 같은 줄 목록(`DayEventList`)을 쓴다. 빈 상태는 Result Section empty.
+ * 여러 날 일정은 하루 패널과 같이 날마다 같은 줄이 나온다(줄 글에 "종일 · 10월 10일 ~ 12일" 처럼 기간이 들어간다).
+ */
 const CalendarAgendaView = ({
   singleDayEvents,
   multiDayEvents,
@@ -184,83 +39,63 @@ const CalendarAgendaView = ({
   const { t } = useTranslation("calendar");
   const { selectedDate } = useCalendar();
 
-  const eventsByDay = useMemo(() => {
-    const allDates = new Map<
-      string,
-      { date: Date; events: IEvent[]; multiDayEvents: IEvent[] }
-    >();
+  const days = useMemo(() => {
+    const all = [...singleDayEvents, ...multiDayEvents];
+    const keys = new Map<string, Date>();
+    const add = (d: Date) => {
+      if (!isSameMonth(d, selectedDate)) return;
+      keys.set(format(d, "yyyy-MM-dd"), startOfDay(d));
+    };
 
-    singleDayEvents.forEach((event) => {
-      const eventDate = parseISO(event.startDate);
-      if (!isSameMonth(eventDate, selectedDate)) return;
-
-      const dateKey = format(eventDate, "yyyy-MM-dd");
-
-      if (!allDates.has(dateKey)) {
-        allDates.set(dateKey, {
-          date: startOfDay(eventDate),
-          events: [],
-          multiDayEvents: [],
-        });
-      }
-
-      allDates.get(dateKey)?.events.push(event);
-    });
-
-    multiDayEvents.forEach((event) => {
-      const eventStart = parseISO(event.startDate);
-      const eventEnd = parseISO(event.endDate);
-
-      let currentDate = startOfDay(eventStart);
-      const lastDate = endOfDay(eventEnd);
-
-      while (currentDate <= lastDate) {
-        if (isSameMonth(currentDate, selectedDate)) {
-          const dateKey = format(currentDate, "yyyy-MM-dd");
-
-          if (!allDates.has(dateKey)) {
-            allDates.set(dateKey, {
-              date: new Date(currentDate),
-              events: [],
-              multiDayEvents: [],
-            });
-          }
-
-          allDates.get(dateKey)?.multiDayEvents.push(event);
-        }
-        currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
+    singleDayEvents.forEach((e) => add(parseISO(e.startDate)));
+    multiDayEvents.forEach((e) => {
+      const last = endOfDay(parseISO(e.endDate));
+      for (
+        let d = startOfDay(parseISO(e.startDate));
+        d <= last;
+        d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)
+      ) {
+        add(d);
       }
     });
 
-    return Array.from(allDates.values()).sort(
-      (a, b) => a.date.getTime() - b.date.getTime(),
-    );
+    return [...keys.values()]
+      .sort((a, b) => a.getTime() - b.getTime())
+      .map((date) => ({ date, events: overlapping(all, date) }));
   }, [singleDayEvents, multiDayEvents, selectedDate]);
 
-  const hasAnyEvents = singleDayEvents.length > 0 || multiDayEvents.length > 0;
-
   return (
-    <div className="w-full h-full">
-      <div className="h-full overflow-y-auto">
-        <div className="space-y-6 p-4">
-          {eventsByDay.map((dayGroup) => (
-            <AgendaDayGroup
-              key={format(dayGroup.date, "yyyy-MM-dd")}
-              date={dayGroup.date}
-              events={dayGroup.events}
-              multiDayEvents={dayGroup.multiDayEvents}
-              onEventClick={onEventClick}
-            />
-          ))}
-
-          {!hasAnyEvents && (
-            <div className="flex flex-col items-center justify-center gap-2 py-20 text-muted-foreground">
-              <CalendarX2 className="size-10" />
-              <p className="text-sm md:text-base">{t("agenda.noEvents")}</p>
-            </div>
-          )}
+    <div data-slot="agenda-view" className="h-full w-full overflow-y-auto">
+      {days.length === 0 ? (
+        <ResultSection
+          size="medium"
+          icon={<CalendarX2 />}
+          title={t("agenda.noEvents")}
+          className="h-full"
+        />
+      ) : (
+        <div className="flex flex-col gap-x3 pb-x4 pt-x2">
+          {days.map(({ date, events }) => {
+            const label = formatMonthDayDow(date);
+            return (
+              <section
+                key={format(date, "yyyy-MM-dd")}
+                data-slot="agenda-day"
+                aria-label={label}
+              >
+                <ListHeader className="sticky top-0 z-10 bg-bg-layer-default">
+                  {label}
+                </ListHeader>
+                <DayEventList
+                  events={events}
+                  label={label}
+                  onTapEvent={(e, el) => onEventClick?.(e, el)}
+                />
+              </section>
+            );
+          })}
         </div>
-      </div>
+      )}
     </div>
   );
 };
