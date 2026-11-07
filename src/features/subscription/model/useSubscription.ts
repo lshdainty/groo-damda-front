@@ -90,7 +90,11 @@ export const useRegisterBrokerCredential = () => {
       apiKey: string;
       apiSecret: string;
     }) => subscriptionApi.registerBrokerCredential(broker, apiKey, apiSecret),
-    onSuccess: () => invalidateFor(queryClient, "broker-connection"),
+    // 입력한 키 · 시크릿이 변수로 담긴다 — 시트를 닫은 뒤 뮤테이션 캐시(기본 5분)에 평문으로 남지 않게 바로 버린다
+    gcTime: 0,
+    // 새 연결 상태가 캐시에 들어온 뒤에 성공 콜백이 불린다 — 연결 화면이 "안 연결됨" 빈 폼으로 한 번 깜빡이지 않게
+    onSuccess: () =>
+      invalidateFor(queryClient, "broker-connection", { wait: true }),
   });
 };
 
@@ -99,7 +103,9 @@ export const useDisconnectBrokerCredential = () => {
   return useMutation({
     mutationFn: (broker: string) =>
       subscriptionApi.disconnectBrokerCredential(broker),
-    onSuccess: () => invalidateFor(queryClient, "broker-connection"),
+    // 새 상태가 캐시에 들어온 뒤에 끝난다 — 그 전에 옛 "연결됨" 화면에서 한 번 더 누르지 못하게
+    onSuccess: () =>
+      invalidateFor(queryClient, "broker-connection", { wait: true }),
   });
 };
 
@@ -107,7 +113,8 @@ export const useSetPrimaryBroker = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (broker: string) => subscriptionApi.setPrimaryBroker(broker),
-    onSuccess: () => invalidateFor(queryClient, "broker-connection"),
+    onSuccess: () =>
+      invalidateFor(queryClient, "broker-connection", { wait: true }),
   });
 };
 
@@ -127,6 +134,8 @@ export const useIssueApiToken = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (name: string) => subscriptionApi.issueApiToken(name),
+    // 응답에 토큰 원문이 담긴다 — 시트를 닫은 뒤 뮤테이션 캐시에 남지 않게 바로 버린다
+    gcTime: 0,
     onSuccess: () => invalidateFor(queryClient, "api-token"),
   });
 };

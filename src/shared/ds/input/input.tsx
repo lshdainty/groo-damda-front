@@ -61,6 +61,13 @@ export interface InputProps extends Omit<
   suffixIcon?: React.ReactNode;
   /** 지우기 버튼 — 값이 있고 막히지 않았을 때만 보인다. 검색칸 · 선택 사항인 칸에 */
   clearable?: boolean;
+  /**
+   * 뒤 단추 슬롯 — 칸의 맨 뒤에 얹는 단추 하나(비밀번호 · 키 "보기" Toggle · 값 복사). 지우기 버튼과 같은 자리 규칙이다:
+   * 맨 뒤면 상자의 오른쪽 여백을 바깥 여백으로 갖고, 입력 글의 오른쪽 끝은 이 슬롯만큼 비는다(글이 단추 밑으로 들어가지 않는다).
+   * 단추의 보이는 크기 · 누르는 영역(44)은 단추가 가진다. 지우기 버튼 뒤에 놓인다. 슬롯 안 단추는 호버 · 누름 바탕을 그리지 않는다(칸 안에
+   * 상자가 하나 더 생겨 보이지 않게 — 지우기 버튼과 같다). 상태는 아이콘으로만 나타낸다
+   */
+  suffixAction?: React.ReactNode;
   /** 상자(div)의 className — className 은 입력(<input>)에 간다 */
   rootClassName?: string;
 }
@@ -75,6 +82,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       suffix,
       suffixIcon,
       clearable = false,
+      suffixAction,
       rootClassName,
       className,
       type = "text",
@@ -213,6 +221,19 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           >
             <CircleX aria-hidden />
           </button>
+        )}
+        {suffixAction != null && (
+          <span
+            data-slot="text-input-action"
+            className={cn(
+              "flex shrink-0 items-center",
+              AFFIX_EDGE,
+              // 지우기 버튼과 같은 모양 — 칸 안에 호버 · 누름 바탕 상자를 그리지 않는다(상태는 아이콘으로만)
+              "[&_button]:hover:bg-transparent [&_button]:active:bg-transparent",
+            )}
+          >
+            {suffixAction}
+          </span>
         )}
       </div>
     );

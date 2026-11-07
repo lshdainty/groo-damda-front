@@ -76,7 +76,6 @@ vi.mock("@/features/auth", () => ({ useAuth: () => ({ logout: () => {} }) }));
 const sec = vi.hoisted(() => ({
   wide: false,
   mounts: 0,
-  mobile: [] as boolean[],
 }));
 vi.mock("@/shared/ds/overlay", async (orig) => ({
   ...(await orig<typeof import("@/shared/ds/overlay")>()),
@@ -85,12 +84,24 @@ vi.mock("@/shared/ds/overlay", async (orig) => ({
 vi.mock("@/features/subscription/ui/SecuritiesLinkDialog", async () => {
   const { useEffect } = await import("react");
   return {
-    SecuritiesLinkDialog: ({ mobile }: { mobile: boolean }) => {
-      sec.mobile.push(mobile);
+    SecuritiesLinkDialog: ({
+      open,
+      onClose,
+      onClosed,
+    }: {
+      open: boolean;
+      onClose: () => void;
+      onClosed: () => void;
+    }) => {
       useEffect(() => {
         sec.mounts += 1;
       }, []);
-      return <div data-sec-dialog />;
+      return (
+        <div data-sec-dialog data-open={open}>
+          <button data-sec-close onClick={onClose} />
+          <button data-sec-closed onClick={onClosed} />
+        </div>
+      );
     },
   };
 });
@@ -401,10 +412,9 @@ describe("Google 줄 상태", () => {
 });
 
 describe("증권사 연동 시트의 표면 (I-wrap-b1 ε 9)", () => {
-  it("표면은 1280 으로 가른다 — 폰 · 768 ~ 1279 모두 시트, 셸이 768 을 넘나들어도 다시 붙지 않는다", () => {
+  it("셸이 768 을 넘나들어도 시트가 다시 붙지 않는다 — 표면(시트 ↔ 대화상자)은 ResponsiveDialog 가 1280 으로 가른다", () => {
     sec.wide = false;
     sec.mounts = 0;
-    sec.mobile.length = 0;
     render(true);
     const open = buttons().find((b) =>
       b.textContent?.includes("account.securities.label"),
@@ -413,7 +423,28 @@ describe("증권사 연동 시트의 표면 (I-wrap-b1 ε 9)", () => {
     act(() => open.click());
     expect(container.querySelector("[data-sec-dialog]")).not.toBeNull();
     render(false);
-    expect(sec.mobile[sec.mobile.length - 1]).toBe(true);
     expect(sec.mounts).toBe(1);
+  });
+
+  it("닫으면 open=false 로 먼저 내려 모션 · 초점 복귀를 하게 하고, 끝났다고 알린 뒤에야 내린다", () => {
+    sec.wide = false;
+    sec.mounts = 0;
+    render(true);
+    const open = buttons().find((b) =>
+      b.textContent?.includes("account.securities.label"),
+    );
+    if (!open) throw new Error("증권사 연동 줄을 찾지 못했다");
+    act(() => open.click());
+    const dialog = () => container.querySelector("[data-sec-dialog]");
+    expect(dialog()?.getAttribute("data-open")).toBe("true");
+    act(() =>
+      (container.querySelector("[data-sec-close]") as HTMLElement).click(),
+    );
+    // 닫는 중 — 아직 달려 있고 open 만 false(통째 언마운트하면 초점이 body 로 떨어졌다)
+    expect(dialog()?.getAttribute("data-open")).toBe("false");
+    act(() =>
+      (container.querySelector("[data-sec-closed]") as HTMLElement).click(),
+    );
+    expect(dialog()).toBeNull();
   });
 });
