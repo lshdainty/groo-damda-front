@@ -52,18 +52,20 @@ function Piece({ muted, children }: { muted?: boolean; children: ReactNode }) {
 }
 
 /**
- * 여러 날 값 — "10월 25일 (토)~10월 27일 (월)" 한 글. 구간 기호는 앞뒤를 붙여 쓰고(로케일 문구),
- * 줄은 구간 기호 뒤에서만 바꾼다(통계 기간 버튼과 같은 규칙) — 날짜 안에서는 자르지 않는다.
+ * 여러 날 값 — "10월 25일 (토)~10월 27일 (월)" 한 글. 구간 기호는 앞뒤를 붙여 쓰고(로케일 문구) 줄바꿈 규칙은 앱과 같다:
+ * ① 줄은 "~" 뒤에서 먼저 바꾼다(앞 날짜는 "~" 까지 한 덩어리 — "~" 가 줄 첫머리나 혼자 한 줄에 오지 않는다)
+ * ② 한 덩어리가 칸보다 넓을 때만 그 날짜 안의 띄어쓰기에서 바꾼다("12월 29일 | (월)" 허용) — 낱말 안은 자르지 않는다
+ *    (`break-keep`: "2025년 1|2월" 금지). 덩어리를 inline-block 으로 둬 칸에 들어가면 쪼개지지 않고 통째로 내려간다.
  */
 function RangePiece({ start, end }: { start: string; end: string }) {
   return (
-    <span data-slot="event-detail-range">
-      <span className="whitespace-nowrap">
+    <span data-slot="event-detail-range" className="min-w-0 break-keep">
+      <span className="inline-block max-w-full">
         {start}
         {dsText("datePicker.rangeSeparator")}
       </span>
       <wbr />
-      <span className="whitespace-nowrap">{end}</span>
+      <span className="inline-block max-w-full">{end}</span>
     </span>
   );
 }

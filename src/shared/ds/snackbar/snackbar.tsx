@@ -18,7 +18,7 @@ import { useDsText } from "@/shared/ds/i18n";
  * specs/components/snackbar.yaml(값은 src/shared/ds/spec/snackbar.json).
  * groo-design recipes/shadcn/components/ui/snackbar.tsx 를 첫 판으로 가져왔다(앱 적용 1A) — 옵션 타입 · useSnackbar ·
  * 컨텍스트는 snackbar-context.ts 다(컴포넌트 파일은 컴포넌트만 내보낸다 — 빠른 새로 고침).
- * 옛 Sonner(sonner.tsx — 흰 카드 · 위 가운데 · 3장 쌓기)를 대신한다.
+ * 옛 Sonner(흰 카드 · 위 가운데 · 3장 쌓기 — 2026-11 에 걷었다)를 대신했다.
  *
  *   SnackbarProvider      앱 맨 위에 한 번 둔다 — 화면 아래 가운데 자리(region)를 body 끝에 그린다
  *   useSnackbar()         show({ message, tone?, action? }) · dismiss() — snackbar-context.ts

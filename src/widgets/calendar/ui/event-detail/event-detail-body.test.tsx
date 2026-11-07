@@ -146,8 +146,11 @@ describe("줄 차례 · 없는 값", () => {
     const range = container.querySelector("[data-slot=event-detail-range]")!;
     const [head, , tail] = [...range.children] as HTMLElement[];
     expect(head!.textContent).toMatch(/\(목\)~$/);
-    expect(head!.className).toContain("whitespace-nowrap");
-    expect(tail!.className).toContain("whitespace-nowrap");
+    // 앞 조각은 "~" 까지, 뒤 조각은 날짜 하나 — 둘 다 칸에 들어가면 통째로 내려가는 덩어리, 낱말은 자르지 않는다
+    expect(head!.className).toContain("inline-block");
+    expect(tail!.className).toContain("inline-block");
+    expect(range.className).toContain("break-keep");
+    expect(tail!.textContent).toMatch(/^10월 24일 \(토\)$/);
     expect(range.querySelector("wbr")).not.toBeNull();
   });
 

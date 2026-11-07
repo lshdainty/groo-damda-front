@@ -22,7 +22,7 @@ export type MemoEditing = Memo | { _new: true } | null;
  * 검색 · 태그 거르기 · 정렬(고정 먼저 → 수정 시각 내림) · 고정 / 나머지 나누기 · 태그별 건수 · 저장 뒤 고정 맞추기.
  *
  * 실패 안내는 전역 서버 원문 토스트가 아니라 여기서 고정 글로 한다(요청은 `silent`) — 저장은 폼 안 Callout(`saveError`),
- * 삭제 · 고정은 critical 스낵바 + [다시 시도]. 저장 · 삭제는 목록을 다시 받은 뒤에 끝난다.
+ * 삭제는 critical 스낵바 + [다시 시도], 고정(토글)은 액션 없는 critical 스낵바(두 문장). 저장 · 삭제는 목록을 다시 받은 뒤에 끝난다.
  */
 export function useMemoScreen() {
   const { t } = useTranslation("memo");
