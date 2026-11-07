@@ -2,7 +2,10 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { i18n } from "@/shared/i18n/config";
 import {
+  formatDailyTick,
+  formatDateDowTime,
   formatDateRange,
+  formatServerDateDowTime,
   formatMonthDay,
   formatMonthShort,
   formatMonthTicks,
@@ -62,5 +65,34 @@ describe("날짜 규칙 — 기간 줄 · 월 눈금 · 점 연월 (웹 B3 가.5
     expect(formatYearMonthDot("2026-01-15")).toBe("2026. 1.");
     await i18n.changeLanguage("en");
     expect(formatYearMonthDot("2026-01-15")).toBe("Jan 2026");
+  });
+
+  it("일별 눈금 — '11. 5.'(0 안 채움) · 해가 바뀌는 눈금만 '2026. 1. 1.' · 영어 'Nov 5'", async () => {
+    expect(formatDailyTick("2026-11-05")).toBe("11. 5.");
+    expect(formatDailyTick("2026-01-01", true)).toBe("2026. 1. 1.");
+    await i18n.changeLanguage("en");
+    expect(formatDailyTick("2026-11-05")).toBe("Nov 5");
+    expect(formatDailyTick("2026-01-01", true)).toBe("Jan 1, 2026");
+  });
+
+  it("요일 · 시각 — '11월 7일 (토) 오전 9:05' · 다른 해 연도 · 영어 'Sat, Nov 7 at 9:05 AM'", async () => {
+    const t = new Date(2026, 10, 7, 9, 5);
+    expect(formatDateDowTime(t, now)).toBe("11월 7일 (토) 오전 9:05");
+    expect(formatDateDowTime(new Date(2025, 10, 7, 21, 5), now)).toBe(
+      "2025년 11월 7일 (금) 오후 9:05",
+    );
+    await i18n.changeLanguage("en");
+    expect(formatDateDowTime(t, now)).toBe("Sat, Nov 7 at 9:05 AM");
+    expect(formatDateDowTime(new Date(2025, 10, 7, 21, 5), now)).toBe(
+      "Fri, Nov 7, 2025 at 9:05 PM",
+    );
+  });
+
+  it("서버 UTC 시각은 로컬로 바꿔 쓰고, 못 읽으면 null", () => {
+    expect(formatServerDateDowTime("not-a-date")).toBeNull();
+    expect(formatServerDateDowTime(null)).toBeNull();
+    expect(formatServerDateDowTime("2026-11-07T00:05:00")).toMatch(
+      /^\d+월 \d+일 \([일월화수목금토]\) (오전|오후) \d+:05$/,
+    );
   });
 });

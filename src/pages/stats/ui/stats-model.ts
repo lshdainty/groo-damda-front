@@ -6,7 +6,11 @@ import {
 } from "@/shared/lib/groo/fixed-bulk-path";
 import { useTranslation } from "react-i18next";
 import { formatChangeRate } from "@/shared/lib/groo/format";
-import { formatMonthShort, formatMonthTicks } from "@/shared/lib/date";
+import {
+  formatDailyTick,
+  formatMonthShort,
+  formatMonthTicks,
+} from "@/shared/lib/date";
 import { assignChartColors, type ChartColored } from "@/shared/ds/chart";
 import type { DateRange } from "@/shared/ds/date-picker";
 import { chartColorOf, type ChartKey } from "@/shared/lib/groo/chart-palette";
@@ -753,10 +757,12 @@ function buildTrendData({
     for (let i = 0; i < days; i++) {
       const d = new Date(fromDay);
       d.setDate(d.getDate() + i);
+      // 점 표기 "11. 5." — 해가 바뀌는 첫 눈금만 연도를 붙인다("2026. 1. 1.")
+      const newYear = i > 0 && d.getMonth() === 0 && d.getDate() === 1;
       byDay.set(fmt(d), {
         income: 0,
         expense: 0,
-        label: `${d.getMonth() + 1}/${d.getDate()}`,
+        label: formatDailyTick(d, newYear),
       });
     }
     // 서버 집계와 같은 규칙 — 환불된 것 · 아직 안 온 것 · 카드 이월은 세지 않는다(`countableTx` 한 곳)

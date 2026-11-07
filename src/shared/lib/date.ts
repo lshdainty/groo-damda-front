@@ -199,6 +199,49 @@ export const formatMonthTicks = (
   );
 };
 
+/**
+ * 일별 눈금 — 점 표기(연도 없이, 0 을 채우지 않는다): ko "11. 5." / en "Nov 5".
+ * `withYear` 는 해가 바뀌는 첫 눈금에만 준다: ko "2026. 1. 1." / en "Jan 1, 2026". 앱과 같다.
+ */
+export const formatDailyTick = (
+  input: Date | string,
+  withYear = false,
+): string => {
+  const d = toDate(input);
+  if (isEnLocale())
+    return format(d, withYear ? "MMM d, yyyy" : "MMM d", { locale: enUS });
+  const md = `${d.getMonth() + 1}. ${d.getDate()}.`;
+  return withYear ? `${d.getFullYear()}. ${md}` : md;
+};
+
+/**
+ * 요일 · 시각 — International Design 날짜 표 "요일 · 시각": ko "11월 7일 (토) 오전 9:05" / en "Sat, Nov 7 at 9:05 AM".
+ * 다른 해면 연도를 붙인다 — ko "2025년 11월 7일 (금) 오전 9:05" / en "Fri, Nov 7, 2025 at 9:05 AM". `now` 는 시험용.
+ */
+export const formatDateDowTime = (
+  input: Date,
+  now: Date = new Date(),
+): string => {
+  if (isEnLocale()) {
+    const otherYear = input.getFullYear() !== now.getFullYear();
+    return format(
+      input,
+      otherYear ? "EEE, MMM d, yyyy 'at' h:mm a" : "EEE, MMM d 'at' h:mm a",
+      { locale: enUS },
+    );
+  }
+  return `${formatMonthDayDow(input, now)} ${format(input, "a h:mm", { locale: ko })}`;
+};
+
+/** 서버 `[UTC]` 시각 → [formatDateDowTime]. 못 읽으면 null(부르는 쪽이 원문으로 폴백). */
+export const formatServerDateDowTime = (
+  iso: string | null | undefined,
+  now: Date = new Date(),
+): string | null => {
+  const d = parseServerUtc(iso);
+  return d ? formatDateDowTime(d, now) : null;
+};
+
 /** ko "Y년" / en "Y". 연도 number 직접 허용. */
 export const formatYear = (input: Date | string | number): string => {
   const y = typeof input === "number" ? input : toDate(input).getFullYear();

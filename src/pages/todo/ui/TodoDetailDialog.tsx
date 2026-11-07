@@ -10,7 +10,7 @@ import {
 } from "@/shared/ds/dialog";
 import { List, ListHeader, ListItem } from "@/shared/ds/list";
 import { cn } from "@/shared/lib/cn";
-import { toLocalDateTime } from "@/shared/lib/date";
+import { formatServerDateDowTime } from "@/shared/lib/date";
 import { dueKey } from "@/pages/todo/model/todo-ledger";
 import { isDone } from "@/pages/todo/model/todo-ledger";
 import { kDate, todoTagLabel } from "@/pages/todo/model/todo-view";
@@ -104,7 +104,10 @@ export function TodoDetailDialog({
                   suffixText
                   // completedAt 은 `[UTC]` — 파싱해서 로컬 시각으로 찍는다. 못 읽으면 원문을 그대로 보여 준다
                   // (앱 todo_detail_dialog 와 같은 폴백) — 값 칸을 비우면 "완료 시각이 없다" 로 읽혀 서버가 준 값이 사라진다
-                  suffix={toLocalDateTime(todo.completedAt) ?? todo.completedAt}
+                  suffix={
+                    formatServerDateDowTime(todo.completedAt) ??
+                    todo.completedAt
+                  }
                 />
               )}
             </List>
