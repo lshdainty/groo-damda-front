@@ -458,9 +458,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
         {people.length > 0 && (
           <>
             <ListHeader as="div" variant="boldSolid" className="mt-x1">
-              <h3 className="m-0 font-[inherit] text-[length:inherit] [font-weight:inherit]">
-                {t("fromTx.sharesTitle")}
-              </h3>
+              <h3>{t("fromTx.sharesTitle")}</h3>
               <span className="tabular-nums">
                 {t("fromTx.sharesTotal", { amount: fmt(total) })}
               </span>

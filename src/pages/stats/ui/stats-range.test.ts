@@ -4,6 +4,7 @@ import i18n from "i18next";
 import "@/shared/i18n/config";
 import {
   monthRangeOf,
+  periodLabel,
   previousRange,
   rangeSegModeOf,
   relativeNames,
@@ -145,5 +146,23 @@ describe("relativeNames", () => {
       now: "선택 기간",
       prev: "이전 기간",
     });
+  });
+});
+
+describe("periodLabel — 직접 기간은 날짜 규칙의 기간 줄(앞뒤 붙인 구간 기호)", () => {
+  const y = new Date().getFullYear();
+  it("올해 안이면 줄임", () => {
+    expect(
+      periodLabel({ from: D(y, 8, 1), to: D(y, 10, 31), segMode: "custom" }),
+    ).toBe("8월 1일~10월 31일");
+  });
+  it("다른 해가 끼면 양끝 연도(ISO 가 아니다)", () => {
+    expect(
+      periodLabel({
+        from: D(y - 1, 12, 29),
+        to: D(y, 1, 4),
+        segMode: "custom",
+      }),
+    ).toBe(`${y - 1}년 12월 29일~${y}년 1월 4일`);
   });
 });

@@ -57,9 +57,7 @@ export function ManageSection({
       variant="boldSolid"
       className={cn(mobile && !first && "mt-x4")}
     >
-      <h2 id={id} className="m-0 font-[inherit] text-[length:inherit]">
-        {title}
-      </h2>
+      <h2 id={id}>{title}</h2>
       {action}
     </ListHeader>
   );

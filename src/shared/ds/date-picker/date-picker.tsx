@@ -715,7 +715,7 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
     const multiselectable = selection !== "single" || undefined;
     const second = fromMonthNumber(viewNumber + 1);
     const liveText = twoMonths
-      ? `${labels.month(view.getFullYear(), view.getMonth() + 1)}~${labels.month(second.getFullYear(), second.getMonth() + 1)}`
+      ? `${labels.month(view.getFullYear(), view.getMonth() + 1)}${labels.rangeSeparator}${labels.month(second.getFullYear(), second.getMonth() + 1)}`
       : labels.month(view.getFullYear(), view.getMonth() + 1);
 
     // 요일 줄 — 보이는 줄(위에 붙는 줄 포함)과, 이어지는 달에서 달마다 두는 숨은 줄(읽는 이름만)

@@ -84,7 +84,7 @@ function PresetBlock({ f }: { f: TxForm }) {
   return (
     <section aria-label={t("addTx.presetLoad")}>
       <ListHeader as="div">
-        <h3 className="m-0 tracking-normal text-inherit [font:inherit]">
+        <h3>
           {applied
             ? t("addTx.presetApplied", { name: applied.templateName })
             : t("addTx.presetLoad")}

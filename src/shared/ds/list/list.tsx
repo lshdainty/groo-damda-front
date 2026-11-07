@@ -864,12 +864,24 @@ type GroupName =
   | { "aria-label": string; "aria-labelledby"?: never }
   | { "aria-labelledby": string; "aria-label"?: never };
 
+// 묶음의 onReselect 를 줄(ListRadioItem)에 전한다 — <form> 안의 라디오는 Radix 가 누름을 위로 올리지 않아(stopPropagation)
+// 묶음에서 세면 폼 안에서 죽는다. 줄의 onClick 은 Radix 가 막기 전에 불린다
+const RadioReselectContext = React.createContext<
+  ((value: string) => void) | undefined
+>(undefined);
+
 export type ListRadioGroupProps = Omit<
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>,
   "aria-label" | "aria-labelledby"
 > &
   ItemRadius &
-  GroupName;
+  GroupName & {
+    /**
+     * 이미 고른 줄을 다시 눌렀을 때 — 값은 그대로(onValueChange 는 불리지 않는다), 저장 요청도 없다.
+     * 시트 · 팝오버 안 하나 고르기는 여기서 닫는다(select.md "고른 선택지를 다시 눌러도 풀리지 않는다" · 앱 PListRadioGroup.onReselect 와 같다)
+     */
+    onReselect?: (value: string) => void;
+  };
 
 // 하나 고르기 목록 — 라디오 묶음(role=radiogroup, 이름 필수). 줄은 li 대신 div 다. Enter 는 폼을 제출한다(Radio 와 같다)
 const ListRadioGroup = React.forwardRef<
@@ -877,19 +889,29 @@ const ListRadioGroup = React.forwardRef<
   ListRadioGroupProps
 >(
   (
-    { className, itemRadius, style, onKeyDown, onKeyDownCapture, ...props },
+    {
+      className,
+      itemRadius,
+      style,
+      onKeyDown,
+      onKeyDownCapture,
+      onReselect,
+      ...props
+    },
     ref,
   ) => (
     <ListRowTag.Provider value="div">
-      <RadioGroupPrimitive.Root
-        ref={ref}
-        data-slot="list"
-        className={cn(listVariants(), className)}
-        style={radiusStyle(itemRadius, style)}
-        {...props}
-        onKeyDown={submitOnRadioEnter(onKeyDown)}
-        onKeyDownCapture={ignoreRadioJumpKeys(onKeyDownCapture)}
-      />
+      <RadioReselectContext.Provider value={onReselect}>
+        <RadioGroupPrimitive.Root
+          ref={ref}
+          data-slot="list"
+          className={cn(listVariants(), className)}
+          style={radiusStyle(itemRadius, style)}
+          {...props}
+          onKeyDown={submitOnRadioEnter(onKeyDown)}
+          onKeyDownCapture={ignoreRadioJumpKeys(onKeyDownCapture)}
+        />
+      </RadioReselectContext.Provider>
     </ListRowTag.Provider>
   ),
 );
@@ -944,12 +966,14 @@ const ListRadioItem = React.forwardRef<
       className,
       id,
       disabled,
+      onClick,
       ...props
     },
     ref,
   ) => {
     const autoId = React.useId();
     const rid = id ?? autoId;
+    const onReselect = React.useContext(RadioReselectContext);
     const mark = (
       <Radiomark
         ref={ref}
@@ -959,6 +983,16 @@ const ListRadioItem = React.forwardRef<
         className={cn(LIST_MARK_NO_SCALE, className)}
         {...markProps}
         {...props}
+        onClick={(e) => {
+          onClick?.(e);
+          // 누르는 순간 DOM 은 아직 옛 상태 — aria-checked=true 면 이미 고른 줄이다(줄 글을 눌러도 라디오로 넘어온 누름)
+          if (
+            onReselect &&
+            e.currentTarget.getAttribute("aria-checked") === "true"
+          ) {
+            onReselect(e.currentTarget.value);
+          }
+        }}
       />
     );
     return (

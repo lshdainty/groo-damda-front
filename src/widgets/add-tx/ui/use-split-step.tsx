@@ -544,9 +544,7 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
             </div>
           )}
           <ListHeader as="div" variant="boldSolid" className="mt-x1">
-            <h3 className="m-0 font-[inherit] text-[length:inherit] [font-weight:inherit]">
-              {t("splitStep.listTitle", { count: list.length })}
-            </h3>
+            <h3>{t("splitStep.listTitle", { count: list.length })}</h3>
             <Button
               variant="ghost"
               ghostColor="neutral"

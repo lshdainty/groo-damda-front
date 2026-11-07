@@ -1,8 +1,4 @@
-import {
-  formatMonthDay,
-  localDateKey,
-  parseLocalDate,
-} from "@/shared/lib/date";
+import { localDateKey, parseLocalDate } from "@/shared/lib/date";
 
 // 반복 거래 다이얼로그 공용 date helpers — RecurringFromTxDialog / RecurringAddDialog /
 // RecurringAddDialog(추가·수정) 공유.
@@ -19,12 +15,6 @@ export function addYears(iso: string, years: number): string {
   if (!d) return iso;
   d.setFullYear(d.getFullYear() + years);
   return localDateKey(d);
-}
-
-export function formatKoreanMonthDay(iso: string): string {
-  const d = parseLocalDate(iso);
-  if (!d) return iso;
-  return formatMonthDay(d, { pad: true });
 }
 
 // 다음 날짜 셈은 한 벌 — recurring-schedule.ts (I-20 D 29)

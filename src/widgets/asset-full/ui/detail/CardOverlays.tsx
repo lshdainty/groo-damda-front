@@ -46,6 +46,7 @@ export function PeriodPicker({
           key={y}
           aria-label={t("assetDetail.yearLabel", { year: y })}
           value={String(c.activeIdx)}
+          onReselect={() => c.setPickOpen(false)}
           onValueChange={(v) => {
             c.setStIdx(Number(v));
             c.setPickOpen(false);

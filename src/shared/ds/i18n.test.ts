@@ -63,10 +63,17 @@ describe("ds 글 — 영어", () => {
     expect(formatDateValue(d(2026, 10, 15), TODAY)).toBe("Thu, Oct 15");
     expect(formatDateValue(d(2027, 1, 3), TODAY)).toBe("Sun, Jan 3, 2027");
   });
-  it("기간은 en dash 로 잇는다", () => {
+  it("기간은 en dash 로 잇는다(구간 기호는 로케일 문구) — 같은 달이면 끝은 날짜만", () => {
     expect(
       formatRangeValue({ start: d(2026, 10, 1), end: d(2026, 10, 31) }, TODAY),
-    ).toBe("Oct 1–Oct 31");
+    ).toBe("Oct 1–31");
+    expect(
+      formatRangeValue({ start: d(2026, 10, 29), end: d(2026, 11, 4) }, TODAY),
+    ).toBe("Oct 29–Nov 4");
+    expect(
+      formatRangeValue({ start: d(2026, 12, 28), end: d(2027, 1, 3) }, TODAY),
+    ).toBe("Dec 28, 2026–Jan 3, 2027");
+    expect(datePickerLabels().rangeSeparator).toBe("–");
   });
   it("요일 · 달 이름이 영어다", () => {
     const labels = datePickerLabels();

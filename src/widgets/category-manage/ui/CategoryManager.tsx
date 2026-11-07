@@ -337,11 +337,7 @@ export function CategoryManager({
 
   const listTitle = !isLoading && categories && (
     <ListHeader as="div">
-      <h2
-        id={titleId}
-        tabIndex={-1}
-        className="m-0 tracking-normal text-inherit [font:inherit]"
-      >
+      <h2 id={titleId} tabIndex={-1}>
         {t("listTitle", {
           kind: tab === "EXPENSE" ? t("expenseCategory") : t("incomeCategory"),
           count,

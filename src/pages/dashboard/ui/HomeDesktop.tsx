@@ -19,6 +19,7 @@ import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import {
   formatMonthDay,
+  formatMonthTicks,
   formatYearMonth,
   parseLocalDate,
 } from "@/shared/lib/date";
@@ -165,7 +166,7 @@ export function HomeDesktop() {
         title: r.description || r.merchant || r.categoryName || "",
         amount: r.amount,
         d,
-        dateLabel: formatMonthDay(next, { pad: true }),
+        dateLabel: formatMonthDay(next),
         nextIso: r.nextExecutionDate as string,
       };
     })
@@ -484,8 +485,10 @@ function IncomeExpenseChart({
   const mOut = useMasked("home.monthExpense", "expense");
   const m = useMasked("home.monthExpense");
   const [off, setOff] = useState<ReadonlySet<string>>(new Set());
-  const data = trend.map((x) => ({
-    label: String(x.month).padStart(2, "0"),
+  // 월 눈금 — 한 해 안이면 "5월", 해가 섞이면 "2025. 12." (날짜 규칙)
+  const tickLabels = formatMonthTicks(trend);
+  const data = trend.map((x, i) => ({
+    label: tickLabels[i]!,
     income: x.totalIncome,
     expense: x.totalExpense,
   }));

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatDateRange, formatMonthDayDow } from "@/shared/lib/date";
 import {
   constellationName,
   useConstellationCollection,
@@ -125,9 +126,9 @@ export function useReportModel() {
       day: "numeric",
       weekday: "short",
     });
-  const [selY = "", selM = "", selD = ""] = sel.split("-");
-  const dateLabel = `${selY.slice(2)}.${selM}.${selD} ${dowOf(sel)}`;
-  const rangeLabel = `${weekStart.split("-").join(".")} ~ ${(days[6] ?? weekStart).split("-").join(".")}`;
+  // 날짜 규칙: 올해는 줄임 · 요일은 괄호 — "11월 6일 (금)", 기간 "11월 2일~11월 8일"(다른 해가 끼면 두 끝 모두 연도)
+  const dateLabel = formatMonthDayDow(sel);
+  const rangeLabel = formatDateRange(weekStart, days[6] ?? weekStart);
   const asOf = new Date().toLocaleTimeString(ko ? "ko-KR" : "en-US", {
     hour: "numeric",
     minute: "2-digit",

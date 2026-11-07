@@ -546,6 +546,7 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
             <ListRadioGroup
               aria-label={t("sound.notif.title")}
               value={notificationSound}
+              onReselect={close}
               onValueChange={(v) => {
                 save({ notificationSound: v as NotificationSound });
                 close();
@@ -593,6 +594,7 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
               <ListRadioGroup
                 aria-label={t("email.frequency.label")}
                 value={emailFrequency}
+                onReselect={close}
                 onValueChange={(v) => {
                   save({ emailFrequency: v as EmailFrequency });
                   close();

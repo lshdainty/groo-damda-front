@@ -206,10 +206,7 @@ export const CardBenefitPage = () => {
       variant="mediumWeak"
       className={mobile ? undefined : "px-0"}
     >
-      <h2
-        className="m-0 font-sans text-t4 font-medium text-fg-neutral-subtle tabular-nums"
-        aria-live="polite"
-      >
+      <h2 className="tabular-nums" aria-live="polite">
         {waiting || failed
           ? ""
           : t("benefit.resultCount", { count: formatKRW(total) })}

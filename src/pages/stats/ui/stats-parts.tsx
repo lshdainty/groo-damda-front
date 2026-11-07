@@ -37,7 +37,7 @@ import {
   Desc,
 } from "@/shared/ui/groo/band-parts";
 import type { FixedView } from "@/entities/expense";
-import { fmt } from "./stats-range";
+import { formatDateRange, formatDateRangeParts } from "@/shared/lib/date";
 
 /** 소수 둘째 자리로 반올림해 0 이 되는 등락률 — 방향 없이 "변화 없음" */
 const ZERO_RATE = formatChangeRate(0, { sign: "none" });
@@ -114,8 +114,10 @@ export function PeriodButton({ m }: { m: StatsModel }) {
   const twoLine =
     period.segMode === "custom" &&
     period.from.getFullYear() !== period.to.getFullYear();
-  const text = twoLine
-    ? `${fmt(period.from)} ~\n${fmt(period.to)}`
+  // 다른 해 직접 기간 — 양끝에 연도, 두 줄은 구간 기호 뒤에서만 바꾼다(날짜 규칙 · 구간 기호는 로케일 문구)
+  const parts = twoLine ? formatDateRangeParts(period.from, period.to) : null;
+  const text = parts
+    ? `${parts.start}${parts.separator}\n${parts.end}`
     : m.periodLbl;
   return (
     <RangePickerSheet
@@ -131,7 +133,7 @@ export function PeriodButton({ m }: { m: StatsModel }) {
           variant="neutralOutline"
           size="small"
           aria-label={t("period.buttonAria", {
-            period: text.replace("\n", " "),
+            period: parts ? formatDateRange(period.from, period.to) : text,
           })}
           aria-haspopup="dialog"
           aria-expanded={m.pickerOpen}

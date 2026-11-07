@@ -134,10 +134,7 @@ export function WatchGroups({
             variant="boldSolid"
             className={idx === 0 ? "mt-x2" : "mt-x4"}
           >
-            <h3
-              id={`watch-group-${g.rowId}`}
-              className="m-0 tracking-normal [font:inherit]"
-            >
+            <h3 id={`watch-group-${g.rowId}`}>
               {t("watch.groupTitle", {
                 name: g.groupName,
                 count: g.items.length,

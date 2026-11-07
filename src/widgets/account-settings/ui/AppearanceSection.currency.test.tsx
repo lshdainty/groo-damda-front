@@ -146,6 +146,22 @@ describe("기본 통화는 서버에 저장한다 (QA #124)", () => {
     expect(state.patched).toEqual([{ defaultCurrency: "USD" }]);
   });
 
+  it("이미 고른 통화를 다시 누르면 고르기 표면이 닫히고 아무것도 안 보낸다 — 값은 그대로(onReselect 연결)", () => {
+    state.prefs = { timezone: "Asia/Seoul", defaultCurrency: "KRW" };
+    render();
+    openCurrency();
+    const surface = () =>
+      document.body
+        .querySelector("[role=dialog]")
+        ?.getAttribute("data-state") ?? "none";
+    expect(surface()).toBe("open");
+    pickCurrency("KRW");
+
+    // jsdom 은 닫는 모션이 끝나지 않아 요소가 남는다 — 상태로 본다
+    expect(surface()).toBe("closed");
+    expect(state.patched).toEqual([]);
+  });
+
   it("localStorage 를 안 쓴다 — 두 저장소가 갈리면 어느 쪽이 참인지 모른다", () => {
     render();
     openCurrency();

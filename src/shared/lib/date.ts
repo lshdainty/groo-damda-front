@@ -17,6 +17,10 @@ import {
 } from "date-fns";
 import { ko, enUS } from "date-fns/locale";
 import { i18n } from "@/shared/i18n/config";
+import {
+  formatRangeValue,
+  rangeParts,
+} from "@/shared/ds/date-picker/date-picker-dates";
 
 // 로케일 소스 = i18n.language(SoT). ko('ko'/'ko-KR'/미정) → ko, en → enUS.
 const isEnLocale = (): boolean => (i18n.language ?? "").startsWith("en");
@@ -69,18 +73,11 @@ export const getWeekDays = (): string[] => (isEnLocale() ? DOW_EN : DOW_KO);
 export const weekdayShort = (input: Date | string): string =>
   getWeekDays()[toDate(input).getDay()] ?? "";
 
-/** ko "M월 D일"(pad 시 "07월 08일") / en "Jul 8". */
-export const formatMonthDay = (
-  input: Date | string,
-  opts: { pad?: boolean } = {},
-): string => {
+/** ko "M월 D일"(0 을 채우지 않는다) / en "Jul 8". */
+export const formatMonthDay = (input: Date | string): string => {
   const d = toDate(input);
   if (isEnLocale()) return format(d, "MMM d", { locale: enUS });
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  return opts.pad
-    ? `${String(m).padStart(2, "0")}월 ${String(day).padStart(2, "0")}일`
-    : `${m}월 ${day}일`;
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
 };
 
 /**
@@ -154,6 +151,93 @@ export const formatYearMonth = (input: Date | string): string => {
   return `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
 };
 
+/**
+ * 점 표기 연·월 — ko "2026. 1."(0 을 채우지 않고 마지막 [월] 뒤에도 점, DESIGN.md International 날짜 "점") / en "Jan 2026"(점 표기는 한국어 전용).
+ * 표 · 목록 끝처럼 좁은 칸의 연월(저축 목표 마감 등).
+ */
+export const formatYearMonthDot = (input: Date | string): string => {
+  const d = toDate(input);
+  if (isEnLocale()) return format(d, "MMM yyyy", { locale: enUS });
+  return `${d.getFullYear()}. ${d.getMonth() + 1}.`;
+};
+
+/**
+ * 기간 줄 — ko "11월 2일~11월 8일" / en "Nov 2–8"(올해 줄임, 0 채움 없음, 구간 기호는 앞뒤를 붙인다). 구간 기호는 로케일 문구
+ * (`ds` datePicker.rangeSeparator)에서 읽는다 — 코드에 직접 쓰지 않는다(DESIGN.desk.md 구간).
+ * 두 끝 중 하나라도 올해가 아니면 두 끝 모두 연도를 붙인다("2025년 12월 29일~2026년 1월 4일"). ds 날짜 고르기 칸 값
+ * ([formatRangeValue])과 같은 한 벌이다 — 앱 `dateRange` 와 같다. `now` 는 시험용(올해를 고정한다).
+ */
+export const formatDateRange = (
+  from: Date | string,
+  to: Date | string,
+  now: Date = new Date(),
+): string => formatRangeValue({ start: toDate(from), end: toDate(to) }, now);
+
+/** 기간의 세 조각(앞 · 구간 기호 · 뒤) — 구간 기호 뒤에서만 줄을 바꿀 때. [formatDateRange] 와 같은 규칙 */
+export const formatDateRangeParts = (
+  from: Date | string,
+  to: Date | string,
+  now: Date = new Date(),
+) => rangeParts({ start: toDate(from), end: toDate(to) }, now);
+
+/**
+ * 월 눈금 — 모두 같은 해면 월만(ko "1월" · en "Jan", 0 을 채우지 않는다), 해가 섞이면 연월(ko "2026. 1." · en "Jan 2026").
+ * 통계 추이 · 순자산 추이 같은 월별 차트의 가로 눈금. 앱 `monthLabels` 와 같다.
+ */
+export const formatMonthTicks = (
+  rows: readonly { year: number; month: number }[],
+): string[] => {
+  const same = rows.length > 0 && rows.every((r) => r.year === rows[0]!.year);
+  return rows.map((r) =>
+    same
+      ? formatMonthShort(r.month)
+      : formatYearMonthDot(new Date(r.year, r.month - 1, 1)),
+  );
+};
+
+/**
+ * 일별 눈금 — 점 표기(연도 없이, 0 을 채우지 않는다): ko "11. 5." / en "Nov 5".
+ * `withYear` 는 해가 바뀌는 첫 눈금에만 준다: ko "2026. 1. 1." / en "Jan 1, 2026". 앱과 같다.
+ */
+export const formatDailyTick = (
+  input: Date | string,
+  withYear = false,
+): string => {
+  const d = toDate(input);
+  if (isEnLocale())
+    return format(d, withYear ? "MMM d, yyyy" : "MMM d", { locale: enUS });
+  const md = `${d.getMonth() + 1}. ${d.getDate()}.`;
+  return withYear ? `${d.getFullYear()}. ${md}` : md;
+};
+
+/**
+ * 요일 · 시각 — International Design 날짜 표 "요일 · 시각": ko "11월 7일 (토) 오전 9:05" / en "Sat, Nov 7 at 9:05 AM".
+ * 다른 해면 연도를 붙인다 — ko "2025년 11월 7일 (금) 오전 9:05" / en "Fri, Nov 7, 2025 at 9:05 AM". `now` 는 시험용.
+ */
+export const formatDateDowTime = (
+  input: Date,
+  now: Date = new Date(),
+): string => {
+  if (isEnLocale()) {
+    const otherYear = input.getFullYear() !== now.getFullYear();
+    return format(
+      input,
+      otherYear ? "EEE, MMM d, yyyy 'at' h:mm a" : "EEE, MMM d 'at' h:mm a",
+      { locale: enUS },
+    );
+  }
+  return `${formatMonthDayDow(input, now)} ${format(input, "a h:mm", { locale: ko })}`;
+};
+
+/** 서버 `[UTC]` 시각 → [formatDateDowTime]. 못 읽으면 null(부르는 쪽이 원문으로 폴백). */
+export const formatServerDateDowTime = (
+  iso: string | null | undefined,
+  now: Date = new Date(),
+): string | null => {
+  const d = parseServerUtc(iso);
+  return d ? formatDateDowTime(d, now) : null;
+};
+
 /** ko "Y년" / en "Y". 연도 number 직접 허용. */
 export const formatYear = (input: Date | string | number): string => {
   const y = typeof input === "number" ? input : toDate(input).getFullYear();
@@ -169,18 +253,15 @@ export const formatYearQuarter = (input: Date | string): string => {
     : `${d.getFullYear()}년 ${q}분기`;
 };
 
-/** 단월 라벨 — ko "M월"(pad 시 "07월") / en "MMM"(Jul). 월 number(1~12) 직접 허용. */
-export const formatMonthShort = (
-  input: Date | string | number,
-  opts: { pad?: boolean } = {},
-): string => {
+/** 단월 라벨 — ko "M월"(0 을 채우지 않는다) / en "MMM"(Jul). 월 number(1~12) 직접 허용. */
+export const formatMonthShort = (input: Date | string | number): string => {
   if (isEnLocale()) {
     const d =
       typeof input === "number" ? new Date(2000, input - 1, 1) : toDate(input);
     return format(d, "MMM", { locale: enUS });
   }
   const m = typeof input === "number" ? input : toDate(input).getMonth() + 1;
-  return opts.pad ? `${String(m).padStart(2, "0")}월` : `${m}월`;
+  return `${m}월`;
 };
 
 /**

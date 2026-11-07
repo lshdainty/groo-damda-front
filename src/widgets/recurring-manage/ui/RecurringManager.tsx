@@ -270,7 +270,7 @@ export function RecurringManager({
       variant="boldSolid"
       className={first ? (mobile ? "mt-x2" : undefined) : "mt-x4"}
     >
-      <h2 className="m-0 min-w-0 font-[inherit] text-[length:inherit]">
+      <h2 className="min-w-0">
         {t("groupTitle", { kind: kindLabel(g.kind), count: g.list.length })}
       </h2>
       {g.total != null && (

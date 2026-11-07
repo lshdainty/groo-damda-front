@@ -39,7 +39,7 @@ import { cn } from "@/shared/lib/cn";
 import { isIconName } from "@/shared/lib";
 import {
   formatMonthDay,
-  formatMonthShort,
+  formatMonthTicks,
   formatYearMonth,
   parseLocalDate,
 } from "@/shared/lib/date";
@@ -115,8 +115,11 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
   const { t } = useTranslation("asset");
   const hidden = useHideAmounts("asset.netWorth");
   const trendQ = useNetWorthTrend(12);
-  const data = (trendQ.data ?? []).map((p) => ({
-    monthLabel: formatMonthShort(p.month, { pad: true }),
+  const points = trendQ.data ?? [];
+  // 월 눈금 — 한 해 안이면 "5월", 해가 섞이면 "2025. 12." (통계와 같은 규칙 · 앱 monthTicks)
+  const tickLabels = formatMonthTicks(points);
+  const data = points.map((p, i) => ({
+    monthLabel: tickLabels[i]!,
     netWorth: p.netWorth,
   }));
   // Y축: 0기준 nice 눈금 (앱 net_worth_chart niceAxis 정합).
@@ -158,7 +161,13 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
       >
         <LineChart
           data={data}
-          margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+          // 해가 섞이면 마지막 눈금 "2026. 11." 이 점 끝(오른쪽 가장자리)을 넘지 않게 오른쪽을 비운다
+          margin={{
+            top: 8,
+            right: tickLabels.some((l) => l.length > 4) ? 32 : 8,
+            left: 0,
+            bottom: 0,
+          }}
         >
           <CartesianGrid {...chartGridProps} />
           <XAxis dataKey="monthLabel" {...chartAxisProps()} />
@@ -648,7 +657,7 @@ export function UpcomingBillsSection() {
         title: r.description || r.merchant || r.categoryName,
         amount: r.amount,
         daysLeft,
-        dateLabel: `${String(next.getMonth() + 1).padStart(2, "0")}/${String(next.getDate()).padStart(2, "0")}`,
+        dateLabel: formatMonthDay(next),
       };
     });
 
