@@ -390,6 +390,7 @@ describe("formatPercent — 퍼센트는 뜻이 셋(B3 1A)", () => {
     expect(formatPercent(99.95, "progress")).toBe("99%");
     expect(formatPercent(100.3, "progress")).toBe("101%");
     expect(formatPercent(100.6, "progress")).toBe("101%");
+    expect(formatPercent(76.4, "progress")).toBe("76%");
     expect(formatPercent(76.6, "progress")).toBe("77%");
   });
 
