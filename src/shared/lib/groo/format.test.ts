@@ -402,6 +402,9 @@ describe("formatPercent — 퍼센트는 뜻이 셋(B3 1A)", () => {
     expect(formatPercent(-12.34, "share")).toBe("−12.3%");
     expect(formatPercent(-12.4, "progress")).toBe("−12%");
     expect(formatPercent(-12.34, "share")).not.toContain("-");
+    // 반올림해서 0 이 되면 부호 없이
+    expect(formatPercent(-0.2, "progress")).toBe("0%");
+    expect(formatPercent(-0.04, "share")).toBe("0.0%");
   });
 
   it("등락률 change — formatChangeRate 와 같은 글자(둘째 자리)", () => {

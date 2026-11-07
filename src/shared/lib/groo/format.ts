@@ -68,7 +68,12 @@ export function formatPercent(
   if (kind === "change") return formatChangeRate(pct, opts);
   if (!Number.isFinite(pct)) return "—";
   // 음수는 U+2212(차트 · 금액과 같은 빼기 기호)
-  if (pct < 0) return `${MINUS}${formatPercent(-pct, kind)}`;
+  if (pct < 0) {
+    // 반올림해서 0 이 되면 부호 없이 0(−0% · −0.0% 를 내지 않는다 — formatChangeRate 와 같다)
+    if (Math.round(-pct * (kind === "progress" ? 1 : 10)) === 0)
+      return kind === "progress" ? "0%" : "0.0%";
+    return `${MINUS}${formatPercent(-pct, kind)}`;
+  }
   if (kind === "progress") {
     // 100 을 넘나드는 상태가 글에서 사라지지 않게 — 반올림하면 100 이 되는 99.5 ~ 99.99 는 내림(99%),
     // 100.01 ~ 100.49 는 올림(101%). 정확히 100 만 "100%", 그 밖은 정수 반올림.
