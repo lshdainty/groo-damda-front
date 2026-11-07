@@ -5,6 +5,7 @@ import { SwipeActions } from "@/shared/ds/swipe-actions";
 import { DynamicIcon } from "lucide-react/dynamic";
 import { isIconName } from "@/shared/lib";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
+import { formatPercent } from "@/shared/lib/groo/format";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
 import { useDeleteSavingGoal, useSavingGoals } from "@/features/savingGoal";
 import type { SavingGoal } from "@/entities/savingGoal";
@@ -162,7 +163,7 @@ function GoalRow({
               {withCommaBreaks(mask(won(goal.targetAmount)))}
             </span>
             <span className="shrink-0 text-t4 font-bold tabular-nums text-fg-brand">
-              {pct.toFixed(0)}%
+              {formatPercent(pct, "progress")}
             </span>
           </div>
           <MeterBar
@@ -230,7 +231,7 @@ function SummaryArea({
           </span>
         </p>
         <span className="shrink-0 text-t9 font-bold tabular-nums text-fg-brand">
-          {totalPct.toFixed(0)}%
+          {formatPercent(totalPct, "progress")}
         </span>
       </div>
     </>

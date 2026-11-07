@@ -3,7 +3,13 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DashboardSummary } from "@/features/dashboard";
-import { EventRows, MonthNote, TodoRows } from "./home-parts";
+import {
+  CategoryBody,
+  EventRows,
+  MonthNote,
+  TodoRows,
+  type ColoredSlice,
+} from "./home-parts";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -121,5 +127,43 @@ describe("MonthNote 전월 대비 비율", () => {
     });
     expect(container.textContent).toContain("3.76%");
     expect(container.textContent).not.toContain("4%");
+  });
+});
+
+describe("홈 지출 도넛 비중(B3 1A — 비중은 늘 소수 한 자리)", () => {
+  it("범례 · 표가 같은 한 자리 값이고 아주 작은 몫은 '0.1% 미만'", () => {
+    const slice = (id: string, amount: number, i: number) =>
+      ({
+        id,
+        name: `카테고리${id}`,
+        amount,
+        color: "blue",
+        fill: `var(--c${i})`,
+      }) as unknown as ColoredSlice;
+    act(() =>
+      root.render(
+        <CategoryBody
+          size={180}
+          center={false}
+          month={11}
+          slices={[
+            slice("a", 3_000_000, 0),
+            slice("b", 6_999_000, 1),
+            slice("c", 1, 2),
+          ]}
+        />,
+      ),
+    );
+    const legend = container.querySelector(
+      "[data-slot=chart-donut-legend]",
+    )!.textContent!;
+    expect(legend).toContain("30.0%");
+    expect(legend).toContain("70.0%");
+    expect(legend).toContain("0.1% 미만");
+    expect(legend).not.toMatch(/(^|[^.\d])30%/);
+    const table = Array.from(container.querySelectorAll("td")).map(
+      (td) => td.textContent,
+    );
+    expect(table).toContain("30.0%");
   });
 });

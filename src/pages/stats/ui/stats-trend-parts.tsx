@@ -29,7 +29,7 @@ import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { chartColorOf } from "@/shared/lib/groo/chart-palette";
 import { niceAxis, niceCeil } from "@/shared/lib/groo/chartAxis";
-import { MINUS } from "@/shared/lib/groo/format";
+import { MINUS, formatPercent } from "@/shared/lib/groo/format";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
 import {
   BandEmpty,
@@ -291,7 +291,9 @@ export function SavingsRateSection({
       </HeadlessBody>
     );
   }
-  const insight = t("trend.savingsInsight", { pct: Math.round(m.saveRate) });
+  const insight = t("trend.savingsInsight", {
+    pct: formatPercent(m.saveRate, "progress"),
+  });
   const rows = [
     {
       key: "in",
@@ -301,13 +303,13 @@ export function SavingsRateSection({
     },
     {
       key: "out",
-      name: `${m.statLabelOut} ${Math.round(m.spendRate)}%`,
+      name: `${m.statLabelOut} ${formatPercent(m.spendRate, "progress")}`,
       value: mask(won(Math.round(m.avgOut))),
       dot: "bg-fg-critical",
     },
     {
       key: "save",
-      name: `${m.statLabelSave} ${Math.round(m.saveRate)}%`,
+      name: `${m.statLabelSave} ${formatPercent(m.saveRate, "progress")}`,
       value: mask(won(Math.round(m.avgSave))),
       dot: "bg-fg-brand",
     },
@@ -357,7 +359,7 @@ export function SavingsRateSection({
                 {t("trend.savingsRate")}
               </span>
               <span className="text-t9 font-bold tabular-nums text-fg-neutral">
-                {Math.round(m.saveRate)}%
+                {formatPercent(m.saveRate, "progress")}
               </span>
             </div>
           </div>

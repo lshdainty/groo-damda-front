@@ -25,6 +25,7 @@ import { withCommaBreaks } from "@/shared/ds/i18n";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthTicks } from "@/shared/lib/date";
 import { niceCeil } from "@/shared/lib/groo/chartAxis";
+import { formatPercent } from "@/shared/lib/groo/format";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
 import {
   BandEmpty,
@@ -87,7 +88,7 @@ function RatioBar({
           className={cell}
           style={{ width: `${fixedPct}%`, background: FIXED_COLOR }}
         >
-          {fixedPct >= 14 ? `${split.fixedPercent}%` : ""}
+          {fixedPct >= 14 ? formatPercent(split.fixedPercent, "share") : ""}
         </div>
       )}
       {split.variable > 0 && (
@@ -95,7 +96,9 @@ function RatioBar({
           className={cn(cell, "flex-1")}
           style={{ background: VARIABLE_COLOR }}
         >
-          {100 - fixedPct >= 14 ? `${100 - split.fixedPercent}%` : ""}
+          {100 - fixedPct >= 14
+            ? formatPercent(100 - split.fixedPercent, "share")
+            : ""}
         </div>
       )}
     </div>
@@ -193,14 +196,14 @@ export function FixedOverviewSection({
       label: t(`fixed.fixed.${kind}`),
       value: split.fixed,
       swatch: true,
-      sub: `${split.fixedPercent}%`,
+      sub: formatPercent(split.fixedPercent, "share"),
     },
     {
       key: "variable",
       label: t(`fixed.variable.${kind}`),
       value: split.variable,
       swatch: false,
-      sub: `${100 - split.fixedPercent}%`,
+      sub: formatPercent(100 - split.fixedPercent, "share"),
     },
   ];
   const label = (f: (typeof figures)[number]) => (
@@ -219,8 +222,8 @@ export function FixedOverviewSection({
             split={split}
             ariaLabel={t("fixed.bar.aria", {
               kind: t(`fixed.total.${kind}`),
-              fixed: split.fixedPercent,
-              variable: 100 - split.fixedPercent,
+              fixed: formatPercent(split.fixedPercent, "share"),
+              variable: formatPercent(100 - split.fixedPercent, "share"),
             })}
           />
         </div>
@@ -269,7 +272,9 @@ export function FixedOverviewSection({
             </>
           ) : (
             <Desc>
-              {t(`fixed.insight.${kind}`, { pct: split.fixedPercent })}{" "}
+              {t(`fixed.insight.${kind}`, {
+                pct: formatPercent(split.fixedPercent, "share"),
+              })}{" "}
               <strong className="font-bold text-fg-neutral">
                 {mask(won(split.variable))}
               </strong>
@@ -649,7 +654,9 @@ export function FixedCategorySection({
                 </div>
                 {s.fixed > 0 && (
                   <p className="m-0 mt-x1 text-t3 text-fg-neutral-subtle">
-                    {t("fixed.category.fixedPart", { pct: s.fixedPercent })}
+                    {t("fixed.category.fixedPart", {
+                      pct: formatPercent(s.fixedPercent, "share"),
+                    })}
                     {place === "card" && ` · ${mask(won(s.fixed))}`}
                   </p>
                 )}

@@ -6,6 +6,7 @@ import {
   MINUS,
   formatChangeRate,
   formatChartAxis,
+  formatPercent,
   minusOf,
   money,
   plusOf,
@@ -352,5 +353,41 @@ describe("wonPrefix — 영어 금액 접두는 값이 있는 호출처만 붙�
     expect(`${wonPrefix()}${KRW(1234567)}`).toBe("₩1,234,567");
     const none = "—";
     expect(none).not.toContain("₩");
+  });
+});
+
+describe("formatPercent — 퍼센트는 뜻이 셋(B3 1A)", () => {
+  it("비중 share — 늘 소수 첫째 자리, 경계 0 · 0.04 · 0.05 · 99.95 · 100", () => {
+    expect(formatPercent(0, "share")).toBe("0.0%");
+    expect(formatPercent(0.04, "share")).toBe("0.1% 미만");
+    expect(formatPercent(0.05, "share")).toBe("0.1%");
+    expect(formatPercent(99.95, "share")).toBe("100.0%");
+    expect(formatPercent(100, "share")).toBe("100.0%");
+    expect(formatPercent(30, "share")).toBe("30.0%");
+    expect(formatPercent(33.24, "share")).toBe("33.2%");
+    expect(formatPercent(Number.NaN, "share")).toBe("—");
+  });
+
+  it("영어 비중 — 아주 작은 몫은 <0.1%", async () => {
+    await i18n.changeLanguage("en");
+    try {
+      expect(formatPercent(0.04, "share")).toBe("<0.1%");
+    } finally {
+      await i18n.changeLanguage("ko");
+    }
+  });
+
+  it("진행률 progress — 정수", () => {
+    expect(formatPercent(0, "progress")).toBe("0%");
+    expect(formatPercent(0.04, "progress")).toBe("0%");
+    expect(formatPercent(76.43, "progress")).toBe("76%");
+    expect(formatPercent(99.95, "progress")).toBe("100%");
+    expect(formatPercent(100, "progress")).toBe("100%");
+  });
+
+  it("등락률 change — formatChangeRate 와 같은 글자(둘째 자리)", () => {
+    expect(formatPercent(1.8, "change")).toBe(formatChangeRate(1.8));
+    expect(formatPercent(-12.3, "change")).toBe("−12.30%");
+    expect(formatPercent(5, "change", { sign: "always" })).toBe("+5.00%");
   });
 });

@@ -19,7 +19,7 @@ export interface FixedSplit {
   fixed: number;
   /** 변동 = 전체 − 고정 */
   variable: number;
-  /** 전체 중 고정 비율, 0~100 정수 반올림. 전체가 0 이면 0. */
+  /** 전체 중 고정 비율, 0~100 **반올림 안 한 값**(보이는 자리수는 화면이 `formatPercent(…, "share")` 로 정한다). 전체가 0 이면 0. */
   fixedPercent: number;
 }
 
@@ -39,7 +39,7 @@ export function splitFixed(
     total: t,
     fixed: f,
     variable: t - f,
-    fixedPercent: t === 0 ? 0 : Math.round((f / t) * 100),
+    fixedPercent: t === 0 ? 0 : (f / t) * 100,
   };
 }
 
