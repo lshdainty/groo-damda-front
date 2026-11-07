@@ -1,10 +1,12 @@
 // 더치페이 참여자 줄의 편집 칸 — 큰 글자에서 이름을 한 글자 폭으로 누르지 않는다(I-wrap-b5 2-b B).
 // 컨테이너 쿼리는 jsdom 이 재지 못한다 — 실제 폭(390 · 200%)은 렌더 하네스가 맡고, 여기서는 그 결과를 만드는 클래스 계약만 잠근다.
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { cwd } from "node:process";
 import { describe, expect, it } from "vitest";
 
 const src = readFileSync(
-  new URL("./use-dutch-step.tsx", import.meta.url),
+  join(cwd(), "src/widgets/expense-detail/ui/use-dutch-step.tsx"),
   "utf8",
 );
 
