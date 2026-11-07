@@ -276,12 +276,14 @@ export function FixedOverviewSection({
             </>
           ) : (
             <Desc>
-              {/* 0.05% 미만이면 숫자 대신 다른 문장 — "0.1% 미만가" 조사 문제를 피한다 */}
-              {split.fixedPercent > 0 && split.fixedPercent < 0.05
-                ? t(`fixed.insight.${kind}None`)
-                : t(`fixed.insight.${kind}`, {
-                    pct: shares.fixed,
-                  })}{" "}
+              {t(`fixed.insight.${kind}`, {
+                pct: shares.fixed,
+                // "0.1% 미만이" / "33.2%가" — 값 끝 글자에 따라(0.05% 미만이면 글이 "미만" 으로 끝난다)
+                josa:
+                  split.fixedPercent > 0 && split.fixedPercent < 0.05
+                    ? "이"
+                    : "가",
+              })}{" "}
               <strong className="font-bold text-fg-neutral">
                 {mask(won(split.variable))}
               </strong>

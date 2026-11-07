@@ -2722,6 +2722,7 @@ expense,txm.emptyMonthDesc,다른 달을 살펴보거나 첫 거래를 추가해
 expense,txm.today,오늘,Today
 expense,txm.yesterday,어제,Yesterday
 expense,txm.monthCalendar,월 달력,Month calendar
+expense,txm.cellHidden,금액 가림,Amounts hidden
 expense,txm.loadFailed,거래를 불러오지 못했어요,Couldn't load transactions
 expense,txm.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
 expense,txm.emptyFiltered,조건에 맞는 거래가 없어요,No transactions match
@@ -3141,8 +3142,8 @@ stats,fixed.fixed.income,고정 수입,Fixed income
 stats,fixed.variable.expense,고정 제외 지출,Spending excl. fixed
 stats,fixed.variable.income,고정 제외 수입,Income excl. fixed
 stats,fixed.bar.aria,"{{kind}} 중 고정 {{fixed}}, 변동 {{variable}}","{{fixed}} fixed, {{variable}} variable of {{kind}}"
-stats,fixed.insight.expense,지출의 {{pct}}가 고정이에요. 고정을 뺀 지출은,{{pct}} of spending is fixed. Spending excluding fixed is
-stats,fixed.insight.income,수입의 {{pct}}가 고정이에요. 고정을 뺀 수입은,{{pct}} of income is fixed. Income excluding fixed is
+stats,fixed.insight.expense,지출의 {{pct}}{{josa}} 고정이에요. 고정을 뺀 지출은,{{pct}} of spending is fixed. Spending excluding fixed is
+stats,fixed.insight.income,수입의 {{pct}}{{josa}} 고정이에요. 고정을 뺀 수입은,{{pct}} of income is fixed. Income excluding fixed is
 stats,fixed.empty.desc,월세·통신비·월급처럼 매달 정해진 거래를 고정으로 표시하면 여기서 따로 볼 수 있어요.,Mark monthly items like rent or salary as fixed to see them separately here
 stats,fixed.manage,거래를 고정으로 정리하기,Organize fixed items
 stats,fixed.manageHint,매달 같은 이름으로 나가는 돈은 한 번에 정리할 수 있어요,Items with the same name every month can be set in one go
@@ -3172,8 +3173,6 @@ stats,fixed.bulk.failed,고정 표시를 바꾸지 못했어요.,Couldn't change
 stats,fixed.bulk.doneFixed,{{count}}건을 고정으로 바꿨어요.,Marked {{count}} as fixed.
 stats,fixed.bulk.doneVariable,{{count}}건을 변동으로 되돌렸어요.,Changed {{count}} back to variable.
 settings,hideAmounts.card.stats.fixed,고정·변동 탭,Fixed vs. variable tab
-stats,fixed.insight.expenseNone,고정 지출이 거의 없어요. 고정을 뺀 지출은,Almost no spending is fixed. Spending excluding fixed is
-stats,fixed.insight.incomeNone,고정 수입이 거의 없어요. 고정을 뺀 수입은,Almost no income is fixed. Income excluding fixed is
 stats,fixed.insight.tail,이에요.,.
 stats,chart.donutName,"{{period}} 카테고리별 지출, 합계 {{total}}","{{period}} spending by category, total {{total}}"
 stats,chart.heatName,"{{period}} 요일 · 시간대별 지출, 합계 {{total}}","{{period}} spending by day and time, total {{total}}"

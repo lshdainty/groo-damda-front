@@ -57,10 +57,9 @@ describe("고정 지출 문장", () => {
     render(332_000);
     expect(container.textContent).toContain("지출의 33.2%가 고정이에요");
   });
-  it("0.05% 미만이면 숫자 없는 문장 — '미만가' 가 나오지 않는다", () => {
+  it("0.05% 미만이면 '미만이' 로 조사가 갈린다", () => {
     render(400); // 0.04%
-    expect(container.textContent).toContain("고정 지출이 거의 없어요");
+    expect(container.textContent).toContain("지출의 0.1% 미만이 고정이에요");
     expect(container.textContent).not.toContain("미만가");
-    expect(container.textContent).not.toContain("지출의 0.1%");
   });
 });

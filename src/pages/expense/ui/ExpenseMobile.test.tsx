@@ -6,6 +6,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Expense } from "@/entities/expense";
 import { SnackbarProvider } from "@/shared/ds/snackbar";
+import { setHiddenCardsLocal } from "@/shared/lib/groo/hide-amounts-core";
+import { CALENDAR_CELL_CARDS } from "@/pages/expense/model/mobile-consts";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -575,6 +577,21 @@ describe("검수 고침 — 요약 0 원 · 실패 틀 · 빼기 부호", () => 
     expect(names.some((n) => /지출 −5,000원/.test(n))).toBe(true);
     // 금액이 없는 날은 날짜만
     expect(names.some((n) => !/지출|수입/.test(n) && n.length > 0)).toBe(true);
+    // 앱과 같은 이름 꼴
+    expect(names).toContain("10월 14일 (수), 지출 −5,000원, 수입 +450,000원");
+    expect(names).toContain("10월 13일 (화)");
+  });
+
+  it("금액을 가리면 날 칸 이름에 금액 대신 '금액 가림' — 금액 없는 날은 그대로", () => {
+    act(() => setHiddenCardsLocal(CALENDAR_CELL_CARDS));
+    render();
+    const names = Array.from(
+      container.querySelectorAll<HTMLElement>("button[data-sel]"),
+    ).map((b) => b.getAttribute("aria-label") ?? "");
+    expect(names).toContain("10월 14일 (수), 금액 가림");
+    expect(names.join("|")).not.toMatch(/5,000|450,000/);
+    expect(names).toContain("10월 13일 (화)");
+    act(() => setHiddenCardsLocal([]));
   });
 });
 

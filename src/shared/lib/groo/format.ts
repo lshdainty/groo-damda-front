@@ -49,6 +49,7 @@ export function formatChangeRate(
  * - `share` 비중(구성 · 카테고리 · 종목 · 고정 대 변동 등 "전체 중 몫") — 소수 첫째 자리, **늘 한 자리**(`30.0%`).
  *   0 보다 크고 0.05% 미만이면 `0.1% 미만`(영어 `<0.1%`) — 반올림하면 `0.0%` 로 사라지는 것을 막는다.
  * - `progress` 진행률(예산 이행 · 사용 · 저축 달성 · 저축률 · 할인율) — 정수(`76%`). 막대 · 말풍선 · 범례 · 낭독이 같은 값.
+ *   100 경계는 99.6 → `99%` · 100.3 → `101%` · 정확히 100 만 `100%`(웹 · 앱 같게).
  * - `change` 등락률 · 수익률 — 둘째 자리. [formatChangeRate] 를 그대로 부른다(합치지 않는다: 부호 · 화살표 규칙이 따로 있다).
  *
  * 값은 0~100 단위 퍼센트다(0.3 = 0.3%). 유한하지 않은 값은 `—`.
@@ -66,7 +67,15 @@ export function formatPercent(
 ): string {
   if (kind === "change") return formatChangeRate(pct, opts);
   if (!Number.isFinite(pct)) return "—";
-  if (kind === "progress") return `${Math.round(pct)}%`;
+  // 음수는 U+2212(차트 · 금액과 같은 빼기 기호)
+  if (pct < 0) return `${MINUS}${formatPercent(-pct, kind)}`;
+  if (kind === "progress") {
+    // 100 을 넘나드는 상태가 글에서 사라지지 않게 — 반올림하면 100 이 되는 99.5 ~ 99.99 는 내림(99%),
+    // 100.01 ~ 100.49 는 올림(101%). 정확히 100 만 "100%", 그 밖은 정수 반올림.
+    const r = Math.round(pct);
+    if (r === 100 && pct !== 100) return `${pct < 100 ? 99 : 101}%`;
+    return `${r}%`;
+  }
   if (pct > 0 && pct < 0.05) return i18n.t("common:percentBelowShare");
   return `${(Math.round(pct * 10) / 10).toFixed(1)}%`;
 }

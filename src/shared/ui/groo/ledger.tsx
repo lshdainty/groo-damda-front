@@ -26,7 +26,7 @@ import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
  *       <LedgerHead> <LedgerTotal/> <LedgerSub/> <LedgerSumBtn/> </LedgerHead>   숨는다(총액 · 지난달 비교 · 소비 요약)
  *       <LedgerKeep>                                남는다 — 주 달력 + 펼침 꺾쇠 + 아래 선
  *         <LedgerCalendar>
- *           <LedgerDow/> <LedgerWeek> <LedgerCell> <LedgerCellNum/> <LedgerCellAmt/> …
+ *           <LedgerDow/> <LedgerWeek> <LedgerCell> <LedgerCellNum/> <LedgerCellMoney/>(금액) · <LedgerCellAmt/>(빈 자리 · 표시) …
  *           <LedgerExpand/> <LedgerCellTip/>
  *         </LedgerCalendar>
  *         <LedgerDivider/>
@@ -406,7 +406,7 @@ export function LedgerCellNum({
   );
 }
 
-/** 칸 금액 · 표시 — t1 11 · 700 · 고정폭. 지출 fg-neutral · 수입 `tone="income"` fg-brand */
+/** 칸 빈 자리 · 한 글자 표시 — t1 11 · 700 · 고정폭. **금액에는 쓰지 않는다**(금액은 LedgerCellMoney — 말줄임 없음). 지출 fg-neutral · 수입 `tone="income"` fg-brand */
 export function LedgerCellAmt({
   className,
   tone,
@@ -415,7 +415,7 @@ export function LedgerCellAmt({
   return (
     <span
       className={cn(
-        "num max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-t1 font-bold tabular-nums",
+        "num max-w-full overflow-hidden whitespace-nowrap text-t1 font-bold tabular-nums",
         "min-h-x3",
         tone === "income" ? "text-fg-brand" : "text-fg-neutral",
         className,

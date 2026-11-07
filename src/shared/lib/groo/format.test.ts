@@ -381,8 +381,26 @@ describe("formatPercent — 퍼센트는 뜻이 셋(B3 1A)", () => {
     expect(formatPercent(0, "progress")).toBe("0%");
     expect(formatPercent(0.04, "progress")).toBe("0%");
     expect(formatPercent(76.43, "progress")).toBe("76%");
-    expect(formatPercent(99.95, "progress")).toBe("100%");
     expect(formatPercent(100, "progress")).toBe("100%");
+  });
+
+  it("진행률 100 경계 — 넘나드는 상태가 글에서 사라지지 않는다", () => {
+    expect(formatPercent(99.4, "progress")).toBe("99%");
+    expect(formatPercent(99.6, "progress")).toBe("99%");
+    expect(formatPercent(99.95, "progress")).toBe("99%");
+    expect(formatPercent(100.3, "progress")).toBe("101%");
+    expect(formatPercent(100.6, "progress")).toBe("101%");
+    expect(formatPercent(76.6, "progress")).toBe("77%");
+  });
+
+  it("유한하지 않은 값은 — , 음수는 빼기 U+2212", () => {
+    for (const kind of ["share", "progress"] as const) {
+      expect(formatPercent(Number.NaN, kind)).toBe("—");
+      expect(formatPercent(Infinity, kind)).toBe("—");
+    }
+    expect(formatPercent(-12.34, "share")).toBe("−12.3%");
+    expect(formatPercent(-12.4, "progress")).toBe("−12%");
+    expect(formatPercent(-12.34, "share")).not.toContain("-");
   });
 
   it("등락률 change — formatChangeRate 와 같은 글자(둘째 자리)", () => {

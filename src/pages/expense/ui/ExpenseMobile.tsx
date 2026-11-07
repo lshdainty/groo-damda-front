@@ -323,10 +323,15 @@ export function ExpenseMobile({
   const cellName = (ds: string, data?: { out: number; inn: number }) => {
     const d = formatDay(ds);
     const parts = [`${d.md} (${d.dow})`];
-    if (data && data.out > 0 && !cellOutHidden)
+    const showOut = !!data && data.out > 0;
+    const showIn = !!data && data.inn > 0;
+    if (showOut && !cellOutHidden)
       parts.push(`${t("expense")} ${MINUS}${money(data.out)}`);
-    if (data && data.inn > 0 && !cellInHidden)
+    if (showIn && !cellInHidden)
       parts.push(`${t("income")} +${money(data.inn)}`);
+    // 가린 금액은 값 대신 "금액 가림" 한 번(앱과 같은 이름)
+    if ((showOut && cellOutHidden) || (showIn && cellInHidden))
+      parts.push(t("txm.cellHidden"));
     return parts.join(", ");
   };
   const insight = useMemo(() => {

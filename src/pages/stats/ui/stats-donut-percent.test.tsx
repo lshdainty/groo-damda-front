@@ -1,4 +1,4 @@
-// 통계 도넛 비중 — 범례 · 표가 같은 소수 한 자리(B3 1A). 합 0 이면 "0.0%".
+// 통계 도넛 비중 — 범례 · 표가 같은 소수 한 자리(B3 1A). 합이 0 이면 비중도 "0.0%".
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -88,5 +88,22 @@ describe("통계 도넛 비중", () => {
     );
     expect(container.textContent).toContain("30.0%");
     expect(container.textContent).toContain("70.0%");
+  });
+
+  it("합이 0 이면 0.0%", () => {
+    act(() =>
+      root.render(
+        <DonutChartBody
+          m={model([row(1, 0), row(2, 0)])}
+          place="card"
+          size={180}
+          mask={(s) => s}
+        />,
+      ),
+    );
+    const cells = Array.from(container.querySelectorAll("td")).map(
+      (c) => c.textContent,
+    );
+    expect(cells.filter((c) => c === "0.0%").length).toBeGreaterThan(0);
   });
 });
