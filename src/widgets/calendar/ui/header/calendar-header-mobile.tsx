@@ -12,7 +12,7 @@ import { CalendarSourceToggle } from "@/widgets/calendar/ui/header/calendar-sour
 /**
  * 폰 달 줄 (I-09 6) — 흰 면 맨 위, 높이 52 · 왼쪽 24 · 오른쪽 16.
  * 달 글 t6 700 + 꺾쇠 16(누르면 연 | 월 휠 시트) · 오른쪽 캘린더 고르기 칩. ‹ › 는 두지 않는다(사용자 10-29 — 연 · 월은 휠로만),
- * 주 · 일 보기만 한 주 · 하루씩 옮기는 ‹ › 를 남긴다.
+ * 주 보기만 한 주씩 옮기는 ‹ › 를 남긴다.
  */
 const CalendarHeaderMobile = () => {
   const { t, i18n } = useTranslation("calendar");
@@ -26,13 +26,13 @@ const CalendarHeaderMobile = () => {
 
   const handlePrevious = () =>
     setSelectedDate(navigateDate(selectedDate, view, "previous"));
-  const stepUnit = view === "week" || view === "day";
+  const stepUnit = view === "week";
   const handleNext = () =>
     setSelectedDate(navigateDate(selectedDate, view, "next"));
 
   return (
     <div className="flex min-h-x13 shrink-0 flex-wrap items-center gap-y-x1 pl-x6 pr-x4">
-      {/* 달 글(+ 주 · 일 보기의 ‹ ›) 은 한 덩어리 — 글자가 커져 줄이 모자라면 칩만 아래 줄로 내려간다 */}
+      {/* 달 글(+ 주 보기의 ‹ ›) 은 한 덩어리 — 글자가 커져 줄이 모자라면 칩만 아래 줄로 내려간다 */}
       <div className="flex shrink-0 items-center">
         {/* 달 글 → 연 | 월 휠 시트(I-27) — 닫기 · 뒤로 가기는 시트가 맡는다 */}
         <MonthPicker
@@ -62,9 +62,7 @@ const CalendarHeaderMobile = () => {
         {stepUnit && (
           <>
             <Button
-              aria-label={t(
-                view === "week" ? "header.prevWeek" : "header.prevDay",
-              )}
+              aria-label={t("header.prevWeek")}
               variant="ghost"
               size="medium"
               layout="iconOnly"
@@ -74,9 +72,7 @@ const CalendarHeaderMobile = () => {
               <ChevronLeft />
             </Button>
             <Button
-              aria-label={t(
-                view === "week" ? "header.nextWeek" : "header.nextDay",
-              )}
+              aria-label={t("header.nextWeek")}
               variant="ghost"
               size="medium"
               layout="iconOnly"

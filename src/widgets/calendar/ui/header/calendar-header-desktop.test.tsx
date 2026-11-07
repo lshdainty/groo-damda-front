@@ -52,15 +52,13 @@ afterEach(() => {
 });
 
 describe("도구 줄", () => {
-  it('보기 고르기는 radiogroup "보기" — 월 · 주 · 일 · 연 · 목록 이름이 보인다', () => {
+  it('보기 고르기는 radiogroup "보기" — 월 · 주 · 목록 셋, 이름이 보인다(일 · 연은 걷었다)', () => {
     const group = container.querySelector("[role=radiogroup]")!;
     expect(group.getAttribute("aria-label")).toBe("view.label");
     const radios = [...group.querySelectorAll("[role=radio]")];
     expect(radios.map((r) => r.textContent)).toEqual([
       "view.month",
       "view.week",
-      "view.day",
-      "view.year",
       "view.agenda",
     ]);
     // 아이콘만인 단추가 아니다 — 이름이 글로 보인다
@@ -71,7 +69,7 @@ describe("도구 줄", () => {
   it("보기 칩을 누르면 그 보기로 바뀐다", () => {
     const radios = [...container.querySelectorAll<HTMLElement>("[role=radio]")];
     act(() => radios[2]!.click());
-    expect(mocks.setView).toHaveBeenCalledWith("day");
+    expect(mocks.setView).toHaveBeenCalledWith("agenda");
   });
 
   it("옛 머리의 것이 없다 — 오늘 칩 상자 · 일정 수 배지 · 기간 글 · 세로 선", () => {
@@ -106,18 +104,18 @@ describe("도구 줄", () => {
     mocks.view = "month";
   });
 
-  it("일 보기에서는 이름이 이전 날 · 다음 날이다(이전 달 로 읽히지 않는다)", () => {
-    mocks.view = "day";
+  it("목록 보기에도 ‹ › 는 없다 — 주 보기에만 한 주씩 옮긴다", () => {
+    mocks.view = "agenda";
     act(() => root.render(<CalendarHeaderDesktop />));
     expect(
-      container.querySelector("[aria-label='header.prevDay']"),
-    ).not.toBeNull();
-    expect(
-      container.querySelector("[aria-label='header.nextDay']"),
-    ).not.toBeNull();
-    expect(
-      container.querySelector("[aria-label='header.prevMonth']"),
+      container.querySelector("[aria-label='header.prevWeek']"),
     ).toBeNull();
+    expect(
+      container.querySelector("[aria-label='header.nextWeek']"),
+    ).toBeNull();
+    // 고른 보기 칩은 목록
+    const checked = container.querySelector("[role=radio][aria-checked=true]");
+    expect(checked?.textContent).toBe("view.agenda");
     mocks.view = "month";
   });
 });

@@ -8,6 +8,7 @@ import { Card } from "@/shared/ds/card";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { PageHead } from "@/shared/ui/groo/page-head";
 import { eventKey, findEvent } from "@/widgets/calendar/lib/event-key";
+import { agendaEmptyReason } from "@/widgets/calendar/lib/agenda-empty";
 import { eventsOnDay } from "@/widgets/calendar/lib/helpers";
 import { useCanEditEvent } from "@/widgets/calendar/model/use-can-edit-event";
 import { dayKey } from "@/widgets/calendar/model/use-calendar-screen";
@@ -24,12 +25,8 @@ import {
   WeekdayHead,
 } from "@/widgets/calendar/ui/month-view/calendar-month-view-desktop";
 import { CalendarMonthViewDesktopSkeleton } from "@/widgets/calendar/ui/month-view/calendar-month-view-desktop-skeleton";
-import { CalendarDayView } from "@/widgets/calendar/ui/week-and-day-view/calendar-day-view";
-import { CalendarDayViewSkeleton } from "@/widgets/calendar/ui/week-and-day-view/calendar-day-view-skeleton";
-import { CalendarWeekView } from "@/widgets/calendar/ui/week-and-day-view/calendar-week-view";
-import { CalendarWeekViewSkeleton } from "@/widgets/calendar/ui/week-and-day-view/calendar-week-view-skeleton";
-import { CalendarYearView } from "@/widgets/calendar/ui/year-view/calendar-year-view";
-import { CalendarYearViewSkeleton } from "@/widgets/calendar/ui/year-view/calendar-year-view-skeleton";
+import { CalendarWeekView } from "@/widgets/calendar/ui/week-view/calendar-week-view";
+import { CalendarWeekViewSkeleton } from "@/widgets/calendar/ui/week-view/calendar-week-view-skeleton";
 
 import type { CalendarScreen } from "@/widgets/calendar/model/use-calendar-screen";
 
@@ -44,14 +41,15 @@ interface IProps {
  * 데스크톱 · 태블릿(768 이상) 캘린더 (I-09 13 ~ 17) — 화면 틀(제목 줄 h1 "캘린더" + 오른쪽 "일정 추가") 아래
  * 도구 줄(달 이동 · 오늘 · 캘린더 고르기 · 보기) 16, 그 아래 카드.
  * 월 보기: 1280 이상은 격자 카드 + 오른쪽 그날 패널 320(사이 24), 미만은 격자 카드 아래 그날 목록 카드(사이 8).
- * 주 · 일 · 연 · 목록 보기는 카드 하나 폭 전체(안 모양은 그대로).
- * 일정을 누르면 상세 — 1280 이상 월 보기는 그날 패널 안 한 단계(칩은 그 날도 고른다), 1280 이상 주 · 일 · 목록 보기는 가운데 대화상자 480,
+ * 주 · 목록 보기는 카드 하나 폭 전체. 보기는 월 · 주 · 목록 셋이다(일 · 연은 걷었다 — I-wrap-b1 γ).
+ * 일정을 누르면 상세 — 1280 이상 월 보기는 그날 패널 안 한 단계(칩은 그 날도 고른다), 1280 이상 주 · 목록 보기는 가운데 대화상자 480,
  * 1280 미만은 가운데 480 시트(I-09b 15 ~ 18).
  */
 const CalendarDesktop = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
   const { t } = useTranslation("calendar");
   const { t: tl } = useTranslation("layout");
-  const { view, selectedDate } = useCalendar();
+  const { view, selectedDate, userCalendars, isCalendarVisible } =
+    useCalendar();
   const wide = useWideSurface();
   const canEdit = useCanEditEvent();
   const {
@@ -63,11 +61,18 @@ const CalendarDesktop = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
     filteredEvents,
     singleDayEvents,
     multiDayEvents,
-    eventStartDates,
+    allEvents,
     setCreatingDate,
   } = screen;
 
   const dayEvents = eventsOnDay(filteredEvents, selectedDate);
+  // 목록 보기가 비었을 때 까닭 — 거르느라 0건이면 "걸러서 0건", 아니면 "이 달에 없음"
+  const emptyReason = agendaEmptyReason(
+    allEvents,
+    selectedDate,
+    userCalendars.map((c) => c.rowId),
+    isCalendarVisible,
+  );
   // 1280 이상 월 보기 — 그날 패널이 상세를 그린다. 보던 날을 바꾸면 패널은 그 날의 목록으로 돌아간다
   const panelMode = wide && view === "month";
   const panelEvent =
@@ -123,7 +128,7 @@ const CalendarDesktop = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
     </>
   );
 
-  // 주 · 일 · 연 · 목록 — 카드 하나(안 모양 그대로). 안쪽 스크롤이 서도록 높이를 준다
+  // 주 · 목록 — 카드 하나. 안쪽 스크롤이 서도록 높이를 준다
   const otherView = (body: React.ReactNode) => (
     <Card
       data-slot="calendar-view-card"
@@ -165,18 +170,6 @@ const CalendarDesktop = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
               ) : (
                 <div className="flex flex-col gap-x2">{monthBody}</div>
               ))}
-            {view === "day" &&
-              otherView(
-                isLoading ? (
-                  <CalendarDayViewSkeleton />
-                ) : (
-                  <CalendarDayView
-                    singleDayEvents={singleDayEvents}
-                    multiDayEvents={multiDayEvents}
-                    onEventClick={openDetail}
-                  />
-                ),
-              )}
             {view === "week" &&
               otherView(
                 isLoading ? (
@@ -189,14 +182,6 @@ const CalendarDesktop = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
                   />
                 ),
               )}
-            {view === "year" &&
-              otherView(
-                isLoading ? (
-                  <CalendarYearViewSkeleton />
-                ) : (
-                  <CalendarYearView allEvents={eventStartDates} />
-                ),
-              )}
             {view === "agenda" &&
               otherView(
                 isLoading ? (
@@ -206,6 +191,8 @@ const CalendarDesktop = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
                     singleDayEvents={singleDayEvents}
                     multiDayEvents={multiDayEvents}
                     onEventClick={openDetail}
+                    emptyReason={emptyReason}
+                    onAdd={() => setCreatingDate(new Date())}
                   />
                 ),
               )}

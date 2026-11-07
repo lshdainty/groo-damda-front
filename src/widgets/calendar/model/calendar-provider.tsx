@@ -9,7 +9,7 @@ import type {
   IBuiltinSource,
 } from "./types";
 import type { IEvent } from "./interfaces";
-import { BUILTIN_SOURCES } from "./types";
+import { BUILTIN_SOURCES, normalizeCalendarView } from "./types";
 import {
   useUserCalendars,
   useToggleCalendarVisibility,
@@ -17,6 +17,7 @@ import {
 import { isCalendarShown } from "@/entities/user-calendar";
 import { useToggleFail } from "@/shared/lib/confirm-fail";
 import { i18n } from "@/shared/i18n/config";
+import { useDeviceSize } from "@/shared/lib/groo/responsive";
 import { CalendarContext, type CalendarContextValue } from "./calendar-context";
 
 interface CalendarProviderProps {
@@ -35,7 +36,16 @@ export const CalendarProvider = ({
   const [selectedDate, setSelectedDate] = useState<Date>(
     initialDate ?? new Date(),
   );
-  const [view, setView] = useState<TCalendarView>(initialView);
+  // 고른 보기(저장값) — 폰(768 미만)은 월 격자만 그리므로 실제 쓰는 보기는 월이다. 저장값은 남겨 둬 다시 넓히면 돌아온다
+  const [pickedView, setViewState] = useState<TCalendarView>(() =>
+    normalizeCalendarView(initialView),
+  );
+  const setView = useCallback(
+    (next: TCalendarView) => setViewState(normalizeCalendarView(next)),
+    [],
+  );
+  const view: TCalendarView =
+    useDeviceSize() === "mobile" ? "month" : pickedView;
   const [badgeVariant, setBadgeVariant] = useState<TBadgeVariant>("dot");
   const [workingHours, setWorkingHours] = useState<TWorkingHours>({
     start: 9,
@@ -130,6 +140,7 @@ export const CalendarProvider = ({
     [
       selectedDate,
       view,
+      setView,
       badgeVariant,
       workingHours,
       visibleHours,

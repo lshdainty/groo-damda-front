@@ -157,22 +157,6 @@ export function useCalendarScreen(events: IEvent[]) {
       )
         return false;
 
-      if (view === "year") {
-        const yearStart = new Date(selectedDate.getFullYear(), 0, 1);
-        const yearEnd = new Date(
-          selectedDate.getFullYear(),
-          11,
-          31,
-          23,
-          59,
-          59,
-          999,
-        );
-        const isInSelectedYear =
-          eventStartDate <= yearEnd && eventEndDate >= yearStart;
-        return isInSelectedYear;
-      }
-
       if (view === "month" || view === "agenda") {
         const monthStart = new Date(
           selectedDate.getFullYear(),
@@ -209,28 +193,6 @@ export function useCalendarScreen(events: IEvent[]) {
         return isInSelectedWeek;
       }
 
-      if (view === "day") {
-        const dayStart = new Date(
-          selectedDate.getFullYear(),
-          selectedDate.getMonth(),
-          selectedDate.getDate(),
-          0,
-          0,
-          0,
-        );
-        const dayEnd = new Date(
-          selectedDate.getFullYear(),
-          selectedDate.getMonth(),
-          selectedDate.getDate(),
-          23,
-          59,
-          59,
-        );
-        const isInSelectedDay =
-          eventStartDate <= dayEnd && eventEndDate >= dayStart;
-        return isInSelectedDay;
-      }
-
       return true;
     });
   }, [selectedDate, events, view, isBuiltinSourceEnabled, isCalendarVisible]);
@@ -256,13 +218,6 @@ export function useCalendarScreen(events: IEvent[]) {
     return !isSameDay(startDate, endDate);
   });
 
-  const eventStartDates = useMemo(() => {
-    return filteredEvents.map((event) => ({
-      ...event,
-      endDate: event.startDate,
-    }));
-  }, [filteredEvents]);
-
   return {
     // 상세
     detail,
@@ -286,7 +241,8 @@ export function useCalendarScreen(events: IEvent[]) {
     dayEvents,
     singleDayEvents,
     multiDayEvents,
-    eventStartDates,
+    // 거르기 전 — 이 범위에 일정이 있는데 거른 결과가 0건인지 알아볼 때
+    allEvents: events,
   };
 }
 

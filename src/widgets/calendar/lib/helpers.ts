@@ -1,21 +1,16 @@
 import {
-  addDays,
   addMonths,
   addWeeks,
-  addYears,
   differenceInDays,
   differenceInMinutes,
   eachDayOfInterval,
   endOfMonth,
   isSameDay,
-  isWithinInterval,
   parseISO,
   startOfDay,
   startOfMonth,
-  subDays,
   subMonths,
   subWeeks,
-  subYears,
 } from "date-fns";
 
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
@@ -49,28 +44,14 @@ export function navigateDate(
 ): Date {
   const operations = {
     agenda: direction === "next" ? addMonths : subMonths,
-    year: direction === "next" ? addYears : subYears,
     month: direction === "next" ? addMonths : subMonths,
     week: direction === "next" ? addWeeks : subWeeks,
-    day: direction === "next" ? addDays : subDays,
   };
 
   return operations[view](date, 1);
 }
 
-// ================ Week and day view helper functions ================ //
-
-export function getCurrentEvents(events: IEvent[]) {
-  const now = new Date();
-  return (
-    events.filter((event) =>
-      isWithinInterval(now, {
-        start: parseISO(event.startDate),
-        end: parseISO(event.endDate),
-      }),
-    ) || null
-  );
-}
+// ================ Week view helper functions ================ //
 
 export function groupEvents(dayEvents: IEvent[]) {
   const sortedEvents = dayEvents.sort(
@@ -418,16 +399,6 @@ type ToneSource = Pick<
   IEvent,
   "sourceType" | "labelColor" | "calendarColor" | "color"
 >;
-
-/**
- * 이벤트 칩/뱃지/점 색 — 공휴일은 `chart-red`. 일반 이벤트는 `eventColorKey` 순서로 고른 색의
- * chart palette alias(다크 자동 swap).
- */
-export function eventBadgeColor(event?: ToneSource | null): string {
-  if (!event) return getPaletteByColor(undefined).color;
-  if (event.sourceType === "holiday") return HOLIDAY_TONE.color;
-  return getPaletteByColor(eventColorKey(event)).color;
-}
 
 /** 이벤트 칩 바탕 · 글 — 팔레트 색은 v111 짝(chart-{hue}-weak · -contrast), 공휴일은 chart-red 짝. */
 export function eventBadgeTone(event?: ToneSource | null): {
