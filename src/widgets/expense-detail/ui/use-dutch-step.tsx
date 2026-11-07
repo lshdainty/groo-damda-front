@@ -81,6 +81,14 @@ const METHODS: { v: SplitMethod; title: string; sub: string }[] = [
   },
 ];
 
+// 편집 칸이 뒤 붙이개인 줄 — 줄 안 폭이 제목 글자 16개(16em)보다 좁으면(큰 글자 · 좁은 폰) 칸을 본문 아래 전폭으로 내린다.
+// list.md "큰 글자에서 값을 본문 아래로" 를 편집 칸까지 넓힌 것(I-wrap-b5 2-b B) — 조건은 List 의 narrow 와 같은 컨테이너 쿼리(줄 24 · 24 → 16rem + 48px).
+// 칸 폭은 px(보통 크기 그대로, 글자 배율을 따라 커져 이름을 누르지 않는다). 클래스는 Tailwind 가 글자 그대로 읽어야 해 풀어 적는다
+const FIELD_ROW =
+  "@max-[calc(16rem+48px)]/list-item:[&_[data-slot=list-suffix]:has(input)]:col-start-3! @max-[calc(16rem+48px)]/list-item:[&_[data-slot=list-suffix]:has(input)]:row-start-2! @max-[calc(16rem+48px)]/list-item:[&_[data-slot=list-suffix]:has(input)]:w-full @max-[calc(16rem+48px)]/list-item:[&_[data-slot=list-suffix]:has(input)]:pt-x2";
+const RATIO_FIELD = "w-[96px] @max-[calc(16rem+48px)]/list-item:w-full";
+const CUSTOM_FIELD = "w-[128px] @max-[calc(16rem+48px)]/list-item:w-full";
+
 export interface DutchStepOptions {
   enabled: boolean;
   expense: Expense;
@@ -484,6 +492,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
                 return (
                   <ListItem
                     key={p.uid}
+                    className={FIELD_ROW}
                     prefix={<Avatar name={shown(p)} size={42} />}
                     title={
                       <span className="[overflow-wrap:anywhere] [word-break:break-all]">
@@ -513,7 +522,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
                       ) : method === "RATIO" ? (
                         <Input
                           size="large"
-                          rootClassName="w-24"
+                          rootClassName={RATIO_FIELD}
                           className="text-right"
                           inputMode="decimal"
                           aria-label={t("fromTx.ratioLabel", {
@@ -533,7 +542,7 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
                       ) : (
                         <AmountInput
                           size="large"
-                          rootClassName="w-32"
+                          rootClassName={CUSTOM_FIELD}
                           className="text-right"
                           aria-label={t("fromTx.customLabel", {
                             name: shown(p),
