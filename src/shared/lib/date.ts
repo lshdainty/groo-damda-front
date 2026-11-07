@@ -17,6 +17,10 @@ import {
 } from "date-fns";
 import { ko, enUS } from "date-fns/locale";
 import { i18n } from "@/shared/i18n/config";
+import {
+  formatRangeValue,
+  rangeParts,
+} from "@/shared/ds/date-picker/date-picker-dates";
 
 // 로케일 소스 = i18n.language(SoT). ko('ko'/'ko-KR'/미정) → ko, en → enUS.
 const isEnLocale = (): boolean => (i18n.language ?? "").startsWith("en");
@@ -158,31 +162,23 @@ export const formatYearMonthDot = (input: Date | string): string => {
 };
 
 /**
- * 기간 줄 — ko "11월 2일~11월 8일" / en "Nov 2–8"(올해 줄임, 0 채움 없음, 구간 기호는 앞뒤를 붙인다 — DESIGN.desk.md 구간 · 영어는 en dash, 같은 달이면 끝은 날짜만).
- * 두 끝 중 하나라도 올해가 아니면 두 끝 모두 연도를 붙인다("2025년 12월 29일~2026년 1월 4일") — 연도 없이 끝만 달라 보이는 것을 막는다.
- * 앱 `dateRange` 와 같다. `now` 는 시험용(올해를 고정한다).
+ * 기간 줄 — ko "11월 2일~11월 8일" / en "Nov 2–8"(올해 줄임, 0 채움 없음, 구간 기호는 앞뒤를 붙인다). 구간 기호는 로케일 문구
+ * (`ds` datePicker.rangeSeparator)에서 읽는다 — 코드에 직접 쓰지 않는다(DESIGN.desk.md 구간).
+ * 두 끝 중 하나라도 올해가 아니면 두 끝 모두 연도를 붙인다("2025년 12월 29일~2026년 1월 4일"). ds 날짜 고르기 칸 값
+ * ([formatRangeValue])과 같은 한 벌이다 — 앱 `dateRange` 와 같다. `now` 는 시험용(올해를 고정한다).
  */
 export const formatDateRange = (
   from: Date | string,
   to: Date | string,
   now: Date = new Date(),
-): string => {
-  const a = toDate(from);
-  const b = toDate(to);
-  const thisYear = now.getFullYear();
-  const withYear = a.getFullYear() !== thisYear || b.getFullYear() !== thisYear;
-  if (isEnLocale()) {
-    // 영어 — 같은 달이면 끝은 날짜만("Nov 2–8"), 구간 기호는 en dash 를 붙여 쓴다
-    const sameMonth =
-      a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
-    const one = (x: Date) =>
-      format(x, withYear ? "MMM d, yyyy" : "MMM d", { locale: enUS });
-    if (sameMonth && !withYear) return `${one(a)}–${b.getDate()}`;
-    return `${one(a)}–${one(b)}`;
-  }
-  const one = (x: Date) => (withYear ? formatDateLong(x) : formatMonthDay(x));
-  return `${one(a)}~${one(b)}`;
-};
+): string => formatRangeValue({ start: toDate(from), end: toDate(to) }, now);
+
+/** 기간의 세 조각(앞 · 구간 기호 · 뒤) — 구간 기호 뒤에서만 줄을 바꿀 때. [formatDateRange] 와 같은 규칙 */
+export const formatDateRangeParts = (
+  from: Date | string,
+  to: Date | string,
+  now: Date = new Date(),
+) => rangeParts({ start: toDate(from), end: toDate(to) }, now);
 
 /**
  * 월 눈금 — 모두 같은 해면 월만(ko "1월" · en "Jan", 0 을 채우지 않는다), 해가 섞이면 연월(ko "2026. 1." · en "Jan 2026").

@@ -1080,6 +1080,30 @@ describe("ListRadioItem · ListRadioGroup", () => {
     expect(onReselect).toHaveBeenCalledTimes(3);
   });
 
+  it("onReselect — <form> 안에서도 불린다(Radix 는 폼 안 라디오의 누름을 위로 올리지 않는다)", () => {
+    stubResizeObserver();
+    const onReselect = vi.fn();
+    const onValueChange = vi.fn();
+    render(
+      <form>
+        <ListRadioGroup
+          aria-label="기본 통화"
+          defaultValue="KRW"
+          onReselect={onReselect}
+          onValueChange={onValueChange}
+        >
+          <ListRadioItem value="KRW" title="대한민국 원" />
+          <ListRadioItem value="USD" title="미국 달러" />
+        </ListRadioGroup>
+      </form>,
+    );
+    click(slot("list-title", slots("list-item")[0]!));
+    click(radios()[0]!);
+    expect(onReselect).toHaveBeenCalledTimes(2);
+    expect(onReselect).toHaveBeenLastCalledWith("KRW");
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
   it("onReselect 가 없으면 아무 일도 없고, 부르는 쪽 onClick 은 그대로 불린다", () => {
     const onClick = vi.fn();
     render(
@@ -1353,11 +1377,16 @@ describe("ListDivider · ListHeader · ListTile", () => {
     for (const rule of [
       "m-0",
       "text-inherit",
-      "[font:inherit]",
+      "[font-size:inherit]",
+      "[line-height:inherit]",
+      "[font-weight:inherit]",
+      "[font-family:inherit]",
       "tracking-[inherit]",
     ]) {
       expect(base).toContain(`[&>:is(h1,h2,h3,h4)]:${rule}`);
     }
+    // font 단축 속성은 쓰지 않는다 — font-variant-numeric(tabular-nums)까지 덮는다
+    expect(base).not.toContain("[&>:is(h1,h2,h3,h4)]:[font:inherit]");
     // 제목 글에는 호출처가 단 클래스가 없다
     expect(container.querySelector("h2")!.getAttribute("class")).toBeNull();
   });

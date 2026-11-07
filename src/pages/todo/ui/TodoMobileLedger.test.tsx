@@ -365,9 +365,12 @@ describe("날짜 묶음 머리 (I-10 16)", () => {
     expect(h2.textContent?.replace(/\u00a0/g, " ")).toBe(
       "10월 21일 (수) · 어제",
     );
-    // 머리말은 브라우저 기본 굵기(700)가 아니라 머리 값(500)을 물려받는다
-    expect(h2.className).toContain("[font-weight:inherit]");
+    // 머리말은 브라우저 기본 굵기(700)가 아니라 머리 값(500)을 물려받는다 — 부품(List Header)이 정하므로 제목 글에 손 클래스가 없다
     const head = h2.closest("[data-slot=list-header]")!;
+    expect(h2.getAttribute("class")).toBeNull();
+    expect(head.className).toContain(
+      "[&>:is(h1,h2,h3,h4)]:[font-weight:inherit]",
+    );
     expect(head.textContent).toContain("1/1 완료");
     expect(head.innerHTML).not.toMatch(/green|positive/);
   });

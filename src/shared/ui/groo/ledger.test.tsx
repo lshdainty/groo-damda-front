@@ -143,9 +143,8 @@ describe("날 숫자 · 날짜 머리", () => {
     expect(head.className).toContain("text-t4");
     expect(head.className).toContain("font-medium");
     expect(head.className).toContain("px-0");
-    expect(head.querySelector("h2")?.className).toContain(
-      "text-[color:inherit]",
-    );
+    // 색 · 글꼴은 부품(List Header)이 물려준다 — 제목 글에 손 클래스가 없다
+    expect(head.querySelector("h2")?.getAttribute("class")).toBeNull();
     expect(head.querySelector("h2")?.textContent).toContain("오늘");
     expect(head.querySelector("h2")?.textContent).not.toContain("12,000");
     expect(container.querySelector("[data-ledger-day]")).not.toBeNull();

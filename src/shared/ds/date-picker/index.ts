@@ -14,6 +14,7 @@ export {
   dayKey,
   formatDateValue,
   formatRangeValue,
+  rangeParts,
   getPresetRange,
   parseDayKey,
   sameDay,

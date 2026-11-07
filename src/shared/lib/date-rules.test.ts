@@ -5,6 +5,7 @@ import {
   formatDailyTick,
   formatDateDowTime,
   formatDateRange,
+  formatDateRangeParts,
   formatServerDateDowTime,
   formatMonthDay,
   formatMonthShort,
@@ -94,5 +95,23 @@ describe("날짜 규칙 — 기간 줄 · 월 눈금 · 점 연월 (웹 B3 가.5
     expect(formatServerDateDowTime("2026-11-07T00:05:00")).toMatch(
       /^\d+월 \d+일 \([일월화수목금토]\) (오전|오후) \d+:05$/,
     );
+  });
+
+  it("기간 세 조각 — 구간 기호 앞 · 기호 · 뒤(통계 버튼이 기호 뒤에서만 줄을 바꾼다)", () => {
+    expect(formatDateRangeParts("2025-12-29", "2026-01-04", now)).toEqual({
+      start: "2025년 12월 29일",
+      separator: "~",
+      end: "2026년 1월 4일",
+    });
+  });
+  it("월 눈금 영어 — 'Jan' · 해가 섞이면 'Dec 2025'", async () => {
+    await i18n.changeLanguage("en");
+    expect(formatMonthTicks([{ year: 2026, month: 1 }])).toEqual(["Jan"]);
+    expect(
+      formatMonthTicks([
+        { year: 2025, month: 12 },
+        { year: 2026, month: 1 },
+      ]),
+    ).toEqual(["Dec 2025", "Jan 2026"]);
   });
 });

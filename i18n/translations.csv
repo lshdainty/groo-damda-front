@@ -3264,6 +3264,7 @@ ds,datePicker.last3Months,최근 3개월,Last 3 months
 ds,datePicker.last6Months,최근 6개월,Last 6 months
 ds,datePicker.last1Year,최근 1년,Last year
 ds,datePicker.thisYear,올해,This year
+ds,datePicker.rangeSeparator,~,–
 ds,timePicker.root,시간 선택,Select time
 ds,timePicker.period,오전/오후,AM/PM
 ds,timePicker.hour,시,Hour

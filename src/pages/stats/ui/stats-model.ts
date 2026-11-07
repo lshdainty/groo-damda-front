@@ -6,11 +6,7 @@ import {
 } from "@/shared/lib/groo/fixed-bulk-path";
 import { useTranslation } from "react-i18next";
 import { formatChangeRate } from "@/shared/lib/groo/format";
-import {
-  formatDailyTick,
-  formatMonthShort,
-  formatMonthTicks,
-} from "@/shared/lib/date";
+import { formatDailyTick, formatMonthTicks } from "@/shared/lib/date";
 import { assignChartColors, type ChartColored } from "@/shared/ds/chart";
 import type { DateRange } from "@/shared/ds/date-picker";
 import { chartColorOf, type ChartKey } from "@/shared/lib/groo/chart-palette";
@@ -474,6 +470,7 @@ export function useStatsModel(lifted?: StatsState) {
   const catTrendTop3 = [...periodBreakdown]
     .sort((a, b) => b.totalAmount - a.totalAmount)
     .slice(0, 3);
+  const catTrendTicks = formatMonthTicks(monthlyBuckets);
   const catTrendData = monthlyBuckets.map((b, i) => {
     const parts = catTrendTop3.map(
       (c) =>
@@ -481,9 +478,8 @@ export function useStatsModel(lifted?: StatsState) {
           (ce) => ce.categoryRowId === c.categoryRowId,
         )?.amount ?? 0,
     );
-    const label = formatMonthShort(b.month);
     return {
-      label: label ?? String(b.month),
+      label: catTrendTicks[i]!,
       parts,
       sum: parts.reduce((s, v) => s + v, 0),
       isCur: i === monthlyBuckets.length - 1,

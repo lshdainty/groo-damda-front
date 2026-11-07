@@ -269,10 +269,7 @@ export function HideAmountsSection({
   // 가릴 화면 · n / m + 모두 선택 · 해제 — 수는 지금 탭 기준
   const screensHeader = (
     <ListHeader as="div" className="pt-x4">
-      <h2
-        id={screensId}
-        className="m-0 text-inherit [font:inherit] tabular-nums"
-      >
+      <h2 id={screensId} className="tabular-nums">
         {t("hideAmounts.screensCount", {
           selected: onCount,
           total: tabCards.length,
@@ -299,12 +296,7 @@ export function HideAmountsSection({
             variant="boldSolid"
             className={i === 0 ? "pt-x1" : "pt-x3"}
           >
-            <h3
-              id={`${uid}-p-${page}`}
-              className="m-0 text-inherit [font:inherit]"
-            >
-              {pageLabel(page)}
-            </h3>
+            <h3 id={`${uid}-p-${page}`}>{pageLabel(page)}</h3>
           </ListHeader>
           <ListCheckGroup aria-labelledby={`${uid}-p-${page}`}>
             {checkRows(cardsOfPage(page))}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatMonthDay } from "@/shared/lib/date";
+import { formatDateRange } from "@/shared/lib/date";
 import {
   Braces,
   Calendar,
@@ -125,7 +125,6 @@ const TYPE_SLUG: Record<ExportDataType, string> = {
 const pad = (n: number) => String(n).padStart(2, "0");
 const iso = (d: Date) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const krLabel = (s: string) => formatMonthDay(s);
 
 interface Range {
   start: string;
@@ -373,7 +372,7 @@ function ExportPane({ mobile }: { mobile: boolean }) {
               const sub =
                 p.v === "CUSTOM"
                   ? t("section.customSelect")
-                  : `${krLabel(r.start)}~${krLabel(r.end)}`;
+                  : formatDateRange(r.start, r.end);
               return (
                 <RadioSelectBox
                   key={p.v}

@@ -268,7 +268,7 @@ export const listDividerVariants = cva(
 // 오른쪽 작은 글 버튼은 위아래 −8 · 오른쪽 −14 로 스스로 번져 머리가 버튼 높이(36)가 되고 글 끝이 화면 여백 24 에 선다(list-header.yaml action.marginY −8 · 보이는 36 · 누르는 44).
 // 오른쪽 동작이 머리 폭의 절반을 넘으면 제목 아래 줄 오른쪽 끝으로 내려간다(제목 최소 50% · 줄바꿈 — 03-G 결정 4A)
 export const listHeaderVariants = cva(
-  "m-0 flex w-full tracking-normal items-center justify-between gap-x2_5 px-global-gutter py-x2 font-sans text-t4 flex-wrap [&>:first-child:not(:last-child)]:min-w-[50%] [&>:first-child:not(:last-child)]:flex-1 [&>:last-child:not(:first-child)]:ml-auto [&>button:last-child:not(:first-child)]:-my-x2 [&>button:last-child:not(:first-child)]:-mr-x3_5 [&>:is(h1,h2,h3,h4)]:m-0 [&>:is(h1,h2,h3,h4)]:text-inherit [&>:is(h1,h2,h3,h4)]:[font:inherit] [&>:is(h1,h2,h3,h4)]:tracking-[inherit]",
+  "m-0 flex w-full tracking-normal items-center justify-between gap-x2_5 px-global-gutter py-x2 font-sans text-t4 flex-wrap [&>:first-child:not(:last-child)]:min-w-[50%] [&>:first-child:not(:last-child)]:flex-1 [&>:last-child:not(:first-child)]:ml-auto [&>button:last-child:not(:first-child)]:-my-x2 [&>button:last-child:not(:first-child)]:-mr-x3_5 [&>:is(h1,h2,h3,h4)]:m-0 [&>:is(h1,h2,h3,h4)]:text-inherit [&>:is(h1,h2,h3,h4)]:[font-size:inherit] [&>:is(h1,h2,h3,h4)]:[line-height:inherit] [&>:is(h1,h2,h3,h4)]:[font-weight:inherit] [&>:is(h1,h2,h3,h4)]:[font-family:inherit] [&>:is(h1,h2,h3,h4)]:tracking-[inherit]",
   {
     variants: {
       variant: {

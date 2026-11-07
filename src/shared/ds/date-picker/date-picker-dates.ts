@@ -145,6 +145,8 @@ export interface DatePickerLabels {
   weekdays: readonly string[];
   /** 읽는 요일(일요일부터 일곱) */
   weekdaysLong: readonly string[];
+  /** 구간 기호 — 한국어 "~", 영어 "–"(앞뒤를 붙여 쓴다) */
+  rangeSeparator: string;
   /** 달 제목 · 알림 — month 는 1 ~ 12 */
   month: (year: number, month: number) => string;
   /** 날짜 버튼 이름 */
@@ -185,6 +187,7 @@ export function datePickerLabels(): DatePickerLabels {
     monthWheel: dsText("datePicker.monthWheel"),
     readOnlyRangeStart: dsText("datePicker.readOnlyRangeStart"),
     presets: dsText("datePicker.presets"),
+    rangeSeparator: dsText("datePicker.rangeSeparator"),
     weekdays: weekdayNames("narrow"),
     weekdaysLong: long,
     month: (year, month) =>
@@ -234,28 +237,48 @@ export function formatDateValue(
 }
 
 /**
- * 칸에 넣는 기간 — 한국어 "10월 1일~10월 31일"(물결표를 앞뒤에 붙여 쓴다), 영어 "Oct 1–Oct 31"(en dash). 올해가 아닌 날이 끼면
- * (두 해에 걸치거나 다른 해) 양쪽에 연도("2026년 12월 28일~2027년 1월 3일"). 끝이 없으면 ""
+ * 기간의 세 조각 — 앞 날짜 · 구간 기호 · 뒤 날짜. 줄을 구간 기호 뒤에서만 바꿀 때(통계 기간 버튼) 조각으로 쓴다.
+ * 한국어 "10월 1일" "~" "10월 31일", 영어 "Oct 1" "–" "Oct 31"(같은 달이면 끝은 날짜만 — "Sep 1–30"). 구간 기호는 로케일 문구
+ * (`ds` datePicker.rangeSeparator — 코드에 직접 쓰지 않는다). 올해가 아닌 날이 끼면(두 해에 걸치거나 다른 해) 양쪽에 연도
+ * ("2026년 12월 28일" "~" "2027년 1월 3일"). 끝이 없으면 null
  */
+export function rangeParts(
+  range: DateRange | undefined | null,
+  today: Date = new Date(),
+): { start: string; separator: string; end: string } | null {
+  if (!range?.start || !range.end) return null;
+  const { start, end } = range;
+  const year = today.getFullYear();
+  const withYear = start.getFullYear() !== year || end.getFullYear() !== year;
+  const separator = dsText("datePicker.rangeSeparator");
+  if (isEn()) {
+    const f = new Intl.DateTimeFormat(dsLocale(), {
+      month: "short",
+      day: "numeric",
+      ...(withYear ? { year: "numeric" } : {}),
+    });
+    const sameMonth =
+      !withYear &&
+      start.getFullYear() === end.getFullYear() &&
+      start.getMonth() === end.getMonth();
+    return {
+      start: f.format(start),
+      separator,
+      end: sameMonth ? String(end.getDate()) : f.format(end),
+    };
+  }
+  const text = (d: Date) =>
+    `${withYear ? `${d.getFullYear()}년 ` : ""}${d.getMonth() + 1}월 ${d.getDate()}일`;
+  return { start: text(start), separator, end: text(end) };
+}
+
+/** 칸에 넣는 기간 — [rangeParts] 를 이은 한 줄(앞뒤를 붙여 쓴다). 끝이 없으면 "" */
 export function formatRangeValue(
   range: DateRange | undefined | null,
   today: Date = new Date(),
 ): string {
-  if (!range?.start || !range.end) return "";
-  const year = today.getFullYear();
-  const withYear =
-    range.start.getFullYear() !== year || range.end.getFullYear() !== year;
-  const en = isEn();
-  const enFmt = new Intl.DateTimeFormat(dsLocale(), {
-    month: "short",
-    day: "numeric",
-    ...(withYear ? { year: "numeric" } : {}),
-  });
-  const text = (d: Date) =>
-    en
-      ? enFmt.format(d)
-      : `${withYear ? `${d.getFullYear()}년 ` : ""}${d.getMonth() + 1}월 ${d.getDate()}일`;
-  return `${text(range.start)}${en ? "–" : "~"}${text(range.end)}`;
+  const p = rangeParts(range, today);
+  return p ? `${p.start}${p.separator}${p.end}` : "";
 }
 
 /** 이어지는 달 스크롤에서 위치가 든 달 — 정렬된 위치 목록에서 이진 탐색 */
