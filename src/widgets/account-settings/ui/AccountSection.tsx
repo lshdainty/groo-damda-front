@@ -19,7 +19,6 @@ import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
 import { Card, CardHeader, CardTitle } from "@/shared/ds/card";
 import { List, ListButtonItem, ListHeader, ListItem } from "@/shared/ds/list";
-import { useWideSurface } from "@/shared/ds/overlay";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
@@ -84,8 +83,10 @@ export function AccountSection({
   // 다시 로그인해야 돌아올 수 있다 — 앱은 이미 한 번 더 묻는다.
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
-  const [securitiesOpen, setSecuritiesOpen] = useState(false);
-  const wide = useWideSurface();
+  // 증권사 연동 시트 — closed → open → closing(닫힘 모션 중, open=false) → closed. 닫으면 연 줄로 초점이 돌아오고, 내리면 쓰던 키가 사라진다
+  const [securities, setSecurities] = useState<"closed" | "open" | "closing">(
+    "closed",
+  );
 
   const hiddenCount = useHiddenCards().size;
 
@@ -283,7 +284,7 @@ export function AccountSection({
             title={t("account.securities.label")}
             detail={t("account.securities.desc")}
             suffix={<ChevronRight aria-hidden />}
-            onClick={() => setSecuritiesOpen(true)}
+            onClick={() => setSecurities("open")}
           />
         </AccountGroup>
       )}
@@ -336,12 +337,11 @@ export function AccountSection({
         </Suspense>
       )}
 
-      {securitiesOpen && (
+      {securities !== "closed" && (
         <SecuritiesLinkDialog
-          onClose={() => setSecuritiesOpen(false)}
-          // 표면 경계는 1280(시트 ↔ 대화상자 — dialog.md:3)이다. 768(셸)로 가르면 폭이 768 을 넘나들 때
-          // 시트가 대화상자로 바뀌며 다시 붙어 쓰던 키가 빈다(I-wrap-b1 ε 9). 안 모양 정리는 β 묶음
-          mobile={!wide}
+          open={securities === "open"}
+          onClose={() => setSecurities("closing")}
+          onClosed={() => setSecurities("closed")}
         />
       )}
     </div>
