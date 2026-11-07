@@ -90,8 +90,8 @@ export function focusOpener(
 export function surfaceTookOver(stillOpen: boolean) {
   if (!stillOpen) return false;
   const active = document.activeElement;
-  return (
-    active instanceof Element &&
-    active.closest('[role="dialog"],[role="alertdialog"]') !== null
-  );
+  if (!(active instanceof Element)) return false;
+  // Radix Popover 내용도 role="dialog" 다 — 관련 없는 팝오버 안에 초점이 있다고 새 표면이 이어받았다고 읽지 않는다
+  const surface = active.closest('[role="dialog"],[role="alertdialog"]');
+  return surface !== null && !surface.matches('[data-slot="popover-content"]');
 }

@@ -409,7 +409,7 @@ const BottomSheetSurface = React.forwardRef<
             onCloseAutoFocus?.(e);
             if (e.defaultPrevented) return;
             e.preventDefault();
-            // 아직 열려 있다 — 폭이 1280 을 넘어 대화상자로 바뀌어 다시 뜬다(ResponsiveDialog). 초점은 새 표면이 가져간다
+            // 폭이 1280 을 넘나들어 다른 표면이 대신 떴으면 초점은 새 표면이 가져간다. 부모가 표면을 지워 닫은 것이면 연 자리로(surfaceTookOver)
             if (surfaceTookOver(refs.openRef.current)) return;
             focusOpener(refs.triggerRef.current, openerRef.current);
           }}

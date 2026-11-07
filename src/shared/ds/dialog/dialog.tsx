@@ -289,7 +289,7 @@ const DialogContent = React.forwardRef<
             onCloseAutoFocus?.(e);
             if (e.defaultPrevented) return;
             e.preventDefault();
-            // 아직 열려 있다 — 폭이 1280 아래로 내려가 시트로 바뀌어 다시 뜬다(ResponsiveDialog). 초점은 새 표면이 가져간다
+            // 폭이 1280 을 넘나들어 다른 표면이 대신 떴으면 초점은 새 표면이 가져간다. 부모가 표면을 지워 닫은 것이면 연 자리로(surfaceTookOver)
             if (surfaceTookOver(ctx?.openRef.current ?? false)) return;
             focusOpener(ctx?.triggerRef.current ?? null, openerRef.current);
           }}
