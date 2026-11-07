@@ -30,6 +30,10 @@ let warn: MockInstance<typeof console.warn>;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   vi.useFakeTimers();
+  // jsdom 은 레이아웃이 없어 getClientRects 가 늘 비어 있다 — 보이는 것으로 둔다(숨은 스켈레톤 시험만 비운다)
+  vi.spyOn(Element.prototype, "getClientRects").mockImplementation(
+    () => [{}] as unknown as DOMRectList,
+  );
   // 개발 중 알림(LoadingAnnouncer 없음 · 10초 넘김)은 여기서 받아 둔다 — 알림을 보는 테스트만 꺼내 본다
   warn = vi.spyOn(console, "warn").mockImplementation(() => {});
   container = document.createElement("div");
@@ -160,6 +164,52 @@ describe("LoadingRegion 없이 그린 Skeleton(화면 82곳 — I-wrap-b5 3-a)",
     const el = status()!;
     advance(LOADING_TIMING.showAfter);
     expect(el.textContent).toBe(WAITING_TEXT);
+  });
+});
+
+describe("Skeleton 의 시간표 — 예외와 한 시계", () => {
+  it('wait="none"(이미지 자리)은 처음부터 보이고 상태 글에 알리지 않는다', () => {
+    render(
+      <LoadingAnnouncer>
+        <Skeleton wait="none" data-testid="img" />
+      </LoadingAnnouncer>,
+    );
+    const el = container.querySelector<HTMLElement>("[data-testid=img]")!;
+    expect(el.className).not.toContain("opacity-0");
+    advance(LOADING_TIMING.slowAfter);
+    expect(status()!.textContent).toBe("");
+  });
+
+  it("보이지 않는 스켈레톤(숨은 탭 칸 · display none)은 알리지 않는다", () => {
+    vi.spyOn(Element.prototype, "getClientRects").mockImplementation(
+      () => [] as unknown as DOMRectList,
+    );
+    render(
+      <LoadingAnnouncer>
+        <Skeleton />
+      </LoadingAnnouncer>,
+    );
+    advance(LOADING_TIMING.slowAfter);
+    expect(status()!.textContent).toBe("");
+  });
+
+  it("같은 LoadingRegion 안의 스켈레톤은 영역의 한 시계를 쓴다 — 늦게 붙어도 다시 투명 1초를 세지 않는다", () => {
+    const tree = (late: boolean) => (
+      <LoadingRegion
+        pending
+        fallback={
+          <>
+            <Skeleton data-testid="a" />
+            {late && <Skeleton data-testid="b" />}
+          </>
+        }
+      />
+    );
+    render(tree(false));
+    advance(LOADING_TIMING.showAfter);
+    render(tree(true));
+    const b = container.querySelector<HTMLElement>("[data-testid=b]")!;
+    expect(b.className).not.toContain("opacity-0");
   });
 });
 

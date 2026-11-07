@@ -277,7 +277,11 @@ const ImageFrame = React.forwardRef<HTMLDivElement, ImageFrameProps>(
         {...props}
       >
         {source && status === "loading" && (
-          <Skeleton radius="0" className="absolute inset-0 size-full" />
+          <Skeleton
+            radius="0"
+            wait="none"
+            className="absolute inset-0 size-full"
+          />
         )}
         {source && status !== "error" && (
           <img
