@@ -12,7 +12,6 @@ import {
 } from "@/features/asset";
 import { useSearchExpenses } from "@/features/expense";
 import { formatDay, money } from "@/shared/lib/groo/format";
-import { fmtBillingDate } from "./detail-shared";
 import { useAssetMask } from "../../lib/asset-groups";
 
 // 결제 회차(청구월) 항목 — 예정 1건 + 과거 결제 완료 이력.
@@ -222,10 +221,6 @@ export function useCardDetail(asset: Asset) {
   const [confirmCancelPay, setConfirmCancelPay] = useState(false);
   // 지금 결제는 예정 회차에서만 — 닫힌 회차를 보는 중엔 감춘다(D10).
   const showPayNow = !(st != null && !st.scheduled);
-  const periodText =
-    st?.periodStart && st?.periodEnd
-      ? `${fmtBillingDate(st.periodStart)} ~ ${fmtBillingDate(st.periodEnd)}`
-      : null;
 
   // 이용 내역 — 선택 회차의 청구 기간(전월 1일~말일)만 조회(사용자 결정).
   // 기간 미확정(폴백 회차)이면 기간 조건 없이 카드 전체에서 최근순.
@@ -351,7 +346,6 @@ export function useCardDetail(asset: Asset) {
     confirmCancelPay,
     setConfirmCancelPay,
     showPayNow,
-    periodText,
     usageTx,
     usageFailed: usageQ.isError && !usageQ.data,
     retryUsage: () => void usageQ.refetch(),

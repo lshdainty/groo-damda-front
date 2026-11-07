@@ -45,7 +45,7 @@ describe("TransferAccountFields 선택 칸 이름", () => {
         .trim(),
     );
     expect(names[0]).toContain("addTx.fromAccount");
-    expect(names[1]).toContain("addTx.depositAccount");
+    expect(names[1]).toContain("addTx.toAccount");
     act(() => root.unmount());
     container.remove();
   });

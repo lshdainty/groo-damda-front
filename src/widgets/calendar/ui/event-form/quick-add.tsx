@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { format, isSameDay } from "date-fns";
 
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
+import { dsText } from "@/shared/ds/i18n";
 import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
 import {
@@ -88,7 +89,7 @@ export function QuickAddDialog({
     calendars.find((c) => c.rowId === calendarId) ?? defaultCalendar;
   const range = !isSameDay(day.start, day.end);
   const dateText = range
-    ? `${formatDateValue(day.start, today)} ~ ${formatDateValue(day.end, today)}`
+    ? `${formatDateValue(day.start, today)}${dsText("datePicker.rangeSeparator")}${formatDateValue(day.end, today)}`
     : formatDateValue(day.start, today);
   const dirty =
     title !== "" ||

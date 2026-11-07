@@ -133,8 +133,9 @@ export const SettingsPage = () => {
       queryClient.invalidateQueries({ queryKey: oauthKeys.all });
     } else if (linkError) {
       // 그루 계정이 쓴 글(linkError)은 화면에 내지 않는다 — 고정 글만(I-14 10)
+      // [다시 시도] 가 없는 띠 — 뒤 문장으로 다시 하라고 말한다(액션 있는 AccountSection 의 linkError 는 한 문장)
       snackbar.show({
-        message: t("account.toast.linkError"),
+        message: t("account.toast.linkReturnError"),
         tone: "critical",
       });
     }

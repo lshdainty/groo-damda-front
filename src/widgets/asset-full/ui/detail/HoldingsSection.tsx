@@ -10,6 +10,7 @@ import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import { BandFailure, ListTitle } from "@/shared/ui/groo/band-parts";
 import { MINUS, KRW, money, formatChangeRate } from "@/shared/lib/groo/format";
 import { won } from "@/shared/lib/groo/money-text";
+import { formatDateSmart } from "@/shared/lib/date";
 import {
   HOLDING_UNIT_KEY,
   formatQty,
@@ -285,7 +286,8 @@ function TradeCancelConfirm({
     <ConfirmDialog
       title={t("trade.deleteTitle")}
       message={t("trade.deleteConfirmTarget", {
-        date: target.tradeDate.slice(0, 10),
+        // 날짜 규칙(올해 줄임 · 다른 해면 연도) — 서버 키(yyyy-MM-dd)를 그대로 보이지 않는다
+        date: formatDateSmart(target.tradeDate.slice(0, 10)),
         name: label.name,
         qty: label.qty,
         kind: target.tradeType === "SELL" ? t("trade.sell") : t("trade.buy"),

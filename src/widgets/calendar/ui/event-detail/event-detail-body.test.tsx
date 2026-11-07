@@ -128,7 +128,7 @@ describe("줄 차례 · 없는 값", () => {
     expect(rowText("form.recurrence")).toContain("recurrence.weekly");
   });
 
-  it("종일이면 시작 · 종료 대신 종일 줄 하나 — 여러 날이면 ~ 끝 날짜가 붙는다", () => {
+  it("종일이면 시작 · 종료 대신 종일 줄 하나 — 여러 날이면 ~ 로 붙은 한 글이다", () => {
     render(
       event({
         isAllDay: true,
@@ -141,7 +141,46 @@ describe("줄 차례 · 없는 값", () => {
       "form.allDay",
       "form.recurrence",
     ]);
-    expect(rowText("form.allDay")).toMatch(/10월 22일.*~ 10월 24일/);
+    expect(rowText("form.allDay")).toMatch(/10월 22일 \(목\)~10월 24일 \(토\)/);
+    // 줄은 "~" 뒤에서만 바뀐다 — 앞 조각은 "~" 로 끝나 한 덩어리, 뒤 조각도 한 덩어리, 사이는 wbr 하나
+    const range = container.querySelector("[data-slot=event-detail-range]")!;
+    const [head, , tail] = [...range.children] as HTMLElement[];
+    expect(head!.textContent).toMatch(/\(목\)~$/);
+    // 앞 조각은 "~" 까지, 뒤 조각은 날짜 하나 — 둘 다 칸에 들어가면 통째로 내려가는 덩어리, 낱말은 자르지 않는다
+    expect(head!.className).toContain("inline-block");
+    expect(tail!.className).toContain("inline-block");
+    expect(range.className).toContain("break-keep");
+    expect(tail!.textContent).toMatch(/^10월 24일 \(토\)$/);
+    expect(range.querySelector("wbr")).not.toBeNull();
+  });
+
+  it("여러 날 종일 — 하나라도 올해가 아니면 양끝에 연도(끝만 다른 해 · 시작만 다른 해)", () => {
+    const y = new Date().getFullYear();
+    render(
+      event({
+        isAllDay: true,
+        startDate: `${y}-10-28T00:00:00`,
+        endDate: `${y + 1}-01-02T23:59:59`,
+      }),
+    );
+    expect(rowText("form.allDay")).toMatch(
+      new RegExp(
+        `^form\\.allDay${y}년 10월 28일 \\(.\\)~${y + 1}년 1월 2일 \\(.\\)$`,
+      ),
+    );
+    render(
+      event({
+        isAllDay: true,
+        startDate: `${y - 1}-12-29T00:00:00`,
+        endDate: `${y}-01-02T23:59:59`,
+      }),
+    );
+    expect(rowText("form.allDay")).toMatch(
+      new RegExp(`${y - 1}년 12월 29일 \\(.\\)~${y}년 1월 2일 \\(.\\)$`),
+    );
+    // 줄바꿈 규칙은 그대로 — 앞 조각은 "~" 로 끝난다
+    const range = container.querySelector("[data-slot=event-detail-range]")!;
+    expect(range.children[0]!.textContent).toMatch(/\(.\)~$/);
   });
 
   it("꺾쇠가 없다 — 보기만 하는 줄이고 누르는 버튼도 없다", () => {

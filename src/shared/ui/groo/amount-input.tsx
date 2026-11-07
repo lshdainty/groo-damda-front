@@ -1,19 +1,23 @@
 import * as React from "react";
-import {
-  MAX_AMOUNT,
-  blockNonDigitKey,
-  sanitizeAmountInput,
-} from "@/shared/lib/groo/amount";
+import { MAX_AMOUNT, blockNonDigitKey } from "@/shared/lib/groo/amount";
+import { useAmountLimit } from "@/shared/lib/groo/use-amount-limit";
+import { useField } from "@/shared/ds/field";
 import { Input, type InputProps } from "@/shared/ds/input";
 import { useTranslation } from "react-i18next";
+import { AmountLimitError } from "./amount-limit-error";
 
 /**
  * 금액 칸 — ds Input 숫자(I-19 7 · 15). 값은 쉼표 없는 숫자 문자열("1500000")로 들고, 칸에는 쓰는 동안 쉼표를 찍는다
- * ("1,500,000"). 뒤 글자 "원"(suffix — 칸 이름과 함께 읽힌다) · 숫자 키보드 · 부호 · 소수점 키 막기 · 상한(`max`, 기본 100억 —
- * 넘으면 깎고 알림은 sanitizeAmountInput 이 토스트로)은 지금 금액 칸 규칙 그대로다.
+ * ("1,500,000"). 뒤 글자 "원"(suffix — 칸 이름과 함께 읽힌다) · 숫자 키보드 · 부호 · 소수점 키 막기는 지금 금액 칸 규칙 그대로다.
+ *
+ * 상한(`max`, 기본 100억)을 넘는 입력은 **받지 않고 값은 그대로** 둔다(2026-11-07). 칸 아래에 critical 오류
+ * "금액은 100억원까지 입력할 수 있어요." 를 보이고, 지금 값이 상한 안이 되면 사라진다(다음 유효한 입력 · 칸 밖에서 값이 바뀜).
+ * 값을 줄이는 입력은 늘 받는다 — 상한 전에 저장된 옛 값을 열어도 한 자리씩 줄여 나갈 수 있다(오류는 상한 안이 될 때까지 보이고,
+ * 그 값으로 저장은 호출처가 막는다). Field 안이면 Field 의 꼬리(오류가
+ * 설명을 대신하고 polite 로 한 번 읽힌다)가, 밖이면 이 칸이 바로 아래에 같은 모양으로 그린다.
  *
  * 쉼표가 끼면 글자 위치가 밀리므로 캐럿을 "캐럿 앞의 숫자 개수" 로 되돌린다 — 중간에 지우거나 끼워도 커서가 끝으로 튀지 않는다.
- * 저장된 옛 값이 상한을 넘어도 열 때는 그대로 보인다(QA #48 — 몰래 고쳐 넣지 않는다). 쓰기 시작하면 상한으로 깎는다.
+ * 저장된 옛 값이 상한을 넘어도 열 때는 그대로 보인다(QA #48 — 몰래 고쳐 넣지 않는다). 깎지 않고 오류로 알린다.
  */
 
 const comma = (digits: string) =>
@@ -30,6 +34,12 @@ export interface AmountInputProps extends Omit<
   max?: number;
   /** 뒤 글자 — 기본 "원" */
   unit?: React.ReactNode;
+  /**
+   * 상한 오류를 호출처가 그린다 — 칸이 Field 밖 좁은 자리(목록 줄의 뒤쪽 `w-32` 칸)라 바로 아래에 그리면 줄 모양이 깨질 때.
+   * 주면 이 칸은 오류 줄을 그리지 않고(`aria-invalid` 만) 글이 바뀔 때마다 알린다. 호출처는 칸 이름과 이어 줄 안 다른 자리에
+   * 같은 오류 모양(critical)으로 보인다
+   */
+  onLimitMessage?: (message: string | null) => void;
 }
 
 export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
@@ -39,6 +49,7 @@ export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
       onValueChange,
       max = MAX_AMOUNT,
       unit,
+      onLimitMessage,
       onKeyDown,
       placeholder = "0",
       ...props
@@ -46,6 +57,10 @@ export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
     ref,
   ) => {
     const { t } = useTranslation("common");
+    const field = useField();
+    const setControlError = field?.setControlError;
+    const limit = useAmountLimit(value, max);
+    const errorId = React.useId();
     const own = React.useRef<HTMLInputElement>(null);
     const caret = React.useRef<number | null>(null);
     const shown = comma(value);
@@ -66,7 +81,26 @@ export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
       el.setSelectionRange(pos, pos);
     });
 
-    return (
+    // Field 안이면 오류를 Field 꼬리로 올린다(꼬리가 aria-invalid · aria-describedby 를 칸에 이어 준다)
+    React.useEffect(() => {
+      if (!setControlError) return;
+      setControlError(limit.message);
+      return () => setControlError(null);
+    }, [setControlError, limit.message, limit.tick]);
+
+    // 호출처 콜백은 ref 로 든다 — 줄마다 새로 만든 함수가 효과를 다시 돌려 서로를 부르는 일이 없게
+    const limitCb = React.useRef(onLimitMessage);
+    React.useLayoutEffect(() => {
+      limitCb.current = onLimitMessage;
+    });
+    React.useEffect(() => {
+      limitCb.current?.(limit.message);
+    }, [limit.message]);
+    React.useEffect(() => () => limitCb.current?.(null), []);
+
+    // Field 밖이면 이 칸이 직접 이어 준다(호출처가 그리면 aria-invalid 만)
+    const ownError = !field && limit.message != null;
+    const input = (
       <Input
         ref={(node) => {
           own.current = node;
@@ -85,11 +119,38 @@ export const AmountInput = React.forwardRef<HTMLInputElement, AmountInputProps>(
         onChange={(e) => {
           const raw = e.target.value;
           const at = e.target.selectionStart ?? raw.length;
-          caret.current = raw.slice(0, at).replace(/\D/g, "").length;
-          onValueChange(sanitizeAmountInput(raw, max));
+          const before = raw.slice(0, at).replace(/\D/g, "").length;
+          const next = limit.read(raw);
+          if (!next.accepted) {
+            // 받지 않은 입력 — 값은 그대로, 캐럿은 친 글자 앞에 둔다
+            const added = raw.replace(/\D/g, "").length - value.length;
+            caret.current = Math.max(0, before - Math.max(0, added));
+            return;
+          }
+          caret.current = before;
+          onValueChange(next.value);
         }}
         {...props}
+        {...(ownError
+          ? {
+              "aria-invalid": true,
+              "aria-describedby":
+                [
+                  props["aria-describedby"],
+                  onLimitMessage ? undefined : errorId,
+                ]
+                  .filter(Boolean)
+                  .join(" ") || undefined,
+            }
+          : {})}
       />
+    );
+    if (field || onLimitMessage) return input;
+    return (
+      <>
+        {input}
+        <AmountLimitError id={errorId} message={limit.message} />
+      </>
     );
   },
 );

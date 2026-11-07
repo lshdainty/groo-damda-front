@@ -661,7 +661,7 @@ describe("0건 · 실패 · 불러오는 줄", () => {
     const status = container.querySelector("[role=status]")!;
     expect(status.getAttribute("data-slot")).toBe("searchable-list-empty");
     expect(status.textContent).toContain(
-      "'나루로리롱'에 대한 검색 결과가 없어요",
+      '"나루로리롱"에 대한 검색 결과가 없어요',
     );
     expect(listbox()).toBeNull();
   });
@@ -694,7 +694,7 @@ describe("0건 · 실패 · 불러오는 줄", () => {
       </SearchableList>,
     );
     expect(container.textContent).toContain(
-      `'${long}'에 대한 검색 결과가 없어요`,
+      `"${long}"에 대한 검색 결과가 없어요`,
     );
   });
 

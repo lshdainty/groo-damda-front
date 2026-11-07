@@ -13,7 +13,7 @@ import {
 import { formatDay } from "@/shared/lib/groo/format";
 import { formatMonthShort, todayLocalKey } from "@/shared/lib/date";
 import { pendingCycleOnOldDay } from "@/entities/expense";
-import { MAX_BALANCE, sanitizeAmountInput } from "@/shared/lib/groo/amount";
+import { parseAmount } from "@/shared/lib/groo/amount";
 import { signedBalanceOf, subToAssetType } from "../lib/account-sub";
 import { KIND_LABEL_KEY, type AssetKind } from "../lib/asset-kind";
 import {
@@ -222,7 +222,7 @@ export function AssetEditDialog({
       return;
     }
     // 칸에는 절대값만 들어온다(부호 키를 막았다) — 부호는 아래에서 종류가 붙인다.
-    const parsedBalance = Number(sanitizeAmountInput(balanceStr, MAX_BALANCE));
+    const parsedBalance = parseAmount(balanceStr);
     // 통화·환율은 세 묶음이 똑같이 싣는다. 환율은 외화일 때만 값이 있고,
     // 원화로 되돌리면 `null` 로 나가 서버에 남은 옛 환율을 지운다.
     //
@@ -383,7 +383,7 @@ export function AssetEditDialog({
     const accountBalance = signedBalanceOf(accountSub, parsedBalance);
     // 약정 한도는 선택 입력. 신용카드 한도와 같은 컬럼을 쓴다(둘 다 '빌릴 수 있는 최대').
     const overdraftLimit = isOverdraft
-      ? Number(sanitizeAmountInput(creditLimit, MAX_BALANCE)) || null
+      ? parseAmount(creditLimit) || null
       : null;
     const common = {
       assetName: resolvedName,

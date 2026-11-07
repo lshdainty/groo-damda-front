@@ -26,7 +26,9 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (k: string) => k }),
+  useTranslation: () => ({
+    t: (k: string, o?: { date?: string }) => (o?.date ? `${k}|${o.date}` : k),
+  }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 vi.mock("sonner", () => ({ toast: { success: () => {}, error: () => {} } }));
@@ -217,8 +219,10 @@ describe("구독이 막을 때", () => {
       // 서버가 실제로 넣는 문자열을 그대로 쓴다 — 상수를 여기 넣으면 상수와 mock 이
       // 서로를 보고 끄덕이는 닫힌 고리가 되어, 둘 다 틀려도 초록불이 난다.
       blocked: ["SUBSCRIPTION_ACTIVE"],
-      // 서버가 시간대 없이 주는 [UTC] — 화면은 KST 로 읽어 10-01 이 되어야 한다.
-      subscriptionPeriodEnd: "2026-09-30T15:00:00",
+      // 서버가 시간대 없이 주는 [UTC]. 한낮(12:00Z)으로 둬서 시험을 도는 기계의 시간대가
+      // 한국이든 UTC 든 같은 날(10-01)로 읽히게 한다 — 15:00Z 로 두면 KST 에서만 10-01 이 되어
+      // CI(UTC)에서 9월 30일로 나온다(2026-11-07 CI 실패).
+      subscriptionPeriodEnd: "2026-10-01T12:00:00",
     };
     render();
   });
@@ -246,6 +250,13 @@ describe("구독이 막을 때", () => {
     expect(document.body.textContent).toContain(
       "withdraw.blockedSubscriptionUntil",
     );
+  });
+
+  // 날짜는 화면 규칙대로 쓴다("10월 1일") — 서버 키 그대로 "2026-10-01" 을 보이지 않는다(2026-11-07 B4)
+  it("날짜를 규칙대로 쓴다 — ISO 가 아니라 '10월 1일'", () => {
+    const text = document.body.textContent ?? "";
+    expect(text).toMatch(/blockedSubscriptionUntil\|(\d{4}년 )?10월 1일/);
+    expect(text).not.toContain("2026-10-01");
   });
 });
 

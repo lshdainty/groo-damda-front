@@ -1,93 +1,82 @@
-import { beforeEach, describe, it, expect, vi } from "vitest";
-import { toast } from "sonner";
+import { describe, it, expect, vi } from "vitest";
 import {
   MAX_AMOUNT,
   MAX_BALANCE,
   blockNonDigitKey,
   parseAmount,
-  sanitizeAmountInput,
+  readAmountInput,
 } from "./amount";
 
-// 안내가 실제로 나가는지만 본다 — 문구는 CSV 가 정한다.
-vi.mock("sonner", () => ({
-  toast: { info: vi.fn() },
-}));
-
-beforeEach(() => {
-  vi.mocked(toast.info).mockClear();
-});
-
 /**
- * 금액 칸의 계약을 고정한다.
- *
- * QA #12 는 "안내는 100억인데 999억이 타이핑된다" 였다 — 자리수(`slice(0,11)`)로만
- * 자르고 값을 안 봤기 때문이다. 그래서 여기 테스트는 **자리수가 아니라 값**을 본다.
+ * 칸에 치는 동안 — 상한을 넘는 입력은 **받지 않고 값은 그대로**, 알림은 칸 아래 오류(`tooLarge`)로 한다.
+ * QA #130 은 15자리를 치면 아무 말 없이 100억이 되는 것이었고, 그 뒤엔 깎고 토스트를 띄웠다(화면 맨 위 — 칸에서 멀다).
+ * 2026-11-07 디자인시스템 결정으로 깎지 않고 받지 않는다.
  */
-describe("sanitizeAmountInput", () => {
-  it("100억을 넘기면 상한으로 떨어진다 — 11자리(999억)가 통과하던 자리", () => {
-    expect(sanitizeAmountInput("99999999999")).toBe(String(MAX_AMOUNT));
+describe("readAmountInput", () => {
+  it("상한 안은 그대로 받는다", () => {
+    expect(readAmountInput("1500", "150")).toEqual({
+      value: "1500",
+      accepted: true,
+      tooLarge: false,
+    });
+    expect(readAmountInput("10000000000", "1000000000")).toEqual({
+      value: "10000000000",
+      accepted: true,
+      tooLarge: false,
+    });
   });
 
-  it("12자리 붙여넣기도 상한으로 떨어진다 — 자리수 자르기로는 못 막던 경로", () => {
-    expect(sanitizeAmountInput("999999999999")).toBe(String(MAX_AMOUNT));
+  it("100억을 넘는 입력은 받지 않는다 — 값은 앞의 값 그대로", () => {
+    expect(readAmountInput("100000000001", "10000000000")).toEqual({
+      value: "10000000000",
+      accepted: false,
+      tooLarge: false,
+    });
   });
 
-  it("정확히 100억은 그대로 통과한다(경계)", () => {
-    expect(sanitizeAmountInput("10000000000")).toBe("10000000000");
+  it("15자리 붙여넣기도 통째로 받지 않는다 — 깎아서 100억으로 만들지 않는다", () => {
+    expect(readAmountInput("999999999999999", "").accepted).toBe(false);
+    expect(readAmountInput("999999999999999", "250")).toMatchObject({
+      value: "250",
+      accepted: false,
+    });
   });
 
-  it("소수점 뒤는 지우는 게 아니라 버린다 — 1000.5 는 10005 가 아니다", () => {
-    expect(sanitizeAmountInput("1000.5")).toBe("1000");
-  });
-
-  it("선행 0 을 없앤다 — 기본값 0 에 500 을 쳐서 0500 이 되던 잔액 칸(QA #18)", () => {
-    expect(sanitizeAmountInput("0500")).toBe("500");
-  });
-
-  it("0 하나는 남는다 — 뒤에 숫자가 없으면 지울 게 없다", () => {
-    expect(sanitizeAmountInput("0")).toBe("0");
-  });
-
-  it("부호는 삼킨다 — 부호는 거래 종류가 정한다(설명서 계약)", () => {
-    expect(sanitizeAmountInput("-5")).toBe("5");
+  it("값을 줄이는 입력은 늘 받는다 — 옛 초과 값에서 한 자리씩 줄여 나간다", () => {
+    // 상한 전에 저장된 123조 — 한 자리를 지워도 아직 상한 위: 받고, 오류는 계속(tooLarge)
+    expect(readAmountInput("12345678901234", "123456789012345")).toEqual({
+      value: "12345678901234",
+      accepted: true,
+      tooLarge: true,
+    });
+    // 줄이다 상한 안이 되면 오류가 없다
+    expect(readAmountInput("9999999999", "10000000001")).toEqual({
+      value: "9999999999",
+      accepted: true,
+      tooLarge: false,
+    });
+    // 같은 값 · 늘리는 입력(옛 초과 값에 한 자리 더)은 받지 않는다
+    expect(
+      readAmountInput("1234567890123456", "123456789012345"),
+    ).toMatchObject({ accepted: false, tooLarge: true });
   });
 
   it("잔액 칸은 1,000억까지 — 상한이 인자로 갈린다", () => {
-    expect(sanitizeAmountInput("99999999999", MAX_BALANCE)).toBe("99999999999");
-    expect(sanitizeAmountInput("999999999999", MAX_BALANCE)).toBe(
-      String(MAX_BALANCE),
-    );
+    expect(readAmountInput("99999999999", "", MAX_BALANCE).accepted).toBe(true);
+    expect(readAmountInput("999999999999", "5", MAX_BALANCE)).toMatchObject({
+      value: "5",
+      accepted: false,
+    });
   });
 
-  it("빈 문자열·기호만이면 빈 문자열", () => {
-    expect(sanitizeAmountInput("")).toBe("");
-    expect(sanitizeAmountInput("-.")).toBe("");
-  });
-
-  /**
-   * QA #130 — 15자리를 치면 **아무 말 없이** 100억이 됐다. 깎는 것 자체는 맞지만,
-   * 방금 친 숫자가 손가락 밑에서 바뀌었는데 화면이 조용하면 잘린 줄도 모른다.
-   */
-  it("상한에 걸려 깎이면 알린다", () => {
-    sanitizeAmountInput("999999999999999");
-    expect(toast.info).toHaveBeenCalledTimes(1);
-  });
-
-  it("안 깎이면 아무 말도 안 한다 — 칠 때마다 뜨면 안내가 소음이 된다", () => {
-    sanitizeAmountInput("10000000000");
-    sanitizeAmountInput("1000.5");
-    sanitizeAmountInput("");
-    expect(toast.info).not.toHaveBeenCalled();
-  });
-
-  it("연달아 깎여도 안내는 한 자리에 겹쳐 쓴다 — 11자리부터는 키마다 잘린다", () => {
-    sanitizeAmountInput("999999999991");
-    sanitizeAmountInput("9999999999912");
-    // id 가 같아야 떠 있는 토스트가 갱신된다. 없으면 같은 안내가 겹겹이 쌓인다.
-    const ids = vi
-      .mocked(toast.info)
-      .mock.calls.map(([, opts]) => (opts as { id?: string } | undefined)?.id);
-    expect(ids).toEqual(["amount-clamped", "amount-clamped"]);
+  it("소수점 뒤 · 선행 0 · 부호는 버린다", () => {
+    expect(readAmountInput("1000.5", "").value).toBe("1000");
+    expect(readAmountInput("0500", "").value).toBe("500");
+    expect(readAmountInput("-5", "").value).toBe("5");
+    expect(readAmountInput("", "5")).toMatchObject({
+      value: "",
+      accepted: true,
+    });
   });
 });
 

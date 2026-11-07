@@ -79,6 +79,11 @@ export type FieldContextValue = {
   setGraphemeCount: (count: number) => void;
   setControlId: (id: string | undefined) => void;
   setGroup: (group: boolean) => void;
+  /**
+   * 칸이 스스로 알리는 오류 — 입력이 받지 않은 값처럼 Field 의 `invalid` 로는 모르는 오류를 꼬리의 오류 글로 올린다.
+   * 호출처가 준 오류(`invalid` + `errorMessage`)가 있으면 그쪽이 이긴다. 지우려면 null.
+   */
+  setControlError: (message: React.ReactNode | null) => void;
 };
 
 export const FieldContext = React.createContext<FieldContextValue | null>(null);

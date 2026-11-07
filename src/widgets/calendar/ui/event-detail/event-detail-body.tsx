@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/shared/ds/badge";
 import { formatDateValue } from "@/shared/ds/date-picker";
+import { dsText } from "@/shared/ds/i18n";
 import { List, ListItem } from "@/shared/ds/list";
 import { formatTimeValue } from "@/shared/ds/time-picker";
 import { cn } from "@/shared/lib/cn";
@@ -46,6 +47,25 @@ function Piece({ muted, children }: { muted?: boolean; children: ReactNode }) {
       className={cn("whitespace-nowrap", muted && "text-fg-neutral-subtle")}
     >
       {children}
+    </span>
+  );
+}
+
+/**
+ * 여러 날 값 — "10월 25일 (토)~10월 27일 (월)" 한 글. 구간 기호는 앞뒤를 붙여 쓰고(로케일 문구) 줄바꿈 규칙은 앱과 같다:
+ * ① 줄은 "~" 뒤에서 먼저 바꾼다(앞 날짜는 "~" 까지 한 덩어리 — "~" 가 줄 첫머리나 혼자 한 줄에 오지 않는다)
+ * ② 한 덩어리가 칸보다 넓을 때만 그 날짜 안의 띄어쓰기에서 바꾼다("12월 29일 | (월)" 허용) — 낱말 안은 자르지 않는다
+ *    (`break-keep`: "2025년 1|2월" 금지). 덩어리를 inline-block 으로 둬 칸에 들어가면 쪼개지지 않고 통째로 내려간다.
+ */
+function RangePiece({ start, end }: { start: string; end: string }) {
+  return (
+    <span data-slot="event-detail-range" className="min-w-0 break-keep">
+      <span className="inline-block max-w-full">
+        {start}
+        {dsText("datePicker.rangeSeparator")}
+      </span>
+      <wbr />
+      <span className="inline-block max-w-full">{end}</span>
     </span>
   );
 }
@@ -102,6 +122,13 @@ export function EventDetailBody({
   const end = parseISO(event.endDate);
   const sameDay = isSameDay(start, end);
   const dayText = (d: Date) => formatDateValue(d, today);
+  // 여러 날 값은 하나라도 올해가 아니면 양끝에 연도(날짜 규칙 구간 — formatDateRange 와 같다). 올해 기준을 1900 으로 밀어
+  // formatDateValue 가 두 날짜 모두에 연도를 붙이게 한다
+  const rangeNeedsYear =
+    start.getFullYear() !== today.getFullYear() ||
+    end.getFullYear() !== today.getFullYear();
+  const rangeDayText = (d: Date) =>
+    formatDateValue(d, rangeNeedsYear ? new Date(1900, 0, 1) : today);
   const timeText = (d: Date) => formatTimeValue(d);
 
   // D-day — 시작일 기준 · 오늘 0. 오늘 · 1 ~ 3일 남음은 곧 닥친 일이라 warning, 그 밖(4일 이상 · 지남)은 neutral
@@ -185,8 +212,14 @@ export function EventDetailBody({
             suffixText
             suffix={
               <Pieces>
-                <Piece>{dayText(start)}</Piece>
-                {!sameDay && <Piece>{`~ ${dayText(end)}`}</Piece>}
+                {sameDay ? (
+                  <Piece>{dayText(start)}</Piece>
+                ) : (
+                  <RangePiece
+                    start={rangeDayText(start)}
+                    end={rangeDayText(end)}
+                  />
+                )}
               </Pieces>
             }
           />

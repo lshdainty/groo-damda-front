@@ -19,7 +19,7 @@ import { List, ListItem } from "@/shared/ds/list";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { ProgressCircle } from "@/shared/ds/progress-circle";
 import { ResultSection } from "@/shared/ds/result-section";
-import { toLocalDateKey } from "@/shared/lib/date";
+import { formatDateSmart, toLocalDateKey } from "@/shared/lib/date";
 import { BusyOverlay } from "@/shared/ui/groo/busy-overlay";
 // 배럴(`@/features/user`)이 이 파일을 다시 내보내므로 거기서 가져오면 순환이 된다 —
 // ESM 이 버티긴 해도 초기화 순서에 따라 undefined 가 잡힌다. 상대 경로로 간다.
@@ -140,9 +140,14 @@ export function WithdrawDialog({
   // 서버가 시간대 없이 주는 `[UTC]` — 자르면 KST 에서 하루 이르게 보인다.
   // 구독 다이얼로그·설정 화면과 같은 값이라 같은 방식으로 읽어야 세 화면이
   // 다른 날짜를 말하지 않는다.
+  const unblockKey = check?.subscriptionPeriodEnd
+    ? toLocalDateKey(check.subscriptionPeriodEnd)
+    : null;
+  // 화면에는 날짜 규칙대로("10월 31일") — 날짜를 못 읽을 때만 서버 값 앞 10자를 그대로 보인다
   const unblockDate = check?.subscriptionPeriodEnd
-    ? (toLocalDateKey(check.subscriptionPeriodEnd) ??
-      check.subscriptionPeriodEnd.slice(0, 10))
+    ? unblockKey
+      ? formatDateSmart(unblockKey)
+      : check.subscriptionPeriodEnd.slice(0, 10)
     : null;
 
   // 방법을 바꾸면 앞선 오류를 지운다 — 비밀번호가 틀렸다는 빨간 줄이 코드 칸 위에

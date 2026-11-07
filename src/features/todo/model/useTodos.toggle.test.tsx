@@ -82,7 +82,9 @@ describe("useToggleTodoStatus", () => {
     });
     const list = qc.getQueryData<Todo[]>(todoKeys.list(undefined))!;
     expect(list[0]!.status).toBe("PENDING");
-    expect(h.toasts).toEqual(["critical:할 일 상태를 바꾸지 못했어요."]);
+    expect(h.toasts).toEqual([
+      "critical:할 일 상태를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.",
+    ]);
   });
 
   it("성공하면 알리지 않는다", async () => {

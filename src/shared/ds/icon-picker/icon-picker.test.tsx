@@ -339,12 +339,12 @@ describe("IconPickerPanel — 찾기", () => {
     ).toBe("polite");
   });
 
-  it("0건이면 격자 대신 Result Section — \"'{검색어}'에 대한 아이콘이 없어요\"", () => {
+  it('0건이면 격자 대신 Result Section — ""{검색어}"에 대한 아이콘이 없어요"', () => {
     render(<Search initial=" 유니콘 " />);
     expect(cells()).toHaveLength(0);
     expect(document.querySelector("[role=listbox]")).toBeNull();
     const status = document.querySelector("[data-icon-picker=empty]")!;
-    expect(status.textContent).toContain("'유니콘'에 대한 아이콘이 없어요");
+    expect(status.textContent).toContain('"유니콘"에 대한 아이콘이 없어요');
     expect(status.textContent).toContain(
       "다른 말로 찾거나 묶음에서 골라주세요.",
     );

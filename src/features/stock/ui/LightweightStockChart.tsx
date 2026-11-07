@@ -18,6 +18,7 @@ import {
   ColorType,
   CrosshairMode,
   LineStyle,
+  TickMarkType,
   type IChartApi,
   type ISeriesApi,
   type CandlestickData,
@@ -29,6 +30,7 @@ import {
   type Time,
 } from "lightweight-charts";
 import { useTheme } from "@/shared/ui/theme-context";
+import { fmtCrosshairTime, fmtTick } from "./chart-time-format";
 import {
   StockChartLegend,
   type StockChartLegendValue,
@@ -129,31 +131,6 @@ function sma(bars: Bar[], period: number): LineData<UTCTimestamp>[] {
     if (i >= period - 1) out.push({ time: bars[i]!.time, value: sum / period });
   }
   return out;
-}
-
-const pad2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
-
-/** UTCTimestamp(초) → 로컬(기기 타임존, KR 사용자는 KST) Date. Lightweight Charts 는 기본 UTC 표시라 직접 변환. */
-function localDate(time: unknown): Date {
-  const sec = typeof time === "number" ? time : Number(time);
-  return new Date(sec * 1000);
-}
-
-/** 축 틱 라벨 — 1m=시:분, 1d=월.일 (로컬 타임존). */
-function fmtTick(time: unknown, interval: "1m" | "1d"): string {
-  const d = localDate(time);
-  return interval === "1m"
-    ? `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
-    : `${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
-}
-
-/** 크로스헤어 시간 라벨 — 1m=YYYY.MM.DD HH:MM, 1d=YYYY.MM.DD (로컬 타임존). */
-function fmtCrosshairTime(time: unknown, interval: "1m" | "1d"): string {
-  const d = localDate(time);
-  const date = `${d.getFullYear()}.${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
-  return interval === "1m"
-    ? `${date} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`
-    : date;
 }
 
 export function LightweightStockChart({
@@ -320,7 +297,8 @@ export function LightweightStockChart({
           fmtCrosshairTime(time, intervalRef.current),
       },
       timeScale: {
-        tickMarkFormatter: (time: Time) => fmtTick(time, intervalRef.current),
+        tickMarkFormatter: (time: Time, type: TickMarkType) =>
+          fmtTick(time, intervalRef.current, type === TickMarkType.Year),
       },
     });
     chartRef.current = chart;

@@ -1,6 +1,6 @@
 import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { refetchMissingRefs } from "@/shared/api";
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { ChevronRight, StickyNote } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -33,6 +33,7 @@ import { todayLocalKey } from "@/shared/lib/date";
 import { Icon } from "@/shared/ui/groo/primitives";
 import { Won } from "@/shared/ui/groo/won-text";
 import { AmountInput } from "@/shared/ui/groo/amount-input";
+import { AmountLimitError } from "@/shared/ui/groo/amount-limit-error";
 import { useCreateDutchPay } from "@/features/dutch-pay";
 import { useExpenseCategories } from "@/features/expense";
 import { useCurrentUser } from "@/features/user";
@@ -119,6 +120,13 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
   const [meRatio, setMeRatio] = useState("1");
   const [others, setOthers] = useState<Person[]>([]);
   const [memo, setMemo] = useState("");
+  // 직접 입력 칸의 상한 오류(참여자별) — 칸이 목록 줄 뒤쪽 좁은 자리라 오류는 줄의 이름 아래에 보인다
+  const [limitErr, setLimitErr] = useState<Record<string, string | null>>({});
+  const limitErrId = useId();
+  const limitMessage =
+    method === "CUSTOM"
+      ? (Object.values(limitErr).find((m) => m != null) ?? null)
+      : null;
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
@@ -534,6 +542,14 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
                           value={p.custom}
                           max={MAX_AMOUNT}
                           onValueChange={(v) => patch(p.uid, { custom: v })}
+                          aria-describedby={
+                            limitErr[p.uid] ? `${limitErrId}-error` : undefined
+                          }
+                          onLimitMessage={(m) =>
+                            setLimitErr((s) =>
+                              s[p.uid] === m ? s : { ...s, [p.uid]: m },
+                            )
+                          }
                         />
                       )
                     }
@@ -541,6 +557,13 @@ export function useDutchStep(o: DutchStepOptions): TxEmbedParts {
                 );
               })}
             </List>
+            {/* 상한 오류 — 칸이 줄 뒤쪽 좁은 자리라 이름 열을 누르지 않게 목록 아래에 한 줄로 */}
+            <div className="px-global-gutter">
+              <AmountLimitError
+                id={`${limitErrId}-error`}
+                message={limitMessage}
+              />
+            </div>
           </>
         )}
 

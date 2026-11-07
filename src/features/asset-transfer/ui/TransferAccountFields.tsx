@@ -10,10 +10,9 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import { KRW } from "@/shared/lib/groo/format";
-import {
-  sanitizeAmountInput,
-  blockNonDigitKey,
-} from "@/shared/lib/groo/amount";
+import { blockNonDigitKey } from "@/shared/lib/groo/amount";
+import { useAmountLimit } from "@/shared/lib/groo/use-amount-limit";
+import { AmountLimitError } from "@/shared/ui/groo/amount-limit-error";
 import type { Asset } from "@/entities/asset";
 import { transferEligible, isLoanTarget } from "../model/rules";
 
@@ -73,6 +72,9 @@ export function TransferAccountFields({
   const showInterest = interestEnabled && isLoanTarget(assets, toAssetRowId);
 
   const uid = useId();
+  // 상한을 넘는 입력은 받지 않고 값은 그대로 — 칸 아래에 오류(다음 유효한 입력에서 사라진다)
+  const feeLimit = useAmountLimit(fee);
+  const interestLimit = useAmountLimit(interest);
   const label = (a: Asset) =>
     a.institution ? `${a.institution} · ${a.assetName}` : a.assetName;
 
@@ -103,9 +105,7 @@ export function TransferAccountFields({
       </Field>
 
       <Field style={{ marginBottom: 14 }}>
-        <FieldLabel id={`${uid}to-label`}>
-          {t("addTx.depositAccount")}
-        </FieldLabel>
+        <FieldLabel id={`${uid}to-label`}>{t("addTx.toAccount")}</FieldLabel>
         <Select
           value={toAssetRowId != null ? String(toAssetRowId) : ""}
           onValueChange={(v) => onToChange(v ? Number(v) : null)}
@@ -133,11 +133,17 @@ export function TransferAccountFields({
         <Input
           className="num"
           value={fee}
-          onChange={(e) => onFeeChange(sanitizeAmountInput(e.target.value))}
+          onChange={(e) => {
+            const r = feeLimit.read(e.target.value);
+            if (r.accepted) onFeeChange(r.value);
+          }}
           onKeyDown={blockNonDigitKey}
           placeholder="0"
           inputMode="numeric"
+          aria-invalid={feeLimit.message ? true : undefined}
+          aria-describedby={feeLimit.message ? `${uid}fee-error` : undefined}
         />
+        <AmountLimitError id={`${uid}fee-error`} message={feeLimit.message} />
       </Field>
 
       {/* 이자 — 대출 상환에만. 상환액 중 이자는 부채를 줄이지 않고 지출로 잡힌다. */}
@@ -147,12 +153,21 @@ export function TransferAccountFields({
           <Input
             className="num"
             value={interest}
-            onChange={(e) =>
-              onInterestChange(sanitizeAmountInput(e.target.value))
-            }
+            onChange={(e) => {
+              const r = interestLimit.read(e.target.value);
+              if (r.accepted) onInterestChange(r.value);
+            }}
             onKeyDown={blockNonDigitKey}
             placeholder="0"
             inputMode="numeric"
+            aria-invalid={interestLimit.message ? true : undefined}
+            aria-describedby={
+              interestLimit.message ? `${uid}interest-error` : undefined
+            }
+          />
+          <AmountLimitError
+            id={`${uid}interest-error`}
+            message={interestLimit.message}
           />
           <div
             style={{

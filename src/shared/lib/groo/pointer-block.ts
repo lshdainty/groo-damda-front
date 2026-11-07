@@ -46,11 +46,11 @@ const PREVENTED = new Set<string>([
   "dblclick",
 ]);
 
-/** 차단 중에도 통과시킬 자리 — 저장 뒤 뜨는 토스트를 못 누르면 곤란하고,
+/** 차단 중에도 통과시킬 자리 — 저장 뒤 뜨는 스낵바(되돌리기 · 다시 시도)를 못 누르면 곤란하고,
  *  아직 살아 있는 다른 오버레이 안은 애초에 '뒤 화면' 이 아니다.
  *  (vaul 시트도 내부적으로 Radix Dialog 라 `role="dialog"` 가 붙는다.) */
 const EXEMPT =
-  '[role="dialog"],[role="alertdialog"],[data-sonner-toast],[data-sonner-toaster]';
+  '[role="dialog"],[role="alertdialog"],[data-slot="snackbar-region"]';
 
 /** 차단이 풀리는 시각(epoch ms). 0 이면 차단 없음. */
 let until = 0;
