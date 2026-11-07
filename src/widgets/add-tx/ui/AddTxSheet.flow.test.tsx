@@ -800,6 +800,36 @@ describe("결제 문자에서 온 내역의 거래 종류 (QA #123)", () => {
     expect(alert).toBeDefined();
   });
 
+  it("같은 문자 묶음에서는 한 번만 읽힌다 — 1단계로 갔다 2단계가 다시 붙어도 role=alert 가 다시 붙지 않는다", async () => {
+    state.parsed = { ...parsed, confidence: "LOW" };
+    await open();
+    await pressStartingWith("sms.pasteOpen");
+    setValue(
+      document.body.querySelector<HTMLTextAreaElement>(
+        "[role=dialog] textarea",
+      )!,
+      "[Web발신] KB국민 5,500원 스타벅스",
+    );
+    await press("sms.pasteAction");
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    const alerts = () =>
+      [...document.body.querySelectorAll('[role="alert"]')].filter((el) =>
+        el.textContent?.includes("sms.lowConfidence"),
+      );
+    expect(alerts()).toHaveLength(1);
+    click(
+      document.body.querySelector<HTMLElement>(
+        "[data-slot=bottom-sheet-back]",
+      )!,
+    );
+    await tick();
+    await press("addTx.next");
+    expect(document.body.textContent).toContain("sms.lowConfidence");
+    expect(alerts()).toHaveLength(0);
+  });
+
   it("해석이 확실하면 불확실 경고가 없다", async () => {
     await readSms();
     expect(document.body.textContent).not.toContain("sms.lowConfidence");

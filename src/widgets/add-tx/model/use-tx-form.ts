@@ -372,6 +372,8 @@ export function useTxForm({
   const [rememberCard, setRememberCard] = useState(false);
   /** 문자 해석 확신이 낮다 — 2단계 맨 위 Callout 이 확인을 부탁한다 */
   const [smsLow, setSmsLow] = useState(false);
+  // 낭독기에 알린 문자 묶음인가 — 2단계가 다시 붙을 때마다(1단계로 갔다 돌아옴) 같은 경고를 또 읽지 않게
+  const [smsLowAnnounced, setSmsLowAnnounced] = useState(false);
   /** 문자를 읽는 중 — [문자 읽기] 버튼 진행 표시 */
   const [smsLoading, setSmsLoading] = useState(false);
   /** 저장 때 자산 · 카테고리 목록을 받아 오지 못했다 — 값을 추측해 보내지 않고 요청 없이 맨 위 알림으로 알린다 */
@@ -531,6 +533,7 @@ export function useTxForm({
     setSmsDraft(null);
     setRememberCard(false);
     setSmsLow(false);
+    setSmsLowAnnounced(false);
     setType(p.expenseType as TxType);
     // 프리셋 금액은 원화다 — 통화 칩이 ₩ KRW 로 돌아온다(20a). 금액은 채운 값일 뿐 잠그지 않는다(33a)
     setOrigCurrency(DEFAULT_CURRENCY);
@@ -989,6 +992,7 @@ export function useTxForm({
   const applySms = (text: string, parsed: SmsParseResult) => {
     setSmsDraft({ text, parsed });
     setSmsLow(parsed.confidence === "LOW");
+    setSmsLowAnnounced(false);
     setActivePresetId(null);
     setRememberCard(false);
     setType("EXPENSE");
@@ -1383,6 +1387,7 @@ export function useTxForm({
     setSmsDraft(null);
     setRememberCard(false);
     setSmsLow(false);
+    setSmsLowAnnounced(false);
     setSmsLoading(false);
     setOpenReconcile(false);
     setSaveConfirm(null);
@@ -1640,6 +1645,8 @@ export function useTxForm({
     errors,
     entryNumber,
     smsLow,
+    smsLowAnnounced,
+    markSmsLowAnnounced: () => setSmsLowAnnounced(true),
     smsLoading,
     setSmsLoading,
     assetsLoaded,
