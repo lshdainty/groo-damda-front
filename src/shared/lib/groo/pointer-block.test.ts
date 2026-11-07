@@ -90,14 +90,14 @@ describe("포인터 차단 창", () => {
     expect(fire(back, "mousedown").defaultPrevented).toBe(true);
   });
 
-  it("아직 떠 있는 오버레이 안과 토스트는 차단 중에도 눌린다", () => {
+  it("아직 떠 있는 오버레이 안과 스낵바는 차단 중에도 눌린다", () => {
     const dialog = document.createElement("div");
     dialog.setAttribute("role", "dialog");
     const inside = document.createElement("button");
     inside.addEventListener("click", spy);
     dialog.appendChild(inside);
     const toast = document.createElement("div");
-    toast.setAttribute("data-sonner-toast", "");
+    toast.setAttribute("data-slot", "snackbar-region");
     const undo = document.createElement("button");
     undo.addEventListener("click", spy);
     toast.appendChild(undo);

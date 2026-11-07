@@ -6,12 +6,6 @@
  * "그 뒤를 버리는" 게 맞다. 부호는 지출·수입 종류가 정하므로 여기서도 버린다.
  */
 
-import { toast } from "sonner";
-// 초기화까지 끝난 인스턴스를 쓴다 — `i18next` 를 직접 들이면 설정 모듈이 아직
-// 안 실렸을 때 키가 그대로 나온다. `format.ts` 도 같은 자리를 본다.
-import { i18n } from "@/shared/i18n/config";
-import { money } from "./format";
-
 /** 거래 한 건에 허용하는 최대 금액(100억원). 0 을 몇 개 더 찍는 오타를 막는다. */
 export const MAX_AMOUNT = 10_000_000_000;
 
@@ -21,42 +15,43 @@ export const MAX_AMOUNT = 10_000_000_000;
  */
 export const MAX_BALANCE = 100_000_000_000;
 
+/** 입력 문자열 → 자릿수만 남긴 문자열(소수점 이하 절사, 선행 0 제거). 상한은 보지 않는다. */
+function digitsOf(raw: string): string {
+  const head = raw.split(".")[0] ?? "";
+  return head.replace(/[^0-9]/g, "").replace(/^0+(?=\d)/, "");
+}
+
 /**
- * 입력 문자열 → 자릿수만 남긴 문자열(소수점 이하 절사, 선행 0 제거, `max` 로 클램프).
+ * 칸에 쳐 넣은 글 → 칸이 받을 값. **상한을 넘는 입력은 받지 않고 값을 그대로 둔다**(2026-11-07 디자인시스템 결정).
  *
- * 예전엔 `slice(0, 11)` 로 **자리수만** 잘라 안내는 "100억까지" 인데 999억이 타이핑됐다
- * (QA #12). 자리수가 아니라 값으로 막는다 — 12자리를 붙여넣어도 상한으로 떨어진다.
- * 선행 0 제거는 기본값 `0` 이 남아 `0500` 이 되던 잔액 칸(QA #18)까지 같이 덮는다.
+ * 예전엔 `slice(0, 11)` 로 자리수만 잘라 안내는 "100억까지" 인데 999억이 타이핑됐다(QA #12). 그 뒤엔 상한으로 깎고
+ * 토스트를 띄웠는데, 토스트가 입력 중인 칸에서 멀고(화면 맨 위) 값이 몰래 바뀌었다. 지금은 받지 않고(`value` = `prev`)
+ * `tooLarge` 로 알려 칸 아래에 오류를 보인다 — 순수 함수라 알리는 곳은 호출처 몫이다(`useAmountLimit`).
+ *
+ * 12자리를 붙여넣어도 마찬가지다 — 통째로 받지 않는다. 선행 0 제거는 기본값 `0` 이 남아 `0500` 이 되던
+ * 잔액 칸(QA #18)까지 같이 덮는다.
+ */
+export function readAmountInput(
+  raw: string,
+  prev: string,
+  max: number = MAX_AMOUNT,
+): { value: string; tooLarge: boolean } {
+  const digits = digitsOf(raw);
+  if (Number(digits) > max) return { value: prev, tooLarge: true };
+  return { value: digits, tooLarge: false };
+}
+
+/**
+ * 입력 문자열 → 자릿수만 남긴 문자열, `max` 를 넘으면 `max` 로 깎는다. **알림이 없는 순수 정리**다 —
+ * 저장 직전에 쓰는 자리(저장된 옛 값이 상한을 넘을 수 있다)에서만 쓴다. 칸에 치는 동안은 `readAmountInput`.
  */
 export function sanitizeAmountInput(
   raw: string,
   max: number = MAX_AMOUNT,
 ): string {
-  const head = raw.split(".")[0] ?? "";
-  const digits = head.replace(/[^0-9]/g, "").replace(/^0+(?=\d)/, "");
+  const digits = digitsOf(raw);
   if (!digits) return "";
-  if (Number(digits) > max) {
-    notifyAmountClamped(max);
-    return String(max);
-  }
-  return digits;
-}
-
-/**
- * 상한에 걸려 값이 깎였다고 알린다.
- *
- * **이 파일에서 유일하게 순수하지 않은 자리다.** 그래도 여기 두는 이유는 상한을 아는
- * 곳이 여기뿐이기 때문이다 — 자르는 자리와 알리는 자리가 떨어지면 새로 생기는 금액 칸이
- * 조용히 잘리는 쪽으로 돌아간다(QA #130 이 그 상태였다: 15자리를 치면 아무 말 없이
- * 100억이 됐다). 화면마다 안내 문구를 다시 그리는 대신 칸 전체가 같은 한 줄을 쓴다.
- *
- * 토스트는 **id 를 고정**한다 — 11번째 자리부터는 키를 누를 때마다 잘리므로,
- * id 가 없으면 같은 안내가 겹겹이 쌓인다. 같은 id 면 떠 있는 토스트가 갱신된다.
- */
-function notifyAmountClamped(max: number): void {
-  toast.info(i18n.t("common:amountClamped", { max: money(max) }), {
-    id: "amount-clamped",
-  });
+  return Number(digits) > max ? String(max) : digits;
 }
 
 /**

@@ -100,17 +100,21 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
     const [controlIdOverride, setControlId] = React.useState<string>();
     const [group, setGroup] = React.useState(false);
     const [count, setGraphemeCount] = React.useState(0);
+    const [controlError, setControlError] =
+      React.useState<React.ReactNode | null>(null);
     const controlId = id ?? controlIdOverride ?? `${auto}control`;
     const labelId = `${auto}label`;
     const descriptionId = `${auto}description`;
     const errorId = `${auto}error`;
     const countId = `${auto}count`;
     const isRequired = required || showRequiredIndicator;
-    const showError =
-      invalid &&
-      errorMessage != null &&
-      errorMessage !== false &&
-      errorMessage !== "";
+    const hasText = (node: React.ReactNode) =>
+      node != null && node !== false && node !== "";
+    const ownError = invalid && hasText(errorMessage);
+    // 호출처가 준 오류가 먼저, 없으면 칸이 스스로 알린 오류(controlError)
+    const showError = ownError || hasText(controlError);
+    const shownError = ownError ? errorMessage : controlError;
+    const isInvalid = invalid || hasText(controlError);
     const showDescription =
       !showError &&
       description != null &&
@@ -128,7 +132,7 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
       controlId,
       labelId,
       describedBy,
-      invalid,
+      invalid: isInvalid,
       required: isRequired,
       disabled,
       readOnly,
@@ -136,6 +140,7 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
       setGraphemeCount,
       setControlId,
       setGroup,
+      setControlError,
     };
 
     const labelClass = cn(
@@ -171,7 +176,7 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
         <div
           ref={ref}
           data-slot="field"
-          data-invalid={invalid || undefined}
+          data-invalid={isInvalid || undefined}
           data-disabled={disabled || undefined}
           className={cn("flex w-full min-w-0 flex-col gap-x2", className)}
           {...props}
@@ -226,7 +231,7 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
                     aria-hidden
                     className="mr-x1_5 mt-[calc((var(--text-t4--line-height)_-_1rem)/2)] size-[16px] shrink-0"
                   />
-                  <span className="min-w-0">{errorMessage}</span>
+                  <span className="min-w-0">{shownError}</span>
                 </p>
               )}
               {showDescription && (
@@ -252,7 +257,7 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
                 >
                   <span
                     className={
-                      invalid || (counterMax != null && count > counterMax)
+                      isInvalid || (counterMax != null && count > counterMax)
                         ? "text-fg-critical"
                         : count === 0
                           ? "text-fg-neutral-subtle"
@@ -263,7 +268,7 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
                   </span>
                   <span
                     className={
-                      invalid || (counterMax != null && count > counterMax)
+                      isInvalid || (counterMax != null && count > counterMax)
                         ? "text-fg-critical"
                         : "text-fg-neutral-subtle"
                     }
@@ -275,7 +280,7 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
             </div>
           )}
           <span className="sr-only" aria-live="polite">
-            {showError ? errorMessage : null}
+            {showError ? shownError : null}
           </span>
         </div>
       </FieldContext.Provider>

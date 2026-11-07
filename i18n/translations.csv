@@ -26,7 +26,6 @@ common,loading,로딩 중...,Loading...
 common,noData,데이터가 없습니다,No data
 common,error,오류가 발생했습니다,An error occurred
 common,apiError,문제가 생겼어요. 잠시 후 다시 시도해주세요,Something went wrong. Please try again.
-common,amountClamped,최대 {{max}}까지 넣을 수 있어요. 그 값으로 맞췄어요,You can enter up to {{max}}. Adjusted to that amount.
 common,close,닫기,Close
 common,add,추가,Add
 common,newTab,새 탭,new tab
@@ -61,6 +60,7 @@ common,themeSystem,시스템,System
 common,none,없음,None
 common,noSearchResults,검색 결과가 없습니다,No results found
 common,amountTooLarge,금액은 100억원까지 입력할 수 있어요.,Amount can be up to 10 billion won.
+common,amountTooLargeAt,금액은 {{max}}까지 입력할 수 있어요.,Amount can be up to {{max}}.
 common,recordOnly,기록만,Record only
 layout,dashboard,대시보드,Dashboard
 layout,todo,할일,Todo

@@ -1,12 +1,12 @@
+import { useId, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ds/button";
 import { Input } from "@/shared/ds/input";
 import { dsText } from "@/shared/ds/i18n";
-import {
-  blockNonDigitKey,
-  sanitizeAmountInput,
-} from "@/shared/lib/groo/amount";
+import { blockNonDigitKey } from "@/shared/lib/groo/amount";
+import { useAmountLimit } from "@/shared/lib/groo/use-amount-limit";
+import { AmountLimitError } from "@/shared/ui/groo/amount-limit-error";
 import { MAX_AMOUNT_RANGES, type AmountRange } from "../../model/filter";
 
 /**
@@ -21,51 +21,74 @@ export function FilterAmountBody({
   onChange: (next: AmountRange[]) => void;
 }) {
   const { t } = useTranslation("expense");
+  const uid = useId();
   const set = (i: number, patch: Partial<AmountRange>) =>
     onChange(value.map((r, k) => (k === i ? { ...r, ...patch } : r)));
+  // 상한을 넘는 입력은 받지 않고 값은 그대로 — 그 칸이 든 줄 아래에 오류, 다음 유효한 입력에서 사라진다
+  const limit = useAmountLimit();
+  const [badAt, setBadAt] = useState<{ i: number; f: "min" | "max" } | null>(
+    null,
+  );
+  const typed = (i: number, f: "min" | "max", raw: string) => {
+    const r = limit.read(raw, value[i]![f]);
+    if (r.accepted) set(i, { [f]: r.value });
+    else setBadAt({ i, f });
+  };
+  const bad = (i: number, f: "min" | "max") =>
+    limit.message != null && badAt?.i === i && badAt.f === f;
   return (
     <div className="flex flex-col gap-x2">
       {value.map((r, i) => (
-        <div key={i} className="flex items-center gap-x2">
-          <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-x2">
-            <Input
-              inputMode="numeric"
-              className="num"
-              aria-label={t("filter.minAmount")}
-              placeholder={t("filter.minAmount")}
-              suffix={t("filter.amountUnit")}
-              value={r.min}
-              onChange={(e) =>
-                set(i, { min: sanitizeAmountInput(e.target.value) })
-              }
-              onKeyDown={blockNonDigitKey}
-            />
-            <span aria-hidden className="text-fg-neutral-subtle">
-              {dsText("datePicker.rangeSeparator")}
-            </span>
-            <Input
-              inputMode="numeric"
-              className="num"
-              aria-label={t("filter.maxAmount")}
-              placeholder={t("filter.maxAmount")}
-              suffix={t("filter.amountUnit")}
-              value={r.max}
-              onChange={(e) =>
-                set(i, { max: sanitizeAmountInput(e.target.value) })
-              }
-              onKeyDown={blockNonDigitKey}
-            />
+        <div key={i} className="flex flex-col gap-x2">
+          <div className="flex items-center gap-x2">
+            <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-x2">
+              <Input
+                inputMode="numeric"
+                className="num"
+                aria-label={t("filter.minAmount")}
+                placeholder={t("filter.minAmount")}
+                suffix={t("filter.amountUnit")}
+                value={r.min}
+                onChange={(e) => typed(i, "min", e.target.value)}
+                onKeyDown={blockNonDigitKey}
+                aria-invalid={bad(i, "min") ? true : undefined}
+                aria-describedby={
+                  bad(i, "min") ? `${uid}${i}-error` : undefined
+                }
+              />
+              <span aria-hidden className="text-fg-neutral-subtle">
+                {dsText("datePicker.rangeSeparator")}
+              </span>
+              <Input
+                inputMode="numeric"
+                className="num"
+                aria-label={t("filter.maxAmount")}
+                placeholder={t("filter.maxAmount")}
+                suffix={t("filter.amountUnit")}
+                value={r.max}
+                onChange={(e) => typed(i, "max", e.target.value)}
+                onKeyDown={blockNonDigitKey}
+                aria-invalid={bad(i, "max") ? true : undefined}
+                aria-describedby={
+                  bad(i, "max") ? `${uid}${i}-error` : undefined
+                }
+              />
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="small"
+              layout="iconOnly"
+              aria-label={t("filter.removeRow")}
+              onClick={() => onChange(value.filter((_, k) => k !== i))}
+            >
+              <X />
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="small"
-            layout="iconOnly"
-            aria-label={t("filter.removeRow")}
-            onClick={() => onChange(value.filter((_, k) => k !== i))}
-          >
-            <X />
-          </Button>
+          <AmountLimitError
+            id={`${uid}${i}-error`}
+            message={badAt?.i === i ? limit.message : null}
+          />
         </div>
       ))}
       {value.length < MAX_AMOUNT_RANGES && (
