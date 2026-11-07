@@ -25,9 +25,7 @@ export function CardLimit({ asset, c }: { asset: Asset; c: CardDetail }) {
       {limit > 0 && (
         <>
           <ListHeader as="div" variant="boldSolid" className="mt-x2">
-            <h2 id={titleId} className="m-0 tracking-normal [font:inherit]">
-              {t("assetDetail.limitUsage")}
-            </h2>
+            <h2 id={titleId}>{t("assetDetail.limitUsage")}</h2>
             <span className="shrink-0 text-t4 font-bold tabular-nums text-fg-neutral">
               {t("assetDetail.limitPctUsed", { pct: limitPct })}
             </span>

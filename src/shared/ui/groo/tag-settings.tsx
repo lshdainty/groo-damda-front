@@ -239,7 +239,7 @@ export function TagSettings<T extends TagLike>({
             </Callout>
           </div>
           <ListHeader as="div" variant="boldSolid" className="mt-x4">
-            <h2 className="m-0 font-[inherit] text-[length:inherit]">
+            <h2>
               {t("tags.title")}
               {/* 수는 불러온 목록에서만 — 불러오는 동안은 Skeleton, 실패하면 수를 쓰지 않는다 */}
               {failed ? null : loading ? (

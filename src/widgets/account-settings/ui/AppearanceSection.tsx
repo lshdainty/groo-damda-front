@@ -135,6 +135,7 @@ export function AppearanceSection({ mobile }: { mobile: boolean }) {
         <ListRadioGroup
           aria-label={t("theme.label")}
           value={theme}
+          onReselect={close}
           onValueChange={(v) => {
             setTheme(v as typeof theme);
             close();
@@ -163,6 +164,7 @@ export function AppearanceSection({ mobile }: { mobile: boolean }) {
         <ListRadioGroup
           aria-label={t("language.label")}
           value={langChoice}
+          onReselect={close}
           onValueChange={(v) => {
             const choice = v as LanguageChoice;
             setLangChoice(choice);
@@ -192,6 +194,7 @@ export function AppearanceSection({ mobile }: { mobile: boolean }) {
         <ListRadioGroup
           aria-label={t("region.label")}
           value={prefs?.timezone ?? ""}
+          onReselect={close}
           onValueChange={(tz) => {
             close();
             if (tz && tz !== prefs?.timezone) savePref({ timezone: tz });
@@ -226,6 +229,7 @@ export function AppearanceSection({ mobile }: { mobile: boolean }) {
         <ListRadioGroup
           aria-label={t("currency.label")}
           value={prefs?.defaultCurrency ?? DEFAULT_CURRENCY}
+          onReselect={close}
           onValueChange={(c) => {
             close();
             if (c !== prefs?.defaultCurrency) savePref({ defaultCurrency: c });

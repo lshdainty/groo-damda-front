@@ -25,12 +25,12 @@ import {
   MeterBar,
 } from "@/shared/ui/groo/band-parts";
 import { SavingGoalAddDialog } from "./SavingGoalAddDialog";
-import { parseLocalDate } from "@/shared/lib/date";
+import { formatYearMonthDot, parseLocalDate } from "@/shared/lib/date";
 
 const formatDeadline = (deadline: string | null): string | null => {
   const d = parseLocalDate(deadline);
   if (!d) return null;
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return formatYearMonthDot(d);
 };
 
 function GoalRow({

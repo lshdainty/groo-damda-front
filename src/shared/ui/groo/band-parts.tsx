@@ -236,9 +236,7 @@ export function ListTitle({
 }) {
   return (
     <ListHeader as="div" variant="boldSolid" className={cn(!first && "mt-x2")}>
-      <h2 id={id} className="m-0 tracking-normal [font:inherit]">
-        {children}
-      </h2>
+      <h2 id={id}>{children}</h2>
       {action && (
         <Button
           type="button"

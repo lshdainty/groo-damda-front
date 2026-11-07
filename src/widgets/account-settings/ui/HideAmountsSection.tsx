@@ -218,9 +218,7 @@ export function HideAmountsSection({
   const kindSection = (
     <>
       <ListHeader as="div" variant="boldSolid">
-        <h2 id={kindId} className="m-0 text-inherit [font:inherit]">
-          {t("hideAmounts.kindLabel")}
-        </h2>
+        <h2 id={kindId}>{t("hideAmounts.kindLabel")}</h2>
         <HelpBubble>
           <HelpBubbleTrigger asChild>
             <Button

@@ -313,9 +313,7 @@ export function RecurringDetailDialog({
             {dates.length > 0 && (
               <>
                 <ListHeader as="div" variant="boldSolid" className="mt-x2">
-                  <h4 className="m-0 font-[inherit] text-[length:inherit]">
-                    {t("nextDatesTitle")}
-                  </h4>
+                  <h4>{t("nextDatesTitle")}</h4>
                 </ListHeader>
                 <p
                   data-slot="recurring-next-dates"

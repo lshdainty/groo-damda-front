@@ -154,6 +154,50 @@ export const formatYearMonth = (input: Date | string): string => {
   return `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
 };
 
+/**
+ * 점 표기 연·월 — ko "2026. 1."(0 을 채우지 않고 마지막 [월] 뒤에도 점, DESIGN.md International 날짜 "점") / en "Jan 2026"(점 표기는 한국어 전용).
+ * 표 · 목록 끝처럼 좁은 칸의 연월(저축 목표 마감 등).
+ */
+export const formatYearMonthDot = (input: Date | string): string => {
+  const d = toDate(input);
+  if (isEnLocale()) return format(d, "MMM yyyy", { locale: enUS });
+  return `${d.getFullYear()}. ${d.getMonth() + 1}.`;
+};
+
+/**
+ * 기간 줄 — ko "11월 2일~11월 8일" / en "Nov 2~Nov 8"(올해 줄임, 0 채움 없음, 물결표는 앞뒤를 붙인다 — DESIGN.desk.md 구간).
+ * 두 끝 중 하나라도 올해가 아니면 두 끝 모두 연도를 붙인다("2025년 12월 29일~2026년 1월 4일") — 연도 없이 끝만 달라 보이는 것을 막는다.
+ * 앱 `dateRange` 와 같다. `now` 는 시험용(올해를 고정한다).
+ */
+export const formatDateRange = (
+  from: Date | string,
+  to: Date | string,
+  now: Date = new Date(),
+): string => {
+  const thisYear = now.getFullYear();
+  const withYear =
+    toDate(from).getFullYear() !== thisYear ||
+    toDate(to).getFullYear() !== thisYear;
+  const one = (x: Date | string) =>
+    withYear ? formatDateLong(x) : formatMonthDay(x);
+  return `${one(from)}~${one(to)}`;
+};
+
+/**
+ * 월 눈금 — 모두 같은 해면 월만(ko "1월" · en "Jan", 0 을 채우지 않는다), 해가 섞이면 연월(ko "2026. 1." · en "Jan 2026").
+ * 통계 추이 · 순자산 추이 같은 월별 차트의 가로 눈금. 앱 `monthLabels` 와 같다.
+ */
+export const formatMonthTicks = (
+  rows: readonly { year: number; month: number }[],
+): string[] => {
+  const same = rows.length > 0 && rows.every((r) => r.year === rows[0]!.year);
+  return rows.map((r) =>
+    same
+      ? formatMonthShort(r.month)
+      : formatYearMonthDot(new Date(r.year, r.month - 1, 1)),
+  );
+};
+
 /** ko "Y년" / en "Y". 연도 number 직접 허용. */
 export const formatYear = (input: Date | string | number): string => {
   const y = typeof input === "number" ? input : toDate(input).getFullYear();

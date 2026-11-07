@@ -5,7 +5,8 @@ import {
   isFixedBulkPath,
 } from "@/shared/lib/groo/fixed-bulk-path";
 import { useTranslation } from "react-i18next";
-import { formatChangeRate, isEn } from "@/shared/lib/groo/format";
+import { formatChangeRate } from "@/shared/lib/groo/format";
+import { formatMonthShort, formatMonthTicks } from "@/shared/lib/date";
 import { assignChartColors, type ChartColored } from "@/shared/ds/chart";
 import type { DateRange } from "@/shared/ds/date-picker";
 import { chartColorOf, type ChartKey } from "@/shared/lib/groo/chart-palette";
@@ -476,22 +477,7 @@ export function useStatsModel(lifted?: StatsState) {
           (ce) => ce.categoryRowId === c.categoryRowId,
         )?.amount ?? 0,
     );
-    const label = isEn()
-      ? [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "May",
-          "Jun",
-          "Jul",
-          "Aug",
-          "Sep",
-          "Oct",
-          "Nov",
-          "Dec",
-        ][b.month - 1]
-      : String(b.month).padStart(2, "0");
+    const label = formatMonthShort(b.month);
     return {
       label: label ?? String(b.month),
       parts,
@@ -787,14 +773,10 @@ function buildTrendData({
       savings: v.income - v.expense,
     }));
   }
-  // 모든 버킷이 같은 해면 'MM' 만 (년 prefix 생략)
-  const allSameYear =
-    monthlyBuckets.length > 0 &&
-    monthlyBuckets.every((b) => b.year === monthlyBuckets[0]!.year);
-  return monthlyBuckets.map((b) => ({
-    month: allSameYear
-      ? String(b.month).padStart(2, "0")
-      : `${b.year}.${String(b.month).padStart(2, "0")}`,
+  // 모든 버킷이 같은 해면 "1월" 만, 해가 섞이면 "2026. 1." (날짜 규칙 — 0 을 채우지 않는다)
+  const monthTickLabels = formatMonthTicks(monthlyBuckets);
+  return monthlyBuckets.map((b, i) => ({
+    month: monthTickLabels[i]!,
     income: b.totalIncome,
     expense: b.totalExpense,
     savings: b.totalIncome - b.totalExpense,

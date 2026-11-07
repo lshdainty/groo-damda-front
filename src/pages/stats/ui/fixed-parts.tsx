@@ -23,6 +23,7 @@ import {
 } from "@/shared/ds/segmented-control";
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { cn } from "@/shared/lib/cn";
+import { formatMonthTicks } from "@/shared/lib/date";
 import { niceCeil } from "@/shared/lib/groo/chartAxis";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
 import {
@@ -288,20 +289,10 @@ interface MonthRow {
   variable: number;
 }
 
-/** 월 라벨 — 한 해 안이면 'MM', 해가 섞이면 'YYYY.MM'. 추이 탭과 같은 규칙 */
-function monthLabels(rows: { year: number; month: number }[]): string[] {
-  const sameYear = rows.every((r) => r.year === rows[0]!.year);
-  return rows.map((r) =>
-    sameYear
-      ? String(r.month).padStart(2, "0")
-      : `${r.year}.${String(r.month).padStart(2, "0")}`,
-  );
-}
-
 function toRows(
   src: { year: number; month: number; total: number; fixed?: number }[],
 ): MonthRow[] {
-  const labels = monthLabels(src);
+  const labels = formatMonthTicks(src);
   return src.map((r, i) => {
     const s = splitFixed(r.total, r.fixed);
     return { label: labels[i]!, fixed: s.fixed, variable: s.variable };

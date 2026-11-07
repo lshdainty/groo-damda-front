@@ -116,7 +116,7 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
   const hidden = useHideAmounts("asset.netWorth");
   const trendQ = useNetWorthTrend(12);
   const data = (trendQ.data ?? []).map((p) => ({
-    monthLabel: formatMonthShort(p.month, { pad: true }),
+    monthLabel: formatMonthShort(p.month),
     netWorth: p.netWorth,
   }));
   // Y축: 0기준 nice 눈금 (앱 net_worth_chart niceAxis 정합).

@@ -1045,6 +1045,52 @@ describe("ListRadioItem · ListRadioGroup", () => {
     expect(onValueChange).toHaveBeenCalledTimes(1);
   });
 
+  it("onReselect — 고른 줄을 다시 누르면(줄 어디든) 불리고 값은 그대로다, 다른 줄이나 막힌 줄에는 안 불린다", () => {
+    const onValueChange = vi.fn();
+    const onReselect = vi.fn();
+    render(
+      <ListRadioGroup
+        aria-label="기본 통화"
+        defaultValue="KRW"
+        onValueChange={onValueChange}
+        onReselect={onReselect}
+      >
+        <ListRadioItem value="KRW" title="대한민국 원" detail="KRW" />
+        <ListRadioItem value="USD" title="미국 달러" detail="USD" />
+        <ListRadioItem disabled value="JPY" title="일본 엔" />
+      </ListRadioGroup>,
+    );
+    // 고른 줄의 글 · 라디오 둘 다
+    click(slot("list-title", slots("list-item")[0]!));
+    expect(onReselect).toHaveBeenCalledTimes(1);
+    expect(onReselect).toHaveBeenLastCalledWith("KRW");
+    click(radios()[0]!);
+    expect(onReselect).toHaveBeenCalledTimes(2);
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(radios()[0]!.getAttribute("aria-checked")).toBe("true");
+    // 다른 줄을 고르는 누름은 onValueChange 만
+    click(slot("list-title", slots("list-item")[1]!));
+    expect(onValueChange).toHaveBeenCalledWith("USD");
+    expect(onReselect).toHaveBeenCalledTimes(2);
+    // 이제 USD 가 고른 줄 — 다시 누르면 USD
+    click(slot("list-title", slots("list-item")[1]!));
+    expect(onReselect).toHaveBeenLastCalledWith("USD");
+    // 막힌 줄
+    click(slot("list-title", slots("list-item")[2]!));
+    expect(onReselect).toHaveBeenCalledTimes(3);
+  });
+
+  it("onReselect 가 없으면 아무 일도 없고, 부르는 쪽 onClick 은 그대로 불린다", () => {
+    const onClick = vi.fn();
+    render(
+      <ListRadioGroup aria-label="통화" defaultValue="KRW" onClick={onClick}>
+        <ListRadioItem value="KRW" title="원" />
+      </ListRadioGroup>,
+    );
+    click(radios()[0]!);
+    expect(onClick).toHaveBeenCalled();
+  });
+
   it("쥐고 다루는 값도 받는다", () => {
     function Controlled() {
       const [value, setValue] = useState("USD");
@@ -1270,9 +1316,7 @@ describe("ListDivider · ListHeader · ListTile", () => {
     render(
       <>
         <ListHeader as="div">
-          <h2 id="budget2" className="m-0 tracking-normal [font:inherit]">
-            카테고리별 예산
-          </h2>
+          <h2 id="budget2">카테고리별 예산</h2>
           <button type="button">전체 보기</button>
         </ListHeader>
         <List aria-labelledby="budget2">
@@ -1294,6 +1338,28 @@ describe("ListDivider · ListHeader · ListTile", () => {
       document.getElementById(list.getAttribute("aria-labelledby")!)
         ?.textContent,
     ).toBe("카테고리별 예산");
+  });
+
+  it("머리 안 제목 글(h1~h4)은 전역 제목 규칙이 아니라 머리의 색 · 글 · 자간 · 줄 높이를 그대로 물려받는다 — 호출처 손 클래스 없이", () => {
+    render(
+      <ListHeader as="div" variant="mediumWeak">
+        <h2 id="t">태그</h2>
+        <button type="button">관리</button>
+      </ListHeader>,
+    );
+    const header = slot("list-header");
+    // 스타일은 부품이 정한다 — 안 제목 태그를 고르는 선택자가 변형 바탕에 있다
+    const base = classes(header);
+    for (const rule of [
+      "m-0",
+      "text-inherit",
+      "[font:inherit]",
+      "tracking-[inherit]",
+    ]) {
+      expect(base).toContain(`[&>:is(h1,h2,h3,h4)]:${rule}`);
+    }
+    // 제목 글에는 호출처가 단 클래스가 없다
+    expect(container.querySelector("h2")!.getAttribute("class")).toBeNull();
   });
 
   it("목록 제목이 있으면 목록에 aria-labelledby 로 잇는다 — 오른쪽 버튼은 제목 글 밖이라 목록 이름에 섞이지 않는다", () => {

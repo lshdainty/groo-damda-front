@@ -869,7 +869,13 @@ export type ListRadioGroupProps = Omit<
   "aria-label" | "aria-labelledby"
 > &
   ItemRadius &
-  GroupName;
+  GroupName & {
+    /**
+     * 이미 고른 줄을 다시 눌렀을 때 — 값은 그대로(onValueChange 는 불리지 않는다), 저장 요청도 없다.
+     * 시트 · 팝오버 안 하나 고르기는 여기서 닫는다(select.md "고른 선택지를 다시 눌러도 풀리지 않는다" · 앱 PListRadioGroup.onReselect 와 같다)
+     */
+    onReselect?: (value: string) => void;
+  };
 
 // 하나 고르기 목록 — 라디오 묶음(role=radiogroup, 이름 필수). 줄은 li 대신 div 다. Enter 는 폼을 제출한다(Radio 와 같다)
 const ListRadioGroup = React.forwardRef<
@@ -877,7 +883,16 @@ const ListRadioGroup = React.forwardRef<
   ListRadioGroupProps
 >(
   (
-    { className, itemRadius, style, onKeyDown, onKeyDownCapture, ...props },
+    {
+      className,
+      itemRadius,
+      style,
+      onKeyDown,
+      onKeyDownCapture,
+      onClick,
+      onReselect,
+      ...props
+    },
     ref,
   ) => (
     <ListRowTag.Provider value="div">
@@ -889,6 +904,22 @@ const ListRadioGroup = React.forwardRef<
         {...props}
         onKeyDown={submitOnRadioEnter(onKeyDown)}
         onKeyDownCapture={ignoreRadioJumpKeys(onKeyDownCapture)}
+        onClick={(e) => {
+          onClick?.(e);
+          // 줄(라벨)을 눌러도 라디오로 넘어온 누름이 한 번 더 온다 — 라디오 자신이 target 인 누름만 센다.
+          // 누르는 순간 DOM 은 아직 옛 상태라 aria-checked=true 면 이미 고른 줄이다
+          const radio = (e.target as HTMLElement).closest<HTMLButtonElement>(
+            '[role="radio"]',
+          );
+          if (
+            onReselect &&
+            radio &&
+            !radio.disabled &&
+            radio.getAttribute("aria-checked") === "true"
+          ) {
+            onReselect(radio.value);
+          }
+        }}
       />
     </ListRowTag.Provider>
   ),

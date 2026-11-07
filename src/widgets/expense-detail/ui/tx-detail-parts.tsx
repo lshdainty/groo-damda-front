@@ -230,9 +230,7 @@ export function ListTitleBar({
 }) {
   return (
     <ListHeader as="div" variant="boldSolid" className="mt-x2">
-      <h3 className="m-0 font-[inherit] text-[length:inherit] [font-weight:inherit]">
-        {children}
-      </h3>
+      <h3>{children}</h3>
       {right != null && <span className="tabular-nums">{right}</span>}
     </ListHeader>
   );

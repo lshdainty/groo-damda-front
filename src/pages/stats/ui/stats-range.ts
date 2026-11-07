@@ -1,4 +1,5 @@
 import {
+  formatDateRange,
   formatYearMonth,
   formatYear,
   formatYearQuarter,
@@ -96,10 +97,8 @@ export const periodLabel = ({ from, to, segMode }: RangeState): string => {
   if (segMode === "m") return formatYearMonth(from);
   if (segMode === "q") return formatYearQuarter(from);
   if (segMode === "y") return formatYear(from);
-  const sameYear = from.getFullYear() === to.getFullYear();
-  return sameYear
-    ? `${from.getMonth() + 1}/${from.getDate()} ~ ${to.getMonth() + 1}/${to.getDate()}`
-    : `${fmt(from)} ~ ${fmt(to)}`;
+  // 기간 줄 — "11월 2일~11월 8일", 다른 해가 끼면 두 끝 모두 연도(날짜 규칙)
+  return formatDateRange(from, to);
 };
 
 /**

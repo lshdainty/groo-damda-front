@@ -244,9 +244,7 @@ export function MemoDesktop({ screen }: { screen: MemoScreen }) {
                 </div>
                 {/* 틀(검색칸 · "태그" 제목 · 관리)은 불러오는 동안에도 그리고 태그 줄 자리만 Skeleton — 메모 0건이어도 관리는 닿는다 */}
                 <ListHeader as="div">
-                  <h2 className="m-0 font-[inherit] text-[length:inherit]">
-                    {t("tagsHeading")}
-                  </h2>
+                  <h2>{t("tagsHeading")}</h2>
                   <Button
                     asChild
                     variant="ghost"
