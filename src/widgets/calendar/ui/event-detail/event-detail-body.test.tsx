@@ -154,6 +154,35 @@ describe("줄 차례 · 없는 값", () => {
     expect(range.querySelector("wbr")).not.toBeNull();
   });
 
+  it("여러 날 종일 — 하나라도 올해가 아니면 양끝에 연도(끝만 다른 해 · 시작만 다른 해)", () => {
+    const y = new Date().getFullYear();
+    render(
+      event({
+        isAllDay: true,
+        startDate: `${y}-10-28T00:00:00`,
+        endDate: `${y + 1}-01-02T23:59:59`,
+      }),
+    );
+    expect(rowText("form.allDay")).toMatch(
+      new RegExp(
+        `^form\\.allDay${y}년 10월 28일 \\(.\\)~${y + 1}년 1월 2일 \\(.\\)$`,
+      ),
+    );
+    render(
+      event({
+        isAllDay: true,
+        startDate: `${y - 1}-12-29T00:00:00`,
+        endDate: `${y}-01-02T23:59:59`,
+      }),
+    );
+    expect(rowText("form.allDay")).toMatch(
+      new RegExp(`${y - 1}년 12월 29일 \\(.\\)~${y}년 1월 2일 \\(.\\)$`),
+    );
+    // 줄바꿈 규칙은 그대로 — 앞 조각은 "~" 로 끝난다
+    const range = container.querySelector("[data-slot=event-detail-range]")!;
+    expect(range.children[0]!.textContent).toMatch(/\(.\)~$/);
+  });
+
   it("꺾쇠가 없다 — 보기만 하는 줄이고 누르는 버튼도 없다", () => {
     render(event({ description: "d" }));
     expect(container.querySelector("[data-slot=list-suffix] svg")).toBeNull();
