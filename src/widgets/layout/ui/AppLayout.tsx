@@ -39,7 +39,8 @@ const CalendarEventAddForm = ({ onClose }: { onClose: () => void }) => (
 );
 
 /**
- * 화면을 옮길 때의 셸 몫 — 문서 제목 "{제목} - 그루 담다" 와, 옮긴 뒤 본문을 맨 위로 + 제목에 초점.
+ * 화면을 옮길 때의 셸 몫 — 문서 제목 "{제목} - 그루 담다" 와, 옮긴 뒤 본문 스크롤 · 초점.
+ * 앞으로(PUSH)는 본문을 맨 위로 + 제목에 초점, 뒤로(POP)는 떠날 때의 스크롤 · 누른 요소를 돌려놓는다(기억이 없으면 PUSH 와 같다).
  * TopNavigationProvider 안에 둔다(제품 이름을 거기서 읽는다). 처음 열 때는 초점을 훔치지 않는다.
  */
 const ScreenEffects = () => {
@@ -61,7 +62,7 @@ const ScreenEffects = () => {
     // 1280 이상의 고정 정리(/desk/stats/fixed)는 주소만 있는 같은 화면 위 대화상자다 — 화면을 옮긴 게 아니므로 뒤 통계를 맨 위로
     // 보내지 않고 초점도 제목으로 옮기지 않는다(닫으면 초점은 Dialog 가 연 단추로 돌려놓는다, dialog.md:179)
     if (wide && (isFixedBulkPath(from) || isFixedBulkPath(pathname))) return;
-    // 뒤로(POP) 왔다 — 떠날 때의 스크롤로 돌리고 누른 요소에 초점. 적어 둔 게 없으면(새로 고침 뒤 등) 앞으로 갈 때와 같다
+    // 뒤로(POP) 왔다 — 떠날 때의 스크롤(맨 위였으면 0)로 돌리고 누른 요소에 초점. 적어 둔 게 없으면(새로 고침 뒤 등) 앞으로 갈 때와 같다
     if (navType === "POP") {
       const stop = restoreScreen(key);
       if (stop) return stop;
