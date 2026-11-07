@@ -169,7 +169,10 @@ export function TxStep2({ f }: { f: TxForm }) {
     <>
       {f.smsLow && (
         <div className="px-global-gutter pb-x3">
-          <Callout tone="warning">{t("sms.lowConfidence")}</Callout>
+          {/* 문자를 읽은 뒤 나타나는 경고 — 처음부터 있던 안내가 아니라 role="alert" (callout.md:152) */}
+          <Callout tone="warning" role="alert">
+            {t("sms.lowConfidence")}
+          </Callout>
         </div>
       )}
       {/* 결제 문자 초안도 지출 · 수입 칩이 있다 — 환불 · 입금 문자를 수입으로 남길 길이 막히지 않게(이체 칩은 막힌다) */}
