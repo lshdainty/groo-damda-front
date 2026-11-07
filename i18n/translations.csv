@@ -183,7 +183,6 @@ todo,projects,프로젝트,Projects
 todo,addProject,프로젝트 추가,Add Project
 todo,editProject,프로젝트 수정,Edit Project
 todo,allProjects,전체 프로젝트,All Projects
-todo,noProjects,프로젝트가 없습니다,No projects yet
 todo,form.projectName,프로젝트 이름,Project Name
 todo,form.projectNamePlaceholder,프로젝트 이름을 입력하세요,Enter project name
 todo,form.project,프로젝트,Project
@@ -212,7 +211,6 @@ todo,view.kanban,보드,Board
 todo,kanban.pending,대기,Pending
 todo,kanban.inProgress,진행중,In Progress
 todo,kanban.completed,완료,Completed
-todo,kanban.empty,여기에 드래그하세요,Drag here
 todo,prio.HIGH,중요,High
 todo,prio.MEDIUM,보통,Medium
 todo,prio.LOW,여유,Low
@@ -315,7 +313,6 @@ memo,detail.noContent,내용 없음,No content
 calculator,title,계산기,Calculator
 calculator,history,계산 기록,History
 calculator,clearHistory,기록 삭제,Clear History
-calculator,noHistory,계산 기록이 없습니다,No calculation history
 calculator,scientific,공학용,Scientific
 calculator,standard,일반,Standard
 calculator,clearAll,AC,AC
@@ -323,7 +320,6 @@ calculator,clear,C,C
 calculator,equals,=,=
 calculator,error,오류,Error
 calculator,clearHistoryConfirm.title,기록 삭제,Clear History
-calculator,clearHistoryConfirm.message,모든 계산 기록을 삭제하시겠습니까?,Are you sure you want to clear all calculation history?
 calculator,clearHistoryConfirm.cancel,취소,Cancel
 calculator,clearHistoryConfirm.confirm,삭제,Clear
 timer,title,타이머,Timer
@@ -337,10 +333,8 @@ timer,stop,정지,Stop
 timer,reset,초기화,Reset
 timer,lap,랩,Lap
 timer,laps,랩 기록,Laps
-timer,noLaps,랩 기록이 없습니다,No laps recorded
 timer,session,세션,Session
 timer,label,라벨,Label
-timer,labelPlaceholder,타이머 라벨을 입력하세요,Enter timer label
 timer,setTime,시간 설정,Set Time
 timer,hours,시간,Hours
 timer,minutes,분,Minutes
@@ -349,7 +343,6 @@ timer,focusTime,집중 시간,Focus Time
 timer,todayFocus,오늘의 집중,Today's Focus
 timer,totalSessions,총 세션,Total Sessions
 timer,totalTime,총 시간,Total Time
-timer,noSessions,아직 세션이 없습니다,No sessions yet
 timer,work,작업,Work
 timer,break,휴식,Break
 timer,completed,완료!,Completed!
@@ -371,14 +364,12 @@ expense,monthly,월별,Monthly
 expense,totalIncome,총 수입,Total Income
 expense,totalExpense,총 지출,Total Expense
 expense,net,순수익,Net
-expense,noTransactions,거래 내역이 없습니다,No transactions yet
 expense,createFirst,첫 번째 거래를 기록해보세요,Record your first transaction
 expense,category,카테고리,Category
 expense,categories,카테고리 관리,Manage categories
 expense,addCategory,카테고리 추가,Add category
 expense,editCategory,카테고리 수정,Edit Category
 expense,categoryName,카테고리 이름,Category Name
-expense,categoryNamePlaceholder,카테고리 이름을 입력하세요,Enter category name
 expense,form.amount,금액,Amount
 expense,form.amountPlaceholder,금액을 입력하세요,Enter amount
 expense,form.description,설명,Description
@@ -394,7 +385,6 @@ expense,budget.set,예산 설정,Set Budget
 expense,budget.amount,예산 금액,Budget Amount
 expense,budget.remaining,남은 예산,Remaining
 expense,budget.exceeded,초과,Exceeded
-expense,budget.noBudget,설정된 예산이 없습니다,No budget set
 expense,categoryBreakdown,카테고리별 분석,Category Breakdown
 expense,deleteConfirm.title,거래 삭제,Delete transaction
 expense,deleteConfirm.cancel,취소,Cancel
@@ -412,7 +402,6 @@ expense,addTemplate,템플릿 추가,Add Template
 expense,editTemplate,템플릿 수정,Edit Template
 expense,useTemplate,템플릿 사용,Use Template
 expense,templateName,템플릿 이름,Template Name
-expense,templateNamePlaceholder,템플릿 이름을 입력하세요,Enter template name
 expense,recurring,반복 거래,Recurring
 expense,addRecurring,반복 거래 추가,Add Recurring
 expense,editRecurring,반복 거래 수정,Edit Recurring
@@ -430,7 +419,6 @@ expense,linkedTodo,연결된 할일,Linked Todo
 expense,form.calendarEvent,일정 연결,Link Event
 expense,form.todo,할일 연결,Link Todo
 expense,linkExpense,지출 추가,Add Expense
-expense,noLinkedExpenses,연결된 지출이 없습니다,No linked expenses
 asset,title,자산 관리,Asset Management
 asset,assets,자산,Assets
 asset,transfers,이체,Transfers
@@ -441,7 +429,6 @@ asset,totalBalance,총 자산,Total Balance
 asset,count,개,
 asset,noAssets,등록된 자산이 없습니다,No assets registered
 asset,createFirst,첫 번째 자산을 등록해보세요,Register your first asset
-asset,noTransfers,이체 내역이 없습니다,No transfers yet
 asset,fee,수수료,Fee
 asset,loading,로딩 중...,Loading...
 asset,assetType.bankaccount,은행 계좌,Bank Account
@@ -460,7 +447,6 @@ asset,assetForm.preview,미리보기,Preview
 asset,assetForm.entryCount,총 {{count}}개,{{count}} total
 asset,assetAdd.title,계좌 추가,Add account
 asset,assetAdd.newAccount,새 계좌,New account
-asset,assetAdd.institutionBrand,기관·브랜드,Institution / Brand
 asset,assetAdd.searchPlaceholder,은행명 또는 증권사 검색,Search bank or brokerage
 asset,assetAdd.nickname,별칭,Nickname
 asset,assetAdd.nicknamePlaceholder,예: 신한 주거래,e.g. Shinhan main account
@@ -469,8 +455,6 @@ asset,assetAdd.accountNumber,계좌번호,Account number
 asset,assetAdd.balance,잔액 (원),Balance (KRW)
 asset,investAdd.title,투자 추가,Add investment
 asset,investAdd.newProduct,새 투자 상품,New investment
-asset,investAdd.searchPlaceholder,증권사·가상자산거래소·상품거래소 검색,Search brokerage/crypto/commodity exchange
-asset,investAdd.productName,상품·종목명,Product / Symbol name
 asset,investAdd.productPlaceholder,"예: KODEX 200, 해외 ETF 포트폴리오","e.g. KODEX 200, overseas ETF portfolio"
 asset,investAdd.valuation,평가액 (원),Valuation (KRW)
 asset,form.assetName,자산명,Asset Name
@@ -570,7 +554,6 @@ asset,cardTypeShort.check,체크,Check
 asset,cardAdd.newCard,새 카드,New card
 asset,cardAdd.cardType,카드 종류,Card type
 asset,cardAdd.cardProduct,카드 상품,Card product
-asset,cardAdd.includeDiscontinuedTitle,단종된 카드 상품도 검색 결과에 포함합니다,Include discontinued cards in search results
 asset,cardAdd.includeDiscontinued,단종 포함,Include discontinued
 asset,cardAdd.resultCount,총 {{count}}건,{{count}} total
 asset,cardAdd.searchPlaceholder,카드명 또는 발급사 검색,Search card name or issuer
@@ -578,7 +561,6 @@ asset,cardAdd.noResults,검색 결과가 없어요,No results
 asset,cardAdd.nicknameOptional,별칭 (선택),Nickname (optional)
 asset,cardAdd.nicknamePlaceholder,예: 신한 Deep Dream,e.g. Shinhan Deep Dream
 asset,cardAdd.outstanding,이전 미결제 사용액 (원),Unpaid balance (KRW)
-asset,cardAdd.outstandingHint,청구될 금액을 입력하세요. 총 부채에 반영됩니다.,Enter the billed amount. It counts toward total debt.
 asset,cardAdd.selectRequired,카드 선택 필요,Select a card
 asset,cardAdd.title,카드 추가,Add card
 asset,editDialog.annualFeeValue,연회비 {{amount}}원,Annual fee {{amount}}
@@ -724,13 +706,11 @@ asset,assetDetail.statusSkipped,건너뜀,Skipped
 asset,assetDetail.perfMonth,{{ym}} 실적,{{ym}} spending
 asset,assetDetail.achieved,달성,Achieved
 asset,assetDetail.remainingLabel,남은,Remaining
-asset,assetDetail.toastPaid,결제가 기록되었어요,Payment recorded
 asset,assetDetail.billingLoadError,청구 정보를 불러오지 못했어요,Couldn't load billing info
 asset,assetDetail.paymentDue,결제 예정,Payment due
 asset,assetDetail.payNow,지금 결제,Pay now
 asset,assetDetail.cancelPayment,결제 취소,Cancel payment
 asset,assetDetail.cancelPaymentConfirm,{{date}}에 낸 {{amount}}원을 되돌려요. 통장 잔액과 카드 청구가 결제 전으로 돌아가요.,Reverts the {{amount}} paid on {{date}}. The account balance and card billing return to the state before payment.
-asset,assetDetail.toastPaymentCancelled,결제를 취소했어요,Payment cancelled
 asset,assetDetail.billingPeriod,{{start}}~{{end}} 사용분,Usage {{start}}–{{end}}
 asset,assetDetail.scheduledTag,예정,Upcoming
 asset,assetDetail.paidDone,결제 완료,Paid
@@ -769,20 +749,12 @@ asset,assetDetail.payNoAccountNote,연결된 결제 계좌가 없어 이체 없�
 asset,assetDetail.tossLinked,토스 연동 중,Linked with Toss
 asset,assetDetail.sharesUnit,{{n}}주,{{n}} shares
 asset,assetDetail.holdingsQty,보유 수량,Quantity held
-asset,assetDetail.toastQtyUpdated,보유 수량을 수정했어요,Quantity updated
-asset,assetDetail.toastQtyFail,수량 수정에 실패했어요,Failed to update quantity
-asset,assetDetail.valuationFormula,평가액 = 토스 현재가 × {{n}}주 로 실시간 계산됩니다.,"Valuation = Toss price × {{n}} shares, updated in real time."
 asset,assetDetail.editQty,수량 수정,Edit quantity
-asset,assetDetail.toastUnlinked,토스 연결을 해제했어요,Toss link removed
-asset,assetDetail.toastUnlinkFail,연결 해제에 실패했어요,Failed to remove link
 asset,assetDetail.unlink,연결 해제,Unlink
 asset,assetDetail.tossRealtimeTitle,토스 시세로 실시간 평가,Real-time valuation via Toss
-asset,assetDetail.tossRealtimeDesc,보유 종목과 수량을 등록하면 토스 현재가 × 수량으로 평가액이 실시간 반영됩니다.,Register your holdings and quantity for real-time valuation using Toss prices.
 asset,assetDetail.change,변경,Change
 asset,assetDetail.symbolSearchPlaceholder,"종목명 또는 코드 검색 (예: 삼성전자, 005930)","Search by name or code (e.g. Samsung, 005930)"
 asset,assetDetail.linkByCode,「{{code}}」 종목코드로 연결,Link by code 「{{code}}」
-asset,assetDetail.toastLinkStarted,토스 시세 연동을 시작했어요,Toss price link started
-asset,assetDetail.toastLinkFail,연결에 실패했어요,Failed to link
 asset,assetDetail.link,연결,Link
 asset,assetDetail.weekLabel,{{n}}주,{{n}}w
 asset,assetDetail.seriesUsage,사용,Usage
@@ -847,7 +819,6 @@ asset,trade.preview,거래 후 미리보기,Preview after the trade
 asset,trade.deleteConfirmTarget,{{date}} {{name}} {{qty}} {{kind}} 거래를 취소할까요? 예수금과 보유 수량이 거래 전으로 돌아가요.,Cancel the {{kind}} of {{qty}} {{name}} on {{date}}? Cash and quantity return to their pre-trade state.
 dashboard,title,대시보드,Dashboard
 dashboard,uncategorized,미분류,Uncategorized
-dashboard,welcome,환영합니다,Welcome
 dashboard,overview,개요,Overview
 dashboard,viewAll,전체 보기,View All
 dashboard,viewAllOf,{{title}} 전체 보기,View all {{title}}
@@ -942,19 +913,9 @@ group,empty,그룹이 없습니다,No groups yet
 group,createFirst,첫 번째 그룹을 만들어보세요,Create your first group
 group,backToList,목록으로,Back to list
 group,inviteCode,초대 코드,Invite Code
-group,inviteCodePlaceholder,초대 코드를 입력하세요,Enter invite code
-group,inviteCodeCopied,초대 코드가 복사되었습니다,Invite code copied
-group,inviteCodeRegenerated,초대 코드가 재생성되었습니다,Invite code regenerated
 group,join,참가,Join
 group,members,멤버,Members
 group,memberCount,명,
-group,createSuccess,그룹이 생성되었습니다,Group created
-group,updateSuccess,그룹이 수정되었습니다,Group updated
-group,deleteSuccess,그룹이 삭제되었습니다,Group deleted
-group,joinSuccess,그룹에 참가했습니다,Joined group successfully
-group,joinError,그룹 참가에 실패했습니다,Failed to join group
-group,memberRemoved,멤버가 제거되었습니다,Member removed
-group,roleChanged,역할이 변경되었습니다,Role changed
 group,groupType.FAMILY,가족,Family
 group,groupType.COUPLE,커플,Couple
 group,groupType.FRIENDS,친구,Friends
@@ -973,24 +934,19 @@ group,comment,댓글,Comment
 group,comments,댓글,Comments
 group,addComment,댓글 추가,Add Comment
 group,editComment,댓글 수정,Edit Comment
-group,noComments,댓글이 없습니다,No comments yet
-group,commentPlaceholder,댓글을 입력하세요,Enter a comment
 group,reply,답글,Reply
 login,sso.description,그루 계정으로 로그인해주세요.,Sign in with your 그루 account.
 login,sso.login,그루 계정으로 로그인,Sign in with 그루
 login,authenticating,인증 중…,Authenticating…
 expense,budget.save,저장,Save
 expense,budget.deleteConfirm.title,예산 삭제,Delete Budget
-expense,budget.deleteConfirm.message,이 예산을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.,Are you sure you want to delete this budget? This action cannot be undone.
 expense,form.icon,아이콘,Icon
 expense,form.iconPlaceholder,예: 이모지,e.g. emoji
 expense,form.color,색상,Color
 expense,form.save,저장,Save
 expense,loadFromTemplate,템플릿에서 불러오기,Load from template
 expense,searchTemplatePlaceholder,템플릿 검색...,Search templates...
-expense,noTemplatesFound,템플릿이 없습니다,No templates found
 expense,addSubCategory,소분류 추가,Add Subcategory
-expense,cannotDeleteParentCategory,하위 카테고리가 있는 대분류는 삭제할 수 없습니다. 먼저 하위 카테고리를 삭제해주세요.,Cannot delete a category that has subcategories. Please delete the subcategories first.
 expense,stats.period3m,3개월,3 months
 expense,stats.period6m,6개월,6 months
 expense,stats.period1y,1년,1 year
@@ -999,16 +955,12 @@ expense,stats.yearOverYear,전년 대비,Year over Year
 expense,stats.categoryTrend,카테고리 추이,Category Trend
 expense,stats.selectCategory,카테고리 선택,Select category
 expense,stats.budgetVsActual,예산 대비 지출,Budget vs Actual
-expense,stats.noBudgetSet,설정된 예산이 없습니다. 예산 탭에서 설정해주세요.,No budgets set. Configure budgets in the Budget tab.
 expense,stats.merchantAnalysis,거래처 분석,Merchant Analysis
-expense,stats.noMerchantData,거래처 데이터가 없습니다,No merchant data available
 expense,stats.assetUsage,자산별 사용,Asset Usage
-expense,stats.noAssetData,자산 데이터가 없습니다,No asset data available
 expense,stats.topMerchants,상위 거래처,Top Merchants
 expense,stats.transactionCount,{{count}}건,{{count}} transactions
 expense,stats.thisYear,올해,This Year
 expense,stats.lastYear,작년,Last Year
-expense,stats.noData,데이터가 없습니다,No data available
 dashboard,loading,로딩 중...,Loading...
 dashboard,noData,데이터 없음,No data
 dashboard,save,저장,Save
@@ -1019,7 +971,6 @@ dashboard,hideWidget,위젯 숨기기,Hide widget
 dashboard,widgetSettings,위젯 설정,Widget Settings
 dashboard,closeSettings,설정 닫기,Close Settings
 dashboard,availableWidgets,사용 가능한 위젯,Available Widgets
-dashboard,widgetDragHint,위젯을 대시보드로 드래그하여 추가하세요,Drag widgets to the dashboard to add them
 dashboard,inUse,사용 중,In Use
 dashboard,layoutReset,레이아웃 초기화,Reset Layout
 dashboard,todo.notes,메모,Notes
@@ -1068,7 +1019,6 @@ dashboard,widget.expenseCategory,카테고리별 지출,Expense by Category
 dashboard,widget.monthlyBudget,월별 예산,Monthly Budget
 dashboard,widget.expenseByMerchant,가맹점별 지출,Expense by Merchant
 dashboard,widget.assetOverview,자산 현황,Asset Overview
-dashboard,widget.monthlyCompare,월별 수입·지출,Monthly Income & Expense
 dashboard,widget.miniCalendar,미니 캘린더,Mini Calendar
 dashboard,widget.todaySchedule,오늘 일정,Today's Schedule
 dashboard,widget.dday,D-Day,D-Day
@@ -1093,7 +1043,6 @@ dashboard,widget.dailyExpenseCalendar,일별 지출 달력,Daily Expense Calenda
 dashboard,widget.savingsRate,저축률 추이,Savings Rate
 dashboard,budget.used,사용,Used
 dashboard,budget.remaining,잔여,Remaining
-dashboard,budget.noBudget,설정된 예산이 없습니다,No budget set
 dashboard,budget.exceeded,초과,Over
 dashboard,budget.danger,주의,Danger
 dashboard,budget.warning,경고,Warning
@@ -1126,8 +1075,6 @@ group,tabs.schedule,공유 일정,Shared Schedule
 group,tabs.expense,공유 가계부,Shared Expenses
 group,addGroupEvent,그룹 일정 추가,Add Group Event
 group,addGroupExpense,그룹 지출 추가,Add Group Expense
-group,noGroupEvents,아직 공유 일정이 없습니다,No shared events yet
-group,noGroupExpenses,아직 공유 가계부가 없습니다,No shared expenses yet
 group,createdBy,작성자,Created by
 calendar,form.calendar,캘린더,Calendar
 calendar,selectGroup,그룹 선택,Select Group
@@ -1144,7 +1091,6 @@ calendar,manageShare,캘린더 관리 · 공유 설정,Calendar & Share Settings
 calendar,name,이름,Name
 calendar,namePlaceholder,캘린더 이름을 입력하세요,Enter calendar name
 calendar,deleteConfirm,이 캘린더를 삭제하시겠습니까? 캘린더의 모든 일정이 삭제됩니다.,Are you sure you want to delete this calendar? All events will be deleted.
-calendar,cannotDeleteDefault,기본 캘린더는 삭제할 수 없습니다,Cannot delete the default calendar
 calendar,cannotHideDefault,기본 캘린더는 숨길 수 없어요,The default calendar cannot be hidden
 calendar,otherSources,기타 소스,Other Sources
 calendar,source.holiday,공휴일,Holidays
@@ -1237,8 +1183,6 @@ dashboard,allDay,종일,All Day
 dashboard,total,합계,Total
 group,addGroupType,그룹 유형 추가,Add Group Type
 group,deleteGroupType,그룹 유형 삭제,Delete Group Type
-group,groupTypeDeleteConfirm,이 그룹 유형을 삭제하시겠습니까?,Are you sure you want to delete this group type?
-group,groupTypeNamePlaceholder,그룹 유형 이름을 입력하세요,Enter group type name
 memo,folders,폴더,Folders
 memo,all,전체,All
 memo,noResults,결과가 없어요,No results
@@ -1609,8 +1553,6 @@ dutchPay,fromTx.addNamePlaceholder,이름 입력 후 추가,Enter a name to add
 dutchPay,fromTx.add,추가,Add
 dutchPay,fromTx.requestMessage,요청 메시지 (선택),Request message (optional)
 dutchPay,fromTx.requestMessagePlaceholder,참여자에게 함께 보낼 한마디를 적어주세요,Write a note to send to participants
-dutchPay,fromTx.shortfall,합계가 총액보다 {{amount}}원 부족합니다.,The total is {{amount}}원 short of the amount.
-dutchPay,fromTx.excess,합계가 총액보다 {{amount}}원 초과합니다.,The total exceeds the amount by {{amount}}원.
 dutchPay,subtitle,"함께 쓴 돈, 깔끔하게 정산",Split shared expenses cleanly
 dutchPay,receivable,받을 돈,To receive
 dutchPay,receivableFrom,{{count}}명에게서,From {{count}} people
@@ -1638,7 +1580,6 @@ dutchPay,addMeAlready,나는 항상 참여자예요,You're always a participant
 expense,accountCard,계좌·카드,Account · Card
 expense,paymentMethodLabel,결제 수단,Payment method
 expense,paymentTransferFull,계좌이체,Bank transfer
-expense,dateTime,날짜·시간,Date · Time
 expense,memo,메모,Memo
 expense,splitTitle,내역 분할,Split transaction
 expense,splitRemove.title,분할 해제,Remove split
@@ -1816,7 +1757,6 @@ expense,splitTx.strategy.add.desc,부족분을 새 항목으로,Add shortfall as
 expense,splitTx.unselected,미선택,Unselected
 expense,splitTx.save,분할 저장,Save split
 expense,splitTx.remove,분할 해제,Remove split
-expense,splitTx.description,하나의 결제를 카테고리·항목별로 나누어 기록합니다. 예: 마트에서 식품과 생활품을 함께 결제한 경우.,Record a single payment split by category or item. e.g. groceries and household goods bought together at a store.
 expense,splitTx.sourceTransaction,원 거래,Original transaction
 expense,splitTx.total,총액,Total
 expense,splitTx.matched,분할 합계가 총액과 일치해요,The split total matches the amount
@@ -2430,7 +2370,6 @@ recurring,dowTitle,요일,Day of week
 recurring,dayOfMonthTitle,반복 일자,Day of month
 recurring,monthDayPrefix,매월,Day
 recurring,monthDaySuffix,일,of each month
-recurring,monthDayHint,해당 일이 없는 달은 말일에 처리됩니다,Months without that day use the last day
 recurring,endTitle,종료,End
 recurring,endNone,무기한,Indefinite
 recurring,endNoneSub,중지할 때까지 계속 반복,Repeats until you stop
@@ -2455,7 +2394,6 @@ recurring,saveLabel,반복 저장,Save recurring
 recurring,defaultTitle,반복 거래,Recurring
 recurring,transaction,거래,Transaction
 recurring,startsOn,{{date}} 시작,Starts {{date}}
-recurring,sourceSub,구독료·월세 등 정기 거래에 쓰여요,For subscriptions·rent and other regular payments
 recurring,paused,일시정지,Paused
 recurring,pause,일시정지,Pause
 recurring,resume,다시 켜기,Turn back on
@@ -2902,7 +2840,6 @@ asset,trade.saveFailed,매매를 처리하지 못했어요.,Couldn't process the
 asset,trade.saveInsufficientQty,보유 수량이 부족해요.,Not enough shares held.
 asset,trade.entryBuy,매수,Buy
 asset,trade.entrySell,매도,Sell
-asset,trade.history,거래 내역,Trade history
 asset,trade.empty,아직 매수·매도 기록이 없어요,No trades recorded yet
 asset,trade.deleteTitle,거래 취소,Cancel trade
 asset,trade.deleteAction,거래 취소,Cancel trade
