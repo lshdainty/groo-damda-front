@@ -135,7 +135,7 @@ more,desc.asset,계좌 · 카드 · 투자 · 부채,Accounts · cards · invest
 more,desc.stocks,시세 · 보유 · 관심 · 호가,Quotes · holdings · watchlist · order book
 more,desc.budget,월간 예산 · 카테고리별 한도,Monthly budget · per-category limits
 more,desc.savingGoal,목표 · 진행률,Goals · Progress
-more,desc.stats,카테고리 · 트렌드 · 비교,Category · trends · comparison
+more,desc.stats,카테고리 · 추이 · 비교,Category · Trends · Compare
 more,desc.recurring,구독 · 고정비,Subscriptions · fixed costs
 more,desc.accounts,계좌 · 카드 관리,Manage accounts and cards
 more,desc.calendar,일정 · 반복 · 알림,Events · recurring · alerts
@@ -2193,7 +2193,7 @@ stocks,namu.holdingsError,보유 정보를 불러오지 못했어요. 계좌가 
 stocks,namu.failDesc,계좌가 없거나 조회 권한이 없을 수 있어요.,There may be no account or no query permission.
 stats,page.title,통계,Statistics
 stats,uncategorized,미분류,Uncategorized
-stats,page.subtitle,카테고리 · 추이 · 비교,Categories · Trends · Compare
+stats,page.subtitle,카테고리 · 추이 · 비교,Category · Trends · Compare
 stats,tab.category,카테고리,Category
 stats,tab.trend,추이,Trends
 stats,tab.compare,비교,Compare
