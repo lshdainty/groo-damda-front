@@ -208,7 +208,7 @@ vi.mock("@/features/dutch-pay", () => ({
 vi.mock("@/features/asset", () => ({
   useAssets: () => ({ data: { assets: api.assets }, isLoading: false }),
 }));
-// 나누기 · 반복 설정 · 더치페이 단계의 안쪽은 각자 시험이 있다 — 여기서는 상세 표면이 단계로 바뀌는 것만 본다
+// 나누기 · 반복 설정 · 더치페이 단계의 안쪽은 각자 시험이 있다(더치페이 = use-dutch-step.render.test.tsx · use-dutch-step.fields.test.ts) — 여기서는 상세 표면이 단계로 바뀌는 것만 본다
 const stepStub = (name: string) => ({
   title: name,
   body: <div data-testid={`step-${name}`} />,
