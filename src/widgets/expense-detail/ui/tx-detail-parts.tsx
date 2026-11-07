@@ -18,7 +18,7 @@ import { dsLocale, withCommaBreaks } from "@/shared/ds/i18n";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthDayDow } from "@/shared/lib/date";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
-import { KRW, formatPercent, isEn } from "@/shared/lib/groo/format";
+import { KRW, isEn } from "@/shared/lib/groo/format";
 import {
   formatAssetAmount,
   isForeignCurrency,
@@ -351,7 +351,8 @@ export function SplitSection({
         {splits.map((s) => {
           const { cat, parent } = splitTone(categories, s.categoryRowId);
           const pal = getPaletteByColor(cat?.color);
-          const pct = total > 0 ? (s.amount / total) * 100 : 0;
+          // 분할 비율은 사용자가 정한 값이라 비중이 아니다 — 정수 그대로
+          const pct = total > 0 ? Math.round((s.amount / total) * 100) : 0;
           return (
             <ListItem
               key={s.rowId}
@@ -378,9 +379,7 @@ export function SplitSection({
                   <TagGroupItem shrink={0}>
                     {s.categoryName ?? "-"}
                   </TagGroupItem>
-                  <TagGroupItem shrink={0}>
-                    {formatPercent(pct, "share")}
-                  </TagGroupItem>
+                  <TagGroupItem shrink={0}>{`${pct}%`}</TagGroupItem>
                 </TagGroup>
               }
               suffix={

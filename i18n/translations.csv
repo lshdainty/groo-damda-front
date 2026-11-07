@@ -3172,6 +3172,8 @@ stats,fixed.bulk.failed,고정 표시를 바꾸지 못했어요.,Couldn't change
 stats,fixed.bulk.doneFixed,{{count}}건을 고정으로 바꿨어요.,Marked {{count}} as fixed.
 stats,fixed.bulk.doneVariable,{{count}}건을 변동으로 되돌렸어요.,Changed {{count}} back to variable.
 settings,hideAmounts.card.stats.fixed,고정·변동 탭,Fixed vs. variable tab
+stats,fixed.insight.expenseNone,고정 지출이 거의 없어요. 고정을 뺀 지출은,Almost no spending is fixed. Spending excluding fixed is
+stats,fixed.insight.incomeNone,고정 수입이 거의 없어요. 고정을 뺀 수입은,Almost no income is fixed. Income excluding fixed is
 stats,fixed.insight.tail,이에요.,.
 stats,chart.donutName,"{{period}} 카테고리별 지출, 합계 {{total}}","{{period}} spending by category, total {{total}}"
 stats,chart.heatName,"{{period}} 요일 · 시간대별 지출, 합계 {{total}}","{{period}} spending by day and time, total {{total}}"

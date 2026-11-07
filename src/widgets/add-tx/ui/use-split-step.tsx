@@ -27,7 +27,7 @@ import { TagGroup, TagGroupItem } from "@/shared/ds/tag-group";
 import { MAX_AMOUNT } from "@/shared/lib/groo/amount";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
-import { KRW, formatPercent, isEn } from "@/shared/lib/groo/format";
+import { KRW, isEn } from "@/shared/lib/groo/format";
 import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
 import { kindOfExpense } from "@/shared/lib/groo/hide-amounts-cards";
 import { Icon } from "@/shared/ui/groo/primitives";
@@ -560,7 +560,9 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
               const p = parentOf(c);
               const pal = getPaletteByColor(c?.color);
               const amt = Number(r.amount) || 0;
-              const pct = targetTotal > 0 ? (amt / targetTotal) * 100 : 0;
+              // 분할 비율은 사용자가 정한 값이라 비중이 아니다 — 정수 그대로
+              const pct =
+                targetTotal > 0 ? Math.round((amt / targetTotal) * 100) : 0;
               return (
                 <ListButtonItem
                   key={r.uid}
@@ -583,9 +585,7 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
                       <TagGroupItem>
                         {c?.categoryName ?? t("splitTx.unselected")}
                       </TagGroupItem>
-                      <TagGroupItem shrink={0}>
-                        {formatPercent(pct, "share")}
-                      </TagGroupItem>
+                      <TagGroupItem shrink={0}>{`${pct}%`}</TagGroupItem>
                     </TagGroup>
                   }
                   suffix={

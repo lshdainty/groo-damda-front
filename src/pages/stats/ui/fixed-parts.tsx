@@ -272,9 +272,12 @@ export function FixedOverviewSection({
             </>
           ) : (
             <Desc>
-              {t(`fixed.insight.${kind}`, {
-                pct: formatPercent(split.fixedPercent, "share"),
-              })}{" "}
+              {/* 0.05% 미만이면 숫자 대신 다른 문장 — "0.1% 미만가" 조사 문제를 피한다 */}
+              {split.fixedPercent > 0 && split.fixedPercent < 0.05
+                ? t(`fixed.insight.${kind}None`)
+                : t(`fixed.insight.${kind}`, {
+                    pct: formatPercent(split.fixedPercent, "share"),
+                  })}{" "}
               <strong className="font-bold text-fg-neutral">
                 {mask(won(split.variable))}
               </strong>
