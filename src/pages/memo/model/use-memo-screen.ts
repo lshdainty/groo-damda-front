@@ -149,7 +149,7 @@ export function useMemoScreen() {
         setSaveErrorSeq((n) => n + 1);
       } else if (!unconfirmedSnack(error, "save")) {
         snackbar.show({
-          message: t("saveFailed"),
+          message: t("saveFailedSnack"),
           tone: "critical",
           action: {
             label: tc("retry"),

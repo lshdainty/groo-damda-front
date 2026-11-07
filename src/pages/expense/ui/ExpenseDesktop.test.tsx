@@ -530,7 +530,7 @@ describe("필터 바 (I-07 28 · 29 · 30)", () => {
       "기간",
       "거래 종류",
       "카테고리",
-      "계좌·카드",
+      "계좌 · 카드",
       "금액",
     ]);
     for (const c of chips) expect(c.className).toContain("min-h-[32px]");

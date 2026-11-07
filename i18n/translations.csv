@@ -221,7 +221,7 @@ todo,editTodoTitle,할 일 수정,Edit todo
 todo,count,건,
 todo,detail,자세히,Details
 todo,addTodoLabel,할 일 추가,Add to-do
-todo,toggleFailed,할 일 상태를 바꾸지 못했어요.,Couldn't update the to-do.
+todo,toggleFailed,할 일 상태를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't update the to-do. Try again later.
 todo,saveFailed,할 일을 저장하지 못했어요.,Couldn't save the to-do.
 todo,deleteFailed,할 일을 삭제하지 못했어요.,Couldn't delete the to-do.
 todo,noDueDate,마감일 없음,No due date
@@ -263,7 +263,7 @@ calendar,form.endBeforeStart,종료가 시작보다 빠를 수 없어요,End can
 calendar,deleteConfirm.title,일정 삭제,Delete event
 calendar,deleteConfirm.message,"""{{name}}"" 일정을 삭제할까요? 삭제한 일정은 되돌릴 수 없어요.","Delete the ""{{name}}"" event? This action cannot be undone."
 calendar,deleteConfirm.messageRecurring,"""{{name}}"" 일정은 반복 일정이라 모든 회차가 함께 삭제돼요. 삭제한 일정은 되돌릴 수 없어요.","""{{name}}"" is a repeating event, so every occurrence will be deleted. This action cannot be undone."
-calendar,deleteConfirm.failed,일정을 삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete the event. Please try again in a moment.
+calendar,deleteConfirm.failed,일정을 삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't delete the event. Try again later.
 calendar,deleteConfirm.cancel,취소,Cancel
 calendar,deleteConfirm.confirm,삭제,Delete
 calendar,label,라벨,Label
@@ -767,7 +767,7 @@ asset,assetDetail.valueCard,이번 달 결제 예정,Due this month
 asset,assetDetail.valueCheckCard,이번 달 사용액,Spent this month
 asset,assetDetail.monthTx,이번 달 내역,This month
 asset,assetDetail.hideAmounts,금액 가리기,Hide amounts
-asset,assetDetail.hideFailed,금액 가리기를 바꾸지 못했어요.,Couldn't change the amount hiding.
+asset,assetDetail.hideFailed,금액 가리기를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change the amount hiding. Try again later.
 asset,assetDetail.trendUsage,사용 추이,Usage trend
 asset,assetDetail.trendValuation,평가액 추이,Valuation trend
 asset,assetDetail.trendBalance,잔액 추이,Balance trend
@@ -1131,12 +1131,12 @@ calendar,shareSection.namePlaceholder,캘린더 이름,Calendar name
 calendar,shareSection.saveChanges,변경 저장,Save Changes
 calendar,shareSection.copyCode,복사,Copy
 calendar,shareSection.regenCode,새로 만들기,Generate new
-calendar,filter.visibilityFailed,캘린더 표시를 바꾸지 못했어요.,Couldn't change the calendar visibility.
+calendar,filter.visibilityFailed,캘린더 표시를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change the calendar visibility. Try again later.
 calendar,shareSection.codeHint,이 코드를 공유하면 다른 사람이 캘린더에 참여할 수 있어요.,Share this code to let others join the calendar.
 calendar,shareSection.codeNone,초대 코드 없음,No invite code
 calendar,shareSection.regenFailed,초대 코드를 새로 만들지 못했어요.,Couldn't create a new invite code.
-calendar,shareSection.roleFailed,권한을 바꾸지 못했어요.,Couldn't change the permission.
-calendar,shareSection.colorFailed,색을 바꾸지 못했어요.,Couldn't change the color.
+calendar,shareSection.roleFailed,권한을 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change the permission. Try again later.
+calendar,shareSection.colorFailed,색을 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change the color. Try again later.
 calendar,shareSection.members,멤버,Members
 calendar,shareSection.you,(나),(me)
 calendar,shareSection.removeMember,멤버 내보내기,Remove member
@@ -1157,12 +1157,12 @@ calendar,shareSection.codeInvalid,초대 코드를 확인해주세요.,Please ch
 calendar,shareSection.codeRequired,초대 코드를 입력해주세요.,Please enter the invite code.
 calendar,shareSection.codeAlreadyJoined,이미 참여한 캘린더예요.,You have already joined this calendar.
 calendar,shareSection.joinFailed,참여하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not join. Please try again in a moment.
-calendar,shareSection.joinedNamed,"""{{name}}"" 캘린더에 참여했어요","Joined the ""{{name}}"" calendar"
+calendar,shareSection.joinedNamed,"""{{name}}"" 캘린더에 참여했어요.","Joined the ""{{name}}"" calendar."
 calendar,shareSection.toast.deleted,캘린더를 삭제했어요,Calendar deleted
 calendar,shareSection.toast.created,캘린더를 만들었어요,Calendar created
 calendar,shareSection.toast.updated,캘린더를 수정했어요,Calendar updated
-calendar,shareSection.toast.codeCopied,초대 코드를 복사했어요,Invite code copied
-calendar,shareSection.toast.codeRegenerated,초대 코드를 새로 만들었어요,New invite code created
+calendar,shareSection.toast.codeCopied,초대 코드를 복사했어요.,Invite code copied.
+calendar,shareSection.toast.codeRegenerated,초대 코드를 새로 만들었어요.,New invite code created.
 calendar,shareSection.toast.memberRemoved,멤버를 제거했어요,Member removed
 calendar,shareSection.toast.roleChanged,권한을 변경했어요,Permission changed
 calendar,labelsSection.title,캘린더 라벨,Calendar labels
@@ -1220,8 +1220,9 @@ memo,loadFailed,메모를 불러오지 못했어요,Could not load memos
 memo,loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
 memo,tagFilter,태그로 거르기,Filter by tag
 memo,saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
-memo,deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
-memo,pinFailed,고정을 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not change the pin. Please try again in a moment.
+memo,saveFailedSnack,메모를 저장하지 못했어요.,Couldn't save the memo.
+memo,deleteFailed,메모를 삭제하지 못했어요.,Couldn't delete the memo.
+memo,pinFailed,고정을 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change the pin. Try again later.
 memo,contentLabel,내용,Content
 memo,tagsHeading,태그,Tags
 memo,tagsManage,관리,Manage
@@ -1230,7 +1231,7 @@ memo,modifiedAt,{{time}} 수정,Edited {{time}}
 memo,tags.loadFailed,태그를 불러오지 못했어요,Could not load tags
 memo,tags.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
 memo,tags.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
-memo,tags.deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
+memo,tags.deleteFailed,태그를 삭제하지 못했어요.,Couldn't delete the tag.
 notification,connectionLost,알림 연결이 끊어졌어요,Notification connection lost
 notification,connectionRestored,알림 연결이 다시 이어졌어요,Notification connection restored
 notification,newNotification,새 알림,New notification
@@ -1282,7 +1283,7 @@ notification,email.frequency.MONTHLY,매월,Monthly
 notification,loadFailed.title,알림을 불러오지 못했어요,Could not load notifications
 notification,loadFailed.desc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
 notification,prefsLoadFailed.title,알림 설정을 불러오지 못했어요,Could not load notification settings
-notification,settingsSaveFailed,알림 설정을 저장하지 못했어요.,Could not save the notification settings.
+notification,settingsSaveFailed,알림 설정을 저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't save the notification settings. Try again later.
 notification,deleteFailed,알림을 삭제하지 못했어요.,Could not delete the notification.
 notification,markAllFailed,알림을 모두 읽음으로 바꾸지 못했어요.,Could not mark all notifications as read.
 notification,markReadFailed,알림을 읽음으로 바꾸지 못했어요.,Could not mark the notification as read.
@@ -1511,11 +1512,11 @@ category,moveTx.targetPlaceholder,카테고리 고르기,Choose a category
 category,moveTx.hint,같은 종류의 맨 아래 카테고리만 고를 수 있어요.,Only bottom-level categories of the same type can be chosen.
 category,moveTx.noTarget,옮길 수 있는 카테고리가 없어요. 먼저 하나 만들어주세요.,No category to move to. Please create one first.
 category,moveTx.action,옮기기,Move
-category,moveTx.done,{{count}}건을 옮겼어요,Moved {{count}} items
+category,moveTx.done,{{count}}건을 옮겼어요.,Moved {{count}} items.
 category,moveTx.failed,거래를 옮기지 못했어요.,Couldn't move the transactions.
 category,saveFailed,카테고리를 저장하지 못했어요.,Couldn't save the category.
 category,deleteFailed,카테고리를 삭제하지 못했어요.,Couldn't delete the category.
-category,reorderFailed,순서를 바꾸지 못했어요.,Couldn't change the order.
+category,reorderFailed,순서를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change the order. Try again later.
 category,moveTx.modeNew,새 하위 만들기,Create subcategory
 category,moveTx.modeExisting,기존 카테고리로,Move to existing
 category,moveTx.childName,만들 하위 이름,New subcategory name
@@ -1698,7 +1699,7 @@ expense,savePreset.amountHint,비워 두면 불러올 때 금액을 직접 넣�
 expense,savePreset.nameRequired,프리셋 이름을 입력해주세요.,Enter a preset name.
 expense,savePreset.nameDuplicate,같은 이름의 프리셋이 있어요.,A preset with this name already exists.
 expense,savePreset.needParties,보내는 계좌와 받는 계좌를 먼저 골라주세요.,Choose the sending and receiving accounts first.
-expense,savePreset.saved,{{name}} 프리셋을 저장했어요,Saved the {{name}} preset
+expense,savePreset.saved,{{name}} 프리셋을 저장했어요.,Saved the {{name}} preset.
 expense,addTx.amountTooLarge,금액은 100억원까지 입력할 수 있어요.,Amount can be up to 10 billion won.
 expense,savePreset.title,프리셋으로 저장,Save as preset
 expense,savePreset.noMerchant,내역 없음,No details
@@ -2030,12 +2031,13 @@ settings,account.sub.perMonth,/ 월,/ mo
 settings,account.sub.perYear,/ 년,/ yr
 settings,account.toast.linked,{{name}} 계정이 연결됐어요.,Connected the {{name}} account.
 settings,account.toast.linkError,계정을 연결하지 못했어요.,Couldn't connect the account.
+settings,account.toast.linkReturnError,계정을 연결하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't connect the account. Try again later.
 settings,account.toast.unlinked,Google 연결을 해제했어요.,Disconnected the Google account.
 settings,account.toast.unlinkError,연결을 해제하지 못했어요.,Couldn't disconnect the account.
 settings,account.providersError,연결 상태를 불러오지 못했어요,Couldn't load the connection status
 settings,prefs.regionLoadError,기준 지역을 불러오지 못했어요,Couldn't load the region
 settings,prefs.currencyLoadError,기본 통화를 불러오지 못했어요,Couldn't load the default currency
-settings,prefs.saveFailed,설정을 바꾸지 못했어요.,Couldn't change the setting.
+settings,prefs.saveFailed,설정을 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change the setting. Try again later.
 stocks,nav.title,증권,Stocks
 stocks,detail.sheetTitle,종목 상세,Stock details
 stocks,summary.title,내 투자 평가금액,My portfolio value
@@ -2197,8 +2199,8 @@ stocks,watch.groupDeleteConfirm,"""{{name}}"" 그룹과 담긴 종목 {{count}}�
 stocks,watch.groupDeleteConfirmEmpty,"""{{name}}"" 그룹을 삭제해요. 삭제한 그룹은 되돌릴 수 없어요.","The ""{{name}}"" group will be deleted."
 stocks,watch.groupSaveFail,그룹을 저장하지 못했어요.,Couldn't save the group.
 stocks,watch.groupDeleteFail,그룹을 삭제하지 못했어요.,Couldn't delete the group.
-stocks,watch.removeFail,관심 종목에서 빼지 못했어요.,Couldn't remove it from your watchlist.
-stocks,watch.addFail,관심 종목에 넣지 못했어요.,Couldn't add it to your watchlist.
+stocks,watch.removeFail,관심 종목에서 빼지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't remove it from your watchlist. Try again later.
+stocks,watch.addFail,관심 종목에 넣지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't add it to your watchlist. Try again later.
 stocks,warning.LIQUIDATION_TRADING,정리매매,Liquidation trading
 stocks,warning.OVERHEATED,단기과열,Overheated
 stocks,warning.SHORT_TERM_OVERHEAT,단기과열,Short-term overheat
@@ -2398,11 +2400,11 @@ recurring,paused,일시정지,Paused
 recurring,pause,일시정지,Pause
 recurring,resume,다시 켜기,Turn back on
 recurring,deleteTitle,반복 거래 삭제,Delete recurring transaction
-recurring,toastPaused,{{name}} 반복을 멈췄어요,Paused {{name}}
-recurring,toastResumed,{{name}} 반복을 다시 켰어요,Turned {{name}} back on
-recurring,toastDeleted,{{name}} 반복 설정을 삭제했어요,Deleted the {{name}} recurring setting
-recurring,toastSaved,변경사항이 저장됐어요,Changes saved
-recurring,toastAdded,반복 거래가 추가됐어요,Recurring transaction added
+recurring,toastPaused,{{name}} 반복을 멈췄어요.,Paused {{name}}.
+recurring,toastResumed,{{name}} 반복을 다시 켰어요.,Turned {{name}} back on.
+recurring,toastDeleted,{{name}} 반복 설정을 삭제했어요.,Deleted the {{name}} recurring setting.
+recurring,toastSaved,변경사항을 저장했어요.,Changes saved.
+recurring,toastAdded,반복 거래를 추가했어요.,Recurring transaction added.
 subscription,title,구독 관리,Manage subscription
 subscription,startPro,Pro 시작하기,Start Pro
 subscription,cancelSub,구독 해지,Cancel subscription
@@ -2740,7 +2742,7 @@ todo,tags.preview,미리보기,Preview
 todo,tags.loadFailed,태그를 불러오지 못했어요,Couldn't load tags
 todo,tags.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
 todo,tags.saveFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
-todo,tags.deleteFailed,삭제하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not delete. Please try again in a moment.
+todo,tags.deleteFailed,태그를 삭제하지 못했어요.,Couldn't delete the tag.
 constellation,strip.title,오늘의 밤하늘 · {{name}},Tonight's sky · {{name}}
 constellation,strip.done,{{name}} 수집 완료!,{{name}} collected!
 constellation,nightSky.title,밤하늘,Night sky
@@ -3106,7 +3108,7 @@ stats,fixed.bulk.badgeSome,고정 {{fixed}}/{{count}},Fixed {{fixed}}/{{count}}
 stats,fixed.bulk.empty,이 기간에는 정리할 거래가 없어요,No transactions to organize in this period
 stats,fixed.bulk.apply,{{count}}건 적용,Apply to {{count}}
 stats,fixed.bulk.unconfirmed,바뀌었는지 확인하지 못했어요.,Couldn't confirm whether it changed.
-stats,fixed.bulk.failed,고정 표시를 바꾸지 못했어요.,Couldn't change the fixed setting.
+stats,fixed.bulk.failed,고정 표시를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change the fixed setting. Try again later.
 stats,fixed.bulk.doneFixed,{{count}}건을 고정으로 바꿨어요.,Marked {{count}} as fixed.
 stats,fixed.bulk.doneVariable,{{count}}건을 변동으로 되돌렸어요.,Changed {{count}} back to variable.
 settings,hideAmounts.card.stats.fixed,고정 · 변동 탭,Fixed vs. variable tab
@@ -3369,7 +3371,7 @@ expense,preset.listTitle,프리셋 {{count}}개,{{count}} presets
 expense,preset.uses,{{count}}번,{{count}} uses
 expense,preset.sortLabel,정렬,Sort
 expense,preset.loadFailed,프리셋을 불러오지 못했어요,Could not load presets
-expense,preset.deleteFailed,프리셋을 삭제하지 못했어요,Could not delete the preset
+expense,preset.deleteFailed,프리셋을 삭제하지 못했어요.,Couldn't delete the preset.
 expense,preset.deleteConfirmTitle,"""{{name}}"" 프리셋을 삭제할까요?","Delete the ""{{name}}"" preset?"
 expense,preset.noteFixed,고정 금액,Fixed amount
 expense,preset.noteUses,{{count}}번 썼어요,Used {{count}} times
