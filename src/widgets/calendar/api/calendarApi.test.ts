@@ -101,7 +101,7 @@ describe("일정 생성 POST 본문", () => {
   });
 });
 
-// silent 는 호출처 옵션이다 — 옵션이 없으면 요청 설정 자체를 넘기지 않아 전역 토스트가 그대로 난다
+// silent 는 호출처 옵션이다 — 옵션이 없으면 요청 설정 자체를 넘기지 않는다(표식이 없다)
 describe("silent 옵션", () => {
   it("옵션이 없으면 설정을 넘기지 않는다(생성 · 수정)", async () => {
     await calendarApi.createEvent(workEvent);

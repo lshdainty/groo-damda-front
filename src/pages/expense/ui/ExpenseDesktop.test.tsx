@@ -848,7 +848,7 @@ describe("고르기 모드 · 일괄 작업 바 (I-07 33 ~ 36)", () => {
     expect(st.snacks[0]!.action).toBeUndefined();
   });
 
-  it("삭제 요청은 전역 오류 토스트를 끈다(silent) — 실패는 화면이 알린다", async () => {
+  it("삭제 요청은 silent 표식을 건다 — 실패는 화면이 알린다", async () => {
     const { expenseApi } = await import("@/features/expense/api/expenseApi");
     const { apiClient } = await import("@/shared/api");
     const post = vi
@@ -922,7 +922,7 @@ describe("고르기 모드 · 일괄 작업 바 (I-07 33 ~ 36)", () => {
     expect(st.snacks[1]).toMatchObject({ tone: "critical" });
   });
 
-  it("고정 표시 요청도 silent — 전역 토스트를 끈다", async () => {
+  it("고정 표시 요청도 silent 표식을 건다", async () => {
     const { expenseApi } = await import("@/features/expense/api/expenseApi");
     const { apiClient } = await import("@/shared/api");
     const put = vi
@@ -934,7 +934,7 @@ describe("고르기 모드 · 일괄 작업 바 (I-07 33 ~ 36)", () => {
       { expenseIds: [1], isFixed: true },
       { silent: true },
     );
-    // 옵션이 없으면(통계 고정 정리 등) 전역 오류 토스트가 그대로 뜬다 — silent 를 걸지 않는다
+    // 옵션이 없으면(통계 고정 정리 등) silent 표식을 걸지 않는다
     put.mockClear();
     await expenseApi.bulkMarkFixed([1], true);
     expect(put).toHaveBeenCalledWith(

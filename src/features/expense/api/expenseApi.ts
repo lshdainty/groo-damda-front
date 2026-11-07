@@ -226,8 +226,8 @@ export const expenseApi = {
    * 응답은 실제로 바뀐 건수다(이미 그 값이던 거래는 세지 않는다).
    */
   /**
-   * 고정 · 변동 일괄 변경. `silent` 는 **호출처가 고른다**(기본은 전역 토스트가 실패를 알린다) —
-   * 실패를 자기 스낵바로 알리는 화면만 true 로 넘겨 서버 글과 겹치지 않게 한다.
+   * 고정 · 변동 일괄 변경. `silent` 는 이 요청의 실패를 호출처가 자기 자리에서 알린다는 **표식**이다(동작은 없다 — base.ts `QuietRequestConfig`) —
+   * 실패를 자기 스낵바로 알리는 화면이 true 로 넘긴다. 전역 서버 원문 토스트는 없다.
    */
   bulkMarkFixed: async (
     expenseIds: number[],

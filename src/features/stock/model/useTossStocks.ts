@@ -24,7 +24,7 @@ const COMMON = {
 
 /**
  * USD→KRW 환율. `/api/v1/toss/**` 는 서버 게이트(SECURITIES 구독) 대상이라
- * 미구독자가 호출하면 403 → 전역 토스트. 호출부가 구독·필요 여부를 판단해 enabled 를 넘긴다.
+ * 미구독자가 호출하면 403 이다(전역 알림은 없다). 호출부가 구독·필요 여부를 판단해 enabled 를 넘긴다.
  */
 export const useTossExchangeRate = (enabled = true) =>
   useQuery({
