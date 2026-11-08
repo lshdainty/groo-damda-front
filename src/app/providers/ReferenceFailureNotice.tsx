@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   isReferenceNoticeHeld,
-  isReferenceQuery,
+  isReferenceObserved,
   markReferenceNoticeShown,
   onReferenceNoticeRelease,
 } from "@/shared/api/reference";
@@ -41,9 +41,10 @@ export const ReferenceFailureNotice = () => {
 
     const isFailedReference = (q: {
       meta: unknown;
+      observers?: ReadonlyArray<{ options: { meta?: unknown } }>;
       state: { status: string; data: unknown };
     }) =>
-      isReferenceQuery(q.meta) &&
+      isReferenceObserved(q) &&
       q.state.status === "error" &&
       q.state.data === undefined;
 

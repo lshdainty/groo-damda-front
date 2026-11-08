@@ -29,6 +29,20 @@ export const isReferenceQuery = (meta: unknown): boolean =>
   meta !== null &&
   (meta as { reference?: unknown }).reference === true;
 
+/**
+ * 이 질의를 지금 보는 관찰자가 모두 참조로 읽는가 — 하나라도 주 데이터로 읽으면 참조가 아니다(화면이 보는 값의 실패는 그 화면이 알린다).
+ * Query.meta 는 같은 키를 읽는 여러 관찰자 중 마지막으로 그려지거나 요청한 쪽 옵션으로 덮이므로(@tanstack/query-core 5.95.2,
+ * query.js setOptions/fetch) 판정에 쓰지 않고, 공개 필드 query.observers 의 각 옵션 meta 를 본다.
+ * 관찰자가 없으면(언마운트 직후) 기존대로 query.meta 를 본다.
+ */
+export const isReferenceObserved = (q: {
+  meta: unknown;
+  observers?: ReadonlyArray<{ options: { meta?: unknown } }>;
+}): boolean =>
+  q.observers && q.observers.length > 0
+    ? q.observers.every((o) => isReferenceQuery(o.options.meta))
+    : isReferenceQuery(q.meta);
+
 /*
  * 폼 · 시트가 열려 있는 동안은 공용 참조 실패 스낵바를 띄우지 않는다 — 그 안의 참조 목록 실패는 폼이 맡는다
  * (불러 둔 값 유지 · 저장 때 다시 받기 · 또 실패하면 폼 Callout). 열려 있는 수를 세는 전역 카운터 하나.
