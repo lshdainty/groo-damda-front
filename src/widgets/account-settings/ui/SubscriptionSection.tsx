@@ -51,13 +51,10 @@ import {
   type Cycle,
 } from "@/features/subscription/lib/plan-cycles";
 import { SUB_FEATURES } from "@/features/subscription/lib/features";
+import { loadFailed } from "@/shared/api";
 
 const FREE = "Free";
 const PRO = "Pro";
-
-/** 못 받은 요청인가 — 데이터가 있는 채로 다시 받기만 실패한 것은 실패가 아니다 */
-const broken = (q: { isError: boolean; data: unknown }) =>
-  q.isError && q.data === undefined;
 
 /**
  * 구독 관리 구역(I-14 G) — 설정 > 계정 > 구독·결제에서 들어오는 페이지. 예전 구독 대화상자의 몸 · 질의 · 뮤테이션을 옮겼다.
@@ -93,7 +90,8 @@ export function SubscriptionSection({
   const [chosen, setChosen] = useState<Cycle | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const failed = broken(featuresQ) || broken(subQ) || broken(plansQ);
+  const failed =
+    loadFailed(featuresQ) || loadFailed(subQ) || loadFailed(plansQ);
   const loading =
     !failed && (featuresQ.isLoading || subQ.isLoading || plansQ.isLoading);
   const refetching =

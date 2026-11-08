@@ -38,6 +38,7 @@ import {
 } from "./home-shared";
 import { useOpenHideAmountsSettings } from "@/shared/lib/groo/hide-amounts-nav";
 import { useMonthNote } from "./use-month-note";
+import { loadFailed } from "@/shared/api";
 
 /**
  * 폰 홈 — **구역마다 따로 띠**(사용자 10-23): 순자산 · 이번 달 가계부 · 카테고리 · 예산 · 다가오는 일정 · 최근 할 일 · 오늘 쓴 돈.
@@ -98,12 +99,12 @@ export function HomeMobile() {
   const events = summary?.upcomingEvents.slice(0, 3) ?? [];
   const todos = summary?.recentTodos.slice(0, 3) ?? [];
   const summaryLoading = dashboardQ.data === undefined && !dashboardQ.isError;
-  const summaryFailed = dashboardQ.isError && dashboardQ.data === undefined;
-  const monthFailed = monthlyQ.isError && monthlyQ.data === undefined;
+  const summaryFailed = loadFailed(dashboardQ);
+  const monthFailed = loadFailed(monthlyQ);
   const monthLoading = monthlyQ.data === undefined && !monthlyQ.isError;
   const overdue = summary?.todoSummary.overDueCount ?? 0;
   const todayLoading = recentQ.data === undefined && !recentQ.isError;
-  const todayFailed = recentQ.isError && recentQ.data === undefined;
+  const todayFailed = loadFailed(recentQ);
   const openToday = (e: Expense) => {
     const m = e.expenseDate?.slice(0, 7) ?? "";
     const params = new URLSearchParams();
@@ -112,7 +113,7 @@ export function HomeMobile() {
     navigate(`/desk/expense?${params.toString()}`);
   };
 
-  const assetFailed = assetSummaryQ.isError && assetSummaryQ.data === undefined;
+  const assetFailed = loadFailed(assetSummaryQ);
   const showEvents = summaryLoading || summaryFailed || events.length > 0;
   const showTodos = summaryLoading || summaryFailed || todos.length > 0;
 

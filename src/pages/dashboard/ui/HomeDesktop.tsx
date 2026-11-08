@@ -66,6 +66,7 @@ import {
   useCurrentMonthKey,
 } from "./home-shared";
 import { MASK, useMasked, won, wonIn, wonOut } from "./home-money";
+import { loadFailed } from "@/shared/api";
 
 /**
  * 데스크톱 · 태블릿 홈(짝 2) — 같은 트리에서 폭만 다르다.
@@ -176,12 +177,12 @@ export function HomeDesktop() {
   const events = summary?.upcomingEvents.slice(0, 3) ?? [];
   const todos = summary?.recentTodos.slice(0, 4) ?? [];
   const summaryLoading = dashboardQ.data === undefined && !dashboardQ.isError;
-  const summaryFailed = dashboardQ.isError && dashboardQ.data === undefined;
-  const monthFailed = monthlyQ.isError && monthlyQ.data === undefined;
+  const summaryFailed = loadFailed(dashboardQ);
+  const monthFailed = loadFailed(monthlyQ);
   const monthLoading = monthlyQ.data === undefined && !monthlyQ.isError;
   const overdue = summary?.todoSummary.overDueCount ?? 0;
   const todayLoading = recentQ.data === undefined && !recentQ.isError;
-  const todayFailed = recentQ.isError && recentQ.data === undefined;
+  const todayFailed = loadFailed(recentQ);
   const openToday = (e: Expense) => {
     const m = e.expenseDate?.slice(0, 7) ?? "";
     const params = new URLSearchParams();
@@ -213,7 +214,7 @@ export function HomeDesktop() {
         />
         <div className="grid grid-cols-1 gap-x2 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:gap-[var(--layout-gutter)]">
           <div className="flex min-w-0 flex-col gap-x2">
-            {assetSummaryQ.isError && assetSummaryQ.data === undefined ? (
+            {loadFailed(assetSummaryQ) ? (
               <Card>
                 <NetWorthFailure
                   title={t("loadFailed.netWorth")}
@@ -255,7 +256,7 @@ export function HomeDesktop() {
                 ) : (
                   <IncomeExpenseChart
                     loading={monthLoading || trendQ.data === undefined}
-                    trendFailed={trendQ.isError && trendQ.data === undefined}
+                    trendFailed={loadFailed(trendQ)}
                     onRetryTrend={() => void trendQ.refetch()}
                     income={income}
                     expense={expense}
@@ -365,7 +366,7 @@ export function HomeDesktop() {
 
             <Card body="list">
               <HomeHead title={t("payment.upcoming")} />
-              {recurringQ.isError && recurringQ.data === undefined ? (
+              {loadFailed(recurringQ) ? (
                 <SectionFailure
                   title={t("loadFailed.payment")}
                   onRetry={() => void recurringQ.refetch()}
