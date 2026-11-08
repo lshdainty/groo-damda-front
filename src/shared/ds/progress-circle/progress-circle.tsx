@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/shared/lib/cn";
+import { progressPercentText } from "@/shared/lib/percent";
 import { useDsText } from "@/shared/ds/i18n";
 
 /*
@@ -179,7 +180,9 @@ const ProgressCircle = React.forwardRef<SVGSVGElement, ProgressCircleProps>(
           aria-valuemax={determinate ? max : undefined}
           aria-valuenow={determinate ? clamp(value, min, max) : undefined}
           aria-valuetext={
-            determinate ? (valueText ?? `${Math.round(percent)}%`) : undefined
+            determinate
+              ? (valueText ?? progressPercentText(percent))
+              : undefined
           }
           data-slot="progress-circle"
           data-size={size}

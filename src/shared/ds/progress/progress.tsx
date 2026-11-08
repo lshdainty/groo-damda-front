@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/shared/lib/cn";
+import { progressPercentText } from "@/shared/lib/percent";
 import { dsMoney, dsText, useDsText } from "@/shared/ds/i18n";
 
 /*
@@ -68,7 +69,7 @@ function measure(
       ? dsText("progress.over", { value: formatValue(current - max) })
       : state === "reached"
         ? dsText("progress.reached")
-        : `${Math.round(Math.min(ratio, 1) * 100)}%`;
+        : progressPercentText(Math.min(ratio, 1) * 100);
   return { current, state, status, fill: Math.min(ratio, 1) };
 }
 

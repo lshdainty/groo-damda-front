@@ -1,4 +1,5 @@
 import { i18n } from "@/shared/i18n/config";
+import { progressPercentText } from "@/shared/lib/percent";
 import { formatMonthDay, weekdayShort } from "@/shared/lib/date";
 
 /** 현재 로케일이 영어인지. 순수 함수라 React 밖에서도 i18n.language 직접 참조. */
@@ -66,20 +67,13 @@ export function formatPercent(
   opts: { sign?: "auto" | "always" | "none" } = {},
 ): string {
   if (kind === "change") return formatChangeRate(pct, opts);
+  if (kind === "progress") return progressPercentText(pct);
   if (!Number.isFinite(pct)) return "—";
   // 음수는 U+2212(차트 · 금액과 같은 빼기 기호)
   if (pct < 0) {
     // 반올림해서 0 이 되면 부호 없이 0(−0% · −0.0% 를 내지 않는다 — formatChangeRate 와 같다)
-    if (Math.round(-pct * (kind === "progress" ? 1 : 10)) === 0)
-      return kind === "progress" ? "0%" : "0.0%";
+    if (Math.round(-pct * 10) === 0) return "0.0%";
     return `${MINUS}${formatPercent(-pct, kind)}`;
-  }
-  if (kind === "progress") {
-    // 100 을 넘나드는 상태가 글에서 사라지지 않게 — 반올림하면 100 이 되는 99.5 ~ 99.99 는 내림(99%),
-    // 100.01 ~ 100.49 는 올림(101%). 정확히 100 만 "100%", 그 밖은 정수 반올림.
-    const r = Math.round(pct);
-    if (r === 100 && pct !== 100) return `${pct < 100 ? 99 : 101}%`;
-    return `${r}%`;
   }
   if (pct > 0 && pct < 0.05) return i18n.t("common:percentBelowShare");
   return `${(Math.round(pct * 10) / 10).toFixed(1)}%`;

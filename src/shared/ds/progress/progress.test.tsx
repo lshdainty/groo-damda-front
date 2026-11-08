@@ -93,6 +93,11 @@ describe("Progress", () => {
     expect(meter.getAttribute("aria-valuetext")).toBe("20,000원 초과");
   });
 
+  it("반올림해 100 이 되는 값은 99% — 100% 는 정확히 닿았을 때만", () => {
+    render(<Progress label="식비 예산" value={99600} max={100000} />);
+    expect(part("progress-status").textContent).toBe("99%");
+  });
+
   it("한도에 딱 닿은 것은 넘침이 아니다", () => {
     const el = render(
       <Progress label="식비 예산" value={400000} max={400000} />,

@@ -57,6 +57,11 @@ describe("ProgressCircle", () => {
     expect(range().style.strokeDashoffset).toBe("40");
   });
 
+  it("반올림해 100 이 되는 값은 99% 로 읽는다", () => {
+    const svg = render(<ProgressCircle value={99.6} />);
+    expect(svg.getAttribute("aria-valuetext")).toBe("99%");
+  });
+
   it("범위를 벗어난 값은 끝에서 멈춘다", () => {
     const svg = render(<ProgressCircle value={150} />);
     expect(svg.getAttribute("aria-valuenow")).toBe("100");
