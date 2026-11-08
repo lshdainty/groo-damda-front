@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { progressPercentValue } from "@/shared/lib/percent";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -64,7 +65,10 @@ export function ConstellationDetailDialog({
   const collected = entry.collectCount > 0;
   const litNow = isToday ? Math.min(today.points, today.goal) : undefined;
   const pct = isToday
-    ? Math.min(100, Math.round((litNow! / Math.max(1, today.goal)) * 100))
+    ? Math.min(
+        100,
+        progressPercentValue((litNow! / Math.max(1, today.goal)) * 100),
+      )
     : 0;
   // 목표에 닿으면 오른쪽 글은 "달성"(progress.yaml:74-80 · progress.md:56) — fg-neutral · 700
   const reached = isToday && litNow! >= today.goal;

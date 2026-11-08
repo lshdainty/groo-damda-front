@@ -437,6 +437,14 @@ describe("항목", () => {
     expect(texts[2]).toContain("b.jpg, 84KB, 올리지 못했어요");
   });
 
+  it("올리는 중 글 — 99.6% 는 99%, 끝나기 전엔 100% 를 보이지 않는다", () => {
+    setup({ entries: [entry({ status: "uploading", progress: 0.996 })] });
+    const item = slots("item")[0]!;
+    const text = item.textContent + (item.getAttribute("aria-label") ?? "");
+    expect(text).toContain("올리는 중 99%");
+    expect(text).not.toContain("100%");
+  });
+
   it("파일 이름은 글자 단위 줄바꿈(break-all), 첫 줄만 오른쪽 4 를 비운다", () => {
     setup({ entries: [pdf()] });
     expect(slot("name")!.className).toContain("break-all");

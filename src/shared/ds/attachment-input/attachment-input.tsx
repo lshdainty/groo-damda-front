@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
+import { progressPercentValue } from "@/shared/lib/percent";
 import { Button } from "@/shared/ds/button";
 import { useField, useFieldGroup, useFieldGroupState } from "@/shared/ds/field";
 import { useInputButtonSurface } from "@/shared/ds/input-button";
@@ -342,7 +343,9 @@ const describe = (
     parts.push(
       typeof entry.progress === "number"
         ? dsText("attachment.uploadingPercent", {
-            percent: Math.round(Math.min(Math.max(entry.progress, 0), 1) * 100),
+            percent: progressPercentValue(
+              Math.min(Math.max(entry.progress, 0), 1) * 100,
+            ),
           })
         : dsText("attachment.uploading"),
     );
@@ -361,7 +364,7 @@ function ItemFace({
   const [broken, setBroken] = React.useState(false);
   const percent =
     typeof entry.progress === "number"
-      ? Math.round(Math.min(Math.max(entry.progress, 0), 1) * 100)
+      ? progressPercentValue(Math.min(Math.max(entry.progress, 0), 1) * 100)
       : undefined;
   const circle = (tone: "staticWhite" | "neutral") => (
     <ProgressCircle size="24" tone={tone} value={percent} aria-hidden />

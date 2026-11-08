@@ -171,6 +171,21 @@ describe("ConstellationDetailDialog", () => {
     expect(text()).not.toContain("0번");
   });
 
+  it("목표에 거의 닿았을 때(99.6%) 오른쪽 글은 99% — 100% 는 달성일 때만", () => {
+    const entry = make(0);
+    act(() =>
+      root.render(
+        <ConstellationDetailDialog
+          entry={entry}
+          today={{ ...todayOf(entry, 996), goal: 1000 }}
+          onClose={() => {}}
+        />,
+      ),
+    );
+    expect(text()).toContain("99%");
+    expect(text()).not.toContain("100%");
+  });
+
   it('목표를 다 채우면 막대 오른쪽 글이 "달성" · 700 · fg-neutral 이다', () => {
     const entry = make(3);
     act(() =>
