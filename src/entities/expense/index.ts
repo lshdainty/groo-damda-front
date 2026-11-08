@@ -23,6 +23,7 @@ export type {
   DeleteExpenseResult,
 } from "./model/types";
 
+export { isExpenseDeletable } from "./lib/deletable";
 export { splitFixed, amountFor, fixedShareTexts } from "./lib/fixed-split";
 export type { FixedSplit, FixedView } from "./lib/fixed-split";
 export {

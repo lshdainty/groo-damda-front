@@ -625,6 +625,17 @@ describe("고르기 모드 · 일괄 작업 바 (I-07 33 ~ 36)", () => {
     expect(bulk()).toBeNull();
   });
 
+  it("자동 생성이라도 deletable:true 인 거래는 체크가 있다 — 일괄 삭제도 같은 판정", () => {
+    st.list = [
+      ...st.list,
+      tx(5, 12, 3_000, { autoSource: "TRADE_REALIZED", deletable: true }),
+      tx(6, 11, 3_000, { autoSource: "TRADE_REALIZED", deletable: false }),
+    ];
+    render();
+    enter();
+    expect(checks()).toHaveLength(4);
+  });
+
   it("모드에서 줄을 누르면 체크가 바뀌고 상세는 열리지 않는다 — 고른 줄은 바탕이 없다", () => {
     render();
     enter();

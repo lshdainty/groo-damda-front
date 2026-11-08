@@ -4,6 +4,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import type { Asset } from "@/entities/asset";
 import {
   closedCycleSpan,
+  isExpenseDeletable,
   isRefundedTx,
   type Expense,
 } from "@/entities/expense";
@@ -62,10 +63,13 @@ export function useExpenseSwipeActions({
       : null;
     const name =
       e.merchant ?? e.description ?? e.categoryName ?? tc("transaction");
+    // 지울 수 없는 자동 생성 거래는 밀어도 아무것도 없다
+    if (!isExpenseDeletable(e)) return [];
     return [
       // 환불된 거래는 고칠 수 없다(서버 EXP_043) — 상세 footer 처럼 [수정]을 빼고
       // 삭제만 남긴다(앱 `canEdit` 과 같은 조건).
-      ...(isRefundedTx(e)
+      // 시스템이 만든 거래도 [수정]은 없다(deletable 이어도 금액·날짜는 계산 결과).
+      ...(isRefundedTx(e) || e.autoSource != null
         ? []
         : [
             {

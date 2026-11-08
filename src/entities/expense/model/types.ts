@@ -104,6 +104,12 @@ export interface Expense {
    * 카테고리·메모는 분류라서 그대로 고칠 수 있다.
    */
   autoSource: string | null;
+  /**
+   * 지금 이 사용자가 직접 지울 수 있나(서버 판정). 자동 생성이면 보통 false 지만, 그 기록을 만든
+   * 증권 자산이 이미 삭제됐으면 true. 삭제 버튼 판정에만 쓴다 — 수정·환불·분할은 `autoSource` 기준.
+   * 옛 서버면 없다(그땐 `autoSource == null` 로 본다).
+   */
+  deletable?: boolean;
   /** 활성 분할 항목들의 카테고리 id (없으면 빈 배열). 목록 카테고리 필터를 split-aware 하게 매칭. */
   splitCategoryRowIds?: number[];
   /**

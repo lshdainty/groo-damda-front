@@ -463,6 +463,11 @@ export interface AssetTransfer {
    * 버튼을 감춘다.
    */
   autoSource: string | null;
+  /**
+   * 지금 이 사용자가 직접 지울 수 있나(서버 판정). 자동 생성이면 보통 false 지만, 받는 증권 자산이
+   * 이미 삭제됐으면 true. 삭제 버튼 판정에만 쓴다. 옛 서버면 없다(그땐 `autoSource == null` 로 본다).
+   */
+  deletable?: boolean;
   /** ISO-LOCAL-DATETIME (YYYY-MM-DDTHH:mm:ss) */
   transferDate: string;
   createAt: string;

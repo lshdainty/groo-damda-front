@@ -540,13 +540,9 @@ export function ExpenseMobile({
                   rowRef={isFocus ? focusRef : undefined}
                   highlighted={isFocus}
                   rowLabel={rowLabelOf(item.expense)}
-                  // 시스템이 만든 거래(매도 실현손익·이체 이자)는 원본을 지워야 사라진다 —
-                  // 상세 다이얼로그가 버튼을 감추는 것과 같은 조건으로 액션 자체를 없앤다.
-                  actions={
-                    item.expense.autoSource != null
-                      ? []
-                      : swipeActionsFor(item.expense)
-                  }
+                  // 시스템이 만든 거래는 수정할 수 없고, 서버가 지울 수 있다고 한 것만 [삭제] 가 남는다
+                  // (자동 생성이면서 지울 수 없으면 []) — 상세 다이얼로그와 같은 조건.
+                  actions={swipeActionsFor(item.expense)}
                   onOpen={(ex) => setDetail(ex)}
                   onAsk={setPendingAction}
                 />

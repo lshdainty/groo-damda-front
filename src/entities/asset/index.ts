@@ -33,6 +33,7 @@ export type {
 } from "./model/types";
 
 export { TransferRow } from "./ui/transfer-row";
+export { isTransferDeletable } from "./lib/deletable";
 export { assetTypeLabel } from "./lib/asset-labels";
 export { ASSET_EDIT_PARAM, editAssetPath } from "./lib/edit-path";
 export {

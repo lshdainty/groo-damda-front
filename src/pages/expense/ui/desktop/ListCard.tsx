@@ -10,7 +10,7 @@ import { List, ListItem } from "@/shared/ds/list";
 import { KRW, formatDay, minusOf } from "@/shared/lib/groo/format";
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
 import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
-import { ExpenseRow } from "@/entities/expense";
+import { ExpenseRow, isExpenseDeletable } from "@/entities/expense";
 import { TransferRow } from "@/entities/asset";
 import { useAssetCurrencyOf } from "@/features/asset";
 import type { Expense } from "@/entities/expense";
@@ -173,7 +173,7 @@ export function ListCard({
                   select={
                     !selecting
                       ? undefined
-                      : item.expense.autoSource != null
+                      : !isExpenseDeletable(item.expense)
                         ? "space"
                         : {
                             checked: selected.has(item.expense.rowId),

@@ -661,6 +661,18 @@ describe("B 9 — 상태 Callout", () => {
     );
   });
 
+  it("자동 거래 + deletable:true — [삭제]만 있고 수정 · 환불 · 분할은 없다", () => {
+    render({ ...baseExpense, autoSource: "TRADE_REALIZED", deletable: true });
+    expect(footerButtons().map((b) => b.textContent)).toEqual(["delete"]);
+    expect(moreRow("refund")).toBeNull();
+    expect(moreRow("split")).toBeNull();
+  });
+
+  it("자동 거래 + deletable:false — 바닥이 없다", () => {
+    render({ ...baseExpense, autoSource: "TRADE_REALIZED", deletable: false });
+    expect(footerButtons()).toHaveLength(0);
+  });
+
   it("기록만 — 닫힌 회차에 적은 카드 지출", () => {
     render({ ...baseExpense, cardSettledThrough: "2026-08-31" });
     expect(

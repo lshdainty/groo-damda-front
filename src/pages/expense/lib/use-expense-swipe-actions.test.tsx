@@ -179,6 +179,20 @@ describe("[수정]", () => {
   });
 });
 
+describe("자동 생성 거래 — 서버 deletable 로 [삭제] 만 가른다", () => {
+  const auto = { ...tx, autoSource: "TRADE_REALIZED" };
+
+  it("deletable:true 면 [삭제] 만 — 수정은 없다", () => {
+    const actions = actionsFor!({ ...auto, deletable: true });
+    expect(actions.map((a) => a.kind)).toEqual(["destructive"]);
+  });
+
+  it("deletable:false 이거나 필드가 없으면(옛 서버) 밀어도 아무것도 없다", () => {
+    expect(actionsFor!({ ...auto, deletable: false })).toEqual([]);
+    expect(actionsFor!(auto)).toEqual([]);
+  });
+});
+
 describe("지운 뒤의 토스트(D4 · D9) — 예전엔 스와이프 삭제만 토스트가 없었다", () => {
   it("닫힌 회차 거래 — 응답과 함께 닫힌 회차·결제계좌를 넘긴다", async () => {
     await act(async () => {
