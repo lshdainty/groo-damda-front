@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/shared/lib/cn";
+import { progressPercentValue } from "@/shared/lib/percent";
 import { Button } from "@/shared/ds/button";
 import { ProgressCircle } from "@/shared/ds/progress-circle";
 
@@ -191,7 +192,7 @@ const Avatar = React.forwardRef<HTMLSpanElement, AvatarProps>(
     const uploading =
       typeof uploadProgress === "number" && Number.isFinite(uploadProgress);
     const percent = uploading
-      ? Math.round(Math.min(Math.max(uploadProgress, 0), 1) * 100)
+      ? progressPercentValue(Math.min(Math.max(uploadProgress, 0), 1) * 100)
       : 0;
     return (
       <span

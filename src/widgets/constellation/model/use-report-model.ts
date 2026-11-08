@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { progressPercentValue } from "@/shared/lib/percent";
 import { useTranslation } from "react-i18next";
 import { formatDateRange, formatMonthDayDow } from "@/shared/lib/date";
 import {
@@ -98,7 +99,10 @@ export function useReportModel() {
   const goal = isToday
     ? (todayQ.data?.goal ?? 7)
     : (grownEntry?.constellation.starCount ?? todayQ.data?.goal ?? 7);
-  const pct = Math.min(100, Math.round((pts / Math.max(1, goal)) * 100));
+  const pct = Math.min(
+    100,
+    progressPercentValue((pts / Math.max(1, goal)) * 100),
+  );
   const missed = missedOf(sel);
   const weekMax = Math.max(goal, ...days.map(ptsOf), 1);
   // 그날 메모로 모은 별빛 = 그날 별빛 − 할 일 몫(하늘 기록이 없는 날은 할 일 몫만)

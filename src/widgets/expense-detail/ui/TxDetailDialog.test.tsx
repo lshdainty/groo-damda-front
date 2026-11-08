@@ -564,6 +564,14 @@ describe("B 11 — 나눈 내역 묶음은 접지 않고 처음부터 다 보인
     expect(document.body.textContent).toContain("txDetail.splitSum");
   });
 
+  it("나눔 줄 비율은 금액에서 계산한 몫이라 점유율 규칙(소수 첫째 자리)이다", () => {
+    api.splits = [split(1, 1000), split(2, 2000)];
+    render();
+    const sec = document.querySelector("[data-slot=tx-detail-splits]")!;
+    expect(sec.textContent).toContain("33.3%");
+    expect(sec.textContent).toContain("66.7%");
+  });
+
   it("나눈 것이 없으면 묶음이 없다", () => {
     render();
     expect(document.querySelector("[data-slot=tx-detail-splits]")).toBeNull();

@@ -241,6 +241,13 @@ describe("Avatar — 올리는 중(uploading)", () => {
     expect(avatar.hasAttribute("data-uploading")).toBe(true);
   });
 
+  it("반올림해 100 이 되는 값은 99 — 올리기가 끝나기 전엔 100% 를 보이지 않는다", () => {
+    const avatar = render(<Avatar name="한지우" uploadProgress={0.996} />);
+    expect(bar(avatar)!.getAttribute("aria-valuenow")).toBe("99");
+    act(() => root.render(<Avatar name="한지우" uploadProgress={1} />));
+    expect(bar(container)!.getAttribute("aria-valuenow")).toBe("100");
+  });
+
   it("이름(uploadLabel)은 부르는 쪽이 바꿀 수 있고, 0 ~ 1 밖의 값은 끝에서 멈춘다", () => {
     const avatar = render(
       <Avatar

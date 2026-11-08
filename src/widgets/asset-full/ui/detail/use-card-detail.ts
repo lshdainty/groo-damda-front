@@ -12,6 +12,7 @@ import {
 } from "@/features/asset";
 import { useSearchExpenses } from "@/features/expense";
 import { formatDay, money } from "@/shared/lib/groo/format";
+import { progressPercentValue } from "@/shared/lib/percent";
 import { useAssetMask } from "../../lib/asset-groups";
 
 // 결제 회차(청구월) 항목 — 예정 1건 + 과거 결제 완료 이력.
@@ -178,7 +179,7 @@ export function useCardDetail(asset: Asset) {
   // 실사용률 그대로 — 한도의 20배를 썼으면 2000% 로 보인다(사용자 결정).
   // 100 으로 눌러 두면 목록(실퍼센트)과 다른 숫자가 나오고, 얼마나 넘겼는지도
   // 안 보인다. 바 채움만 아래에서 100% 로 캡한다(넘치면 그릴 수 없다).
-  const limitPct = limit > 0 ? Math.round((used / limit) * 100) : 0;
+  const limitPct = limit > 0 ? progressPercentValue((used / limit) * 100) : 0;
 
   const paymentDay = billing?.paymentDay ?? asset.paymentDay ?? null;
   const cancelPayment = useCancelCardPayment();
