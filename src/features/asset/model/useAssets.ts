@@ -27,10 +27,11 @@ export const useAssets = (opts?: ReferenceOpts) => {
 
 /**
  * 계좌 rowId → 통화 — 이체 줄이 보내는 · 받는 계좌 통화로 금액을 찍는다(I-13). 목록 쿼리(같은 키)를 그대로 읽어 요청이 늘지 않고,
- * 실패는 조용히(silent) — 통화를 모르면 줄은 원화로 찍힌다(지금 그대로).
+ * 통화를 모르면 줄은 원화로 찍힌다(지금 그대로). 이 읽기는 보조 값이라 참조(reference)로 표시한다 — 실패 알림은 앱 공용 참조
+ * 알림 한 자리가 하고, 가계부가 같은 목록을 참조로 읽는 동안 표시 없는 관찰자가 끼어 "모두 참조" 판정이 깨지지 않는다.
  */
 export const useAssetCurrencyOf = () => {
-  const { data } = useAssets({ silent: true });
+  const { data } = useAssets({ reference: true });
   const list = data?.assets ?? [];
   return (assetRowId: number): string | null =>
     list.find((a) => a.rowId === assetRowId)?.currency ?? null;
