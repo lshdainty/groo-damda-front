@@ -1,6 +1,6 @@
 import type { Query } from "@tanstack/react-query";
 import { isHttpStatus } from "./base";
-import { isReferenceQuery } from "./reference";
+import { isReferenceObserved } from "./reference";
 
 /*
  * 내용이 있는 채로 다시 받다 실패 — 공용 스낵바 "새로 고치지 못했어요." 한 줄(I-wrap-b2b 2-1 · result-section.md:53 · skeleton.md:167).
@@ -28,6 +28,7 @@ export const isPollQuery = (meta: unknown): boolean =>
   (meta as { poll?: unknown }).poll === true;
 
 type QueryLike = Pick<Query, "meta" | "getObserversCount" | "queryHash"> & {
+  observers?: ReadonlyArray<{ options: { meta?: unknown } }>;
   state: { data: unknown };
 };
 
@@ -38,7 +39,7 @@ export const shouldNotifyRefreshFailure = (
 ): boolean =>
   query.state.data !== undefined &&
   !isPollQuery(query.meta) &&
-  !isReferenceQuery(query.meta) &&
+  !isReferenceObserved(query) &&
   query.getObserversCount() > 0 &&
   !isHttpStatus(error, 401);
 
