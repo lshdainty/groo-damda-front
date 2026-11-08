@@ -23,6 +23,7 @@ import { RecurringAddDialog } from "@/features/recurring-transaction/ui/Recurrin
 import { useTxForm, useTxSheetParts } from "@/widgets/add-tx";
 import { SheetStepDone } from "@/widgets/calendar/ui/event-form/step-header";
 import type { Asset, AssetTransfer } from "@/entities/asset";
+import { isTransferDeletable } from "@/entities/asset";
 
 import { dateTimeLabel } from "@/widgets/expense-detail/lib/detail-format";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
@@ -175,12 +176,15 @@ export function TransferDetailDialog({
         }
         bodyKey={isEditing ? `edit:${form.main}:${form.sub ?? ""}` : "detail"}
         footer={
-          isEditing || locked
+          isEditing || !isTransferDeletable(transfer)
             ? undefined
             : {
                 onDelete: () => setConfirmDelete(true),
                 deleting: deleteMut.isPending,
-                primary: { label: tc("edit"), onClick: startEdit },
+                // 자동 생성 이체는 서버가 지울 수 있다고 해도 수정은 없다
+                primary: locked
+                  ? undefined
+                  : { label: tc("edit"), onClick: startEdit },
               }
         }
       >

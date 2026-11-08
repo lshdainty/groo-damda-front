@@ -27,6 +27,7 @@ import {
   expenseSum,
   incomeSum,
   type ClosedCycleSpan,
+  isExpenseDeletable,
 } from "@/entities/expense";
 import { editAssetPath } from "@/entities/asset";
 import {
@@ -174,7 +175,7 @@ export function ExpenseDesktop({
   const [picked, setPicked] = useState<ReadonlySet<number>>(new Set());
   const selectable = useMemo(() => {
     const m = new Map<number, Expense>();
-    for (const e of data.expenses) if (e.autoSource == null) m.set(e.rowId, e);
+    for (const e of data.expenses) if (isExpenseDeletable(e)) m.set(e.rowId, e);
     return m;
   }, [data.expenses]);
   // 보이지 않는 줄을 고른 채 두지 않는다(목록이 바뀌어 사라진 것은 뺀다)

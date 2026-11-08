@@ -296,6 +296,22 @@ describe("C 15 — 바닥 · 자동 이체", () => {
     );
     expect(document.querySelector("[data-testid=more-recurring]")).toBeNull();
   });
+
+  it("자동 이체 + deletable:true — [삭제]만 있고 수정 · 반복 설정은 없다", () => {
+    render(transfer({ autoSource: "TRADE_SETTLEMENT", deletable: true }));
+    expect(footerButtons().map((b) => b.textContent)).toEqual(["delete"]);
+    expect(document.querySelector("[data-testid=more-recurring]")).toBeNull();
+  });
+
+  it("자동 이체 + deletable:false — 바닥이 없다", () => {
+    render(transfer({ autoSource: "TRADE_SETTLEMENT", deletable: false }));
+    expect(footerButtons()).toHaveLength(0);
+  });
+
+  it("직접 만든 이체라도 deletable:false 면 바닥이 없다(서버 판정이 먼저)", () => {
+    render(transfer({ deletable: false }));
+    expect(footerButtons()).toHaveLength(0);
+  });
 });
 
 describe("C 17 · 18 — 반복 설정은 '더 하기' 줄 하나", () => {
