@@ -1,5 +1,5 @@
 import { loadFailed } from "@/shared/api";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Receipt, Search } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,7 @@ import { ResultSection } from "@/shared/ds/result-section";
 import { ScrollAutoHide } from "@/shared/ds/scroll-auto-hide";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
-import { getShellScrollerElement } from "@/shared/lib/groo/shell-scroller";
+import { useShellScroller } from "@/shared/lib/groo/shell-scroller";
 import { formatMonthDayDow, todayLocalKey } from "@/shared/lib/date";
 import {
   LedgerDayDate,
@@ -62,11 +62,9 @@ export function SearchPage() {
   const query = useSearchExpenses(toSearchParams(debounced), { silent: true });
   const [detail, setDetail] = useState<Expense | null>(null);
 
-  // 스크롤 상자는 셸의 본문 스크롤 주체(지금은 main) — 칩 줄이 이 상자 맨 위에서 숨고 드러난다
-  const scrollRef = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    scrollRef.current = getShellScrollerElement();
-  }, []);
+  // 스크롤 상자는 셸의 본문 스크롤 주체(폰은 문서, 아니면 main) — 칩 줄이 이 상자 맨 위에서 숨고 드러난다.
+  // 효과로 ref 를 채우면 자식(ScrollAutoHide)의 효과가 먼저 돌아 production 에서 null 을 보고 빠진다(N1) — 읽는 순간 찾는 ref 를 넘긴다
+  const scrollRef = useShellScroller();
 
   const groups = useMemo(() => {
     const by = new Map<string, Expense[]>();
