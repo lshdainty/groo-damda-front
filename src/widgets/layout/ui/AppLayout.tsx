@@ -151,7 +151,7 @@ const Shell = () => {
       document.documentElement,
       shellInsets({ money, tabBar: pageShell }),
     );
-  }, [mobile, money, pageShell]);
+  }, [mobile, money, pageShell, location.pathname]);
 
   return (
     <TooltipProvider>

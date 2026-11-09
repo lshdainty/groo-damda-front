@@ -43,7 +43,15 @@ export function shellInsets({
   };
 }
 
-/** 값을 `<html>` 에 걸고 되돌리는 함수를 돌려준다 */
+/** 가계부 탭(Line Tabs) 루트 — 실제 높이를 잰다(글자를 키우면 min-h 44 를 넘는다) */
+export const MONEY_TABS_ATTR = "data-shell-money-tabs";
+const HEADER_SELECTOR = ".m-app header";
+
+/**
+ * 값을 `<html>` 에 걸고 되돌리는 함수를 돌려준다. 상수(56 · 44)는 측정 전 첫 프레임 값이다 — 머리 · 가계부 탭의 실제 높이가
+ * 재지면(ResizeObserver) 그 값으로 바꾼다. 가계부 탭은 `min-h-[44px]` + 위아래 10 + 줄 높이(rem)라 루트 글자가 커지면 44 를 넘고,
+ * 고정 44 로 두면 아래 줄(달 이동 줄)이 탭 밑으로 들어가 가린다. 고정 높이로 자르면 큰 글자에서 탭 글이 잘리므로 재는 쪽이다.
+ */
 export function applyShellInsets(
   root: HTMLElement,
   insets: ShellInsets,
@@ -54,11 +62,33 @@ export function applyShellInsets(
     padTop: root.style.scrollPaddingTop,
     padBottom: root.style.scrollPaddingBottom,
   };
-  root.style.setProperty("--shell-head", insets["--shell-head"]);
-  root.style.setProperty("--shell-top", insets["--shell-top"]);
-  root.style.scrollPaddingTop = insets.scrollPaddingTop;
+  const set = (head: string, top: string) => {
+    root.style.setProperty("--shell-head", head);
+    root.style.setProperty("--shell-top", top);
+    root.style.scrollPaddingTop = top;
+  };
+  set(insets["--shell-head"], insets["--shell-top"]);
   root.style.scrollPaddingBottom = insets.scrollPaddingBottom;
+
+  const header = root.querySelector<HTMLElement>(HEADER_SELECTOR);
+  const tabs = root.querySelector<HTMLElement>(`[${MONEY_TABS_ATTR}]`);
+  const measure = () => {
+    const h = header?.getBoundingClientRect().height ?? 0;
+    const t = tabs?.getBoundingClientRect().height ?? 0;
+    // 안 재지면(0 — 아직 레이아웃 전 · 없는 줄) 상수를 그대로 둔다
+    if (h <= 0 && t <= 0) return;
+    const head = h > 0 ? `${h}px` : insets["--shell-head"];
+    set(head, t > 0 ? `calc(${head} + ${t}px)` : head);
+  };
+  measure();
+  let ro: ResizeObserver | undefined;
+  if (typeof ResizeObserver !== "undefined" && (header || tabs)) {
+    ro = new ResizeObserver(measure);
+    if (header) ro.observe(header);
+    if (tabs) ro.observe(tabs);
+  }
   return () => {
+    ro?.disconnect();
     for (const [k, v] of [
       ["--shell-head", prev.head],
       ["--shell-top", prev.top],

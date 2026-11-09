@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ds/tabs";
 import { MONEY_TABS, isMoneyPath } from "../model/shell";
+import { MONEY_TABS_ATTR } from "../model/shell-insets";
 
 /**
  * 가계부 묶음(가계부 · 자산 · 통계 · 예산)의 위 Line Tabs — 탭 바는 그대로 "가계부" 가 현재다.
@@ -22,6 +23,7 @@ export function MoneyTabs() {
       value={current?.path}
       onValueChange={(path) => navigate(path, { replace: true })}
       // 문서가 스크롤하는 폰 — 머리(sticky) 바로 아래에 붙는다(머리 높이는 셸이 `--shell-head` 로 적는다)
+      {...{ [MONEY_TABS_ATTR]: "" }}
       className="sticky top-(--shell-head) z-(--z-sticky) shrink-0"
     >
       <TabsList size="medium" aria-label={t("expense")}>
