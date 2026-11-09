@@ -23,6 +23,7 @@ import {
 } from "@/shared/ds/list";
 import { formatDateValue, parseDayKey } from "@/shared/ds/date-picker";
 import { formatTimeValue } from "@/shared/ds/time-picker";
+import { mergeRefs } from "@/shared/ds/overlay";
 import {
   RECURRENCE_OPTIONS,
   REMINDER_OPTIONS,
@@ -45,17 +46,20 @@ export function Piece({
   onClick,
   expanded,
   buttonRef,
+  ref,
   children,
 }: {
   label: string;
   onClick: () => void;
   expanded: boolean;
   buttonRef?: React.Ref<HTMLButtonElement>;
+  /** PopoverTrigger asChild 가 닿는 자리를 알아야 1280 이상 팝오버가 이 조각 아래에 선다(없으면 화면 밖에 뜬다) */
+  ref?: React.Ref<HTMLButtonElement>;
   children: ReactNode;
 }) {
   return (
     <button
-      ref={buttonRef}
+      ref={mergeRefs(buttonRef, ref)}
       type="button"
       aria-label={label}
       aria-haspopup="dialog"
