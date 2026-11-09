@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SCROLL_AUTO_HIDE_SYNC_EVENT } from "@/shared/ds/scroll-auto-hide";
+import { scrollHostOf, type ScrollHost } from "@/shared/lib/groo/scroll-host";
+import { closestScroller } from "@/shared/lib/groo/shell-scroller";
 
 /*
  * 원장 스크롤 훅 — 컴포넌트 파일(`ledger.tsx`)과 갈라 둔다.
@@ -50,10 +52,11 @@ export function useLedgerScroll({
     }, ms);
   };
 
-  const scroller = () =>
-    rootRef.current?.closest(
-      ".m-scroll, .overflow-y-auto",
-    ) as HTMLElement | null;
+  // 원장이 든 스크롤 상자 — 셸 본문이면 셸의 스크롤 주체(문서일 수도 있다), 안쪽 상자면 그 상자
+  const scroller = (): ScrollHost | null => {
+    const el = closestScroller(rootRef.current);
+    return el ? scrollHostOf(el) : null;
+  };
 
   // 펼침 — 펼친 뒤 가장 위로 올라간 자리부터 아래로 내린 거리를 잰다
   const expandedRef = useRef(expanded);
@@ -65,7 +68,7 @@ export function useLedgerScroll({
   });
   useEffect(() => {
     expandedRef.current = expanded;
-    if (expanded) lowestRef.current = scroller()?.scrollTop ?? 0;
+    if (expanded) lowestRef.current = scroller()?.getTop() ?? 0;
   }, [expanded]);
 
   // 접은 뒤 — 맨 위 묶음의 화면 y 를 접기 전 그대로(브라우저 스크롤 고정이 이미 옮겼으면 남은 만큼만)
@@ -76,8 +79,8 @@ export function useLedgerScroll({
     const p = scroller();
     if (!p) return;
     const drift = pending.el.getBoundingClientRect().top - pending.y;
-    if (drift !== 0) p.scrollTop += drift;
-    p.dispatchEvent(new Event(SCROLL_AUTO_HIDE_SYNC_EVENT));
+    if (drift !== 0) p.setTop(p.getTop() + drift);
+    p.eventTarget.dispatchEvent(new Event(SCROLL_AUTO_HIDE_SYNC_EVENT));
   }, [expanded]);
 
   const collapseFrom = () => {
@@ -101,7 +104,7 @@ export function useLedgerScroll({
     if (!p) return;
     const onScroll = () => {
       if (expandedRef.current && onCollapseRef.current) {
-        const st = p.scrollTop;
+        const st = p.getTop();
         // 날 누름 이동(lock) 중 · 위로 올림 — 기준 자리만 옮긴다
         if (lockRef.current || st < lowestRef.current) lowestRef.current = st;
         else if (st - lowestRef.current >= LEDGER_COLLAPSE_SCROLL)
@@ -122,8 +125,8 @@ export function useLedgerScroll({
         setSelected(cur);
       }
     };
-    p.addEventListener("scroll", onScroll, { passive: true });
-    return () => p.removeEventListener("scroll", onScroll);
+    p.eventTarget.addEventListener("scroll", onScroll, { passive: true });
+    return () => p.eventTarget.removeEventListener("scroll", onScroll);
   }, []);
 
   /**
@@ -135,10 +138,8 @@ export function useLedgerScroll({
     const el = rootRef.current?.querySelector(`[data-ledger-day="${ds}"]`);
     const p = scroller();
     if (!el || !p) return;
-    const top =
-      p.scrollTop +
-      el.getBoundingClientRect().top -
-      p.getBoundingClientRect().top;
+    // 문서 좌표 — 상자 안 스크롤 위치 + 요소의 화면 위치 − 상자의 화면 위치(문서 스크롤이면 viewportTop 이 0)
+    const top = p.getTop() + el.getBoundingClientRect().top - p.viewportTop();
     const pin = pinRef.current;
     const pinH = pin?.offsetHeight ?? 0;
     const stickyTop = pin
@@ -149,7 +150,7 @@ export function useLedgerScroll({
     const hideH = keep ? keep.offsetTop : pinH;
     const downTarget = top - (stickyTop + pinH - hideH);
     p.scrollTo({
-      top: downTarget > p.scrollTop ? downTarget : top - (stickyTop + pinH),
+      top: downTarget > p.getTop() ? downTarget : top - (stickyTop + pinH),
       behavior: "smooth",
     });
   };

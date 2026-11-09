@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { getShellScroller } from "@/shared/lib/groo/shell-scroller";
 import {
   isRestoring,
   remember,
@@ -11,13 +12,9 @@ import {
 
 /**
  * 모바일 탭 셸 안에서 탭마다 마지막 화면 · 스크롤을 적어 두고, 탭 바가 옮겨 온 화면에서 스크롤을 복원한다.
- * 화면은 그리지 않는다. 본문(main) 과 같은 자리에 둔다.
+ * 화면은 그리지 않는다. 스크롤 상자는 셸의 본문 스크롤 주체(`getShellScroller`)다.
  */
-export function TabMemory({
-  scrollRef,
-}: {
-  scrollRef: RefObject<HTMLElement | null>;
-}) {
+export function TabMemory() {
   const { pathname, search } = useLocation();
   const tab = tabOf(pathname);
   const path = pathname + search;
@@ -31,22 +28,22 @@ export function TabMemory({
 
   // 탭 바를 눌러 도착했으면 기억한 스크롤로
   useEffect(() => {
-    const box = scrollRef.current;
+    const box = getShellScroller();
     const y = takePending(tab);
     if (!box || y === null) return;
     return restoreScroll(box, y);
-  }, [tab, path, scrollRef]);
+  }, [tab, path]);
 
   useEffect(() => {
-    const box = scrollRef.current;
+    const box = getShellScroller();
     if (!box) return;
     const onScroll = () => {
       if (tabRef.current && !isRestoring())
-        rememberScroll(tabRef.current, box.scrollTop);
+        rememberScroll(tabRef.current, box.getTop());
     };
-    box.addEventListener("scroll", onScroll, { passive: true });
-    return () => box.removeEventListener("scroll", onScroll);
-  }, [scrollRef]);
+    box.eventTarget.addEventListener("scroll", onScroll, { passive: true });
+    return () => box.eventTarget.removeEventListener("scroll", onScroll);
+  }, []);
 
   return null;
 }

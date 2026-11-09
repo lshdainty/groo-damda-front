@@ -10,6 +10,7 @@ import { withCommaBreaks } from "@/shared/ds/i18n";
 import { KRW, MINUS } from "@/shared/lib/groo/format";
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
 import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
+import { useShellScroller } from "@/shared/lib/groo/shell-scroller";
 import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
 
 /*
@@ -104,23 +105,14 @@ const LedgerKeepContext =
 /**
  * 머리 — ds Scroll Auto Hide(sticky, 바탕 `bg-layer-default` · z-2 — 스크롤 상자 안의 겹침 값). Bar 바로 아래에 붙고(top = 상단 바 +
  * Bar 높이), 내리면 `LedgerKeep` 위 부분만 Bar 아래로 숨는다 — Keep(주 달력)은 남는다. Keep 이 없으면 전부 숨는다. 거르기 중에는 칩 줄이 Keep 이다(가계부 — 남는다).
- * 스크롤 상자는 셸의 main 이다 — 자식(ScrollAutoHide)의 효과가 부모보다 먼저 돌아 효과로 집으면 늦으므로, 읽는 순간 main 을 찾는 ref 를
+ * 스크롤 상자는 셸의 본문 스크롤 주체(`useShellScroller` — 지금은 main)다 — 자식(ScrollAutoHide)의 효과가 부모보다 먼저 돌아 효과로 집으면 늦으므로, 읽는 순간 main 을 찾는 ref 를
  * 넘긴다. 처음 그릴 때 집으면 셸과 원장이 한 번에 그려질 때(새로 고침 · 바로 들어옴) main 이 아직 문서에 없어 null 로 굳어 머리가 숨지 않았다.
  */
 export const LedgerPin = React.forwardRef<
   HTMLElement,
   Omit<React.ComponentProps<"div">, "ref"> & { top?: number }
 >(({ className, top, style, ...props }, ref) => {
-  const [scroller] = React.useState(
-    () =>
-      ({
-        get current() {
-          return typeof document === "undefined"
-            ? null
-            : document.getElementById("main");
-        },
-      }) as React.RefObject<HTMLElement | null>,
-  );
+  const scroller = useShellScroller();
   const keepRef = React.useRef<HTMLDivElement>(null);
   return (
     <LedgerKeepContext.Provider value={keepRef}>

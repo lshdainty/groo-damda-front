@@ -8,6 +8,7 @@ import { ResultSection } from "@/shared/ds/result-section";
 import { ScrollAutoHide } from "@/shared/ds/scroll-auto-hide";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
+import { getShellScrollerElement } from "@/shared/lib/groo/shell-scroller";
 import { formatMonthDayDow, todayLocalKey } from "@/shared/lib/date";
 import {
   LedgerDayDate,
@@ -61,10 +62,10 @@ export function SearchPage() {
   const query = useSearchExpenses(toSearchParams(debounced), { silent: true });
   const [detail, setDetail] = useState<Expense | null>(null);
 
-  // 스크롤 상자는 셸의 main — 칩 줄이 이 상자 맨 위에서 숨고 드러난다
+  // 스크롤 상자는 셸의 본문 스크롤 주체(지금은 main) — 칩 줄이 이 상자 맨 위에서 숨고 드러난다
   const scrollRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    scrollRef.current = document.getElementById("main");
+    scrollRef.current = getShellScrollerElement();
   }, []);
 
   const groups = useMemo(() => {

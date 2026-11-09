@@ -116,7 +116,6 @@ const Shell = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [calendarAddOpen, setCalendarAddOpen] = useState(false);
   const location = useLocation();
-  const scrollRef = useRef<HTMLElement>(null);
   // 금액 가리기를 계정 설정과 맞춘다
   useHideCardsSync();
   // 서버 알림 도착 — 로그인 뒤 셸에서 한 번(폰 · 데스크톱 모두). 받으면 벨 점만 바뀐다(띠 없음, I-28 D5 B)
@@ -164,7 +163,6 @@ const Shell = () => {
           <main
             id="main"
             tabIndex={-1}
-            ref={scrollRef}
             className={
               !mobile
                 ? "relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col bg-bg-layer-basement outline-none"
@@ -202,7 +200,7 @@ const Shell = () => {
             </SwipeActionsProvider>
           </main>
         </div>
-        {pageShell && <TabMemory scrollRef={scrollRef} />}
+        {pageShell && <TabMemory />}
         {pageShell && (
           <AppTabBar onAdd={handleAdd} addLabel={t(fab.labelKey)} />
         )}
