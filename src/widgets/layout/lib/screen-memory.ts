@@ -1,3 +1,4 @@
+import { getShellScroller } from "@/shared/lib/groo/shell-scroller";
 import { restoreScroll, isRestoring, RESTORE_WAIT } from "./tab-memory";
 
 /*
@@ -99,9 +100,10 @@ export function watchScreen() {
   // Safari 는 단추를 눌러도 초점이 가지 않는다 — 눌린 요소는 pointerdown 으로 적는다
   const onPointerDown = (e: PointerEvent) => note(e.target);
   const onScroll = (e: Event) => {
-    const box = main();
-    if (!box || e.target !== box || isRestoring()) return;
-    spotForCurrent().scroll = box.scrollTop;
+    // capture 로 안쪽 상자의 scroll 도 오므로 셸 스크롤 주체의 것만 적는다 — 문서 스크롤이면 target 이 document 다
+    const host = getShellScroller();
+    if (!host || !host.isScrollEvent(e) || isRestoring()) return;
+    spotForCurrent().scroll = host.getTop();
   };
   document.addEventListener("focusin", onFocusIn);
   document.addEventListener("pointerdown", onPointerDown, true);
@@ -123,7 +125,7 @@ export function restoreScreen(key: string): (() => void) | false {
   const spot = spots.get(key);
   const box = document.getElementById("main");
   if (!spot || !box) return false;
-  const stopScroll = restoreScroll(box, spot.scroll);
+  const stopScroll = restoreScroll(getShellScroller() ?? box, spot.scroll);
   if (!spot.how) {
     box.focus({ preventScroll: true });
     return () => stopScroll();

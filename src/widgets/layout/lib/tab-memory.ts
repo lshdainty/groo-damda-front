@@ -1,3 +1,4 @@
+import { asScrollHost, type ScrollHost } from "@/shared/lib/groo/scroll-host";
 import {
   isAllTab,
   isCalendarTab,
@@ -62,8 +63,9 @@ export const RESTORE_WAIT = 1500;
 let restoring = false;
 export const isRestoring = () => restoring;
 
-/** 본문 높이가 y 에 닿을 때까지 프레임마다 보다가 이동한다. 돌려주는 함수는 중단 */
-export function restoreScroll(box: HTMLElement, y: number) {
+/** 본문 높이가 y 에 닿을 때까지 프레임마다 보다가 이동한다. 돌려주는 함수는 중단 — box 는 스크롤 상자(요소 또는 문서) */
+export function restoreScroll(target: HTMLElement | ScrollHost, y: number) {
+  const box = asScrollHost(target);
   let frame = 0;
   let stopped = false;
   const start = performance.now();
@@ -72,25 +74,25 @@ export function restoreScroll(box: HTMLElement, y: number) {
     stopped = true;
     restoring = false;
     cancelAnimationFrame(frame);
-    box.removeEventListener("wheel", stop);
-    box.removeEventListener("touchstart", stop);
+    box.eventTarget.removeEventListener("wheel", stop);
+    box.eventTarget.removeEventListener("touchstart", stop);
   };
   const tick = () => {
     if (stopped) return;
-    const max = box.scrollHeight - box.clientHeight;
+    const max = box.getMax();
     if (max >= y) {
-      box.scrollTop = y;
+      box.setTop(y);
       stop();
     } else if (performance.now() - start > RESTORE_WAIT) {
-      box.scrollTop = Math.max(0, max);
+      box.setTop(Math.max(0, max));
       stop();
     } else {
       frame = requestAnimationFrame(tick);
     }
   };
   restoring = true;
-  box.addEventListener("wheel", stop, { passive: true });
-  box.addEventListener("touchstart", stop, { passive: true });
+  box.eventTarget.addEventListener("wheel", stop, { passive: true });
+  box.eventTarget.addEventListener("touchstart", stop, { passive: true });
   frame = requestAnimationFrame(tick);
   return stop;
 }

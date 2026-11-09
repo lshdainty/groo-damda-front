@@ -58,7 +58,7 @@ const render = (path: string, addLabel = "일정 추가", onAdd = () => {}) =>
     root.render(
       <MemoryRouter initialEntries={[path]}>
         <PathProbe />
-        <TabMemory scrollRef={{ current: null }} />
+        <TabMemory />
         <AppTabBar onAdd={onAdd} addLabel={addLabel} />
       </MemoryRouter>,
     ),
