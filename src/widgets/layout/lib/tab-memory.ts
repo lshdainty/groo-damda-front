@@ -77,7 +77,7 @@ export function restoreScroll(target: HTMLElement | ScrollHost, y: number) {
     box.eventTarget.removeEventListener("wheel", onInput);
     box.eventTarget.removeEventListener("touchstart", onInput);
   };
-  // 문서는 페이지 전체에서 들리므로 머리 · 탭 바 · 시트를 만진 것은 본문을 만진 게 아니다(F3)
+  // 문서는 페이지 전체에서 들리므로 셸(.m-app) 밖의 시트 · 대화상자를 만진 것은 본문을 만진 게 아니다(F3). 머리 · 탭 바에서 끌어도 문서는 스크롤한다
   const onInput = (e: Event) => {
     if (box.ownsInput(e)) stop();
   };

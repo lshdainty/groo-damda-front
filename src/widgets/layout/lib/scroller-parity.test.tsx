@@ -106,29 +106,32 @@ describe.each(["element", "document"] as const)(
       expect(top).toBe(0);
     });
 
-    it("restoreScroll: 문서 상자면 본문 밖(머리 · 탭 바)을 만져도 복원을 멈추지 않고, 본문을 만지면 멈춘다 (F3)", () => {
+    it("restoreScroll: 문서 상자면 시트(셸 밖)를 만져도 복원을 멈추지 않고, 머리 · 본문(셸 안)을 만지면 멈춘다 (F3)", () => {
       if (kind !== "document") return;
       vi.useFakeTimers();
       setup(kind);
+      const app = document.createElement("div");
+      app.className = "m-app";
       const header = document.createElement("header");
-      document.body.appendChild(header);
-      max = 0;
-      restoreScroll(current!, 400);
+      app.append(header);
+      document.body.appendChild(app);
+      const sheet = document.createElement("div");
+      document.body.appendChild(sheet);
       const touch = (target: Element) =>
         target.dispatchEvent(new Event("touchstart", { bubbles: true }));
-      touch(header); // 고정 머리를 건드렸다 — 본문이 아니다
-      max = 700;
-      vi.advanceTimersByTime(100);
-      expect(top).toBe(400);
-      // 다시: 이번엔 본문을 건드리면 멈춘다
-      top = 0;
-      max = 0;
-      restoreScroll(current!, 400);
-      touch(main);
-      max = 700;
-      vi.advanceTimersByTime(100);
-      expect(top).toBe(0);
-      header.remove();
+      const tryRestore = (target: Element) => {
+        top = 0;
+        max = 0;
+        restoreScroll(current!, 400);
+        touch(target);
+        max = 700;
+        vi.advanceTimersByTime(100);
+        return top;
+      };
+      expect(tryRestore(sheet)).toBe(400); // 시트를 건드렸다 — 본문이 아니다
+      expect(tryRestore(header)).toBe(0); // 머리에서 끌어도 문서가 스크롤한다 — 멈춘다
+      app.remove();
+      sheet.remove();
     });
 
     it("watchScreen: 이 상자의 scroll 을 화면 키에 적고 POP 에서 그 값으로 돌려놓는다", () => {

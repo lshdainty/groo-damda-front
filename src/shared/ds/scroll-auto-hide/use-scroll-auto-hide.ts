@@ -357,7 +357,7 @@ export function useScrollAutoHide(
       scheduleSettle();
     };
 
-    // 문서가 스크롤 상자일 땐 페이지 전체의 입력이 들린다 — 고정 머리 · 탭 바 · 열린 시트에서 시작한 입력은 본문 스크롤이 아니다
+    // 문서가 스크롤 상자일 땐 페이지 전체의 입력이 들린다 — 열린 시트 · 대화상자(셸 밖)에서 시작한 입력은 본문 스크롤이 아니다
     const handleInteractionStart = (event?: Event) => {
       if (event && !host.ownsInput(event)) return;
       clearSettleTimer();

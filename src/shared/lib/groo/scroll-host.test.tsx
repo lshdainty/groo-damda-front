@@ -115,20 +115,30 @@ describe("scrollHostOf — 문서(documentElement)", () => {
     expect(h.getMax()).toBe(0);
   });
 
-  it("F3: 문서 호스트는 셸 본문(#main) 밖(머리 · 탭 바 · 시트)에서 시작한 입력을 본문의 것으로 치지 않는다", () => {
+  it("F3: 문서 호스트는 셸(.m-app) 안(본문 · 머리 · 탭 바)에서 시작한 입력은 본문의 것으로 치고, 셸 밖(시트 · 대화상자 포털)은 거른다", () => {
     const h = scrollHostOf(document.documentElement);
+    const app = document.createElement("div");
+    app.className = "m-app";
+    const header = document.createElement("header");
     const inMain = document.createElement("p");
     main.appendChild(inMain);
-    const header = document.createElement("header");
-    document.body.appendChild(header);
+    app.append(header, main);
+    document.body.appendChild(app);
+    const sheet = document.createElement("div");
+    sheet.setAttribute("role", "dialog");
+    document.body.appendChild(sheet);
     const ev = (target: EventTarget) => ({ target }) as unknown as Event;
     expect(h.ownsInput(ev(inMain))).toBe(true);
     expect(h.ownsInput(ev(main))).toBe(true);
+    expect(h.ownsInput(ev(header))).toBe(true); // 머리에서 끌어도 문서는 스크롤한다
+    expect(h.ownsInput(ev(app))).toBe(true);
     expect(h.ownsInput(ev(document.body))).toBe(true);
-    expect(h.ownsInput(ev(header))).toBe(false);
-    header.remove();
+    expect(h.ownsInput(ev(sheet))).toBe(false);
     // 요소 호스트는 그 요소에 듣고 있어 늘 참이다
-    expect(scrollHostOf(main).ownsInput(ev(header))).toBe(true);
+    expect(scrollHostOf(main).ownsInput(ev(sheet))).toBe(true);
+    document.body.appendChild(main); // afterEach 가 main 을 치운다
+    app.remove();
+    sheet.remove();
   });
 
   it("asScrollHost 는 호스트는 그대로, 요소는 감싼다", () => {

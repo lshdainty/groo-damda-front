@@ -29,7 +29,7 @@ export type ScrollHost = {
   isScrollEvent(e: Event): boolean;
   /**
    * 이 입력(touchstart · wheel · keydown)이 이 상자 본문에서 시작했나. 요소 상자는 그 요소에 듣고 있어 늘 참이다.
-   * 문서는 페이지 전체에서 들리므로 고정된 머리 · 탭 바 · 열린 시트에서 온 입력을 "본문을 만졌다" 로 치지 않게 가른다(F3).
+   * 문서는 페이지 전체에서 들리므로 셸(.m-app) 밖 — 열린 시트 · 대화상자 — 에서 온 입력을 "본문을 만졌다" 로 치지 않게 가른다(F3). 머리 · 탭 바는 셸 안이다.
    */
   ownsInput(e: Event): boolean;
 };
@@ -49,15 +49,21 @@ function visibleHeight(el: HTMLElement, isDocument: boolean): number {
   return win && win.innerHeight > 0 ? win.innerHeight : el.clientHeight;
 }
 
-/** 입력이 셸 본문(`#main`) 안에서 시작했나 — 문서 · html · body 자체(빈 바탕)도 본문이다 */
+/**
+ * 입력이 셸(`.m-app`) 안에서 시작했나 — 문서 · html · body 자체(빈 바탕)도 그렇다. 머리 · 가계부 탭 · 탭 바에서 시작한 끌기도
+ * 문서를 스크롤하므로 본문과 같이 친다. 시트 · 대화상자 같은 오버레이(body 직속 포털)만 거른다
+ */
 function isBodyInput(doc: Document, e: Event): boolean {
   const t = e.target;
   if (!(t instanceof Node)) return true;
   if (t === doc || t === doc.documentElement || t === doc.body) return true;
-  return doc.getElementById(SHELL_BODY_ID)?.contains(t) ?? false;
+  return (
+    t.parentElement?.closest(SHELL_ROOT) != null ||
+    (t instanceof Element && t.matches(SHELL_ROOT))
+  );
 }
 
-const SHELL_BODY_ID = "main";
+const SHELL_ROOT = ".m-app";
 
 export function scrollHostOf(el: HTMLElement): ScrollHost {
   const isDocument = isDocumentScroller(el);
