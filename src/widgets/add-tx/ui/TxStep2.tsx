@@ -444,6 +444,44 @@ export function TxStep2({ f }: { f: TxForm }) {
           >
             {({ close }) => <CategoryPickBody f={f} close={close} />}
           </PickRow>
+          {/* 결제 수단이 먼저 — 고르면 계좌 · 카드 목록이 그 수단에 맞는 것만 나온다(사용자 결정 11-10) */}
+          {locked ? (
+            <LockedRow
+              title={
+                isIncome
+                  ? t("addTx.incomeMethodRow")
+                  : t("addTx.paymentMethodRow")
+              }
+              prefix={<CreditCard />}
+              value={methodLabel ?? none}
+            />
+          ) : (
+            <PickRow
+              title={
+                isIncome
+                  ? t("addTx.incomeMethodRow")
+                  : t("addTx.paymentMethodRow")
+              }
+              prefix={<CreditCard />}
+              value={methodLabel}
+              placeholder={
+                isIncome ? t("addTx.noIncomeMethod") : t("addTx.noMethodOption")
+              }
+            >
+              {({ close }) => (
+                <SimplePickBody
+                  label={t("addTx.paymentMethodRow")}
+                  items={methodItems}
+                  value={f.paymentMethod}
+                  onPick={(v) => {
+                    f.setPaymentMethod(v);
+                    f.clearPresetMark();
+                  }}
+                  close={close}
+                />
+              )}
+            </PickRow>
+          )}
           {locked ? (
             <LockedRow
               title={isIncome ? t("addTx.depositAccount") : t("addTx.account")}
@@ -488,43 +526,6 @@ export function TxStep2({ f }: { f: TxForm }) {
                 />
               </List>
             )}
-          {locked ? (
-            <LockedRow
-              title={
-                isIncome
-                  ? t("addTx.incomeMethodRow")
-                  : t("addTx.paymentMethodRow")
-              }
-              prefix={<CreditCard />}
-              value={methodLabel ?? none}
-            />
-          ) : (
-            <PickRow
-              title={
-                isIncome
-                  ? t("addTx.incomeMethodRow")
-                  : t("addTx.paymentMethodRow")
-              }
-              prefix={<CreditCard />}
-              value={methodLabel}
-              placeholder={
-                isIncome ? t("addTx.noIncomeMethod") : t("addTx.noMethodOption")
-              }
-            >
-              {({ close }) => (
-                <SimplePickBody
-                  label={t("addTx.paymentMethodRow")}
-                  items={methodItems}
-                  value={f.paymentMethod}
-                  onPick={(v) => {
-                    f.setPaymentMethod(v);
-                    f.clearPresetMark();
-                  }}
-                  close={close}
-                />
-              )}
-            </PickRow>
-          )}
           {f.showInstallment &&
             (locked ? (
               <LockedRow
