@@ -498,3 +498,40 @@ describe("띄울 자리 · 모달 끄기", () => {
     place.remove();
   });
 });
+
+// F-1 — 문서가 스크롤하는 폰: vaul 의 iOS 잠금은 Trigger 로 열 때만 켜져 문서 스크롤을 0 으로 보냈다 되돌린다. 꺼 둔다
+describe("Trigger 로 연 시트는 iOS 에서도 문서 스크롤을 건드리지 않는다", () => {
+  const spoof = (key: "platform" | "userAgent", value: string) => {
+    const prev = Object.getOwnPropertyDescriptor(navigator, key);
+    Object.defineProperty(navigator, key, { configurable: true, value });
+    return () => {
+      if (prev) Object.defineProperty(navigator, key, prev);
+      else delete (navigator as unknown as Record<string, unknown>)[key];
+    };
+  };
+
+  it("window.scrollTo 를 부르지 않고 body 를 position:fixed 로 만들지 않는다(isIOS · isSafari 참)", async () => {
+    const restore = [
+      spoof("platform", "iPhone"),
+      spoof(
+        "userAgent",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      ),
+    ];
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    try {
+      render(<Sheet />);
+      await tick();
+      act(() => byText("열기")!.click());
+      await tick();
+      await new Promise((r) => setTimeout(r, 400)); // vaul 의 툴바 보정 타이머(300ms)까지
+      expect(sheet()).not.toBeNull();
+      expect(scrollTo).not.toHaveBeenCalled();
+      expect(document.body.style.position).not.toBe("fixed");
+      expect(document.body.style.top).toBe("");
+    } finally {
+      scrollTo.mockRestore();
+      restore.forEach((r) => r());
+    }
+  });
+});

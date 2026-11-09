@@ -32,6 +32,7 @@ import {
   isMoneyPath,
   screenTitleKey,
 } from "../model/shell";
+import { applyShellInsets, shellInsets } from "../model/shell-insets";
 
 /** 캘린더 일정 생성 폼 — AppLayout에서 + 버튼 클릭 시 마운트. */
 const CalendarEventAddForm = ({ onClose }: { onClose: () => void }) => (
@@ -50,6 +51,14 @@ const ScreenEffects = () => {
   useScreenTitle(t(screenTitleKey(pathname)));
   const last = useRef(pathname);
   const wide = useWideSurface();
+  // 폰은 문서가 스크롤한다 — 브라우저가 뒤로 갈 때 창 스크롤을 제멋대로 되돌리면 셸이 돌려주는 값(restoreScreen)과 다투므로 손으로만 복원한다
+  useEffect(() => {
+    const prev = history.scrollRestoration;
+    history.scrollRestoration = "manual";
+    return () => {
+      history.scrollRestoration = prev;
+    };
+  }, []);
   // 스크롤 · 누른 요소를 화면(location.key)마다 적어 둔다 — 뒤로 오면 돌려주려고(top-navigation.md:230)
   useEffect(() => watchScreen(), []);
   useLayoutEffect(() => {
@@ -134,6 +143,15 @@ const Shell = () => {
       ? () => setCalendarAddOpen(true)
       : () => setAddOpen(true);
   useKeepFocusAcrossShell(fullscreen ? "fullscreen" : size);
+  // 폰의 위 고정 줄 높이(--shell-top)와 포커스가 머리 · 탭 바 뒤로 가려지지 않게 하는 scroll-padding — 문서(<html>)에 건다
+  const money = pageShell && isMoneyPath(location.pathname);
+  useLayoutEffect(() => {
+    if (!mobile) return;
+    return applyShellInsets(
+      document.documentElement,
+      shellInsets({ money, tabBar: pageShell }),
+    );
+  }, [mobile, money, pageShell, location.pathname]);
 
   return (
     <TooltipProvider>
@@ -153,9 +171,9 @@ const Shell = () => {
           }
         >
           {!mobile && <DesktopHeader onOpenAdd={() => setAddOpen(true)} />}
-          {/* 머리 · 가계부 탭은 main 밖이다(banner) — 본문만 스크롤한다 */}
+          {/* 머리 · 가계부 탭은 main 밖이다(banner) — 문서가 스크롤하고 둘은 맨 위에 sticky 로 붙는다(데스크톱은 본문 상자만 스크롤) */}
           {pageShell && <MobileHeader />}
-          {pageShell && isMoneyPath(location.pathname) && <MoneyTabs />}
+          {money && <MoneyTabs />}
           {/* 데스크톱: relative — 본문 안의 absolute 요소(sr-only 등)가 기댈 자리를 여기로 잡는다. 없으면 위에 positioned 조상이 없는
               요소는 문서 첫 상자에 기대 본문 스크롤 높이만큼 문서를 늘려 창 스크롤이 하나 더 생긴다(카드 혜택 쪽 넘김의 sr-only).
               폰 페이지: 아래 여백은 떠 있는 탭 바가 마지막 줄을 덮지 않게 한다(바가 줄어도 그대로).
@@ -167,9 +185,9 @@ const Shell = () => {
               !mobile
                 ? "relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col bg-bg-layer-basement outline-none"
                 : fullscreen
-                  ? "m-scroll m-fullscreen flex flex-col bg-bg-layer-basement outline-none"
+                  ? "m-body m-fullscreen flex flex-col bg-bg-layer-basement outline-none"
                   : cn(
-                      "m-scroll flex flex-col outline-none",
+                      "m-body flex flex-col outline-none",
                       floor === "white"
                         ? "bg-bg-layer-default"
                         : "bg-bg-layer-basement",

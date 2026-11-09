@@ -173,7 +173,6 @@ const render = (p: Props = {}) =>
         constellationToday={SKY_TODAY}
         sky={[]}
         doneToday={1}
-        pinTop={56}
         onToggle={(t) => calls.toggle.push(t.rowId)}
         onRowClick={(t) => calls.open.push(t.rowId)}
         onEdit={(t) => calls.edit.push(t.rowId)}

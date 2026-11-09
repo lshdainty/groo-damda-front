@@ -41,8 +41,9 @@ beforeEach(() => {
       disconnect() {}
     };
   }
+  // 768 이상(데스크톱 폭) — 셸 스크롤 주체가 main 이다(폰이면 문서)
   window.matchMedia = ((query: string) => ({
-    matches: false,
+    matches: query.includes("min-width"),
     media: query,
     addEventListener() {},
     removeEventListener() {},
@@ -223,7 +224,7 @@ describe("원장 머리 — 달 이동 줄 · 주 달력은 남고 총액만 숨
       initialSelected: days[0] ?? null,
     });
     return (
-      <div className="m-scroll" data-testid="scroll">
+      <div className="overflow-y-auto" data-testid="scroll">
         <LedgerShell ref={rootRef}>
           <LedgerBar top={56}>
             <LedgerMonthNav>
@@ -343,7 +344,7 @@ describe("펼친 월 달력 — 펼친 채 내리기 시작하면 고른 날이 
       onCollapse: () => setExpanded(false),
     });
     return (
-      <div className="m-scroll" data-testid="scroll">
+      <div className="overflow-y-auto" data-testid="scroll">
         <LedgerShell ref={rootRef}>
           <LedgerPin ref={pinRef}>
             <LedgerKeep>
@@ -466,7 +467,7 @@ describe("날 누름 이동 — 묶음 윗변이 고정 덩어리 아래 끝에 
       onApi({ scrollToDay, setSelected });
     });
     return (
-      <div className="m-scroll" data-testid="scroll">
+      <div className="overflow-y-auto" data-testid="scroll">
         <LedgerShell ref={rootRef}>
           <LedgerPin ref={pinRef}>
             <LedgerHead>총액</LedgerHead>

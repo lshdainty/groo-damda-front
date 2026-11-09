@@ -36,7 +36,7 @@ const CalendarMobile = ({ screen, isLoading, isFailed, onRetry }: IProps) => {
       {/* 달 줄 · 요일 줄은 고정 — 격자만 스크롤한다(처음부터 그린다, 불러오는 중에도) */}
       <div
         data-slot="calendar-month-head"
-        className="sticky top-0 z-30 bg-bg-layer-default"
+        className="sticky top-[var(--shell-top,0px)] z-30 bg-bg-layer-default"
       >
         <CalendarHeaderMobile />
         <WeekdayRow />

@@ -1,17 +1,12 @@
 import { useEffect, useState } from "react";
+import {
+  DESKTOP_QUERY,
+  TABLET_QUERY,
+  detect,
+  type DeviceSize,
+} from "./viewport";
 
-export type DeviceSize = "mobile" | "tablet" | "desktop";
-
-const TABLET_QUERY = "(min-width: 768px)";
-const DESKTOP_QUERY = "(min-width: 1280px)";
-
-function detect(): DeviceSize {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function")
-    return "desktop";
-  if (!window.matchMedia(TABLET_QUERY).matches) return "mobile";
-  if (!window.matchMedia(DESKTOP_QUERY).matches) return "tablet";
-  return "desktop";
-}
+export type { DeviceSize };
 
 export function useDeviceSize(): DeviceSize {
   const [size, setSize] = useState<DeviceSize>(detect());

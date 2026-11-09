@@ -5,6 +5,8 @@
 // jsdom 은 레이아웃(offsetParent · scrollHeight)을 재지 않는다 — 실제 스크롤 상자 개수 · 문서 높이는 렌더 하네스 측정이 맡고
 // (1280 · 1440 · 1920 × 라이트 · 다크), 여기서는 그 결과를 만드는 구조(클래스)만 본다.
 import * as React from "react";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import {
@@ -85,29 +87,42 @@ vi.mock("@/shared/ds/top-navigation", async (importOriginal) => ({
     // 진짜는 본문을 맨 위로도 보낸다 — 앞으로 가는 시험이 "맨 위" 를 실제로 본다
     const main = document.querySelector("main");
     if (main) main.scrollTop = 0;
+    document.documentElement.scrollTop = 0; // window.scrollTo({ top: 0 }) — 폰은 문서가 스크롤한다
   },
 }));
 
 const { AppLayout } = await import("./AppLayout");
+const { getShellScrollerElement } =
+  await import("@/shared/lib/groo/shell-scroller");
+const { BOTTOM_NAVIGATION_INSET } =
+  await import("@/shared/ds/bottom-navigation");
 const { resetScreenMemory } = await import("../lib/screen-memory");
 const { SwipeActions } = await import("@/shared/ds/swipe-actions");
 
 let container: HTMLDivElement;
 let root: Root;
 
-beforeEach(() => {
-  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  // MemoryRouter 첫 항목 key 는 늘 "default" — 앞 시험의 화면 기억을 끊는다
-  resetScreenMemory();
-  state.size = "desktop";
+// 폭 질의 — 셸의 폰 판정(768 미만)과 스크롤 주체가 같은 질의를 읽으므로 mock 한 useDeviceSize(state.size)와 맞춘다.
+// 폰이면 768 · 1280 모두 거짓, 아니면 768 은 참이고 1280 은 wide 일 때만 참
+function stubMedia(wide: boolean) {
   window.matchMedia = ((query: string) => ({
-    matches: false,
+    matches:
+      state.size !== "mobile" &&
+      (query.includes("768") || (wide && query.includes("1280"))),
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},
     addListener: () => {},
     removeListener: () => {},
   })) as unknown as typeof window.matchMedia;
+}
+
+beforeEach(() => {
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  // MemoryRouter 첫 항목 key 는 늘 "default" — 앞 시험의 화면 기억을 끊는다
+  resetScreenMemory();
+  state.size = "desktop";
+  stubMedia(true);
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -295,14 +310,7 @@ const renderStats = () =>
       </MemoryRouter>,
     ),
   );
-const setWide = (wide: boolean) => {
-  window.matchMedia = ((query: string) => ({
-    matches: wide && query.includes("1280"),
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
-};
+const setWide = (wide: boolean) => stubMedia(wide);
 const frame = () =>
   act(async () => {
     await new Promise((r) => requestAnimationFrame(() => r(null)));
@@ -513,5 +521,159 @@ describe("화면을 옮길 때 PUSH 와 POP 을 가른다", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+// ── 폰: 문서가 스크롤한다(I-fix-2.0.0 B) — 내리면 브라우저 주소 · 아래 바가 숨는다 ──
+describe("폰 셸은 문서 스크롤이다", () => {
+  const html = document.documentElement;
+  const css = readFileSync(
+    path.join(__dirname, "../../../shared/styles/groo.css"),
+    "utf8",
+  );
+  const rule = (selector: string) =>
+    new RegExp(`(^|\\n)${selector.replace(/[.]/g, "\\.")} \\{([^}]*)\\}`).exec(
+      css,
+    )?.[2] ?? "";
+
+  beforeEach(() => {
+    state.size = "mobile";
+    stubMedia(false);
+  });
+
+  it("main 은 스크롤 상자가 아니고 셸은 높이를 가두지 않는다 — 폰의 스크롤 상자는 문서 하나", () => {
+    renderPage();
+    const main = container.querySelector("main#main")!;
+    const shell = container.querySelector(".m-app")!;
+    expect(shell).not.toBeNull();
+    expect(scrolls(main)).toBe(false);
+    expect(main.className).toMatch(/(^|\s)m-body(\s|$)/);
+    const others = [...container.querySelectorAll("*")].filter((el) =>
+      scrolls(el),
+    );
+    expect(others).toEqual([]);
+    // 높이를 가두는 클래스가 없다(고정 height · h-svh · overflow-hidden)
+    expect(shell.className).not.toMatch(/(^|\s)(h-svh|h-dvh|overflow-hidden)/);
+  });
+
+  it("CSS: .m-app 은 min-height 만(고정 height · overflow hidden 없음), .m-body 는 overflow-y 를 만들지 않는다", () => {
+    const app = rule(".m-app");
+    expect(app).toMatch(/min-height:\s*100dvh/);
+    expect(app).not.toMatch(/(^|[\s;])height:/);
+    expect(app).not.toMatch(/overflow(-y)?:\s*(hidden|auto|scroll)/);
+    expect(app).toMatch(/overflow-x:\s*clip/);
+    const body = rule(".m-body");
+    expect(body).not.toMatch(/overflow(-y)?:\s*(hidden|auto|scroll)/);
+    expect(body).not.toMatch(/overflow-x:\s*(hidden|auto|scroll)/);
+  });
+
+  it("본문 아래 여백은 탭 바 높이만큼 그대로 준다", () => {
+    renderPage();
+    const main = container.querySelector<HTMLElement>("main#main")!;
+    // jsdom 이 calc 를 다시 써서 돌려준다 — 값이 비지 않고 탭 바 높이(90)를 담는 것까지만 본다
+    expect(main.style.paddingBottom).toContain("90px");
+    expect(BOTTOM_NAVIGATION_INSET).toContain("90px");
+  });
+
+  it("<html> 에 --shell-top 과 scroll-padding 을 건다 — 가계부 묶음이면 가계부 탭 높이를 더하고, 떠나면 걷는다", () => {
+    renderPage(); // /desk/expense — 가계부 묶음
+    expect(html.style.getPropertyValue("--shell-top")).toContain("44px");
+    expect(html.style.scrollPaddingTop).toContain("44px");
+    expect(html.style.scrollPaddingBottom).toContain("90px");
+    act(() => root.render(<div />)); // 셸을 걷는다
+    expect(html.style.getPropertyValue("--shell-top")).toBe("");
+    expect(html.style.scrollPaddingTop).toBe("");
+  });
+
+  it("768 이상으로 넘어가면 문서에 건 값을 걷고 main 이 다시 스크롤 상자가 된다", () => {
+    renderPage();
+    expect(html.style.getPropertyValue("--shell-top")).not.toBe("");
+    state.size = "tablet";
+    stubMedia(true);
+    renderPage();
+    expect(html.style.getPropertyValue("--shell-top")).toBe("");
+    expect(scrolls(container.querySelector("main#main")!)).toBe(true);
+  });
+
+  it("셸 스크롤 주체는 문서다 — 탭 바 · 화면 기억이 읽는 상자", () => {
+    renderPage();
+    expect(getShellScrollerElement()).toBe(html);
+  });
+
+  it("history.scrollRestoration 을 manual 로 둔다 — 뒤로 갈 때 브라우저가 창 스크롤을 제멋대로 되돌리지 않는다", () => {
+    const before = history.scrollRestoration;
+    renderPage();
+    expect(history.scrollRestoration).toBe("manual");
+    act(() => root.render(<div />));
+    expect(history.scrollRestoration).toBe(before);
+  });
+
+  describe("화면 기억은 문서 스크롤을 쓴다", () => {
+    let top = 0;
+    const Bulk = () => {
+      const navigate = useNavigate();
+      useEffect(() => {
+        nav.go = navigate;
+      });
+      return (
+        <div>
+          <h1 data-screen-title tabIndex={-1}>
+            통계
+          </h1>
+          <button type="button" data-testid="to-bulk">
+            정리
+          </button>
+        </div>
+      );
+    };
+    beforeEach(() => {
+      top = 0;
+      Object.defineProperties(html, {
+        scrollTop: {
+          configurable: true,
+          get: () => top,
+          set: (v: number) => {
+            top = v;
+          },
+        },
+        scrollHeight: { configurable: true, value: 3000 },
+        clientHeight: { configurable: true, value: 600 },
+      });
+      vi.stubGlobal("innerHeight", 600);
+    });
+    afterEach(() => {
+      for (const k of ["scrollTop", "scrollHeight", "clientHeight"])
+        delete (html as unknown as Record<string, unknown>)[k];
+      vi.unstubAllGlobals();
+    });
+
+    it("앞으로(PUSH)는 문서를 맨 위로, 뒤로(POP)는 떠날 때의 문서 스크롤 400 을 돌려준다", async () => {
+      act(() =>
+        root.render(
+          <MemoryRouter initialEntries={["/desk/stats"]}>
+            <Routes>
+              <Route element={<AppLayout />}>
+                <Route path="/desk/stats" element={<Bulk />} />
+                <Route
+                  path="/desk/stats/fixed"
+                  element={<h1 data-screen-title>정리</h1>}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>,
+        ),
+      );
+      act(() => {
+        top = 400;
+        document.dispatchEvent(new Event("scroll")); // 문서 스크롤의 target 은 document
+      });
+      act(() => nav.go("/desk/stats/fixed"));
+      await frame();
+      expect(top).toBe(0); // 상세에서 시작은 맨 위 — 앞 화면의 400 을 이어받지 않는다
+      act(() => nav.go(-1 as unknown as string));
+      await frame();
+      await frame();
+      expect(top).toBe(400);
+    });
   });
 });

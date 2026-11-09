@@ -56,11 +56,16 @@ export const LedgerShell = React.forwardRef<
 ));
 LedgerShell.displayName = "LedgerShell";
 
+/** 위 고정 줄(상단 바 · 가계부 탭) 높이 — 폰 셸이 `<html>` 에 적는다. 768 이상은 본문 상자가 머리 아래에서 시작하므로 0 이다 */
+const SHELL_TOP = "var(--shell-top, 0px)";
+const topValue = (top: number | string | undefined) =>
+  top === undefined ? SHELL_TOP : typeof top === "number" ? `${top}px` : top;
+
 /** Bar 높이를 셸에 적는 CSS 변수 — Pin 이 그만큼 아래에 붙는다 */
 const BAR_HEIGHT_VAR = "--ledger-bar-h";
 
 /**
- * 늘 고정되는 달 이동 줄 — sticky · 맨 위(top 은 위 상단 바 높이, 없으면 0), 바탕 `bg-layer-default` · z-3(Pin 의 숨는 부분이 이 아래로
+ * 늘 고정되는 달 이동 줄 — sticky · 맨 위(top 은 위 고정 줄 높이 `--shell-top` — 폰은 머리 · 가계부 탭, 768 이상은 0), 바탕 `bg-layer-default` · z-3(Pin 의 숨는 부분이 이 아래로
  * 들어간다 — 스크롤 상자 안의 겹침 값). 제 높이를 셸에 CSS 변수로 적어 Pin 이 바로 아래에 붙게 한다.
  */
 export function LedgerBar({
@@ -68,7 +73,7 @@ export function LedgerBar({
   top,
   style,
   ...props
-}: React.ComponentProps<"div"> & { top?: number }) {
+}: React.ComponentProps<"div"> & { top?: number | string }) {
   const ref = React.useRef<HTMLDivElement>(null);
   React.useLayoutEffect(() => {
     const el = ref.current;
@@ -93,7 +98,7 @@ export function LedgerBar({
         "sticky z-3 -mx-global-gutter bg-bg-layer-default px-global-gutter pt-x2",
         className,
       )}
-      style={{ top: top ?? 0, ...style }}
+      style={{ top: topValue(top), ...style }}
       {...props}
     />
   );
@@ -105,12 +110,12 @@ const LedgerKeepContext =
 /**
  * 머리 — ds Scroll Auto Hide(sticky, 바탕 `bg-layer-default` · z-2 — 스크롤 상자 안의 겹침 값). Bar 바로 아래에 붙고(top = 상단 바 +
  * Bar 높이), 내리면 `LedgerKeep` 위 부분만 Bar 아래로 숨는다 — Keep(주 달력)은 남는다. Keep 이 없으면 전부 숨는다. 거르기 중에는 칩 줄이 Keep 이다(가계부 — 남는다).
- * 스크롤 상자는 셸의 본문 스크롤 주체(`useShellScroller` — 지금은 main)다 — 자식(ScrollAutoHide)의 효과가 부모보다 먼저 돌아 효과로 집으면 늦으므로, 읽는 순간 main 을 찾는 ref 를
+ * 스크롤 상자는 셸의 본문 스크롤 주체(`useShellScroller` — 폰은 문서, 아니면 main)다 — 자식(ScrollAutoHide)의 효과가 부모보다 먼저 돌아 효과로 집으면 늦으므로, 읽는 순간 main 을 찾는 ref 를
  * 넘긴다. 처음 그릴 때 집으면 셸과 원장이 한 번에 그려질 때(새로 고침 · 바로 들어옴) main 이 아직 문서에 없어 null 로 굳어 머리가 숨지 않았다.
  */
 export const LedgerPin = React.forwardRef<
   HTMLElement,
-  Omit<React.ComponentProps<"div">, "ref"> & { top?: number }
+  Omit<React.ComponentProps<"div">, "ref"> & { top?: number | string }
 >(({ className, top, style, ...props }, ref) => {
   const scroller = useShellScroller();
   const keepRef = React.useRef<HTMLDivElement>(null);
@@ -125,7 +130,7 @@ export const LedgerPin = React.forwardRef<
           className,
         )}
         style={{
-          top: `calc(${top ?? 0}px + var(${BAR_HEIGHT_VAR}, 0px))`,
+          top: `calc(${topValue(top)} + var(${BAR_HEIGHT_VAR}, 0px))`,
           ...style,
         }}
         {...props}

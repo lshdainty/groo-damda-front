@@ -208,7 +208,6 @@ const TodoPageInner = ({
           constellationToday={constellationTodayQ.data}
           sky={skyQ.data ?? []}
           doneToday={doneToday}
-          pinTop={56}
           loading={loading}
           failed={failed}
           onRetry={() => void todosQ.refetch()}

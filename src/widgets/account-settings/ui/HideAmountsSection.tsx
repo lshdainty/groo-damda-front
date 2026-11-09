@@ -361,7 +361,7 @@ export function HideAmountsSection({
       <div
         data-slot="hide-amounts-page"
         ref={setBoundary}
-        className="fixed inset-0 z-(--z-modal) flex flex-col bg-bg-layer-default"
+        className="fixed inset-0 z-(--z-modal) flex flex-col overflow-hidden overscroll-contain bg-bg-layer-default"
       >
         <TopNavigation type="standard">
           <TopNavigationBackButton
@@ -370,8 +370,8 @@ export function HideAmountsSection({
           />
           <TopNavigationTitle>{t("hideAmounts.label")}</TopNavigationTitle>
         </TopNavigation>
-        {/* 본문 아래 여백 = 띠 높이는 flex 가 맡는다 — 마지막 줄이 띠 위로 끝까지 스크롤된다 */}
-        <div className="min-h-0 flex-1 overflow-y-auto pb-x6">
+        {/* 덮개 안 상자 끝에서 계속 밀어도 뒤 문서가 따라 스크롤되지 않는다(overscroll contain). 본문 아래 여백 = 띠 높이는 flex 가 맡는다 — 마지막 줄이 띠 위로 끝까지 스크롤된다 */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-x6">
           {failure}
           <p className="m-0 px-global-gutter pt-x4 pb-x2 font-sans text-t4 text-fg-neutral-subtle">
             {t("hideAmounts.sectionDesc")}

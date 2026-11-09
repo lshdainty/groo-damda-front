@@ -40,6 +40,7 @@ function setup(kind: "element" | "document") {
     scrollHeight: { configurable: true, get: () => max + 300 },
     clientHeight: { configurable: true, value: 300 },
   });
+  vi.stubGlobal("innerHeight", 300); // 문서 상자의 보이는 높이는 innerHeight 다
   current = scrollHostOf(el);
   // 스크롤 이벤트는 요소는 요소에, 문서는 document 로 온다
   return {
@@ -67,6 +68,7 @@ afterEach(() => {
   for (const k of ["scrollTop", "scrollHeight", "clientHeight"])
     delete (document.documentElement as unknown as Record<string, unknown>)[k];
   current = null;
+  vi.unstubAllGlobals();
   vi.useRealTimers();
 });
 
@@ -102,6 +104,34 @@ describe.each(["element", "document"] as const)(
       max = 700;
       vi.advanceTimersByTime(100);
       expect(top).toBe(0);
+    });
+
+    it("restoreScroll: 문서 상자면 시트(셸 밖)를 만져도 복원을 멈추지 않고, 머리 · 본문(셸 안)을 만지면 멈춘다 (F3)", () => {
+      if (kind !== "document") return;
+      vi.useFakeTimers();
+      setup(kind);
+      const app = document.createElement("div");
+      app.className = "m-app";
+      const header = document.createElement("header");
+      app.append(header);
+      document.body.appendChild(app);
+      const sheet = document.createElement("div");
+      document.body.appendChild(sheet);
+      const touch = (target: Element) =>
+        target.dispatchEvent(new Event("touchstart", { bubbles: true }));
+      const tryRestore = (target: Element) => {
+        top = 0;
+        max = 0;
+        restoreScroll(current!, 400);
+        touch(target);
+        max = 700;
+        vi.advanceTimersByTime(100);
+        return top;
+      };
+      expect(tryRestore(sheet)).toBe(400); // 시트를 건드렸다 — 본문이 아니다
+      expect(tryRestore(header)).toBe(0); // 머리에서 끌어도 문서가 스크롤한다 — 멈춘다
+      app.remove();
+      sheet.remove();
     });
 
     it("watchScreen: 이 상자의 scroll 을 화면 키에 적고 POP 에서 그 값으로 돌려놓는다", () => {

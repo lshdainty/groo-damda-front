@@ -69,6 +69,7 @@ function mount(kind: "element" | "document") {
     scrollHeight: { configurable: true, value: 1000 },
     clientHeight: { configurable: true, value: 300 },
   });
+  vi.stubGlobal("innerHeight", 300); // 문서 상자의 보이는 높이는 innerHeight 다
   // 요소 상자는 머리 아래(56)에 놓이고, 문서의 윗변은 늘 -scrollY
   const boxTop = () => (kind === "element" ? HEAD : -top);
   el.getBoundingClientRect = () => ({ top: boxTop(), height: 300 }) as DOMRect;

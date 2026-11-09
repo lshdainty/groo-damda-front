@@ -47,7 +47,8 @@ export function StatsMobile({ state }: { state?: StatsState } = {}) {
     </div>
   );
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex flex-1 flex-col">
+      {/* 패널은 따로 스크롤하지 않는다 — 문서(폰)가 한 번에 스크롤하고 칩 탭은 지금처럼 내용과 함께 올라간다 */}
       <Tabs
         value={m.tab}
         onValueChange={(v) => m.setTab(v as TabKey)}
@@ -61,7 +62,7 @@ export function StatsMobile({ state }: { state?: StatsState } = {}) {
           ))}
         </ChipTabsList>
       </Tabs>
-      <div role="tabpanel" className="min-h-0 flex-1 overflow-y-auto">
+      <div role="tabpanel" className="flex-1">
         <ScreenBands>
           {m.tab === "cat" && (
             <>

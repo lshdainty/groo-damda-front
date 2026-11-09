@@ -401,7 +401,7 @@ export function SubscriptionSection({
     return (
       <div
         data-slot="subscription-page"
-        className="fixed inset-0 z-(--z-modal) flex flex-col bg-bg-layer-default"
+        className="fixed inset-0 z-(--z-modal) flex flex-col overflow-hidden overscroll-contain bg-bg-layer-default"
       >
         <TopNavigation type="standard">
           <TopNavigationBackButton
@@ -410,8 +410,10 @@ export function SubscriptionSection({
           />
           <TopNavigationTitle>{t("title")}</TopNavigationTitle>
         </TopNavigation>
-        {/* 본문 아래 여백 = 띠 높이는 flex 가 맡는다 — 본문이 띠 위에서 끝까지 스크롤된다 */}
-        <div className="min-h-0 flex-1 overflow-y-auto pb-x6">{body}</div>
+        {/* 덮개 안 상자 끝에서 계속 밀어도 뒤 문서가 따라 스크롤되지 않는다(overscroll contain). 본문 아래 여백 = 띠 높이는 flex 가 맡는다 — 본문이 띠 위에서 끝까지 스크롤된다 */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-x6">
+          {body}
+        </div>
         {ready && (
           // 바닥 띠 — 스낵바는 이 띠 위 8 에 선다(SnackbarAvoidOverlap). 아래 16 + 안전 영역
           <SnackbarAvoidOverlap>
