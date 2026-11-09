@@ -12,6 +12,7 @@ import {
   vi,
 } from "vitest";
 
+import spec from "@/shared/ds/spec/time-picker.json";
 import { TimePicker, type TimePickerProps } from "./time-picker";
 import {
   formatTimeValue,
@@ -272,6 +273,13 @@ describe("TimePicker — 구조 · 접근성", () => {
       />,
     );
     expect(Number(col("minute").getAttribute("aria-valuemax")) + 1).toBe(60);
+  });
+
+  it("간격 기본값은 스펙 JSON(defaults.minuteStep)을 따른다", () => {
+    render(<TimePicker aria-label="t" value={{ hour: 9, minute: 0 }} />);
+    expect(Number(col("minute").getAttribute("aria-valuemax")) + 1).toBe(
+      60 / Number(spec.defaults.minuteStep),
+    );
   });
 
   it("간격을 안 주면 1분이다 — 9시 13분이 그대로 보인다(카드 결제 시각 같은 정확한 값)", () => {
