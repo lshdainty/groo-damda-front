@@ -254,6 +254,11 @@ function BottomSheet({
             }}
             // 입력 폼은 끌리지 않는다 — 손잡이가 없으므로 어디서도 끌 수 없다
             handleOnly={form}
+            // 문서가 스크롤하는 폰 — vaul 의 iOS 잠금(usePreventScroll 의 scrollTo(0,0) 유지 · usePositionFixed 의 body fixed + 툴바 보정)은
+            // Trigger 로 열었을 때만 켜져 문서 스크롤을 0 으로 보냈다 되돌린다(가짜 scroll → 화면 · 탭 기억 · 숨김 · 탭 바가 흔들림).
+            // 잠금은 Radix Dialog 의 RemoveScroll(body overflow hidden)이 맡는다. vaul 의 이름이 거꾸로다 — disablePreventScroll={false} 라야 꺼진다
+            noBodyStyles
+            disablePreventScroll={false}
             snapPoints={snaps}
             activeSnapPoint={snaps ? snap : undefined}
             setActiveSnapPoint={snaps ? setSnap : undefined}

@@ -27,6 +27,9 @@ const Drawer = ({
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
   <DrawerPrimitive.Root
     shouldScaleBackground={shouldScaleBackground}
+    // 문서 스크롤을 0 으로 보내는 vaul 의 iOS 잠금을 끈다 — bottom-sheet.tsx 의 같은 자리 주석
+    noBodyStyles
+    disablePreventScroll={false}
     {...props}
   />
 );
