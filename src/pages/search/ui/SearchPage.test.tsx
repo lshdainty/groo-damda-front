@@ -173,3 +173,52 @@ describe("검색 날짜 머리 합계 (I-wrap-b1 ε)", () => {
     ]);
   });
 });
+
+// N1 — 칩 줄(Scroll Auto Hide)이 스크롤 상자에 붙는다. 부모 효과로 ref 를 채우면 자식 효과가 먼저 돌아 null 을 보고 빠졌다
+// (production 은 StrictMode 가 없어 한 번만 돈다 — 이 시험도 StrictMode 없이 한 번 그린다).
+describe("검색 칩 줄은 셸 스크롤 상자에 붙는다 (N1)", () => {
+  const stubWidth = (phone: boolean) => {
+    window.matchMedia = ((query: string) => ({
+      matches: !phone && query.includes("min-width"),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+    globalThis.ResizeObserver ??= class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+  };
+  const scrollListeners = (target: EventTarget) => {
+    const spy = vi.spyOn(target, "addEventListener");
+    act(() => root.render(<SearchPage />));
+    const heard = spy.mock.calls.filter(([type]) => type === "scroll").length;
+    spy.mockRestore();
+    return heard;
+  };
+
+  it("768 이상은 main 에 scroll 을 듣는다", () => {
+    stubWidth(false);
+    const main = document.createElement("main");
+    main.id = "main";
+    document.body.appendChild(main);
+    try {
+      expect(scrollListeners(main)).toBeGreaterThan(0);
+    } finally {
+      main.remove();
+    }
+  });
+
+  it("폰은 문서(document)에 scroll 을 듣는다", () => {
+    stubWidth(true);
+    const main = document.createElement("main");
+    main.id = "main";
+    document.body.appendChild(main);
+    try {
+      expect(scrollListeners(document)).toBeGreaterThan(0);
+    } finally {
+      main.remove();
+    }
+  });
+});

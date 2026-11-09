@@ -171,7 +171,8 @@ export function SearchPage() {
         // 폰은 문서가 스크롤 — 머리 바로 아래에 붙는다(768 이상은 본문 상자 맨 위 = 0)
         style={{ top: "var(--shell-top, 0px)" }}
         className={cn(
-          "z-(--z-sticky) py-x1_5",
+          // 머리(z-sticky)보다 낮아야 한다 — 문서가 스크롤하는 폰에서 숨는 칩 줄이 머리 위로 비쳐 보이면 안 된다
+          "z-30 py-x1_5",
           mobile ? "bg-surface-default px-global-gutter" : "bg-bg-page",
         )}
       >

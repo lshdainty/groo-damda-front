@@ -106,6 +106,31 @@ describe.each(["element", "document"] as const)(
       expect(top).toBe(0);
     });
 
+    it("restoreScroll: 문서 상자면 본문 밖(머리 · 탭 바)을 만져도 복원을 멈추지 않고, 본문을 만지면 멈춘다 (F3)", () => {
+      if (kind !== "document") return;
+      vi.useFakeTimers();
+      setup(kind);
+      const header = document.createElement("header");
+      document.body.appendChild(header);
+      max = 0;
+      restoreScroll(current!, 400);
+      const touch = (target: Element) =>
+        target.dispatchEvent(new Event("touchstart", { bubbles: true }));
+      touch(header); // 고정 머리를 건드렸다 — 본문이 아니다
+      max = 700;
+      vi.advanceTimersByTime(100);
+      expect(top).toBe(400);
+      // 다시: 이번엔 본문을 건드리면 멈춘다
+      top = 0;
+      max = 0;
+      restoreScroll(current!, 400);
+      touch(main);
+      max = 700;
+      vi.advanceTimersByTime(100);
+      expect(top).toBe(0);
+      header.remove();
+    });
+
     it("watchScreen: 이 상자의 scroll 을 화면 키에 적고 POP 에서 그 값으로 돌려놓는다", () => {
       vi.useFakeTimers();
       const s = setup(kind);
