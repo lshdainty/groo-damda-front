@@ -273,7 +273,7 @@ function PickRow({
   );
 }
 
-/** 시각 줄 — 12시간 · 5분 단위 Time Picker, "완료" 에 들어간다. */
+/** 시각 줄 — 12시간 · 1분 단위 Time Picker, "완료" 에 들어간다. */
 function TimeRow({
   title,
   value,

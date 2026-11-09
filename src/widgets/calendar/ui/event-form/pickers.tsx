@@ -26,7 +26,6 @@ import {
 } from "@/shared/ds/popover";
 import {
   TimePicker,
-  roundToStep,
   type TimeValue,
 } from "@/shared/ds/time-picker";
 
@@ -105,7 +104,7 @@ export function DayPickSurface({
   );
 }
 
-/** 시각 HH:mm 을 휠로 고른다 — 5분 단위 */
+/** 시각 HH:mm 을 휠로 고른다 — 1분 단위 */
 export function TimePickSurface({
   trigger,
   title,
@@ -138,20 +137,17 @@ export function TimePickSurface({
       aria-label={title}
       value={draft}
       onValueChange={setDraft}
-      minuteStep={5}
       autoFocus
     />
   );
   const done = (
     <Button
       onClick={() => {
-        // 휠을 안 굴렸으면 지금(5분 단위로 올린 값)이 들어간다 — 시간 칸이 빈 채로 열렸을 때
-        const v =
-          draft ??
-          roundToStep(
-            { hour: new Date().getHours(), minute: new Date().getMinutes() },
-            5,
-          );
+        // 휠을 안 굴렸으면 지금 시각 그대로 들어간다(반올림 없음) — 시간 칸이 빈 채로 열렸을 때
+        const v = draft ?? {
+          hour: new Date().getHours(),
+          minute: new Date().getMinutes(),
+        };
         const pad = (n: number) => String(n).padStart(2, "0");
         onConfirm(`${pad(v.hour)}:${pad(v.minute)}`);
         setOpen(false);

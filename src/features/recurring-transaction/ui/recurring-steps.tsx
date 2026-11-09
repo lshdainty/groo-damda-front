@@ -9,7 +9,6 @@ import { ListRadioGroup, ListRadioItem } from "@/shared/ds/list";
 import { Textarea } from "@/shared/ds/textarea";
 import {
   TimePicker,
-  roundToStep,
   type TimeValue,
 } from "@/shared/ds/time-picker";
 import { AmountInput } from "@/shared/ui/groo/amount-input";
@@ -277,11 +276,9 @@ export function RepeatStep({
           aria-label={t("atWhatTime")}
           value={time}
           onValueChange={(v) => {
-            const r = roundToStep(v, 5);
             const pad = (n: number) => String(n).padStart(2, "0");
-            onChange({ ...draft, time: `${pad(r.hour)}:${pad(r.minute)}` });
+            onChange({ ...draft, time: `${pad(v.hour)}:${pad(v.minute)}` });
           }}
-          minuteStep={5}
         />
       </div>
     </div>
