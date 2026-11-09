@@ -198,7 +198,7 @@ export function NotificationsPage() {
 
   // ── 데스크톱 · 태블릿 — 최대 720 가운데(밀도 low), 제목 줄 [알림 설정] + 목록 카드 하나 ───
   return (
-    <div className="m-scroll" style={{ padding: 0 }}>
+    <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto [&::-webkit-scrollbar]:w-0">
       <div className="mx-auto w-full max-w-[720px] px-[var(--layout-margin)] pt-nav-to-title">
         <PageHead
           title={t("title")}
