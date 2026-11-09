@@ -168,6 +168,8 @@ export function SearchPage() {
       )}
       <ScrollAutoHide
         scrollContainerRef={scrollRef}
+        // 폰은 문서가 스크롤 — 머리 바로 아래에 붙는다(768 이상은 본문 상자 맨 위 = 0)
+        style={{ top: "var(--shell-top, 0px)" }}
         className={cn(
           "z-(--z-sticky) py-x1_5",
           mobile ? "bg-surface-default px-global-gutter" : "bg-bg-page",

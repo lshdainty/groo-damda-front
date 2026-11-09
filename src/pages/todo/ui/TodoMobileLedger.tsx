@@ -98,7 +98,6 @@ export function TodoMobileLedger({
   constellationToday,
   sky,
   doneToday,
-  pinTop,
   loading = false,
   failed = false,
   onRetry,
@@ -116,7 +115,6 @@ export function TodoMobileLedger({
   sky: SkyDay[];
   doneToday: number;
   /** 상단 바 높이(px) — 머리가 붙는 자리 · 스크롤 보정 */
-  pinTop: number;
   /** 처음 받는 중 — 틀은 그리고 데이터 자리만 Skeleton */
   loading?: boolean;
   /** 받지 못했다 — 틀은 그리고 목록 자리에 Result Section failure */
@@ -332,7 +330,7 @@ export function TodoMobileLedger({
   return (
     <LedgerShell ref={rootRef}>
       {/* 머리 — 월 이동 줄 · 주 달력은 늘 남고, 오늘 상태 · 별빛 · 밤하늘만 내리면 숨는다(가계부 원장과 같은 부품) */}
-      <LedgerBar top={pinTop}>
+      <LedgerBar>
         {/* 월 네비 + 거르기 */}
         <LedgerMonthNav>
           <MonthTitle month={ym} onChange={pickMonth} className="text-t6" />
@@ -348,7 +346,7 @@ export function TodoMobileLedger({
           </LedgerNavBtn>
         </LedgerMonthNav>
       </LedgerBar>
-      <LedgerPin ref={pinRef} top={pinTop}>
+      <LedgerPin ref={pinRef}>
         {/* 오늘 상태 + 별빛 한 줄 + [밤하늘] */}
         <LedgerHead>
           <div className="min-w-0 flex-auto">

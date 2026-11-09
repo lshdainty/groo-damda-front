@@ -34,7 +34,8 @@ const MoreDesktop = () => {
       <div
         style={{
           position: "sticky",
-          top: 0,
+          // 폰은 문서가 스크롤 — 머리 아래에 붙는다(768 이상은 본문 상자 맨 위 = 0)
+          top: "var(--shell-top, 0px)",
           zIndex: 5,
           background: "var(--bg-surface)",
           paddingBottom: "var(--spacing-sm)",
