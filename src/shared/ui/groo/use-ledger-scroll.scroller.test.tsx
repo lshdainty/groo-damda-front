@@ -8,6 +8,7 @@ import { LEDGER_COLLAPSE_SCROLL } from "./use-ledger-scroll";
 let scroller: HTMLElement | null = null;
 vi.mock("@/shared/lib/groo/shell-scroller", () => ({
   closestScroller: () => scroller,
+  useShellScroller: () => ({ current: scroller }),
 }));
 const { useLedgerScroll } = await import("./use-ledger-scroll");
 

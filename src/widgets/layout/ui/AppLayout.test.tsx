@@ -95,19 +95,27 @@ const { SwipeActions } = await import("@/shared/ds/swipe-actions");
 let container: HTMLDivElement;
 let root: Root;
 
-beforeEach(() => {
-  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  // MemoryRouter 첫 항목 key 는 늘 "default" — 앞 시험의 화면 기억을 끊는다
-  resetScreenMemory();
-  state.size = "desktop";
+// 폭 질의 — 셸의 폰 판정(768 미만)과 스크롤 주체가 같은 질의를 읽으므로 mock 한 useDeviceSize(state.size)와 맞춘다.
+// 폰이면 768 · 1280 모두 거짓, 아니면 768 은 참이고 1280 은 wide 일 때만 참
+function stubMedia(wide: boolean) {
   window.matchMedia = ((query: string) => ({
-    matches: false,
+    matches:
+      state.size !== "mobile" &&
+      (query.includes("768") || (wide && query.includes("1280"))),
     media: query,
     addEventListener: () => {},
     removeEventListener: () => {},
     addListener: () => {},
     removeListener: () => {},
   })) as unknown as typeof window.matchMedia;
+}
+
+beforeEach(() => {
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  // MemoryRouter 첫 항목 key 는 늘 "default" — 앞 시험의 화면 기억을 끊는다
+  resetScreenMemory();
+  state.size = "desktop";
+  stubMedia(true);
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -295,14 +303,7 @@ const renderStats = () =>
       </MemoryRouter>,
     ),
   );
-const setWide = (wide: boolean) => {
-  window.matchMedia = ((query: string) => ({
-    matches: wide && query.includes("1280"),
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
-};
+const setWide = (wide: boolean) => stubMedia(wide);
 const frame = () =>
   act(async () => {
     await new Promise((r) => requestAnimationFrame(() => r(null)));

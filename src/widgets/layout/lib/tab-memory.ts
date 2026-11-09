@@ -74,8 +74,12 @@ export function restoreScroll(target: HTMLElement | ScrollHost, y: number) {
     stopped = true;
     restoring = false;
     cancelAnimationFrame(frame);
-    box.eventTarget.removeEventListener("wheel", stop);
-    box.eventTarget.removeEventListener("touchstart", stop);
+    box.eventTarget.removeEventListener("wheel", onInput);
+    box.eventTarget.removeEventListener("touchstart", onInput);
+  };
+  // 문서는 페이지 전체에서 들리므로 머리 · 탭 바 · 시트를 만진 것은 본문을 만진 게 아니다(F3)
+  const onInput = (e: Event) => {
+    if (box.ownsInput(e)) stop();
   };
   const tick = () => {
     if (stopped) return;
@@ -91,8 +95,8 @@ export function restoreScroll(target: HTMLElement | ScrollHost, y: number) {
     }
   };
   restoring = true;
-  box.eventTarget.addEventListener("wheel", stop, { passive: true });
-  box.eventTarget.addEventListener("touchstart", stop, { passive: true });
+  box.eventTarget.addEventListener("wheel", onInput, { passive: true });
+  box.eventTarget.addEventListener("touchstart", onInput, { passive: true });
   frame = requestAnimationFrame(tick);
   return stop;
 }

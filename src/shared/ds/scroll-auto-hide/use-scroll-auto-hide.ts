@@ -357,14 +357,17 @@ export function useScrollAutoHide(
       scheduleSettle();
     };
 
-    const handleInteractionStart = () => {
+    // 문서가 스크롤 상자일 땐 페이지 전체의 입력이 들린다 — 고정 머리 · 탭 바 · 열린 시트에서 시작한 입력은 본문 스크롤이 아니다
+    const handleInteractionStart = (event?: Event) => {
+      if (event && !host.ownsInput(event)) return;
       clearSettleTimer();
       cancelSettling();
       syncTracking();
       skipNextSettleAnimation = false;
     };
 
-    const handleTouchStart = () => {
+    const handleTouchStart = (event: Event) => {
+      if (!host.ownsInput(event)) return;
       isTouching = true;
       handleInteractionStart();
     };
@@ -406,7 +409,8 @@ export function useScrollAutoHide(
       if (!SCROLL_KEYS.has(event.key)) return;
       if (
         !(event.target instanceof Node) ||
-        !scrollContainer.contains(event.target)
+        !scrollContainer.contains(event.target) ||
+        !host.ownsInput(event)
       )
         return;
       if (

@@ -40,6 +40,7 @@ function setup(kind: "element" | "document") {
     scrollHeight: { configurable: true, get: () => max + 300 },
     clientHeight: { configurable: true, value: 300 },
   });
+  vi.stubGlobal("innerHeight", 300); // 문서 상자의 보이는 높이는 innerHeight 다
   current = scrollHostOf(el);
   // 스크롤 이벤트는 요소는 요소에, 문서는 document 로 온다
   return {
@@ -67,6 +68,7 @@ afterEach(() => {
   for (const k of ["scrollTop", "scrollHeight", "clientHeight"])
     delete (document.documentElement as unknown as Record<string, unknown>)[k];
   current = null;
+  vi.unstubAllGlobals();
   vi.useRealTimers();
 });
 

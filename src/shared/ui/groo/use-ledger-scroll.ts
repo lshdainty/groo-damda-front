@@ -1,7 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SCROLL_AUTO_HIDE_SYNC_EVENT } from "@/shared/ds/scroll-auto-hide";
 import { scrollHostOf, type ScrollHost } from "@/shared/lib/groo/scroll-host";
-import { closestScroller } from "@/shared/lib/groo/shell-scroller";
+import {
+  closestScroller,
+  useShellScroller,
+} from "@/shared/lib/groo/shell-scroller";
 
 /*
  * 원장 스크롤 훅 — 컴포넌트 파일(`ledger.tsx`)과 갈라 둔다.
@@ -99,6 +102,8 @@ export function useLedgerScroll({
     onCollapseRef.current?.();
   };
 
+  // 폰 ↔ 태블릿 경계를 넘으면 스크롤 상자(문서 ↔ main)가 바뀐다 — 새 상자에 다시 붙게 deps 에 둔다(F1)
+  const shellScroller = useShellScroller();
   useEffect(() => {
     const p = scroller();
     if (!p) return;
@@ -127,7 +132,7 @@ export function useLedgerScroll({
     };
     p.eventTarget.addEventListener("scroll", onScroll, { passive: true });
     return () => p.eventTarget.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [shellScroller]);
 
   /**
    * 날을 눌러 그 날 묶음으로 옮긴다 — 묶음 윗변이 보이는 머리(고정 덩어리) 아래 끝에 딱 붙는다(틈 0 — 앱과 같다). 머리의 sticky top(상단 바 + 달 이동 줄)은 늘 보이고,

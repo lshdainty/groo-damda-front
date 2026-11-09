@@ -27,12 +27,37 @@ export type ScrollHost = {
   scrollTo(options: ScrollToOptions): void;
   /** 이 scroll 이벤트가 이 상자의 것인가(capture 로 듣는 자리에서 안쪽 상자의 것을 거른다) */
   isScrollEvent(e: Event): boolean;
+  /**
+   * 이 입력(touchstart · wheel · keydown)이 이 상자 본문에서 시작했나. 요소 상자는 그 요소에 듣고 있어 늘 참이다.
+   * 문서는 페이지 전체에서 들리므로 고정된 머리 · 탭 바 · 열린 시트에서 온 입력을 "본문을 만졌다" 로 치지 않게 가른다(F3).
+   */
+  ownsInput(e: Event): boolean;
 };
 
 export function isDocumentScroller(el: Element): boolean {
   const doc = el.ownerDocument;
   return el === doc.documentElement || el === doc.scrollingElement;
 }
+
+/**
+ * 상자의 보이는 높이. 문서는 `clientHeight` 가 아니라 `innerHeight` 다 — 폰 브라우저는 툴바가 보일 때의 작은 뷰포트를
+ * `documentElement.clientHeight` 로 돌려줘, 툴바가 숨은 상태(문서 스크롤의 목적)에서 실제 최대 스크롤보다 툴바 높이만큼 크게 잡힌다(F2).
+ */
+function visibleHeight(el: HTMLElement, isDocument: boolean): number {
+  if (!isDocument) return el.clientHeight;
+  const win = el.ownerDocument.defaultView;
+  return win && win.innerHeight > 0 ? win.innerHeight : el.clientHeight;
+}
+
+/** 입력이 셸 본문(`#main`) 안에서 시작했나 — 문서 · html · body 자체(빈 바탕)도 본문이다 */
+function isBodyInput(doc: Document, e: Event): boolean {
+  const t = e.target;
+  if (!(t instanceof Node)) return true;
+  if (t === doc || t === doc.documentElement || t === doc.body) return true;
+  return doc.getElementById(SHELL_BODY_ID)?.contains(t) ?? false;
+}
+
+const SHELL_BODY_ID = "main";
 
 export function scrollHostOf(el: HTMLElement): ScrollHost {
   const isDocument = isDocumentScroller(el);
@@ -45,12 +70,13 @@ export function scrollHostOf(el: HTMLElement): ScrollHost {
     setTop: (top) => {
       el.scrollTop = top;
     },
-    getMax: () => Math.max(0, el.scrollHeight - el.clientHeight),
+    getMax: () => Math.max(0, el.scrollHeight - visibleHeight(el, isDocument)),
     viewportTop: () => (isDocument ? 0 : el.getBoundingClientRect().top),
     clientTop: () => (isDocument ? 0 : el.clientTop),
     scrollTo: (options) => el.scrollTo(options),
     isScrollEvent: (e) =>
       e.target === el || (isDocument && e.target === el.ownerDocument),
+    ownsInput: (e) => !isDocument || isBodyInput(el.ownerDocument, e),
   };
 }
 
