@@ -45,7 +45,8 @@ export function shellInsets({
 
 /** 가계부 탭(Line Tabs) 루트 — 실제 높이를 잰다(글자를 키우면 min-h 44 를 넘는다) */
 export const MONEY_TABS_ATTR = "data-shell-money-tabs";
-const HEADER_SELECTOR = ".m-app header";
+/** 셸 머리(MobileHeader) — 첫 `<header>` 를 잡으면 셸 머리보다 앞에 다른 header 가 오는 화면에서 틀린다 */
+export const SHELL_HEAD_ATTR = "data-shell-head";
 
 /**
  * 값을 `<html>` 에 걸고 되돌리는 함수를 돌려준다. 상수(56 · 44)는 측정 전 첫 프레임 값이다 — 머리 · 가계부 탭의 실제 높이가
@@ -70,7 +71,7 @@ export function applyShellInsets(
   set(insets["--shell-head"], insets["--shell-top"]);
   root.style.scrollPaddingBottom = insets.scrollPaddingBottom;
 
-  const header = root.querySelector<HTMLElement>(HEADER_SELECTOR);
+  const header = root.querySelector<HTMLElement>(`[${SHELL_HEAD_ATTR}]`);
   const tabs = root.querySelector<HTMLElement>(`[${MONEY_TABS_ATTR}]`);
   const measure = () => {
     const h = header?.getBoundingClientRect().height ?? 0;

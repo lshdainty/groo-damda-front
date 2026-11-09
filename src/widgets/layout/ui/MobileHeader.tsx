@@ -18,6 +18,9 @@ import {
 import { useUnreadCount } from "@/features/notification";
 import { useNotificationLabel } from "../lib/use-notification-label";
 import { rootActionsFor, screenTitleKey } from "../model/shell";
+import { SHELL_HEAD_ATTR } from "../model/shell-insets";
+
+const SHELL_HEAD_PROPS = { [SHELL_HEAD_ATTR]: "" };
 
 /**
  * 모바일 root 머리 — 탭 바의 첫 화면(홈 · 가계부 · 캘린더 · 전체)의 큰 제목 + 오른쪽 아이콘.
@@ -35,7 +38,7 @@ export function MobileHeader() {
 function SearchHeader() {
   const { condition, update } = useSearchCondition();
   return (
-    <TopNavigation type="standard">
+    <TopNavigation type="standard" {...SHELL_HEAD_PROPS}>
       <TopNavigationBackButton fallbackHref="/desk" />
       <TopNavigationSearch>
         <SearchField
@@ -65,7 +68,7 @@ function RootHeader() {
   const notificationLabel = useNotificationLabel(hasUnread);
 
   return (
-    <TopNavigation type="root">
+    <TopNavigation type="root" {...SHELL_HEAD_PROPS}>
       <TopNavigationTitle>{t(screenTitleKey(pathname))}</TopNavigationTitle>
       <TopNavigationActions>
         {actions.includes("search") && (
