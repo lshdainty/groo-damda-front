@@ -48,11 +48,11 @@ export function StatsMobile({ state }: { state?: StatsState } = {}) {
   );
   return (
     <div className="flex flex-1 flex-col">
-      {/* 칩 탭은 가계부 탭 아래에 붙어 있는다(문서가 스크롤 — sticky), 패널은 따로 스크롤하지 않는다 */}
+      {/* 패널은 따로 스크롤하지 않는다 — 문서(폰)가 한 번에 스크롤하고 칩 탭은 지금처럼 내용과 함께 올라간다 */}
       <Tabs
         value={m.tab}
         onValueChange={(v) => m.setTab(v as TabKey)}
-        className="sticky top-(--shell-top) z-3 shrink-0 bg-bg-layer-default"
+        className="shrink-0 bg-bg-layer-default"
       >
         <ChipTabsList variant="solid" size="large" aria-label={t("tab.aria")}>
           {TAB_ITEMS.map(({ v, l }) => (
