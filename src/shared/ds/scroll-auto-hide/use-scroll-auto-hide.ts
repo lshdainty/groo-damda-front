@@ -1,4 +1,5 @@
 import * as React from "react";
+import { scrollHostOf } from "@/shared/lib/groo/scroll-host";
 
 /*
  * 스크롤하면 숨는 영역의 동작 — SEED Breeze ScrollAutoHide(Apache-2.0)를 옮긴 것이다. 옮긴 곳: github.com/daangn/seed-design
@@ -82,8 +83,10 @@ export function useScrollAutoHide(
     const initialTransition = root.style.transition;
     const initialWillChange = root.style.willChange;
     const mediaQuery = window.matchMedia(REDUCED_MOTION_QUERY);
-    const supportsScrollEnd =
-      typeof scrollContainer.onscrollend !== "undefined";
+    // 스크롤 상자가 요소면 그 요소에, 문서(documentElement)면 document 에 듣는다 — scroll · scrollend 가 거기로 온다
+    const host = scrollHostOf(scrollContainer);
+    const eventTarget = host.eventTarget as HTMLElement;
+    const supportsScrollEnd = typeof eventTarget.onscrollend !== "undefined";
     const ScrollTimeline = Reflect.get(window, "ScrollTimeline") as unknown;
     let scrollTimeline: AnimationTimeline | undefined;
 
@@ -98,13 +101,8 @@ export function useScrollAutoHide(
       }
     }
 
-    const getScrollTop = () => {
-      const maxScrollTop = Math.max(
-        0,
-        scrollContainer.scrollHeight - scrollContainer.clientHeight,
-      );
-      return Math.min(maxScrollTop, Math.max(0, scrollContainer.scrollTop));
-    };
+    const getScrollTop = () =>
+      Math.min(host.getMax(), Math.max(0, host.getTop()));
 
     let height = 0;
     let naturalOffset = 0;
@@ -158,10 +156,7 @@ export function useScrollAutoHide(
 
       stopTracking();
 
-      const maxScrollTop = Math.max(
-        0,
-        scrollContainer.scrollHeight - scrollContainer.clientHeight,
-      );
+      const maxScrollTop = host.getMax();
       if (maxScrollTop === 0) return;
 
       let rangeStart: number;
@@ -305,7 +300,8 @@ export function useScrollAutoHide(
       root.style.transform = "none";
 
       const rootRect = root.getBoundingClientRect();
-      const scrollRect = scrollContainer.getBoundingClientRect();
+      // 상자 윗변의 화면 위치 — 문서 스크롤이면 0(getBoundingClientRect 는 -scrollY 라 scrollTop 과 두 번 센다)
+      const scrollViewportTop = host.viewportTop();
       const scrollTop = getScrollTop();
       // sticky top — relative 로 잴 때 그만큼 밀려 있고, 그만큼 일찍 붙는다(auto · 0 이면 SEED 그대로)
       const stickyTop = Number.parseFloat(getComputedStyle(root).top) || 0;
@@ -318,8 +314,8 @@ export function useScrollAutoHide(
         scrollTop +
         rootRect.top -
         stickyTop -
-        scrollRect.top -
-        scrollContainer.clientTop -
+        scrollViewportTop -
+        host.clientTop() -
         stickyTop;
 
       root.style.position = previousPosition;
@@ -451,21 +447,21 @@ export function useScrollAutoHide(
     resizeObserver.observe(scrollContainer);
     if (keepRef?.current) resizeObserver.observe(keepRef.current);
 
-    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
-    scrollContainer.addEventListener("scrollend", settle);
-    scrollContainer.addEventListener("touchstart", handleTouchStart, {
+    eventTarget.addEventListener("scroll", handleScroll, { passive: true });
+    eventTarget.addEventListener("scrollend", settle);
+    eventTarget.addEventListener("touchstart", handleTouchStart, {
       passive: true,
     });
-    scrollContainer.addEventListener("touchend", handleTouchEnd, {
+    eventTarget.addEventListener("touchend", handleTouchEnd, {
       passive: true,
     });
-    scrollContainer.addEventListener("touchcancel", handleTouchEnd, {
+    eventTarget.addEventListener("touchcancel", handleTouchEnd, {
       passive: true,
     });
-    scrollContainer.addEventListener("wheel", handleInteractionStart, {
+    eventTarget.addEventListener("wheel", handleInteractionStart, {
       passive: true,
     });
-    scrollContainer.addEventListener(SCROLL_AUTO_HIDE_SYNC_EVENT, handleSync);
+    eventTarget.addEventListener(SCROLL_AUTO_HIDE_SYNC_EVENT, handleSync);
     root.addEventListener("focusin", handleFocusIn);
     root.addEventListener("transitionend", handleTransitionComplete);
     root.ownerDocument.addEventListener("keydown", handleKeyDown);
@@ -475,16 +471,13 @@ export function useScrollAutoHide(
       clearSettleTimer();
       stopTracking();
       resizeObserver.disconnect();
-      scrollContainer.removeEventListener("scroll", handleScroll);
-      scrollContainer.removeEventListener("scrollend", settle);
-      scrollContainer.removeEventListener("touchstart", handleTouchStart);
-      scrollContainer.removeEventListener("touchend", handleTouchEnd);
-      scrollContainer.removeEventListener("touchcancel", handleTouchEnd);
-      scrollContainer.removeEventListener("wheel", handleInteractionStart);
-      scrollContainer.removeEventListener(
-        SCROLL_AUTO_HIDE_SYNC_EVENT,
-        handleSync,
-      );
+      eventTarget.removeEventListener("scroll", handleScroll);
+      eventTarget.removeEventListener("scrollend", settle);
+      eventTarget.removeEventListener("touchstart", handleTouchStart);
+      eventTarget.removeEventListener("touchend", handleTouchEnd);
+      eventTarget.removeEventListener("touchcancel", handleTouchEnd);
+      eventTarget.removeEventListener("wheel", handleInteractionStart);
+      eventTarget.removeEventListener(SCROLL_AUTO_HIDE_SYNC_EVENT, handleSync);
       root.removeEventListener("focusin", handleFocusIn);
       root.removeEventListener("transitionend", handleTransitionComplete);
       root.ownerDocument.removeEventListener("keydown", handleKeyDown);
