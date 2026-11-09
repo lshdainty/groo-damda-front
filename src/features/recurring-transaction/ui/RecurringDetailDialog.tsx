@@ -116,13 +116,6 @@ export function RecurringDetailDialog({
   } else {
     add("cat", te("category"), item.categoryName);
     add(
-      "asset",
-      item.expenseType === "INCOME"
-        ? te("addTx.depositAccount")
-        : te("accountCard"),
-      item.assetName,
-    );
-    add(
       "pay",
       item.expenseType === "INCOME"
         ? te("addTx.incomeMethod")
@@ -132,6 +125,13 @@ export function RecurringDetailDialog({
           ? te(PAYMENT_KEYS[item.paymentMethod]!)
           : item.paymentMethod
         : null,
+    );
+    add(
+      "asset",
+      item.expenseType === "INCOME"
+        ? te("addTx.depositAccount")
+        : te("accountCard"),
+      item.assetName,
     );
   }
   add("memo", te("memo"), item.description);

@@ -747,6 +747,36 @@ export function useRecurringForm({
               />
             )}
             {!isTransfer && (
+              <ChoicePickRow
+                prefix={<CreditCard className={ROW_ICON} />}
+                title={
+                  f.type === "INCOME"
+                    ? te("addTx.incomeMethod")
+                    : te("paymentMethodLabel")
+                }
+                placeholder={t("noValue", {
+                  name:
+                    f.type === "INCOME"
+                      ? te("addTx.incomeMethod")
+                      : te("paymentMethodLabel"),
+                })}
+                surfaceTitle={
+                  f.type === "INCOME"
+                    ? te("addTx.incomeMethod")
+                    : te("paymentMethodLabel")
+                }
+                items={PAYMENT_METHODS.map((pm) => ({
+                  value: pm.v,
+                  label: te(pm.lKey),
+                }))}
+                value={f.paymentMethod}
+                onChange={(v) => changePayment(v)}
+                onClear={() => set("paymentMethod", "")}
+                clearLabel={t("clearValue")}
+              />
+            )}
+
+            {!isTransfer && (
               <AssetPickRow
                 failed={assetsQ.isError && !assetsQ.data}
                 onRetry={() => void assetsQ.refetch()}
@@ -778,36 +808,6 @@ export function useRecurringForm({
                 emptyText={t("noAssets")}
               />
             )}
-            {!isTransfer && (
-              <ChoicePickRow
-                prefix={<CreditCard className={ROW_ICON} />}
-                title={
-                  f.type === "INCOME"
-                    ? te("addTx.incomeMethod")
-                    : te("paymentMethodLabel")
-                }
-                placeholder={t("noValue", {
-                  name:
-                    f.type === "INCOME"
-                      ? te("addTx.incomeMethod")
-                      : te("paymentMethodLabel"),
-                })}
-                surfaceTitle={
-                  f.type === "INCOME"
-                    ? te("addTx.incomeMethod")
-                    : te("paymentMethodLabel")
-                }
-                items={PAYMENT_METHODS.map((pm) => ({
-                  value: pm.v,
-                  label: te(pm.lKey),
-                }))}
-                value={f.paymentMethod}
-                onChange={(v) => changePayment(v)}
-                onClear={() => set("paymentMethod", "")}
-                clearLabel={t("clearValue")}
-              />
-            )}
-
             {isTransfer && (
               <>
                 <AssetPickRow

@@ -801,27 +801,6 @@ export function PresetEditDialog({
                         onClick={() => enterStep("merchant")}
                       />
                       <PickerRow
-                        title={t("accountCard")}
-                        prefix={<Wallet />}
-                        value={
-                          assetById(assetRowId)
-                            ? assetLabel(assetById(assetRowId)!)
-                            : t("preset.noAccount")
-                        }
-                        surfaceTitle={t("accountCard")}
-                      >
-                        {({ close }) =>
-                          assetPick(
-                            t("accountCard"),
-                            assets,
-                            assetRowId,
-                            setAssetRowId,
-                            close,
-                            true,
-                          )
-                        }
-                      </PickerRow>
-                      <PickerRow
                         title={t("paymentMethodLabel")}
                         prefix={<CreditCard />}
                         value={payLabel(paymentMethod) ?? t("preset.noPayment")}
@@ -844,6 +823,27 @@ export function PresetEditDialog({
                             }}
                           />
                         )}
+                      </PickerRow>
+                      <PickerRow
+                        title={t("accountCard")}
+                        prefix={<Wallet />}
+                        value={
+                          assetById(assetRowId)
+                            ? assetLabel(assetById(assetRowId)!)
+                            : t("preset.noAccount")
+                        }
+                        surfaceTitle={t("accountCard")}
+                      >
+                        {({ close }) =>
+                          assetPick(
+                            t("accountCard"),
+                            assets,
+                            assetRowId,
+                            setAssetRowId,
+                            close,
+                            true,
+                          )
+                        }
                       </PickerRow>
                       <StepRow
                         icon={<Coins />}

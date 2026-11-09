@@ -673,6 +673,10 @@ export function TxDetailDialog({
                 />
               )}
               <KvRow
+                label={t("paymentMethodLabel")}
+                value={paymentMethodLabel}
+              />
+              <KvRow
                 label={t("accountCard")}
                 value={
                   asset
@@ -681,10 +685,6 @@ export function TxDetailDialog({
                       : asset.assetName
                     : expense.assetName
                 }
-              />
-              <KvRow
-                label={t("paymentMethodLabel")}
-                value={paymentMethodLabel}
               />
               <KvRow label={t("memo")} value={expense.description} />
             </List>
