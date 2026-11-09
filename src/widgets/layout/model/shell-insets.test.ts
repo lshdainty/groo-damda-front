@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   MONEY_TABS_ATTR,
+  SHELL_HEAD_ATTR,
   applyShellInsets,
   shellInsets,
   shellTop,
@@ -11,6 +12,7 @@ import {
 const html = document.documentElement;
 let observed: { cb: () => void; els: Element[] }[] = [];
 let header: HTMLElement;
+let decoy: HTMLElement;
 let tabs: HTMLElement;
 let h = 0;
 let t = 0;
@@ -35,10 +37,14 @@ beforeEach(() => {
   );
   const app = document.createElement("div");
   app.className = "m-app";
+  // 셸 머리보다 앞에 다른 header 가 와도 data 속성으로 셸 머리를 잡는다
+  decoy = document.createElement("header");
+  decoy.getBoundingClientRect = () => ({ height: 999 }) as DOMRect;
   header = document.createElement("header");
+  header.setAttribute(SHELL_HEAD_ATTR, "");
   tabs = document.createElement("div");
   tabs.setAttribute(MONEY_TABS_ATTR, "");
-  app.append(header, tabs);
+  app.append(decoy, header, tabs);
   document.body.appendChild(app);
   header.getBoundingClientRect = () => ({ height: h }) as DOMRect;
   tabs.getBoundingClientRect = () => ({ height: t }) as DOMRect;
