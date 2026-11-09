@@ -412,6 +412,7 @@ export function AssetTradeDialog({
                 title={t("trade.date")}
                 value={dateText}
                 surfaceTitle={t("trade.date")}
+                dismissible={false}
                 onOpen={() => setDateDraft(parseDayKey(dayPart))}
                 popoverClassName="w-[336px]"
                 pickerActions={({ close }) => (

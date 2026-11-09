@@ -116,7 +116,7 @@ export function PeriodField({
       errorMessage={errorMessage}
     >
       {sheet ? (
-        <BottomSheet open={open} onOpenChange={setOpen}>
+        <BottomSheet open={open} dismissible={false} onOpenChange={setOpen}>
           {trigger}
           <BottomSheetContent title={label} className="h-[90dvh]">
             <BottomSheetBody className="overflow-hidden">

@@ -111,7 +111,7 @@ function DueDateField({
   return (
     <Field label={label}>
       {sheet ? (
-        <BottomSheet open={open} onOpenChange={setOpen}>
+        <BottomSheet open={open} dismissible={false} onOpenChange={setOpen}>
           {trigger}
           <BottomSheetContent title={label}>
             <BottomSheetBody>{picker}</BottomSheetBody>

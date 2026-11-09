@@ -24,10 +24,7 @@ import {
   PopoverFooter,
   PopoverTrigger,
 } from "@/shared/ds/popover";
-import {
-  TimePicker,
-  type TimeValue,
-} from "@/shared/ds/time-picker";
+import { TimePicker, type TimeValue } from "@/shared/ds/time-picker";
 
 /**
  * 일정 폼의 고르는 표면 (I-09 24 · 26 · 27 · 28) — 누르는 것(trigger)이 1280 미만은 폼 시트 위 고르기 시트,
@@ -86,7 +83,7 @@ export function DayPickSurface({
     </Button>
   );
   return sheet ? (
-    <BottomSheet open={open} onOpenChange={setOpen}>
+    <BottomSheet open={open} dismissible={false} onOpenChange={setOpen}>
       {node}
       <BottomSheetContent title={title}>
         <BottomSheetBody>{picker}</BottomSheetBody>
@@ -157,7 +154,7 @@ export function TimePickSurface({
     </Button>
   );
   return sheet ? (
-    <BottomSheet open={open} onOpenChange={setOpen}>
+    <BottomSheet open={open} dismissible={false} onOpenChange={setOpen}>
       {node}
       <BottomSheetContent title={title}>
         <BottomSheetBody>

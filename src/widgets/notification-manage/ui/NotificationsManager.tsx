@@ -263,7 +263,8 @@ function PickRow({
   ) : (
     <>
       {row}
-      <BottomSheet open={open} onOpenChange={change}>
+      {/* 시각 줄(done 이 있는 시트)은 휠이라 끌어서 안 닫는다 */}
+      <BottomSheet open={open} dismissible={!done} onOpenChange={change}>
         <BottomSheetContent title={title}>
           <BottomSheetBody>{children(close)}</BottomSheetBody>
           {doneButton && <BottomSheetFooter>{doneButton}</BottomSheetFooter>}

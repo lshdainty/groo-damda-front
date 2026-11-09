@@ -113,6 +113,7 @@ export function DateRow({
       value={value ? formatDateLong(value) : ""}
       surfaceTitle={surfaceTitle ?? title}
       errorMessage={errorMessage}
+      dismissible={false}
       onOpen={() => setDraft(value ? parseDayKey(value) : undefined)}
       pickerActions={({ close }) => (
         <Button

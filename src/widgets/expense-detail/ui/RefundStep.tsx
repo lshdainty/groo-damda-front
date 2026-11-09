@@ -192,7 +192,7 @@ function RefundDatePick({
     </Button>
   );
   return surface === "sheet" ? (
-    <BottomSheet open={open} onOpenChange={setOpen}>
+    <BottomSheet open={open} dismissible={false} onOpenChange={setOpen}>
       {node}
       <BottomSheetContent title={title}>
         <BottomSheetBody>{picker}</BottomSheetBody>
