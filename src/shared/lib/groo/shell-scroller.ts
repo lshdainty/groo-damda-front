@@ -67,7 +67,7 @@ export function useShellScroller() {
   return ref;
 }
 
-const SCROLL_PARENT = ".m-scroll, .overflow-y-auto";
+const SCROLL_PARENT = `#${SHELL_SCROLLER_ID}, .overflow-y-auto`;
 
 /**
  * `from` 를 품은 가장 가까운 스크롤 상자 — 셸 본문(`#main`)이면 그 자리의 스크롤 주체로 바꿔 돌려준다.

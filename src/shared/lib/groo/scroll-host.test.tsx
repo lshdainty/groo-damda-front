@@ -44,7 +44,7 @@ beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   main = document.createElement("main");
   main.id = "main";
-  main.className = "overflow-y-auto"; // 실제 main 은 데스크톱 overflow-y-auto · 폰 m-scroll
+  main.className = "overflow-y-auto"; // 실제 main 은 데스크톱 overflow-y-auto · 폰 m-body(스크롤 상자 아님)
   document.body.appendChild(main);
 });
 afterEach(() => {
@@ -255,7 +255,7 @@ describe("셸 스크롤 주체 — 폰은 문서, 768 이상은 main", () => {
     expect(closestScroller(bare)).toBe(main);
     expect(closestScroller(null)).toBeNull();
     const box = document.createElement("div");
-    box.className = "m-scroll";
+    box.className = "overflow-y-auto";
     const x = document.createElement("p");
     box.appendChild(x);
     document.body.appendChild(box);

@@ -21,7 +21,8 @@ export function MoneyTabs() {
     <Tabs
       value={current?.path}
       onValueChange={(path) => navigate(path, { replace: true })}
-      className="shrink-0"
+      // 문서가 스크롤하는 폰 — 머리(sticky) 바로 아래에 붙는다(머리 높이는 셸이 `--shell-head` 로 적는다)
+      className="sticky top-(--shell-head) z-(--z-sticky) shrink-0"
     >
       <TabsList size="medium" aria-label={t("expense")}>
         {MONEY_TABS.map((m) => (

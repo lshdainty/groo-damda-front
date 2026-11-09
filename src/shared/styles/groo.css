@@ -12,34 +12,32 @@
 /* =============================================================================
  * Mobile chrome
  * ========================================================================== */
+/* 폰 셸 — 높이를 가두지 않는다. 문서(창)가 스크롤해야 폰 브라우저가 내릴 때 주소 · 아래 바를 숨긴다(고정 height · 본문 overflow 는
+   브라우저에게 "스크롤하는 창" 이 아니다). 그래서 상자는 min-height 만 — 100vh 는 주소바가 보일 때 뷰포트보다 커서 dvh 를 쓴다
+   (min-height 는 주소바 높이가 흔들려도 무해하다 — 고정 height 는 아니다).
+   머리 · 가계부 탭은 sticky(맨 위), 탭 바는 fixed(맨 아래)이고 본문 바닥 여백은 셸(AppLayout)이 준다.
+   overflow-x 는 hidden 이 아니라 clip — hidden 은 상자를 스크롤 상자로 만들어 sticky 가 이 상자에 갇힌다. */
 .m-app {
   width: 100%;
-  /* 100vh 는 모바일 주소바가 보일 때 뷰포트보다 크게 잡혀 하단 탭바가
-     화면 아래로 밀려남. dvh 는 주소바 상태에 따라 동적으로 줄어들어
-     하단 탭바가 항상 가시영역 안쪽에 고정됨. */
-  height: 100vh;
-  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   /* 모바일 카드 다이어트 — 콘텐츠가 카드 없이 배경 위에 바로 놓이므로
      페이지 배경 = surface (design app.css .m-app 정합). */
   background: var(--bg-surface);
   position: relative;
-  overflow: hidden;
+  overflow-x: clip;
 }
 /* 탭 셸의 본문 바닥 = 페이지 바탕(bg-layer-basement). 머리 · 탭 바는 스스로 흰 면이다.
    풀스크린 화면(옛 ← 머리)은 옛 모양대로 surface 를 그대로 둔다. */
 .m-app--page {
   background: var(--bg-canvas);
 }
-.m-scroll {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-}
-.m-scroll::-webkit-scrollbar {
-  width: 0;
+/* 폰 본문 — 스크롤 상자가 아니다(문서가 스크롤). 짧은 화면이 바닥까지 배경을 채우게 남는 높이를 먹는다 */
+.m-body {
+  flex: 1 0 auto;
+  overflow-x: clip;
 }
 /* =============================================================================
  * Primitives — hero, tx row, cat icon, chart, budget bar, account card
