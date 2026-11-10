@@ -3,7 +3,7 @@
   "source": "specs/components/popover.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "ce410e4e7025"
+    "sha256": "849be129bc9d"
   },
   "slots": {
     "root": "표면 — 트리거 아래(모자라면 위)",

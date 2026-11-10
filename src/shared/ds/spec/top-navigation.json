@@ -3,7 +3,7 @@
   "source": "specs/components/top-navigation.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "ce410e4e7025"
+    "sha256": "849be129bc9d"
   },
   "slots": {
     "root": "바 — 화면 폭 · 높이 56(위 안전 영역은 더한다). 맨 위에 붙어 스크롤해도 그 자리에 있다",

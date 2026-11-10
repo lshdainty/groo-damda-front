@@ -3,7 +3,7 @@
   "source": "specs/components/dialog.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "ce410e4e7025"
+    "sha256": "849be129bc9d"
   },
   "slots": {
     "overlay": "딤 — 대화상자 뒤 화면 전체",

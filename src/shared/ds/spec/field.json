@@ -3,7 +3,7 @@
   "source": "specs/components/field.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "ce410e4e7025"
+    "sha256": "849be129bc9d"
   },
   "slots": {
     "root": "Field — 머리 · 입력 · 꼬리를 세로로 쌓는다",
