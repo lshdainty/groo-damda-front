@@ -99,6 +99,7 @@ const pointerDown = (el: Element) =>
 function Sheet({
   form,
   dirty,
+  dismissible,
   description,
   showCloseButton,
   snapPoints,
@@ -107,6 +108,7 @@ function Sheet({
 }: {
   form?: boolean;
   dirty?: boolean;
+  dismissible?: boolean;
   description?: string;
   showCloseButton?: boolean;
   snapPoints?: string[];
@@ -118,6 +120,7 @@ function Sheet({
       <BottomSheet
         form={form}
         dirty={dirty}
+        dismissible={dismissible}
         snapPoints={snapPoints}
         onOpenChange={onOpenChange}
       >
@@ -244,6 +247,43 @@ describe("닫는 길", () => {
     await tick();
     expect(onOpenChange).not.toHaveBeenCalled();
     expect(sheet()).not.toBeNull();
+  });
+
+  it("dismissible=false(휠 시트)는 바깥(딤)을 눌러도 닫지 않고, 닫기 버튼은 닫는다", async () => {
+    const onOpenChange = vi.fn();
+    render(<Sheet dismissible={false} onOpenChange={onOpenChange} />);
+    open();
+    await tick();
+    onOpenChange.mockClear();
+    pointerDown(overlay()!);
+    await tick();
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(sheet()).not.toBeNull();
+    act(() => closeButton()!.click());
+    await tick();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it("dismissible=false 여도 Esc · 뒤로 가기(popstate)는 닫는다", async () => {
+    const onOpenChange = vi.fn();
+    render(<Sheet dismissible={false} onOpenChange={onOpenChange} />);
+    open();
+    await tick();
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    await tick();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    onOpenChange.mockClear();
+    open();
+    await tick();
+    act(() => {
+      sheet()!.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+      );
+    });
+    await tick();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
   });
 
   it("뒤로 가기(popstate)는 닫는다", async () => {

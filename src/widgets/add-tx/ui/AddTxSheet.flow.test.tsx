@@ -18,6 +18,7 @@ import {
   click,
   lastButton,
   row,
+  rowText,
   setValue,
   setupFormDom,
   tick,
@@ -1529,3 +1530,104 @@ describe("호스트가 폼을 든 채 한 단계로 보인다 — 실제 폼 (I-
 
 const dialogTextOf = (id: string) =>
   document.body.querySelector(`[data-testid="${id}"]`)?.textContent ?? "";
+
+describe("결제 수단이 계좌 · 카드보다 먼저 — 고르면 그 수단에 맞는 것만 나온다 (사용자 결정 11-10)", () => {
+  const cash = asset(31, "지갑", "CASH");
+  const bank = asset(32, "주거래 통장", "BANK_ACCOUNT");
+  const credit = asset(33, "현대카드", "CREDIT_CARD");
+  const check = asset(34, "체크카드", "CHECK_CARD");
+  const sheetText = () =>
+    [...document.body.querySelectorAll("[role=dialog]")].slice(-1)[0]
+      ?.textContent ?? "";
+  /** 문서 순서에서 a 줄이 b 줄보다 앞인가 */
+  const el = (k: string) =>
+    k === "addTx.dateRow"
+      ? document.body.querySelector(`[aria-label^="${k}"]`)!
+      : row(k);
+  const before = (a: string, b: string) =>
+    !!(el(a).compareDocumentPosition(el(b)) & Node.DOCUMENT_POSITION_FOLLOWING);
+  const toStep2 = async () => {
+    await open();
+    setValue(amountInput(), "5000");
+    await press("addTx.next");
+  };
+  const pickMethod = async (labelKey: string) => {
+    click(row("addTx.paymentMethodRow"));
+    await tick();
+    await press(labelKey);
+  };
+
+  beforeEach(() => {
+    state.assets = [cash, bank, credit, check];
+  });
+
+  it("지출 새 거래: 카테고리 → 결제 수단 → 계좌 · 카드 → 날짜 → 메모 순서다", async () => {
+    await toStep2();
+    expect(before("addTx.category", "addTx.paymentMethodRow")).toBe(true);
+    expect(before("addTx.paymentMethodRow", "addTx.account")).toBe(true);
+    expect(before("addTx.account", "addTx.dateRow")).toBe(true);
+    expect(before("addTx.dateRow", "addTx.memo")).toBe(true);
+  });
+
+  it("수정 · 고쳐 쓰기 · 수입도 같은 순서다(수입은 수입 방식 → 입금 계좌)", async () => {
+    await open({ expense: expense });
+    expect(before("addTx.paymentMethodRow", "addTx.account")).toBe(true);
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await open({
+      expense: {
+        ...expense,
+        expenseType: "INCOME",
+        categoryRowId: 21,
+      } as Expense,
+    });
+    expect(before("addTx.incomeMethodRow", "addTx.depositAccount")).toBe(true);
+  });
+
+  it("카드를 고르면 계좌 시트에는 신용 · 체크카드만 나온다", async () => {
+    await toStep2();
+    await pickMethod("form.paymentMethod.CARD");
+    click(row("addTx.account"));
+    await tick();
+    const t = sheetText();
+    expect(t).toContain("현대카드");
+    expect(t).toContain("체크카드");
+    expect(t).not.toContain("지갑");
+    expect(t).not.toContain("주거래 통장");
+  });
+
+  it("현금은 현금만 · 계좌 이체는 은행 · 예적금 계좌만 나온다", async () => {
+    await toStep2();
+    await pickMethod("form.paymentMethod.CASH");
+    click(row("addTx.account"));
+    await tick();
+    expect(sheetText()).toContain("지갑");
+    expect(sheetText()).not.toContain("현대카드");
+    await press("addTx.noAccountOption");
+    await pickMethod("paymentTransferFull");
+    click(row("addTx.account"));
+    await tick();
+    expect(sheetText()).toContain("주거래 통장");
+    expect(sheetText()).not.toContain("지갑");
+  });
+
+  it("맞는 계좌 · 카드가 없으면 시트에 안내가 뜬다", async () => {
+    state.assets = [bank];
+    await toStep2();
+    await pickMethod("form.paymentMethod.CARD");
+    click(row("addTx.account"));
+    await tick();
+    expect(sheetText()).toContain("addTx.noPickableAsset");
+  });
+
+  it("고른 계좌 · 카드가 바꾼 결제 수단에 안 맞으면 비워진다", async () => {
+    await toStep2();
+    click(row("addTx.account"));
+    await tick();
+    await press("현대카드");
+    expect(rowText("addTx.account")).toContain("현대카드");
+    await pickMethod("form.paymentMethod.CASH");
+    expect(rowText("addTx.account")).not.toContain("현대카드");
+    expect(rowText("addTx.account")).toContain("addTx.noAccountOption");
+  });
+});

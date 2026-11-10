@@ -112,7 +112,7 @@ export function RangePickerSheet({
     </>
   );
   return sheet ? (
-    <BottomSheet open={open} onOpenChange={changeOpen}>
+    <BottomSheet open={open} dismissible={false} onOpenChange={changeOpen}>
       {trigger({ onClick: () => changeOpen(true) })}
       <BottomSheetContent title={label} className="h-[90dvh]">
         <BottomSheetBody className="overflow-hidden">{picker}</BottomSheetBody>

@@ -34,6 +34,7 @@ export type {
 
 export { TransferRow } from "./ui/transfer-row";
 export { isTransferDeletable } from "./lib/deletable";
+export { PAYMENT_ASSET_TYPES, allowAssetFor } from "./lib/payment-assets";
 export { assetTypeLabel } from "./lib/asset-labels";
 export { ASSET_EDIT_PARAM, editAssetPath } from "./lib/edit-path";
 export {

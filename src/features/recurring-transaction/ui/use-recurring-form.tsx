@@ -39,7 +39,7 @@ import {
   useCreateRecurringTransaction,
   useUpdateRecurringTransaction,
 } from "@/features/recurring-transaction";
-import type { Asset, AssetType } from "@/entities/asset";
+import { allowAssetFor, type Asset } from "@/entities/asset";
 import type { Expense } from "@/entities/expense";
 import type {
   RecurringFrequency,
@@ -75,14 +75,6 @@ const PAYMENT_METHODS: { v: string; lKey: string }[] = [
   { v: "TRANSFER", lKey: "paymentTransferFull" },
   { v: "OTHER", lKey: "form.paymentMethod.OTHER" },
 ];
-
-/** 결제 수단 → 허용 자산 타입. null이면 전체 허용. (AddTxSheet와 동일) */
-const PAYMENT_ASSET_TYPES: Record<string, AssetType[] | null> = {
-  CASH: ["CASH"],
-  CARD: ["CREDIT_CARD", "CHECK_CARD"],
-  TRANSFER: ["BANK_ACCOUNT", "SAVINGS"],
-  OTHER: null,
-};
 
 type TxType = "EXPENSE" | "INCOME" | "TRANSFER";
 type Step =
@@ -315,14 +307,7 @@ export function useRecurringForm({
 
   // 결제 수단 + 거래 타입으로 계좌·카드 목록 필터.
   // 지출에선 예·적금(SAVINGS)을 뺀다 — 만기 전까지 묶인 돈이라 거기서 직접 결제·출금이 나가지 않는다(납입·해지는 이체로 처리).
-  const allowAsset = (a: Asset) => {
-    const allowed = f.paymentMethod
-      ? PAYMENT_ASSET_TYPES[f.paymentMethod]
-      : null;
-    if (allowed && !allowed.includes(a.assetType)) return false;
-    if (f.type === "EXPENSE" && a.assetType === "SAVINGS") return false;
-    return true;
-  };
+  const allowAsset = (a: Asset) => allowAssetFor(a, f.paymentMethod, f.type);
   const filteredAssets = assets.filter(allowAsset);
   const eligible = transferEligible(assets);
   const showInterest = isTransfer && isLoanTarget(assets, f.toAssetRowId);
@@ -387,12 +372,7 @@ export function useRecurringForm({
           ? assets.find((a) => a.rowId === s.assetRowId)
           : undefined;
       if (!picked || next.type === "TRANSFER") return { ...s, ...next };
-      const allowed = next.paymentMethod
-        ? PAYMENT_ASSET_TYPES[next.paymentMethod]
-        : null;
-      const bad =
-        (allowed != null && !allowed.includes(picked.assetType)) ||
-        (next.type === "EXPENSE" && picked.assetType === "SAVINGS");
+      const bad = !allowAssetFor(picked, next.paymentMethod, next.type);
       return { ...s, ...next, assetRowId: bad ? null : s.assetRowId };
     });
   const changeType = (type: TxType) =>
@@ -747,38 +727,6 @@ export function useRecurringForm({
               />
             )}
             {!isTransfer && (
-              <AssetPickRow
-                failed={assetsQ.isError && !assetsQ.data}
-                onRetry={() => void assetsQ.refetch()}
-                pending={assetsQ.data === undefined}
-                retrying={assetsQ.isFetching}
-                prefix={<Wallet className={ROW_ICON} />}
-                title={
-                  f.type === "INCOME"
-                    ? te("addTx.depositAccount")
-                    : te("accountCard")
-                }
-                placeholder={t("noValue", {
-                  name:
-                    f.type === "INCOME"
-                      ? te("addTx.depositAccount")
-                      : te("accountCard"),
-                })}
-                surfaceTitle={
-                  f.type === "INCOME"
-                    ? te("addTx.depositAccount")
-                    : te("accountCard")
-                }
-                assets={filteredAssets}
-                valueAssets={assets}
-                value={f.assetRowId}
-                onChange={(id) => set("assetRowId", id)}
-                onClear={() => set("assetRowId", null)}
-                clearLabel={t("clearValue")}
-                emptyText={t("noAssets")}
-              />
-            )}
-            {!isTransfer && (
               <ChoicePickRow
                 prefix={<CreditCard className={ROW_ICON} />}
                 title={
@@ -808,6 +756,38 @@ export function useRecurringForm({
               />
             )}
 
+            {!isTransfer && (
+              <AssetPickRow
+                failed={assetsQ.isError && !assetsQ.data}
+                onRetry={() => void assetsQ.refetch()}
+                pending={assetsQ.data === undefined}
+                retrying={assetsQ.isFetching}
+                prefix={<Wallet className={ROW_ICON} />}
+                title={
+                  f.type === "INCOME"
+                    ? te("addTx.depositAccount")
+                    : te("accountCard")
+                }
+                placeholder={t("noValue", {
+                  name:
+                    f.type === "INCOME"
+                      ? te("addTx.depositAccount")
+                      : te("accountCard"),
+                })}
+                surfaceTitle={
+                  f.type === "INCOME"
+                    ? te("addTx.depositAccount")
+                    : te("accountCard")
+                }
+                assets={filteredAssets}
+                valueAssets={assets}
+                value={f.assetRowId}
+                onChange={(id) => set("assetRowId", id)}
+                onClear={() => set("assetRowId", null)}
+                clearLabel={t("clearValue")}
+                emptyText={te("addTx.noPickableAsset")}
+              />
+            )}
             {isTransfer && (
               <>
                 <AssetPickRow

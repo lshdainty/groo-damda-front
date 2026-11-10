@@ -23,7 +23,7 @@ import { useDsText } from "@/shared/ds/i18n";
  * recipes/shadcn/components/ui/time-picker.tsx 를 첫 판으로 가져왔다(값 · 글 · 반올림 도구는 time-picker-variants.ts).
  *
  *   TimePicker        12시간 휠 — 오전·오후 → 시 → 분. value · onValueChange 는 24시간 { hour 0 ~ 23, minute 0 ~ 59 }.
- *                     minuteStep(1 · 5 · 10 · 15 · 30, 기본 5) · disabled · autoFocus(열 때 시 칼럼에 초점) · aria-label(칸 라벨, 기본 "시간 선택")
+ *                     minuteStep(1 · 5 · 10 · 15 · 30, 기본 1 — 사용자 결정 11-10: 카드 결제 시각 같은 정확한 시각을 넣을 수 있게) · disabled · autoFocus(열 때 시 칼럼에 초점) · aria-label(칸 라벨, 기본 "시간 선택")
  *
  * 칼럼(Wheel Picker medium × 5 — 220)
  *   오전·오후   두 칸에서 멈춘다(반복 없음), 가운데 정렬. 바깥에서 바뀌면(시 11 ↔ 12) 부드럽게 따라간다
@@ -81,7 +81,7 @@ const TimePicker = React.forwardRef<HTMLDivElement, TimePickerProps>(
     {
       value: valueProp,
       onValueChange,
-      minuteStep = 5,
+      minuteStep = 1,
       disabled = false,
       autoFocus = false,
       now,
@@ -94,8 +94,8 @@ const TimePicker = React.forwardRef<HTMLDivElement, TimePickerProps>(
   ) => {
     useDsText();
     const labels = { ...timePickerLabels(), ...labelsProp };
-    const step: MinuteStep = MINUTE_STEPS.includes(minuteStep) ? minuteStep : 5;
-    // 빈 칸 — 지금을 반올림한 자리(처음 한 번만 잰다)
+    const step: MinuteStep = MINUTE_STEPS.includes(minuteStep) ? minuteStep : 1;
+    // 빈 칸 — 지금 시각 그대로(기본 1분 간격이라 반올림이 없다. 더 큰 간격이면 그 간격으로 올린다 · 처음 한 번만 잰다)
     const [fallback] = React.useState(() => {
       const d = now ?? new Date();
       return { hour: d.getHours(), minute: d.getMinutes() };

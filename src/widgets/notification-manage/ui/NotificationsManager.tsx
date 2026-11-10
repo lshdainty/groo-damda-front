@@ -263,7 +263,8 @@ function PickRow({
   ) : (
     <>
       {row}
-      <BottomSheet open={open} onOpenChange={change}>
+      {/* 시각 줄(done 이 있는 시트)은 휠이라 끌어서 안 닫는다 */}
+      <BottomSheet open={open} dismissible={!done} onOpenChange={change}>
         <BottomSheetContent title={title}>
           <BottomSheetBody>{children(close)}</BottomSheetBody>
           {doneButton && <BottomSheetFooter>{doneButton}</BottomSheetFooter>}
@@ -273,7 +274,7 @@ function PickRow({
   );
 }
 
-/** 시각 줄 — 12시간 · 5분 단위 Time Picker, "완료" 에 들어간다. */
+/** 시각 줄 — 12시간 · 1분 단위 Time Picker, "완료" 에 들어간다. */
 function TimeRow({
   title,
   value,

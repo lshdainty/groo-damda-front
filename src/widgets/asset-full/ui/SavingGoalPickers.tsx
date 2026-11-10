@@ -38,6 +38,7 @@ export function GoalDeadlineRow({
       title={t("savingGoal.deadline")}
       value={text}
       surfaceTitle={t("savingGoal.deadline")}
+      dismissible={false}
       onClear={date ? () => onChange("") : undefined}
       clearLabel={t("savingGoal.deadlineClear")}
       onOpen={() => setDraft(date)}

@@ -12,6 +12,7 @@ import {
   vi,
 } from "vitest";
 
+import spec from "@/shared/ds/spec/time-picker.json";
 import { TimePicker, type TimePickerProps } from "./time-picker";
 import {
   formatTimeValue,
@@ -157,7 +158,11 @@ describe("roundToStep · formatTimeValue", () => {
 describe("TimePicker — 구조 · 접근성", () => {
   it("칼럼은 오전·오후 → 시 → 분, 이름 있는 group 안의 spinbutton 이고 읽는 값은 단위 글자 없이 '오후' · '3' · '00'", () => {
     render(
-      <TimePicker aria-label="시작 시각" value={{ hour: 15, minute: 0 }} />,
+      <TimePicker
+        aria-label="시작 시각"
+        minuteStep={5}
+        value={{ hour: 15, minute: 0 }}
+      />,
     );
     const wheel = container.querySelector("[data-slot=wheel-picker]")!;
     expect(wheel.getAttribute("role")).toBe("group");
@@ -212,7 +217,13 @@ describe("TimePicker — 구조 · 접근성", () => {
   });
 
   it("시 칼럼은 1 ~ 12(0 을 채우지 않는다)·반복, 오전·오후는 두 칸·반복 없음, 분은 간격대로 두 자리", () => {
-    render(<TimePicker aria-label="t" value={{ hour: 9, minute: 15 }} />);
+    render(
+      <TimePicker
+        aria-label="t"
+        minuteStep={5}
+        value={{ hour: 9, minute: 15 }}
+      />,
+    );
     const labelsOf = (name: "period" | "hour" | "minute") => {
       const seen: string[] = [];
       for (const item of col(name).querySelectorAll(
@@ -234,7 +245,7 @@ describe("TimePicker — 구조 · 접근성", () => {
     expect(text("minute")).toBe("15");
   });
 
-  it("분 간격마다 칼럼의 칸 수 — 1 → 60 · 5 → 12 · 10 → 6 · 15 → 4 · 30 → 2, 알 수 없는 값은 5", () => {
+  it("분 간격마다 칼럼의 칸 수 — 1 → 60 · 5 → 12 · 10 → 6 · 15 → 4 · 30 → 2, 알 수 없는 값은 기본 1(60)", () => {
     const counts: [number, number][] = [
       [1, 60],
       [5, 12],
@@ -261,7 +272,20 @@ describe("TimePicker — 구조 · 접근성", () => {
         value={{ hour: 9, minute: 0 }}
       />,
     );
-    expect(Number(col("minute").getAttribute("aria-valuemax")) + 1).toBe(12);
+    expect(Number(col("minute").getAttribute("aria-valuemax")) + 1).toBe(60);
+  });
+
+  it("간격 기본값은 스펙 JSON(defaults.minuteStep)을 따른다", () => {
+    render(<TimePicker aria-label="t" value={{ hour: 9, minute: 0 }} />);
+    expect(Number(col("minute").getAttribute("aria-valuemax")) + 1).toBe(
+      60 / Number(spec.defaults.minuteStep),
+    );
+  });
+
+  it("간격을 안 주면 1분이다 — 9시 13분이 그대로 보인다(카드 결제 시각 같은 정확한 값)", () => {
+    render(<TimePicker aria-label="t" value={{ hour: 9, minute: 13 }} />);
+    expect(Number(col("minute").getAttribute("aria-valuemax")) + 1).toBe(60);
+    expect(text("minute")).toBe("13");
   });
 
   it("막힌 휠 — 값은 그대로, 칼럼에 초점이 가지 않는다", () => {
@@ -298,10 +322,10 @@ describe("TimePicker — 값 규칙", () => {
     render(
       <TimePicker aria-label="t" now={NOW} onValueChange={onValueChange} />,
     );
-    // 9시 13분 → 5 간격 9시 15분
+    // 9시 13분 → 기본 1분 간격이라 반올림 없이 그대로
     expect(text("period")).toBe("오전");
     expect(text("hour")).toBe("9");
-    expect(text("minute")).toBe("15");
+    expect(text("minute")).toBe("13");
     expect(onValueChange).not.toHaveBeenCalled();
     render(
       <TimePicker
@@ -320,6 +344,7 @@ describe("TimePicker — 값 규칙", () => {
     render(
       <TimePicker
         aria-label="t"
+        minuteStep={5}
         value={{ hour: 23, minute: 58 }}
         onValueChange={onValueChange}
       />,
@@ -333,7 +358,11 @@ describe("TimePicker — 값 규칙", () => {
   it("분 휠이 55 → 00 을 넘어도 시는 그대로다(10시 55분 → 10시 00분)", () => {
     const onChange = vi.fn();
     render(
-      <Controlled initial={{ hour: 10, minute: 55 }} onChange={onChange} />,
+      <Controlled
+        minuteStep={5}
+        initial={{ hour: 10, minute: 55 }}
+        onChange={onChange}
+      />,
     );
     key(col("minute"), "ArrowDown");
     settle();
@@ -345,7 +374,11 @@ describe("TimePicker — 값 규칙", () => {
   it("분 휠이 00 → 55 로 거꾸로 넘어도 시는 그대로다", () => {
     const onChange = vi.fn();
     render(
-      <Controlled initial={{ hour: 10, minute: 0 }} onChange={onChange} />,
+      <Controlled
+        minuteStep={5}
+        initial={{ hour: 10, minute: 0 }}
+        onChange={onChange}
+      />,
     );
     key(col("minute"), "ArrowUp");
     settle();
@@ -440,7 +473,12 @@ describe("TimePicker — 값 규칙", () => {
   it("굴리는 동안은 알리지 않고 멈춘 뒤 한 번만 — 값을 안 줘도(제어하지 않아도) 휠이 따라간다", () => {
     const onValueChange = vi.fn();
     render(
-      <TimePicker aria-label="t" now={NOW} onValueChange={onValueChange} />,
+      <TimePicker
+        aria-label="t"
+        minuteStep={5}
+        now={NOW}
+        onValueChange={onValueChange}
+      />,
     );
     key(col("minute"), "ArrowDown");
     expect(onValueChange).not.toHaveBeenCalled();

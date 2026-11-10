@@ -66,7 +66,7 @@ function Sample({
  */
 function TimeField({
   label,
-  step = 5,
+  step = 1,
   initial,
 }: {
   label: string;
@@ -169,9 +169,9 @@ export const TimePickerDemo = () => (
       </DemoRow>
     </DemoBlock>
 
-    <DemoBlock title="값이 없을 때 — 지금(오전 9:13)을 분 간격에 맞춰 반올림한 자리를 짚는다(간격 5 → 오전 9:15 · 15 → 오전 9:15 · 30 → 오전 9:00). 고른 것처럼 넣지 않는다">
+    <DemoBlock title="값이 없을 때 — 지금(오전 9:13)을 짚는다. 기본 간격 1 은 반올림 없이 오전 9:13 그대로이고, 더 큰 간격이면 그 간격에 맞춘다(5 → 오전 9:15 · 15 → 오전 9:15 · 30 → 오전 9:00). 고른 것처럼 넣지 않는다">
       <DemoRow label="비어 있음">
-        {([5, 15, 30] as const).map((step) => (
+        {([1, 5, 15, 30] as const).map((step) => (
           <div key={step} className="w-[280px]">
             <TimePicker
               aria-label={`빈 값 · 간격 ${step}`}

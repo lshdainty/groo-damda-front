@@ -55,7 +55,7 @@ import {
 import { CategoryPickList } from "@/features/expense/ui/CategoryPickList";
 import { PresetTile } from "@/features/expense/ui/preset-row";
 import { useAssets } from "@/features/asset";
-import type { Asset } from "@/entities/asset";
+import { allowAssetFor, type Asset } from "@/entities/asset";
 import type { TxKind } from "@/entities/expense";
 import type {
   ExpenseTemplate,
@@ -465,6 +465,7 @@ export function PresetEditDialog({
     onPick: (id: number | null) => void,
     close: () => void,
     withNone: boolean,
+    emptyText?: string,
   ) => (
     // 목록을 못 받았으면 실패 + [다시 시도], 받는 중이면 Skeleton — 빈 목록으로 읽히지 않게(거래 시트 AssetPickBody 와 한 벌)
     <PickLoadGate
@@ -475,20 +476,27 @@ export function PresetEditDialog({
       retrying={assetsQ.isFetching}
     >
       {() => (
-        <PickList
-          label={label}
-          selected={selected == null ? NONE : String(selected)}
-          items={[
-            ...(withNone
-              ? [{ value: NONE, title: t("preset.noAccount") }]
-              : []),
-            ...pool.map(assetItem),
-          ]}
-          onPick={(v) => {
-            onPick(v === NONE ? null : Number(v));
-            close();
-          }}
-        />
+        <>
+          {pool.length === 0 && emptyText && (
+            <p className="m-0 px-global-gutter py-x3 font-sans text-t4 text-fg-neutral-subtle">
+              {emptyText}
+            </p>
+          )}
+          <PickList
+            label={label}
+            selected={selected == null ? NONE : String(selected)}
+            items={[
+              ...(withNone
+                ? [{ value: NONE, title: t("preset.noAccount") }]
+                : []),
+              ...pool.map(assetItem),
+            ]}
+            onPick={(v) => {
+              onPick(v === NONE ? null : Number(v));
+              close();
+            }}
+          />
+        </>
       )}
     </PickLoadGate>
   );
@@ -632,7 +640,13 @@ export function PresetEditDialog({
                   <ChipRadioGroup
                     aria-label={t("preset.typeLabel")}
                     value={type}
-                    onValueChange={(v) => setType(v as TxKind)}
+                    onValueChange={(v) => {
+                      setType(v as TxKind);
+                      // 종류가 바뀌어 안 맞게 된 계좌 · 카드는 비운다(지출은 예 · 적금 제외)
+                      const cur = assetById(assetRowId);
+                      if (cur && !allowAssetFor(cur, paymentMethod, v))
+                        setAssetRowId(null);
+                    }}
                   >
                     <ChipRadio value="EXPENSE" variant="outlineStrong">
                       {t("expense")}
@@ -801,27 +815,6 @@ export function PresetEditDialog({
                         onClick={() => enterStep("merchant")}
                       />
                       <PickerRow
-                        title={t("accountCard")}
-                        prefix={<Wallet />}
-                        value={
-                          assetById(assetRowId)
-                            ? assetLabel(assetById(assetRowId)!)
-                            : t("preset.noAccount")
-                        }
-                        surfaceTitle={t("accountCard")}
-                      >
-                        {({ close }) =>
-                          assetPick(
-                            t("accountCard"),
-                            assets,
-                            assetRowId,
-                            setAssetRowId,
-                            close,
-                            true,
-                          )
-                        }
-                      </PickerRow>
-                      <PickerRow
                         title={t("paymentMethodLabel")}
                         prefix={<CreditCard />}
                         value={payLabel(paymentMethod) ?? t("preset.noPayment")}
@@ -839,11 +832,41 @@ export function PresetEditDialog({
                               })),
                             ]}
                             onPick={(v) => {
-                              setPaymentMethod(v === NONE ? "" : v);
+                              const next = v === NONE ? "" : v;
+                              setPaymentMethod(next);
+                              // 안 맞는 계좌 · 카드는 비운다(사람이 바꾼 때만)
+                              const cur = assetById(assetRowId);
+                              if (cur && !allowAssetFor(cur, next, type))
+                                setAssetRowId(null);
                               close();
                             }}
                           />
                         )}
+                      </PickerRow>
+                      <PickerRow
+                        title={t("accountCard")}
+                        prefix={<Wallet />}
+                        value={
+                          assetById(assetRowId)
+                            ? assetLabel(assetById(assetRowId)!)
+                            : t("preset.noAccount")
+                        }
+                        surfaceTitle={t("accountCard")}
+                      >
+                        {({ close }) =>
+                          assetPick(
+                            t("accountCard"),
+                            // 결제 수단 · 종류에 맞는 것만 — 거래 추가 · 반복과 같은 거르기(allowAssetFor)
+                            assets.filter((a) =>
+                              allowAssetFor(a, paymentMethod, type),
+                            ),
+                            assetRowId,
+                            setAssetRowId,
+                            close,
+                            true,
+                            t("addTx.noPickableAsset"),
+                          )
+                        }
                       </PickerRow>
                       <StepRow
                         icon={<Coins />}

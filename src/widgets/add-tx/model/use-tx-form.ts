@@ -28,10 +28,10 @@ import type {
 } from "@/entities/expense";
 import type { AssetTransfer } from "@/entities/asset";
 import {
+  allowAssetFor,
   toKrw,
   transferReceiveAmount,
   type Asset,
-  type AssetType,
 } from "@/entities/asset";
 import type { ExpenseTemplate } from "@/entities/expense-template";
 import { closedCycleSpan, cyclePaymentDate } from "@/entities/expense";
@@ -46,14 +46,6 @@ import {
 import { money } from "@/shared/lib/groo/format";
 import { dsLocale } from "@/shared/ds/i18n";
 import { isLoanTarget, transferPartiesReady } from "@/features/asset-transfer";
-
-/** 결제 수단 → 허용 자산 타입. null이면 전체 허용. */
-export const PAYMENT_ASSET_TYPES: Record<string, AssetType[] | null> = {
-  CASH: ["CASH"],
-  CARD: ["CREDIT_CARD", "CHECK_CARD"],
-  TRANSFER: ["BANK_ACCOUNT", "SAVINGS"],
-  OTHER: null,
-};
 
 /** 카드사 공통 할부 개월 — 2~12, 18, 24. */
 export const INSTALLMENT_MONTHS = [
@@ -568,12 +560,7 @@ export function useTxForm({
   // 납입·해지는 이체로 처리하므로 이체 목록에는 그대로 남는다.
   // 수입은 이자가 그 계좌로 직접 들어오므로 남긴다.
   const allowAsset = useCallback(
-    (a: Asset) => {
-      const allowed = paymentMethod ? PAYMENT_ASSET_TYPES[paymentMethod] : null;
-      if (allowed && !allowed.includes(a.assetType)) return false;
-      if (type === "EXPENSE" && a.assetType === "SAVINGS") return false;
-      return true;
-    },
+    (a: Asset) => allowAssetFor(a, paymentMethod, type),
     [paymentMethod, type],
   );
 

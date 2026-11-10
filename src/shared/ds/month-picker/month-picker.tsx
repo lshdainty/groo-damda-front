@@ -147,7 +147,11 @@ function MonthPicker({
 
   if (!wide) {
     return (
-      <BottomSheet open={open} onOpenChange={handleOpenChange}>
+      <BottomSheet
+        open={open}
+        dismissible={false}
+        onOpenChange={handleOpenChange}
+      >
         <BottomSheetTrigger asChild>{trigger}</BottomSheetTrigger>
         <BottomSheetContent title={title}>
           <BottomSheetBody>{wheel}</BottomSheetBody>

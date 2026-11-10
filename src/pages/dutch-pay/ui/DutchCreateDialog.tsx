@@ -104,7 +104,7 @@ function DateField({
   return (
     <Field label={label}>
       {surface === "sheet" ? (
-        <BottomSheet open={open} onOpenChange={setOpen}>
+        <BottomSheet open={open} dismissible={false} onOpenChange={setOpen}>
           {trigger}
           <BottomSheetContent title={label}>
             <BottomSheetBody>{picker}</BottomSheetBody>

@@ -98,7 +98,6 @@ export function PresetDetailDialog({
     );
   } else {
     add("category", t("category"), preset.categoryName);
-    add("asset", t("accountCard"), preset.assetName);
     add(
       "payment",
       t("paymentMethodLabel"),
@@ -106,6 +105,7 @@ export function PresetDetailDialog({
         ? t(PAYMENT_KEYS[preset.paymentMethod] ?? "selectNone")
         : null,
     );
+    add("asset", t("accountCard"), preset.assetName);
     add("merchant", t("preset.defaultMerchant"), preset.merchant);
   }
   add("memo", t("memo"), preset.description);
