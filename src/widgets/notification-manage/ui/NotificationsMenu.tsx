@@ -122,7 +122,7 @@ export function NotificationsMenu({
       }}
     />
   ) : items.length === 0 ? (
-    <p className="m-0 py-x10 text-center text-t3 text-fg-neutral-subtle">
+    <p className="m-0 py-x10 text-center text-t4 text-fg-neutral-subtle">
       {t("empty")}
     </p>
   ) : (

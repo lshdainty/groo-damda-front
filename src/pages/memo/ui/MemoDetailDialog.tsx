@@ -128,7 +128,7 @@ export function MemoDetailDialog({
                 {memo.content}
               </p>
             ) : (
-              <p className="m-0 pb-x2 font-sans text-t5 font-normal leading-6 text-fg-neutral-subtle">
+              <p className="m-0 pb-x2 font-sans text-t4 font-normal text-fg-neutral-subtle">
                 {t("detail.noContent")}
               </p>
             )}
