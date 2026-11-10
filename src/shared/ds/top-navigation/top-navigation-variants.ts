@@ -101,3 +101,14 @@ export const SCREEN_TITLE = cn(
   "m-0 mt-nav-to-title font-sans text-screen-title font-bold text-fg-neutral",
   FOCUS_INSIDE,
 );
+
+/** 제목 줄 — 제목 덩어리(제목 + 설명) 왼쪽 · 동작 버튼 오른쪽 아래 끝. 머리 아래 20 은 줄 전체의 위, 덩어리 ↔ 버튼 16 */
+export const SCREEN_TITLE_ROW =
+  "mt-nav-to-title flex items-end justify-between gap-x4";
+
+/** 제목 아래 설명 16 / 22 · 400 · muted, 제목과 2 */
+export const SCREEN_DESCRIPTION =
+  "mt-x0_5 mb-0 text-t5 font-normal text-fg-neutral-muted";
+
+/** 동작 버튼 묶음 — Button small, 사이 8 */
+export const SCREEN_ACTIONS = "flex shrink-0 items-center gap-x2";

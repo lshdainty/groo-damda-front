@@ -416,6 +416,61 @@ describe("화면을 옮길 때", () => {
     expect(title.className).toContain("mt-nav-to-title");
   });
 
+  it("ScreenTitle — description · actions 를 주면 한 줄 제목 줄(제목 덩어리 왼쪽 · 버튼 오른쪽 아래 끝)", () => {
+    const ref = createRef<HTMLHeadingElement>();
+    render(
+      <ScreenTitle
+        ref={ref}
+        description="모든 거래 내역"
+        actions={<button type="button">내보내기</button>}
+      >
+        가계부
+      </ScreenTitle>,
+    );
+    const row = slot("screen-title-row") as HTMLElement;
+    expect(row.className).toContain("items-end");
+    expect(row.className).toContain("justify-between");
+    expect(row.className).toContain("gap-x4");
+    expect(row.className).toContain("mt-nav-to-title");
+    const title = slot("screen-title") as HTMLElement;
+    // ref 는 늘 h1, 줄 전체의 위 20 은 줄이 맡고 h1 은 0
+    expect(ref.current).toBe(title);
+    expect(title.tagName).toBe("H1");
+    expect(title.className).toContain("mt-0");
+    expect(title.className).not.toContain("mt-nav-to-title");
+    const desc = slot("screen-description") as HTMLElement;
+    expect(desc.textContent).toBe("모든 거래 내역");
+    expect(desc.className).toContain("text-t5");
+    expect(desc.className).toContain("mt-x0_5");
+    expect(desc.className).toContain("font-normal");
+    expect(desc.className).toContain("text-fg-neutral-muted");
+    const actions = slot("screen-actions") as HTMLElement;
+    expect(actions.className).toContain("gap-x2");
+    expect(actions.textContent).toBe("내보내기");
+    expect(title.parentElement).toBe(desc.parentElement);
+    expect(row.contains(actions)).toBe(true);
+  });
+
+  it("ScreenTitle — 설명만 줘도 줄이 서고 동작 칸은 없다", () => {
+    render(<ScreenTitle description="부제">제목</ScreenTitle>);
+    expect(slot("screen-title-row")).not.toBeNull();
+    expect(slot("screen-actions")).toBeNull();
+  });
+
+  it("ScreenTitle — 동작만 줘도 줄이 서고, 둘 다 없으면 h1 하나(줄 없음)", () => {
+    render(<ScreenTitle actions={<span>a</span>}>제목</ScreenTitle>);
+    expect(slot("screen-description")).toBeNull();
+    expect(slot("screen-actions")).not.toBeNull();
+  });
+
+  it("ScreenTitle — 설명 · 동작이 없으면 줄 상자 없이 h1 하나", () => {
+    render(<ScreenTitle>제목</ScreenTitle>);
+    expect(slot("screen-title-row")).toBeNull();
+    expect((slot("screen-title") as HTMLElement).className).toContain(
+      "mt-nav-to-title",
+    );
+  });
+
   it('TopNavigationSearch — standard 는 제목 자리(보이지 않는 h1 "검색"), desktop 은 폭 360 에 h1 없음', () => {
     render(
       <TopNavigation>

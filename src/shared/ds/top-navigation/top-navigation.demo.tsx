@@ -9,6 +9,7 @@ import {
   Settings,
 } from "lucide-react";
 
+import { Button } from "@/shared/ds/button";
 import { DemoBlock, DemoRow, Specimen } from "@/shared/ds/catalog/DemoKit";
 
 import {
@@ -204,7 +205,21 @@ const TypesDemo = () => (
             </TopNavigationActions>
           </TopNavigation>
           <div className="px-x8 pb-x6">
-            <ScreenTitle>가계부</ScreenTitle>
+            <ScreenTitle
+              description="모든 거래 내역"
+              actions={
+                <>
+                  <Button variant="neutralOutline" size="small" onClick={noop}>
+                    필터 · 3
+                  </Button>
+                  <Button variant="neutralOutline" size="small" onClick={noop}>
+                    내보내기
+                  </Button>
+                </>
+              }
+            >
+              가계부
+            </ScreenTitle>
           </div>
         </Specimen>
       </Phone>
