@@ -120,6 +120,22 @@ describe("Field", () => {
     expect(header.className).not.toContain("sr-only");
   });
 
+  it("머리는 줄바꿈하고 라벨이 반 폭 이상 쥔다(카드 머리 · List Header 와 같은 판정)", () => {
+    render(
+      <Field label="제목" headerAction={<button>도움말</button>}>
+        <TestInput />
+      </Field>,
+    );
+    const header = container.querySelector("[data-slot=field-header]")!;
+    expect(header.className.split(" ")).toEqual(
+      expect.arrayContaining([
+        "flex-wrap",
+        "[&>:first-child:not(:last-child)]:min-w-[50%]",
+        "[&>:first-child:not(:last-child)]:flex-1",
+      ]),
+    );
+  });
+
   it("글자 수는 세 자리마다 쉼표 — 10,000/10,000 · 4/200", () => {
     render(
       <Field label="메모" maxGraphemeCount={10000}>

@@ -222,7 +222,7 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
               className={
                 labelHidden && headerAction == null
                   ? "sr-only"
-                  : "flex flex-wrap items-center justify-between gap-x2_5 px-x0_5"
+                  : "flex flex-wrap items-center justify-between gap-x2_5 px-x0_5 [&>:first-child:not(:last-child)]:min-w-[50%] [&>:first-child:not(:last-child)]:flex-1"
               }
             >
               {label != null &&
