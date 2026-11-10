@@ -42,6 +42,7 @@ import {
   SHEET_HEADER_ACTION,
 } from "./bottom-sheet-variants";
 import { useDsText } from "@/shared/ds/i18n";
+import { useClearKeyboardSizing } from "./use-clear-keyboard-sizing";
 
 /*
  * Groo Bottom Sheet — 구조는 SEED Bottom Sheet(2026-10-02). 수치 원본은 groo-design specs/components/bottom-sheet.yaml
@@ -384,6 +385,8 @@ const BottomSheetSurface = React.forwardRef<
     } = ctx;
     const own = React.useRef<HTMLDivElement>(null);
     const openerRef = React.useRef<Element | null>(null);
+    // 키보드가 내려갔는데 vaul 이 박은 bottom · height 가 남는 것을 푼다(겹친 시트도 각자)
+    useClearKeyboardSizing(own);
     // 모달이 아니면(카탈로그 · 문서 전용) vaul 문맥이 없어 Radix 부품을 바로 쓴다
     const SheetContentPrimitive = modal
       ? DrawerPrimitive.Content
