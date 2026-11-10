@@ -7,10 +7,7 @@ import { Field } from "@/shared/ds/field";
 import { Input } from "@/shared/ds/input";
 import { ListRadioGroup, ListRadioItem } from "@/shared/ds/list";
 import { Textarea } from "@/shared/ds/textarea";
-import {
-  TimePicker,
-  type TimeValue,
-} from "@/shared/ds/time-picker";
+import { TimePicker, type TimeValue } from "@/shared/ds/time-picker";
 import { AmountInput } from "@/shared/ui/groo/amount-input";
 import type { RecurringFrequency } from "@/entities/recurring-transaction";
 import {

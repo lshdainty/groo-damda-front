@@ -1545,9 +1545,7 @@ describe("결제 수단이 계좌 · 카드보다 먼저 — 고르면 그 수�
       ? document.body.querySelector(`[aria-label^="${k}"]`)!
       : row(k);
   const before = (a: string, b: string) =>
-    !!(
-      el(a).compareDocumentPosition(el(b)) & Node.DOCUMENT_POSITION_FOLLOWING
-    );
+    !!(el(a).compareDocumentPosition(el(b)) & Node.DOCUMENT_POSITION_FOLLOWING);
   const toStep2 = async () => {
     await open();
     setValue(amountInput(), "5000");
