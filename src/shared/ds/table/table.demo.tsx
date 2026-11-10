@@ -512,7 +512,7 @@ export const TableDemo = () => (
                 </TableHeader>
                 <TableBody>
                   <TableRow onClick={noop}>
-                    <TableRowHeader thumbnail>
+                    <TableRowHeader>
                       <TableCellContent
                         media={
                           <ImageFrame

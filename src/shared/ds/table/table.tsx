@@ -11,7 +11,6 @@ import {
   TABLE_ALIGN,
   TABLE_BODY_CELL,
   TABLE_BODY_RICH,
-  TABLE_BODY_THUMBNAIL,
   TABLE_BULK_BAR,
   TABLE_CELL,
   TABLE_HEAD_CELL,
@@ -390,63 +389,44 @@ export interface TableRowHeaderProps extends Omit<
   href?: string;
   /** 이름을 버튼으로 — 줄을 누를 때와 같은 동작 */
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
-  /** Image Frame 48 썸네일을 담는 칸 — 72 줄에서 위아래 12 를 두지 않는다(48 + 24 + 선 1 = 73 이 72 를 넘는다). 다른 칸은 12 그대로 */
-  thumbnail?: boolean;
 }
 
 const TableRowHeader = React.forwardRef<
   HTMLTableCellElement,
   TableRowHeaderProps
->(
-  (
-    {
-      align = "start",
-      href,
-      onClick,
-      thumbnail,
-      className,
-      children,
-      ...props
-    },
-    ref,
-  ) => {
-    const ctx = React.useContext(TableContext);
-    return (
-      <th
-        ref={ref}
-        scope="row"
-        data-slot="table-row-header"
-        className={cn(
-          bodyCellClass(ctx.rowHeight, align),
-          thumbnail && ctx.rowHeight === "rich" && TABLE_BODY_THUMBNAIL,
-          className,
-        )}
-        {...props}
-      >
-        {href != null ? (
-          <a
-            href={href}
-            data-slot="table-row-link"
-            className={TABLE_ROW_HEADER_ACTION}
-          >
-            {children}
-          </a>
-        ) : onClick != null ? (
-          <button
-            type="button"
-            data-slot="table-row-link"
-            className={TABLE_ROW_HEADER_ACTION}
-            onClick={onClick}
-          >
-            {children}
-          </button>
-        ) : (
-          children
-        )}
-      </th>
-    );
-  },
-);
+>(({ align = "start", href, onClick, className, children, ...props }, ref) => {
+  const ctx = React.useContext(TableContext);
+  return (
+    <th
+      ref={ref}
+      scope="row"
+      data-slot="table-row-header"
+      className={cn(bodyCellClass(ctx.rowHeight, align), className)}
+      {...props}
+    >
+      {href != null ? (
+        <a
+          href={href}
+          data-slot="table-row-link"
+          className={TABLE_ROW_HEADER_ACTION}
+        >
+          {children}
+        </a>
+      ) : onClick != null ? (
+        <button
+          type="button"
+          data-slot="table-row-link"
+          className={TABLE_ROW_HEADER_ACTION}
+          onClick={onClick}
+        >
+          {children}
+        </button>
+      ) : (
+        children
+      )}
+    </th>
+  );
+});
 TableRowHeader.displayName = "TableRowHeader";
 
 export interface TableCellProps extends Omit<
@@ -455,22 +435,16 @@ export interface TableCellProps extends Omit<
 > {
   /** "start"(기본) · "end"(숫자 — 오른쪽 + 고정폭 숫자) */
   align?: TableAlign;
-  /** Image Frame 48 썸네일을 담는 칸 — 72 줄에서 위아래 12 를 두지 않는다(48 + 24 + 선 1 = 73 이 72 를 넘는다) */
-  thumbnail?: boolean;
 }
 
 const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
-  ({ align = "start", thumbnail, className, ...props }, ref) => {
+  ({ align = "start", className, ...props }, ref) => {
     const ctx = React.useContext(TableContext);
     return (
       <td
         ref={ref}
         data-slot="table-cell"
-        className={cn(
-          bodyCellClass(ctx.rowHeight, align),
-          thumbnail && ctx.rowHeight === "rich" && TABLE_BODY_THUMBNAIL,
-          className,
-        )}
+        className={cn(bodyCellClass(ctx.rowHeight, align), className)}
         {...props}
       />
     );

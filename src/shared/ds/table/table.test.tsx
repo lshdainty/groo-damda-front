@@ -196,37 +196,24 @@ describe("Table — 구조", () => {
       expect(cell.className).not.toContain("min-h-");
       // 옛 값(여백 0)은 긴 글이 줄 선에 붙었다
       expect(cell.className).toContain("py-x3");
-      expect(cell.className).not.toContain("py-0");
+      expect(cell.className.split(" ")).not.toContain("py-0");
     }
   });
 
-  it("thumbnail(Image Frame 48 을 담는 칸)은 rich 줄에서만 위아래 0 — 다른 칸은 12 그대로", () => {
+  it("Image Frame 을 담은 칸만 위아래 0 — 클래스가 has-[[data-slot=image-frame]]:py-0, 다른 칸은 py-x3", () => {
     render(
       <Table caption="x" rowHeight="rich">
         <TableBody>
           <TableRow>
-            <TableRowHeader thumbnail>a</TableRowHeader>
+            <TableRowHeader>a</TableRowHeader>
             <TableCell>b</TableCell>
           </TableRow>
         </TableBody>
       </Table>,
     );
-    const th = one("tbody th");
-    const td = one("tbody td");
-    expect(th.className).toContain("py-0");
-    expect(th.className).not.toContain("py-x3");
-    expect(td.className).toContain("py-x3");
-    // 한 줄(text) 표에서는 걸리지 않는다
-    render(
-      <Table caption="y">
-        <TableBody>
-          <TableRow>
-            <TableCell thumbnail>c</TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>,
-    );
-    expect(one("tbody td").className).toContain("py-x3");
+    const cell = one("tbody td");
+    expect(cell.className).toContain("py-x3");
+    expect(cell.className).toContain("has-[[data-slot=image-frame]]:py-0");
   });
 
   it("TableCellContent — 그림 ↔ 글 12, 윗줄 + 둘째 줄(13 · 옅은 글) 사이 2", () => {

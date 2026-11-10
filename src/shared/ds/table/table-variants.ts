@@ -20,9 +20,9 @@ export const TABLE_HEAD_STICKY = "sticky top-0 z-[1] bg-bg-layer-default";
 // 자란다. min-height 는 표 칸에 먹지 않아(크로미움 계측: min-h-[72px] 는 줄이 67 로 줄었다) 쓰지 않는다.
 // Image Frame 48 썸네일은 48 + 24 + 1 = 73 이라 72 를 넘는다 — 판단 대기라 표에 새로 두지 않는다
 export const TABLE_BODY_CELL = "py-x3 font-normal [&>*]:align-top";
-export const TABLE_BODY_RICH = "h-[72px] py-x3";
-// Image Frame 48 썸네일을 담는 칸만 위아래 0(사용자 결정 2026-11-10 14C) — 48 + 24 + 선 1 = 73 이라 72 를 넘으므로 높이가 먼저다
-export const TABLE_BODY_THUMBNAIL = "py-0";
+// Image Frame 48 을 담은 칸만 위아래 0(사용자 결정 2026-11-10 14C — 48 + 24 + 선 1 = 73 이 72 를 넘으니 높이가 먼저). 레시피 table.tsx 와 같은 클래스
+export const TABLE_BODY_RICH =
+  "h-[72px] py-x3 has-[[data-slot=image-frame]]:py-0";
 
 export const TABLE_ALIGN = {
   start: "text-start",
