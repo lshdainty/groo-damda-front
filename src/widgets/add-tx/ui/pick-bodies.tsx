@@ -181,7 +181,12 @@ export function AssetPickBody({
           >
             {allowNone && (
               <ListButtonItem
-                title={noneLabel ?? t("addTx.noAccountOption")}
+                title={
+                  noneLabel ??
+                  (f.type === "INCOME"
+                    ? t("addTx.noDepositAccount")
+                    : t("addTx.noAccountOption"))
+                }
                 aria-current={value == null ? true : undefined}
                 suffix={value == null ? <Check aria-hidden /> : undefined}
                 onClick={() => {

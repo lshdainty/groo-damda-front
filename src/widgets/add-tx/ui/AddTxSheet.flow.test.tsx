@@ -1596,6 +1596,9 @@ describe("결제 수단이 계좌 · 카드보다 먼저 — 고르면 그 수�
     await tick();
     expect(sheetText()).toContain("addTx.depositAccount");
     expect(sheetText()).not.toContain("addTx.account");
+    // 목록 첫 항목(없음)도 수입 말이다
+    expect(sheetText()).toContain("addTx.noDepositAccount");
+    expect(sheetText()).not.toContain("addTx.noAccountOption");
     expect(
       document.querySelector(
         '[role=dialog] ul[aria-label="addTx.depositAccount"], [role=dialog] [role=list][aria-label="addTx.depositAccount"], [role=dialog] [aria-label="addTx.depositAccount"]',
@@ -1608,6 +1611,8 @@ describe("결제 수단이 계좌 · 카드보다 먼저 — 고르면 그 수�
     await tick();
     expect(sheetText()).toContain("addTx.account");
     expect(sheetText()).not.toContain("addTx.depositAccount");
+    expect(sheetText()).toContain("addTx.noAccountOption");
+    expect(sheetText()).not.toContain("addTx.noDepositAccount");
     expect(
       document.querySelector('[role=dialog] [aria-label="addTx.account"]'),
     ).not.toBeNull();
