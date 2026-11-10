@@ -116,6 +116,14 @@ const topItem = (label: string) =>
     container.querySelectorAll<HTMLElement>("[data-slot=side-navigation-item]"),
   ).find((el) => labelOf(el) === label);
 
+describe("DesktopSidebar 쌓임", () => {
+  it("사이드바는 z-sticky — 접힘 펼침 메뉴가 본문의 뒤 형제(Card) 아래로 깔리지 않는다", () => {
+    render("/desk");
+    const nav = container.querySelector("[data-slot=side-navigation]");
+    expect(nav?.className).toContain("z-(--z-sticky)");
+  });
+});
+
 describe("DesktopSidebar 증권 하위 메뉴", () => {
   it("연결이 둘 이상이면 증권사별 하위 항목이 뜬다 — 부모는 링크가 아니라 펼치기 버튼이다", () => {
     state.connectedBrokers = ["TOSS", "NAMU"];

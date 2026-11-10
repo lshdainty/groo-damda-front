@@ -79,8 +79,10 @@ export function DesktopSidebar() {
     );
   };
 
+  // z-sticky — 사이드바는 sticky 라 자기 쌓임 맥락이다. 층이 auto 면 본문의 Card 같은 뒤 형제가 그 위에 그려져 접힘(768 ~ 1279)에서
+  // 펼치는 메뉴(사이드바 안에 그려진다)를 가린다. 이음 HrSidebar 와 같다(specs/z-index.md — 사이드바는 L0 이지만 형제 위로 올린다)
   return (
-    <SideNavigation>
+    <SideNavigation className="z-(--z-sticky)">
       <SideNavigationHeader
         logo={
           <>
