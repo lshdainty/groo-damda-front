@@ -1584,6 +1584,27 @@ describe("결제 수단이 계좌 · 카드보다 먼저 — 고르면 그 수�
     expect(before("addTx.incomeMethodRow", "addTx.depositAccount")).toBe(true);
   });
 
+  it("계좌 시트 제목 — 수입은 입금 계좌, 지출은 계좌 · 카드다", async () => {
+    await open({
+      expense: {
+        ...expense,
+        expenseType: "INCOME",
+        categoryRowId: 21,
+      } as Expense,
+    });
+    click(row("addTx.depositAccount"));
+    await tick();
+    expect(sheetText()).toContain("addTx.depositAccount");
+    expect(sheetText()).not.toContain("addTx.account");
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await open({ expense: expense });
+    click(row("addTx.account"));
+    await tick();
+    expect(sheetText()).toContain("addTx.account");
+    expect(sheetText()).not.toContain("addTx.depositAccount");
+  });
+
   it("카드를 고르면 계좌 시트에는 신용 · 체크카드만 나온다", async () => {
     await toStep2();
     await pickMethod("form.paymentMethod.CARD");

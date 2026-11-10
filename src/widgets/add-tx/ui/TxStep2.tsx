@@ -498,7 +498,9 @@ export function TxStep2({ f }: { f: TxForm }) {
                   ? t("addTx.noDepositAccount")
                   : t("addTx.noAccountOption")
               }
-              surfaceTitle={t("addTx.account")}
+              surfaceTitle={
+                isIncome ? t("addTx.depositAccount") : t("addTx.account")
+              }
             >
               {({ close }) => (
                 <AssetPickBody
