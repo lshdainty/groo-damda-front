@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ArrowLeft, X } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
 import { useBeforeUnloadWhile } from "@/shared/lib/before-unload";
@@ -325,7 +325,7 @@ const DialogContent = React.forwardRef<
                     if (!ctx?.busy) onBack();
                   }}
                 >
-                  <ArrowLeft aria-hidden strokeWidth={2} />
+                  <ChevronLeft aria-hidden strokeWidth={2} />
                 </button>
               )}
               <DialogPrimitive.Title

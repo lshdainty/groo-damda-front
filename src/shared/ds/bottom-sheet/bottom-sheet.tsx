@@ -2,7 +2,7 @@ import { ResponsivePair } from "@/shared/ds/button";
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Drawer as DrawerPrimitive } from "vaul";
-import { ArrowLeft, X } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
 import { useBeforeUnloadWhile } from "@/shared/lib/before-unload";
@@ -517,7 +517,7 @@ const BottomSheetContent = React.forwardRef<
               if (!ctx.busy) onBack();
             }}
           >
-            <ArrowLeft aria-hidden strokeWidth={2} />
+            <ChevronLeft aria-hidden strokeWidth={2} />
           </button>
         )}
         <div data-slot="bottom-sheet-header" className={SHEET_HEADER}>
