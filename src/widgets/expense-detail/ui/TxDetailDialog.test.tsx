@@ -452,6 +452,23 @@ describe('B 10 — "더 하기" 동작 줄은 개수와 무관하게 한 목록�
     ]);
   });
 
+  it("수입이면 값 줄 이름이 수입 방식 · 입금 계좌, 지출은 결제 수단 · 계좌 · 카드다", () => {
+    render({
+      ...baseExpense,
+      expenseType: "INCOME",
+      paymentMethod: "CASH",
+    } as Expense);
+    expect(kv()).toContain("addTx.incomeMethod");
+    expect(kv()).toContain("addTx.depositAccount");
+    expect(kv()).not.toContain("paymentMethodLabel");
+    expect(kv()).not.toContain("accountCard");
+    render({ ...baseExpense, paymentMethod: "CASH" } as Expense);
+    expect(kv()).toContain("paymentMethodLabel");
+    expect(kv()).toContain("accountCard");
+    expect(kv()).not.toContain("addTx.incomeMethod");
+    expect(kv()).not.toContain("addTx.depositAccount");
+  });
+
   it("수입 셋 — 환불이 없다", () => {
     render({ ...baseExpense, expenseType: "INCOME" });
     expect(keys()).toEqual(["more-split", "more-recurring", "more-dutch"]);

@@ -277,6 +277,30 @@ describe("프리셋 폼 — 결제 수단에 맞는 계좌 · 카드만 나온�
     );
   });
 
+  it("종류가 수입이면 줄 이름이 수입 방식 · 입금 계좌, 지출은 결제 수단 · 계좌 · 카드다", () => {
+    render({
+      rowId: 9,
+      templateName: "월급",
+      expenseType: "INCOME",
+      amount: 0,
+    } as unknown as ExpenseTemplate);
+    const names = () =>
+      Array.from(document.querySelectorAll("[data-slot=list-title]")).map(
+        (e) => e.textContent,
+      );
+    expect(names()).toContain("addTx.incomeMethod");
+    expect(names()).toContain("addTx.depositAccount");
+    expect(names()).not.toContain("paymentMethodLabel");
+    expect(names()).not.toContain("accountCard");
+    act(() => root.unmount());
+    root = createRoot(container);
+    render(null);
+    expect(names()).toContain("paymentMethodLabel");
+    expect(names()).toContain("accountCard");
+    expect(names()).not.toContain("addTx.incomeMethod");
+    expect(names()).not.toContain("addTx.depositAccount");
+  });
+
   it("카드를 고르면 계좌 시트에 카드만 나온다", async () => {
     render(null);
     await pick("paymentMethodLabel", "form.paymentMethod.CARD");

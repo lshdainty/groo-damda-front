@@ -673,11 +673,13 @@ export function TxDetailDialog({
                 />
               )}
               <KvRow
-                label={t("paymentMethodLabel")}
+                label={
+                  isIncome ? t("addTx.incomeMethod") : t("paymentMethodLabel")
+                }
                 value={paymentMethodLabel}
               />
               <KvRow
-                label={t("accountCard")}
+                label={isIncome ? t("addTx.depositAccount") : t("accountCard")}
                 value={
                   asset
                     ? asset.institution && asset.institution !== asset.assetName

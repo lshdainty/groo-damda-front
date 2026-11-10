@@ -1596,6 +1596,11 @@ describe("결제 수단이 계좌 · 카드보다 먼저 — 고르면 그 수�
     await tick();
     expect(sheetText()).toContain("addTx.depositAccount");
     expect(sheetText()).not.toContain("addTx.account");
+    expect(
+      document.querySelector(
+        '[role=dialog] ul[aria-label="addTx.depositAccount"], [role=dialog] [role=list][aria-label="addTx.depositAccount"], [role=dialog] [aria-label="addTx.depositAccount"]',
+      ),
+    ).not.toBeNull();
     await act(async () => root.unmount());
     root = createRoot(container);
     await open({ expense: expense });
@@ -1603,6 +1608,9 @@ describe("결제 수단이 계좌 · 카드보다 먼저 — 고르면 그 수�
     await tick();
     expect(sheetText()).toContain("addTx.account");
     expect(sheetText()).not.toContain("addTx.depositAccount");
+    expect(
+      document.querySelector('[role=dialog] [aria-label="addTx.account"]'),
+    ).not.toBeNull();
   });
 
   it("카드를 고르면 계좌 시트에는 신용 · 체크카드만 나온다", async () => {

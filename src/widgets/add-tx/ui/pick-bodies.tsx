@@ -168,7 +168,13 @@ export function AssetPickBody({
           {sorted.length === 0 && (
             <PickEmpty>{t("addTx.noPickableAsset")}</PickEmpty>
           )}
-          <List aria-label={t("addTx.account")}>
+          <List
+            aria-label={
+              f.type === "INCOME"
+                ? t("addTx.depositAccount")
+                : t("addTx.account")
+            }
+          >
             {allowNone && (
               <ListButtonItem
                 title={noneLabel ?? t("addTx.noAccountOption")}
