@@ -33,6 +33,20 @@ describe("ds 글 — 한국어(초기화 전)", () => {
   });
 });
 
+describe("ds 글 — 수 맞춤(복수형)", () => {
+  it("한국어(초기화 전)는 수와 상관없이 같은 글이다", () => {
+    expect(dsText("inputOtp.placeholder", { count: 1 })).toBe("1자리 숫자");
+    expect(dsText("inputOtp.placeholder", { count: 6 })).toBe("6자리 숫자");
+    expect(dsText("iconPicker.results", { count: 1 })).toBe("검색 결과 1개");
+    expect(dsText("attachment.addedPhotos", { count: 1 })).toBe(
+      "사진 1장을 붙였어요.",
+    );
+    expect(dsText("attachment.addedFiles", { count: 0 })).toBe(
+      "파일 0개를 붙였어요.",
+    );
+  });
+});
+
 describe("ds 글 — 영어", () => {
   beforeAll(async () => {
     await i18next.init({
@@ -56,6 +70,27 @@ describe("ds 글 — 영어", () => {
       "Page 2 of 9",
     );
     expect(timePickerLabels().am).toBe("AM");
+  });
+  it("복수형 — 1 은 단수, 0 · 2 이상은 복수(inputOtp.placeholder · iconPicker.results · attachment.added*)", () => {
+    expect(dsText("inputOtp.placeholder", { count: 1 })).toBe("1 digit");
+    expect(dsText("inputOtp.placeholder", { count: 6 })).toBe("6 digits");
+    expect(dsText("iconPicker.results", { count: 1 })).toBe("1 result");
+    expect(dsText("iconPicker.results", { count: 0 })).toBe("0 results");
+    expect(dsText("iconPicker.results", { count: 2 })).toBe("2 results");
+    expect(dsText("attachment.addedPhotos", { count: 1 })).toBe(
+      "Added 1 photo.",
+    );
+    expect(dsText("attachment.addedPhotos", { count: 2 })).toBe(
+      "Added 2 photos.",
+    );
+    expect(dsText("attachment.addedFiles", { count: 1 })).toBe("Added 1 file.");
+    expect(dsText("attachment.addedFiles", { count: 0 })).toBe(
+      "Added 0 files.",
+    );
+    expect(dsText("attachment.addedItems", { count: 1 })).toBe("Added 1 item.");
+    expect(dsText("attachment.addedItems", { count: 3 })).toBe(
+      "Added 3 items.",
+    );
   });
   it("돈은 ₩1,234,567, 시각은 3:00 PM, 날짜는 Thu, Oct 15", () => {
     expect(dsMoney(1234567)).toBe("₩1,234,567");

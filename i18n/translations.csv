@@ -2609,7 +2609,8 @@ ds,common.moreFor,{{label}} 더보기,More options for {{label}}
 ds,avatar.uploading,프로필 사진 올리는 중,Uploading profile photo
 ds,chartHeatmap.value,지출,Spending
 ds,chart.legend,범례,Legend
-ds,inputOtp.placeholder,{{count}}자리 숫자,{{count}} digits
+ds,inputOtp.placeholder_one,{{count}}자리 숫자,{{count}} digit
+ds,inputOtp.placeholder_other,{{count}}자리 숫자,{{count}} digits
 ds,inputOtp.send,코드 받기,Get code
 ds,inputOtp.resendIn,다시 받기({{seconds}}초),Resend ({{seconds}}s)
 ds,inputOtp.resend,다시 받기,Resend
@@ -2688,7 +2689,8 @@ ds,progress.reached,달성,Reached
 ds,progress.label,{{label}} {{max}} 중 {{current}},{{label}}: {{current}} of {{max}}
 ds,skeleton.waiting,불러오는 중…,Loading…
 ds,skeleton.slow,평소보다 오래 걸리고 있어요.,This is taking longer than usual.
-ds,iconPicker.results,검색 결과 {{count}}개,{{count}} results
+ds,iconPicker.results_one,검색 결과 {{count}}개,{{count}} result
+ds,iconPicker.results_other,검색 결과 {{count}}개,{{count}} results
 ds,iconPicker.searchPlaceholder,아이콘 이름 검색,Search icon name
 ds,iconPicker.searchLabel,아이콘 검색,Search icons
 ds,iconPicker.emptyDescription,다른 말로 찾거나 묶음에서 골라주세요.,Try other words or browse the groups.
@@ -2707,9 +2709,12 @@ ds,attachment.previewFile,열기,Open
 ds,attachment.retryFor,{{name}} 다시 시도,Retry {{name}}
 ds,attachment.removeFor,{{name}} 지우기,Remove {{name}}
 ds,attachment.sortableRole,순서를 바꿀 수 있는 항목,reorderable item
-ds,attachment.addedPhotos,사진 {{count}}장을 붙였어요.,Added {{count}} photos.
-ds,attachment.addedFiles,파일 {{count}}개를 붙였어요.,Added {{count}} files.
-ds,attachment.addedItems,{{count}}개를 붙였어요.,Added {{count}} items.
+ds,attachment.addedPhotos_one,사진 {{count}}장을 붙였어요.,Added {{count}} photo.
+ds,attachment.addedPhotos_other,사진 {{count}}장을 붙였어요.,Added {{count}} photos.
+ds,attachment.addedFiles_one,파일 {{count}}개를 붙였어요.,Added {{count}} file.
+ds,attachment.addedFiles_other,파일 {{count}}개를 붙였어요.,Added {{count}} files.
+ds,attachment.addedItems_one,{{count}}개를 붙였어요.,Added {{count}} item.
+ds,attachment.addedItems_other,{{count}}개를 붙였어요.,Added {{count}} items.
 ds,attachment.uploaded,{{count}}개를 올렸어요.,{{count}} uploaded.
 ds,attachment.failedCount,{{count}}개는 올리지 못했어요.,{{count}} failed to upload.
 ds,attachment.dragLifted,{{position}}번째 항목을 들었어요.,Picked up item {{position}}.
