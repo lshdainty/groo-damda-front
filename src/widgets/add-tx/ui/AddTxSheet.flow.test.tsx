@@ -1352,6 +1352,45 @@ describe("자산 · 카테고리 목록을 받기 전 · 실패한 채 수정해
   });
 });
 
+describe("이체 계좌 — 보내는 후보에서 받는 계좌를 빼지 않고, 같은 것을 고르면 받는 계좌를 비운다 (스펙 3차 정리, 프리셋과 같게)", () => {
+  const pickTransferAccounts = async () => {
+    state.assets = [
+      asset(1, "주거래", "BANK_ACCOUNT"),
+      asset(2, "비상금", "BANK_ACCOUNT"),
+    ];
+    await open();
+    click(lastButton("addTx.transfer"));
+    await tick();
+    setValue(amountInput(), "500000");
+    await press("addTx.next");
+    click(row("addTx.fromAccountRow"));
+    await tick();
+    click(lastButton("주거래"));
+    await tick();
+    click(row("addTx.toAccount"));
+    await tick();
+    click(lastButton("비상금"));
+    await tick();
+  };
+
+  it("보내는 계좌로 받는 계좌와 같은 것을 고르면 받는 계좌가 비워진다", async () => {
+    await pickTransferAccounts();
+    expect(rowText("addTx.toAccount")).toContain("비상금");
+    click(row("addTx.fromAccountRow"));
+    await tick();
+    // 닫히는 중인 받는 계좌 시트가 DOM 뒤쪽에 남아 있을 수 있어, 먼저 나오는(= 보내는 계좌 목록의) 것을 고른다
+    click(
+      [...document.body.querySelectorAll("button")].find(
+        (b) => b.textContent?.trim() === "비상금",
+      )!,
+    );
+    await tick();
+    expect(rowText("addTx.fromAccountRow")).toContain("비상금");
+    expect(rowText("addTx.toAccount")).not.toContain("비상금");
+    expect(rowText("addTx.toAccount")).toContain("addTx.toAccountPick");
+  });
+});
+
 describe("계좌 고르기 — 받는 중 · 못 받음을 빈 목록과 가른다 (B2-6)", () => {
   const sheetText = () =>
     [...document.body.querySelectorAll("[role=dialog]")].slice(-1)[0]
