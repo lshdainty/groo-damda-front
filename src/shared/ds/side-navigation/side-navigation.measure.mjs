@@ -30,6 +30,7 @@ const TRIGGER = "[data-slot=side-navigation-trigger]";
 export default {
   "root.width": ["root", "px", "width"],
   "root.background": ["root", "color", "background-color"],
+  "root.zIndex": ["root", "exact", "z-index"],
   "header.minHeight": [
     "[data-slot=side-navigation-header]",
     "px",

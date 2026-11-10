@@ -117,7 +117,7 @@ const topItem = (label: string) =>
   ).find((el) => labelOf(el) === label);
 
 describe("DesktopSidebar 쌓임", () => {
-  it("사이드바는 z-sticky — 접힘 펼침 메뉴가 본문의 뒤 형제(Card) 아래로 깔리지 않는다", () => {
+  it("사이드바는 z-sticky(ds 루트) — 접힘 펼침 메뉴가 본문의 뒤 형제(Card) 아래로 깔리지 않는다", () => {
     render("/desk");
     const nav = container.querySelector("[data-slot=side-navigation]");
     expect(nav?.className).toContain("z-(--z-sticky)");
