@@ -3,10 +3,9 @@
  * Reads tokens from index.css (Mossy Bark)
  * ========================================================================== */
 
+/* 숫자 — 고정폭만(tabular-nums). 자간 · font-feature-settings(cv01 · ss03)는 두지 않는다 — 웹 · 앱이 같은 폭(결정 9C, 2026-11-10) */
 .num {
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1;
-  letter-spacing: -0.012em;
 }
 
 /* =============================================================================

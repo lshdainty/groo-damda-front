@@ -420,7 +420,6 @@
     @apply overflow-x-hidden;
     font-size: var(--text-body-sm);
     line-height: 1.5;
-    font-feature-settings: "ss03", "cv01";
     background: var(--bg-canvas);
     color: var(--fg-primary);
   }
