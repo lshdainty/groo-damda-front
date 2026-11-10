@@ -10,7 +10,7 @@
 //   check.display · ring.display  보임 · 숨김 — 고른 칸에만 그려진다(테스트)
 //   swatch.scale · scaleDuration · scaleEasing  누름 축소 — 변환 · 시간 값(테스트)
 //   focusRing.*  키보드 포커스 링은 ::after 가상 요소의 outline 이라 요소 값으로 잴 수 없다(테스트가 클래스를 본다)
-//   divider.stackBelow  321 미만에서 쌓이는 컨테이너 쿼리 — 견본 폭 360 은 옆으로 둔다(테스트가 클래스를 본다)
+//   divider.stackBelow  지금 색 칸 실제 폭 + 33 + 248 보다 좁으면 쌓인다(ResizeObserver 판정 — 견본 폭 360 은 옆으로 둔다, 테스트가 맡는다)
 //   current.background · name · check.color(지금 색)  저장된 색 그대로 · 차트가 쓸 색 · 대비가 큰 쪽 — 문장 값
 const SWATCH = "[data-slot=color-swatch]";
 const CHECKED = "[role=radio][aria-checked=true]";

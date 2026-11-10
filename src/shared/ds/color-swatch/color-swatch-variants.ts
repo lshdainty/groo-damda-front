@@ -120,11 +120,14 @@ export const CHECK =
 
 // 지금 색 칸이 있으면 묶음이 놓인 자리의 폭으로 가른다 — 321(칸 40 + 16 + 선 1 + 16 + 격자 248, color-swatch.yaml divider.stackBelow)
 // 보다 좁으면 지금 색 칸 · 선 · 격자를 세로로. 폭을 내용으로 정하는 자리(팝오버 · fit-content)에서는 321 로 잰다(contain-intrinsic)
-export const STACK_CONTAINER =
-  "@container w-full min-w-0 [contain-intrinsic-inline-size:321px]";
+// 321 은 지금 색 칸이 40 일 때의 값이다 — 실제 판정은 color-swatch.tsx 가 칸의 실제 폭으로 다시 잰다(글자 확대에서 칸이 넓어진다).
+// 폭을 내용으로 정하는 자리의 기본 폭만 inline style(containIntrinsicInlineSize)로 그 값을 받는다
+export const STACK_CONTAINER = "@container w-full min-w-0";
 // 선 — 세로로 쌓이면 가로 1px(격자 폭), 옆으로 두면 세로 1px(격자 높이). 사이는 늘 16
-export const DIVIDER =
-  "h-px shrink-0 self-stretch bg-stroke-neutral-weak @min-[321px]:h-auto @min-[321px]:w-px";
+export const DIVIDER_STACKED =
+  "h-px shrink-0 self-stretch bg-stroke-neutral-weak";
+export const DIVIDER_SIDE =
+  "h-auto w-px shrink-0 self-stretch bg-stroke-neutral-weak";
 
 export type Rgb = [number, number, number];
 export const parseRgb = (text: string): Rgb | null => {
