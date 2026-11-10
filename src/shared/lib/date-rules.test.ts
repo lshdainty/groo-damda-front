@@ -114,7 +114,7 @@ describe("날짜 규칙 — 기간 줄 · 월 눈금 · 점 연월 (웹 B3 가.5
     );
     await i18n.changeLanguage("en");
     expect(plain(formatDateRangeShortYear("2025-11-10", "2026-11-10"))).toBe(
-      "11/10/25–11/10/26",
+      "Nov 10, '25–Nov 10, '26",
     );
   });
   it("월 눈금 영어 — 'Jan' · 해가 섞이면 'Dec 2025'", async () => {
