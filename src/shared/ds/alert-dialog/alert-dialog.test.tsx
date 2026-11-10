@@ -1,5 +1,5 @@
 // Alert Dialog 의 동작 — 모양 · 색은 scripts/check-ds-spec.mjs 가 크로미움에서 스펙 값과 맞춘다.
-import { act, type ReactNode } from "react";
+import { act, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -459,6 +459,59 @@ describe("요청 중(busy) — 어느 길도 받지 않는다", () => {
     await tick();
     expect(content()).not.toBeNull();
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+});
+
+describe("닫힌 뒤 초점 — 연 줄이 지워졌으면", () => {
+  function Rows() {
+    const [rows, setRows] = useState(["점심", "커피"]);
+    const [target, setTarget] = useState<string | null>(null);
+    return (
+      <main>
+        <h2>자주 쓰는 거래</h2>
+        <ul>
+          {rows.map((r) => (
+            <li key={r}>
+              <button type="button" onClick={() => setTarget(r)}>
+                {r} 지우기
+              </button>
+            </li>
+          ))}
+        </ul>
+        <AlertDialog
+          open={target != null}
+          onOpenChange={(o) => !o && setTarget(null)}
+        >
+          <AlertDialogContent aria-label="지울까요?">
+            <AlertDialogDescription>지워요.</AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogCancel>취소</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => setRows((a) => a.filter((x) => x !== target))}
+              >
+                지우기
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </main>
+    );
+  }
+
+  it("지운 줄의 ⋮ 가 사라지면 초점은 문서 맨 앞(body)이 아니라 목록 머리로 간다", async () => {
+    render(<Rows />);
+    const row = byText("점심 지우기");
+    act(() => {
+      row.focus();
+      row.click();
+    });
+    await tick();
+    expect(content()).not.toBeNull();
+    act(() => byText("지우기").click());
+    await tick();
+    await tick();
+    expect(document.body.textContent).not.toContain("점심 지우기");
+    expect(document.activeElement).toBe(document.querySelector("h2"));
   });
 });
 

@@ -4,7 +4,9 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/shared/lib/cn";
 import { Button, ResponsivePair, type ButtonProps } from "@/shared/ds/button";
 import {
+  captureAnchor,
   focusOpener,
+  type FocusAnchor,
   mergeRefs,
   useBackClose,
   useOpenState,
@@ -172,7 +174,7 @@ const AlertDialogContent = React.forwardRef<
   ) => {
     const ctx = useAlert("AlertDialogContent");
     const own = React.useRef<HTMLDivElement>(null);
-    const openerRef = React.useRef<Element | null>(null);
+    const openerRef = React.useRef<FocusAnchor | null>(null);
     return (
       <DialogPrimitive.Portal container={ctx.container}>
         {ctx.modal ? (
@@ -196,7 +198,7 @@ const AlertDialogContent = React.forwardRef<
           className={cn(ALERT_CONTENT, className)}
           // 처음 초점은 확인창 — 첫 버튼이 아니라 확인창(컨테이너)이다
           onOpenAutoFocus={(e) => {
-            openerRef.current = document.activeElement;
+            openerRef.current = captureAnchor(document.activeElement);
             checkName(own.current, ariaLabel);
             onOpenAutoFocus?.(e);
             if (e.defaultPrevented) return;

@@ -65,20 +65,104 @@ export function withButtonSize(
 }
 
 /**
- * 닫힌 뒤 초점을 연 자리로 — 트리거, 없으면 열 때 초점이 있던 곳. 둘 다 문서에서 빠졌으면 그대로 둔다.
+ * 연 자리의 둘레 — 열 때 잡아 둔다. 연 자리(트리거 · 열 때 초점이 있던 곳)가 닫힌 뒤 사라졌을 때(⋮ 메뉴의 항목이 지운 줄 ·
+ * 줄이 지워져 ⋮ 도 없어짐) 초점이 문서 맨 앞(body)으로 빠지지 않도록 그 줄 → 목록 머리 → main 순으로 간다(alert-dialog.md 닫힌 뒤).
+ * 줄 · 머리는 열 때 이미 문서에 있던 요소라 지워지면 isConnected 가 거짓이 된다 — 그때는 다음 후보로 넘어간다.
+ */
+export interface FocusAnchor {
+  opener: Element | null;
+  row: Element | null;
+  head: Element | null;
+}
+
+const ROW_SELECTOR =
+  '[data-slot="list-item"],[data-slot="list-parent-item"],[data-slot="table-row"],tr,li,[role="row"],[role="listitem"]';
+const HEAD_SELECTOR =
+  'h1,h2,h3,h4,h5,h6,[role="heading"],[data-slot="list-header"],[data-slot="list-title"],thead,[data-slot="table-header"]';
+
+/** 줄에서 목록 머리를 찾는다 — 표는 표 머리, 그 밖에는 줄을 품은 상자들을 거슬러 오르며 앞 형제의 제목 · 목록 머리 */
+function findHead(row: Element): Element | null {
+  const table = row.closest('table,[role="table"],[role="grid"]');
+  if (table) {
+    return (
+      table.querySelector('thead,[data-slot="table-header"]') ??
+      table.querySelector('[role="columnheader"]')
+    );
+  }
+  const list = row.closest('[data-slot="list"]');
+  const ownHeader = list?.querySelector(':scope > [data-slot="list-header"]');
+  if (ownHeader) return ownHeader;
+  let node: Element | null = row;
+  while (node && node.tagName !== "MAIN" && node.parentElement) {
+    for (
+      let prev = node.previousElementSibling;
+      prev;
+      prev = prev.previousElementSibling
+    ) {
+      if (prev.matches(HEAD_SELECTOR)) return prev;
+      const inside = prev.querySelector(HEAD_SELECTOR);
+      if (inside) return inside;
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
+
+export function captureAnchor(el: Element | null): FocusAnchor {
+  const opener = el instanceof Element ? el : null;
+  const row = opener?.closest(ROW_SELECTOR) ?? null;
+  return { opener, row, head: row ? findHead(row) : null };
+}
+
+/** 초점을 둘 수 있게 — 일반 요소(제목 · 줄 · main)는 tabindex -1 을 달아 준다(탭 순서에는 들어오지 않는다) */
+function focusPlace(el: Element | null): boolean {
+  if (!(el instanceof HTMLElement) || !el.isConnected) return false;
+  if (!el.matches("a[href],button,input,select,textarea,[tabindex]")) {
+    el.setAttribute("tabindex", "-1");
+  }
+  el.focus({ preventScroll: true });
+  return document.activeElement === el;
+}
+
+/**
+ * 닫힌 뒤 초점을 연 자리로 — 트리거, 없으면 열 때 초점이 있던 곳. 둘 다 사라졌으면 그 줄(안의 첫 초점 가능한 곳, 없으면 줄) →
+ * 목록 머리 → main 순으로 남아 있는 첫 곳에 둔다. 아무 데도 없으면 그대로 둔다.
+ * opener 에 요소만 주면(둘레를 잡지 않은 옛 호출) 요소만 본다.
  */
 export function focusOpener(
   trigger: HTMLElement | null,
-  opener: Element | null,
+  anchor: FocusAnchor | Element | null,
 ) {
-  const target = trigger?.isConnected
-    ? trigger
-    : opener instanceof HTMLElement &&
-        opener.isConnected &&
-        opener !== opener.ownerDocument.body
-      ? opener
-      : null;
-  target?.focus({ preventScroll: true });
+  const a: FocusAnchor =
+    anchor && "opener" in anchor
+      ? anchor
+      : { opener: anchor as Element | null, row: null, head: null };
+  const opener = a.opener;
+  if (trigger?.isConnected) {
+    trigger.focus({ preventScroll: true });
+    return;
+  }
+  if (
+    opener instanceof HTMLElement &&
+    opener.isConnected &&
+    opener !== opener.ownerDocument.body
+  ) {
+    opener.focus({ preventScroll: true });
+    return;
+  }
+  const row = a.row;
+  if (row?.isConnected) {
+    const inner = row.querySelector<HTMLElement>(
+      'a[href],button:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])',
+    );
+    if (inner) {
+      inner.focus({ preventScroll: true });
+      return;
+    }
+    if (focusPlace(row)) return;
+  }
+  if (focusPlace(a.head)) return;
+  focusPlace(document.querySelector("main,[role=main]"));
 }
 
 /**
