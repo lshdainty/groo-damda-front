@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { EllipsisVertical, Send } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Avatar } from "@/shared/ds/avatar";
 import { Badge } from "@/shared/ds/badge";
@@ -11,6 +12,13 @@ import {
   ResponsiveDialogFooter,
 } from "@/shared/ds/dialog";
 import { List, ListHeader, ListItem } from "@/shared/ds/list";
+import {
+  ResponsiveMenu,
+  ResponsiveMenuContent,
+  ResponsiveMenuGroup,
+  ResponsiveMenuItem,
+  ResponsiveMenuTrigger,
+} from "@/shared/ds/menu";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
@@ -27,7 +35,8 @@ import { MaskedText, PerPersonText, Won } from "./dutch-parts";
 /**
  * 정산 상세(I-15 38 · 39, 7-2B) — 읽기 시트 · 1280 이상 Dialog 480. 머리 제목 = 정산 이름. 본문: "{날짜 (요일)} · {장소}" → 총액(t9 700) →
  * "1인당 … · {n}명" → 선 → "참여자 · {n}" 머리 + 참여자 줄(ds List · 아바타 36). 줄 끝: 결제자 Badge "결제자"(설명 "결제했어요", 몫이 다르면
- * "· 몫 …") · 낸 사람 Badge "냈어요" · 안 낸 사람 [받음]. 바닥: 진행 중 [삭제] + [모두 받음], 완료 [삭제]. 송금 요청 · 일괄 요청은 걷었다(서버에 API 가 없다).
+ * "· 몫 …") · 낸 사람 Badge "냈어요" · 안 낸 사람 [받음]. 바닥: 진행 중 왼쪽 [삭제] + [모두 받음](주 동작 하나), 완료 [삭제]. 동작이 여럿이면 머리 ⋮(bottom-sheet 규칙) —
+ [일괄 요청] 은 서버 API 가 없어 막힌 줄로만 ⋮ 에 둔다(진행 중일 때만).
  * 삭제는 공용 ConfirmDialog 를 상세 위에 — 실패하면 확인창을 닫고 critical 스낵바 + [다시 시도](바로 재요청). 받음 · 모두 받음 실패도 같은 띠.
  */
 export function DutchDetailDialog({
@@ -131,16 +140,34 @@ export function DutchDetailDialog({
       {tc("delete")}
     </Button>
   );
-  const requestAll = active ? (
-    <Button
-      variant="neutralWeak"
-      size={wide ? undefined : "large"}
-      disabled
-      aria-describedby={reasonId}
-    >
-      {t("requestAll")}
-    </Button>
-  ) : null;
+  // 머리 ⋮ — 바닥에는 주 동작([모두 받음]) 하나와 왼쪽 [삭제] 만 둔다. [일괄 요청] 은 아직 열리지 않아 막힌 줄로 머리 ⋮ 에
+  // (진행 중일 때만 — 끝난 정산엔 메뉴에 담을 동작이 없어 ⋮ 도 없다). 닫히면 초점은 ⋮ 로 돌아온다(Radix 기본)
+  const more = active ? (
+    <ResponsiveMenu>
+      <ResponsiveMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          ghostColor="neutralSubtle"
+          layout="iconOnly"
+          size="small"
+          aria-label={t("moreOf", { name: d.title })}
+        >
+          <EllipsisVertical aria-hidden />
+        </Button>
+      </ResponsiveMenuTrigger>
+      <ResponsiveMenuContent title={d.title} align="end">
+        <ResponsiveMenuGroup>
+          <ResponsiveMenuItem
+            label={t("requestAll")}
+            description={t("requestSoon")}
+            icon={<Send aria-hidden />}
+            disabled
+            onSelect={() => undefined}
+          />
+        </ResponsiveMenuGroup>
+      </ResponsiveMenuContent>
+    </ResponsiveMenu>
+  ) : undefined;
   const all = active ? (
     <Button
       variant="neutralSolid"
@@ -161,7 +188,11 @@ export function DutchDetailDialog({
           if (!next) onClose();
         }}
       >
-        <ResponsiveDialogContent title={d.title} aria-describedby={undefined}>
+        <ResponsiveDialogContent
+          title={d.title}
+          headerAction={more}
+          aria-describedby={undefined}
+        >
           <ResponsiveDialogBody scrollFog>
             <p className="m-0 text-t4 text-fg-neutral-subtle">
               {place ? t("detailDate", { date, place }) : date}
@@ -256,13 +287,11 @@ export function DutchDetailDialog({
             {wide ? (
               <>
                 {del}
-                {requestAll}
                 {all}
               </>
             ) : (
               <div className="flex w-full min-w-0! flex-wrap items-center gap-x2 gap-y2">
                 {del}
-                {requestAll}
                 {all}
               </div>
             )}
