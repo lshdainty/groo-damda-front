@@ -1,5 +1,7 @@
 export {
+  captureAnchor,
   focusOpener,
+  type FocusAnchor,
   surfaceTookOver,
   mergeRefs,
   useOpenState,

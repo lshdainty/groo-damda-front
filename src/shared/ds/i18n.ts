@@ -24,9 +24,18 @@ export const dsLanguage = () => i18next.resolvedLanguage ?? "ko";
 
 /** 렌더 밖(상수 · 헬퍼)에서 쓰는 글 — 언어가 바뀌면 다음에 부를 때 따라간다. 렌더 안에서는 `useDsText` 를 쓴다. */
 export function dsText(key: string, vars?: Vars): string {
-  if (i18next.isInitialized && i18next.exists(key, { ns: "ds" }))
+  // vars 를 함께 준다 — count 가 있으면 i18next 가 `{key}_one` · `{key}_other` 처럼 수에 맞는 꼴을 찾는다(복수형)
+  if (i18next.isInitialized && i18next.exists(key, { ns: "ds", ...vars }))
     return i18next.t(key, { ns: "ds", ...vars }) as string;
-  return fill((koDs as Record<string, string>)[key] ?? key, vars);
+  const ko = koDs as Record<string, string>;
+  // 초기화 전 · 카탈로그 밖 — 한국어 원본에서도 수에 맞는 꼴을 고른다(한국어는 other 하나라 보통 `_one` 과 같은 글)
+  const count = vars?.count;
+  const plural =
+    typeof count === "number"
+      ? (ko[`${key}_${new Intl.PluralRules("ko").select(count)}`] ??
+        ko[`${key}_other`])
+      : undefined;
+  return fill(plural ?? ko[key] ?? key, vars);
 }
 
 /** 렌더 안에서 쓰는 글 — 언어가 바뀌면 다시 그린다 */

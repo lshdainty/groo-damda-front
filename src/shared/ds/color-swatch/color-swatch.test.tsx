@@ -381,9 +381,66 @@ describe("지금 색 · 자동", () => {
     ).not.toBeNull();
     // 묶음이 놓인 자리의 폭으로 위 · 옆을 가른다
     expect(group().className).toContain("@container");
+    // 폭을 못 잰 곳(jsdom)은 옆으로 둔다 — 실제 폭 판정은 아래 시험
     expect(
       container.querySelector("[data-slot=color-swatch-layout]")!.className,
-    ).toContain("@min-[321px]:flex-row");
+    ).toContain("flex-row");
+  });
+
+  describe("지금 색 칸 위 · 옆 — 실제 폭으로 판정", () => {
+    const layout = () =>
+      container
+        .querySelector("[data-slot=color-swatch-layout]")!
+        .className.split(" ");
+    const divider = () =>
+      container
+        .querySelector("[data-slot=color-swatch-divider]")!
+        .className.split(" ");
+    function measured(rootWidth: number, columnWidth: number) {
+      const cw = vi
+        .spyOn(HTMLElement.prototype, "clientWidth", "get")
+        .mockImplementation(function (this: HTMLElement) {
+          return this.dataset.slot === "color-swatch-group" ? rootWidth : 0;
+        });
+      const ow = vi
+        .spyOn(HTMLElement.prototype, "offsetWidth", "get")
+        .mockImplementation(function (this: HTMLElement) {
+          return this.dataset.slot === "color-swatch-current-column"
+            ? columnWidth
+            : 0;
+        });
+      return () => {
+        cw.mockRestore();
+        ow.mockRestore();
+      };
+    }
+    const renderCurrent = () =>
+      render(<ColorSwatchGroup aria-label="색상" currentColor="#9E9E9E" />);
+
+    it("폭이 칸 + 33 + 격자 248 보다 좁으면(312) 위 줄 · 가로 선", () => {
+      const restore = measured(312, 40);
+      renderCurrent();
+      expect(layout()).toContain("flex-col");
+      expect(layout()).not.toContain("@min-[321px]:flex-row");
+      expect(divider()).toContain("h-px");
+      restore();
+    });
+
+    it("넓으면(342) 옆 · 세로 선", () => {
+      const restore = measured(342, 40);
+      renderCurrent();
+      expect(layout()).toContain("flex-row");
+      expect(divider()).toContain("w-px");
+      restore();
+    });
+
+    it("글자 확대로 칸이 넓어지면(80) 같은 342 에서도 위 줄로 올려 가로로 넘치지 않는다", () => {
+      const restore = measured(342, 80);
+      renderCurrent();
+      expect(layout()).toContain("flex-col");
+      expect(layout()).not.toContain("@min-[321px]:flex-row");
+      restore();
+    });
   });
 
   it('autoColor 는 "자동" 칸 — 점선 원에 차트가 줄 색', () => {

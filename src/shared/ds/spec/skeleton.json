@@ -3,7 +3,7 @@
   "source": "specs/components/skeleton.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "ce410e4e7025"
+    "sha256": "f9abe93acb04"
   },
   "slots": {
     "root": "면 — 곧 나타날 내용 하나의 자리(글 한 줄 · 숫자 · 카드 · 아바타 · 사진)",

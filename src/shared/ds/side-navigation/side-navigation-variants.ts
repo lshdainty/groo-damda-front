@@ -14,8 +14,10 @@ export const FLYOUT_CLOSE_DELAY = 100;
 
 // ── 사이드바 ─────────────────────────────────────────────────
 // 흰 면 + 오른쪽 안쪽 1px 선, 높이 전체 · 왼쪽에 붙는다. 폭 240 ↔ 56 200ms easing
+// z-sticky(50) — sticky 라 스스로 쌓임 맥락이다. 층이 auto 면 뒤따르는 본문 카드가 그 위에 그려져 안에 그리는 펼침 메뉴를 가린다
+// (side-navigation.yaml root.zIndex · 2026-11-09 그루 이음 셸)
 export const ROOT = [
-  "sticky top-0 flex h-dvh shrink-0 flex-col overflow-hidden bg-bg-layer-default font-sans text-fg-neutral",
+  "sticky top-0 z-(--z-sticky) flex h-dvh shrink-0 flex-col overflow-hidden bg-bg-layer-default font-sans text-fg-neutral",
   "shadow-[inset_-1px_0_0_0_var(--color-stroke-neutral-subtle)]",
   "[transition:width_var(--motion-duration-d4)_var(--motion-ease-easing)] motion-reduce:transition-none",
 ].join(" ");

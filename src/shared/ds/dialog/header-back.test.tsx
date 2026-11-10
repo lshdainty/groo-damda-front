@@ -70,6 +70,10 @@ describe("머리 뒤로 가기(onBack)", () => {
     expect(
       back.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+    // ← 는 모두 꺾쇠(chevron-left) — 화살표(arrow-left)를 쓰지 않는다
+    expect(back.querySelector("svg")!.getAttribute("class")).toContain(
+      "lucide-chevron-left",
+    );
     act(() => back.click());
     expect(onBack).toHaveBeenCalledTimes(1);
   });
@@ -81,6 +85,9 @@ describe("머리 뒤로 가기(onBack)", () => {
     const back = q("[data-slot=dialog-back]")!;
     expect(back.getAttribute("aria-label")).toBe("뒤로");
     expect(q("[data-slot=dialog-close]")).toBeNull();
+    expect(back.querySelector("svg")!.getAttribute("class")).toContain(
+      "lucide-chevron-left",
+    );
     expect(q("[data-slot=dialog-title]")!.className).toContain("pl-[36px]");
     act(() => back.click());
     expect(onBack).toHaveBeenCalledTimes(1);

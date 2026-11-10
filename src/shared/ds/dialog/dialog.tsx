@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { ArrowLeft, X } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
 import { useBeforeUnloadWhile } from "@/shared/lib/before-unload";
@@ -15,7 +15,9 @@ import {
   BottomSheetTrigger,
 } from "@/shared/ds/bottom-sheet";
 import {
+  captureAnchor,
   focusOpener,
+  type FocusAnchor,
   surfaceTookOver,
   mergeRefs,
   useOpenState,
@@ -242,7 +244,7 @@ const DialogContent = React.forwardRef<
     const dsT = useDsText();
     const ctx = React.useContext(DialogContext);
     const own = React.useRef<HTMLDivElement>(null);
-    const openerRef = React.useRef<Element | null>(null);
+    const openerRef = React.useRef<FocusAnchor | null>(null);
     const form = ctx?.form ?? false;
     const hasHeader = title != null;
     // 닫기 버튼은 조회 · 안내의 머리에만 — 입력 폼은 바닥 [취소] 가 닫는다(닫기 버튼과 취소를 함께 두지 않는다)
@@ -272,7 +274,7 @@ const DialogContent = React.forwardRef<
           className={cn(DIALOG_CONTENT, DIALOG_SIZE[size], className)}
           // 처음 초점은 대화상자 — Radix 기본(첫 칸)을 쓰지 않는다
           onOpenAutoFocus={(e) => {
-            openerRef.current = document.activeElement;
+            openerRef.current = captureAnchor(document.activeElement);
             // 이름이 없으면 개발 중에 알린다(열릴 때)
             if (import.meta.env.DEV && !hasHeader && !ariaLabel?.trim()) {
               console.warn(
@@ -323,7 +325,7 @@ const DialogContent = React.forwardRef<
                     if (!ctx?.busy) onBack();
                   }}
                 >
-                  <ArrowLeft aria-hidden strokeWidth={2} />
+                  <ChevronLeft aria-hidden strokeWidth={2} />
                 </button>
               )}
               <DialogPrimitive.Title

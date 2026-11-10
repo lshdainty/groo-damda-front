@@ -4,7 +4,9 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/shared/lib/cn";
 import { Button, ResponsivePair, type ButtonProps } from "@/shared/ds/button";
 import {
+  captureAnchor,
   focusOpener,
+  type FocusAnchor,
   mergeRefs,
   useBackClose,
   useOpenState,
@@ -35,7 +37,7 @@ import {
  *   AlertDialogAction        확정 — variant criticalSolid(지우기 · 잃기) | neutralSolid(기본). 누르면 닫힌다.
  *                            onClick 에서 e.preventDefault() 하면 닫지 않고, loading 이면 누르기를 막는다(서버 응답을 기다릴 때)
  *
- * 바깥(딤)을 눌러도 닫히지 않는다. Esc · 뒤로 가기(1280 미만)는 취소와 같다. 열면 초점은 확인창(컨테이너)으로 가고
+ * 바깥(딤)을 눌러도 닫히지 않는다. Esc · 뒤로 가기(1280 미만)는 취소와 같다 — 요청 중(busy · 확정 버튼 loading)이면 Esc · 뒤로 가기 · [취소] 모두 받지 않는다(뒤로 가기는 칸을 다시 쌓는다). 열면 초점은 확인창(컨테이너)으로 가고
  * 열린 동안 확인창 안을 돌며, 닫으면 연 자리(트리거, 없으면 열 때 초점이 있던 곳)로 돌아간다. role="alertdialog" + aria-modal.
  * 버튼은 1280 미만 medium 40 · 이상 small 36 — Footer 가 크기를 주지 않은 바로 아래 자식에 넣는다. 배치는 CSS 가 정한다(alert-dialog-variants.ts).
  * 딤 z-alert 300 · 확인창 z-alert-content 301(specs/z-index.md L5) — 열린 대화상자 · 시트 위에 뜬다.
@@ -50,6 +52,9 @@ import {
  */
 
 type AlertContextValue = {
+  /** 확정 요청 중 — 확정 버튼의 loading 이 켜면 true(AlertDialog 의 busy 와 함께 본다) */
+  busy: boolean;
+  setActionBusy: (busy: boolean) => void;
   triggerRef: React.RefObject<HTMLButtonElement | null>;
   container: HTMLElement | null | undefined;
   modal: boolean;
@@ -60,6 +65,11 @@ export interface AlertDialogProps {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: OpenChange;
+  /**
+   * 요청 중 — Bottom Sheet 의 busy 와 같은 계약: 어느 길도 받지 않는다(Esc · 뒤로 가기 · [취소] · 바깥). 뒤로 가기는 칸을 다시 쌓아
+   * 다음 뒤로 가기도 이 확인창으로 온다. 확정 버튼에 loading 을 걸면 저절로 켜진다 — 확정 말고 다른 일을 기다릴 때만 직접 준다
+   */
+  busy?: boolean;
   /** 띄울 자리 — 기본 document.body. 다크가 문서가 아니라 하위 요소에 걸린 곳(카탈로그의 다크 판)에서 그 안의 요소로 */
   container?: HTMLElement | null;
   /** false 면 모달 부작용(초점 가둠 · 바깥 비활성 · 뒤 화면 숨김 · 스크롤 잠금)을 끈다 — 카탈로그 · 문서 전용 */
@@ -71,6 +81,7 @@ function AlertDialog({
   open: openProp,
   defaultOpen,
   onOpenChange,
+  busy: busyProp = false,
   container,
   modal = true,
   children,
@@ -78,11 +89,27 @@ function AlertDialog({
   const [open, setOpen] = useOpenState(openProp, defaultOpen, onOpenChange);
   const narrow = !useWideSurface();
   const triggerRef = React.useRef<HTMLButtonElement>(null);
-  // 뒤로 가기 = 취소(1280 미만)
-  useBackClose(open && narrow && modal, () => setOpen(false));
+  const [actionBusy, setActionBusy] = React.useState(false);
+  const busy = busyProp || actionBusy;
+  // 뒤로 가기 = 취소(1280 미만). 요청 중이면 받지 않는다 — 칸을 다시 쌓아 다음 뒤로 가기도 이 확인창으로 오게
+  // (받아 놓고 닫지 않으면 칸만 사라지고 다음 뒤로 가기가 요청 중인 화면을 떠난다)
+  useBackClose(open && narrow && modal, (keep) => {
+    if (busy) keep();
+    else setOpen(false);
+  });
   return (
-    <AlertContext.Provider value={{ triggerRef, container, modal }}>
-      <DialogPrimitive.Root open={open} onOpenChange={setOpen} modal={modal}>
+    <AlertContext.Provider
+      value={{ busy, setActionBusy, triggerRef, container, modal }}
+    >
+      <DialogPrimitive.Root
+        open={open}
+        // Esc · [취소] 도 요청 중에는 받지 않는다(바깥은 늘 무시)
+        onOpenChange={(next) => {
+          if (busy && !next) return;
+          setOpen(next);
+        }}
+        modal={modal}
+      >
         {children}
       </DialogPrimitive.Root>
     </AlertContext.Provider>
@@ -147,7 +174,7 @@ const AlertDialogContent = React.forwardRef<
   ) => {
     const ctx = useAlert("AlertDialogContent");
     const own = React.useRef<HTMLDivElement>(null);
-    const openerRef = React.useRef<Element | null>(null);
+    const openerRef = React.useRef<FocusAnchor | null>(null);
     return (
       <DialogPrimitive.Portal container={ctx.container}>
         {ctx.modal ? (
@@ -167,10 +194,11 @@ const AlertDialogContent = React.forwardRef<
           role="alertdialog"
           data-slot="alert-dialog-content"
           aria-modal="true"
+          aria-busy={ctx.busy || undefined}
           className={cn(ALERT_CONTENT, className)}
           // 처음 초점은 확인창 — 첫 버튼이 아니라 확인창(컨테이너)이다
           onOpenAutoFocus={(e) => {
-            openerRef.current = document.activeElement;
+            openerRef.current = captureAnchor(document.activeElement);
             checkName(own.current, ariaLabel);
             onOpenAutoFocus?.(e);
             if (e.defaultPrevented) return;
@@ -281,16 +309,26 @@ export interface AlertDialogActionProps extends Omit<
 const AlertDialogAction = React.forwardRef<
   HTMLButtonElement,
   AlertDialogActionProps
->(({ variant = "neutralSolid", onClick, ...props }, ref) => (
-  <DialogPrimitive.Close asChild onClick={onClick}>
-    <Button
-      ref={ref}
-      variant={variant}
-      data-slot="alert-dialog-action"
-      {...props}
-    />
-  </DialogPrimitive.Close>
-));
+>(({ variant = "neutralSolid", onClick, loading, ...props }, ref) => {
+  const { setActionBusy } = useAlert("AlertDialogAction");
+  // 확정을 기다리는 동안은 확인창이 요청 중이다 — Esc · 뒤로 가기 · [취소] 를 받지 않는다
+  React.useEffect(() => {
+    if (!loading) return;
+    setActionBusy(true);
+    return () => setActionBusy(false);
+  }, [loading, setActionBusy]);
+  return (
+    <DialogPrimitive.Close asChild onClick={onClick}>
+      <Button
+        ref={ref}
+        variant={variant}
+        loading={loading}
+        data-slot="alert-dialog-action"
+        {...props}
+      />
+    </DialogPrimitive.Close>
+  );
+});
 AlertDialogAction.displayName = "AlertDialogAction";
 
 export {

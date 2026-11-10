@@ -12,6 +12,7 @@
 //   iconButton.touchTarget                         "44 × 44" 문장 — 상자 44 를 size 가 잰다
 //   *.transitionProperty · Duration · Easing       계산값이 "background-color, scale" · "0.15s" · cubic-bezier(…) 라 스펙의 글과 같지 않다
 //   *.scale · scaleDuration · scaleEasing          2px 거리 축소 — 누름의 scale 은 문장 · 시간
+//   screenTitle.* · screenDescription.* · screenActions.*   본문 맨 위 제목 줄(ScreenTitle)은 바(견본의 뿌리) 밖에 그려져 검사기가 뿌리 안에서 찾지 못한다 — top-navigation.test.tsx 가 클래스(text-screen-title · text-t5 · text-fg-neutral-muted · gap-x4 · gap-x2 · items-end · mt-x0_5)로 잠근다
 //   title.display · leading.glyph · primaryButton.buttonSize   문장
 const ICON = "[data-slot=top-navigation-icon-button]";
 const ICON_PLAIN = `${ICON}:not([aria-pressed=true])`;

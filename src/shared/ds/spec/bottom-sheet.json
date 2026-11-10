@@ -3,7 +3,7 @@
   "source": "specs/components/bottom-sheet.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "ce410e4e7025"
+    "sha256": "f9abe93acb04"
   },
   "slots": {
     "overlay": "딤 — 시트 뒤 화면 전체",
@@ -430,7 +430,7 @@
       "state": "enabled",
       "slot": "backButton",
       "prop": "iconSize",
-      "note": "lucide arrow-left"
+      "note": "lucide chevron-left — 페이지 머리(Top Navigation) ← 와 같은 꺾쇠. 돌아가기 모양은 어디서나 하나다(2026-11-10 사용자 결정 8A)"
     },
     {
       "rule": 2,

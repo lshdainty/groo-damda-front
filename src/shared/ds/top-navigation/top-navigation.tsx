@@ -20,7 +20,10 @@ import {
   ROW,
   SEARCH,
   SEARCH_TYPE,
+  SCREEN_ACTIONS,
+  SCREEN_DESCRIPTION,
   SCREEN_TITLE,
+  SCREEN_TITLE_ROW,
   TEXT_BUTTON,
   TITLE,
   TITLE_TYPE,
@@ -48,6 +51,7 @@ import { useDsText } from "@/shared/ds/i18n";
  *   TopNavigationTextButton     글 버튼("완료" · "모두 읽음") — 오른쪽 자리에 하나, 아이콘 버튼과 섞지 않는다
  *   TopNavigationPrimaryButton  데스크톱 머리의 주 버튼 — Button brandSolid · small 그대로 + 오른쪽 8
  *   ScreenTitle                 데스크톱 본문 맨 위 제목 <h1 tabIndex={-1} data-screen-title> — text-screen-title 26 / 35 · 700, 머리 아래 20
+ *                               description(제목 아래 16 / 22 · muted) · actions(Button small)를 주면 한 줄 제목 줄 — 제목 덩어리 왼쪽, 버튼 오른쪽 아래 끝
  *   TopNavigationProvider       product("그루 담다" · "그루 이음") — useScreenTitle(title) 가 문서 제목을 "{title} - {product}" 로 쓴다
  *   (top-navigation-context.ts) useScreenTitle · focusScreenTitle() — 셸이 화면을 옮긴 뒤 부른다: 본문 스크롤을 맨 위로, 보이는
  *                               [data-screen-title] 에 초점(링은 키보드로 왔을 때만)
@@ -344,19 +348,50 @@ const TopNavigationMenuButton = React.forwardRef<
 TopNavigationMenuButton.displayName = "TopNavigationMenuButton";
 
 // ── 데스크톱 본문 제목 ───────────────────────────────────────
-const ScreenTitle = React.forwardRef<
-  HTMLHeadingElement,
-  React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
-  <h1
-    ref={ref}
-    tabIndex={-1}
-    data-screen-title=""
-    data-slot="screen-title"
-    className={cn(SCREEN_TITLE, className)}
-    {...props}
-  />
-));
+interface ScreenTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  /** 제목 아래 설명 — 16 / 22 · 400 · fg-neutral-muted. 길면 줄을 바꾸고 동작 버튼은 그 자리에 남는다 */
+  description?: React.ReactNode;
+  /** 그 화면의 동작 버튼(Button small neutralOutline) — 제목 덩어리 오른쪽, 아래 끝에 맞춘다 */
+  actions?: React.ReactNode;
+}
+
+const ScreenTitle = React.forwardRef<HTMLHeadingElement, ScreenTitleProps>(
+  ({ className, description, actions, ...props }, ref) => {
+    // false · null · undefined 는 없는 것 — `cond && <Button/>` 가 false 를 줘도 빈 줄이 서지 않는다
+    const hasDescription = description != null && description !== false;
+    const hasActions = actions != null && actions !== false;
+    const hasRow = hasDescription || hasActions;
+    const heading = (
+      <h1
+        ref={ref}
+        tabIndex={-1}
+        data-screen-title=""
+        data-slot="screen-title"
+        className={cn(SCREEN_TITLE, hasRow && "mt-0", className)}
+        {...props}
+      />
+    );
+    // 설명 · 동작이 없으면 h1 하나 — 지금까지의 모양 그대로(둘러싼 상자가 줄을 맡는다)
+    if (!hasRow) return heading;
+    return (
+      <div data-slot="screen-title-row" className={SCREEN_TITLE_ROW}>
+        <div className="min-w-0">
+          {heading}
+          {hasDescription && (
+            <p data-slot="screen-description" className={SCREEN_DESCRIPTION}>
+              {description}
+            </p>
+          )}
+        </div>
+        {hasActions && (
+          <div data-slot="screen-actions" className={SCREEN_ACTIONS}>
+            {actions}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
 ScreenTitle.displayName = "ScreenTitle";
 
 // ── 문서 제목 ────────────────────────────────────────────────

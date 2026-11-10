@@ -2,7 +2,14 @@ import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 
 import { cn } from "@/shared/lib/cn";
-import { mergeRefs, useOpenState, type OpenChange } from "@/shared/ds/overlay";
+import {
+  captureAnchor,
+  focusOpener,
+  mergeRefs,
+  useOpenState,
+  type FocusAnchor,
+  type OpenChange,
+} from "@/shared/ds/overlay";
 import { measurePress, usePendingSelect } from "@/shared/ds/menu-sheet";
 
 import {
@@ -89,6 +96,7 @@ type MenuContextValue = {
   setTriggerId: (id: string | undefined) => void;
   openRef: React.RefObject<boolean>;
   triggerRef: React.RefObject<HTMLButtonElement | null>;
+  anchorRef: React.RefObject<FocusAnchor | null>;
   /** ↑ 로 열었다 — 처음 초점을 마지막 줄에 */
   focusLastRef: React.RefObject<boolean>;
   /** Tab 으로 닫았다 — 초점은 브라우저가 옮긴 자리에 둔다 */
@@ -124,6 +132,11 @@ function Menu({
     openRef.current = open;
   });
   const triggerRef = React.useRef<HTMLButtonElement>(null);
+  // 열 때의 둘레 — 트리거가 닫힌 뒤 사라졌으면(줄이 지워짐) 그 줄 → 목록 머리 → main 으로(overlay-utils focusOpener)
+  const anchorRef = React.useRef<FocusAnchor | null>(null);
+  React.useLayoutEffect(() => {
+    if (open) anchorRef.current = captureAnchor(triggerRef.current);
+  }, [open]);
   const focusLastRef = React.useRef(false);
   const tabbedOutRef = React.useRef(false);
   const [triggerId, setTriggerId] = React.useState<string | undefined>(
@@ -137,6 +150,7 @@ function Menu({
     setTriggerId,
     openRef,
     triggerRef,
+    anchorRef,
     focusLastRef,
     tabbedOutRef,
     queueSelect: pending.queue,
@@ -229,6 +243,7 @@ const MenuContent = React.forwardRef<
       open,
       setOpen,
       triggerRef,
+      anchorRef,
       focusLastRef,
       tabbedOutRef,
       openRef,
@@ -302,8 +317,8 @@ const MenuContent = React.forwardRef<
               // 초점이 갈 곳을 잃었으면(고르기 · Esc · 빈 자리를 누름) 트리거로. 바깥의 다른 칸을 눌렀으면 그 자리에 둔다
               const active = document.activeElement;
               const trigger = triggerRef.current;
-              if ((!active || active === document.body) && trigger?.isConnected)
-                trigger.focus({ preventScroll: true });
+              if (!active || active === document.body)
+                focusOpener(trigger, anchorRef.current);
             }
             // 다 닫혔다 — 고른 줄의 동작을 부른다(초점이 트리거로 돌아온 뒤)
             flushSelect();

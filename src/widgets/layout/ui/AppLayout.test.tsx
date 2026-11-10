@@ -473,6 +473,32 @@ describe("화면을 옮길 때 PUSH 와 POP 을 가른다", () => {
     expect(main.scrollTop).toBe(0);
   });
 
+  it("주소가 같고 history 칸만 다른 되감기도 칸(location.key)을 따라 스크롤 · 누른 단추를 돌려준다(pathname 비교는 놓쳤다)", async () => {
+    setWide(false);
+    titleFocus.calls = 0;
+    renderTwoScreens();
+    const main = growMain();
+    scrollTo(main, 400);
+    act(() => {
+      q("to-bulk")!.focus();
+    });
+    // 같은 주소로 쿼리만 바꿔 앞으로 — 화면을 옮긴 게 아니다(맨 위 · 제목 초점 없음)
+    act(() => nav.go("/desk/stats?m=10"));
+    await frame();
+    expect(titleFocus.calls).toBe(0);
+    expect(main.scrollTop).toBe(400);
+    // 새 칸에서 본문이 깎였다고 하자
+    act(() => {
+      main.scrollTop = 0;
+    });
+    act(() => nav.go(-1 as unknown as string));
+    await frame();
+    await frame();
+    expect(titleFocus.calls).toBe(0);
+    expect(main.scrollTop).toBe(400);
+    expect(document.activeElement).toBe(q("to-bulk"));
+  });
+
   it("기억이 없는 뒤로(새로 고침 뒤)는 앞으로 갈 때처럼 제목 초점 + 맨 위다", async () => {
     setWide(false);
     titleFocus.calls = 0;

@@ -155,6 +155,8 @@ describe("SideNavigation — 폭", () => {
       "shadow-[inset_-1px_0_0_0_var(--color-stroke-neutral-subtle)]",
     );
     expect(bar.className).toContain("sticky");
+    // 쌓임 맥락이라 층이 auto 면 본문 카드가 펼침 메뉴를 가린다
+    expect(bar.className).toContain("z-(--z-sticky)");
     expect(bar.className).toContain("h-dvh");
     expect(bar.className).not.toMatch(/rounded|ring/);
   });

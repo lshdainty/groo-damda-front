@@ -16,7 +16,8 @@ import {
   COLOR_SWATCH_ORDER,
   COLUMNS,
   contrastOf,
-  DIVIDER,
+  DIVIDER_SIDE,
+  DIVIDER_STACKED,
   parseRgb,
   STACK_CONTAINER,
   SWATCH,
@@ -133,6 +134,35 @@ const ColorSwatchGroup = React.forwardRef<
     const controlled = valueProp !== undefined;
     const value = controlled ? valueProp : inner;
     const current = currentColor ? "custom" : autoColor ? "auto" : null;
+    // 지금 색 칸의 위 · 옆 판정 — 고정 321 이 아니라 실제 폭으로: 묶음이 놓인 자리 폭이 (지금 색 칸의 실제 폭 + 16 + 선 1 + 16 + 격자 248)
+    // 보다 좁으면 위 줄로 올린다. 칸 폭은 글(지금 색 · 자동)의 크기를 따라 커지므로 글자 200% 에서도 가로로 넘치지 않는다
+    const currentColRef = React.useRef<HTMLDivElement>(null);
+    const [stack, setStack] = React.useState<{
+      stacked: boolean;
+      needed: number;
+    }>({ stacked: false, needed: 321 });
+    React.useLayoutEffect(() => {
+      const root = rootRef.current;
+      const col = currentColRef.current;
+      if (!current || !root || !col) return;
+      const measure = () => {
+        const needed = Math.ceil(col.offsetWidth) + 16 + 1 + 16 + 248;
+        const width = root.clientWidth;
+        // 폭을 못 잰 곳(0 — 숨김 · jsdom)은 옆으로 둔다
+        const stacked = width > 0 && width < needed;
+        setStack((prev) =>
+          prev.stacked === stacked && prev.needed === needed
+            ? prev
+            : { stacked, needed },
+        );
+      };
+      measure();
+      if (typeof ResizeObserver === "undefined") return;
+      const ro = new ResizeObserver(measure);
+      ro.observe(root);
+      ro.observe(col);
+      return () => ro.disconnect();
+    }, [current, rootRef]);
     const checkTone = useCheckTone(
       rootRef,
       current === "custom" ? currentColor : undefined,
@@ -271,6 +301,11 @@ const ColorSwatchGroup = React.forwardRef<
         data-slot="color-swatch-group"
         data-disabled={disabled || undefined}
         className={cn(current && STACK_CONTAINER, className)}
+        style={
+          current
+            ? { containIntrinsicInlineSize: `${stack.needed}px` }
+            : undefined
+        }
         {...(disabled ? { "aria-disabled": true } : {})}
         {...(field.invalid ? { "aria-invalid": true } : {})}
         {...(field.required ? { "aria-required": true } : {})}
@@ -282,12 +317,13 @@ const ColorSwatchGroup = React.forwardRef<
           data-slot="color-swatch-layout"
           className={cn(
             "flex w-fit items-start gap-x4",
-            current && "flex-col @min-[321px]:flex-row",
+            current && (stack.stacked ? "flex-col" : "flex-row"),
           )}
         >
           {current && (
             <>
               <div
+                ref={currentColRef}
                 data-slot="color-swatch-current-column"
                 className="flex shrink-0 flex-col items-center"
               >
@@ -305,7 +341,7 @@ const ColorSwatchGroup = React.forwardRef<
               <span
                 aria-hidden
                 data-slot="color-swatch-divider"
-                className={DIVIDER}
+                className={stack.stacked ? DIVIDER_STACKED : DIVIDER_SIDE}
               />
             </>
           )}

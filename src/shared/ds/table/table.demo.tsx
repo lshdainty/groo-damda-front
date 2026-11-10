@@ -1,6 +1,9 @@
 import { useState, type FocusEvent, type ReactNode } from "react";
 import { ReceiptText, SearchX, Trash2 } from "lucide-react";
 
+import { Avatar } from "@/shared/ds/avatar";
+import { ImageFrame } from "@/shared/ds/image-frame";
+import { PHOTO } from "@/shared/ds/image-frame/image-frame-samples";
 import { Badge } from "@/shared/ds/badge";
 import { Button } from "@/shared/ds/button";
 import { Card, CardAction, CardHeader, CardTitle } from "@/shared/ds/card";
@@ -203,9 +206,8 @@ const RICH_ROWS = [
   { name: "박서준", id: "HR-0031", dept: "디자인팀", mail: "seojun@groo.kr" },
 ];
 
-const Thumb = () => (
-  <span className="size-12 shrink-0 rounded-[6px] bg-bg-neutral-weak" />
-);
+// 썸네일 자리 — 사람은 Avatar 42(table.md). Image Frame 48 은 위아래 12 + 선 1 로 73 이라 72 를 넘어 새로 두지 않는다
+const Thumb = ({ name }: { name: string }) => <Avatar name={name} size={42} />;
 
 // 고르는 표 — 머리 체크(전체 · 일부) · 줄 체크 · 표 위 일괄 작업 바. 고른 줄에는 바탕이 없다
 const SelectTable = ({ picked }: { picked: Set<number> }) => (
@@ -445,7 +447,7 @@ export const TableDemo = () => (
                       <TableRow key={u.id} onClick={noop}>
                         <TableRowHeader>
                           <TableCellContent
-                            media={<Thumb />}
+                            media={<Thumb name={u.name} />}
                             title={u.name}
                             detail={u.id}
                           />
@@ -458,6 +460,77 @@ export const TableDemo = () => (
                 </Table>
               </div>
             </Specimen>
+          </TableCard>
+        </Floor>
+      </DemoRow>
+    </DemoBlock>
+
+    <DemoBlock title="rich 의 가장 나쁜 값 — 긴 글이 두 · 세 줄이어도 위아래 12 를 지킨다(72 는 최소 높이)">
+      <DemoRow label="rich · 긴 글">
+        <Floor>
+          <TableCard title="결재함">
+            <div className="w-[520px] max-w-full">
+              <Table caption="결재함" rowHeight="rich">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>정책</TableHead>
+                    <TableHead>상태</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow onClick={noop}>
+                    <TableRowHeader>
+                      <TableCellContent title="연차" detail="2026-11-10" />
+                    </TableRowHeader>
+                    <TableCell>승인</TableCell>
+                  </TableRow>
+                  <TableRow onClick={noop}>
+                    <TableRowHeader>
+                      <TableCellContent
+                        title="경조사 휴가 — 본인 결혼 · 배우자 출산 · 직계 가족 사망 시 신청하는 특별 휴가 정책"
+                        detail="2026-11-10 · 두 번째 줄 설명이 길어서 줄이 바뀌는 경우의 글"
+                      />
+                    </TableRowHeader>
+                    <TableCell>대기</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </TableCard>
+        </Floor>
+      </DemoRow>
+      <DemoRow label="rich · Image Frame 48 (칸만 위아래 0)">
+        <Floor>
+          <TableCard title="상품">
+            <div className="w-[520px] max-w-full">
+              <Table caption="상품" rowHeight="rich">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>상품</TableHead>
+                    <TableHead>상태</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow onClick={noop}>
+                    <TableRowHeader>
+                      <TableCellContent
+                        media={
+                          <ImageFrame
+                            ratio="1:1"
+                            width={48}
+                            src={PHOTO}
+                            alt=""
+                          />
+                        }
+                        title="나무 책상"
+                        detail="SKU-0042"
+                      />
+                    </TableRowHeader>
+                    <TableCell>판매 중</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
           </TableCard>
         </Floor>
       </DemoRow>

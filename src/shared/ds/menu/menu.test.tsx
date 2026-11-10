@@ -451,6 +451,32 @@ describe("키보드", () => {
     expect(onSelect).not.toHaveBeenCalled();
   });
 
+  it("닫혔을 때 트리거가 문서에서 사라졌으면(지워진 줄) 초점은 body 가 아니라 목록 머리로 간다", async () => {
+    render(
+      <main>
+        <h2>자주 쓰는 거래</h2>
+        <ul>
+          <li id="row">
+            <Menu>
+              <MenuTrigger aria-label="점심 더보기">⋮</MenuTrigger>
+              <MenuContent>
+                <MenuItem label="수정" onSelect={() => {}} />
+              </MenuContent>
+            </Menu>
+          </li>
+        </ul>
+      </main>,
+    );
+    await open();
+    expect(menu()).not.toBeNull();
+    // 줄이 지워졌다(열린 동안 다른 곳에서 지움)
+    act(() => document.getElementById("row")!.remove());
+    press("Escape");
+    await tick(250);
+    expect(menu()).toBeNull();
+    expect(document.activeElement).toBe(document.querySelector("h2"));
+  });
+
   it("Tab 은 닫고 트리거 다음 칸으로(트리거에 초점을 두고 브라우저의 Tab 에 맡긴다)", async () => {
     const onOpenChange = vi.fn();
     render(<Basic onOpenChange={onOpenChange} />);

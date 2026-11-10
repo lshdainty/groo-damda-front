@@ -1,5 +1,5 @@
 // Alert Dialog 의 동작 — 모양 · 색은 scripts/check-ds-spec.mjs 가 크로미움에서 스펙 값과 맞춘다.
-import { act, type ReactNode } from "react";
+import { act, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -374,6 +374,144 @@ describe("뒤로 가기(1280 미만)", () => {
     });
     await tick();
     expect(content()).not.toBeNull();
+  });
+});
+
+describe("요청 중(busy) — 어느 길도 받지 않는다", () => {
+  const popState = () =>
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+
+  it("확정 버튼이 loading 이면 뒤로 가기가 와도 닫지 않고 칸을 다시 쌓는다 — 다음 뒤로 가기도 확인창으로 온다", async () => {
+    const onOpenChange = vi.fn();
+    const push = vi.spyOn(window.history, "pushState");
+    render(<Ask loading onOpenChange={onOpenChange} />);
+    open();
+    await tick();
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(content()!.getAttribute("aria-busy")).toBe("true");
+    popState();
+    await tick();
+    // 닫히지 않고, 먹은 칸 자리에 한 칸을 다시 쌓았다(그대로 두면 다음 뒤로 가기가 요청 중인 화면을 떠난다)
+    expect(content()).not.toBeNull();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(push).toHaveBeenCalledTimes(2);
+    expect(window.history.state?.grooOverlayBack).toBe(true);
+    // 두 번째 뒤로 가기도 같다
+    popState();
+    await tick();
+    expect(content()).not.toBeNull();
+    expect(push).toHaveBeenCalledTimes(3);
+    push.mockRestore();
+  });
+
+  it("요청이 끝나면(loading 꺼짐) 뒤로 가기가 다시 닫는다", async () => {
+    const onOpenChange = vi.fn();
+    render(<Ask loading onOpenChange={onOpenChange} />);
+    open();
+    await tick();
+    popState();
+    await tick();
+    expect(content()).not.toBeNull();
+    render(<Ask loading={false} onOpenChange={onOpenChange} />);
+    await tick();
+    expect(content()!.getAttribute("aria-busy")).toBeNull();
+    popState();
+    await tick();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    expect(content()).toBeNull();
+  });
+
+  it("Esc · [취소] 도 요청 중에는 받지 않는다", async () => {
+    const onOpenChange = vi.fn();
+    render(<Ask loading onOpenChange={onOpenChange} />);
+    open();
+    await tick();
+    key(content()!, "Escape");
+    await tick();
+    expect(content()).not.toBeNull();
+    act(() => byText("취소").click());
+    await tick();
+    expect(content()).not.toBeNull();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    // 바깥(딤)은 늘 무시
+    pointerDown(overlay()!);
+    await tick();
+    expect(content()).not.toBeNull();
+  });
+
+  it("busy prop 으로 직접 켜도 같다(확정 말고 다른 일을 기다릴 때)", async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <AlertDialog defaultOpen busy onOpenChange={onOpenChange}>
+        <AlertDialogContent aria-label="묻는 말">
+          <AlertDialogDescription>설명</AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>,
+    );
+    await tick();
+    popState();
+    key(content()!, "Escape");
+    await tick();
+    expect(content()).not.toBeNull();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+});
+
+describe("닫힌 뒤 초점 — 연 줄이 지워졌으면", () => {
+  function Rows() {
+    const [rows, setRows] = useState(["점심", "커피"]);
+    const [target, setTarget] = useState<string | null>(null);
+    return (
+      <main>
+        <h2>자주 쓰는 거래</h2>
+        <ul>
+          {rows.map((r) => (
+            <li key={r}>
+              <button type="button" onClick={() => setTarget(r)}>
+                {r} 지우기
+              </button>
+            </li>
+          ))}
+        </ul>
+        <AlertDialog
+          open={target != null}
+          onOpenChange={(o) => !o && setTarget(null)}
+        >
+          <AlertDialogContent aria-label="지울까요?">
+            <AlertDialogDescription>지워요.</AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogCancel>취소</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => setRows((a) => a.filter((x) => x !== target))}
+              >
+                지우기
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </main>
+    );
+  }
+
+  it("지운 줄의 ⋮ 가 사라지면 초점은 문서 맨 앞(body)이 아니라 목록 머리로 간다", async () => {
+    render(<Rows />);
+    const row = byText("점심 지우기");
+    act(() => {
+      row.focus();
+      row.click();
+    });
+    await tick();
+    expect(content()).not.toBeNull();
+    act(() => byText("지우기").click());
+    await tick();
+    await tick();
+    expect(document.body.textContent).not.toContain("점심 지우기");
+    expect(document.activeElement).toBe(document.querySelector("h2"));
   });
 });
 

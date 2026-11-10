@@ -49,7 +49,8 @@ const ScreenEffects = () => {
   const { pathname, key } = useLocation();
   const navType = useNavigationType();
   useScreenTitle(t(screenTitleKey(pathname)));
-  const last = useRef(pathname);
+  // 화면 기억은 주소(pathname)가 아니라 history 칸(location.key)을 따른다 — 주소가 같고 칸만 다른 되감기도 놓치지 않는다
+  const last = useRef({ pathname, key });
   const wide = useWideSurface();
   // 폰은 문서가 스크롤한다 — 브라우저가 뒤로 갈 때 창 스크롤을 제멋대로 되돌리면 셸이 돌려주는 값(restoreScreen)과 다투므로 손으로만 복원한다
   useEffect(() => {
@@ -65,9 +66,13 @@ const ScreenEffects = () => {
     enterScreen(key);
   }, [key]);
   useEffect(() => {
-    if (last.current === pathname) return;
-    const from = last.current;
-    last.current = pathname;
+    if (last.current.key === key) return;
+    const from = last.current.pathname;
+    const samePath = from === pathname;
+    last.current = { pathname, key };
+    // 같은 주소로 앞으로 가거나 바꿔 쓰기(?month= 같은 쿼리만 바뀜)는 화면을 옮긴 게 아니다 — 맨 위 · 제목 초점을 부르지 않는다.
+    // 되감기(POP)만 칸이 달라졌으면 그 칸의 스크롤 · 누른 요소를 돌려준다
+    if (samePath && navType !== "POP") return;
     // 1280 이상의 고정 정리(/desk/stats/fixed)는 주소만 있는 같은 화면 위 대화상자다 — 화면을 옮긴 게 아니므로 뒤 통계를 맨 위로
     // 보내지 않고 초점도 제목으로 옮기지 않는다(닫으면 초점은 Dialog 가 연 단추로 돌려놓는다, dialog.md:179)
     if (wide && (isFixedBulkPath(from) || isFixedBulkPath(pathname))) return;
@@ -76,6 +81,8 @@ const ScreenEffects = () => {
       const stop = restoreScreen(key);
       if (stop) return stop;
     }
+    // 같은 주소의 되감기인데 적어 둔 게 없으면 옮긴 화면이 아니므로 그대로 둔다
+    if (samePath) return;
     // 새 화면이 그려진 다음 프레임에 — 제목(data-screen-title)이 DOM 에 있어야 초점이 간다
     const frame = requestAnimationFrame(() => focusScreenTitle());
     return () => cancelAnimationFrame(frame);

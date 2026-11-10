@@ -2,13 +2,15 @@ import { ResponsivePair } from "@/shared/ds/button";
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Drawer as DrawerPrimitive } from "vaul";
-import { ArrowLeft, X } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
 import { useBeforeUnloadWhile } from "@/shared/lib/before-unload";
 import { useLeaveConfirm } from "@/shared/ds/alert-dialog";
 import {
+  captureAnchor,
   focusOpener,
+  type FocusAnchor,
   surfaceTookOver,
   mergeRefs,
   useBackClose,
@@ -384,7 +386,7 @@ const BottomSheetSurface = React.forwardRef<
       nested,
     } = ctx;
     const own = React.useRef<HTMLDivElement>(null);
-    const openerRef = React.useRef<Element | null>(null);
+    const openerRef = React.useRef<FocusAnchor | null>(null);
     // 키보드가 내려갔는데 vaul 이 박은 bottom · height 가 남는 것을 푼다(겹친 시트도 각자)
     useClearKeyboardSizing(own);
     // 모달이 아니면(카탈로그 · 문서 전용) vaul 문맥이 없어 Radix 부품을 바로 쓴다
@@ -419,7 +421,7 @@ const BottomSheetSurface = React.forwardRef<
           )}
           // 처음 초점은 시트(본문 위) — vaul 은 기본으로 아무 데도 두지 않는다
           onOpenAutoFocus={(e) => {
-            openerRef.current = document.activeElement;
+            openerRef.current = captureAnchor(document.activeElement);
             onOpenAutoFocus?.(e);
             if (e.defaultPrevented) return;
             e.preventDefault();
@@ -515,7 +517,7 @@ const BottomSheetContent = React.forwardRef<
               if (!ctx.busy) onBack();
             }}
           >
-            <ArrowLeft aria-hidden strokeWidth={2} />
+            <ChevronLeft aria-hidden strokeWidth={2} />
           </button>
         )}
         <div data-slot="bottom-sheet-header" className={SHEET_HEADER}>
