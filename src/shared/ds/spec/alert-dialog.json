@@ -3,7 +3,7 @@
   "source": "specs/components/alert-dialog.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "849be129bc9d"
+    "sha256": "f9abe93acb04"
   },
   "slots": {
     "overlay": "딤 — 확인창 뒤 화면 전체",

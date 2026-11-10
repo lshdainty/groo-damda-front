@@ -3,7 +3,7 @@
   "source": "specs/components/help-bubble.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "849be129bc9d"
+    "sha256": "f9abe93acb04"
   },
   "slots": {
     "root": "말풍선 — 짙은 바탕, 트리거 쪽에 화살표",

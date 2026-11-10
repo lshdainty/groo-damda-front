@@ -3,7 +3,7 @@
   "source": "specs/components/top-navigation.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "849be129bc9d"
+    "sha256": "f9abe93acb04"
   },
   "slots": {
     "root": "바 — 화면 폭 · 높이 56(위 안전 영역은 더한다). 맨 위에 붙어 스크롤해도 그 자리에 있다",
@@ -818,7 +818,7 @@
       "state": "enabled",
       "slot": "leading",
       "prop": "glyph",
-      "note": "이름 \"뒤로\" — 기본은 들어온 화면(History), 화면마다 상위 화면(Hierarchy)을 고를 수 있다(top-navigation.md 의 \"← 는 어디로\")"
+      "note": "이름 \"뒤로\" — 시트 · 대화상자 머리 ← 도 같은 꺾쇠다(돌아가기 모양은 어디서나 하나 — 2026-11-10 사용자 결정 8A). 기본은 들어온 화면(History), 화면마다 상위 화면(Hierarchy)을 고를 수 있다(top-navigation.md 의 \"← 는 어디로\")"
     },
     {
       "rule": 6,

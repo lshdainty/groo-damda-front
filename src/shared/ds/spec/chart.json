@@ -3,7 +3,7 @@
   "source": "specs/components/chart.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "849be129bc9d"
+    "sha256": "f9abe93acb04"
   },
   "slots": {
     "root": "차트 상자 — 카드 본문 안, 폭 100%. 높이는 쓰는 자리가 정한다",
@@ -12,6 +12,12 @@
     "series": "계열 — 선 · 막대 · 조각 · 칸의 색",
     "line": "선 — 선 · 영역 차트",
     "bar": "막대",
+    "barValue": "막대 위 값 — 막대가 적어 글이 들어갈 때만(예산 이행률 \"88%\")",
+    "compareBar": "비교 막대 줄의 막대 — \"이름 | 막대 | 금액\" 으로 두 기간을 견준다(통계 비교). 트랙 없음",
+    "compareBarPrevious": "비교 막대 줄의 지난 기간 막대 — 같은 계열 색의 옅은 단계",
+    "compareLabel": "비교 막대 줄의 이름 — 기간(\"11월\" · \"10월\")",
+    "compareAmount": "비교 막대 줄의 금액 — 오른쪽 끝, 자르지 않는다",
+    "stockLegend": "주가(캔들) 차트 범례 — 그림 위 자기 줄의 시가 · 고가 · 저가 · 종가 · 거래량",
     "point": "가리킨 점 — 가리킨 자리에만",
     "crosshair": "가리킴 선 — 세로 점선",
     "tooltip": "툴팁 — 떠 있는 표면",
@@ -182,6 +188,65 @@
           },
           "numerals": "tabular-nums"
         },
+        "compareBar": {
+          "height": 8,
+          "radius": 9999,
+          "background": {
+            "light": "#1D6EC9",
+            "dark": "#69ABFF"
+          },
+          "gap": 10
+        },
+        "compareBarPrevious": {
+          "background": {
+            "light": "#D7E6FB",
+            "dark": "#204069"
+          }
+        },
+        "compareLabel": {
+          "typography": {
+            "fontSize": 12,
+            "lineHeight": 16,
+            "fontWeight": 700,
+            "fontFamily": "Pretendard, Inter, sans-serif"
+          },
+          "fontWeight": 700,
+          "foreground": {
+            "light": "#62697A",
+            "dark": "#A2A8B7"
+          }
+        },
+        "compareAmount": {
+          "typography": {
+            "fontSize": 13,
+            "lineHeight": 18,
+            "fontWeight": 700,
+            "fontFamily": "Pretendard, Inter, sans-serif"
+          },
+          "fontWeight": 700,
+          "foreground": {
+            "light": "#1A1F2E",
+            "dark": "#F5F6FA"
+          },
+          "numerals": "tabular-nums"
+        },
+        "stockLegend": {
+          "typography": {
+            "fontSize": 13,
+            "lineHeight": 18,
+            "fontWeight": 400,
+            "fontFamily": "Pretendard, Inter, sans-serif"
+          },
+          "fontWeight": 400,
+          "foreground": {
+            "light": "#62697A",
+            "dark": "#A2A8B7"
+          },
+          "numerals": "tabular-nums",
+          "paddingY": 4,
+          "gap": 8,
+          "minHeight": "한 줄"
+        },
         "heatmapCell": {
           "aspectRatio": "1 / 1",
           "radius": 4,
@@ -251,6 +316,20 @@
           "maxWidth": 28,
           "radius": 4,
           "gap": 4
+        },
+        "barValue": {
+          "typography": {
+            "fontSize": 12,
+            "lineHeight": 16,
+            "fontWeight": 700,
+            "fontFamily": "Pretendard, Inter, sans-serif"
+          },
+          "fontWeight": 700,
+          "foreground": {
+            "light": "#1A1F2E",
+            "dark": "#F5F6FA"
+          },
+          "numerals": "tabular-nums"
         }
       }
     },
@@ -629,6 +708,69 @@
     {
       "rule": 0,
       "state": "enabled",
+      "slot": "compareBar",
+      "prop": "height",
+      "note": "막대 줄의 막대 — Progress 막대와 같은 높이지만 트랙(바탕)이 없다. 길이는 두 값 가운데 큰 값을 100% 로 잰다. 한 줄에 들어가면 이름 · 막대(최소 64) · 금액이 한 줄, 아니면 위 줄(이름 · 금액) + 막대 줄 — 이름이 먼저 줄을 바꾸고 금액은 자르지 않는다(progress.md 의 이름 ↔ 오른쪽 글 규칙과 같다)"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "compareBar",
+      "prop": "background",
+      "note": "이번 기간 — 강조 계열. 지난 기간은 compareBarPrevious(같은 파랑의 옅은 단계 — 위 \"색\" 의 비교 계열). 2026-11-10 사용자 결정 10B — 전엔 이번 달 fg-brand · 지난 달 bg-neutral-weak + 테두리였다"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "compareBar",
+      "prop": "gap",
+      "note": "이름 ↔ 막대 ↔ 금액 · 두 줄 사이 10"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "compareBarPrevious",
+      "prop": "background",
+      "note": "지난 기간 — 테두리 없음. 금액 글은 fg-neutral-muted"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "compareAmount",
+      "prop": "foreground",
+      "note": "이번 기간 — 지난 기간은 fg-neutral-muted. 돈은 원까지, 줄바꿈 없음"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "stockLegend",
+      "prop": "typography",
+      "note": "\"O 70,010 H … L … C … VOL 1.2M\" — 값 쌍은 한 덩어리로 줄을 바꾼다(쌍 안에서 끊지 않는다). 그림 위 자기 줄이라 큰 글자에서 줄이 늘면 카드가 커지고 차트 높이는 그대로다(2026-11-10 사용자 결정 12A). 좌우 여백 없이 그래프 왼쪽 끝에 맞춘다"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "stockLegend",
+      "prop": "foreground",
+      "note": "거래량 — 시가 · 고가 · 저가 · 종가는 봉의 방향 색(오름 fg-critical · 내림 fg-informative, Card 의 증감과 같다)"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "stockLegend",
+      "prop": "gap",
+      "note": "값 쌍 사이"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "stockLegend",
+      "prop": "minHeight",
+      "note": "값이 오기 전에도 한 줄 높이를 잡아 둔다 — 채워질 때 차트가 밀리지 않게"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
       "slot": "heatmapCell",
       "prop": "aspectRatio",
       "note": "정사각형 — 폭은 격자가 정한다(시간대 라벨 열 56 + 요일 일곱 칸, 사이 6). 2026-10-08 칸 폭은 1440 → 140 · 1280 → 117 · 1024 → 81 · 768 → 44 · 폰 390 → 35"
@@ -695,6 +837,13 @@
       "slot": "bar",
       "prop": "gap",
       "note": "한 묶음 안 막대 사이"
+    },
+    {
+      "rule": 2,
+      "state": "enabled",
+      "slot": "barValue",
+      "prop": "typography",
+      "note": "막대 바로 위 — 막대가 적어(예산 이행률 6개월) 값 글이 막대 사이에 들어갈 때만 둔다. 많으면 툴팁 · 표로 보기로 읽는다(2026-11-10 사용자 결정 3A)"
     },
     {
       "rule": 3,
