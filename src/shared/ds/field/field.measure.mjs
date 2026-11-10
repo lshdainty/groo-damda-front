@@ -9,7 +9,9 @@ export default {
   "header.paddingX": ["[data-slot=field-header]", "px", "padding-left"],
   "header.gap": ["[data-slot=field-header]", "px", "column-gap"],
   "header.alignItems": ["[data-slot=field-header]", "exact", "align-items"],
+  "header.flexWrap": ["[data-slot=field-header]", "exact", "flex-wrap"],
   "label.typography": ["[id$=label]", "typography"],
+  "label.wordBreak": ["[id$=label]", "exact", "word-break"],
   "label.fontWeight": ["[id$=label]", "exact", "font-weight"],
   "label.foreground": ["[id$=label]", "color", "color"],
   "requiredIndicator.color": [
@@ -43,6 +45,7 @@ export default {
   "footer.gap": ["[data-slot=field-footer]", "px", "column-gap"],
   "footer.alignItems": ["[data-slot=field-footer]", "exact", "align-items"],
   "description.typography": ["[id$=description]", "typography"],
+  "description.wordBreak": ["[id$=description]", "exact", "word-break"],
   "description.foreground": ["[id$=description]", "color", "color"],
   "descriptionIcon.size": [
     "[id$=description] > span[aria-hidden] > svg",
@@ -60,6 +63,7 @@ export default {
     "margin-right",
   ],
   "errorMessage.typography": ["[id$=error]", "typography"],
+  "errorMessage.wordBreak": ["[id$=error]", "exact", "word-break"],
   "errorMessage.foreground": ["[id$=error]", "color", "color"],
   "errorIcon.size": ["[id$=error] > svg", "px", "width"],
   "errorIcon.color": ["[id$=error] > svg", "color", "color"],
