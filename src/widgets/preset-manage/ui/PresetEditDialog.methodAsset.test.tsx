@@ -317,6 +317,21 @@ describe("프리셋 폼 — 결제 수단에 맞는 계좌 · 카드만 나온�
     expect(valueOf("accountCard")).toBe("preset.noAccount");
   });
 
+  it("수입이면 맞는 계좌가 없을 때 입금 계좌 문구가 뜬다", async () => {
+    assetState.removed = [5];
+    render({
+      rowId: 9,
+      templateName: "월급",
+      expenseType: "INCOME",
+      amount: 0,
+    } as unknown as ExpenseTemplate);
+    await pick("addTx.incomeMethod", "form.paymentMethod.CARD");
+    await click(rowButton("addTx.depositAccount"));
+    await tick();
+    expect(document.body.textContent).toContain("addTx.noPickableDepositAsset");
+    expect(document.body.textContent).not.toContain("addTx.noPickableAsset");
+  });
+
   it("맞는 계좌 · 카드가 없으면 시트에 안내가 뜬다", async () => {
     assetState.removed = [5];
     render(null);

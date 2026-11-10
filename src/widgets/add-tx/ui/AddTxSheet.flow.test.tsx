@@ -1649,6 +1649,24 @@ describe("결제 수단이 계좌 · 카드보다 먼저 — 고르면 그 수�
     expect(sheetText()).toContain("addTx.noPickableAsset");
   });
 
+  it("맞는 입금 계좌가 없으면 수입은 입금 계좌 문구, 지출은 기존 문구다", async () => {
+    state.assets = [bank];
+    await open({
+      expense: {
+        ...expense,
+        expenseType: "INCOME",
+        categoryRowId: 21,
+      } as Expense,
+    });
+    click(row("addTx.incomeMethodRow"));
+    await tick();
+    await press("form.paymentMethod.CARD");
+    click(row("addTx.depositAccount"));
+    await tick();
+    expect(sheetText()).toContain("addTx.noPickableDepositAsset");
+    expect(sheetText()).not.toContain("addTx.noPickableAsset");
+  });
+
   it("고른 계좌 · 카드가 바꾼 결제 수단에 안 맞으면 비워진다", async () => {
     await toStep2();
     click(row("addTx.account"));

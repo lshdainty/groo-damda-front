@@ -166,7 +166,11 @@ export function AssetPickBody({
       {() => (
         <div className="-mx-x6">
           {sorted.length === 0 && (
-            <PickEmpty>{t("addTx.noPickableAsset")}</PickEmpty>
+            <PickEmpty>
+              {f.type === "INCOME"
+                ? t("addTx.noPickableDepositAsset")
+                : t("addTx.noPickableAsset")}
+            </PickEmpty>
           )}
           <List
             aria-label={

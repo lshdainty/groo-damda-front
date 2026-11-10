@@ -785,7 +785,11 @@ export function useRecurringForm({
                 onChange={(id) => set("assetRowId", id)}
                 onClear={() => set("assetRowId", null)}
                 clearLabel={t("clearValue")}
-                emptyText={te("addTx.noPickableAsset")}
+                emptyText={
+                  f.type === "INCOME"
+                    ? te("addTx.noPickableDepositAsset")
+                    : te("addTx.noPickableAsset")
+                }
               />
             )}
             {isTransfer && (

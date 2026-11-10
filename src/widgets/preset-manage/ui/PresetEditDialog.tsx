@@ -889,7 +889,9 @@ export function PresetEditDialog({
                             setAssetRowId,
                             close,
                             true,
-                            t("addTx.noPickableAsset"),
+                            isIncome
+                              ? t("addTx.noPickableDepositAsset")
+                              : t("addTx.noPickableAsset"),
                           )
                         }
                       </PickerRow>
