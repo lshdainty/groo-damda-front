@@ -463,6 +463,16 @@ describe("화면을 옮길 때", () => {
     expect(slot("screen-actions")).not.toBeNull();
   });
 
+  it("ScreenTitle — actions={false} · description={false} 면 줄 상자 없이 h1 하나(빈 줄이 서지 않는다)", () => {
+    render(
+      <ScreenTitle description={false} actions={false}>
+        제목
+      </ScreenTitle>,
+    );
+    expect(slot("screen-title-row")).toBeNull();
+    expect(slot("screen-actions")).toBeNull();
+  });
+
   it("ScreenTitle — 설명 · 동작이 없으면 줄 상자 없이 h1 하나", () => {
     render(<ScreenTitle>제목</ScreenTitle>);
     expect(slot("screen-title-row")).toBeNull();

@@ -357,7 +357,10 @@ interface ScreenTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
 
 const ScreenTitle = React.forwardRef<HTMLHeadingElement, ScreenTitleProps>(
   ({ className, description, actions, ...props }, ref) => {
-    const hasRow = description != null || actions != null;
+    // false · null · undefined 는 없는 것 — `cond && <Button/>` 가 false 를 줘도 빈 줄이 서지 않는다
+    const hasDescription = description != null && description !== false;
+    const hasActions = actions != null && actions !== false;
+    const hasRow = hasDescription || hasActions;
     const heading = (
       <h1
         ref={ref}
@@ -374,13 +377,13 @@ const ScreenTitle = React.forwardRef<HTMLHeadingElement, ScreenTitleProps>(
       <div data-slot="screen-title-row" className={SCREEN_TITLE_ROW}>
         <div className="min-w-0">
           {heading}
-          {description != null && (
+          {hasDescription && (
             <p data-slot="screen-description" className={SCREEN_DESCRIPTION}>
               {description}
             </p>
           )}
         </div>
-        {actions != null && (
+        {hasActions && (
           <div data-slot="screen-actions" className={SCREEN_ACTIONS}>
             {actions}
           </div>
