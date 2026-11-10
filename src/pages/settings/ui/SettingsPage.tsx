@@ -3,7 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useDeviceSize } from "@/shared/lib/groo/responsive";
-import { useOutletContext, useSearchParams } from "react-router-dom";
+import {
+  useNavigationType,
+  useOutletContext,
+  useSearchParams,
+} from "react-router-dom";
 import { focusScreenTitle, useScreenTitle } from "@/shared/ds/top-navigation";
 import { BudgetManager } from "@/widgets/budget-manage";
 import { CategoryManager } from "@/widgets/category-manage";
@@ -99,14 +103,17 @@ export const SettingsPage = () => {
         : t(activeSection.labelKey)
       : t("page.title"),
   );
-  // 섹션이 바뀌면(앞으로 · 뒤로 모두) 본문 맨 위 · 새 제목에 초점 — 처음 열 때는 훔치지 않는다.
+  // 섹션이 바뀌면 본문 맨 위 · 새 제목에 초점 — 처음 열 때는 훔치지 않는다. 뒤로 오기(POP)는 건너뛴다: 같은 주소 안의 섹션 이동은
+  // 셸(AppLayout ScreenEffects)이 그 칸의 스크롤 · 누른 요소를 돌려주므로, 여기서 맨 위 + 제목으로 덮으면 타이밍에 따라 둘이 다툰다
+  const navType = useNavigationType();
   const lastFocused = useRef(section);
   useEffect(() => {
     if (lastFocused.current === section) return;
     lastFocused.current = section;
+    if (navType === "POP") return;
     const frame = requestAnimationFrame(() => focusScreenTitle());
     return () => cancelAnimationFrame(frame);
-  }, [section]);
+  }, [section, navType]);
 
   // 소셜 연동 복귀 처리 — SSO→Google 연동 후 ?linked=<provider>(성공) / ?linkError=<msg>(실패) 를
   // 달고 이 페이지로 돌아온다. 알림 노출 + provider 상태 재조회 + 쿼리 제거.

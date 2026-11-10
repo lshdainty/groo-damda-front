@@ -79,6 +79,14 @@ vi.mock("@/features/recurring-transaction", () => ({
   useRecurringTransactions: () => ({}),
 }));
 
+const titleFocus = vi.hoisted(() => ({ calls: 0 }));
+vi.mock("@/shared/ds/top-navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/shared/ds/top-navigation")>()),
+  focusScreenTitle: () => {
+    titleFocus.calls += 1;
+  },
+}));
+
 const { SettingsPage } = await import("./SettingsPage");
 const { TopNavigationProvider } = await import("@/shared/ds/top-navigation");
 
@@ -144,6 +152,26 @@ describe("설정 섹션 이동 기록", () => {
     });
     expect(where(router)).toBe("/desk/settings");
     expect(document.title).toBe("page.title - 그루 담다");
+  });
+
+  it("섹션 이동(push)은 맨 위 + 제목 초점, 뒤로 오기(POP)는 건너뛰고 셸 복원에 맡긴다", async () => {
+    const frame = () =>
+      act(async () => {
+        await new Promise((r) => requestAnimationFrame(() => r(null)));
+      });
+    titleFocus.calls = 0;
+    const router = mount("/desk/settings?section=budget", false);
+    pressByText("sections.notifications.label");
+    await frame();
+    expect(titleFocus.calls).toBe(1);
+    act(() => {
+      void router.navigate(-1);
+    });
+    await frame();
+    await frame();
+    expect(router.state.historyAction).toBe("POP");
+    expect(where(router)).toBe("/desk/settings?section=budget");
+    expect(titleFocus.calls).toBe(1);
   });
 
   it("지금 켜진 섹션을 다시 누르면 기록이 늘지 않는다(데스크톱 목록)", () => {
