@@ -377,6 +377,91 @@ describe("뒤로 가기(1280 미만)", () => {
   });
 });
 
+describe("요청 중(busy) — 어느 길도 받지 않는다", () => {
+  const popState = () =>
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+
+  it("확정 버튼이 loading 이면 뒤로 가기가 와도 닫지 않고 칸을 다시 쌓는다 — 다음 뒤로 가기도 확인창으로 온다", async () => {
+    const onOpenChange = vi.fn();
+    const push = vi.spyOn(window.history, "pushState");
+    render(<Ask loading onOpenChange={onOpenChange} />);
+    open();
+    await tick();
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(content()!.getAttribute("aria-busy")).toBe("true");
+    popState();
+    await tick();
+    // 닫히지 않고, 먹은 칸 자리에 한 칸을 다시 쌓았다(그대로 두면 다음 뒤로 가기가 요청 중인 화면을 떠난다)
+    expect(content()).not.toBeNull();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    expect(push).toHaveBeenCalledTimes(2);
+    expect(window.history.state?.grooOverlayBack).toBe(true);
+    // 두 번째 뒤로 가기도 같다
+    popState();
+    await tick();
+    expect(content()).not.toBeNull();
+    expect(push).toHaveBeenCalledTimes(3);
+    push.mockRestore();
+  });
+
+  it("요청이 끝나면(loading 꺼짐) 뒤로 가기가 다시 닫는다", async () => {
+    const onOpenChange = vi.fn();
+    render(<Ask loading onOpenChange={onOpenChange} />);
+    open();
+    await tick();
+    popState();
+    await tick();
+    expect(content()).not.toBeNull();
+    render(<Ask loading={false} onOpenChange={onOpenChange} />);
+    await tick();
+    expect(content()!.getAttribute("aria-busy")).toBeNull();
+    popState();
+    await tick();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    expect(content()).toBeNull();
+  });
+
+  it("Esc · [취소] 도 요청 중에는 받지 않는다", async () => {
+    const onOpenChange = vi.fn();
+    render(<Ask loading onOpenChange={onOpenChange} />);
+    open();
+    await tick();
+    key(content()!, "Escape");
+    await tick();
+    expect(content()).not.toBeNull();
+    act(() => byText("취소").click());
+    await tick();
+    expect(content()).not.toBeNull();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    // 바깥(딤)은 늘 무시
+    pointerDown(overlay()!);
+    await tick();
+    expect(content()).not.toBeNull();
+  });
+
+  it("busy prop 으로 직접 켜도 같다(확정 말고 다른 일을 기다릴 때)", async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <AlertDialog defaultOpen busy onOpenChange={onOpenChange}>
+        <AlertDialogContent aria-label="묻는 말">
+          <AlertDialogDescription>설명</AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>,
+    );
+    await tick();
+    popState();
+    key(content()!, "Escape");
+    await tick();
+    expect(content()).not.toBeNull();
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+});
+
 describe("띄울 자리", () => {
   it("container 를 주면 그 안에 뜬다(다크 판의 색을 받는다)", async () => {
     const place = document.createElement("div");
