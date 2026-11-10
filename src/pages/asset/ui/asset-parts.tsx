@@ -772,7 +772,7 @@ export function UpcomingBillsSection() {
             title={it.title}
             detail={
               <span
-                className={it.daysLeft <= 3 ? "text-fg-critical" : undefined}
+                className={it.daysLeft <= 3 ? "text-fg-warning" : undefined}
               >
                 {it.daysLeft <= 0
                   ? t("date:today")
