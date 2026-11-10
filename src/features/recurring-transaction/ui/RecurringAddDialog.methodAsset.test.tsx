@@ -194,4 +194,14 @@ describe("반복 폼 — 결제 수단에 맞는 계좌 · 카드만 나온다 (
     await click(rowBtn("accountCard"));
     expect(surface().textContent).toContain("addTx.noPickableAsset");
   });
+
+  it("수입이면 맞는 계좌가 없을 때 입금 계좌 문구가 뜬다", async () => {
+    assetState.list = [bank];
+    act(() => root.render(<RecurringAddDialog onClose={() => {}} />));
+    await click(rowBtn("income"));
+    await choose("addTx.incomeMethod", "form.paymentMethod.CARD");
+    await click(rowBtn("addTx.depositAccount"));
+    expect(surface().textContent).toContain("addTx.noPickableDepositAsset");
+    expect(surface().textContent).not.toContain("addTx.noPickableAsset");
+  });
 });

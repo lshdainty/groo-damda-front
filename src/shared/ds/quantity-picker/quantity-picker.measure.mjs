@@ -38,7 +38,7 @@ export default {
     "display",
   ],
   "root.background": [GROUP, "color", "background-color"],
-  "root.height": [GROUP, "px", "height"],
+  "root.minHeight": [GROUP, "px", "min-height"],
   "root.radius": [GROUP, "px", "border-top-left-radius"],
   "button.background": [BTN, "color", "background-color"],
   "button.cursor": [BTN, "exact", "cursor"],

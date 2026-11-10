@@ -100,12 +100,16 @@ export function PresetDetailDialog({
     add("category", t("category"), preset.categoryName);
     add(
       "payment",
-      t("paymentMethodLabel"),
+      isIncome ? t("addTx.incomeMethod") : t("paymentMethodLabel"),
       preset.paymentMethod
         ? t(PAYMENT_KEYS[preset.paymentMethod] ?? "selectNone")
         : null,
     );
-    add("asset", t("accountCard"), preset.assetName);
+    add(
+      "asset",
+      isIncome ? t("addTx.depositAccount") : t("accountCard"),
+      preset.assetName,
+    );
     add("merchant", t("preset.defaultMerchant"), preset.merchant);
   }
   add("memo", t("memo"), preset.description);

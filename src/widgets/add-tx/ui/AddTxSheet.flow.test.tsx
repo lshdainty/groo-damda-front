@@ -1584,6 +1584,40 @@ describe("결제 수단이 계좌 · 카드보다 먼저 — 고르면 그 수�
     expect(before("addTx.incomeMethodRow", "addTx.depositAccount")).toBe(true);
   });
 
+  it("계좌 시트 제목 — 수입은 입금 계좌, 지출은 계좌 · 카드다", async () => {
+    await open({
+      expense: {
+        ...expense,
+        expenseType: "INCOME",
+        categoryRowId: 21,
+      } as Expense,
+    });
+    click(row("addTx.depositAccount"));
+    await tick();
+    expect(sheetText()).toContain("addTx.depositAccount");
+    expect(sheetText()).not.toContain("addTx.account");
+    // 목록 첫 항목(없음)도 수입 말이다
+    expect(sheetText()).toContain("addTx.noDepositAccount");
+    expect(sheetText()).not.toContain("addTx.noAccountOption");
+    expect(
+      document.querySelector(
+        '[role=dialog] ul[aria-label="addTx.depositAccount"], [role=dialog] [role=list][aria-label="addTx.depositAccount"], [role=dialog] [aria-label="addTx.depositAccount"]',
+      ),
+    ).not.toBeNull();
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await open({ expense: expense });
+    click(row("addTx.account"));
+    await tick();
+    expect(sheetText()).toContain("addTx.account");
+    expect(sheetText()).not.toContain("addTx.depositAccount");
+    expect(sheetText()).toContain("addTx.noAccountOption");
+    expect(sheetText()).not.toContain("addTx.noDepositAccount");
+    expect(
+      document.querySelector('[role=dialog] [aria-label="addTx.account"]'),
+    ).not.toBeNull();
+  });
+
   it("카드를 고르면 계좌 시트에는 신용 · 체크카드만 나온다", async () => {
     await toStep2();
     await pickMethod("form.paymentMethod.CARD");
@@ -1618,6 +1652,24 @@ describe("결제 수단이 계좌 · 카드보다 먼저 — 고르면 그 수�
     click(row("addTx.account"));
     await tick();
     expect(sheetText()).toContain("addTx.noPickableAsset");
+  });
+
+  it("맞는 입금 계좌가 없으면 수입은 입금 계좌 문구, 지출은 기존 문구다", async () => {
+    state.assets = [bank];
+    await open({
+      expense: {
+        ...expense,
+        expenseType: "INCOME",
+        categoryRowId: 21,
+      } as Expense,
+    });
+    click(row("addTx.incomeMethodRow"));
+    await tick();
+    await press("form.paymentMethod.CARD");
+    click(row("addTx.depositAccount"));
+    await tick();
+    expect(sheetText()).toContain("addTx.noPickableDepositAsset");
+    expect(sheetText()).not.toContain("addTx.noPickableAsset");
   });
 
   it("고른 계좌 · 카드가 바꾼 결제 수단에 안 맞으면 비워진다", async () => {

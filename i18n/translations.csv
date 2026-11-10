@@ -1192,6 +1192,7 @@ expense,addTx.categoryLoadFailed,카테고리를 불러오지 못했어요,Could
 expense,addTx.assetLoadFailed,계좌 · 카드를 불러오지 못했어요,Couldn't load accounts and cards
 expense,addTx.noCategoryOfType,이 종류의 카테고리가 없어요.,There are no categories of this kind.
 expense,addTx.noPickableAsset,이 결제 수단에 맞는 계좌 · 카드가 없어요.,No account or card fits this payment method.
+expense,addTx.noPickableDepositAsset,이 수입 방식에 맞는 입금 계좌가 없어요.,No deposit account matches this income method.
 expense,addTx.fxRateLabel,환율,Exchange rate
 expense,addTx.krwAmount,원화 금액,Amount in won
 expense,addTx.amountStepTitle,금액,Amount

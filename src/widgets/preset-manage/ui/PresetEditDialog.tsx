@@ -216,6 +216,11 @@ export function PresetEditDialog({
   const contentRef = useRef<HTMLDivElement>(null);
 
   const isTransfer = type === "TRANSFER";
+  const isIncome = type === "INCOME";
+  const methodName = isIncome
+    ? t("addTx.incomeMethod")
+    : t("paymentMethodLabel");
+  const accountName = isIncome ? t("addTx.depositAccount") : t("accountCard");
   const amountNumber = parseAmount(amount);
   const lock = amountNumber > 0;
   // 이자는 **금액이 있을 때만** 받는다(금액이 매달 다르면 이자도 매달 다르다 — 2026-09-15). 금액을 비우면 이자도 비운다.
@@ -487,7 +492,15 @@ export function PresetEditDialog({
             selected={selected == null ? NONE : String(selected)}
             items={[
               ...(withNone
-                ? [{ value: NONE, title: t("preset.noAccount") }]
+                ? [
+                    {
+                      value: NONE,
+                      title:
+                        type === "INCOME"
+                          ? t("addTx.noDepositAccount")
+                          : t("preset.noAccount"),
+                    },
+                  ]
                 : []),
               ...pool.map(assetItem),
             ]}
@@ -815,17 +828,27 @@ export function PresetEditDialog({
                         onClick={() => enterStep("merchant")}
                       />
                       <PickerRow
-                        title={t("paymentMethodLabel")}
+                        title={methodName}
                         prefix={<CreditCard />}
-                        value={payLabel(paymentMethod) ?? t("preset.noPayment")}
-                        surfaceTitle={t("paymentMethodLabel")}
+                        value={
+                          payLabel(paymentMethod) ??
+                          (isIncome
+                            ? t("addTx.noIncomeMethod")
+                            : t("preset.noPayment"))
+                        }
+                        surfaceTitle={methodName}
                       >
                         {({ close }) => (
                           <PickList
-                            label={t("paymentMethodLabel")}
+                            label={methodName}
                             selected={paymentMethod || NONE}
                             items={[
-                              { value: NONE, title: t("preset.noPayment") },
+                              {
+                                value: NONE,
+                                title: isIncome
+                                  ? t("addTx.noIncomeMethod")
+                                  : t("preset.noPayment"),
+                              },
                               ...PAYMENT_METHODS.map((p) => ({
                                 value: p.v,
                                 title: t(p.lKey),
@@ -844,18 +867,20 @@ export function PresetEditDialog({
                         )}
                       </PickerRow>
                       <PickerRow
-                        title={t("accountCard")}
+                        title={accountName}
                         prefix={<Wallet />}
                         value={
                           assetById(assetRowId)
                             ? assetLabel(assetById(assetRowId)!)
-                            : t("preset.noAccount")
+                            : isIncome
+                              ? t("addTx.noDepositAccount")
+                              : t("preset.noAccount")
                         }
-                        surfaceTitle={t("accountCard")}
+                        surfaceTitle={accountName}
                       >
                         {({ close }) =>
                           assetPick(
-                            t("accountCard"),
+                            accountName,
                             // 결제 수단 · 종류에 맞는 것만 — 거래 추가 · 반복과 같은 거르기(allowAssetFor)
                             assets.filter((a) =>
                               allowAssetFor(a, paymentMethod, type),
@@ -864,7 +889,9 @@ export function PresetEditDialog({
                             setAssetRowId,
                             close,
                             true,
-                            t("addTx.noPickableAsset"),
+                            isIncome
+                              ? t("addTx.noPickableDepositAsset")
+                              : t("addTx.noPickableAsset"),
                           )
                         }
                       </PickerRow>

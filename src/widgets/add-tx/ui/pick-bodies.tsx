@@ -166,12 +166,27 @@ export function AssetPickBody({
       {() => (
         <div className="-mx-x6">
           {sorted.length === 0 && (
-            <PickEmpty>{t("addTx.noPickableAsset")}</PickEmpty>
+            <PickEmpty>
+              {f.type === "INCOME"
+                ? t("addTx.noPickableDepositAsset")
+                : t("addTx.noPickableAsset")}
+            </PickEmpty>
           )}
-          <List aria-label={t("addTx.account")}>
+          <List
+            aria-label={
+              f.type === "INCOME"
+                ? t("addTx.depositAccount")
+                : t("addTx.account")
+            }
+          >
             {allowNone && (
               <ListButtonItem
-                title={noneLabel ?? t("addTx.noAccountOption")}
+                title={
+                  noneLabel ??
+                  (f.type === "INCOME"
+                    ? t("addTx.noDepositAccount")
+                    : t("addTx.noAccountOption"))
+                }
                 aria-current={value == null ? true : undefined}
                 suffix={value == null ? <Check aria-hidden /> : undefined}
                 onClick={() => {
