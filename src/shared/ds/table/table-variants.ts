@@ -21,6 +21,8 @@ export const TABLE_HEAD_STICKY = "sticky top-0 z-[1] bg-bg-layer-default";
 // Image Frame 48 썸네일은 48 + 24 + 1 = 73 이라 72 를 넘는다 — 판단 대기라 표에 새로 두지 않는다
 export const TABLE_BODY_CELL = "py-x3 font-normal [&>*]:align-top";
 export const TABLE_BODY_RICH = "h-[72px] py-x3";
+// Image Frame 48 썸네일을 담는 칸만 위아래 0(사용자 결정 2026-11-10 14C) — 48 + 24 + 선 1 = 73 이라 72 를 넘으므로 높이가 먼저다
+export const TABLE_BODY_THUMBNAIL = "py-0";
 
 export const TABLE_ALIGN = {
   start: "text-start",

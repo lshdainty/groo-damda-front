@@ -2,6 +2,8 @@ import { useState, type FocusEvent, type ReactNode } from "react";
 import { ReceiptText, SearchX, Trash2 } from "lucide-react";
 
 import { Avatar } from "@/shared/ds/avatar";
+import { ImageFrame } from "@/shared/ds/image-frame";
+import { PHOTO } from "@/shared/ds/image-frame/image-frame-samples";
 import { Badge } from "@/shared/ds/badge";
 import { Button } from "@/shared/ds/button";
 import { Card, CardAction, CardHeader, CardTitle } from "@/shared/ds/card";
@@ -490,6 +492,41 @@ export const TableDemo = () => (
                       />
                     </TableRowHeader>
                     <TableCell>대기</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </TableCard>
+        </Floor>
+      </DemoRow>
+      <DemoRow label="rich · Image Frame 48 (칸만 위아래 0)">
+        <Floor>
+          <TableCard title="상품">
+            <div className="w-[520px] max-w-full">
+              <Table caption="상품" rowHeight="rich">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>상품</TableHead>
+                    <TableHead>상태</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow onClick={noop}>
+                    <TableRowHeader thumbnail>
+                      <TableCellContent
+                        media={
+                          <ImageFrame
+                            ratio="1:1"
+                            width={48}
+                            src={PHOTO}
+                            alt=""
+                          />
+                        }
+                        title="나무 책상"
+                        detail="SKU-0042"
+                      />
+                    </TableRowHeader>
+                    <TableCell>판매 중</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
