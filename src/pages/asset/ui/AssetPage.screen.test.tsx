@@ -566,3 +566,25 @@ describe("저축 목표 기한 없음(I-05 60)", () => {
     expect(text()).not.toContain("anytime");
   });
 });
+
+describe("다가오는 결제 D-day 색(결정 1A — 며칠 남은 일은 warning)", () => {
+  const dayFromToday = (n: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const bill = (rowId: number, n: number) => ({
+    rowId,
+    description: `결제 ${rowId}`,
+    amount: 10_000,
+    nextExecutionDate: dayFromToday(n),
+  });
+
+  it("3일 안은 fg-warning 이고 fg-critical 은 어디에도 없다", () => {
+    state.recurring = q([bill(1, 1), bill(2, 3), bill(3, 10)]);
+    render();
+    const list = container.querySelector('[aria-label="upcomingBills"]')!;
+    expect(list.querySelectorAll(".text-fg-warning")).toHaveLength(2);
+    expect(list.querySelector(".text-fg-critical")).toBeNull();
+  });
+});

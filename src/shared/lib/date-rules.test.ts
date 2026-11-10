@@ -6,6 +6,7 @@ import {
   formatDateDowTime,
   formatDateRange,
   formatDateRangeParts,
+  formatDateRangeShortYear,
   formatServerDateDowTime,
   formatMonthDay,
   formatMonthShort,
@@ -103,6 +104,18 @@ describe("날짜 규칙 — 기간 줄 · 월 눈금 · 점 연월 (웹 B3 가.5
       separator: "~",
       end: "2026년 1월 4일",
     });
+  });
+  it("해가 다른 직접 기간 한 줄 — 두 자리 연도(7C) · 구간 기호는 로케일 문구", async () => {
+    // NBSP(날짜 안) · ZWSP(기호 뒤 줄바꿈 자리) 를 걷으면 스펙 문자열 그대로다
+    const plain = (s: string) =>
+      s.replace(/\u00a0/g, " ").replace(/\u200b/g, "");
+    expect(plain(formatDateRangeShortYear("2025-11-10", "2026-11-10"))).toBe(
+      "25. 11. 10.~26. 11. 10.",
+    );
+    await i18n.changeLanguage("en");
+    expect(plain(formatDateRangeShortYear("2025-11-10", "2026-11-10"))).toBe(
+      "Nov 10, '25–Nov 10, '26",
+    );
   });
   it("월 눈금 영어 — 'Jan' · 해가 섞이면 'Dec 2025'", async () => {
     await i18n.changeLanguage("en");

@@ -32,7 +32,7 @@ export function CategoryPickList({
 
   if (tops.length === 0) {
     return (
-      <p className="m-0 py-x3 text-center text-t3 text-fg-neutral-subtle">
+      <p className="m-0 py-x3 text-center text-t4 text-fg-neutral-subtle">
         {t("preset.noCategoryOfKind")}
       </p>
     );

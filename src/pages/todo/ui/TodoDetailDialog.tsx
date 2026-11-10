@@ -120,7 +120,7 @@ export function TodoDetailDialog({
                 {todo.content}
               </p>
             ) : (
-              <p className="m-0 font-sans text-t5 font-normal text-fg-neutral-subtle">
+              <p className="m-0 font-sans text-t4 font-normal text-fg-neutral-subtle">
                 {t("detail.none")}
               </p>
             )}

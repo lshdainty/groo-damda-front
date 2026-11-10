@@ -21,6 +21,7 @@ import {
   formatRangeValue,
   rangeParts,
 } from "@/shared/ds/date-picker/date-picker-dates";
+import { dsText } from "@/shared/ds/i18n";
 
 // 로케일 소스 = i18n.language(SoT). ko('ko'/'ko-KR'/미정) → ko, en → enUS.
 const isEnLocale = (): boolean => (i18n.language ?? "").startsWith("en");
@@ -179,6 +180,25 @@ export const formatDateRangeParts = (
   to: Date | string,
   now: Date = new Date(),
 ) => rangeParts({ start: toDate(from), end: toDate(to) }, now);
+
+/**
+ * 해가 다른 직접 기간의 한 줄 — 두 자리 연도(결정 7C, 2026-11-10): ko "25. 11. 10.~26. 11. 10." / en "Nov 10, '25–Nov 10, '26"(앱과 같은 꼴).
+ * 구간 기호는 로케일 문구(`ds` datePicker.rangeSeparator) · 날짜 꼴은 로케일별 — 둘을 따로 둔다.
+ * 날짜 안 공백은 줄바꿈 금지(NBSP), 구간 기호 뒤에만 줄바꿈 자리(ZWSP)를 둔다 — 글자 200% 에서 넘치는 대신 기호 뒤에서 꺾인다.
+ * 같은 해 기간은 이 함수를 쓰지 않는다([formatDateRange] 의 올해 줄임 그대로).
+ */
+export const formatDateRangeShortYear = (
+  from: Date | string,
+  to: Date | string,
+): string => {
+  const one = (input: Date | string) => {
+    const d = toDate(input);
+    if (isEnLocale())
+      return format(d, "MMM d, ''yy", { locale: enUS }).replace(/ /g, "\u00a0");
+    return `${format(d, "yy")}.\u00a0${d.getMonth() + 1}.\u00a0${d.getDate()}.`;
+  };
+  return `${one(from)}${dsText("datePicker.rangeSeparator")}\u200b${one(to)}`;
+};
 
 /**
  * 월 눈금 — 모두 같은 해면 월만(ko "1월" · en "Jan", 0 을 채우지 않는다), 해가 섞이면 연월(ko "2026. 1." · en "Jan 2026").

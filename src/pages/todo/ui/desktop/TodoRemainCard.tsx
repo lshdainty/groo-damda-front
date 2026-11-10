@@ -52,7 +52,7 @@ export function TodoRemainCard({
             // 남은 것이 없으면 태그 묶음을 두지 않는다 — "태그 없음 0개" 같은 줄을 채우지 않는다(지시서 32)
             <p
               data-slot="todo-remain-empty"
-              className="m-0 px-x6 py-x3 text-t5 text-fg-neutral-subtle"
+              className="m-0 px-x6 py-x3 text-t4 text-fg-neutral-subtle"
             >
               {t("remain.none")}
             </p>

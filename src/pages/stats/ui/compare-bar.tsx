@@ -56,9 +56,8 @@ export function CompareBar({
       <div
         className={cn(
           "h-full rounded-full",
-          current
-            ? "bg-fg-brand"
-            : "box-border border border-solid border-stroke-neutral-weak bg-bg-neutral-weak",
+          // 두 값 견주기는 Chart(chart.md "비교 막대 줄", 결정 10B) — 이번 chart-blue · 지난 chart-blue-weak, 트랙도 테두리도 없다
+          current ? "bg-chart-blue" : "bg-chart-blue-weak",
         )}
         style={{ width: `${max * 100}%` }}
       />

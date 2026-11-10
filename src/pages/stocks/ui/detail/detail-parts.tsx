@@ -618,7 +618,7 @@ export function QuotesBand({
                 onRetry={() => void bookQ.refetch()}
               />
             ) : asks.length === 0 && bids.length === 0 ? (
-              <p className="m-0 py-x3 text-center text-t3 text-fg-neutral-subtle">
+              <p className="m-0 py-x3 text-center text-t4 text-fg-neutral-subtle">
                 {t("quotes.orderbookEmpty")}
               </p>
             ) : (
@@ -673,7 +673,7 @@ export function QuotesBand({
               onRetry={() => void tradesQ.refetch()}
             />
           ) : fills.length === 0 ? (
-            <p className="m-0 py-x3 text-center text-t3 text-fg-neutral-subtle">
+            <p className="m-0 py-x3 text-center text-t4 text-fg-neutral-subtle">
               {t("quotes.tradesEmpty")}
             </p>
           ) : (
@@ -798,7 +798,7 @@ export function DailyBand({
           onRetry={() => void q.refetch()}
         />
       ) : rows.length === 0 ? (
-        <p className="m-0 px-x6 py-x3 text-center text-t3 text-fg-neutral-subtle">
+        <p className="m-0 px-x6 py-x3 text-center text-t4 text-fg-neutral-subtle">
           {t("daily.empty")}
         </p>
       ) : (
@@ -881,7 +881,7 @@ export function DailyCard({
             </TableStatusRow>
           ) : rows.length === 0 ? (
             <TableStatusRow>
-              <p className="m-0 py-x3 text-center text-t3 text-fg-neutral-subtle">
+              <p className="m-0 py-x3 text-center text-t4 text-fg-neutral-subtle">
                 {t("daily.empty")}
               </p>
             </TableStatusRow>

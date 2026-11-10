@@ -75,7 +75,7 @@ const MoreDesktop = () => {
           <SearchX size={28} style={{ display: "inline-block" }} />
           <div
             style={{
-              fontSize: "var(--text-label-sm)",
+              fontSize: "var(--text-t4)",
               fontWeight: 600,
               marginTop: 8,
             }}

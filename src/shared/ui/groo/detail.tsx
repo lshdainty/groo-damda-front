@@ -43,7 +43,7 @@ export function DetailHero({
           {title}
         </span>
       </div>
-      <div className="num mt-3 text-[length:var(--text-display-md)] font-extrabold tracking-[-0.03em]">
+      <div className="num mt-3 text-[length:var(--text-display-md)] font-extrabold">
         {children}
       </div>
       {meta && (

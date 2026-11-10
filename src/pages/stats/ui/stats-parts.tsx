@@ -37,7 +37,7 @@ import {
   Desc,
 } from "@/shared/ui/groo/band-parts";
 import type { FixedView } from "@/entities/expense";
-import { formatDateRange, formatDateRangeParts } from "@/shared/lib/date";
+import { formatDateRange, formatDateRangeShortYear } from "@/shared/lib/date";
 
 /** 소수 둘째 자리로 반올림해 0 이 되는 등락률 — 방향 없이 "변화 없음" */
 const ZERO_RATE = formatChangeRate(0, { sign: "none" });
@@ -106,18 +106,17 @@ function useFitLimit(limit: number) {
   return [ref, fits] as const;
 }
 
-/** 기간 버튼(31) — ds Button neutralOutline small 36 · 뒤 꺾쇠 16 하나(앞 · 뒤 아이콘을 함께 쓰지 않는다 — button.md:67) · t4 · 700. 다른 해 직접 기간의 두 줄 글은 "~" 뒤에서만 줄을 바꾼다.
+/** 기간 버튼(31) — ds Button neutralOutline small 36 · 뒤 꺾쇠 16 하나(앞 · 뒤 아이콘을 함께 쓰지 않는다 — button.md:67) · t4 · 700.
+ * 해가 다른 직접 기간은 두 자리 연도 한 줄("25. 11. 10.~26. 11. 10." — 결정 7C), 같은 해는 올해 줄임 그대로. 글자가 아주 커지면 구간 기호 뒤에서만 꺾인다.
  * 누르면 ds Date Picker 기간 고르기가 열린다 — 1280 미만 시트, 이상 이 버튼 아래 팝오버(date-picker.md 어디에 놓나 :112) */
 export function PeriodButton({ m }: { m: StatsModel }) {
   const { t } = useTranslation("stats");
   const { period } = m;
-  const twoLine =
+  const otherYears =
     period.segMode === "custom" &&
     period.from.getFullYear() !== period.to.getFullYear();
-  // 다른 해 직접 기간 — 양끝에 연도, 두 줄은 구간 기호 뒤에서만 바꾼다(날짜 규칙 · 구간 기호는 로케일 문구)
-  const parts = twoLine ? formatDateRangeParts(period.from, period.to) : null;
-  const text = parts
-    ? `${parts.start}${parts.separator}\n${parts.end}`
+  const text = otherYears
+    ? formatDateRangeShortYear(period.from, period.to)
     : m.periodLbl;
   return (
     <RangePickerSheet
@@ -133,11 +132,11 @@ export function PeriodButton({ m }: { m: StatsModel }) {
           variant="neutralOutline"
           size="small"
           aria-label={t("period.buttonAria", {
-            period: parts ? formatDateRange(period.from, period.to) : text,
+            period: otherYears ? formatDateRange(period.from, period.to) : text,
           })}
           aria-haspopup="dialog"
           aria-expanded={m.pickerOpen}
-          className="h-auto min-h-9 shrink-0 whitespace-pre-line py-x1_5 text-center [&_svg]:size-4"
+          className="h-auto min-h-9 shrink-0 whitespace-normal py-x1_5 text-center [&_svg]:size-4"
           onClick={onClick}
         >
           <span>{text}</span>

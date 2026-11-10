@@ -16,7 +16,7 @@ import { useAssetMask } from "../../lib/asset-groups";
 import type { CardDetail } from "./use-card-detail";
 import { PeriodPicker } from "./CardOverlays";
 
-const NOTE = "m-0 px-global-gutter pt-x1 text-t3 text-fg-neutral-subtle";
+const NOTE = "m-0 px-global-gutter pt-x1 text-t4 text-fg-neutral-subtle";
 const VALUE = "min-w-0 text-end tabular-nums text-fg-neutral-muted";
 const TEXT_LINK = "-my-x1";
 

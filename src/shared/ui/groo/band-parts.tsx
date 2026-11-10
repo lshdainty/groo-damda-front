@@ -102,10 +102,10 @@ export function BandFailure({
   );
 }
 
-/** 빈 글 — R9(t3 · fg-neutral-subtle) 가운데 한 줄, 위아래 12 */
+/** 빈 글 — R9 혼자 서는 안내(t4 · fg-neutral-subtle, 결정 4B) 가운데 한 줄, 위아래 12 */
 export function BandEmpty({ children }: { children: ReactNode }) {
   return (
-    <p className="m-0 py-x3 text-center text-t3 text-fg-neutral-subtle">
+    <p className="m-0 py-x3 text-center text-t4 text-fg-neutral-subtle">
       {children}
     </p>
   );
