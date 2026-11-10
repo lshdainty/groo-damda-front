@@ -25,7 +25,7 @@ const HEAD = "[data-slot=table-head]";
 const HEAD_MID = `${HEAD}:not(:first-child):not(:last-child):not(:has([data-slot=table-sort-button]))`;
 const BODY_ROW = "[data-slot=table-body] tr";
 const BODY_CELLS = "[data-slot=table-body] tr > *";
-// 가운데 칸 — 72 줄(rich)은 스펙이 칸 위아래 여백을 0 으로 둔다(cell.paddingY 0 — 높이가 먼저, Q-011-1) — 한 줄 표와 같은 키로 잰다
+// 가운데 칸 — 72 줄(rich)도 칸 위아래 12(cell.paddingY 12 — 72 는 최소 높이, 2026-11-09) — 한 줄 표와 같은 키로 잰다
 const CELL_MID = `${TABLE} [data-slot=table-cell]:not(:first-child):not(:last-child)`;
 const CELL_MID_ANY = `${TABLE} [data-slot=table-cell]:not(:first-child):not(:last-child)`;
 const BAR = "[data-slot=table-bulk-bar]";

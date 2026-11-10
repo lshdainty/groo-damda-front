@@ -187,12 +187,16 @@ describe("Table — 구조", () => {
     expect(one("thead th").className).not.toContain("sticky");
   });
 
-  it("rich 표는 모든 줄이 72 — 칸 여백 없이 높이 72 안 세로 가운데", () => {
+  it("rich 표는 모든 줄이 최소 72 — 칸 위아래 12 를 지키고 내용이 넘으면 줄이 자란다", () => {
     render(<Basic rowHeight="rich" />);
     expect(one("[data-slot=table]").dataset.rowHeight).toBe("rich");
     for (const cell of all("tbody th, tbody td")) {
+      // 표 칸의 height 는 최소 높이처럼 자란다(min-height 는 표 칸에 먹지 않는다)
       expect(cell.className).toContain("h-[72px]");
-      expect(cell.className).toContain("py-0");
+      expect(cell.className).not.toContain("min-h-");
+      // 옛 값(여백 0)은 긴 글이 줄 선에 붙었다
+      expect(cell.className).toContain("py-x3");
+      expect(cell.className).not.toContain("py-0");
     }
   });
 

@@ -15,9 +15,12 @@ export const TABLE_HEAD_CELL = "py-x2_5 font-medium whitespace-nowrap";
 export const TABLE_HEAD_STICKY = "sticky top-0 z-[1] bg-bg-layer-default";
 
 // 본문 칸 — 위아래 12 · 400. 칸 안의 인라인 블록(배지 · 이름 링크)은 줄 위에 맞춘다 — 글자 기준선에 맞추면 줄이 45 를 넘는다.
-// 썸네일 · 두 줄 칸이 있는 표는 72 — 칸 여백 12 보다 높이가 먼저다(48 + 12 + 12 + 선 1 = 73 이라 위아래 여백 없이 72 안 세로 가운데)
+// 썸네일 · 두 줄 칸이 있는 표는 최소 72(선 1 포함) — 칸은 위아래 12 를 지키고 내용을 세로 가운데에 둔다. 내용이 72 를 넘으면(긴 두 줄 글)
+// 줄이 자라되 위아래 12 가 줄 선에 붙지 않게 지킨다(table.md 줄 높이 · 2026-11-09). 표 칸에서는 height 가 곧 최소 높이다 — 내용이 넘으면 칸이
+// 자란다. min-height 는 표 칸에 먹지 않아(크로미움 계측: min-h-[72px] 는 줄이 67 로 줄었다) 쓰지 않는다.
+// Image Frame 48 썸네일은 48 + 24 + 1 = 73 이라 72 를 넘는다 — 판단 대기라 표에 새로 두지 않는다
 export const TABLE_BODY_CELL = "py-x3 font-normal [&>*]:align-top";
-export const TABLE_BODY_RICH = "h-[72px] py-0";
+export const TABLE_BODY_RICH = "h-[72px] py-x3";
 
 export const TABLE_ALIGN = {
   start: "text-start",
