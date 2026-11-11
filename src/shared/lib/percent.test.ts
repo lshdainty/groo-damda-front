@@ -38,6 +38,15 @@ describe("progressPercentText", () => {
     for (const [v, want] of table) expect(progressPercentText(v)).toBe(want);
   });
 
+  it("천 단위 쉼표 — 999 · 1000 · 1234.4 · 음수", () => {
+    expect(progressPercentText(999)).toBe("999%");
+    expect(progressPercentText(1000)).toBe("1,000%");
+    expect(progressPercentText(1234.4)).toBe("1,234%");
+    expect(progressPercentText(12345.67)).toBe("12,346%");
+    expect(progressPercentText(-1234.5)).toBe("−1,235%");
+    expect(progressPercentText(-0.2)).toBe("0%");
+  });
+
   it("유한하지 않은 값은 —", () => {
     expect(progressPercentText(NaN)).toBe("—");
     expect(progressPercentText(Infinity)).toBe("—");

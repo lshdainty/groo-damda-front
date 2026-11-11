@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ListHeader } from "@/shared/ds/list";
 import { useDsText } from "@/shared/ds/i18n";
 import { money } from "@/shared/lib/groo/format";
+import { groupInt } from "@/shared/lib/percent";
 import { BarCaption, MeterBar } from "@/shared/ui/groo/band-parts";
 import type { Asset } from "@/entities/asset";
 import { useAssetMask } from "../../lib/asset-groups";
@@ -27,7 +28,7 @@ export function CardLimit({ asset, c }: { asset: Asset; c: CardDetail }) {
           <ListHeader as="div" variant="boldSolid" className="mt-x2">
             <h2 id={titleId}>{t("assetDetail.limitUsage")}</h2>
             <span className="shrink-0 text-t4 font-bold tabular-nums text-fg-neutral">
-              {t("assetDetail.limitPctUsed", { pct: limitPct })}
+              {t("assetDetail.limitPctUsed", { pct: groupInt(limitPct) })}
             </span>
           </ListHeader>
           <div className="px-global-gutter pt-x1 pb-x2">

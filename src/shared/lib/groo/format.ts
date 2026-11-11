@@ -19,7 +19,7 @@ export const MINUS = "−";
  * "첫째 자리" · "소수가 0 이면 빼기" 는 거절. 사용률 · 비중 · 달성률 같은 **등락이 아닌 비율**은 이 함수가 아니다.
  *
  * `sign`: `"auto"`(기본 — 음수만 U+2212) · `"always"`(양수 · 0 은 `+`, 음수는 `−`) · `"none"`(절댓값 — ▲ ▼ 화살표가 방향을 말하는 자리).
- * 반올림해서 0.00 이 되는 음수는 `−0.00%` 가 아니라 `0.00%` 다. 유한하지 않은 값은 `—`.
+ * 1000% 이상은 천 단위 쉼표(`1,234.56%`). 반올림해서 0.00 이 되는 음수는 `−0.00%` 가 아니라 `0.00%` 다. 유한하지 않은 값은 `—`.
  */
 export function formatChangeRate(
   pct: number,
@@ -53,7 +53,7 @@ export function formatChangeRate(
  *   100 경계는 99.6 → `99%` · 100.3 → `101%` · 정확히 100 만 `100%`(웹 · 앱 같게).
  * - `change` 등락률 · 수익률 — 둘째 자리. [formatChangeRate] 를 그대로 부른다(합치지 않는다: 부호 · 화살표 규칙이 따로 있다).
  *
- * 값은 0~100 단위 퍼센트다(0.3 = 0.3%). 유한하지 않은 값은 `—`.
+ * 값은 0~100 단위 퍼센트다(0.3 = 0.3%). **1000% 이상은 천 단위 쉼표**(`1,234%` · `−1,234.5%`, 영어도 같다 — 사용자 결정 2026-11-11). 유한하지 않은 값은 `—`.
  */
 export function formatPercent(pct: number, kind: "share" | "progress"): string;
 export function formatPercent(
@@ -76,7 +76,12 @@ export function formatPercent(
     return `${MINUS}${formatPercent(-pct, kind)}`;
   }
   if (pct > 0 && pct < 0.05) return i18n.t("common:percentBelowShare");
-  return `${(Math.round(pct * 10) / 10).toFixed(1)}%`;
+  // 1000% 이상은 천 단위 쉼표(`1,234.5%`) — 금액 · 개수와 같은 규칙. 소수 첫째 자리는 그대로.
+  const body = (Math.round(pct * 10) / 10).toLocaleString("en-US", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+  return `${body}%`;
 }
 
 /**

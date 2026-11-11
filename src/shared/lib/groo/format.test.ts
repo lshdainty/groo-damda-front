@@ -356,6 +356,52 @@ describe("wonPrefix — 영어 금액 접두는 값이 있는 호출처만 붙�
   });
 });
 
+describe("퍼센트 천 단위 쉼표(2026-11-11) — 소수 자리 규칙은 그대로", () => {
+  const rows: Array<[string, number, string, string, string]> = [
+    // [설명, 값, share, progress, change(auto)]
+    ["999", 999, "999.0%", "999%", "999.00%"],
+    ["1000", 1000, "1,000.0%", "1,000%", "1,000.00%"],
+    ["1234.56", 1234.56, "1,234.6%", "1,235%", "1,234.56%"],
+    ["12345.67", 12345.67, "12,345.7%", "12,346%", "12,345.67%"],
+    ["음수 -1234.5", -1234.5, "−1,234.5%", "−1,235%", "−1,234.50%"],
+    ["반올림 0 음수 -0.04", -0.04, "0.0%", "0%", "−0.04%"],
+    ["등락 반올림 0 -0.004", -0.004, "0.0%", "0%", "0.00%"],
+    ["999.96 (올림해 1000)", 999.96, "1,000.0%", "1,000%", "999.96%"],
+  ];
+  it.each(rows)("%s", (_n, v, share, progress, change) => {
+    expect(formatPercent(v, "share")).toBe(share);
+    expect(formatPercent(v, "progress")).toBe(progress);
+    expect(formatPercent(v, "change")).toBe(change);
+  });
+
+  it("change sign — always · none · 쉼표와 부호가 함께", () => {
+    expect(formatPercent(1234.56, "change", { sign: "always" })).toBe(
+      "+1,234.56%",
+    );
+    expect(formatPercent(-1234.56, "change", { sign: "always" })).toBe(
+      "−1,234.56%",
+    );
+    expect(formatPercent(-1234.56, "change", { sign: "none" })).toBe(
+      "1,234.56%",
+    );
+    expect(formatChangeRate(-12345.67)).toBe("−12,345.67%");
+    expect(formatChangeRate(0.004, { sign: "always" })).toBe("+0.00%");
+  });
+
+  it("경계 — 0.04 는 미만 문구(쉼표 무관), 영어도 쉼표", async () => {
+    expect(formatPercent(0.04, "share")).toBe("0.1% 미만");
+    await i18n.changeLanguage("en");
+    try {
+      expect(formatPercent(0.04, "share")).toBe("<0.1%");
+      expect(formatPercent(1234, "progress")).toBe("1,234%");
+      expect(formatPercent(1234.5, "share")).toBe("1,234.5%");
+      expect(formatPercent(-1234.5, "change")).toBe("−1,234.50%");
+    } finally {
+      await i18n.changeLanguage("ko");
+    }
+  });
+});
+
 describe("formatPercent — 퍼센트는 뜻이 셋(B3 1A)", () => {
   it("비중 share — 늘 소수 첫째 자리, 경계 0 · 0.04 · 0.05 · 99.95 · 100", () => {
     expect(formatPercent(0, "share")).toBe("0.0%");
