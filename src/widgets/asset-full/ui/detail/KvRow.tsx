@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { withCommaBreaks } from "@/shared/ds/i18n";
 import { ListItem } from "@/shared/ds/list";
 
 /**
@@ -14,7 +15,7 @@ export function KvRow({ label, value }: { label: string; value: ReactNode }) {
       suffixText
       suffix={
         <span className="block text-end text-fg-neutral-muted [overflow-wrap:anywhere]">
-          {value}
+          {withCommaBreaks(value)}
         </span>
       }
     />

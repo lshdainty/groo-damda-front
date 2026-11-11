@@ -38,7 +38,7 @@ import {
   formatAssetAmount,
   isForeignCurrency,
 } from "@/shared/lib/groo/currency";
-import { dsLocale } from "@/shared/ds/i18n";
+import { dsLocale, withCommaBreaks } from "@/shared/ds/i18n";
 
 /**
  * 매수·매도 입력.
@@ -503,7 +503,7 @@ export function AssetTradeDialog({
                     suffix={
                       <span className="text-end font-bold tabular-nums text-fg-neutral">
                         {realizedPreview >= 0 ? "+" : "−"}
-                        {money(Math.abs(realizedPreview))}
+                        {withCommaBreaks(money(Math.abs(realizedPreview)))}
                       </span>
                     }
                   />
