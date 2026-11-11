@@ -12,7 +12,13 @@ import {
   formatDateValue,
   formatRangeValue,
 } from "./date-picker";
-import { dsMoney, dsMoneyText, dsText, withCommaBreaks } from "./i18n";
+import {
+  dsMoney,
+  dsMoneyText,
+  dsText,
+  splitAmountWords,
+  withCommaBreaks,
+} from "./i18n";
 import { formatTimeValue, timePickerLabels } from "./time-picker";
 
 const d = (y: number, m: number, day: number) => new Date(y, m - 1, day);
@@ -143,5 +149,33 @@ describe("금액 줄바꿈 — 쉼표 뒤에서만(03-D 결정 2 B)", () => {
     el.innerHTML = html(dsMoneyText(1234567));
     expect(el.textContent).toBe(dsMoney(1234567));
     expect(html(dsMoneyText(1234567))).toBe("1,<wbr/>234,<wbr/>567원");
+  });
+  it("앞뒤에 다른 말이 있으면 금액 낱말을 상자로 싸 통째로 넘긴다 — 탐욕 채움(이체 1,000, / 000원) 방지", () => {
+    const out = html(withCommaBreaks("이체 1,000,000원"));
+    expect(out).toContain('<span data-amount-word="" class="inline-block');
+    expect(out).toContain("1,<wbr/>000,<wbr/>000원</span>");
+    expect(out.startsWith("이체 <span")).toBe(true);
+    const el = document.createElement("span");
+    el.innerHTML = out;
+    expect(el.textContent).toBe("이체 1,000,000원");
+  });
+  it("금액 뒤 공백은 상자 밖에 둔다 — 영어 · 여러 낱말", () => {
+    const out = html(withCommaBreaks("Fee ₩1,000,000 total"));
+    expect(out).toContain("</span> total");
+    const el = document.createElement("span");
+    el.innerHTML = out;
+    expect(el.textContent).toBe("Fee ₩1,000,000 total");
+  });
+  it("splitAmountWords — 금액 낱말만 amount, 공백은 앞 글에 붙는다", () => {
+    expect(splitAmountWords("이체 1,000,000원  한도")).toEqual([
+      { text: "이체 ", amount: false },
+      { text: "1,000,000원  ", amount: true },
+      { text: "한도", amount: false },
+    ]);
+    expect(splitAmountWords("")).toEqual([]);
+    expect(splitAmountWords("서울, 강남")).toEqual([
+      { text: "서울, ", amount: false },
+      { text: "강남", amount: false },
+    ]);
   });
 });
