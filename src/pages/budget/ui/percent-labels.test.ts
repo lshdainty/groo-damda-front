@@ -18,4 +18,15 @@ describe("visiblePercentLabels — 끝을 지키고 앞에서 건너뛴다", () 
     const r = visiblePercentLabels(["96%", null, "104%"], 30, 12);
     expect(r).toEqual([true, false, true]);
   });
+  it("쉼표 글자도 폭에 든다 — 1,234% · 12,346% 가 닿으면 끝을 남기고 앞을 건너뛴다", () => {
+    // jsdom 은 글자 수 × 0.62em 어림 — 쉼표 없는 5 · 6 글자는 step 48 에 들지만 쉼표 6 · 7 글자는 닿는다
+    expect(visiblePercentLabels(["1234%", "12346%"], 48, 12)).toEqual([
+      true,
+      true,
+    ]);
+    expect(visiblePercentLabels(["1,234%", "12,346%"], 48, 12)).toEqual([
+      false,
+      true,
+    ]);
+  });
 });
