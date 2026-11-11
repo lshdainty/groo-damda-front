@@ -1,4 +1,4 @@
-// 정산 상세 — 바닥은 주 동작 하나 + 왼쪽 [삭제], 나머지 동작은 머리 ⋮ (bottom-sheet "동작이 여럿이면 머리 ⋮", 스펙 3차 정리).
+// 정산 상세 — 바닥은 주 동작 하나 + 왼쪽 [삭제] 뿐, 머리 ⋮ 는 없다(담을 실행이 없다).
 // 번역은 CSV 원본에서 읽는다.
 import { readFileSync } from "node:fs";
 import { act } from "react";
@@ -164,37 +164,31 @@ const footerLabels = () =>
   ).map((b) => b.textContent);
 
 describe("정산 상세 바닥 · 머리 ⋮", () => {
-  it("진행 중이면 바닥은 왼쪽 [삭제] 와 주 동작 [모두 받음] 둘뿐이다([일괄 요청] 은 바닥에 없다)", () => {
+  it("진행 중이면 바닥은 왼쪽 [삭제] 와 주 동작 [모두 받음] 둘뿐이다", () => {
     open(session(false));
     expect(footerLabels()).toEqual(["삭제", "모두 받음"]);
   });
 
-  it("끝난 정산은 바닥 [삭제] 하나, 머리 ⋮ 는 없다(담을 동작이 없다)", () => {
+  it("끝난 정산은 바닥 [삭제] 하나뿐이다", () => {
     open(session(true));
     expect(footerLabels()).toEqual(["삭제"]);
     expect(byName("금요일 회식 2차 더보기")).toBeUndefined();
   });
 
-  it("진행 중이면 머리 ⋮ 가 이름이 붙은 버튼으로 있고, 열면 막힌 [일괄 요청] 줄(설명 포함)이 있다", () => {
+  it("진행 중이어도 머리에 ⋮ 는 없다 — 제목 · 닫기만(메뉴는 실행만 담는다)", () => {
     open(session(false));
-    const more = byName("금요일 회식 2차 더보기");
-    expect(more).toBeTruthy();
-    act(() => more!.click());
-    const items = menuItems();
-    expect(items).toHaveLength(1);
-    expect(items[0]!.textContent).toContain("일괄 요청");
-    expect(items[0]!.textContent).toContain("송금 요청은 곧 열려요.");
-    // 1280 미만 Menu Sheet 는 <button disabled>, 1280 이상 Menu 는 aria-disabled
+    expect(byName("금요일 회식 2차 더보기")).toBeUndefined();
     expect(
-      (items[0] as HTMLButtonElement).disabled ||
-        items[0]!.getAttribute("aria-disabled") === "true",
-    ).toBe(true);
+      Array.from(document.body.querySelectorAll("button")).filter((b) =>
+        /더보기/.test(b.getAttribute("aria-label") ?? ""),
+      ),
+    ).toHaveLength(0);
+    expect(menuItems()).toHaveLength(0);
   });
 
-  it("막힌 줄을 눌러도 상세는 닫히지 않는다", () => {
+  it("[일괄 요청] 은 어디에도 없다(참여자 줄의 막힌 [요청] 은 그대로)", () => {
     open(session(false));
-    act(() => byName("금요일 회식 2차 더보기")!.click());
-    act(() => menuItems()[0]!.click());
-    expect(closed).toBe(0);
+    expect(document.body.textContent).not.toContain("일괄 요청");
+    expect(document.body.textContent).toContain("송금 요청은 곧 열려요.");
   });
 });
