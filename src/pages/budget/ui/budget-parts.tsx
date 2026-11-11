@@ -769,10 +769,10 @@ export function ComplianceSection({
                     }) => {
                       const i = p.index ?? -1;
                       const w = Number(p.width ?? 0);
-                      // 막대 폭 = 한 칸 / (1 + 25%) 이므로 한 칸 = 폭 × 1.25
+                      // barCategoryGap 25% 는 칸 양쪽에 걸리므로 막대 폭 = 한 칸의 50% → 한 칸 = 폭 × 2
                       const show = visiblePercentLabels(
                         labelTexts,
-                        w * 1.25,
+                        w * 2,
                         0.75 * rootPx,
                       );
                       if (!labelTexts[i] || !show[i]) return null;
