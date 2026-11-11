@@ -601,13 +601,13 @@ type ComplianceDatum = {
   active: boolean;
 };
 
-/** 막대 색 — 100% 넘음 chart red · 고른 달 chart blue · 지난 달 chart-blue-weak(같은 파랑의 옅은 단계 — v111) */
+/** 막대 색 — 100% 넘음 chart red · 고른 달 chart blue · 지난 달 회색(--chart-prev-period — 11-11 "B 회색") */
 const complianceFill = (d: ComplianceDatum) =>
   d.percent != null && d.percent > 100
     ? "var(--color-chart-red)"
     : d.active
       ? "var(--color-chart-blue)"
-      : "var(--color-chart-blue-weak)";
+      : "var(--chart-prev-period)";
 
 function ComplianceTip({
   active,

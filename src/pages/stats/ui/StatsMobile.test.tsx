@@ -345,7 +345,7 @@ describe("통계 글 · 색 규칙", () => {
     expect(summary.textContent).not.toContain("compare.dirLess");
   });
 
-  it("요일 비교 지난 기간은 chart-blue-weak", () => {
+  it("요일 비교 지난 기간은 회색(--chart-prev-period) — 점은 ds 클래스 위에 이 줄이 덮고, 막대는 var 로 칠한다", () => {
     render();
     clickTab("tab.compare");
     const dots = Array.from(
@@ -357,6 +357,11 @@ describe("통계 글 · 색 규칙", () => {
       expect.stringMatching(/bg-chart-blue(\s|$)/),
       expect.stringContaining("bg-chart-blue-weak"),
     ]);
+    // 점 색(ds blue-weak)을 지난 기간 회색으로 덮는 규칙이 범례 줄에 있다
+    const legend = container.querySelector(
+      "[data-section=weekday] [class*='chart-legend-dot']",
+    );
+    expect(legend?.className).toContain("bg-(--chart-prev-period)");
   });
 
   it("저축률 가운데 %는 t9, 비율 막대 글은 차트 색 위 글자색(fg-neutral-inverted, 흰색 고정 아님)", () => {

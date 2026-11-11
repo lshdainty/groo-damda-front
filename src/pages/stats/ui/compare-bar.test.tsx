@@ -87,7 +87,7 @@ describe("CompareBar", () => {
     ).toBe("true");
   });
 
-  it("색은 Chart 규칙(10B) · DA-10 — 이번 chart-blue · 지난 blue-600(다크 blue-700, 바탕 3:1), 트랙 · 테두리 없음", () => {
+  it("색은 Chart 규칙(10B) · DA-10 — 이번 chart-blue · 지난 회색(--chart-prev-period, 바탕 3:1), 트랙 · 테두리 없음", () => {
     mount();
     const fill = (h: HTMLElement) =>
       h.querySelector<HTMLElement>("[aria-hidden=true] > div")!;
@@ -101,9 +101,8 @@ describe("CompareBar", () => {
         <CompareBar label="지난달" amount="1원" max={0.5} current={false} />,
       ),
     );
-    // DA-10(11-11) — 옅은 chart-blue-weak 는 바탕 1.26:1 이라 한 단계 진하게
-    expect(fill(host).className).toContain("bg-blue-600");
-    expect(fill(host).className).toContain("dark:bg-blue-700");
+    // DA-10(11-11 "B 회색") — 옅은 chart-blue-weak 는 바탕 1.26:1 이라 회색(라이트 gray-500 · 다크 gray-600)
+    expect(fill(host).className).toContain("bg-(--chart-prev-period)");
     expect(fill(host).className).not.toContain("chart-blue-weak");
     expect(fill(host).className).not.toMatch(/neutral-weak|border/);
   });
