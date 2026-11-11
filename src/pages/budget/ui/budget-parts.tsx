@@ -17,6 +17,7 @@ import {
   ChartDataTable,
   ChartTooltip,
   ChartTooltipContent,
+  CHART_TICK_SIZE,
   chartAxisProps,
 } from "@/shared/ds/chart";
 import { List, ListItem, ListTile } from "@/shared/ds/list";
@@ -48,6 +49,11 @@ import {
 } from "@/shared/ui/groo/band-parts";
 import { Icon } from "@/shared/ui/groo/primitives";
 import type { BudgetModel } from "./budget-model";
+import {
+  PERCENT_LABEL_SIZE,
+  rootFontPx,
+  visiblePercentLabels,
+} from "./percent-labels";
 
 /*
  * 예산 화면의 구역 부품(I-08 8 ~ 13) — 폰 띠(band)와 데스크톱 카드(card)가 같은 내용을 같은 부품으로 그린다.
@@ -574,7 +580,7 @@ function MonthTick(props: {
       x={x}
       y={yNum + 8}
       textAnchor="middle"
-      fontSize={11}
+      fontSize={CHART_TICK_SIZE}
       fontWeight={active ? 700 : 400}
       fill={
         active ? "var(--color-fg-neutral)" : "var(--color-fg-neutral-subtle)"
@@ -703,6 +709,10 @@ export function ComplianceSection({
     active: b.year === m.year && b.month === m.month,
   }));
   const activeIndex = data.findIndex((d) => d.active);
+  const rootPx = rootFontPx();
+  const labelTexts = data.map((d) =>
+    d.percent == null ? null : formatPercent(d.percent, "progress"),
+  );
   const name = t("complianceName");
   return (
     <>
@@ -715,12 +725,18 @@ export function ComplianceSection({
             <Chart label={name} height={180}>
               <BarChart
                 data={data}
-                margin={{ top: 24, right: 8, left: 8, bottom: 0 }}
+                margin={{
+                  top: Math.round(24 * (rootPx / 16)),
+                  right: 8,
+                  left: 8,
+                  bottom: 0,
+                }}
                 barCategoryGap="25%"
               >
                 <XAxis
                   dataKey="label"
                   {...chartAxisProps()}
+                  interval={0}
                   tick={(p) => <MonthTick {...p} activeIndex={activeIndex} />}
                 />
                 <YAxis
@@ -745,14 +761,33 @@ export function ComplianceSection({
                   ))}
                   <LabelList
                     dataKey="percent"
-                    position="top"
-                    formatter={(v: unknown) =>
-                      v == null ? "" : formatPercent(Number(v), "progress")
-                    }
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      fill: "var(--color-fg-neutral)",
+                    content={(p: {
+                      x?: number | string;
+                      y?: number | string;
+                      width?: number | string;
+                      index?: number;
+                    }) => {
+                      const i = p.index ?? -1;
+                      const w = Number(p.width ?? 0);
+                      // 막대 폭 = 한 칸 / (1 + 25%) 이므로 한 칸 = 폭 × 1.25
+                      const show = visiblePercentLabels(
+                        labelTexts,
+                        w * 1.25,
+                        0.75 * rootPx,
+                      );
+                      if (!labelTexts[i] || !show[i]) return null;
+                      return (
+                        <text
+                          x={Number(p.x ?? 0) + w / 2}
+                          y={Number(p.y ?? 0) - 5}
+                          textAnchor="middle"
+                          fontSize={PERCENT_LABEL_SIZE}
+                          fontWeight={700}
+                          fill="var(--color-fg-neutral)"
+                        >
+                          {labelTexts[i]}
+                        </text>
+                      );
                     }}
                   />
                 </Bar>
