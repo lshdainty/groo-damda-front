@@ -17,7 +17,7 @@ export function Won({
   card?: HideCardKey;
 }) {
   return (
-    <span className="tabular-nums">
+    <span className="inline-block max-w-full tabular-nums">
       <MaskAmount card={card} mask="••••">
         {withCommaBreaks(`${wonPre()}${KRW(amount)}`)}
       </MaskAmount>

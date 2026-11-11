@@ -415,7 +415,7 @@ export function StackedAmount({
         {withCommaBreaks(main)}
       </span>
       <span className="block text-end text-t3 font-medium tabular-nums text-fg-neutral-subtle">
-        / {withCommaBreaks(sub)}
+        {withCommaBreaks(`/ ${sub}`)}
       </span>
     </span>
   );

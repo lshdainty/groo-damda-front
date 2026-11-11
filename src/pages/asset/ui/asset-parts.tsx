@@ -782,7 +782,7 @@ export function UpcomingBillsSection() {
             }
             suffix={
               <span className="text-t5 font-bold tabular-nums text-fg-neutral">
-                {m(MINUS + won(it.amount))}
+                {withCommaBreaks(m(MINUS + won(it.amount)))}
               </span>
             }
             onClick={() => goToSettings(it.rowId)}

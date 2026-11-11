@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ChevronRight, CircleAlert } from "lucide-react";
+import { withCommaBreaks } from "@/shared/ds/i18n";
 
 import { cn } from "@/shared/lib/cn";
 import {
@@ -37,7 +38,7 @@ export function RowValue({
 }) {
   return (
     <span className={cn("text-end", empty && "text-fg-placeholder", className)}>
-      {children}
+      {withCommaBreaks(children)}
     </span>
   );
 }
