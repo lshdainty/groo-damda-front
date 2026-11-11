@@ -56,8 +56,9 @@ export function CompareBar({
       <div
         className={cn(
           "h-full rounded-full",
-          // 두 값 견주기는 Chart(chart.md "비교 막대 줄", 결정 10B) — 이번 chart-blue · 지난 chart-blue-weak, 트랙도 테두리도 없다
-          current ? "bg-chart-blue" : "bg-chart-blue-weak",
+          // 두 값 견주기는 Chart(chart.md "비교 막대 줄", 결정 10B) — 이번 chart-blue, 트랙도 테두리도 없다.
+          // 지난 기간은 회색(11-11 사용자 결정 "B 회색", DA-10) — 라이트 gray-500 · 다크 gray-600, 바탕 대비 3:1 이상(index.css --chart-prev-period)
+          current ? "bg-chart-blue" : "bg-(--chart-prev-period)",
         )}
         style={{ width: `${max * 100}%` }}
       />

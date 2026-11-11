@@ -497,6 +497,8 @@ export function CompareWeekdaySection({
       <Body place={place}>
         <ChartLegendTiles
           id={legendId}
+          // 지난 기간 점도 막대와 같은 회색(11-11 "B 회색") — ds 점 색(blue-weak)을 이 줄에서만 덮는다
+          className="[&_[data-slot=chart-legend-dot].bg-chart-blue-weak]:bg-(--chart-prev-period)"
           items={[
             {
               key: "now",
@@ -545,7 +547,7 @@ export function CompareWeekdaySection({
               <Bar
                 dataKey="prev"
                 name={m.periodPrev}
-                fill={chartVar("blue-weak")}
+                fill="var(--chart-prev-period)"
               />
             )}
           </BarChart>

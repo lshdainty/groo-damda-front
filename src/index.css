@@ -288,6 +288,16 @@
   --surface-hero: var(--bg-brand-subtle);
 }
 
+/* 지난 기간 막대 색(사용자 결정 11-11 "B 회색", 담다 앱 시험 DA-10) — 이번 기간 chart-blue 와 색상으로 갈리고 바탕 대비 3:1 이상.
+ * 라이트 gray-500 · 다크 gray-600(다크 팔레트 값 #838997). 스펙이 토큰 이름을 정하면 그 이름으로 옮긴다. */
+:root {
+  --chart-prev-period: var(--color-gray-500);
+}
+.dark,
+[data-theme="dark"] {
+  --chart-prev-period: var(--color-gray-600);
+}
+
 /* 옛 로컬 이름 → 역할 색 — groo-design DESIGN.md v102 표의 "Desk 웹 이름" 칸 그대로(앱 적용 5A, 2026-10-06).
  * 역할 색이 라이트 · 다크를 스스로 따라가므로(groo-tokens.css 의 다크 블록) 두 모드가 같은 식이다.
  * .dark 에도 적는다 — 하위 요소에 .dark 를 단 곳(카탈로그의 다크 판)에서 역할 색의 다크 값으로 다시 계산되게.
