@@ -27,7 +27,8 @@ import { MaskedText, PerPersonText, Won } from "./dutch-parts";
 /**
  * 정산 상세(I-15 38 · 39, 7-2B) — 읽기 시트 · 1280 이상 Dialog 480. 머리 제목 = 정산 이름. 본문: "{날짜 (요일)} · {장소}" → 총액(t9 700) →
  * "1인당 … · {n}명" → 선 → "참여자 · {n}" 머리 + 참여자 줄(ds List · 아바타 36). 줄 끝: 결제자 Badge "결제자"(설명 "결제했어요", 몫이 다르면
- * "· 몫 …") · 낸 사람 Badge "냈어요" · 안 낸 사람 [받음]. 바닥: 진행 중 [삭제] + [모두 받음], 완료 [삭제]. 송금 요청 · 일괄 요청은 걷었다(서버에 API 가 없다).
+ * "· 몫 …") · 낸 사람 Badge "냈어요" · 안 낸 사람 [받음]. 바닥: 진행 중 왼쪽 [삭제] + [모두 받음](주 동작 하나), 완료 [삭제]. 머리 ⋮ 는 없다 — 메뉴는 실행만 담는데
+ [일괄 요청] 은 서버 API 가 없어(본문 Callout · 참여자 줄의 막힌 [요청] 이 그 말을 한다) 담을 동작이 없다.
  * 삭제는 공용 ConfirmDialog 를 상세 위에 — 실패하면 확인창을 닫고 critical 스낵바 + [다시 시도](바로 재요청). 받음 · 모두 받음 실패도 같은 띠.
  */
 export function DutchDetailDialog({
@@ -131,16 +132,6 @@ export function DutchDetailDialog({
       {tc("delete")}
     </Button>
   );
-  const requestAll = active ? (
-    <Button
-      variant="neutralWeak"
-      size={wide ? undefined : "large"}
-      disabled
-      aria-describedby={reasonId}
-    >
-      {t("requestAll")}
-    </Button>
-  ) : null;
   const all = active ? (
     <Button
       variant="neutralSolid"
@@ -256,13 +247,11 @@ export function DutchDetailDialog({
             {wide ? (
               <>
                 {del}
-                {requestAll}
                 {all}
               </>
             ) : (
               <div className="flex w-full min-w-0! flex-wrap items-center gap-x2 gap-y2">
                 {del}
-                {requestAll}
                 {all}
               </div>
             )}

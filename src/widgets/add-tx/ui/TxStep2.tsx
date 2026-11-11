@@ -370,10 +370,13 @@ export function TxStep2({ f }: { f: TxForm }) {
               <AssetPickBody
                 f={f}
                 close={close}
-                list={eligible.filter((a) => a.rowId !== f.toAssetRowId)}
+                list={eligible}
                 value={f.fromAssetRowId}
                 onPick={(id) => {
                   f.setFromAssetRowId(id);
+                  // 받는 계좌와 같은 것을 고르면 받는 계좌를 비운다(이체 프리셋과 같게) — 다음 단계에서 "받는 계좌를 골라주세요."
+                  if (id != null && id === f.toAssetRowId)
+                    f.setToAssetRowId(null);
                   f.clearPresetMark();
                 }}
               />
@@ -391,6 +394,7 @@ export function TxStep2({ f }: { f: TxForm }) {
               <AssetPickBody
                 f={f}
                 close={close}
+                // 받는 계좌 후보에서는 보내는 계좌를 뺀다(보내는 계좌 후보에서는 받는 계좌를 빼지 않는다)
                 list={eligible.filter((a) => a.rowId !== f.fromAssetRowId)}
                 value={f.toAssetRowId}
                 onPick={(id) => {

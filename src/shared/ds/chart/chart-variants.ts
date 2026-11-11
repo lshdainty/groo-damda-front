@@ -205,8 +205,12 @@ export interface ChartAxisOptions {
   color?: ChartColor;
 }
 
-/** 눈금 글자 크기(px) — 11 / 15 · 고정폭 숫자 */
-export const CHART_TICK_SIZE = 11;
+/**
+ * 눈금 글자 크기 — 11 / 15(rem 이라 설정의 글자 크기 · 200% 를 따른다) · 고정폭 숫자.
+ * SVG 글자는 var() 를 속성으로 못 받아 토큰(`--text-badge` = 0.6875rem)과 같은 값을 적는다.
+ * 세로축 폭 측정(`axisWidth.ts` AXIS_TICK_FONT_SIZE)이 같은 토큰이라 폭 · 글자가 늘 같이 움직인다.
+ */
+export const CHART_TICK_SIZE = "0.6875rem";
 
 /** XAxis · YAxis 에 펼친다 — 눈금 11 · fg-neutral-subtle(이중 축이면 계열 색) · 축 선 · 눈금 선 없음 · 눈금과 그리는 자리 사이 8 */
 export function chartAxisProps({ color }: ChartAxisOptions = {}) {

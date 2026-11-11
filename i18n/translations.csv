@@ -2929,7 +2929,6 @@ dutchPay,receive,받음,Received
 dutchPay,receiveName,{{name}} 받음 처리,Mark {{name}} as received
 dutchPay,receiveAll,모두 받음,Receive all
 dutchPay,participantsHeading,참여자 · {{count}},Participants · {{count}}
-dutchPay,requestAll,일괄 요청,Request all
 dutchPay,requestSoon,송금 요청은 곧 열려요.,Payment requests are coming soon.
 dutchPay,addNameLabel,참여자 이름,Participant name
 dutchPay,monthKpi.created,이번 달 만든 정산,Settlements this month
