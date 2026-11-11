@@ -3,13 +3,6 @@
     "shadcn": {
       "command": "npx",
       "args": ["shadcn@latest", "mcp"]
-    },
-    "figma-context-mcp": {
-      "command": "npx",
-      "args": ["-y", "figma-context-mcp", "--stdio"],
-      "env": {
-        "FIGMA_API_KEY": "${FIGMA_PERSONAL_ACCESS_TOKEN}"
-      }
     }
   }
 }
