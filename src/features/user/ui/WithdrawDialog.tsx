@@ -1,6 +1,6 @@
 import { useSaveFailureText } from "@/shared/lib/save-failure-text";
 import { loadFailed } from "@/shared/api";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
@@ -14,7 +14,6 @@ import {
 import { Field } from "@/shared/ds/field";
 import { useDsText } from "@/shared/ds/i18n";
 import { Input } from "@/shared/ds/input";
-import { InputOTP, InputOTPResend } from "@/shared/ds/input-otp";
 import { List, ListItem } from "@/shared/ds/list";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { ProgressCircle } from "@/shared/ds/progress-circle";
@@ -24,13 +23,12 @@ import { BusyOverlay } from "@/shared/ui/groo/busy-overlay";
 // 배럴(`@/features/user`)이 이 파일을 다시 내보내므로 거기서 가져오면 순환이 된다 —
 // ESM 이 버티긴 해도 초기화 순서에 따라 undefined 가 잡힌다. 상대 경로로 간다.
 import { WITHDRAW_BLOCK_SUBSCRIPTION } from "../api/userApi";
+import { useReauth } from "../model/useReauth";
 import {
-  useSendReauthEmailCodeMutation,
-  useVerifyReauthEmailCodeMutation,
-  useVerifyReauthPasswordMutation,
   useWithdrawMutation,
   useWithdrawalCheck,
 } from "../model/useWithdrawal";
+import { ReauthFields } from "./ReauthFields";
 
 /**
  * 해지 흐름의 단계.
@@ -39,18 +37,6 @@ import {
  * 끊기고(모바일 뒤로가기 = 닫기), 사용자가 "안내를 읽던 자리" 로 돌아올 수 없다.
  */
 type Step = "impact" | "reauth";
-
-/** 서버 `REAUTH_FAILED`(AUTH_021) — 비밀번호 · 코드가 틀렸거나 지났다. */
-const REAUTH_FAILED = "AUTH_021";
-/** 서버 `REAUTH_LOCKED`(AUTH_022, 429) — 5번 틀려 잠겼다. 코드를 다시 받아야 풀린다. */
-const REAUTH_LOCKED = "AUTH_022";
-const errorCode = (e: unknown) =>
-  (e as { response?: { data?: { code?: string } } } | null)?.response?.data
-    ?.code;
-const isReauthFailed = (e: unknown) => errorCode(e) === REAUTH_FAILED;
-
-/** 본인 확인 방법. 비밀번호가 없는 소셜 전용 계정은 코드 말고 길이 없다. */
-type ReauthMethod = "password" | "emailCode";
 
 /** 해지하면 없어지는 것들 — 개수가 0 이면 줄을 아예 안 보여 준다. ds List 의 누르지 않는 줄. */
 function ImpactList({
@@ -114,18 +100,16 @@ export function WithdrawDialog({
 
   const [step, setStep] = useState<Step>("impact");
   const [reason, setReason] = useState("");
-  const [method, setMethod] = useState<ReauthMethod>("password");
-  const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
-  const [reauthError, setReauthError] = useState<string | null>(null);
-  const [sentAt, setSentAt] = useState<number | null>(null);
   // 본인 확인 요청이 시작될 때 켠다. 성공하면 걷지 않는다 — 안내 화면으로 떠나며 사라진다.
   const [busy, setBusy] = useState(false);
 
   const checkQ = useWithdrawalCheck(true);
-  const sendCode = useSendReauthEmailCodeMutation();
-  const verifyCode = useVerifyReauthEmailCodeMutation();
-  const verifyPassword = useVerifyReauthPasswordMutation();
+  // 본인 확인 칸 · 확인은 소셜 연동과 함께 쓴다 — 티켓은 해지용("withdraw")으로 받는다
+  const reauth = useReauth({
+    purpose: "withdraw",
+    idPrefix: "withdraw",
+    failedText: t("withdraw.failed"),
+  });
   const withdraw = useWithdrawMutation();
   const sft = useSaveFailureText();
 
@@ -150,15 +134,9 @@ export function WithdrawDialog({
       : check.subscriptionPeriodEnd.slice(0, 10)
     : null;
 
-  // 방법을 바꾸면 앞선 오류를 지운다 — 비밀번호가 틀렸다는 빨간 줄이 코드 칸 위에
-  // 남아 있으면 무엇이 잘못됐는지 알 수 없다.
-  useEffect(() => {
-    setReauthError(null);
-  }, [method]);
-
   // 입력 폼인 때 — 점검이 끝났고 막히지 않았을 때만. 아니면 안내 표면(위 ✕ 하나).
   const form = !checkQ.isLoading && !loadFailed(checkQ) && !blocked;
-  const dirty = reason.trim() !== "" || password !== "" || code !== "";
+  const dirty = reason.trim() !== "" || reauth.dirty;
 
   const doWithdraw = async (reauthToken: string) => {
     await withdraw.mutateAsync({
@@ -170,35 +148,13 @@ export function WithdrawDialog({
 
   const onConfirm = async () => {
     if (runningRef.current) return;
-    // 6자리가 안 되면 칸 오류로 알린다(input-otp.md "6자리 전 확인 막힘") — 서버에 보내지 않는다.
-    if (method === "emailCode" && !/^\d{6}$/.test(code)) {
-      setReauthError(t("withdraw.codeIncomplete"));
-      document.getElementById("withdraw-code")?.focus();
-      return;
-    }
+    // 6자리가 안 되면 칸 오류로 알린다 — 서버에 보내지 않는다(useReauth.checkInput)
+    if (!reauth.checkInput()) return;
     runningRef.current = true;
-    setReauthError(null);
     setBusy(true);
-    // 본인 확인 실패는 그 칸의 문제다 — 토스트로 띄우면 어느 칸을 고쳐야 하는지 안 보인다. 칸 밑에 붙인다.
-    // 서버가 보낸 글을 그대로 보이지 않고 화면 글로 바꾼다(input-otp.md "서버가 보낸 글을 그대로 보이지 않고 화면 글로" ·
-    // Writing 오류) — 틀린 코드 · 틀린 비밀번호는 같은 한 문장이고, 해지 요청이 실패하면 해지 실패 문장이다.
-    let token: string;
-    try {
-      token =
-        method === "password"
-          ? await verifyPassword.mutateAsync(password)
-          : await verifyCode.mutateAsync(code);
-    } catch (e) {
-      // 틀림 · 지남(서버 AUTH_021 REAUTH_FAILED)만 그 칸의 글이고, 네트워크 · 서버 오류는 해지 실패 글이다(앱과 한 벌).
-      setReauthError(
-        errorCode(e) === REAUTH_LOCKED
-          ? t("withdraw.locked")
-          : isReauthFailed(e)
-            ? method === "password"
-              ? t("withdraw.passwordWrong")
-              : t("withdraw.codeWrong")
-            : t("withdraw.failed"),
-      );
+    // 틀림 · 잠김은 그 칸의 글, 네트워크 · 서버 오류는 해지 실패 글이다 — 칸 밑에 붙는다(useReauth.verify)
+    const token = await reauth.verify();
+    if (token == null) {
       setBusy(false);
       runningRef.current = false;
       return;
@@ -207,29 +163,12 @@ export function WithdrawDialog({
       await doWithdraw(token);
     } catch (e) {
       // 결과를 확인하지 못했으면(응답을 못 읽음 · 응답 전에 끊김) 실패라 하지 않는다 — 해지됐을 수 있다(앱 withdrawUnconfirmed 와 같은 자리, 글은 웹 전용 — 새로 고침)
-      setReauthError(sft(e, t("withdraw.failed"), "withdraw"));
+      reauth.setError(sft(e, t("withdraw.failed"), "withdraw"));
       setBusy(false);
     } finally {
       runningRef.current = false;
     }
   };
-
-  const onSendCode = () => {
-    sendCode.mutate(undefined, {
-      onError: () => {
-        // 확인 실패와 같은 자리에 붙인다 — 한쪽만 토스트로 띄우면 같은 흐름 안에서
-        // 오류가 두 가지 방식으로 나타난다. 서버 글 대신 화면 글.
-        setReauthError(t("withdraw.sendCodeFailed"));
-      },
-      onSuccess: () => {
-        setSentAt(Date.now());
-        setReauthError(null);
-        // 대화상자가 열린 채라 스낵바가 아니라 코드 칸 아래 안내 글(아래 role=status)이 말한다
-      },
-    });
-  };
-
-  const canConfirm = method === "password" ? password.length > 0 : true;
 
   // ── 본문 ────────────────────────────────────────────────────────────────
   let body;
@@ -297,88 +236,7 @@ export function WithdrawDialog({
       </div>
     );
   } else {
-    body = (
-      <div className="flex flex-col gap-x4">
-        {method === "password" ? (
-          <>
-            <Field
-              label={t("currentPassword")}
-              invalid={!!reauthError}
-              errorMessage={reauthError}
-            >
-              <Input
-                id="withdraw-password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                placeholder={t("currentPasswordPlaceholder")}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setReauthError(null);
-                }}
-              />
-            </Field>
-            <div className="flex justify-end">
-              <Button
-                variant="ghost"
-                size="small"
-                onClick={() => setMethod("emailCode")}
-              >
-                {t("withdraw.useEmailCode")}
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* 칸 → [코드 받기] 12(input-otp.md ⓓ · 예제 mt-x3) — 본문 쌓기(16)와 따로 묶는다 */}
-            <div className="flex flex-col items-start gap-x3">
-              <Field
-                label={t("withdraw.codeLabel")}
-                description={t("withdraw.codeRule")}
-                invalid={!!reauthError}
-                errorMessage={reauthError}
-              >
-                <InputOTP
-                  id="withdraw-code"
-                  value={code}
-                  placeholder={t("withdraw.codePlaceholder")}
-                  onValueChange={(v) => {
-                    setCode(v);
-                    setReauthError(null);
-                  }}
-                />
-              </Field>
-              <InputOTPResend
-                sentAt={sentAt}
-                codeInputId="withdraw-code"
-                onResend={onSendCode}
-              />
-              {/* 스팸함 안내 — input-otp.md 해부에 없는 줄이지만 사용자 결정(10-24) 05-2 Q1 A 로 남긴다. 코드를 보낸 뒤에만 보인다
-                  (보내기 전에는 확인할 메일이 없다). 오류 때도 남는다 */}
-              {sentAt != null && (
-                <>
-                  <p role="status" className="m-0 text-t4 text-fg-neutral">
-                    {t("withdraw.codeSent")}
-                  </p>
-                  <p className="m-0 text-t4 text-fg-neutral-subtle">
-                    {t("withdraw.codeHint")}
-                  </p>
-                </>
-              )}
-            </div>
-            <div className="flex justify-end">
-              <Button
-                variant="ghost"
-                size="small"
-                onClick={() => setMethod("password")}
-              >
-                {t("withdraw.usePassword")}
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    );
+    body = <ReauthFields reauth={reauth} />;
   }
 
   // ── 바닥 ────────────────────────────────────────────────────────────────
@@ -417,7 +275,7 @@ export function WithdrawDialog({
         <Button
           variant="criticalSolid"
           onClick={onConfirm}
-          disabled={!canConfirm}
+          disabled={!reauth.canConfirm}
         >
           {t("withdraw.confirm")}
         </Button>

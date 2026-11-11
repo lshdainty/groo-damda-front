@@ -1,5 +1,5 @@
 import { loadFailed } from "@/shared/api";
-import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
+import { lazy, Suspense, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ChevronRight,
@@ -39,11 +39,8 @@ import {
   useSubscriptionPlans,
 } from "@/features/subscription/model/useSubscription";
 import { resolveSubPlan } from "@/features/subscription/lib/plan-cycles";
-import {
-  oauthLinkApi,
-  useOAuthProviders,
-  useUnlinkOAuth,
-} from "@/features/oauth-link";
+import { useOAuthProviders, useUnlinkOAuth } from "@/features/oauth-link";
+import { LinkReauthDialog } from "./LinkReauthDialog";
 
 /*
  * 비밀번호 변경 대화상자만 지연 로딩한다.
@@ -392,42 +389,10 @@ function GoogleRow() {
   const providersQ = useOAuthProviders();
   const unlinkGoogle = useUnlinkOAuth();
   const snackbar = useSnackbar();
-  const [linking, setLinking] = useState(false);
-  const linkingRef = useRef(false);
-  // [다시 시도] 가 부르는 연결 시작 — 스낵바 액션이 자기 함수를 직접 가리키지 않게 ref 로 건넨다
-  const retryLinkRef = useRef<(() => Promise<void>) | null>(null);
+  // [연결] 은 곧장 연동을 시작하지 않고 본인 확인부터 받는다(보안 점검 S-2) — 연동 시작은 다이얼로그가 티켓을 싣고 부른다
+  const [linkOpen, setLinkOpen] = useState(false);
   const google = providersQ.data?.find((p) => p.type === "GOOGLE");
   const linked = google?.linked ?? false;
-
-  const onLink = async () => {
-    if (linkingRef.current) return;
-    linkingRef.current = true;
-    setLinking(true);
-    try {
-      // returnUrl = 현재 설정 페이지 절대 URL. 연동 후 그루 계정이 여기로 ?linked/?linkError 를 달고 복귀.
-      const { startUrl } = await oauthLinkApi.startLink(
-        "google",
-        window.location.origin + window.location.pathname,
-      );
-      window.location.href = startUrl;
-    } catch {
-      // 다시 하면 되는 가벼운 실패 — critical 스낵바 + [다시 시도](연결을 처음부터 다시 시작)
-      snackbar.show({
-        message: t("account.toast.linkError"),
-        tone: "critical",
-        action: {
-          label: tDs("common.retry"),
-          onClick: () => void retryLinkRef.current?.(),
-        },
-      });
-      linkingRef.current = false;
-      setLinking(false);
-    }
-  };
-
-  useEffect(() => {
-    retryLinkRef.current = onLink;
-  });
 
   const onUnlink = () => {
     unlinkGoogle.mutate("google", {
@@ -491,8 +456,7 @@ function GoogleRow() {
         size="small"
         className={buttonClass}
         disabled={loading}
-        loading={linking}
-        onClick={() => void onLink()}
+        onClick={() => setLinkOpen(true)}
       >
         {t("account.link")}
       </Button>
@@ -500,19 +464,28 @@ function GoogleRow() {
   }
 
   return (
-    <ListItem
-      prefix={
-        <span
-          aria-hidden
-          className="inline-grid size-[22px] place-items-center font-sans text-t5 font-bold text-fg-neutral"
-        >
-          G
-        </span>
-      }
-      title="Google"
-      detail={detail}
-      suffix={action}
-    />
+    <>
+      <ListItem
+        prefix={
+          <span
+            aria-hidden
+            className="inline-grid size-[22px] place-items-center font-sans text-t5 font-bold text-fg-neutral"
+          >
+            G
+          </span>
+        }
+        title="Google"
+        detail={detail}
+        suffix={action}
+      />
+      {linkOpen && (
+        <LinkReauthDialog
+          provider="google"
+          providerName="Google"
+          onClose={() => setLinkOpen(false)}
+        />
+      )}
+    </>
   );
 }
 

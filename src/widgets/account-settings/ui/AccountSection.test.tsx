@@ -33,6 +33,11 @@ const state = vi.hoisted(() => ({
   },
   plans: { data: undefined as unknown, isLoading: false },
 }));
+// 연동 시작 호출 · 본인 확인 다이얼로그가 열렸는지(S-2)
+const link = vi.hoisted(() => ({
+  startLinkCalls: 0,
+  dialogs: [] as { provider: string; providerName: string }[],
+}));
 const toasts = vi.hoisted(() => ({
   error: [] as string[],
   opts: [] as { action?: { label: string; onClick: () => void } }[],
@@ -112,7 +117,12 @@ vi.mock("@/features/subscription/model/useSubscription", () => ({
   useMySubscription: () => state.sub,
 }));
 vi.mock("@/features/oauth-link", () => ({
-  oauthLinkApi: { startLink: async () => ({ startUrl: "#" }) },
+  oauthLinkApi: {
+    startLink: async () => {
+      link.startLinkCalls += 1;
+      return { startUrl: "#" };
+    },
+  },
   useOAuthProviders: () => state.providers,
   useUnlinkOAuth: () => ({
     isPending: false,
@@ -124,6 +134,12 @@ vi.mock("@/features/oauth-link", () => ({
       else cb.onSuccess?.();
     },
   }),
+}));
+vi.mock("./LinkReauthDialog", () => ({
+  LinkReauthDialog: (p: { provider: string; providerName: string }) => {
+    link.dialogs.push({ provider: p.provider, providerName: p.providerName });
+    return <div data-link-reauth />;
+  },
 }));
 vi.mock("@/shared/lib/groo/hide-amounts-core", () => ({
   useHiddenCards: () => new Set<string>(),
@@ -142,6 +158,8 @@ beforeEach(() => {
   toasts.error.length = 0;
   toasts.opts.length = 0;
   state.unlinkError = false;
+  link.startLinkCalls = 0;
+  link.dialogs.length = 0;
   state.features = ["SECURITIES"];
   state.sub = { data: undefined, isLoading: false };
   state.featuresQ = null;
@@ -408,6 +426,26 @@ describe("Google 줄 상태", () => {
     expect(toasts.opts[0]?.action?.label).toBe("common.retry");
     act(() => toasts.opts[0]!.action!.onClick());
     expect(toasts.error).toHaveLength(2);
+  });
+});
+
+// S-2 — 로그인 쿠키만 훔친 사람이 [연결] 한 번으로 자기 구글을 붙이지 못하게, 연동 시작 전에 본인 확인을 받는다.
+describe("Google [연결] — 본인 확인부터(S-2)", () => {
+  it("누르면 연동을 바로 시작하지 않고 본인 확인 다이얼로그를 연다", () => {
+    state.providers = {
+      ...state.providers,
+      data: [{ type: "GOOGLE", name: "Google", authUrl: "", linked: false }],
+    };
+    render(true);
+    expect(container.querySelector("[data-link-reauth]")).toBeNull();
+    const btn = buttons().find((b) => b.textContent === "account.link")!;
+    act(() => btn.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(container.querySelector("[data-link-reauth]")).not.toBeNull();
+    expect(link.dialogs[link.dialogs.length - 1]).toEqual({
+      provider: "google",
+      providerName: "Google",
+    });
+    expect(link.startLinkCalls).toBe(0);
   });
 });
 

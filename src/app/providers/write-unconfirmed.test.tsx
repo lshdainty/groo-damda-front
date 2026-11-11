@@ -299,14 +299,20 @@ describe("쓰기 응답을 못 읽었다(PARSE) — 실패도 성공도 아니�
       ["logout", () => authApi.logout()],
       ["verifyPassword", () => userApi.verifyPassword("p")],
       ["reauth code send", () => userApi.sendReauthEmailCode()],
-      ["reauth code verify", () => userApi.verifyReauthEmailCode("123456")],
-      ["reauth password", () => userApi.verifyReauthPassword("p")],
+      [
+        "reauth code verify",
+        () => userApi.verifyReauthEmailCode("123456", "withdraw"),
+      ],
+      ["reauth password", () => userApi.verifyReauthPassword("p", "withdraw")],
       ["import analyze", () => analyzeImport(file, "BANKSALAD" as never)],
       ["sms parse", () => parseSms("x")],
       ["export counts", () => fetchExportCounts({} as never)],
       ["export preview", () => fetchExportPreview({} as never)],
       ["trade preview", () => assetApi.previewTrade({} as never)],
-      ["oauth link start", () => oauthLinkApi.startLink("google", "http://x")],
+      [
+        "oauth link start",
+        () => oauthLinkApi.startLink("google", "http://x", "t"),
+      ],
     ];
     const outcomes: Record<string, () => void> = {
       깨진본문: () => {
