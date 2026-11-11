@@ -34,15 +34,27 @@ export const oauthLinkApi = {
     return resp.data;
   },
 
+  /**
+   * 연동 시작 — 서버가 SSO 시작 주소를 돌려준다.
+   *
+   * `reauthToken` 은 `purpose: "oauth-link"` 로 방금 받은 10분 · 단회 재인증 티켓이다(보안 점검 S-2 —
+   * 로그인 쿠키만 훔친 사람이 자기 구글을 붙여 계정을 가로채지 못하게). 저장하지 말고 곧장 싣는다.
+   * 이 호출이 실패하면 티켓은 이미 쓰였을 수 있다 — 다시 본인 확인부터 받는다.
+   */
   startLink: async (
     provider: string,
     returnUrl: string,
+    reauthToken: string,
   ): Promise<{ startUrl: string }> => {
     const resp: ApiResponse<{ startUrl: string }> = await apiClient.post(
       `/v1/oauth/link/${provider}`,
       { returnUrl },
       // 연결 시작 주소를 받을 뿐 저장이 아니다 — 확인 처리에서 뺀다(판단 (2) 예외)
-      { ...QUIET, ...NOT_A_SAVE },
+      {
+        ...QUIET,
+        ...NOT_A_SAVE,
+        headers: { "X-Reauth-Token": reauthToken },
+      },
     );
     return resp.data;
   },

@@ -96,6 +96,16 @@ export interface WithdrawalCheck {
 export const WITHDRAW_BLOCK_SUBSCRIPTION = "SUBSCRIPTION_ACTIVE";
 
 /**
+ * 재인증 티켓을 어디에 쓸지. 서버(SSO)가 티켓에 새겨 두고 쓰는 자리에서 맞는지 본다 —
+ * 해지용 티켓으로 소셜 연동을 시작할 수 없고, 그 반대도 마찬가지다.
+ *
+ * <p>**빼먹으면 서버는 `withdraw` 로 본다.** 연동 흐름이 이 값을 안 실으면 해지용 티켓을 받아
+ * 연동 시작에서 거절(OAUTH_LINK_FAILED)당한다. 그래서 인자를 선택으로 두지 않는다 — 부르는
+ * 쪽이 늘 명시한다.
+ */
+export type ReauthPurpose = "withdraw" | "oauth-link";
+
+/**
  * 티켓이 비어 오면 실패로 본다.
  *
  * <p>서버도 같은 검사를 하지만(desk-back `ticketOf`) 여기서 한 번 더 막는다 — 빈 값을
@@ -165,10 +175,13 @@ export const userApi = {
    * 실패(400)는 코드 칸 밑에 붙일 것이라 `silent` — 전역 토스트까지 겹치면 같은 말을
    * 두 번 하게 된다(`verifyPassword` 와 같은 이유).
    */
-  verifyReauthEmailCode: async (code: string): Promise<string> => {
+  verifyReauthEmailCode: async (
+    code: string,
+    purpose: ReauthPurpose,
+  ): Promise<string> => {
     const resp: ApiResponse<{ reauthToken: string }> = await apiClient.post(
       "/v1/users/me/reauth/email-code/verify",
-      { code },
+      { code, purpose },
       { silent: true, ...NOT_A_SAVE } as import("axios").AxiosRequestConfig & {
         silent?: boolean;
       },
@@ -178,10 +191,13 @@ export const userApi = {
   },
 
   /** 비밀번호 확인 → 재인증 티켓. 실패는 비밀번호 칸 밑에 붙인다. */
-  verifyReauthPassword: async (password: string): Promise<string> => {
+  verifyReauthPassword: async (
+    password: string,
+    purpose: ReauthPurpose,
+  ): Promise<string> => {
     const resp: ApiResponse<{ reauthToken: string }> = await apiClient.post(
       "/v1/users/me/reauth/password",
-      { password },
+      { password, purpose },
       { silent: true, ...NOT_A_SAVE } as import("axios").AxiosRequestConfig & {
         silent?: boolean;
       },

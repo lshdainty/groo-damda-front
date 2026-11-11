@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { userApi } from "../api/userApi";
-import type { WithdrawalCheck } from "../api/userApi";
+import type { ReauthPurpose, WithdrawalCheck } from "../api/userApi";
 
 /**
  * 해지 전 점검.
@@ -21,22 +21,28 @@ export const useWithdrawalCheck = (enabled: boolean) =>
     retry: false,
   });
 
-/** 본인 메일로 재인증 코드 발송. */
+/*
+ * 아래 재인증 셋은 해지와 소셜 연동이 함께 쓴다(`useReauth`). 파일 이름이 해지인 것은 먼저
+ * 생긴 쪽이라서다 — 옮기면 이 파일을 통째로 바꿔 끼우는 해지 다이얼로그 테스트가 끊긴다.
+ */
+
+/** 본인 메일로 재인증 코드 발송. 코드에는 쓰임새가 없다 — 확인할 때 정한다. */
 export const useSendReauthEmailCodeMutation = () =>
   useMutation<void, Error, void>({
     mutationFn: () => userApi.sendReauthEmailCode(),
   });
 
-/** 코드 확인 → 재인증 티켓. */
-export const useVerifyReauthEmailCodeMutation = () =>
+/** 코드 확인 → `purpose` 용 재인증 티켓. */
+export const useVerifyReauthEmailCodeMutation = (purpose: ReauthPurpose) =>
   useMutation<string, Error, string>({
-    mutationFn: (code: string) => userApi.verifyReauthEmailCode(code),
+    mutationFn: (code: string) => userApi.verifyReauthEmailCode(code, purpose),
   });
 
-/** 비밀번호 확인 → 재인증 티켓. */
-export const useVerifyReauthPasswordMutation = () =>
+/** 비밀번호 확인 → `purpose` 용 재인증 티켓. */
+export const useVerifyReauthPasswordMutation = (purpose: ReauthPurpose) =>
   useMutation<string, Error, string>({
-    mutationFn: (password: string) => userApi.verifyReauthPassword(password),
+    mutationFn: (password: string) =>
+      userApi.verifyReauthPassword(password, purpose),
   });
 
 /**

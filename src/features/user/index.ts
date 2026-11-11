@@ -13,6 +13,9 @@ export {
   useWithdrawMutation,
 } from "./model/useWithdrawal";
 export { WithdrawDialog } from "./ui/WithdrawDialog";
+export { useReauth } from "./model/useReauth";
+export type { Reauth, ReauthMethod } from "./model/useReauth";
+export { ReauthFields } from "./ui/ReauthFields";
 export {
   useUserPreferences,
   useUpdateUserPreferences,
@@ -22,6 +25,7 @@ export {
 } from "./model/useUserPreferences";
 export { WITHDRAW_BLOCK_SUBSCRIPTION } from "./api/userApi";
 export type {
+  ReauthPurpose,
   WithdrawalCheck,
   ChangePasswordReq,
   UserPreferences,

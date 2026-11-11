@@ -16,7 +16,7 @@ const { oauthLinkApi } = await import("./oauthLinkApi");
 describe("oauthLinkApi silent", () => {
   it("목록 · 연결 · 해제 모두 silent", async () => {
     await oauthLinkApi.getProviders();
-    await oauthLinkApi.startLink("google", "http://x");
+    await oauthLinkApi.startLink("google", "http://x", "ticket-1");
     await oauthLinkApi.unlink("google");
     expect(calls.get.mock.calls[0]![1]).toMatchObject({ silent: true });
     // 연결 시작은 주소를 받을 뿐 저장이 아니다 — 쓰기 확인 처리에서 뺀다(판단 (2) 예외)
@@ -25,5 +25,17 @@ describe("oauthLinkApi silent", () => {
       confirmWrite: false,
     });
     expect(calls.delete.mock.calls[0]![1]).toMatchObject({ silent: true });
+  });
+
+  // S-2 — 연동 시작은 방금 받은 재인증 티켓을 헤더로 싣는다. 빠지면 서버가 OAUTH_LINK_FAILED 로 막는다.
+  it("연결 시작은 재인증 티켓을 X-Reauth-Token 헤더로 싣고, 본문은 returnUrl 그대로다", async () => {
+    calls.post.mockClear();
+    await oauthLinkApi.startLink("google", "http://x", "ticket-1");
+    const [url, body, config] = calls.post.mock.calls[0]!;
+    expect(url).toBe("/v1/oauth/link/google");
+    expect(body).toEqual({ returnUrl: "http://x" });
+    expect(config).toMatchObject({
+      headers: { "X-Reauth-Token": "ticket-1" },
+    });
   });
 });
