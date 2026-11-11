@@ -25,9 +25,14 @@ export function progressPercentValue(pct: number): number {
   return roundMagnitude(pct);
 }
 
-/** 진행률 글자 — "76%". 값은 0~100 단위 퍼센트. */
+/** 정수 천 단위 쉼표 — 금액 · 개수와 같은 규칙(로케일과 상관없이 `,`). 1000% 이상도 `1,234%`. */
+export function groupInt(n: number): string {
+  return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
+/** 진행률 글자 — "76%" · "1,234%"(천 단위 쉼표). 값은 0~100 단위 퍼센트. */
 export function progressPercentText(pct: number): string {
   if (!Number.isFinite(pct)) return "—";
   const v = progressPercentValue(pct);
-  return v < 0 ? `${MINUS}${-v}%` : `${v}%`;
+  return v < 0 ? `${MINUS}${groupInt(-v)}%` : `${groupInt(v)}%`;
 }

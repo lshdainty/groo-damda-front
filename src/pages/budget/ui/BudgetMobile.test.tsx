@@ -223,7 +223,7 @@ describe("목록 짜임 · 페이스 값 글 · 한 줄 금액 쌓기(검수 12 
     expect(cells).toContain("76%");
     expect(cells.join("|")).not.toMatch(/76\.4/);
     const meter = section("pace").querySelector("[role=meter]")!;
-    expect(meter.getAttribute("aria-valuetext")).toMatch(/"used":"\d+%"/);
+    expect(meter.getAttribute("aria-valuetext")).toMatch(/"used":"[\d,]+%"/);
   });
 
   it("이행률 100 을 넘으면 글에서 사라지지 않는다 — 100.3 → 101%, 99.6 → 99%", () => {
