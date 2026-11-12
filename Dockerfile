@@ -13,7 +13,9 @@ RUN npm run i18n:generate && npm run build
 
 # 실행 단계 — 비루트(uid 101) nginx. 1024 미만 포트를 못 물어 8080 을 쓴다.
 # 엣지 nginx(prod/dev)의 프록시 대상도 :8080 이어야 한다 — 서버 conf 와 동시 전환.
-FROM nginxinc/nginx-unprivileged:1.29.4-alpine AS runtime
+# nginx 는 안정판(짝수) 최신 패치로 고정한다. 올릴 때는 nginx.org 보안 권고(security_advisories)와
+# 대조한다 — 1.30.6 은 2026-11 기준 공개 권고 전부에서 '취약하지 않음'(보안 점검 INF-3).
+FROM nginxinc/nginx-unprivileged:1.30.6-alpine AS runtime
 
 # nginx 설정 복사
 COPY nginx.conf /etc/nginx/conf.d/default.conf
