@@ -1522,6 +1522,11 @@ settings,account.linkReauth.confirm,연결하기,Connect
 settings,account.linkReauth.failed,본인 확인을 하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't confirm it's you. Please try again shortly.
 settings,account.linkReauth.startFailed,계정을 연결하지 못했어요. 본인 확인부터 다시 해주세요.,Couldn't connect the account. Please confirm it's you again.
 settings,account.linkReauth.busy,연결하는 중,Connecting
+settings,account.unlinkReauth.title,{{name}} 연결 해제,Disconnect your {{name}} account
+settings,account.unlinkReauth.intro,{{name}} 계정 연결을 해제하려면 본인 확인이 필요해요.,"To disconnect your {{name}} account, we need to confirm it's you."
+settings,account.unlinkReauth.confirm,해제하기,Disconnect
+settings,account.unlinkReauth.failed,연결을 해제하지 못했어요. 본인 확인부터 다시 해주세요.,Couldn't disconnect the account. Please confirm it's you again.
+settings,account.unlinkReauth.busy,해제하는 중,Disconnecting
 settings,account.toast.linkReturnError,계정을 연결하지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't connect the account. Try again later.
 settings,account.toast.unlinked,Google 연결을 해제했어요.,Disconnected the Google account.
 settings,account.toast.unlinkError,연결을 해제하지 못했어요.,Couldn't disconnect the account.

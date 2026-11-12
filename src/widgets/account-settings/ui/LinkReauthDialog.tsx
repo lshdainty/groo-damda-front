@@ -10,7 +10,7 @@ import {
 } from "@/shared/ds/dialog";
 import { BusyOverlay } from "@/shared/ui/groo/busy-overlay";
 import { ReauthFields, useReauth } from "@/features/user";
-import { oauthLinkApi } from "@/features/oauth-link";
+import { oauthLinkApi, useUnlinkOAuth } from "@/features/oauth-link";
 
 /**
  * 소셜 계정 연결 전 본인 확인(보안 점검 S-2).
@@ -24,17 +24,27 @@ import { oauthLinkApi } from "@/features/oauth-link";
  *
  * <p>확인 뒤 연동 시작이 실패하면 티켓은 이미 쓰였을 수 있다. 같은 입력으로 다시 보내지 않게 칸을 비우고
  * 칸 밑에 "본인 확인부터 다시" 를 세운다 — 다음 [연결하기] 는 처음부터 다시 확인한다.
+ *
+ * <p>`mode="unlink"` 면 같은 본인 확인 뒤 연결 **해제**를 부른다(보안 점검 S-2 잔여) — 해제도 로그인 쿠키만으로
+ * 되면, 쿠키를 쥔 사람이 본인의 구글 연결을 끊어 복구 수단을 없앤다. 티켓 용도는 같은 `oauth-link` 다.
+ * 성공하면 `onUnlinked` 를 부르고 닫는다. 실패하면 연결 때와 같이 본인 확인부터 다시 받는다.
  */
 export function LinkReauthDialog({
   provider,
   providerName,
   onClose,
+  mode = "link",
+  onUnlinked,
 }: {
   /** 연동 시작 경로의 provider (예: "google") */
   provider: string;
   /** 화면에 보이는 이름 (예: "Google") */
   providerName: string;
   onClose: () => void;
+  /** 연결(기본) · 해제 */
+  mode?: "link" | "unlink";
+  /** 해제가 끝났을 때(스낵바 등) — 해제 모드에서만 */
+  onUnlinked?: () => void;
 }) {
   const { t } = useTranslation("settings");
   const { t: tc } = useTranslation("common");
@@ -42,11 +52,29 @@ export function LinkReauthDialog({
   const [busy, setBusy] = useState(false);
   // 확인이 나가 있는 동안 또 눌려도 아무 일이 없어야 한다 — 두 번째 요청이 이미 쓴 티켓을 들고 가 거절당한다.
   const runningRef = useRef(false);
+  const unlinking = mode === "unlink";
+  const unlink = useUnlinkOAuth();
   const reauth = useReauth({
     purpose: "oauth-link",
     idPrefix: "link-reauth",
     failedText: t("account.linkReauth.failed"),
   });
+  // 글은 연결 · 해제로 갈린다(키를 조립하지 않는다 — 찾기 쉽게)
+  const text = unlinking
+    ? {
+        title: t("account.unlinkReauth.title", { name: providerName }),
+        intro: t("account.unlinkReauth.intro", { name: providerName }),
+        confirm: t("account.unlinkReauth.confirm"),
+        failed: t("account.unlinkReauth.failed"),
+        busy: t("account.unlinkReauth.busy"),
+      }
+    : {
+        title: t("account.linkReauth.title", { name: providerName }),
+        intro: t("account.linkReauth.intro", { name: providerName }),
+        confirm: t("account.linkReauth.confirm"),
+        failed: t("account.linkReauth.startFailed"),
+        busy: t("account.linkReauth.busy"),
+      };
 
   const onConfirm = async () => {
     if (runningRef.current) return;
@@ -59,6 +87,20 @@ export function LinkReauthDialog({
       runningRef.current = false;
       return;
     }
+    if (unlinking) {
+      try {
+        await unlink.mutateAsync({ provider, reauthToken: token });
+        onUnlinked?.();
+        onClose();
+      } catch {
+        // 티켓 거절 · 마지막 로그인 수단 · 네트워크 — 티켓은 이미 쓰였을 수 있어 본인 확인부터 다시 받는다
+        reauth.restart(text.failed);
+        setBusy(false);
+      } finally {
+        runningRef.current = false;
+      }
+      return;
+    }
     try {
       // returnUrl = 현재 설정 페이지 절대 URL. 연동 후 그루 계정이 여기로 ?linked/?linkError 를 달고 복귀.
       const { startUrl } = await oauthLinkApi.startLink(
@@ -69,7 +111,7 @@ export function LinkReauthDialog({
       window.location.href = startUrl;
     } catch {
       // 티켓 거절(OAUTH_LINK_FAILED) · 네트워크 — 티켓은 이미 쓰였을 수 있어 본인 확인부터 다시 받는다
-      reauth.restart(t("account.linkReauth.startFailed"));
+      reauth.restart(text.failed);
       setBusy(false);
     } finally {
       runningRef.current = false;
@@ -87,22 +129,19 @@ export function LinkReauthDialog({
         dirty={reauth.dirty}
         busy={busy}
       >
-        <ResponsiveDialogContent
-          title={t("account.linkReauth.title", { name: providerName })}
-          description={t("account.linkReauth.intro", { name: providerName })}
-        >
+        <ResponsiveDialogContent title={text.title} description={text.intro}>
           <ResponsiveDialogBody>
             <ReauthFields reauth={reauth} />
           </ResponsiveDialogBody>
           <ResponsiveDialogFooter>
             <ResponsiveDialogCancel>{tc("cancel")}</ResponsiveDialogCancel>
             <Button onClick={onConfirm} disabled={!reauth.canConfirm}>
-              {t("account.linkReauth.confirm")}
+              {text.confirm}
             </Button>
           </ResponsiveDialogFooter>
         </ResponsiveDialogContent>
       </ResponsiveDialog>
-      <BusyOverlay busy={busy} label={t("account.linkReauth.busy")} />
+      <BusyOverlay busy={busy} label={text.busy} />
     </>
   );
 }

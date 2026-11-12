@@ -36,11 +36,14 @@ const state = vi.hoisted(() => ({
 // 연동 시작 호출 · 본인 확인 다이얼로그가 열렸는지(S-2)
 const link = vi.hoisted(() => ({
   startLinkCalls: 0,
-  dialogs: [] as { provider: string; providerName: string }[],
+  dialogs: [] as { provider: string; providerName: string; mode?: string }[],
+  onUnlinked: undefined as (() => void) | undefined,
 }));
 const toasts = vi.hoisted(() => ({
   error: [] as string[],
   opts: [] as { action?: { label: string; onClick: () => void } }[],
+  /** 톤과 상관없이 띄운 글 전부 */
+  all: [] as string[],
 }));
 
 vi.mock("react-i18next", () => ({
@@ -60,6 +63,7 @@ vi.mock("@/shared/ds/snackbar", async (importOriginal) => ({
       tone?: string;
       action?: { label: string; onClick: () => void };
     }) => {
+      toasts.all.push(o.message);
       if (o.tone !== "critical") return;
       toasts.error.push(o.message);
       toasts.opts.push(o);
@@ -136,9 +140,19 @@ vi.mock("@/features/oauth-link", () => ({
   }),
 }));
 vi.mock("./LinkReauthDialog", () => ({
-  LinkReauthDialog: (p: { provider: string; providerName: string }) => {
-    link.dialogs.push({ provider: p.provider, providerName: p.providerName });
-    return <div data-link-reauth />;
+  LinkReauthDialog: (p: {
+    provider: string;
+    providerName: string;
+    mode?: "link" | "unlink";
+    onUnlinked?: () => void;
+  }) => {
+    link.dialogs.push({
+      provider: p.provider,
+      providerName: p.providerName,
+      mode: p.mode,
+    });
+    link.onUnlinked = p.onUnlinked;
+    return <div data-link-reauth data-mode={p.mode} />;
   },
 }));
 vi.mock("@/shared/lib/groo/hide-amounts-core", () => ({
@@ -157,6 +171,7 @@ beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   toasts.error.length = 0;
   toasts.opts.length = 0;
+  toasts.all.length = 0;
   state.unlinkError = false;
   link.startLinkCalls = 0;
   link.dialogs.length = 0;
@@ -416,16 +431,18 @@ describe("Google 줄 상태", () => {
     expect(refetched).toBe(1);
   });
 
-  it("해제가 실패하면 고정 글 하나만 알린다", () => {
-    state.unlinkError = true;
+  // S-2 잔여 — 해제도 로그인 쿠키만으로 되면 쿠키를 쥔 사람이 구글 연결을 끊어 복구 수단을 없앤다
+  it("[해제] 는 곧장 해제하지 않고 본인 확인(해제 모드)을 연다 — 끝나면 해제 알림", () => {
     render(true);
+    expect(container.querySelector("[data-link-reauth]")).toBeNull();
     const unlink = buttons().find((b) => b.textContent === "account.unlink")!;
     act(() => unlink.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    expect(toasts.error).toEqual(["account.toast.unlinkError"]);
-    // 다시 하면 되는 실패라 "다시 시도" 를 붙인다 — 누르면 다시 해제한다
-    expect(toasts.opts[0]?.action?.label).toBe("common.retry");
-    act(() => toasts.opts[0]!.action!.onClick());
-    expect(toasts.error).toHaveLength(2);
+    expect(link.dialogs[link.dialogs.length - 1]).toMatchObject({
+      provider: "google",
+      mode: "unlink",
+    });
+    act(() => link.onUnlinked?.());
+    expect(toasts.all).toEqual(["account.toast.unlinked"]);
   });
 });
 
@@ -444,6 +461,7 @@ describe("Google [연결] — 본인 확인부터(S-2)", () => {
     expect(link.dialogs[link.dialogs.length - 1]).toEqual({
       provider: "google",
       providerName: "Google",
+      mode: "link",
     });
     expect(link.startLinkCalls).toBe(0);
   });
