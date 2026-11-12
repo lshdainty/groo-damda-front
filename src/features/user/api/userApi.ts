@@ -97,13 +97,14 @@ export const WITHDRAW_BLOCK_SUBSCRIPTION = "SUBSCRIPTION_ACTIVE";
 
 /**
  * 재인증 티켓을 어디에 쓸지. 서버(SSO)가 티켓에 새겨 두고 쓰는 자리에서 맞는지 본다 —
- * 해지용 티켓으로 소셜 연동을 시작할 수 없고, 그 반대도 마찬가지다.
+ * 해지용 티켓으로 소셜 연동을 시작할 수 없고, 그 반대도 마찬가지다. 연동 시작(`oauth-link`)과
+ * 해제(`oauth-unlink`)도 서로 바꿔 쓸 수 없다(보안 점검 S-2 잔여).
  *
  * <p>**빼먹으면 서버는 `withdraw` 로 본다.** 연동 흐름이 이 값을 안 실으면 해지용 티켓을 받아
  * 연동 시작에서 거절(OAUTH_LINK_FAILED)당한다. 그래서 인자를 선택으로 두지 않는다 — 부르는
  * 쪽이 늘 명시한다.
  */
-export type ReauthPurpose = "withdraw" | "oauth-link";
+export type ReauthPurpose = "withdraw" | "oauth-link" | "oauth-unlink";
 
 /**
  * 티켓이 비어 오면 실패로 본다.
