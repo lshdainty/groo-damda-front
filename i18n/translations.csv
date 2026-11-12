@@ -678,7 +678,7 @@ calendar,shareSection.copyCode,복사,Copy
 calendar,shareSection.regenCode,새로 만들기,Generate new
 calendar,filter.visibilityFailed,캘린더 표시를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change the calendar visibility. Try again later.
 calendar,shareSection.codeHint,이 코드를 공유하면 다른 사람이 캘린더에 참여할 수 있어요.,Share this code to let others join the calendar.
-calendar,shareSection.codeNone,초대 코드 없음,No invite code
+calendar,shareSection.codeNone,공유 꺼짐,Sharing off
 calendar,shareSection.regenFailed,초대 코드를 새로 만들지 못했어요.,Couldn't create a new invite code.
 calendar,shareSection.roleFailed,권한을 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change the permission. Try again later.
 calendar,shareSection.colorFailed,색을 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change the color. Try again later.
@@ -697,7 +697,7 @@ calendar,shareSection.saveFailed,저장하지 못했어요. 잠시 뒤 다시 �
 calendar,shareSection.createFailed,저장하지 못했어요. 잠시 뒤 다시 시도해주세요.,Could not save. Please try again in a moment.
 calendar,shareSection.create,만들기,Create
 calendar,shareSection.createNamePlaceholder,"예: 가족, 업무, 운동 일정","e.g. Family, Work, Workout"
-calendar,shareSection.joinCodePlaceholder,예: 3F9A1C2B,e.g. 3F9A1C2B
+calendar,shareSection.joinCodePlaceholder,받은 초대 코드를 붙여 넣으세요,Paste the invite code you received
 calendar,shareSection.codeInvalid,초대 코드를 확인해주세요.,Please check the invite code.
 calendar,shareSection.codeRequired,초대 코드를 입력해주세요.,Please enter the invite code.
 calendar,shareSection.codeAlreadyJoined,이미 참여한 캘린더예요.,You have already joined this calendar.
@@ -708,6 +708,12 @@ calendar,shareSection.toast.created,캘린더를 만들었어요,Calendar create
 calendar,shareSection.toast.updated,캘린더를 수정했어요,Calendar updated
 calendar,shareSection.toast.codeCopied,초대 코드를 복사했어요.,Invite code copied.
 calendar,shareSection.toast.codeRegenerated,초대 코드를 새로 만들었어요.,New invite code created.
+calendar,shareSection.codeRateLimited,초대 코드를 너무 많이 잘못 입력했어요. 잠시 뒤 다시 시도해주세요.,Too many incorrect invite codes. Please try again later.
+calendar,shareSection.toast.sharingStopped,초대 코드를 껐어요. 이미 참여한 사람은 그대로예요.,Invite code turned off. Current members stay.
+calendar,shareSection.stopFailed,초대 코드를 끄지 못했어요.,Could not turn off the invite code.
+calendar,shareSection.stopSharing,끄기,Turn off
+calendar,shareSection.createCode,만들기,Create
+calendar,shareSection.codeOffHint,초대 코드를 만들면 다른 사람이 이 캘린더에 참여할 수 있어요.,Create an invite code to let others join this calendar.
 calendar,shareSection.toast.memberRemoved,멤버를 제거했어요,Member removed
 calendar,shareSection.toast.roleChanged,권한을 변경했어요,Permission changed
 calendar,labelsSection.title,캘린더 라벨,Calendar labels

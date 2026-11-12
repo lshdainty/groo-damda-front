@@ -132,9 +132,11 @@ describe("초대 코드 참여", () => {
     // 빈 칸으로 눌렀다 — 칸 아래 오류(무반응이 아니다)
     expect(document.body.textContent).toContain("shareSection.codeRequired");
 
-    // ①-2 칸 규칙 한 벌 — 영문 · 숫자만, 최대 8, 대문자로 보인다
-    type(input, "a b-1!2cd34567x");
-    expect(input.value, "영문 · 숫자 8 · 대문자").toBe("AB12CD34");
+    // ①-2 칸 규칙 한 벌 — 붙여 넣은 공백 · 하이픈 · 기호는 걷고(영문 · 숫자만), 최대 32, 대문자로 보인다
+    type(input, "0123 4567-89ab cdef!0123456789abcdef99");
+    expect(input.value, "영문 · 숫자 32 · 대문자").toBe(
+      "0123456789ABCDEF0123456789ABCDEF",
+    );
 
     // ② 코드를 넣고 연타 — 서버로는 한 번만 간다(대문자로 정규화해서).
     type(input, "ab12cd");

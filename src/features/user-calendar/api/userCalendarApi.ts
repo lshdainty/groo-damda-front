@@ -97,6 +97,15 @@ export const userCalendarApi = {
     return resp.data.inviteCode;
   },
 
+  /** 공유 끄기 — 초대 코드를 지워 새로 참여할 수 없게 한다. 이미 참여한 멤버는 그대로다. */
+  stopSharing: async (id: number, opts?: SilentOpts): Promise<void> => {
+    const resp: ApiResponse<void> = await apiClient.delete(
+      `/v1/calendar/calendars/${id}/invite-code`,
+      silentConfig(opts),
+    );
+    return resp.data;
+  },
+
   joinByCode: async (inviteCode: string): Promise<UserCalendar> => {
     // 실패는 호출부가 "초대 코드를 확인해 주세요" 로 안내한다 — 전역 토스트까지 겹치면
     // 친절한 문구 옆에 서버 문구가 나란히 뜬다(QA #127 이 그 화면이었다). silent 로 끈다.
