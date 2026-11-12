@@ -39,7 +39,7 @@ import {
   useSubscriptionPlans,
 } from "@/features/subscription/model/useSubscription";
 import { resolveSubPlan } from "@/features/subscription/lib/plan-cycles";
-import { useOAuthProviders, useUnlinkOAuth } from "@/features/oauth-link";
+import { useOAuthProviders } from "@/features/oauth-link";
 import { LinkReauthDialog } from "./LinkReauthDialog";
 
 /*
@@ -387,30 +387,18 @@ function GoogleRow() {
   const { t } = useTranslation("settings");
   const { t: tDs } = useTranslation("ds");
   const providersQ = useOAuthProviders();
-  const unlinkGoogle = useUnlinkOAuth();
   const snackbar = useSnackbar();
-  // [연결] 은 곧장 연동을 시작하지 않고 본인 확인부터 받는다(보안 점검 S-2) — 연동 시작은 다이얼로그가 티켓을 싣고 부른다
-  const [linkOpen, setLinkOpen] = useState(false);
+  // [연결] · [해제] 모두 곧장 부르지 않고 본인 확인부터 받는다(보안 점검 S-2 · S-2 잔여) — 다이얼로그가 티켓을 싣고 부른다.
+  // 해제 실패 글은 다이얼로그 안(칸 밑)에 선다 — 티켓이 이미 쓰였을 수 있어 본인 확인부터 다시 받는다.
+  const [reauthMode, setReauthMode] = useState<"link" | "unlink" | null>(null);
   const google = providersQ.data?.find((p) => p.type === "GOOGLE");
   const linked = google?.linked ?? false;
 
-  const onUnlink = () => {
-    unlinkGoogle.mutate("google", {
-      // onSuccess 에서 provider 목록 재조회(invalidate) → 상태 자동 갱신.
-      onSuccess: () =>
-        snackbar.show({
-          message: t("account.toast.unlinked"),
-          tone: "neutral",
-        }),
-      // 다시 하면 되는 가벼운 실패라 "다시 시도" 를 붙인다(snackbar.md)
-      onError: () =>
-        snackbar.show({
-          message: t("account.toast.unlinkError"),
-          tone: "critical",
-          action: { label: tDs("common.retry"), onClick: onUnlink },
-        }),
+  const onUnlinked = () =>
+    snackbar.show({
+      message: t("account.toast.unlinked"),
+      tone: "neutral",
     });
-  };
 
   const loading = providersQ.isLoading;
   const failed = loadFailed(providersQ);
@@ -443,8 +431,7 @@ function GoogleRow() {
         size="small"
         className={buttonClass}
         disabled={loading}
-        loading={unlinkGoogle.isPending}
-        onClick={onUnlink}
+        onClick={() => setReauthMode("unlink")}
       >
         {t("account.unlink")}
       </Button>
@@ -456,7 +443,7 @@ function GoogleRow() {
         size="small"
         className={buttonClass}
         disabled={loading}
-        onClick={() => setLinkOpen(true)}
+        onClick={() => setReauthMode("link")}
       >
         {t("account.link")}
       </Button>
@@ -478,11 +465,13 @@ function GoogleRow() {
         detail={detail}
         suffix={action}
       />
-      {linkOpen && (
+      {reauthMode && (
         <LinkReauthDialog
           provider="google"
           providerName="Google"
-          onClose={() => setLinkOpen(false)}
+          mode={reauthMode}
+          onUnlinked={onUnlinked}
+          onClose={() => setReauthMode(null)}
         />
       )}
     </>

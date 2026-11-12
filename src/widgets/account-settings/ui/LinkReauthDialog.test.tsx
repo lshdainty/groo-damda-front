@@ -36,6 +36,12 @@ vi.mock("@/shared/api", async (orig) => ({
       if (!r) throw new Error(`no reply for ${url}`);
       return r();
     },
+    delete: async (url: string, config: unknown) => {
+      net.calls.push({ url: `DELETE ${url}`, body: undefined, config });
+      const r = net.reply[`DELETE ${url}`];
+      if (!r) throw new Error(`no reply for DELETE ${url}`);
+      return r();
+    },
   },
 }));
 
@@ -58,7 +64,11 @@ let root: Root;
 /** 연동 시작 주소로 떠나려 한 기록 — jsdom 은 실제 이동을 못 한다 */
 let hrefSets: string[];
 
-function render() {
+function render(
+  mode: "link" | "unlink" = "link",
+  onUnlinked?: () => void,
+  onClose: () => void = () => {},
+) {
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -71,7 +81,9 @@ function render() {
         <LinkReauthDialog
           provider="google"
           providerName="Google"
-          onClose={() => {}}
+          mode={mode}
+          onUnlinked={onUnlinked}
+          onClose={onClose}
         />
       </QueryClientProvider>,
     ),
@@ -285,5 +297,54 @@ describe("소셜 연결 전 본인 확인", () => {
     await act(async () => click("account.linkReauth.confirm"));
     expect(net.calls).toEqual([]);
     expect(document.body.textContent).toContain("withdraw.codeIncomplete");
+  });
+});
+
+// S-2 잔여 — 해제도 같은 본인 확인 뒤에만 나간다
+describe("소셜 연결 해제 전 본인 확인", () => {
+  const UNLINK = "DELETE /v1/oauth/link/google";
+
+  it("비밀번호 확인(purpose=oauth-link) → 그 티켓을 X-Reauth-Token 헤더에 싣고 해제 → 알리고 닫는다", async () => {
+    net.reply[UNLINK] = ok();
+    let unlinked = 0;
+    let closed = 0;
+    render(
+      "unlink",
+      () => (unlinked += 1),
+      () => (closed += 1),
+    );
+    expect(document.body.textContent).toContain(
+      "account.unlinkReauth.intro|Google",
+    );
+    act(() => setValue(passwordInput(), "my-password"));
+    await act(async () => click("account.unlinkReauth.confirm"));
+
+    expect(net.calls.map((c) => c.url)).toEqual([PW, UNLINK]);
+    expect(net.calls[0]!.body).toEqual({
+      password: "my-password",
+      purpose: "oauth-link",
+    });
+    expect(net.calls[1]!.config).toMatchObject({
+      headers: { "X-Reauth-Token": "ticket-pw" },
+    });
+    expect(unlinked).toBe(1);
+    expect(closed).toBe(1);
+    expect(hrefSets).toEqual([]);
+  });
+
+  it("열기만 해서는 해제가 나가지 않는다", () => {
+    render("unlink");
+    expect(net.calls).toEqual([]);
+  });
+
+  it("해제가 실패하면 알리지 않고 본인 확인부터 다시 받는다", async () => {
+    net.reply[UNLINK] = fail("DESK_OAUTH_LINK_FAILED");
+    let unlinked = 0;
+    render("unlink", () => (unlinked += 1));
+    act(() => setValue(passwordInput(), "my-password"));
+    await act(async () => click("account.unlinkReauth.confirm"));
+
+    expect(unlinked).toBe(0);
+    expect(document.body.textContent).toContain("account.unlinkReauth.failed");
   });
 });

@@ -9,11 +9,17 @@ export const useOAuthProviders = () =>
     queryFn: () => oauthLinkApi.getProviders(),
   });
 
-/** 소셜 계정 연동 해제. 성공 시 provider 목록 재조회로 상태 갱신 */
+/** 소셜 계정 연동 해제(재인증 티켓 필요 — S-2 잔여). 성공 시 provider 목록 재조회로 상태 갱신 */
 export const useUnlinkOAuth = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (provider: string) => oauthLinkApi.unlink(provider),
+    mutationFn: ({
+      provider,
+      reauthToken,
+    }: {
+      provider: string;
+      reauthToken: string;
+    }) => oauthLinkApi.unlink(provider, reauthToken),
     onSuccess: () => invalidateFor(queryClient, "oauth-link"),
   });
 };
