@@ -60,7 +60,7 @@ export const oauthLinkApi = {
   },
 
   /**
-   * 연결 해제 — 연결 시작과 같은 `oauth-link` 재인증 티켓을 헤더로 싣는다(보안 점검 S-2 잔여). 로그인 쿠키만 쥔
+   * 연결 해제 — 해제 전용 `oauth-unlink` 재인증 티켓을 헤더로 싣는다(보안 점검 S-2 잔여). 로그인 쿠키만 쥔
    * 사람이 본인의 구글 연결을 끊어 복구 수단을 없애지 못하게. 저장하지 말고 곧장 싣는다.
    */
   unlink: async (provider: string, reauthToken: string): Promise<void> => {

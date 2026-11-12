@@ -26,7 +26,8 @@ import { oauthLinkApi, useUnlinkOAuth } from "@/features/oauth-link";
  * 칸 밑에 "본인 확인부터 다시" 를 세운다 — 다음 [연결하기] 는 처음부터 다시 확인한다.
  *
  * <p>`mode="unlink"` 면 같은 본인 확인 뒤 연결 **해제**를 부른다(보안 점검 S-2 잔여) — 해제도 로그인 쿠키만으로
- * 되면, 쿠키를 쥔 사람이 본인의 구글 연결을 끊어 복구 수단을 없앤다. 티켓 용도는 같은 `oauth-link` 다.
+ * 되면, 쿠키를 쥔 사람이 본인의 구글 연결을 끊어 복구 수단을 없앤다. 티켓 용도는 해제 전용 `oauth-unlink` 다
+ * — 연결과 같은 용도면 해제하려고 받은 티켓으로 연결을 시작할 수 있다.
  * 성공하면 `onUnlinked` 를 부르고 닫는다. 실패하면 연결 때와 같이 본인 확인부터 다시 받는다.
  */
 export function LinkReauthDialog({
@@ -55,7 +56,7 @@ export function LinkReauthDialog({
   const unlinking = mode === "unlink";
   const unlink = useUnlinkOAuth();
   const reauth = useReauth({
-    purpose: "oauth-link",
+    purpose: unlinking ? "oauth-unlink" : "oauth-link",
     idPrefix: "link-reauth",
     failedText: t("account.linkReauth.failed"),
   });

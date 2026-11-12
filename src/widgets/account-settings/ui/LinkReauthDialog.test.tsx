@@ -304,7 +304,7 @@ describe("소셜 연결 전 본인 확인", () => {
 describe("소셜 연결 해제 전 본인 확인", () => {
   const UNLINK = "DELETE /v1/oauth/link/google";
 
-  it("비밀번호 확인(purpose=oauth-link) → 그 티켓을 X-Reauth-Token 헤더에 싣고 해제 → 알리고 닫는다", async () => {
+  it("비밀번호 확인(purpose=oauth-unlink) → 그 티켓을 X-Reauth-Token 헤더에 싣고 해제 → 알리고 닫는다", async () => {
     net.reply[UNLINK] = ok();
     let unlinked = 0;
     let closed = 0;
@@ -322,7 +322,8 @@ describe("소셜 연결 해제 전 본인 확인", () => {
     expect(net.calls.map((c) => c.url)).toEqual([PW, UNLINK]);
     expect(net.calls[0]!.body).toEqual({
       password: "my-password",
-      purpose: "oauth-link",
+      // 해제 전용 용도(보안 점검 S-2 잔여) — 연결용(oauth-link) 티켓과 바꿔 쓸 수 없다
+      purpose: "oauth-unlink",
     });
     expect(net.calls[1]!.config).toMatchObject({
       headers: { "X-Reauth-Token": "ticket-pw" },
