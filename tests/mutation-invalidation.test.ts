@@ -408,6 +408,12 @@ const ROWS: Row[] = [
   },
   {
     file: CALENDARS,
+    hook: "useStopCalendarSharing",
+    change: "user-calendar",
+    call: () => calendars.useStopCalendarSharing(),
+  },
+  {
+    file: CALENDARS,
     hook: "useRemoveCalendarMember",
     change: "user-calendar",
     call: () => calendars.useRemoveCalendarMember(),
