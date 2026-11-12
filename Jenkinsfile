@@ -59,6 +59,13 @@ pipeline {
                             ).trim()
                         }
                         echo "APP_VERSION = ${env.APP_VERSION}"
+                        // 버전은 아래 셸 명령(docker build · docker run)에 들어간다. dev 는 git describe 결과라
+                        // 태그 이름이 그대로 섞인다 — 태그를 올릴 수 있는 사람이 이름에 셸 문법을 심으면 Jenkins 에서
+                        // 실행된다. 운영 Validate 의 형식 검사처럼 허용 문자만 통과시키고, 셸에는 문자열을 이어 붙이지
+                        // 않고 환경변수(env.APP_VERSION → "$APP_VERSION")로만 넘긴다(보안 점검 SUP-2).
+                        if (!(env.APP_VERSION ==~ /[A-Za-z0-9._-]+/)) {
+                            error "버전 문자열에 허용되지 않는 문자가 있습니다(영문·숫자·. _ - 만 허용): '${env.APP_VERSION}'"
+                        }
                     }
                 }
             }
@@ -69,14 +76,14 @@ pipeline {
                     sh "cp ${ENV_SRC_DIR}/${params.DEPLOY_ENV}/${APP_NAME}/${params.DEPLOY_ENV}.env .env.production"
                     // 빌드 시점에 번들로 들어가는 버전 (화면 표시는 프론트에서 import.meta.env.VITE_APP_VERSION 사용)
                     // printf 앞 개행: 원본 env 가 개행 없이 끝나도 마지막 변수 값에 이어붙지 않게
-                    sh "printf '\\nVITE_APP_VERSION=%s\\n' '${env.APP_VERSION}' >> .env.production"
+                    sh '''printf '\\nVITE_APP_VERSION=%s\\n' "$APP_VERSION" >> .env.production'''
                 }
             }
         }
         stage('Docker Build') {
             steps {
                 dir("${SRC_DIR}") {
-                    sh "docker build -t ${IMAGE_NAME}:latest -t ${IMAGE_NAME}:${env.APP_VERSION} ."
+                    sh 'docker build -t "$IMAGE_NAME:latest" -t "$IMAGE_NAME:$APP_VERSION" .'
                 }
             }
         }
@@ -91,7 +98,7 @@ pipeline {
                         --hostname ${CONTAINER_NAME}-dev \
                         --restart unless-stopped \
                         --network ${env.DEV_NETWORK} \
-                        ${IMAGE_NAME}:${env.APP_VERSION}
+                        ${IMAGE_NAME}:"\$APP_VERSION"
 
                     # 헬스 게이트 — HEALTHCHECK 가 healthy 가 될 때까지 대기, 못 뜨면 배포 실패
                     st=starting
@@ -132,7 +139,7 @@ pipeline {
                         --hostname ${CONTAINER_NAME}-prod \
                         --restart unless-stopped \
                         --network ${env.PROD_NETWORK} \
-                        ${IMAGE_NAME}:${env.APP_VERSION}
+                        ${IMAGE_NAME}:"\$APP_VERSION"
 
                     # 헬스 게이트 — HEALTHCHECK 가 healthy 가 될 때까지 대기, 못 뜨면 배포 실패
                     st=starting
