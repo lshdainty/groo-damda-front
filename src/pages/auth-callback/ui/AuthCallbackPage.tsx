@@ -35,10 +35,14 @@ export const AuthCallbackPage = () => {
         const returnedState = query.get("state");
         const savedState = getSavedState();
         const verifier = getCodeVerifier();
-        // verifier 없거나 state(CSRF) 불일치 시 거부
+        // verifier 가 없거나 state(CSRF) 가 저장값과 다르면 거부한다. 주소에 state 가 없거나
+        // 저장해 둔 state 가 없는 것도 불일치다 — 한쪽이 비었다고 검사를 건너뛰면 공격자가
+        // state 를 뺀 주소로 자기 code 를 피해자 브라우저에서 교환시킬 수 있다(보안 점검 CLI-5).
         if (
           !verifier ||
-          (savedState && returnedState && savedState !== returnedState)
+          !savedState ||
+          !returnedState ||
+          savedState !== returnedState
         ) {
           clearPkce();
           navigate("/login", { replace: true });
