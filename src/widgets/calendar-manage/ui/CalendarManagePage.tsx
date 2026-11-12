@@ -19,6 +19,7 @@ import {
   useChangeCalendarMemberRole,
   useDeleteUserCalendar,
   useRegenerateCalendarInviteCode,
+  useStopCalendarSharing,
   useRemoveCalendarMember,
   useUpdateUserCalendar,
   useUserCalendars,
@@ -142,6 +143,7 @@ function ManageBody({
   // 바로 나가는 셋(색 · 권한 · 코드 새로 만들기)은 서버 글을 내지 않는다 — 고정 한 문장 critical 스낵바(P4)
   const colorMut = useUpdateUserCalendar({ silent: true });
   const regenMut = useRegenerateCalendarInviteCode({ silent: true });
+  const stopMut = useStopCalendarSharing({ silent: true });
   const roleMut = useChangeCalendarMemberRole({ silent: true });
   const removeMut = useRemoveCalendarMember();
   const deleteMut = useDeleteUserCalendar();
@@ -184,6 +186,21 @@ function ManageBody({
         unconfirmedKind: "action",
         message: t("shareSection.regenFailed"),
         retry: regenerate,
+      }),
+    );
+
+  // 공유 끄기 — 코드를 지운다. 이미 참여한 멤버는 그대로다(새로 들어올 수만 없다)
+  const stopSharing = async () => {
+    await stopMut.mutateAsync(calendar.rowId);
+    snackbar.show({ message: t("shareSection.toast.sharingStopped") });
+  };
+  const stopSharingWithFail = () =>
+    stopSharing().catch((error: unknown) =>
+      confirmFail({
+        error,
+        unconfirmedKind: "action",
+        message: t("shareSection.stopFailed"),
+        retry: stopSharing,
       }),
     );
 
@@ -256,7 +273,8 @@ function ManageBody({
   const code = (
     <div className="px-x6 pb-x3 pt-x1">
       <div className="flex flex-wrap items-center justify-between gap-x3">
-        {/* 코드가 없는 캘린더(백필 없이 칸이 생기기 전에 만든 것 — 옛 기본 캘린더 포함)는 값 자리에 "초대 코드 없음", [복사] 는 숨기고 [새로 만들기] 만 */}
+        {/* 코드는 공유를 켤 때만 있다(보안 점검 DAM-4 — 새 캘린더 · 기본 캘린더는 꺼진 채 시작). 없으면 값 자리에 "공유 꺼짐", [복사] · [끄기] 는 숨기고 [만들기] 만.
+            코드는 32자라 손으로 옮기기보다 [복사] 해서 보낸다 — 줄이 넘치면 글자 단위로 꺾는다 */}
         {calendar.inviteCode ? (
           <span
             data-slot="invite-code"
@@ -288,12 +306,26 @@ function ManageBody({
             loading={regenMut.isPending}
             onClick={() => void regenerateWithFail()}
           >
-            {t("shareSection.regenCode")}
+            {calendar.inviteCode
+              ? t("shareSection.regenCode")
+              : t("shareSection.createCode")}
           </Button>
+          {calendar.inviteCode && (
+            <Button
+              variant="neutralWeak"
+              size="small"
+              loading={stopMut.isPending}
+              onClick={() => void stopSharingWithFail()}
+            >
+              {t("shareSection.stopSharing")}
+            </Button>
+          )}
         </span>
       </div>
       <p className="m-0 mt-x2 text-t3 text-fg-neutral-subtle">
-        {t("shareSection.codeHint")}
+        {calendar.inviteCode
+          ? t("shareSection.codeHint")
+          : t("shareSection.codeOffHint")}
       </p>
     </div>
   );

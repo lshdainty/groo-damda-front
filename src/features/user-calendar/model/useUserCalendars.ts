@@ -106,6 +106,15 @@ export const useRegenerateCalendarInviteCode = (opts?: {
   });
 };
 
+/** `silent` — 실패를 호출처가 고정 한 문장 스낵바로 말한다 */
+export const useStopCalendarSharing = (opts?: { silent?: boolean }) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => userCalendarApi.stopSharing(id, opts),
+    onSuccess: () => invalidateFor(queryClient, "user-calendar"),
+  });
+};
+
 export const useJoinCalendar = () => {
   const queryClient = useQueryClient();
   return useMutation({

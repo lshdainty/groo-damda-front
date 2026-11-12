@@ -77,6 +77,7 @@ vi.mock("@/features/user-calendar", () => {
       isPending: false,
     }),
     useRegenerateCalendarInviteCode: idle,
+    useStopCalendarSharing: idle,
     useChangeCalendarMemberRole: () => ({
       mutateAsync: async (v: unknown) => {
         state.roleCalls.push(v);
@@ -235,16 +236,36 @@ describe("캘린더 관리 페이지", () => {
     ]);
   });
 
-  it('초대 코드가 없는 캘린더 — "코드 없음" 과 [새로 만들기] 만, [복사] 는 없다', () => {
+  it('공유가 꺼진 캘린더(코드 없음) — "공유 꺼짐" 과 [만들기] 만, [복사] · [끄기] 는 없다', () => {
     state.cals = [cal(1, { isDefault: true, inviteCode: null })];
     state.members = [member(1, 1, "OWNER")];
     render(1);
     expect(container.textContent).toContain("shareSection.codeNone");
+    expect(container.textContent).toContain("shareSection.codeOffHint");
     const labels = [...container.querySelectorAll("button")].map((b) =>
       b.textContent?.trim(),
     );
-    expect(labels).toContain("shareSection.regenCode");
+    expect(labels).toContain("shareSection.createCode");
     expect(labels).not.toContain("shareSection.copyCode");
+    expect(labels).not.toContain("shareSection.stopSharing");
+  });
+
+  it("공유가 켜진 캘린더 — 32자 코드와 [복사] · [새로 만들기] · [끄기]", () => {
+    const code = "0123456789ABCDEF0123456789ABCDEF";
+    state.cals = [cal(1, { inviteCode: code })];
+    state.members = [member(1, 1, "OWNER")];
+    render(1);
+    expect(container.textContent).toContain(code);
+    const labels = [...container.querySelectorAll("button")].map((b) =>
+      b.textContent?.trim(),
+    );
+    expect(labels).toEqual(
+      expect.arrayContaining([
+        "shareSection.copyCode",
+        "shareSection.regenCode",
+        "shareSection.stopSharing",
+      ]),
+    );
   });
 
   it("캘린더 목록을 못 받으면 Result Section 과 [다시 시도] — 서버 글은 없다", () => {

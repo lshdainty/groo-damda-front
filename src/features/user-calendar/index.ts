@@ -7,6 +7,7 @@ export {
   useDeleteUserCalendar,
   useCalendarMembers,
   useRegenerateCalendarInviteCode,
+  useStopCalendarSharing,
   useJoinCalendar,
   useRemoveCalendarMember,
   useChangeCalendarMemberRole,
