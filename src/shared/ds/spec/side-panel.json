@@ -3,7 +3,7 @@
   "source": "specs/components/side-panel.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "f9abe93acb04"
+    "sha256": "f49ebd82767d"
   },
   "slots": {
     "overlay": "딤 — 패널 뒤 화면 전체. 입력 폼이 아니면 누르면 닫힌다",
@@ -232,7 +232,7 @@
       "duration": "300ms",
       "easing": "cubic-bezier(0.03, 0.4, 0.1, 1)",
       "properties": ["translateX ∓100% → 0"],
-      "note": "붙은 쪽에서 미끄러져 들어온다(SEED). 모션 줄이기면 150ms 서서히 나타남(v104)"
+      "note": "붙은 쪽에서 미끄러져 들어온다. 모션 줄이기면 150ms 서서히 나타남"
     },
     "열림 — 딤": {
       "duration": "300ms",
@@ -267,7 +267,7 @@
       "state": "enabled",
       "slot": "overlay",
       "prop": "background",
-      "note": "groo 딤(v102) — SEED 0.455 는 들이지 않았다"
+      "note": "groo 딤"
     },
     {
       "rule": 0,
@@ -281,28 +281,28 @@
       "state": "enabled",
       "slot": "root",
       "prop": "height",
-      "note": "dvh — 방향과 상관없이(SEED)"
+      "note": "dvh — 방향과 상관없이"
     },
     {
       "rule": 0,
       "state": "enabled",
       "slot": "root",
       "prop": "maxWidth",
-      "note": "딤이 늘 20% 남는다(SEED 코드). 768 미만이면 크기와 상관없이 화면 폭의 80%"
+      "note": "딤이 늘 20% 남는다. 768 미만이면 크기와 상관없이 화면 폭의 80%"
     },
     {
       "rule": 0,
       "state": "enabled",
       "slot": "root",
       "prop": "radius",
-      "note": "평평 — 모서리 · 그림자 · 선 없이 딤과 면 색으로 뜬다(SEED)"
+      "note": "평평 — 모서리 · 그림자 · 선 없이 딤과 면 색으로 뜬다"
     },
     {
       "rule": 0,
       "state": "enabled",
       "slot": "root",
       "prop": "paddingBottom",
-      "note": "패널 내용의 맨 아래 — 바닥이 없어도(SEED). 붙은 쪽 안전 영역(가로 노치)은 폭에 더한다"
+      "note": "패널 내용의 맨 아래 — 바닥이 없어도. 붙은 쪽 안전 영역(가로 노치)은 폭에 더한다"
     },
     {
       "rule": 0,
@@ -358,7 +358,7 @@
       "state": "enabled",
       "slot": "divider",
       "prop": "background",
-      "note": "머리 아래 — 본문이 위 끝에서 떨어지면 나타난다(SEED). SEED stroke.neutral-muted 의 불투명 짝"
+      "note": "머리 아래 — 본문이 위 끝에서 떨어지면 나타난다. 불투명 색"
     },
     {
       "rule": 0,
@@ -393,7 +393,7 @@
       "state": "pressed",
       "slot": "closeButton",
       "prop": "background",
-      "note": "SEED bg.transparent-pressed 의 떠 있는 표면 짝(v102)"
+      "note": "떠 있는 표면의 누름 색(불투명)"
     },
     {
       "rule": 0,
@@ -442,7 +442,7 @@
       "state": "enabled",
       "slot": "fog",
       "prop": "mask",
-      "note": "Scroll Fog overlayBody(scroll-fog.yaml) — 늘 켜져 있다. SEED Side Panel 의 아래 48 대신"
+      "note": "Scroll Fog overlayBody(scroll-fog.yaml) — 늘 켜져 있다"
     },
     {
       "rule": 6,
