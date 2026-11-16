@@ -3,7 +3,7 @@
   "source": "specs/components/page-banner.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "f9abe93acb04"
+    "sha256": "f49ebd82767d"
   },
   "slots": {
     "root": "띠 — 화면 폭 전체, 모서리 없음",
@@ -590,7 +590,7 @@
       "state": "enabled",
       "slot": "root",
       "prop": "paddingX",
-      "note": "SEED 16 → 화면 여백 24"
+      "note": "화면 여백 24 — 띠 안 글이 페이지 글과 같은 선에서 시작한다"
     },
     {
       "rule": 0,
@@ -632,7 +632,7 @@
       "state": "enabled",
       "slot": "content",
       "prop": "justifyContent",
-      "note": "한 줄에 들어가면 버튼은 오른쪽 끝(SEED 와 같다)"
+      "note": "한 줄에 들어가면 버튼은 오른쪽 끝"
     },
     {
       "rule": 0,
@@ -646,7 +646,7 @@
       "state": "enabled",
       "slot": "description",
       "prop": "typography",
-      "note": "단어 단위 줄바꿈(v114)"
+      "note": "단어 단위 줄바꿈"
     },
     {
       "rule": 0,
@@ -730,7 +730,7 @@
       "state": "pressed",
       "slot": "content",
       "prop": "scale",
-      "note": "안의 내용만(SEED scaleScope: content) — 바탕은 그대로. 모션 줄이기면 하지 않는다"
+      "note": "안의 내용만 — 바탕은 그대로. 모션 줄이기면 하지 않는다"
     },
     {
       "rule": 22,

@@ -3,7 +3,7 @@
   "source": "specs/components/quantity-picker.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "f9abe93acb04"
+    "sha256": "f49ebd82767d"
   },
   "slots": {
     "root": "테두리 상자 — 줄이기 · 선 · 값 · 선 · 늘리기를 한 줄로 담는다. role=\"group\" + 이름(Field 라벨 · aria-label) 필수",
@@ -398,13 +398,13 @@
       "duration": "150ms",
       "easing": "cubic-bezier(0.35, 0, 0.35, 1)",
       "properties": ["background-color"],
-      "note": "SEED colorDuration · colorTimingFunction — 누른 버튼만"
+      "note": "누른 버튼만"
     },
     "누름 — 버튼 축소": {
       "duration": "150ms",
       "easing": "cubic-bezier(0, 0, 0.15, 1)",
       "properties": ["scale"],
-      "note": "누른 버튼만 2px 거리 축소(v104) — 모션 줄이기면 하지 않는다"
+      "note": "누른 버튼만 2px 거리 축소 — 모션 줄이기면 하지 않는다"
     }
   },
   "notes": [
@@ -420,7 +420,7 @@
       "state": "enabled",
       "slot": "root",
       "prop": "background",
-      "note": "SEED 와 같다 — 시트 · 대화상자(bg-layer-floating) 위에서도 이 색이다(다크 시트 위 상자가 한 단계 어둡다)"
+      "note": "시트 · 대화상자(bg-layer-floating) 위에서도 이 색이다(다크 시트 위 상자가 한 단계 어둡다)"
     },
     {
       "rule": 0,
@@ -448,14 +448,14 @@
       "state": "enabled",
       "slot": "button",
       "prop": "background",
-      "note": "SEED bg.transparent"
+      "note": "투명 — 올림 · 누름 · 로딩에만 바탕이 생긴다"
     },
     {
       "rule": 0,
       "state": "enabled",
       "slot": "button",
       "prop": "repeat",
-      "note": "한 번 누르면 한 단계 — 누르고 있어도 반복하지 않는다(사용자 결정 2A, 길게 누르기 2C 는 고르지 않았다)"
+      "note": "한 번 누르면 한 단계 — 누르고 있어도 반복하지 않는다"
     },
     {
       "rule": 0,
@@ -483,7 +483,7 @@
       "state": "enabled",
       "slot": "divider",
       "prop": "height",
-      "note": "SEED x4 16 — 크기와 관계없이 같다"
+      "note": "16 — 크기와 관계없이 같다"
     },
     {
       "rule": 0,
@@ -497,7 +497,7 @@
       "state": "enabled",
       "slot": "value",
       "prop": "fontWeight",
-      "note": "SEED medium"
+      "note": "medium"
     },
     {
       "rule": 0,
@@ -511,21 +511,21 @@
       "state": "enabled",
       "slot": "value",
       "prop": "paddingX",
-      "note": "SEED x2 8 — 세 크기 같다"
+      "note": "8 — 세 크기 같다"
     },
     {
       "rule": 0,
       "state": "enabled",
       "slot": "value",
       "prop": "minWidth",
-      "note": "가장 긴 표시 글(getValueText(min) 과 getValueText(max) — \"99회\" · \"24h\")을 숨겨 둔 자리 글로 폭을 잡는다(SEED valueDisplayPlaceholder) — 값이 바뀌어도 상자 폭이 그대로다. max 를 주지 않으면(기본 Number.MAX_SAFE_INTEGER — 열여섯 자리) max 글은 빼고 min 과 지금 값으로 잡는다"
+      "note": "가장 긴 표시 글(getValueText(min) 과 getValueText(max) — \"99회\" · \"24h\")을 숨겨 둔 자리 글로 폭을 잡는다 — 값이 바뀌어도 상자 폭이 그대로다. max 를 주지 않으면(기본 Number.MAX_SAFE_INTEGER — 열여섯 자리) max 글은 빼고 min 과 지금 값으로 잡는다"
     },
     {
       "rule": 0,
       "state": "enabled",
       "slot": "value",
       "prop": "pointerEvents",
-      "note": "보기만 — 누르지도 치지도 못한다(SEED \"Value Display는 터치에 반응하지 않습니다\", 사용자 결정 2A). 치는 값 칸(2B)은 고르지 않았다"
+      "note": "보기만 — 누르지도 치지도 못한다"
     },
     {
       "rule": 0,
@@ -546,14 +546,14 @@
       "state": "enabled",
       "slot": "progressCircle",
       "prop": "thickness",
-      "note": "SEED quantity-picker-button progressCircle thickness 2"
+      "note": "크기와 관계없이 2"
     },
     {
       "rule": 0,
       "state": "enabled",
       "slot": "progressCircle",
       "prop": "track",
-      "note": "SEED palette.gray-500 그대로 — Button ghost 의 로딩 원과 같다(button.yaml ghost). 누름 바탕 위 2.98 · 다크 2.08 — 트랙은 장식"
+      "note": "Button ghost 의 로딩 원과 같다(button.yaml ghost). 누름 바탕 위 2.98 · 다크 2.08 — 트랙은 장식"
     },
     {
       "rule": 0,
@@ -567,7 +567,7 @@
       "state": "hovered",
       "slot": "button",
       "prop": "background",
-      "note": "웹 — 누름과 같은 바탕(v106). SEED bg.transparent-pressed 의 불투명 짝"
+      "note": "웹 — 누름과 같은 바탕. 불투명한 색이라 대비를 잴 수 있다"
     },
     {
       "rule": 0,
@@ -588,21 +588,21 @@
       "state": "pressed",
       "slot": "button",
       "prop": "background",
-      "note": "SEED bg.transparent-pressed 의 불투명 짝(button.yaml 25-26)"
+      "note": "불투명한 누름 바탕 — Button 과 같다(button.yaml)"
     },
     {
       "rule": 0,
       "state": "pressed",
       "slot": "button",
       "prop": "scale",
-      "note": "누른 버튼만(SEED scaleScope self) — 기준 길이 max(높이, 폭 ÷ 4, 24) 에서 2px(v104). 36 은 34/36"
+      "note": "누른 버튼만 — 기준 길이 max(높이, 폭 ÷ 4, 24) 에서 2px. 36 은 34/36"
     },
     {
       "rule": 0,
       "state": "loading",
       "slot": "button",
       "prop": "background",
-      "note": "SEED loading = bg.transparent-pressed"
+      "note": "누름과 같은 바탕"
     },
     {
       "rule": 0,
@@ -630,7 +630,7 @@
       "state": "invalid",
       "slot": "root",
       "prop": "borderWidth",
-      "note": "안쪽에 덧그린다 — 값이 허용 범위를 벗어났다(SEED Error). 오류 글은 Field 가 칸 아래에"
+      "note": "안쪽에 덧그린다 — 값이 허용 범위를 벗어났다. 오류 글은 Field 가 칸 아래에"
     },
     {
       "rule": 0,
@@ -651,21 +651,21 @@
       "state": "disabled",
       "slot": "icon",
       "prop": "color",
-      "note": "SEED quantity-picker-button disabled"
+      "note": "막힘 색"
     },
     {
       "rule": 0,
       "state": "disabled",
       "slot": "value",
       "prop": "foreground",
-      "note": "불투명도로 흐리지 않는다(v106)"
+      "note": "불투명도로 흐리지 않는다"
     },
     {
       "rule": 1,
       "state": "enabled",
       "slot": "root",
       "prop": "minHeight",
-      "note": "SEED x9 — 최소 높이다. 글자가 커져 값이 상자보다 높아지면 상자가 글을 따라 커지고 숫자를 자르지 않는다(Input · Select 와 같다 — Button 큰 글자 A, 2026-10-29 I-29)"
+      "note": "최소 높이다. 글자가 커져 값이 상자보다 높아지면 상자가 글을 따라 커지고 숫자를 자르지 않는다(Input · Select · Button 의 큰 글자 규칙과 같다)"
     },
     {
       "rule": 1,
@@ -686,14 +686,14 @@
       "state": "enabled",
       "slot": "value",
       "prop": "typography",
-      "note": "16 / 22 — SEED small t5"
+      "note": "16 / 22"
     },
     {
       "rule": 2,
       "state": "enabled",
       "slot": "root",
       "prop": "minHeight",
-      "note": "SEED x10 — 최소 높이(small 비고)"
+      "note": "최소 높이(small 비고)"
     },
     {
       "rule": 2,
@@ -707,14 +707,14 @@
       "state": "enabled",
       "slot": "value",
       "prop": "typography",
-      "note": "16 / 22 — SEED medium t5"
+      "note": "16 / 22"
     },
     {
       "rule": 3,
       "state": "enabled",
       "slot": "root",
       "prop": "minHeight",
-      "note": "SEED x13 — 옆 Input · Select large 와 같은 높이. 최소 높이(small 비고)"
+      "note": "옆 Input · Select large 와 같은 높이. 최소 높이(small 비고)"
     },
     {
       "rule": 3,
@@ -728,21 +728,21 @@
       "state": "enabled",
       "slot": "value",
       "prop": "typography",
-      "note": "18 / 24 — SEED large t6"
+      "note": "18 / 24"
     },
     {
       "rule": 4,
       "state": "enabled",
       "slot": "root",
       "prop": "breakpoint",
-      "note": "미만은 large, 이상은 medium 의 값을 쓴다 — Input 과 같은 경계(SEED lg). 앱은 늘 large. 한 폼 안에서 옆 칸과 같은 크기다"
+      "note": "미만은 large, 이상은 medium 의 값을 쓴다 — Input 과 같은 경계. 앱은 늘 large. 한 폼 안에서 옆 칸과 같은 크기다"
     },
     {
       "rule": 5,
       "state": "enabled",
       "slot": "root",
       "prop": "width",
-      "note": "flex-grow 1 — 부모가 Flex 일 때(SEED layout fill)"
+      "note": "flex-grow 1 — 부모가 Flex 일 때"
     },
     {
       "rule": 5,
@@ -763,7 +763,7 @@
       "state": "enabled",
       "slot": "decrement",
       "prop": "iconColor",
-      "note": "막힌 모습 — SEED quantity-picker-button disabled 의 아이콘 색"
+      "note": "막힌 모습 — 막힘 아이콘 색"
     },
     {
       "rule": 6,

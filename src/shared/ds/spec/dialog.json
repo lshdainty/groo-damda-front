@@ -3,7 +3,7 @@
   "source": "specs/components/dialog.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "f9abe93acb04"
+    "sha256": "f49ebd82767d"
   },
   "slots": {
     "overlay": "딤 — 대화상자 뒤 화면 전체",
@@ -209,7 +209,7 @@
       "duration": "200ms",
       "easing": "cubic-bezier(0.03, 0.4, 0.1, 1)",
       "properties": ["scale 1.3 → 1", "opacity 0 → 1"],
-      "note": "크게 나타나며 줄어든다(SEED) — 모션 줄이기면 150ms 서서히 나타남"
+      "note": "크게 나타나며 줄어든다 — 모션 줄이기면 150ms 서서히 나타남"
     },
     "열림 — 딤": {
       "duration": "100ms",
@@ -244,7 +244,7 @@
       "state": "enabled",
       "slot": "overlay",
       "prop": "background",
-      "note": "groo 딤(v102)"
+      "note": "라이트 0.50 · 다크 0.65"
     },
     {
       "rule": 0,
@@ -272,7 +272,7 @@
       "state": "enabled",
       "slot": "root",
       "prop": "shadow",
-      "note": "그림자 없이 딤과 표면 색으로 뜬다(SEED · Elevation)"
+      "note": "그림자 없이 딤과 표면 색으로 뜬다(Elevation)"
     },
     {
       "rule": 0,
@@ -342,7 +342,7 @@
       "state": "enabled",
       "slot": "footer",
       "prop": "buttonSize",
-      "note": "Button small(Button 결정)"
+      "note": "Button small"
     },
     {
       "rule": 0,
@@ -356,7 +356,7 @@
       "state": "pressed",
       "slot": "closeButton",
       "prop": "background",
-      "note": "SEED bg.transparent-pressed 의 떠 있는 표면 짝(v102)"
+      "note": "떠 있는 표면의 누름 색"
     },
     {
       "rule": 0,

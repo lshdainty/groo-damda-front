@@ -3,7 +3,7 @@
   "source": "specs/components/resizable.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "f9abe93acb04"
+    "sha256": "f49ebd82767d"
   },
   "slots": {
     "group": "나눈 자리 — 목록 | 상세 두 패널",
@@ -125,14 +125,14 @@
       "state": "enabled",
       "slot": "group",
       "prop": "direction",
-      "note": "목록 | 상세 — 세로 나누기 · 셋 이상 나누기는 쓰는 곳이 없어 두지 않는다"
+      "note": "목록 | 상세 — 세로 나누기 · 셋 이상 나누기는 두지 않는다"
     },
     {
       "rule": 0,
       "state": "enabled",
       "slot": "group",
       "prop": "breakpoint",
-      "note": "768 미만은 나누지 않는다 — 역할 · 사용자는 목록 → 상세, 회사는 탭(지금과 같다)"
+      "note": "768 미만은 나누지 않는다 — 역할 · 사용자는 목록 → 상세, 회사는 탭"
     },
     {
       "rule": 0,
@@ -153,7 +153,7 @@
       "state": "enabled",
       "slot": "panel",
       "prop": "maxWidth",
-      "note": "오른쪽 상세가 60% 아래로 줄지 않는다 — 지금 회사 · 부서 사용자는 0폭까지 민다"
+      "note": "오른쪽 상세가 60% 아래로 줄지 않는다"
     },
     {
       "rule": 0,
@@ -174,7 +174,7 @@
       "state": "enabled",
       "slot": "handle",
       "prop": "width",
-      "note": "누르는 폭 — 선 가운데로 양쪽 8. 768 이상 데스크톱의 마우스 경계라 44 가 아니다(사용자 결정 12B)"
+      "note": "누르는 폭 — 선 가운데로 양쪽 8. 768 이상 데스크톱의 마우스 경계라 44 가 아니다"
     },
     {
       "rule": 0,
@@ -209,7 +209,7 @@
       "state": "enabled",
       "slot": "handle",
       "prop": "step",
-      "note": "← → 한 번에 — 지금 HR 은 10%"
+      "note": "← → 한 번에"
     },
     {
       "rule": 0,
@@ -237,7 +237,7 @@
       "state": "enabled",
       "slot": "grip",
       "prop": "background",
-      "note": "흰 면 위 4.18 · 다크 4.13(WCAG 1.4.11 ≥ 3) — 지금 HR 은 선 · 손잡이가 모두 #EEEEEE 1.11"
+      "note": "흰 면 위 4.18 · 다크 4.13(WCAG 1.4.11 ≥ 3)"
     },
     {
       "rule": 0,
