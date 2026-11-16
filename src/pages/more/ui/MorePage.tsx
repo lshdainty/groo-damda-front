@@ -25,7 +25,7 @@ const MoreDesktop = () => {
   return (
     <div
       style={{
-        padding: "var(--spacing-xs) var(--spacing-xl) var(--spacing-xl)",
+        padding: "var(--spacing-x1) var(--spacing-x6) var(--spacing-x6)",
       }}
     >
       {/* 폰은 상단 바의 제목이 화면 제목이다 — 데스크톱만 본문 맨 위 h1 */}
@@ -37,7 +37,7 @@ const MoreDesktop = () => {
           top: 0,
           zIndex: 5,
           background: "var(--bg-surface)",
-          paddingBottom: "var(--spacing-sm)",
+          paddingBottom: "var(--spacing-x2)",
         }}
       >
         {/* 아이콘 세로 중앙 기준은 input 높이 — sticky wrapper의 paddingBottom에 안 끌리도록 분리 */}
@@ -98,7 +98,7 @@ const MoreDesktop = () => {
             )}
             <div
               style={{
-                fontSize: "var(--text-body-lg)",
+                fontSize: "var(--text-t5)",
                 fontWeight: 700,
                 color: "var(--fg-primary)",
                 letterSpacing: "-0.01em",
@@ -129,7 +129,7 @@ const MoreDesktop = () => {
                     border: 0,
                     cursor: "pointer",
                     textAlign: "left",
-                    fontSize: "var(--text-body-md)",
+                    fontSize: "var(--text-t4)",
                     fontWeight: 500,
                     letterSpacing: "-0.01em",
                     color: "var(--fg-primary)",

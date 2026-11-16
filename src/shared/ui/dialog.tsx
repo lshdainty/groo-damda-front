@@ -19,7 +19,7 @@ import { registerOverlay } from "@/shared/lib/groo/pointer-block";
  * Groo 시각:
  *   - overlay: var(--overlay-dim-light) light / var(--overlay-dim-dark) dark
  *   - bg-[var(--bg-surface)]: Phase 1 alias로 자동 Cobalt 톤 surface-default
- *   - shadow-[var(--shadow-xl)]: Tailwind arbitrary(분해 회피, dark token swap 안전)
+ *   - shadow-[var(--shadow-s4)]: Tailwind arbitrary(분해 회피, dark token swap 안전)
  *   - radius-xl + rounded
  */
 
@@ -62,7 +62,7 @@ const dialogContentVariants = cva(
     // 셋을 한 덩어리로 묶을 수 없다(dialog.md Layout). 컨테이너는 padding 0.
     "flex flex-col overflow-hidden",
     // popup 은 radius-lg(12) — dialog.md. 안에 놓이는 버튼(radius-md 8)과 맞물린다.
-    "bg-[var(--bg-surface)] rounded-lg",
+    "bg-[var(--bg-surface)] rounded-r3",
     "data-[state=open]:animate-in data-[state=closed]:animate-out",
     "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
     "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
@@ -100,7 +100,7 @@ const DialogContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         className={cn(dialogContentVariants({ size }), className)}
-        style={{ boxShadow: "var(--shadow-xl)", ...style }}
+        style={{ boxShadow: "var(--shadow-s4)", ...style }}
         // 열면 초점이 표면(대화상자 자체)으로 — 첫 칸이 아니다. Tab 은 안을 돈다(Radix 가 가둔다), 닫으면 연 자리로(03F-006)
         onOpenAutoFocus={(e) => {
           e.preventDefault();
@@ -112,7 +112,7 @@ const DialogContent = React.forwardRef<
       >
         {children}
         {!hideClose && (
-          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring disabled:pointer-events-none">
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-r1 opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring disabled:pointer-events-none">
             <X className="h-4 w-4" />
             <span className="sr-only">{t("close")}</span>
           </DialogPrimitive.Close>
@@ -178,7 +178,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "flex-1 text-title-md font-semibold leading-snug tracking-tight text-text-primary",
+      "flex-1 text-t6 font-semibold leading-snug tracking-tight text-fg-neutral",
       className,
     )}
     {...props}
@@ -192,7 +192,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-text-secondary", className)}
+    className={cn("text-sm text-fg-neutral-muted", className)}
     {...props}
   />
 ));

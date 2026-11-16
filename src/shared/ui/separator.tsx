@@ -5,7 +5,7 @@ import { cn } from "@/shared/lib/index";
 
 /*
  * Groo Separator — groo-design specs/components/separator.md SoT 기반.
- * 1px 라인 + bg-border-default. orientation horizontal/vertical.
+ * 1px 라인 + bg-stroke-neutral-weak. orientation horizontal/vertical.
  * decorative=true (시각용), decorative=false (의미 분리).
  */
 
@@ -22,7 +22,7 @@ const Separator = React.forwardRef<
       decorative={decorative}
       orientation={orientation}
       className={cn(
-        "shrink-0 bg-border-default",
+        "shrink-0 bg-stroke-neutral-weak",
         orientation === "horizontal" ? "h-px w-full" : "h-full w-px",
         className,
       )}

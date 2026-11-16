@@ -14,7 +14,7 @@ import { cn } from "@/shared/lib/index";
  * sizes(default/sm/lg) 보존.
  *
  * variants:
- *   default (borderless toolbar): bg-transparent + hover:bg-surface-input + on:bg-surface-input
+ *   default (borderless toolbar): bg-transparent + hover:bg-bg-neutral-weak + on:bg-bg-neutral-weak
  *   outline (독립 toggle): border-default + on:border-strong
  *   segmented (= solid): ToggleGroup variant="segmented" 와 — active = primary 채움 + 흰글씨 + bold + shadow (강조 톤)
  *   segmented-subtle: ToggleGroup variant="segmented-subtle" 와 — active = surface-input 채움 + 검정 + semi (토스 절제 톤)

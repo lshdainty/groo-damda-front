@@ -19,7 +19,7 @@ export function ClosedCycleNote({ span }: { span: ClosedCycleSpan | null }) {
       style={{
         display: "block",
         marginTop: 10,
-        fontSize: "var(--text-body-sm)",
+        fontSize: "var(--text-t4)",
         color: "var(--fg-secondary)",
       }}
     >

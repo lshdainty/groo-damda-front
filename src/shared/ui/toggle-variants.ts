@@ -6,8 +6,8 @@ import { cva } from "class-variance-authority";
  */
 export const toggleVariants = cva(
   [
-    "inline-flex items-center justify-center gap-[var(--spacing-xs)] rounded-md text-caption font-semibold",
-    "ring-offset-bg-page transition-[color,background-color,border-color,box-shadow] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-easing)]",
+    "inline-flex items-center justify-center gap-[var(--spacing-x1)] rounded-r2 text-t2 font-semibold",
+    "ring-offset-bg-layer-basement transition-[color,background-color,border-color,box-shadow] duration-[var(--motion-duration-d3)] ease-[var(--motion-ease-easing)]",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
     "disabled:pointer-events-none disabled:bg-bg-disabled disabled:text-fg-disabled",
     "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
@@ -16,35 +16,35 @@ export const toggleVariants = cva(
     variants: {
       variant: {
         // spec toggle.md — base가 caption 600 고정(off/on 동일 weight, WCAG 1.4.11).
-        // on: surface-input 채움 + text-primary 변화로 식별.
+        // on: surface-input 채움 + text-fg-neutral 변화로 식별.
         default:
-          "bg-transparent text-text-secondary hover:bg-surface-input hover:text-text-primary data-[state=on]:bg-surface-input data-[state=on]:text-text-primary",
+          "bg-transparent text-fg-neutral-muted hover:bg-bg-neutral-weak hover:text-fg-neutral data-[state=on]:bg-bg-neutral-weak data-[state=on]:text-fg-neutral",
         outline:
-          "border border-border-default bg-transparent text-text-secondary hover:bg-surface-input hover:text-text-primary data-[state=on]:bg-surface-input data-[state=on]:text-text-primary data-[state=on]:border-border-default-strong",
+          "border border-stroke-neutral-weak bg-transparent text-fg-neutral-muted hover:bg-bg-neutral-weak hover:text-fg-neutral data-[state=on]:bg-bg-neutral-weak data-[state=on]:text-fg-neutral data-[state=on]:border-border-default-strong",
         // 그루 .p-seg__btn (solid) — segmented item, active 강조 톤.
         // spec toggle-group.md visual=solid 정합 — primary 채움 + 흰글씨 + bold + shadow.
         // 앱 PSegmented 정합 — active 는 primary 채움 + 흰글씨 + semi(600), shadow 없음.
         // (spec toggle-group.md solid 은 700+shadow 였으나 desk 구독 세그먼트 기준 앱 룩 채택)
         segmented: [
-          "flex-1 gap-0 rounded-[var(--radius-sm)] bg-transparent px-3 py-1 whitespace-nowrap",
-          "text-[length:var(--text-caption)] font-semibold leading-none text-text-secondary",
-          "hover:bg-transparent hover:text-text-secondary",
-          "data-[state=on]:bg-bg-brand-solid data-[state=on]:text-text-on-accent",
+          "flex-1 gap-0 rounded-[var(--radius-r1)] bg-transparent px-3 py-1 whitespace-nowrap",
+          "text-[length:var(--text-t2)] font-semibold leading-none text-fg-neutral-muted",
+          "hover:bg-transparent hover:text-fg-neutral-muted",
+          "data-[state=on]:bg-bg-brand-solid data-[state=on]:text-static-white",
         ].join(" "),
         // 그루 .p-seg__btn--subtle — segmented item, 토스 절제 톤.
         // spec toggle-group.md visual=subtle 정합 — surface-input 채움 + 검정 + semi.
         "segmented-subtle": [
-          "flex-1 gap-0 rounded-[var(--radius-sm)] bg-transparent px-3 py-1 whitespace-nowrap",
-          "text-[length:var(--text-caption)] font-semibold leading-none text-text-secondary",
-          "hover:bg-surface-input hover:text-text-primary",
-          "data-[state=on]:bg-surface-input data-[state=on]:text-text-primary data-[state=on]:font-semibold",
+          "flex-1 gap-0 rounded-[var(--radius-r1)] bg-transparent px-3 py-1 whitespace-nowrap",
+          "text-[length:var(--text-t2)] font-semibold leading-none text-fg-neutral-muted",
+          "hover:bg-bg-neutral-weak hover:text-fg-neutral",
+          "data-[state=on]:bg-bg-neutral-weak data-[state=on]:text-fg-neutral data-[state=on]:font-semibold",
         ].join(" "),
       },
       size: {
         // spec toggle.md Sizes — token padding + min-height, font은 base(caption 600).
-        default: "px-[var(--spacing-md)] py-[var(--spacing-xs)] min-h-8",
-        sm: "px-[var(--spacing-sm)] py-[var(--spacing-xs)] min-h-7",
-        lg: "px-[var(--spacing-lg)] py-[var(--spacing-sm)] min-h-10",
+        default: "px-[var(--spacing-x3)] py-[var(--spacing-x1)] min-h-8",
+        sm: "px-[var(--spacing-x2)] py-[var(--spacing-x1)] min-h-7",
+        lg: "px-[var(--spacing-x4)] py-[var(--spacing-x2)] min-h-10",
       },
     },
     compoundVariants: [

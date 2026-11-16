@@ -70,7 +70,7 @@ function EventChipButton({
       data-slot="week-chip"
       data-part={part}
       className={cn(
-        "block cursor-pointer select-none overflow-hidden whitespace-nowrap rounded-sm text-left text-t2 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
+        "block cursor-pointer select-none overflow-hidden whitespace-nowrap rounded-r1 text-left text-t2 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
         className,
       )}
       style={{ background: tone.bg, color: tone.fg, ...style }}
@@ -231,7 +231,7 @@ const WeekViewMultiDayEventsRow = ({
                   aria-hidden
                   data-part={position}
                   data-slot="week-chip"
-                  className={cn("cursor-pointer select-none rounded-sm", bar)}
+                  className={cn("cursor-pointer select-none rounded-r1", bar)}
                   style={{ background: tone.bg, color: tone.fg }}
                   onClick={(e) => onEventClick?.(event, e.currentTarget)}
                 />

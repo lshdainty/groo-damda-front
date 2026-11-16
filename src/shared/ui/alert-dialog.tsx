@@ -21,7 +21,7 @@ type FooterButtonSize = "default" | "lg";
  * Phase 2 마이그레이션: 비가역 액션 확정용 modal. Dialog와 시각 동일.
  *
  * 호환 보존:
- *   - sizes 추가(sm/md/lg) — desk-front 기존 max-w-lg는 default md(480)와 유사
+ *   - sizes 추가(sm/md/lg) — desk-front 기존 최대 폭(lg, 32rem)은 default md(480)와 유사
  *   - AlertDialogAction: buttonVariants() default(primary) 유지 + loading prop 보존
  *     (사용처에서 destructive 필요 시 className 또는 variant override)
  *   - Loader2 → groo Spinner → ds ProgressCircle(inherit) 교체
@@ -73,10 +73,10 @@ const alertDialogContentVariants = cva(
       size: {
         // 폭은 Dialog 와 같은 값이다 — 같은 화면에서 확인창만 좁으면 다른 컴포넌트로
         // 보인다(2026-09-16 결정: 420/520/720 로 통일).
-        sm: "[--dialog-max-w:420px] rounded-lg",
+        sm: "[--dialog-max-w:420px] rounded-r3",
         // popup 은 세 사이즈 모두 radius-lg(12) — dialog.md. 시트/드로어(20)와 갈라 둔다.
-        md: "[--dialog-max-w:520px] rounded-lg",
-        lg: "[--dialog-max-w:720px] rounded-lg",
+        md: "[--dialog-max-w:520px] rounded-r3",
+        lg: "[--dialog-max-w:720px] rounded-r3",
       },
     },
     defaultVariants: { size: "md" },
@@ -97,7 +97,7 @@ const AlertDialogContent = React.forwardRef<
     <AlertDialogPrimitive.Content
       ref={ref}
       className={cn(alertDialogContentVariants({ size }), className)}
-      style={{ boxShadow: "var(--shadow-xl)", ...style }}
+      style={{ boxShadow: "var(--shadow-s4)", ...style }}
       {...props}
     />
   </AlertDialogPortal>
@@ -144,7 +144,7 @@ const AlertDialogFooter = ({
       // 모바일에서 우측 정렬 compact 로 두면 화면 구석의 작은 알약이 돼 한 손으로
       // 누를 폭이 안 나온다 — dialog.md 114-116 · drawer.md footer 와 같은 규칙.
       // footer 18 22 — 헤더 위와 같은 값이다(dialog.md Layout).
-      "flex shrink-0 items-center gap-[var(--spacing-sm)] px-[22px] py-[18px]",
+      "flex shrink-0 items-center gap-[var(--spacing-x2)] px-[22px] py-[18px]",
       "[&>button]:flex-1 sm:justify-end sm:[&>button]:flex-none",
       className,
     )}
@@ -160,7 +160,7 @@ const AlertDialogTitle = React.forwardRef<
   <AlertDialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-title-md font-semibold leading-[var(--text-title-md--line-height)] text-text-primary tracking-[-0.01em]",
+      "text-t7 font-bold text-fg-neutral tracking-[-0.01em]",
       className,
     )}
     {...props}
@@ -174,7 +174,7 @@ const AlertDialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Description
     ref={ref}
-    className={cn("text-body-md leading-[1.6] text-text-secondary", className)}
+    className={cn("text-t5 text-fg-neutral-muted", className)}
     {...props}
   />
 ));

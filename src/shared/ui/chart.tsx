@@ -10,7 +10,7 @@ import { cn } from "@/shared/lib/index";
  * - chart 색상은 토큰(--color-chart-1 ~ --color-chart-5, ChartStyle로 주입).
  *   Phase 1 alias로 chart-1=primary(Cobalt), chart-2=chart-red, chart-3=chart-orange,
  *   chart-4=chart-green, chart-5=chart-violet.
- * - ChartTooltipContent: shadow-md inline + border-default + rounded-sm + bg-surface-default
+ * - ChartTooltipContent: shadow-s2 inline + border-default + rounded-r1 + bg-bg-layer-default
  *   (다크모드 토큰 swap 정합).
  */
 
@@ -61,7 +61,7 @@ const ChartContainer = React.forwardRef<
         data-chart={chartId}
         ref={ref}
         className={cn(
-          "flex aspect-video justify-center text-xs text-text-primary [&_.recharts-cartesian-axis-tick_text]:fill-text-secondary [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border-default/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border-default [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border-default [&_.recharts-radial-bar-background-sector]:fill-surface-input [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-surface-input [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border-default [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+          "flex aspect-video justify-center text-xs text-fg-neutral [&_.recharts-cartesian-axis-tick_text]:fill-fg-neutral-muted [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-stroke-neutral-weak/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-stroke-neutral-weak [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-stroke-neutral-weak [&_.recharts-radial-bar-background-sector]:fill-bg-neutral-weak [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-bg-neutral-weak [&_.recharts-reference-line_[stroke='#ccc']]:stroke-stroke-neutral-weak [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
           className,
         )}
         {...props}
@@ -198,10 +198,10 @@ const ChartTooltipContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "grid min-w-[8rem] items-start gap-[var(--spacing-xs)] rounded-sm border border-border-default bg-surface-default px-[var(--spacing-md)] py-[var(--spacing-sm)] text-label-sm text-text-primary",
+          "grid min-w-[8rem] items-start gap-[var(--spacing-x1)] rounded-r1 border border-stroke-neutral-weak bg-bg-layer-default px-[var(--spacing-x3)] py-[var(--spacing-x2)] text-t3 text-fg-neutral",
           className,
         )}
-        style={{ boxShadow: "var(--shadow-md)" }}
+        style={{ boxShadow: "var(--shadow-s2)" }}
       >
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
@@ -221,7 +221,7 @@ const ChartTooltipContent = React.forwardRef<
               <div
                 key={rowKey}
                 className={cn(
-                  "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-text-secondary",
+                  "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-fg-neutral-muted",
                   indicator === "dot" && "items-center",
                 )}
               >
@@ -261,12 +261,12 @@ const ChartTooltipContent = React.forwardRef<
                     >
                       <div className="grid gap-1.5">
                         {nestLabel ? tooltipLabel : null}
-                        <span className="text-text-secondary">
+                        <span className="text-fg-neutral-muted">
                           {itemConfig?.label || item.name}
                         </span>
                       </div>
                       {item.value !== undefined && (
-                        <span className="font-mono font-medium tabular-nums text-text-primary">
+                        <span className="font-mono font-medium tabular-nums text-fg-neutral">
                           {typeof item.value === "number"
                             ? item.value.toLocaleString()
                             : item.value}
@@ -323,7 +323,7 @@ const ChartLegendContent = React.forwardRef<
             <div
               key={item.value}
               className={cn(
-                "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-text-secondary",
+                "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-fg-neutral-muted",
               )}
             >
               {itemConfig?.icon && !hideIcon ? (

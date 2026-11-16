@@ -13,29 +13,29 @@ import { cn } from "@/shared/lib/index";
  * - semantic variants: border-l 4px + color-mix 8% bg (preview .banner SoT)
  * - default: border 1px all-around + surface-default
  *
- * Layout: flex items-start + gap-md (icon ↔ body wrapper). icon은 first child(absolute X).
+ * Layout: flex items-start + gap-x3 (icon ↔ body wrapper). icon은 first child(absolute X).
  * role: error/warning/danger/destructive는 alert, 그 외는 status.
  */
 
 const alertVariants = cva(
-  "relative w-full flex items-start gap-[var(--spacing-md)] rounded-sm p-[var(--spacing-md)] text-body-sm [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:mt-[2px]",
+  "relative w-full flex items-start gap-[var(--spacing-x3)] rounded-r1 p-[var(--spacing-x3)] text-t4 [&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:mt-[2px]",
   {
     variants: {
       variant: {
         default:
-          "border border-border-default bg-surface-default text-text-primary",
-        info: "border-l-4 border-l-stroke-informative-solid bg-bg-informative-weak text-text-primary [&>svg]:text-fg-informative",
+          "border border-stroke-neutral-weak bg-bg-layer-default text-fg-neutral",
+        info: "border-l-4 border-l-stroke-informative-solid bg-bg-informative-weak text-fg-neutral [&>svg]:text-fg-informative",
         success:
-          "border-l-4 border-l-stroke-positive-solid bg-bg-positive-weak text-text-primary [&>svg]:text-fg-positive",
+          "border-l-4 border-l-stroke-positive-solid bg-bg-positive-weak text-fg-neutral [&>svg]:text-fg-positive",
         warning:
-          "border-l-4 border-l-stroke-warning-solid bg-bg-warning-weak text-text-primary [&>svg]:text-fg-warning",
+          "border-l-4 border-l-stroke-warning-solid bg-bg-warning-weak text-fg-neutral [&>svg]:text-fg-warning",
         error:
-          "border-l-4 border-l-stroke-critical-solid bg-bg-critical-weak text-text-primary [&>svg]:text-fg-critical",
+          "border-l-4 border-l-stroke-critical-solid bg-bg-critical-weak text-fg-neutral [&>svg]:text-fg-critical",
         // 호환 별칭 — desk-front 사용처 보존
         danger:
-          "border-l-4 border-l-stroke-critical-solid bg-bg-critical-weak text-text-primary [&>svg]:text-fg-critical",
+          "border-l-4 border-l-stroke-critical-solid bg-bg-critical-weak text-fg-neutral [&>svg]:text-fg-critical",
         destructive:
-          "border-l-4 border-l-stroke-critical-solid bg-bg-critical-weak text-text-primary [&>svg]:text-fg-critical",
+          "border-l-4 border-l-stroke-critical-solid bg-bg-critical-weak text-fg-neutral [&>svg]:text-fg-critical",
       },
     },
     defaultVariants: {
@@ -64,7 +64,7 @@ const Alert = React.forwardRef<
 ));
 Alert.displayName = "Alert";
 
-/* Body wrapper — title + description 묶음. flex-1 + gap-xs. */
+/* Body wrapper — title + description 묶음. flex-1 + gap-x1. */
 const AlertBody = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -72,7 +72,7 @@ const AlertBody = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "flex flex-col gap-[var(--spacing-xs)] flex-1 min-w-0",
+      "flex flex-col gap-[var(--spacing-x1)] flex-1 min-w-0",
       className,
     )}
     {...props}
@@ -87,7 +87,7 @@ const AlertTitle = React.forwardRef<
   <h5
     ref={ref}
     className={cn(
-      "text-body-md font-semibold leading-none tracking-tight text-text-primary",
+      "text-t4 font-bold leading-none tracking-tight text-fg-neutral",
       className,
     )}
     {...props}
@@ -102,7 +102,7 @@ const AlertDescription = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "text-body-sm text-text-secondary [&_p]:leading-[1.5]",
+      "text-t4 text-fg-neutral-muted [&_p]:leading-[1.5]",
       className,
     )}
     {...props}

@@ -12,12 +12,12 @@ import { ProgressCircle } from "@/shared/ds/progress-circle";
  * Phase 2 마이그레이션(2026-05-13): groo 시각 토큰 + desk-front 호환 보존.
  *
  * Groo 시각 (preview-html `.btn` SoT):
- *   - gap-sm + transition-[box-shadow] + focus-visible:ring-2 ring-ring ring-offset-2
- *   - default: bg-primary + shadow-sm/md + brightness hover/active
+ *   - gap-x2 + transition-[box-shadow] + focus-visible:ring-2 ring-ring ring-offset-2
+ *   - default: bg-fg-brand + shadow-s1/s2 + brightness hover/active
  *   - destructive: bg-destructive + 동일 패턴
- *   - outline: border-border-default + hover:bg-surface-input
- *   - secondary: bg-secondary + hover:bg-surface-input
- *   - ghost: hover:bg-surface-input (Groo는 hover:bg-surface-input, desk-front token alias 후 동일)
+ *   - outline: border-stroke-neutral-weak + hover:bg-bg-neutral-weak
+ *   - secondary: bg-secondary + hover:bg-bg-neutral-weak
+ *   - ghost: hover:bg-bg-neutral-weak (Groo는 hover:bg-bg-neutral-weak, desk-front token alias 후 동일)
  *
  * desk-front 호환 보존:
  *   - size: default(=md 톤, h-9)/xs(h-6)/sm(h-8)/md(h-10 신규)/lg(h-11)/icon(h-9)

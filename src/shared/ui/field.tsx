@@ -116,7 +116,7 @@ function FieldLabel({
         // 그루 .p-field__label spec: 12px / 600 / secondary / -0.005em
         "text-xs font-semibold tracking-[-0.005em] text-[var(--fg-secondary)]",
         "group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:text-fg-disabled",
-        "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col has-[>[data-slot=field]]:rounded-md has-[>[data-slot=field]]:border [&>[data-slot=field]]:p-4",
+        "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col has-[>[data-slot=field]]:rounded-r2 has-[>[data-slot=field]]:border [&>[data-slot=field]]:p-4",
         "has-data-[state=checked]:bg-bg-brand-weak has-data-[state=checked]:border-stroke-brand-solid dark:has-data-[state=checked]:bg-bg-brand-weak",
         className,
       )}
@@ -143,7 +143,7 @@ function FieldDescription({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="field-description"
       className={cn(
-        "text-text-secondary text-sm font-normal leading-normal group-has-[[data-orientation=horizontal]]/field:text-balance",
+        "text-fg-neutral-muted text-sm font-normal leading-normal group-has-[[data-orientation=horizontal]]/field:text-balance",
         "nth-last-2:-mt-1 last:mt-0 [[data-variant=legend]+&]:-mt-1.5",
         "[&>a:hover]:text-fg-brand [&>a]:underline [&>a]:underline-offset-4",
         className,
@@ -173,7 +173,7 @@ function FieldSeparator({
       <Separator className="absolute inset-0 top-1/2" />
       {children && (
         <span
-          className="bg-bg-page text-text-secondary relative mx-auto block w-fit px-2"
+          className="bg-bg-layer-basement text-fg-neutral-muted relative mx-auto block w-fit px-2"
           data-slot="field-separator-content"
         >
           {children}

@@ -261,7 +261,7 @@ describe("숫자 — formatAxisWon · formatWon", () => {
 describe("축 · 격자 · 계열 기본값", () => {
   it("눈금 11(0.6875rem) · fg-neutral-subtle · 축 선 · 눈금 선 없음 · 눈금과 사이 8", () => {
     const p = chartAxisProps();
-    // rem — 글자 크기 설정(200%)을 따른다. 0.6875rem = 11px(--text-badge)
+    // rem — 글자 크기 설정(200%)을 따른다. 0.6875rem = 11px(--text-t1)
     expect(p.tick.fontSize).toBe("0.6875rem");
     expect(p.tick.fill).toBe("var(--color-fg-neutral-subtle)");
     expect(p.axisLine).toBe(false);

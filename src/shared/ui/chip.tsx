@@ -20,8 +20,8 @@ import { cn } from "@/shared/lib/index";
 
 const chipVariants = cva(
   [
-    "inline-flex items-center gap-[var(--spacing-xs)] font-sans leading-tight",
-    "transition-colors duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-easing)]",
+    "inline-flex items-center gap-[var(--spacing-x1)] font-sans leading-tight",
+    "transition-colors duration-[var(--motion-duration-d3)] ease-[var(--motion-ease-easing)]",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
     "disabled:pointer-events-none disabled:bg-bg-disabled disabled:text-fg-disabled",
   ].join(" "),
@@ -29,16 +29,16 @@ const chipVariants = cva(
     variants: {
       shape: {
         pill: "rounded-full",
-        rounded: "rounded-md",
+        rounded: "rounded-r2",
       },
       size: {
-        sm: "px-2.5 py-[5px] text-caption",
-        md: "px-3 py-1.5 text-body-sm",
+        sm: "px-2.5 py-[5px] text-t2",
+        md: "px-3 py-1.5 text-t4",
       },
       selected: {
         true: "bg-[var(--bg-brand)] text-[var(--fg-on-brand)] font-semibold",
         false:
-          "bg-surface-input text-text-secondary font-medium hover:text-text-primary",
+          "bg-bg-neutral-weak text-fg-neutral-muted font-medium hover:text-fg-neutral",
       },
       /** 그리드 셀용 — 주어진 칸을 꽉 채우고 라벨을 좌측 정렬한다. */
       fullWidth: {

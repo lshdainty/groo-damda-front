@@ -5,11 +5,11 @@ import { niceAxis } from "./chartAxis";
  * 세로축(Y) 폭 — 눈금 글자 중 **가장 긴 것**을 실제로 재서 잡는다(스펙 chart.md "세로축의 폭은 가장
  * 긴 글자('−3,000만')가 잘리지 않게", 결함 D6). 고정 폭(44 · 52)은 음수 부호 하나로 첫 글자가 잘렸다.
  *
- * 숨은 span 에 눈금 글자와 같은 글꼴 · 크기(`--text-badge`, rem 이라 글자 크기 200% 도 따라간다)를
+ * 숨은 span 에 눈금 글자와 같은 글꼴 · 크기(`--text-t1`, rem 이라 글자 크기 200% 도 따라간다)를
  * 주고 `getBoundingClientRect().width` 를 읽는다. 레이아웃이 없는 환경(jsdom)이면 글자 수 추정치로 돌아간다.
  * 웹폰트가 늦게 도착하면 `document.fonts.ready` 뒤에 한 번 더 잰다.
  */
-export const AXIS_TICK_FONT_SIZE = "var(--text-badge)";
+export const AXIS_TICK_FONT_SIZE = "var(--text-t1)";
 /**
  * 눈금 글자 옆 여백 — recharts 가 축 폭에서 따로 덜어 가는 것의 합이다. ds 차트 `chartAxisProps` 는 tickMargin 8 을 주고
  * tickLine 만 끌 뿐 tickSize(기본 6)는 그대로라 글자는 축 끝에서 6 + 8 = 14 안쪽에 놓인다. 여기에 올림 오차 2 를 더해 16.

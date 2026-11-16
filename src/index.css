@@ -4,18 +4,12 @@
 /* =============================================================================
  * 그루 Design System tokens — Phase 0 도입 (chore/design-tokens 브랜치)
  *
- * `groo-design` 산출물 두 파일을 옆에 두기만 함. 기존 Mossy/Bark/Mist 토큰은
- * 그대로 보존(아래 :root 블록)되며, Groo 토큰(`--color-primary`, `--color-bg-page`,
- * `--color-text-*`, `--spacing-*`, `--text-*` 등)이 추가로 살아 있음.
+ * `groo-design` 산출물(groo-tokens.css)을 불러온다. 코드는 새 이름만 쓴다 — 역할 색
+ * (`--color-fg-*` · `--color-bg-*` · `--color-stroke-*`), `--spacing-x*`, `--radius-r*`,
+ * `--text-t*`, `--shadow-s*`, `--motion-duration-d*`. 옛 이름(text · surface · border 색, xs~3xl 간격,
+ * xs~2xl 모서리, display~overline 글자, sm~xl 그림자)은 2026-11-16 걷었다 — 디자인 시스템에서 지운다.
  *
- * Phase 1 — 기존 semantic 토큰(`--bg-canvas`, `--fg-primary` 등)을 Groo 토큰으로
- * alias하여 Mossy 색→Cobalt 색 일괄 전환.
- * Phase 2~ — 기존 컴포넌트가 Groo 토큰을 직접 참조하도록 점진 마이그레이션.
- *
- * 충돌 토큰 노트(현재 후승=기존 Mossy 값 유지):
- *   --radius-sm (Groo 4 / Mossy 6) — 기존 6 유지
- *   --shadow-sm/md/lg/xl (Mossy green tinted vs Groo neutral) — 기존 유지
- *   --font-sans (둘 다 Pretendard, 호환)
+ * 로컬 이름(`--bg-canvas`, `--fg-primary` 등)은 아래 블록에서 역할 색에 잇는다.
  * ========================================================================== */
 @import "./shared/styles/groo-tokens.css";
 @import "./shared/styles/groo-shadcn-bridge.css";
@@ -80,9 +74,9 @@
  * SoT 정합으로 마이그됨:
  *   Mossy → --color-chart-green (수입/proto user 색)
  *   Bark → --color-chart-brown (저축/카드 fallback/proto)
- *   Mist 200/700 → --color-chart-gray + --color-text-tertiary (chart axis)
- *   Sunlit → --color-warning(-light) (경고/긴급) 또는 --color-chart-yellow (proto)
- *   Sky → --color-info (calendar 토요일) 또는 --color-chart-blue (proto)
+ *   Mist 200/700 → --color-chart-gray + --color-fg-neutral-subtle (chart axis)
+ *   Sunlit → --color-fg-warning(-light) (경고/긴급) 또는 --color-chart-yellow (proto)
+ *   Sky → --color-fg-informative (calendar 토요일) 또는 --color-chart-blue (proto)
  *   Berry / Sprout → 0 사용처 dead code, 제거됨
  * ========================================================================== */
 :root {
@@ -93,15 +87,15 @@
   --swatch-lift: 0%;
   /* 색 스와치 체크박스의 체크 표시 색 — fill 대비(라이트: 진한 fill→흰 체크) */
   --swatch-check: var(--color-static-white);
-  --bg-section-warm: var(--color-surface-input);
-  --fg-on-warm: var(--color-text-primary);
+  --bg-section-warm: var(--color-bg-neutral-weak);
+  --fg-on-warm: var(--color-fg-neutral);
   --fg-link-hover: var(--color-fg-brand);
-  --border-warm: var(--color-border-default);
+  --border-warm: var(--color-stroke-neutral-weak);
 
   /* Interaction tints */
-  --bg-hover-subtle: var(--color-surface-input);
-  --bg-hover-strong: var(--color-surface-input);
-  --bg-track: var(--color-border-default);
+  --bg-hover-subtle: var(--color-bg-neutral-weak);
+  --bg-hover-strong: var(--color-bg-neutral-weak);
+  --bg-track: var(--color-stroke-neutral-weak);
 
   /* Brand-tinted interaction surfaces */
   /* 예산 카드(디자인 p-card--brand): 라이트 = mossy-50 솔리드(#eaf2fb) */
@@ -110,9 +104,9 @@
   --border-brand-mid: var(--color-stroke-brand-solid);
 
   /* Warm (Bark) tinted surfaces — Groo엔 warm 톤 없음, surface-input으로 통합 */
-  --bg-warm-tint: var(--color-surface-input);
-  --bg-warm-tint-strong: var(--color-surface-input);
-  --fg-on-warm-strong: var(--color-text-primary);
+  --bg-warm-tint: var(--color-bg-neutral-weak);
+  --bg-warm-tint-strong: var(--color-bg-neutral-weak);
+  --fg-on-warm-strong: var(--color-fg-neutral);
 
   /* Tx semantic — 거래 종류별 색 (지출=danger 톤, 수입=brand 톤, 이체=info 톤) */
   --fg-income: var(--fg-brand);
@@ -120,21 +114,16 @@
   --bg-income-subtle: var(--bg-brand-subtle);
   --bg-transfer-subtle: var(--status-info-subtle);
 
-  /* Radii — desk-front custom aliases (radius scale 은 groo-tokens.css SoT).
-   * 옛 --radius-2xs(2px) 는 --radius-xs SoT 와 동일 값이라 마이그됨. */
+  /* Radii — desk-front custom aliases (radius scale 은 groo-tokens.css `--radius-r*` SoT). */
   --radius-tile: var(
-    --radius-lg
-  ); /* spec: color-swatch/tile = radius-lg(12px) alias */
+    --radius-r3
+  ); /* spec: color-swatch/tile = radius-r3(12px) alias */
   --radius-card: 14px; /* desk-front custom: tx-row card, dashboard card (spec 외) */
   --radius-pill: 9999px; /* spec radius-full 별명 */
 
-  /* Spacing — groo-tokens.css `--spacing-xs/sm/md/lg/xl/2xl/3xl` (SoT) 사용.
-   * 옛 --space-N 시리즈는 마이그 후 제거됨. */
+  /* Spacing — groo-tokens.css `--spacing-x*` (SoT) 사용. */
 
-  /* Shadow — groo-tokens.css `--shadow-sm/md/lg/xl` (SoT cool-neutral rgba(15,18,28,*)) cascade 사용.
-   * 옛 Mossy green-tinted rgba(28,36,20,*) 정의 4 라인 제거됨 — base color 분기:
-   *   sm: rgba(28,36,20,0.06) → rgba(15,18,28,0.05)
-   *   md/lg/xl: 같은 패턴 (Mossy green tint → cool-neutral gray-black) */
+  /* Shadow — groo-tokens.css `--shadow-s1 ~ s4` (SoT, 다크는 토큰 다크 블록이 바꾼다) 사용. */
 
   /* Typography */
   --font-sans:
@@ -142,14 +131,10 @@
     BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Inter",
     "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", "Monaco", monospace;
-  /* font-size / line-height / font-weight / letter-spacing — groo-tokens.css `--text-*` SoT 사용.
-   * 옛 --fs-* / --lh-* / --fw-* / --tracking-* legacy 별명은 마이그됨:
-   *   font-size: display-lg 44→40, display-md 36→32, h4 17→18 사이즈별 SoT 정합
-   *   lh/fw/tracking: 직접 값 (숫자/em) 인라인 마이그 — general scale 토큰은 SoT에 없음 (SoT는 사이즈별만)
-   * className utility (text-display-xl 등) 마이그는 별도 task — 인라인 패턴 case-by-case 처리 필요. */
+  /* font-size — groo-tokens.css `--text-t*` SoT 사용. 줄 높이 · 굵기 · 자간은 쓰는 자리에 직접 적는다. */
 
-  /* Motion — groo-tokens.css `--motion-duration-*` / `--motion-ease-out` (SoT) 사용.
-   * 옛 --dur-* / --ease-standard 는 마이그됨. spring/decel 은 SoT 미정의 desk-front custom 보존. */
+  /* Motion — groo-tokens.css `--motion-duration-d*` / `--motion-ease-*` (SoT) 사용.
+   * spring/decel 은 SoT 미정의 desk-front custom 보존. */
   --ease-spring: cubic-bezier(
     0.34,
     1.26,
@@ -177,9 +162,9 @@
   --popover-foreground: var(--fg-primary);
   --primary: var(--bg-brand);
   --primary-foreground: var(--fg-on-brand);
-  --secondary: var(--color-surface-input);
+  --secondary: var(--color-bg-neutral-weak);
   --secondary-foreground: var(--fg-primary);
-  --muted: var(--color-surface-input);
+  --muted: var(--color-bg-neutral-weak);
   --muted-foreground: var(--fg-tertiary);
   --accent: var(--color-bg-brand-weak);
   --accent-foreground: var(--fg-brand-strong);
@@ -203,7 +188,7 @@
   --sidebar-border: var(--border-subtle);
   --sidebar-ring: var(--border-focus);
   --surface-hero: var(--color-bg-brand-weak);
-  --radius: var(--radius-lg);
+  --radius: var(--radius-r3);
 }
 
 /* Dark mode — Phase 1: Groo *-dark 토큰 활성화 + semantic alias.
@@ -213,33 +198,21 @@
 .dark,
 :root.dark,
 [data-theme="dark"] {
-  /* Groo *-dark 토큰 활성화 */
-  --color-bg-page: var(--color-bg-page-dark);
-  --color-surface-default: var(--color-surface-default-dark);
-  --color-surface-input: var(--color-surface-input-dark);
-  --color-text-primary: var(--color-text-primary-dark);
-  --color-text-secondary: var(--color-text-secondary-dark);
-  --color-text-tertiary: var(--color-text-tertiary-dark);
-  --color-text-disabled: var(--color-text-disabled-dark);
-  --color-border-default: var(--color-border-default-dark);
-  --color-border-strong: var(--color-border-strong-dark);
-  --shadow-sm: var(--shadow-sm-dark);
-  --shadow-md: var(--shadow-md-dark);
-  --shadow-lg: var(--shadow-lg-dark);
-  --shadow-xl: var(--shadow-xl-dark);
+  /* 역할 색 · 그림자(--color-fg-neutral · --shadow-s1 …)는 groo-tokens.css 다크 블록이 스스로 다크 값으로 바꾼다 —
+   * 옛 이름(--color-fg-neutral …)을 여기서 *-dark 로 덮던 줄은 옛 이름을 걷으며 지웠다. */
 
   /* Semantic alias — Groo 토큰이 *-dark로 활성됐으니 light와 동일 매핑으로 dark 자동 적용 */
   --swatch-lift: 38%;
   --swatch-check: #1a1f2e; /* 다크: fill 이 light variant → 어두운 체크로 대비 */
-  --bg-section-warm: var(--color-surface-input);
-  --fg-on-warm: var(--color-text-primary);
+  --bg-section-warm: var(--color-bg-neutral-weak);
+  --fg-on-warm: var(--color-fg-neutral);
   --fg-link-hover: var(--color-fg-brand);
-  --border-warm: var(--color-border-default);
+  --border-warm: var(--color-stroke-neutral-weak);
 
   /* Interaction tints */
-  --bg-hover-subtle: var(--color-surface-input);
-  --bg-hover-strong: var(--color-surface-input);
-  --bg-track: var(--color-border-default);
+  --bg-hover-subtle: var(--color-bg-neutral-weak);
+  --bg-hover-strong: var(--color-bg-neutral-weak);
+  --bg-track: var(--color-stroke-neutral-weak);
 
   /* 예산 카드(디자인 p-card--brand 정합): 다크 = cobalt(primary-light) @12% 알파.
      카드가 page(#1a1f2e) 위에 합성 → 디자인 렌더값 #222E44 와 동일. */
@@ -247,9 +220,9 @@
   --bg-brand-tint-strong: var(--color-bg-brand-weak-pressed);
   --border-brand-mid: var(--color-stroke-brand-solid);
 
-  --bg-warm-tint: var(--color-surface-input);
-  --bg-warm-tint-strong: var(--color-surface-input);
-  --fg-on-warm-strong: var(--color-text-primary);
+  --bg-warm-tint: var(--color-bg-neutral-weak);
+  --bg-warm-tint-strong: var(--color-bg-neutral-weak);
+  --fg-on-warm-strong: var(--color-fg-neutral);
 
   /* shadcn mapping */
   --background: var(--bg-canvas);
@@ -260,9 +233,9 @@
   --popover-foreground: var(--fg-primary);
   --primary: var(--bg-brand);
   --primary-foreground: var(--fg-on-brand);
-  --secondary: var(--color-surface-input);
+  --secondary: var(--color-bg-neutral-weak);
   --secondary-foreground: var(--fg-primary);
-  --muted: var(--color-surface-input);
+  --muted: var(--color-bg-neutral-weak);
   --muted-foreground: var(--fg-tertiary);
   --accent: var(--bg-brand-subtle);
   --accent-foreground: var(--fg-brand);
@@ -272,10 +245,10 @@
   --input: var(--border-default);
   --ring: var(--border-focus);
   --chart-1: var(--color-fg-brand);
-  --chart-2: var(--color-chart-red-light);
-  --chart-3: var(--color-chart-orange-light);
-  --chart-4: var(--color-chart-green-light);
-  --chart-5: var(--color-chart-violet-light);
+  --chart-2: var(--color-chart-red-dark);
+  --chart-3: var(--color-chart-orange-dark);
+  --chart-4: var(--color-chart-green-dark);
+  --chart-5: var(--color-chart-violet-dark);
   /* 카테고리 색 alias — light variant 로 swap */
   --sidebar: var(--bg-surface);
   --sidebar-foreground: var(--fg-primary);
@@ -373,8 +346,8 @@
   --font-weight-bold: 700;
   --font-weight-extrabold: 800;
   /* radius-* 토큰은 groo-tokens.css `@theme { ... }`에서 직접 정의됨.
-   * 여기서 self-reference(`--radius-lg: var(--radius-lg)`) 두면 Tailwind v4가
-   * `:root { --radius-lg: var(--radius-lg) }` cascade-killing self-reference를
+   * 여기서 self-reference(`--radius-r3: var(--radius-r3)`) 두면 Tailwind v4가
+   * `:root { --radius-r3: var(--radius-r3) }` 같은 cascade-killing self-reference를
    * emit해서 모든 `rounded-*` / `rounded-[var(--radius-*)]` 무효화됨. 제거. */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -382,10 +355,8 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  /* --color-primary: tokens.desk.css @theme {} 안에 `--color-primary: #0147ad` 직접
-   * 정의됨. 여기서 `var(--primary)`로 재정의하면 chain이 `--primary → --bg-brand →
-   * --color-primary` 자기 참조 cycle → bg-primary utility 무효 → 배경 transparent +
-   * 흰 글씨 깨짐. 이 라인 의도적 제거. (Phase 2 fix) */
+  /* 옛 primary 색 이름은 두지 않는다 — 디자인 시스템 옛 이름이라 걷었다(2026-11-16).
+   * 브랜드 자리는 역할 이름(`bg-bg-brand-solid` · `text-fg-brand` …)을 직접 쓴다. */
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -428,7 +399,7 @@
   }
   body {
     @apply overflow-x-hidden;
-    font-size: var(--text-body-sm);
+    font-size: var(--text-t4);
     line-height: 1.5;
     background: var(--bg-canvas);
     color: var(--fg-primary);
@@ -449,20 +420,20 @@
   }
   h2,
   .h2 {
-    font-size: var(--text-display-sm);
+    font-size: var(--text-t9);
     font-weight: 700;
     line-height: 1.3;
     letter-spacing: -0.012em;
   }
   h3,
   .h3 {
-    font-size: var(--text-title-lg);
+    font-size: var(--text-t7);
     font-weight: 600;
     line-height: 1.3;
   }
   h4,
   .h4 {
-    font-size: var(--text-title-md);
+    font-size: var(--text-t6);
     font-weight: 600;
     line-height: 1.3;
   }
@@ -507,14 +478,8 @@
     scrollbar-width: none;
   }
 
-  .display-xl {
-    font-size: var(--text-display-xl);
-    font-weight: 800;
-    letter-spacing: -0.022em;
-    line-height: 1.15;
-  }
   .display-lg {
-    font-size: var(--text-display-lg);
+    font-size: var(--text-t13);
     font-weight: 800;
     letter-spacing: -0.022em;
     line-height: 1.15;
@@ -526,16 +491,16 @@
     line-height: 1.15;
   }
   .body-lg {
-    font-size: var(--text-body-lg);
+    font-size: var(--text-t5);
     line-height: 1.5;
   }
   .body-sm {
-    font-size: var(--text-label-sm);
+    font-size: var(--text-t3);
     line-height: 1.5;
     color: var(--fg-secondary);
   }
   .caption {
-    font-size: var(--text-caption);
+    font-size: var(--text-t2);
     line-height: 1.3;
     color: var(--fg-tertiary);
     letter-spacing: 0.04em;
@@ -543,7 +508,7 @@
     font-weight: 500;
   }
   .micro {
-    font-size: var(--text-badge);
+    font-size: var(--text-t1);
     color: var(--fg-tertiary);
   }
   .tabular {

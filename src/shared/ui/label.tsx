@@ -8,12 +8,12 @@ import { cn } from "@/shared/lib/index";
 
 /*
  * Groo Label — groo-design specs/components/label.md SoT 기반.
- * label-md typography (14/500/1.4) + text-primary 색 명시.
+ * label-md typography (14/500/1.4) + text-fg-neutral 색 명시.
  * peer-disabled: 짝지어진 input이 disabled면 함께 흐림.
  */
 
 const labelVariants = cva(
-  "text-label-md font-medium text-text-primary leading-none peer-disabled:cursor-not-allowed peer-disabled:text-fg-disabled",
+  "text-t4 font-medium text-fg-neutral leading-none peer-disabled:cursor-not-allowed peer-disabled:text-fg-disabled",
 );
 
 const Label = React.forwardRef<

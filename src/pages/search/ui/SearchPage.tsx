@@ -173,7 +173,9 @@ export function SearchPage() {
         className={cn(
           // 머리(z-sticky)보다 낮아야 한다 — 문서가 스크롤하는 폰에서 숨는 칩 줄이 머리 위로 비쳐 보이면 안 된다
           "z-30 py-x1_5",
-          mobile ? "bg-surface-default px-global-gutter" : "bg-bg-page",
+          mobile
+            ? "bg-bg-layer-default px-global-gutter"
+            : "bg-bg-layer-basement",
         )}
       >
         <ChipRadioGroup

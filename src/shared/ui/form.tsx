@@ -19,10 +19,10 @@ import { Label } from "@/shared/ui/label";
  * - react-hook-form composition helper. RHF + Zod 조합 가정.
  * - 7 primitive: Form / FormField / FormItem / FormLabel / FormControl / FormDescription / FormMessage
  * - aria-invalid / aria-describedby / htmlFor 자동 wire — useFormField hook + useId 기반.
- * - FormItem `gap-xs` (4) — preview `.form-group` SoT 정합 (shadcn 기본 `space-y-2` 8 → 4 정정).
- * - FormLabel = Label 컴포넌트 재사용 (text-label-md 14/500 + text-primary + leading-none).
- * - FormDescription = text-body-sm + text-text-secondary
- * - FormMessage = text-body-sm + font-medium + text-error (zod schema message 자동 표시).
+ * - FormItem `gap-x1` (4) — preview `.form-group` SoT 정합 (shadcn 기본 `space-y-2` 8 → 4 정정).
+ * - FormLabel = Label 컴포넌트 재사용 (text-t4 + font-medium + text-fg-neutral + leading-none).
+ * - FormDescription = text-t4 + text-fg-neutral-muted
+ * - FormMessage = text-t4 + font-medium + text-fg-critical (zod schema message 자동 표시).
  */
 
 const Form = FormProvider;
@@ -92,7 +92,7 @@ const FormItem = React.forwardRef<
     <FormItemContext.Provider value={{ id }}>
       <div
         ref={ref}
-        className={cn("flex flex-col gap-[var(--spacing-xs)]", className)}
+        className={cn("flex flex-col gap-[var(--spacing-x1)]", className)}
         {...props}
       />
     </FormItemContext.Provider>
@@ -150,7 +150,7 @@ const FormDescription = React.forwardRef<
     <p
       ref={ref}
       id={formDescriptionId}
-      className={cn("text-body-sm text-text-secondary", className)}
+      className={cn("text-t4 text-fg-neutral-muted", className)}
       {...props}
     />
   );
@@ -172,7 +172,7 @@ const FormMessage = React.forwardRef<
     <p
       ref={ref}
       id={formMessageId}
-      className={cn("text-body-sm font-medium text-fg-critical", className)}
+      className={cn("text-t4 font-medium text-fg-critical", className)}
       {...props}
     >
       {body}

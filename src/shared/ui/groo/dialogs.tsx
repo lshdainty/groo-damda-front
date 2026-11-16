@@ -111,7 +111,7 @@ export function ModalShell({
             // 모바일 footer 는 버튼을 가로 균등 분배한다(spec drawer.md:35 — 한 손 조작 폭).
             // 우측 정렬 compact 로 두면 화면 구석의 작은 알약이 되어 누르기 어렵다.
             // 삭제처럼 marginRight:auto 로 좌측에 붙는 보조 액션은 균등분배에서 빠진다.
-            <div className="flex items-center gap-2 px-xl py-3 [&>button]:flex-1">
+            <div className="flex items-center gap-2 px-x6 py-3 [&>button]:flex-1">
               {footer}
             </div>
           )}

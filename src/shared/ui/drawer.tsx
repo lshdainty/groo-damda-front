@@ -17,8 +17,8 @@ import { registerOverlay } from "@/shared/lib/groo/pointer-block";
  *
  * Groo 시각:
  *   - overlay: var(--overlay-dim-light) light / var(--overlay-dim-dark) dark
- *   - content: bg-[var(--bg-surface)] + rounded-t-[radius-2xl] + shadow-xl inline
- *   - handle: 40×4 + bg-surface-input + rounded-full
+ *   - content: bg-[var(--bg-surface)] + rounded-t-[radius-2xl] + shadow-s4 inline
+ *   - handle: 40×4 + bg-bg-neutral-weak + rounded-full
  */
 
 const Drawer = ({
@@ -131,10 +131,10 @@ const DrawerContent = React.forwardRef<
           else if (ref) ref.current = node;
         }}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-(--z-modal-content) flex h-auto max-h-[88%] flex-col rounded-t-[var(--radius-2xl)] bg-[var(--bg-surface)] outline-none",
+          "fixed inset-x-0 bottom-0 z-(--z-modal-content) flex h-auto max-h-[88%] flex-col rounded-t-[var(--radius-r5)] bg-[var(--bg-surface)] outline-none",
           className,
         )}
-        style={{ boxShadow: "var(--shadow-xl)", ...style }}
+        style={{ boxShadow: "var(--shadow-s4)", ...style }}
         // 열면 초점이 시트 표면으로(03F-008a) — vaul 기본은 열기 버튼에 남는다
         onOpenAutoFocus={(e) => {
           e.preventDefault();
@@ -143,7 +143,7 @@ const DrawerContent = React.forwardRef<
         {...props}
       >
         {/* handle — preview `.drw-handle` SoT (40×4 + surface-input + rounded-full) */}
-        <div className="mx-auto mt-1.5 mb-2 h-1 w-10 shrink-0 rounded-full bg-surface-input" />
+        <div className="mx-auto mt-1.5 mb-2 h-1 w-10 shrink-0 rounded-full bg-bg-neutral-weak" />
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>
@@ -156,7 +156,7 @@ const DrawerHeader = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex items-center gap-3 px-xl pb-4 pt-2", className)}
+    className={cn("flex items-center gap-3 px-x6 pb-4 pt-2", className)}
     {...props}
   />
 );
@@ -167,7 +167,7 @@ const DrawerBody = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   // 세로 스크롤바는 숨기지 않는다(scroll-area.md · 03G-016) — 전역 6px 알약이 그대로 그려진다
-  <div className={cn("flex-1 overflow-y-auto px-xl", className)} {...props} />
+  <div className={cn("flex-1 overflow-y-auto px-x6", className)} {...props} />
 );
 DrawerBody.displayName = "DrawerBody";
 
@@ -183,7 +183,7 @@ const DrawerFooter = ({
       // (spec drawer.md Migration notes — `.drw-actions` SoT `[&>*]:flex-1`).
       // 우측 정렬 compact 로 두면 화면 구석의 작은 알약이 돼 한 손으로 누를 폭이 안 나온다.
       // 삭제처럼 좌측에 붙일 버튼은 className="mr-auto flex-none" 로 균등분배에서 뺀다.
-      "mt-auto flex items-center gap-2 px-xl py-3 [&>button]:flex-1",
+      "mt-auto flex items-center gap-2 px-x6 py-3 [&>button]:flex-1",
       className,
     )}
     {...props}
@@ -198,7 +198,7 @@ const DrawerTitle = React.forwardRef<
   <DrawerPrimitive.Title
     ref={ref}
     className={cn(
-      "text-title-md font-semibold tracking-[-0.01em] text-[var(--fg-primary)]",
+      "text-t6 font-semibold tracking-[-0.01em] text-[var(--fg-primary)]",
       className,
     )}
     {...props}
