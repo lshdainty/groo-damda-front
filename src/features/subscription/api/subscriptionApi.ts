@@ -17,6 +17,11 @@ export interface MyFeatures {
   primaryBroker: string | null;
   /** @deprecated 구버전 호환용 파생값 — 새 코드는 connectedBrokers 를 봐라 */
   tossConnected: boolean;
+  /**
+   * 화면에서 스스로 구독을 시작할 수 있는가(서버 설정). 결제 연동 전이라 지금은 닫혀 있고, 일부 사용자만
+   * 관리자가 켠다. **`true` 일 때만 열림** — 값이 없는 옛 서버 응답은 닫힘으로 읽는다(서버도 닫혀 있으면 거절한다).
+   */
+  subscriptionSelfSignupEnabled?: boolean;
 }
 
 export interface SubscriptionInfo {
