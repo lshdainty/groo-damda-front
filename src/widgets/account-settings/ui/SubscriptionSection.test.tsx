@@ -49,7 +49,7 @@ vi.mock("@/shared/ui/groo/manager-layout", () => ({
 
 const server = vi.hoisted(() => ({
   features: { data: { features: [] as string[] } } as {
-    data?: { features: string[] };
+    data?: { features: string[]; subscriptionSelfSignupEnabled?: boolean };
     isLoading?: boolean;
     isError?: boolean;
     isRefetching?: boolean;
@@ -138,7 +138,11 @@ beforeEach(() => {
     };
   }
   setWide(false);
-  server.features = { data: { features: [] }, refetch: () => {} };
+  // 시작 단추 시험은 자가 가입이 열린 서버를 기준으로 둔다. 닫힘 · 옛 서버는 "자가 가입" 묶음이 따로 본다.
+  server.features = {
+    data: { features: [], subscriptionSelfSignupEnabled: true },
+    refetch: () => {},
+  };
   server.sub = { data: null, refetch: () => {} };
   server.plans = { data: [MONTHLY, YEARLY], refetch: () => {} };
   server.subscribe = vi.fn();
@@ -268,6 +272,45 @@ describe("지금 플랜 · 해지 유예 (28 · 31)", () => {
     expect(text()).toContain("freeLocked");
     expect(buttonLabels()).toContain("startPro");
     expect(buttonLabels()).not.toContain("cancelSub");
+  });
+});
+
+describe("자가 가입 닫힘 — 결제 연동 전, 서버 설정이 연다", () => {
+  const startButton = () =>
+    [...container.querySelectorAll("button")].find(
+      (b) => b.textContent === "startProSoon",
+    );
+
+  it("닫혀 있으면 시작 단추가 '추후 열릴 예정' 으로 막히고 눌러도 구독하지 않는다", async () => {
+    server.features = {
+      data: { features: [], subscriptionSelfSignupEnabled: false },
+      refetch: () => {},
+    };
+    mount(true);
+    expect(buttonLabels()).not.toContain("startPro");
+    const soon = startButton()!;
+    expect(soon).toBeDefined();
+    expect(soon.disabled).toBe(true);
+    await act(async () => soon.click());
+    expect(server.subscribe).not.toHaveBeenCalled();
+  });
+
+  it("옛 서버(값 없음)는 닫힘으로 본다", () => {
+    server.features = { data: { features: [] }, refetch: () => {} };
+    mount(false);
+    expect(startButton()?.disabled).toBe(true);
+    expect(buttonLabels()).not.toContain("startPro");
+  });
+
+  it("닫혀 있어도 이미 Pro 인 사람(관리자가 켠 사람)은 해지 단추를 그대로 본다", () => {
+    server.features = {
+      data: { features: ["SECURITIES"], subscriptionSelfSignupEnabled: false },
+      refetch: () => {},
+    };
+    server.sub = { data: subscription(), refetch: () => {} };
+    mount(true);
+    expect(buttonLabels()).toContain("cancelSub");
+    expect(startButton()).toBeUndefined();
   });
 });
 

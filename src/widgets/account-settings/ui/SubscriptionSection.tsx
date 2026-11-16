@@ -61,7 +61,8 @@ const PRO = "Pro";
  *
  * 폰은 제 껍데기(ds Top Navigation + 흰 면 스크롤 본문 + 바닥 띠)를 그린다 — 바닥에 고정 버튼이 있어 공용 설정 껍데기에
  * 들어가지 않는다(금액 가리기와 같은 갈래). 768 이상은 설정 본문 칸에 "‹ 계정"(틀) → 제목(`ManagerHead`) → 카드 하나 +
- * 카드 바닥 줄이다. PG 가 없어 'Pro 시작하기' 는 self-grant(useSubscribe)로 즉시 구독된다.
+ * 카드 바닥 줄이다. PG 가 없어 'Pro 시작하기' 는 self-grant(useSubscribe)로 즉시 구독된다 — 그래서 서버가 자가 가입을
+ * 닫아 두는 동안(`subscriptionSelfSignupEnabled` 가 true 가 아님)은 시작 단추를 막고 "추후 열릴 예정" 을 말한다.
  *
  * 가격은 서버가 준다(요금제 행의 `price` · `durationMonths`). 화면에 숫자를 박지 않는다 — 할인율도 월간 · 연간 가격에서 계산한다.
  */
@@ -103,6 +104,9 @@ export function SubscriptionSection({
   };
 
   const isPro = featuresQ.data?.features?.includes("SECURITIES") ?? false;
+  // 자가 가입 열림 — 서버가 true 를 줄 때만. 값이 없으면(옛 서버) 닫힘으로 본다. 닫혀 있으면 서버가 거절(SUBS_006)하므로
+  // 누를 수 있게 두면 실패만 보여 준다. 일부 사용자는 관리자가 DB 로 켜고, 그 사람은 isPro 라 이 단추를 안 본다.
+  const selfSignupOpen = featuresQ.data?.subscriptionSelfSignupEnabled === true;
   const sub = subQ.data;
   // currentPeriodEnd 는 서버가 시간대 없이 주는 `[UTC]` (백엔드 UserSubscription 의 LocalDateTime). 자르면 UTC 날짜가 나와
   // KST(+9)에서 하루 이르게 보인다 — 계정의 '다음 결제'와 같은 값이라 같은 방식으로 읽어야 두 화면이 다른 날짜를 말하지 않는다.
@@ -149,7 +153,7 @@ export function SubscriptionSection({
   ) => (price != null ? `${money(price)} / ${unit(months)}` : null);
 
   const onSubscribe = () => {
-    if (!selected) return;
+    if (!selected || !selfSignupOpen) return;
     // 구독 시작은 드문 이정표라 positive. 실패는 critical 스낵바 + [다시 시도](같은 요청)
     const started = () =>
       snackbar.show({ message: t("toast.subscribed"), tone: "positive" });
@@ -367,10 +371,10 @@ export function SubscriptionSection({
       size={mobile ? "large" : "small"}
       className={mobile ? "w-full" : undefined}
       loading={subscribe.isPending}
-      disabled={!selected}
+      disabled={!selected || !selfSignupOpen}
       onClick={onSubscribe}
     >
-      {t("startPro")}
+      {selfSignupOpen ? t("startPro") : t("startProSoon")}
     </Button>
   );
 

@@ -1881,6 +1881,7 @@ recurring,toastSaved,변경사항을 저장했어요.,Changes saved.
 recurring,toastAdded,반복 거래를 추가했어요.,Recurring transaction added.
 subscription,title,구독 관리,Manage subscription
 subscription,startPro,Pro 시작하기,Start Pro
+subscription,startProSoon,추후 열릴 예정이에요,Opening soon
 subscription,cancelSub,구독 해지,Cancel subscription
 subscription,proInUse,담다 Pro 이용 중,Using 담다 Pro
 subscription,freeInUse,Free 플랜 이용 중,On the Free plan
