@@ -153,8 +153,8 @@ describe("flush ghost 는 텍스트 버튼이다", () => {
     expect(cls()).toContain("hover:bg-transparent");
     expect(cls()).toContain("active:bg-transparent");
     // 일반 ghost 의 hover 채움이 남아 있으면 상자가 다시 생긴다.
-    expect(cls()).not.toContain("hover:bg-surface-input");
-    expect(cls()).not.toContain("active:bg-border-default");
+    expect(cls()).not.toContain("hover:bg-bg-neutral-weak");
+    expect(cls()).not.toContain("active:bg-stroke-neutral-weak");
   });
 
   it("글자색으로만 반응한다 — 보조톤에서 본문색으로", () => {
@@ -163,9 +163,9 @@ describe("flush ghost 는 텍스트 버튼이다", () => {
         금액 가리기
       </Button>,
     );
-    expect(cls()).toContain("text-text-secondary");
-    expect(cls()).toContain("hover:text-text-primary");
-    expect(cls()).toContain("focus-visible:text-text-primary");
+    expect(cls()).toContain("text-fg-neutral-muted");
+    expect(cls()).toContain("hover:text-fg-neutral");
+    expect(cls()).toContain("focus-visible:text-fg-neutral");
   });
 
   it("해당 방향 padding 만 0 이다 — 반대쪽은 그대로", () => {
@@ -180,9 +180,9 @@ describe("flush ghost 는 텍스트 버튼이다", () => {
 
   it("flush 를 안 붙인 ghost 는 지금 규칙 그대로다", () => {
     render(<Button variant="ghost">툴바</Button>);
-    expect(cls()).toContain("hover:bg-surface-input");
+    expect(cls()).toContain("hover:bg-bg-neutral-weak");
     expect(cls()).not.toContain("hover:bg-transparent");
-    expect(cls()).not.toContain("text-text-secondary");
+    expect(cls()).not.toContain("text-fg-neutral-muted");
   });
 });
 

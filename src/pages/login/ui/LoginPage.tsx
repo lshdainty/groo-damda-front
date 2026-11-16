@@ -20,7 +20,7 @@ export const LoginPage = () => {
   return (
     // 앱 로그인 정합(사용자 결정) — 카드/이미지 패널 없이 셸 밖 흰 면(bg-layer-default, 11B) 중앙 콘텐츠만.
     <div className="flex min-h-svh flex-col items-center justify-center bg-bg-layer-default p-x6">
-      {/* max-w-sm 금지 — groo --spacing-sm(8px) 이 Tailwind 스케일을 가려 8px 로 컴파일됨. */}
+      {/* max-w-[384px] — 옛 groo 간격 토큰이 Tailwind 크기 이름(sm 등)을 가려 max-w-* 가 간격 값(8px)으로 컴파일되던 때 명시 값으로 적었다. */}
       <div className="w-full max-w-[384px]">
         <LoginForm />
       </div>

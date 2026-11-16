@@ -52,7 +52,7 @@ const SearchableList = React.forwardRef<HTMLDivElement, SearchableListProps>(
         {showHeader && (
           <div className="flex items-center justify-between mb-2">
             {label != null ? (
-              <span className="text-[13px] font-medium text-text-primary">
+              <span className="text-[13px] font-medium text-fg-neutral">
                 {label}
               </span>
             ) : (
@@ -61,7 +61,7 @@ const SearchableList = React.forwardRef<HTMLDivElement, SearchableListProps>(
             <div className="flex items-center gap-3">
               {headerExtras}
               {typeof totalCount === "number" && (
-                <span className="text-[11px] text-text-tertiary">
+                <span className="text-[11px] text-fg-neutral-subtle">
                   {t("totalCount", { count: totalCount })}
                 </span>
               )}
@@ -71,7 +71,7 @@ const SearchableList = React.forwardRef<HTMLDivElement, SearchableListProps>(
         <div className="relative mb-2">
           <Search
             size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-neutral-subtle"
           />
           <Input
             search
@@ -83,7 +83,7 @@ const SearchableList = React.forwardRef<HTMLDivElement, SearchableListProps>(
         </div>
         <div
           className={cn(
-            "rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-surface)]",
+            "rounded-[var(--radius-r2)] border border-[var(--border-subtle)] bg-[var(--bg-surface)]",
             "divide-y divide-[var(--border-subtle)] overflow-y-auto",
           )}
           style={{ maxHeight }}
@@ -93,7 +93,7 @@ const SearchableList = React.forwardRef<HTMLDivElement, SearchableListProps>(
           ) : hasChildren ? (
             children
           ) : (
-            <div className="py-6 text-center text-[12px] text-text-tertiary">
+            <div className="py-6 text-center text-[12px] text-fg-neutral-subtle">
               {emptyText ?? t("searchEmpty")}
             </div>
           )}
@@ -141,7 +141,7 @@ const SearchableListItem = React.forwardRef<
       className={cn(
         "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors",
         "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-stroke-focus-ring",
-        !active && "hover:bg-surface-input",
+        !active && "hover:bg-bg-neutral-weak",
         className,
       )}
       style={{
@@ -165,7 +165,7 @@ const SearchableListItem = React.forwardRef<
           {title}
         </span>
         {subtitle != null && (
-          <span className="block truncate mt-0.5 text-[11.5px] text-text-tertiary">
+          <span className="block truncate mt-0.5 text-[11.5px] text-fg-neutral-subtle">
             {subtitle}
           </span>
         )}

@@ -60,7 +60,7 @@ export function MonthChip({
       data-slot="month-chip"
       data-part={part}
       className={cn(
-        "relative block select-none whitespace-nowrap rounded-sm text-t2 font-medium",
+        "relative block select-none whitespace-nowrap rounded-r1 text-t2 font-medium",
         BOX[density],
         part === "none" && "truncate",
         part === "first" && "z-10 rounded-r-none",

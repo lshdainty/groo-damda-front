@@ -17,53 +17,53 @@
 
 :root {
   /* shadcn v3 conv (`--{name}`) — 호환용 */
-  --background: var(--color-bg-page);
-  --foreground: var(--color-text-primary);
-  --card: var(--color-surface-default);
-  --card-foreground: var(--color-text-primary);
-  --popover: var(--color-surface-default);
-  --popover-foreground: var(--color-text-primary);
+  --background: var(--color-bg-layer-basement);
+  --foreground: var(--color-fg-neutral);
+  --card: var(--color-bg-layer-default);
+  --card-foreground: var(--color-fg-neutral);
+  --popover: var(--color-bg-layer-default);
+  --popover-foreground: var(--color-fg-neutral);
   --primary: var(--color-bg-brand-solid);
-  --primary-foreground: var(--color-text-on-accent);
-  --secondary: var(--color-surface-input);
-  --secondary-foreground: var(--color-text-primary);
-  --muted: var(--color-surface-input);
-  --muted-foreground: var(--color-text-secondary);
-  --accent: var(--color-surface-input);
-  --accent-foreground: var(--color-text-primary);
+  --primary-foreground: var(--color-static-white);
+  --secondary: var(--color-bg-neutral-weak);
+  --secondary-foreground: var(--color-fg-neutral);
+  --muted: var(--color-bg-neutral-weak);
+  --muted-foreground: var(--color-fg-neutral-muted);
+  --accent: var(--color-bg-neutral-weak);
+  --accent-foreground: var(--color-fg-neutral);
   --destructive: var(--color-bg-critical-solid);
-  --destructive-foreground: var(--color-text-on-accent);
-  --border: var(--color-border-default);
-  --input: var(--color-border-default);
-  --ring: var(--color-border-focus);
-  --radius: var(--radius-md);
+  --destructive-foreground: var(--color-static-white);
+  --border: var(--color-stroke-neutral-weak);
+  --input: var(--color-stroke-neutral-weak);
+  --ring: var(--color-stroke-focus-ring);
+  --radius: var(--radius-r2);
 
   /* Tailwind v4 conv (`--color-{name}`) — utility class 자동 생성용
    * (예: bg-primary-foreground, ring-ring, text-muted-foreground 등) */
-  --color-primary-foreground: var(--color-text-on-accent);
-  --color-secondary: var(--color-surface-input);
-  --color-secondary-foreground: var(--color-text-primary);
-  --color-muted: var(--color-surface-input);
-  --color-muted-foreground: var(--color-text-secondary);
-  --color-accent: var(--color-surface-input);
-  --color-accent-foreground: var(--color-text-primary);
+  --color-primary-foreground: var(--color-static-white);
+  --color-secondary: var(--color-bg-neutral-weak);
+  --color-secondary-foreground: var(--color-fg-neutral);
+  --color-muted: var(--color-bg-neutral-weak);
+  --color-muted-foreground: var(--color-fg-neutral-muted);
+  --color-accent: var(--color-bg-neutral-weak);
+  --color-accent-foreground: var(--color-fg-neutral);
   --color-destructive: var(--color-bg-critical-solid);
-  --color-destructive-foreground: var(--color-text-on-accent);
-  --color-border: var(--color-border-default);
-  --color-input: var(--color-border-default);
-  --color-ring: var(--color-border-focus);
-  --color-card: var(--color-surface-default);
-  --color-card-foreground: var(--color-text-primary);
-  --color-popover: var(--color-surface-default);
-  --color-popover-foreground: var(--color-text-primary);
-  --color-background: var(--color-bg-page);
-  --color-foreground: var(--color-text-primary);
+  --color-destructive-foreground: var(--color-static-white);
+  --color-border: var(--color-stroke-neutral-weak);
+  --color-input: var(--color-stroke-neutral-weak);
+  --color-ring: var(--color-stroke-focus-ring);
+  --color-card: var(--color-bg-layer-default);
+  --color-card-foreground: var(--color-fg-neutral);
+  --color-popover: var(--color-bg-layer-default);
+  --color-popover-foreground: var(--color-fg-neutral);
+  --color-background: var(--color-bg-layer-basement);
+  --color-foreground: var(--color-fg-neutral);
 
   /* Ring offset — Tailwind ring-offset-{n} utility의 갭 색상.
    * 미정의 시 currentColor가 적용되어 검정 띠로 보이는 문제 회피. bg-page 색을
    * 따라가서 input 외곽이 매끄럽게 이어짐 (light=흰색 / dark=짙은 navy). */
-  --ring-offset-color: var(--color-bg-page);
-  --tw-ring-offset-color: var(--color-bg-page);
+  --ring-offset-color: var(--color-bg-layer-basement);
+  --tw-ring-offset-color: var(--color-bg-layer-basement);
 }
 
 /*

@@ -207,7 +207,7 @@ export interface ChartAxisOptions {
 
 /**
  * 눈금 글자 크기 — 11 / 15(rem 이라 설정의 글자 크기 · 200% 를 따른다) · 고정폭 숫자.
- * SVG 글자는 var() 를 속성으로 못 받아 토큰(`--text-badge` = 0.6875rem)과 같은 값을 적는다.
+ * SVG 글자는 var() 를 속성으로 못 받아 토큰(`--text-t1` = 0.6875rem)과 같은 값을 적는다.
  * 세로축 폭 측정(`axisWidth.ts` AXIS_TICK_FONT_SIZE)이 같은 토큰이라 폭 · 글자가 늘 같이 움직인다.
  */
 export const CHART_TICK_SIZE = "0.6875rem";

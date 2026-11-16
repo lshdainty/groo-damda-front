@@ -72,7 +72,7 @@ export function Section({
       <CardHeader className="flex-row items-center justify-between">
         <CardTitle
           style={{
-            fontSize: "var(--text-body-lg)",
+            fontSize: "var(--text-t5)",
             display: "flex",
             alignItems: "center",
             gap: 6,
@@ -85,7 +85,7 @@ export function Section({
             className="num"
             style={{
               marginLeft: "auto",
-              fontSize: "var(--text-label-sm)",
+              fontSize: "var(--text-t3)",
               fontWeight: 700,
               color: totalColor,
             }}

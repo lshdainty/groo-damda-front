@@ -47,7 +47,7 @@ export function ManagerHead({
 
 /**
  * ManagerTabs (cat-mgr__tabs): segmented toggle — tabs.md Container 룩.
- * active = surface-default pill + shadow-sm + text-primary (brand 채움 아님). count 배지 유지.
+ * active = surface-default pill + shadow-s1 + text-fg-neutral (brand 채움 아님). count 배지 유지.
  */
 /**
  * ManagerTabs — 관리 화면 탭. shared `Tabs`(tabs.md pills variant) 그대로 사용한다.

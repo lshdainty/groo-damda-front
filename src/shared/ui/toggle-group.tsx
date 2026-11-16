@@ -32,7 +32,7 @@ const ToggleGroup = React.forwardRef<
   // 다크에서 surface 보다 밝아 앱(어두운 sunken)과 반대라, 트랙만 page 톤으로 맞춤.
   const wrapper =
     variant === "segmented" || variant === "segmented-subtle"
-      ? "inline-flex w-full gap-0 rounded-[var(--radius-md)] border border-border-default bg-[var(--bg-canvas)] p-0.5"
+      ? "inline-flex w-full gap-0 rounded-[var(--radius-r2)] border border-stroke-neutral-weak bg-[var(--bg-canvas)] p-0.5"
       : "flex items-center justify-center gap-1";
   return (
     <ToggleGroupPrimitive.Root

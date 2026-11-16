@@ -57,7 +57,7 @@ describe("반반 액션 바", () => {
   it("네모다 — pill 이면 선택 컨트롤과 구분이 안 된다", () => {
     render(twoActions);
     const cls = Array.from(bar().classList);
-    expect(cls).toContain("rounded-[var(--radius-md)]");
+    expect(cls).toContain("rounded-[var(--radius-r2)]");
     expect(cls).not.toContain("rounded-full");
     // 칸 모서리는 컨테이너가 깎는다.
     expect(cls).toContain("overflow-hidden");
@@ -69,7 +69,7 @@ describe("반반 액션 바", () => {
     const sep = container.querySelector('[data-orientation="vertical"]')!;
     expect(sep, "칸 사이에 구분선이 없다").not.toBeNull();
     // 글자 크기에 맞춘 높이 — h-full 이면 바를 끝까지 가른다.
-    expect(Array.from(sep.classList)).toContain("h-[var(--text-caption)]");
+    expect(Array.from(sep.classList)).toContain("h-[var(--text-t2)]");
     expect(Array.from(sep.classList)).not.toContain("h-full");
     // 세로 가운데 — 위아래 여백이 남아야 한다.
     expect(Array.from(bar().classList)).toContain("items-center");

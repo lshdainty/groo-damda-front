@@ -30,13 +30,13 @@ export function SplitActions({
   return (
     <div
       className={[
-        "flex w-full items-center overflow-hidden rounded-[var(--radius-md)]",
-        "border border-border-default bg-[var(--bg-canvas)]",
+        "flex w-full items-center overflow-hidden rounded-[var(--radius-r2)]",
+        "border border-stroke-neutral-weak bg-[var(--bg-canvas)]",
         "[&>button]:flex-1 [&>button]:rounded-none",
       ].join(" ")}
     >
       {left}
-      <Separator orientation="vertical" className="h-[var(--text-caption)]" />
+      <Separator orientation="vertical" className="h-[var(--text-t2)]" />
       {right}
     </div>
   );

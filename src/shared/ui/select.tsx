@@ -9,9 +9,9 @@ import { cn } from "@/shared/lib/index";
  *
  * - Radix Select 베이스. 키보드 네비게이션 / ARIA / 포털 자동.
  * - composition: Select > SelectTrigger > SelectValue + SelectContent > SelectItem / SelectGroup / SelectLabel / SelectSeparator
- * - trigger: input과 동일 톤(rounded-sm h-10 bg-surface-input + body-md + border-default + focus ring-2 ring-ring/30)
- * - content: shadow-md(Tailwind) + rounded-sm + border-default + bg-surface-default
- * - item: rounded-xs + focus:bg-surface-input + text-body-md
+ * - trigger: input과 동일 톤(rounded-r1 h-10 bg-bg-neutral-weak + t5 + stroke-neutral-weak + focus ring-2 ring-ring/30)
+ * - content: shadow-s2(Tailwind) + rounded-r1 + border-default + bg-bg-layer-default
+ * - item: rounded-r0_5 + focus:bg-bg-neutral-weak + text-t5
  */
 
 const Select = SelectPrimitive.Root;
@@ -27,10 +27,10 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-sm border border-border-default bg-surface-input px-[var(--spacing-md)] py-[var(--spacing-sm)] font-sans text-body-md text-text-primary placeholder:text-text-tertiary data-[placeholder]:text-text-tertiary",
+      "flex h-10 w-full items-center justify-between rounded-r1 border border-stroke-neutral-weak bg-bg-neutral-weak px-[var(--spacing-x3)] py-[var(--spacing-x2)] font-sans text-t5 text-fg-neutral placeholder:text-fg-neutral-subtle data-[placeholder]:text-fg-neutral-subtle",
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
       "disabled:cursor-not-allowed disabled:bg-bg-disabled disabled:text-fg-disabled disabled:border-stroke-neutral-weak",
-      "transition-[color,background-color,border-color,box-shadow] duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-easing)]",
+      "transition-[color,background-color,border-color,box-shadow] duration-[var(--motion-duration-d3)] ease-[var(--motion-ease-easing)]",
       "[&>span]:line-clamp-1",
       className,
     )}
@@ -38,7 +38,7 @@ const SelectTrigger = React.forwardRef<
   >
     {children}
     <SelectPrimitive.Icon asChild>
-      <ChevronDown className="h-4 w-4 text-text-tertiary" />
+      <ChevronDown className="h-4 w-4 text-fg-neutral-subtle" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
 ));
@@ -87,7 +87,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-(--z-floating) max-h-96 min-w-[8rem] overflow-hidden rounded-sm border border-border-default bg-surface-default text-text-primary shadow-md",
+        "relative z-(--z-floating) max-h-96 min-w-[8rem] overflow-hidden rounded-r1 border border-stroke-neutral-weak bg-bg-layer-default text-fg-neutral shadow-s2",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         position === "popper" &&
@@ -120,7 +120,7 @@ const SelectLabel = React.forwardRef<
   <SelectPrimitive.Label
     ref={ref}
     className={cn(
-      "py-[var(--spacing-xs)] pl-8 pr-[var(--spacing-sm)] text-label-sm font-medium text-text-secondary",
+      "py-[var(--spacing-x1)] pl-8 pr-[var(--spacing-x2)] text-t4 font-medium text-fg-neutral-muted",
       className,
     )}
     {...props}
@@ -135,13 +135,13 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-xs py-[var(--spacing-xs)] pl-8 pr-[var(--spacing-sm)] text-body-md outline-none focus:bg-surface-input focus:text-text-primary",
+      "relative flex w-full cursor-default select-none items-center rounded-r0_5 py-[var(--spacing-x1)] pl-8 pr-[var(--spacing-x2)] text-t5 outline-none focus:bg-bg-neutral-weak focus:text-fg-neutral",
       "data-[disabled]:pointer-events-none data-[disabled]:text-fg-disabled",
       className,
     )}
     {...props}
   >
-    <span className="absolute left-[var(--spacing-sm)] flex h-3.5 w-3.5 items-center justify-center">
+    <span className="absolute left-[var(--spacing-x2)] flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
         <Check className="h-4 w-4" />
       </SelectPrimitive.ItemIndicator>
@@ -158,7 +158,7 @@ const SelectSeparator = React.forwardRef<
   <SelectPrimitive.Separator
     ref={ref}
     className={cn(
-      "-mx-[var(--spacing-xs)] my-[var(--spacing-xs)] h-px bg-border-default",
+      "-mx-[var(--spacing-x1)] my-[var(--spacing-x1)] h-px bg-stroke-neutral-weak",
       className,
     )}
     {...props}

@@ -31,7 +31,7 @@ const ColorSwatchGroup = React.forwardRef<
 >(({ options, columns = 5, className, style, ...props }, ref) => (
   <RadioGroupPrimitive.Root
     ref={ref}
-    className={cn("grid gap-[var(--spacing-sm)]", className)}
+    className={cn("grid gap-[var(--spacing-x2)]", className)}
     style={{
       gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
       ...style,
@@ -55,7 +55,7 @@ const ColorSwatchItem = React.forwardRef<
     aria-label={option.label ?? option.value}
     className={cn(
       "relative aspect-square w-full rounded-[var(--radius-tile)]",
-      "border-2 border-transparent transition-transform duration-[var(--motion-duration-fast)] ease-[var(--motion-ease-easing)]",
+      "border-2 border-transparent transition-transform duration-[var(--motion-duration-d3)] ease-[var(--motion-ease-easing)]",
       "hover:scale-[1.05]",
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
       "data-[state=checked]:border-[currentColor]",

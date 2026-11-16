@@ -39,15 +39,15 @@ export function DetailHero({
     <div className={cn("pb-4", className)}>
       <div className="flex items-center gap-2">
         {icon}
-        <span className="text-[length:var(--text-body-sm)] font-medium text-[var(--fg-secondary)]">
+        <span className="text-[length:var(--text-t4)] font-medium text-[var(--fg-secondary)]">
           {title}
         </span>
       </div>
-      <div className="num mt-3 text-[length:var(--text-display-md)] font-extrabold">
+      <div className="num mt-3 text-[length:var(--text-t12)] font-extrabold">
         {children}
       </div>
       {meta && (
-        <div className="mt-1 text-[length:var(--text-label-sm)] text-[var(--fg-tertiary)]">
+        <div className="mt-1 text-[length:var(--text-t3)] text-[var(--fg-tertiary)]">
           {meta}
         </div>
       )}
@@ -81,7 +81,7 @@ export function DetailField({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 py-3.5 text-[length:var(--text-body-sm)]",
+        "flex items-center gap-3 py-3.5 text-[length:var(--text-t4)]",
         className,
       )}
     >
@@ -115,7 +115,7 @@ export function DetailSection({
       {(title || trailing) && (
         <div className="mb-2 flex items-baseline gap-2">
           {title && (
-            <h4 className="m-0 text-[length:var(--text-body-sm)] font-bold tracking-[-0.01em] text-[var(--fg-primary)]">
+            <h4 className="m-0 text-[length:var(--text-t4)] font-bold tracking-[-0.01em] text-[var(--fg-primary)]">
               {title}
             </h4>
           )}

@@ -350,7 +350,7 @@ function PlaceholderSection({ section }: { section: SectionDef }) {
           style={{
             width: 48,
             height: 48,
-            borderRadius: "var(--radius-lg)",
+            borderRadius: "var(--radius-r3)",
             background: "var(--bg-brand-subtle)",
             color: "var(--fg-brand-strong)",
             display: "inline-flex",
@@ -363,7 +363,7 @@ function PlaceholderSection({ section }: { section: SectionDef }) {
         </div>
         <div
           style={{
-            fontSize: "var(--text-body-lg)",
+            fontSize: "var(--text-t5)",
             fontWeight: "700",
             marginBottom: 4,
           }}
@@ -372,7 +372,7 @@ function PlaceholderSection({ section }: { section: SectionDef }) {
         </div>
         <div
           style={{
-            fontSize: "var(--text-label-sm)",
+            fontSize: "var(--text-t3)",
             color: "var(--fg-tertiary)",
           }}
         >
@@ -380,7 +380,7 @@ function PlaceholderSection({ section }: { section: SectionDef }) {
         </div>
         <div
           style={{
-            fontSize: "var(--text-badge)",
+            fontSize: "var(--text-t1)",
             color: "var(--fg-tertiary)",
             marginTop: 14,
             letterSpacing: "0.04em",

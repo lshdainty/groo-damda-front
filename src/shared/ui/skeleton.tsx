@@ -15,7 +15,7 @@ function Skeleton({
   return (
     <div
       className={cn(
-        "animate-pulse motion-reduce:animate-none rounded-sm bg-bg-neutral-weak",
+        "animate-pulse motion-reduce:animate-none rounded-r1 bg-bg-neutral-weak",
         className,
       )}
       {...props}
@@ -34,7 +34,7 @@ function SkeletonShimmer({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-sm bg-bg-neutral-weak",
+        "relative overflow-hidden rounded-r1 bg-bg-neutral-weak",
         className,
       )}
       {...props}

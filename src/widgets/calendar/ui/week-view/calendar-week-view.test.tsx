@@ -61,7 +61,7 @@ const event = (id: number, over: Partial<IEvent> = {}): IEvent => ({
 });
 
 const OLD_CLASSES =
-  /(?:^|\s)(?:text-muted-foreground|bg-muted(?:\/\d+)?|bg-background|bg-accent|text-(?:xs|sm|base)|rounded-(?:md|lg)|rounded-r\d|animate-pulse)(?=\s|$)/;
+  /(?:^|\s)(?:text-muted-foreground|bg-muted(?:\/\d+)?|bg-background|bg-accent|text-(?:xs|sm|base)|rounded-(?:xs|sm|md|lg|xl|2xl)|animate-pulse)(?=\s|$)/;
 
 const render = (
   single: IEvent[],
@@ -119,7 +119,7 @@ describe("주 보기 일정 칩", () => {
       "focus-visible:outline-2",
       "focus-visible:outline-offset-2",
       "focus-visible:outline-stroke-focus-ring",
-      "rounded-sm",
+      "rounded-r1",
       "text-t2",
       "font-medium",
     ])
@@ -184,9 +184,9 @@ describe("주 보기 일정 칩", () => {
     }
     // 모서리 — 사이 조각은 각지고, 첫 조각은 오른쪽이, 끝 조각은 왼쪽이 각진다(둥근 모서리 클래스가 뒤에서 덮어쓰지 않는다)
     expect(parts[1]!.className).toContain("rounded-none");
-    expect(parts[1]!.className).not.toMatch(/rounded-sm/);
+    expect(parts[1]!.className).not.toMatch(/rounded-r1/);
     expect(parts[0]!.className).toContain("rounded-r-none");
-    expect(parts[0]!.className).toMatch(/rounded-sm/);
+    expect(parts[0]!.className).toMatch(/rounded-r1/);
     expect(parts[3]!.className).toContain("rounded-l-none");
     expect(parts[1]!.className).toContain("mx-0");
     expect(parts[1]!.className).toContain("-ml-px");
