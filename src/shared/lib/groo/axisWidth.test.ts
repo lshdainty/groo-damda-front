@@ -34,8 +34,8 @@ describe("niceValueAxis — 그리는 눈금 = 폭을 잰 눈금 (B5-1)", () => 
     expect(a.ticks.map(a.tickFormatter)).toEqual(["0", "1만", "2만", "3만"]);
   });
 
-  it.each([7_500, 15_000, 22_500, 30_000])(
-    "최대 %d — 눈금은 1·2·2.5·5 배수라 반올림한 글자(2.25만 → '2.3만')가 나오지 않고, 폭은 그 눈금 글자 가운데 가장 긴 것",
+  it.each([7_500, 8_000, 10_000, 15_000, 22_500, 30_000, 150_000_000])(
+    "최대 %d — 눈금은 1·2·5 배수라 반올림한 글자(0.25만 → '0.3만')가 나오지 않고, 폭은 그 눈금 글자 가운데 가장 긴 것",
     async (max) => {
       const { formatAxisWon } = await import("@/shared/ds/chart");
       const a = niceValueAxis([0, max], formatAxisWon);
@@ -43,14 +43,16 @@ describe("niceValueAxis — 그리는 눈금 = 폭을 잰 눈금 (B5-1)", () => 
       // 글자가 눈금값을 그대로 말한다 — 소수 한 자리로 반올림돼 다른 수가 되지 않는다
       for (const [i, v] of a.ticks.entries()) {
         const l = labels[i]!;
-        const back = l.endsWith("만")
-          ? Number(l.slice(0, -1)) * 10_000
-          : Number(l.replace(/,/g, ""));
+        const back = l.endsWith("억")
+          ? Number(l.slice(0, -1)) * 100_000_000
+          : l.endsWith("만")
+            ? Number(l.slice(0, -1).replace(/,/g, "")) * 10_000
+            : Number(l.replace(/,/g, ""));
         expect(back).toBe(v);
       }
-      // 한 축은 한 단위 — 0 말고는 모두 만 단위이거나 모두 쉼표 정수
+      // 한 축은 한 단위 — 0 말고는 모두 억 · 모두 만 · 모두 쉼표 정수 가운데 하나
       const units = new Set(
-        labels.filter((l) => l !== "0").map((l) => l.endsWith("만")),
+        labels.filter((l) => l !== "0").map((l) => l.replace(/[^억만]/g, "")),
       );
       expect(units.size).toBe(1);
       expect(a.domain[1]).toBeGreaterThanOrEqual(max);
@@ -79,6 +81,71 @@ describe("niceValueAxis — 그리는 눈금 = 폭을 잰 눈금 (B5-1)", () => 
     ]);
   });
 
+  /** 그 값들의 축 눈금 글 */
+  const drawn = async (values: number[]) => {
+    const { formatAxisWon } = await import("@/shared/ds/chart");
+    const a = niceValueAxis(values, formatAxisWon);
+    return a.ticks.map(a.tickFormatter);
+  };
+
+  it("눈금 간격은 1 · 2 · 5 × 10ⁿ — 0 ~ 1만은 0.2만 간격(2,500 간격의 '0.3만' · '0.8만' 이 나오지 않는다)", async () => {
+    expect(await drawn([0, 10_000])).toEqual([
+      "0",
+      "0.2만",
+      "0.4만",
+      "0.6만",
+      "0.8만",
+      "1만",
+    ]);
+    expect(await drawn([0, 8_000])).toEqual([
+      "0",
+      "2,000",
+      "4,000",
+      "6,000",
+      "8,000",
+    ]);
+    expect(await drawn([0, 30_000])).toEqual(["0", "1만", "2만", "3만"]);
+  });
+
+  it("억 축 — 1억 이상이면 모든 눈금이 억(5,000만 · 1억 섞임 없음)", async () => {
+    expect(await drawn([0, 150_000_000])).toEqual([
+      "0",
+      "0.5억",
+      "1억",
+      "1.5억",
+    ]);
+    // 5,000만 ~ 1억 이 섞인 값
+    expect(await drawn([50_000_000, 80_000_000, 100_000_000])).toEqual([
+      "0",
+      "0.2억",
+      "0.4억",
+      "0.6억",
+      "0.8억",
+      "1억",
+    ]);
+  });
+
+  it("음수 축 · 모두 0", async () => {
+    expect(await drawn([-25_000, 60_000])).toEqual([
+      "−4만",
+      "−2만",
+      "0",
+      "2만",
+      "4만",
+      "6만",
+    ]);
+    expect(await drawn([-30_000_000, 10_000_000])).toEqual([
+      "−3,000만",
+      "−2,000만",
+      "−1,000만",
+      "0",
+      "1,000만",
+    ]);
+    // 모두 0 · 값 없음 — 앱과 같은 0 ~ 1만
+    expect(await drawn([0, 0])).toEqual(await drawn([0, 10_000]));
+    expect(await drawn([])).toEqual(await drawn([0, 10_000]));
+  });
+
   it("글자 함수는 눈금 목록을 함께 받는다 — 그리는 눈금과 같은 목록", () => {
     const seen: (readonly number[])[] = [];
     const a = niceValueAxis([0, 28_000], (v, ticks) => {
@@ -97,9 +164,9 @@ describe("niceValueAxis — 그리는 눈금 = 폭을 잰 눈금 (B5-1)", () => 
     expect(a.width).toBeGreaterThan(measureTickWidth(["60000"]));
   });
 
-  it("값이 없으면(계열을 모두 껐을 때) 0 하나짜리 축이 아니라 0 ~ 1 로 잡는다", () => {
+  it("값이 없으면(계열을 모두 껐을 때) 0 하나짜리 축이 아니라 0 ~ 1만으로 잡는다", () => {
     const a = niceValueAxis([], String);
     expect(a.domain[0]).toBe(0);
-    expect(a.domain[1]).toBeGreaterThan(0);
+    expect(a.domain[1]).toBe(10_000);
   });
 });

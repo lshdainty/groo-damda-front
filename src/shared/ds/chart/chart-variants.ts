@@ -152,13 +152,18 @@ export function assignChartColors<T extends object>(
 export const MINUS = "−";
 const round1 = (x: number) => Math.floor(x * 10 + 0.5) / 10;
 
-/** 만 단위로 쓰는 축의 문턱 — 눈금 가운데 가장 큰 절댓값이 이 이상이면 그 축의 모든 눈금이 만 단위다 */
-const AXIS_MAN = 10000;
+/** 축 단위 — 눈금 가운데 가장 큰 절댓값이 그 값 이상이면 그 축의 모든 눈금이 그 단위다(큰 것부터) */
+const AXIS_UNITS = [
+  { min: 1e12, label: "조" },
+  { min: 1e8, label: "억" },
+  { min: 1e4, label: "만" },
+] as const;
 
 /**
- * 눈금 글자 — **한 축은 한 단위**(chart.md "축 · 격자"). 그 축의 눈금([ticks]) 가운데 가장 큰 절댓값이 1만 이상이면
- * 모든 눈금을 만 단위(0.5만 · 1만 · 1.5만 — 억 · 조에 이르는 값은 그 단위)로, 아니면 모두 쉼표 정수(2,500 · 5,000)로 쓴다.
- * 값 하나만 보고 정하면 한 축에 "5,000 · 1만" 이 섞인다. 소수는 한 자리(.0 은 버린다), 0 은 "0", 빼기는 U+2212.
+ * 눈금 글자 — **한 축은 한 단위**(chart.md "축 · 격자"). 그 축의 눈금([ticks]) 가운데 가장 큰 절댓값이 1억 이상이면 모든 눈금을
+ * 억 단위(0.5억 · 1억 · 1.5억), 1만 이상이면 만 단위(0.5만 · 1만 · 1.5만), 아니면 쉼표 정수(2,000 · 4,000)로 쓴다(조도 같은 셈).
+ * 값 하나만 보고 정하면 한 축에 "5,000 · 1만" · "5,000만 · 1억" 이 섞인다. 소수는 한 자리(.0 은 버린다) — 눈금 간격이
+ * 1 · 2 · 5 × 10ⁿ(`niceAxis`)이라 한 자리 안에서 글자가 눈금 위치와 맞는다. 0 은 "0", 빼기는 U+2212.
  * [ticks] 는 그 축이 그리는 눈금 목록 그대로다 — 세로축 폭도 같은 목록 · 같은 글자로 잰다(`niceValueAxis`).
  */
 export function formatAxisWon(value: number, ticks: readonly number[]): string {
@@ -179,19 +184,13 @@ export function formatAxisWon(value: number, ticks: readonly number[]): string {
     n,
     ...ticks.filter(Number.isFinite).map((t) => Math.abs(t)),
   );
-  if (axisMax < AXIS_MAN) return sign + Math.round(n).toLocaleString("ko-KR");
+  const unit = AXIS_UNITS.find((u) => axisMax >= u.min);
+  if (!unit) return sign + Math.round(n).toLocaleString("ko-KR");
   if (n === 0) return "0";
-  let scaled = n / 10000;
-  let unit = "만";
-  for (const bigger of ["억", "조"]) {
-    if (round1(scaled) < 10000) break;
-    scaled /= 10000;
-    unit = bigger;
-  }
   return (
     sign +
-    round1(scaled).toLocaleString("ko-KR", { maximumFractionDigits: 1 }) +
-    unit
+    round1(n / unit.min).toLocaleString("ko-KR", { maximumFractionDigits: 1 }) +
+    unit.label
   );
 }
 
