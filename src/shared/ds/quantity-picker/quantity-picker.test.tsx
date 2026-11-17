@@ -142,6 +142,30 @@ describe("끝 — 최소 · 최대", () => {
     expect(Array.from(placeholders).map((p) => p.textContent)).toEqual(["0"]);
   });
 
+  it('hug — 끝값보다 긴 글이 범위 안에 있으면 그 글이 폭 자리를 잡는다(소요 시간 "23시간 30분")', () => {
+    const text = (n: number) => {
+      const h = Math.floor(n);
+      return n % 1 ? `${h}시간 30분` : `${h}시간`;
+    };
+    render(
+      <QuantityPicker
+        defaultValue={0}
+        min={0}
+        max={24}
+        step={0.5}
+        getValueText={text}
+        aria-label="소요 시간"
+      />,
+    );
+    const placeholders = Array.from(
+      valueCell().querySelectorAll("[aria-hidden]"),
+    ).map((p) => p.textContent);
+    // 끝값(24시간)만으로는 "23시간 30분" 같은 가장 긴 글이 들어가지 않아 값이 바뀔 때 + 가 밀렸다(QA IE-18)
+    expect(placeholders).toContain("24시간");
+    expect(placeholders).toContain("23시간 30분");
+    expect(placeholders).toHaveLength(2);
+  });
+
   it("0 · 최대 값 — 범위 밖 value 는 고치지 않고 그대로 둔다(invalid 로 알린다)", () => {
     render(
       <QuantityPicker
