@@ -215,6 +215,19 @@ describe("MemoDesktop (I-15 15 ~ 19)", () => {
     expect(refetch).toHaveBeenCalled();
   });
 
+  it("0 건 안내는 넓은 화면에 없는 + 버튼이 아니라 제목 줄 [메모 추가] 를 가리킨다(1280 이상 · 미만)", () => {
+    for (const wide of [true, false]) {
+      setWide(wide);
+      render(fakeScreen({ memos: [], filtered: [], pinned: [], others: [] }));
+      const result = container.querySelector("[data-slot=result-section]")!;
+      expect(result.textContent).toContain("메모가 없어요");
+      expect(result.textContent).toContain("[메모 추가]로 첫 메모를 써보세요.");
+      expect(result.textContent).not.toContain("+ 버튼");
+      // 버튼은 제목 줄에 하나 — 결과에 또 두지 않는다
+      expect(result.querySelector("button")).toBeNull();
+    }
+  });
+
   it("[메모 추가] 는 제목 줄의 neutralOutline small 이고 새 폼을 연다", () => {
     setWide(true);
     const screen = fakeScreen();

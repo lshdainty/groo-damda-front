@@ -742,6 +742,7 @@ memo,noResults,결과가 없어요,No results
 memo,noMemos,메모가 없어요,No memos
 memo,noResultsHint,다른 검색어를 입력해보세요.,Try a different search.
 memo,noMemosHint,오른쪽 아래 + 버튼으로 첫 메모를 써보세요.,Tap the + button at the bottom right to write your first memo.
+memo,noMemosHintDesktop,[메모 추가]로 첫 메모를 써보세요.,Use [Add memo] to write your first memo.
 memo,allMemosSection,모든 메모,All memos
 memo,subtitle,생각 · 기록을 한곳에,Thoughts and notes in one place
 memo,titlePlaceholder,제목,Title
