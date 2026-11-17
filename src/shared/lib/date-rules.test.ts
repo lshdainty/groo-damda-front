@@ -48,7 +48,7 @@ describe("날짜 규칙 — 기간 줄 · 월 눈금 · 점 연월 (웹 B3 가.5
     expect(formatMonthDay("2026-07-08")).toBe("7월 8일");
     expect(formatMonthShort(5)).toBe("5월");
   });
-  it("월 눈금 — 한 해 안이면 '1월'(0 을 채우지 않는다), 섞이면 '2026. 1.'", () => {
+  it("월 눈금 — 한 해 안이면 '1월'(0 을 채우지 않는다), 해가 바뀌는 첫 눈금에만 '2026. 1.'", () => {
     expect(
       formatMonthTicks([
         { year: 2026, month: 1 },
@@ -60,8 +60,31 @@ describe("날짜 규칙 — 기간 줄 · 월 눈금 · 점 연월 (웹 B3 가.5
         { year: 2025, month: 12 },
         { year: 2026, month: 1 },
       ]),
-    ).toEqual(["2025. 12.", "2026. 1."]);
+    ).toEqual(["12월", "2026. 1."]);
     expect(formatMonthTicks([])).toEqual([]);
+  });
+  it("월 눈금 12칸(25년 12월 ~ 26년 11월) — 연도는 해가 바뀌는 한 칸뿐, 나머지는 월만(QA B5-2)", () => {
+    const rows = [
+      { year: 2025, month: 12 },
+      ...Array.from({ length: 11 }, (_, i) => ({ year: 2026, month: i + 1 })),
+    ];
+    const ticks = formatMonthTicks(rows);
+    expect(ticks[0]).toBe("12월");
+    expect(ticks[1]).toBe("2026. 1.");
+    expect(ticks.slice(2)).toEqual(
+      Array.from({ length: 10 }, (_, i) => `${i + 2}월`),
+    );
+    expect(ticks.filter((t) => t.includes("2026")).length).toBe(1);
+  });
+  it("월 눈금 — 해가 두 번 바뀌면 바뀌는 칸마다 연도", () => {
+    expect(
+      formatMonthTicks([
+        { year: 2024, month: 12 },
+        { year: 2025, month: 1 },
+        { year: 2025, month: 12 },
+        { year: 2026, month: 1 },
+      ]),
+    ).toEqual(["12월", "2025. 1.", "12월", "2026. 1."]);
   });
   it("점 연월 — 저축 목표 마감 '2026. 1.' · 영어는 'Jan 2026'", async () => {
     expect(formatYearMonthDot("2026-01-15")).toBe("2026. 1.");
@@ -117,7 +140,7 @@ describe("날짜 규칙 — 기간 줄 · 월 눈금 · 점 연월 (웹 B3 가.5
       "Nov 10, '25–Nov 10, '26",
     );
   });
-  it("월 눈금 영어 — 'Jan' · 해가 섞이면 'Dec 2025'", async () => {
+  it("월 눈금 영어 — 'Jan' · 해가 바뀌는 첫 눈금에만 'Jan 2026'", async () => {
     await i18n.changeLanguage("en");
     expect(formatMonthTicks([{ year: 2026, month: 1 }])).toEqual(["Jan"]);
     expect(
@@ -125,6 +148,6 @@ describe("날짜 규칙 — 기간 줄 · 월 눈금 · 점 연월 (웹 B3 가.5
         { year: 2025, month: 12 },
         { year: 2026, month: 1 },
       ]),
-    ).toEqual(["Dec 2025", "Jan 2026"]);
+    ).toEqual(["Dec", "Jan 2026"]);
   });
 });
