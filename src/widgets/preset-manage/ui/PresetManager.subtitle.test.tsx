@@ -183,6 +183,36 @@ describe("목록 (I-20 C 14 · 15 · 17)", () => {
   });
 });
 
+// 폰 빈 화면은 흰 면의 남은 자리 세로 가운데(groo-design result-section.md) — 껍데기가 min-h-full 이면 폰 셸에서 % 높이가
+// 풀리지 않아 위에 섰다. 흰 면(세로 flex)의 늘림을 flex-1 로 받는다
+describe("폰 껍데기 — 결과는 남은 자리 가운데", () => {
+  const phone = () =>
+    container.querySelector<HTMLElement>("[data-slot=preset-phone]")!;
+  const classes = (el: Element) => el.getAttribute("class")?.split(/\s+/) ?? [];
+
+  it("빈 화면 — 껍데기가 세로 flex · flex-1, 결과(grow)가 바로 아래 자식", () => {
+    state.items = [];
+    render(true);
+    expect(classes(phone())).toEqual(
+      expect.arrayContaining(["flex", "flex-1", "flex-col"]),
+    );
+    expect(classes(phone())).not.toContain("min-h-full");
+    const result = phone().querySelector(":scope > [data-slot=result-section]");
+    expect(result).not.toBeNull();
+    expect(classes(result!)).toContain("grow");
+  });
+
+  it("목록 — 늘어나는 자식이 없다(위에 그대로 선다)", () => {
+    state.items = [preset(1, "점심", "EXPENSE")];
+    render(true);
+    expect(phone().querySelector("[data-slot=result-section]")).toBeNull();
+    for (const child of Array.from(phone().children)) {
+      expect(classes(child)).not.toContain("grow");
+      expect(classes(child)).not.toContain("flex-1");
+    }
+  });
+});
+
 describe("카테고리 조회 실패 (I-20 20-2 후속)", () => {
   it("카테고리 조회는 silent — 서버 원문 토스트 대신 화면이 알린다", () => {
     state.items = [preset(1, "점심", "EXPENSE")];
