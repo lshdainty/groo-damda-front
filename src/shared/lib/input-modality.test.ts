@@ -72,3 +72,69 @@ describe("index.css — focus-visible 변형", () => {
     expect(css).not.toMatch(/^\s*:focus-visible\s*\{/m);
   });
 });
+
+describe("index.css — 브라우저 기본 링도 포인터 뒤에는 그리지 않는다", () => {
+  // 2026-11-17 QA(iPhone Safari 26) — 손가락으로 하단 탭을 누르면 셸이 제목(tabindex -1)에 초점을 두고 Safari 가 그것을
+  // :focus-visible 로 잡아 브라우저 기본 링(outline auto 연파랑)이 보였다. 전역 링만 빠지고 기본 링은 남았던 것.
+  const css = readFileSync("src/index.css", "utf-8");
+  const rule =
+    /(:where\(:root\[data-input="pointer"\]\)\s*:where\(:focus-visible[^{]*)\{([^}]*)\}/.exec(
+      css,
+    );
+
+  it("규칙이 있고 outline 을 없앤다", () => {
+    expect(rule).not.toBeNull();
+    expect(rule![2]!.trim()).toBe("outline: none;");
+  });
+
+  // jsdom 은 :focus-visible 판단을 마지막 이벤트로 흉내 내 흔들린다 — :focus 로 바꿔 우리가 더한 조건(직전 입력 · 칸 종류)만 본다
+  const selector = () =>
+    rule![1]!
+      .trim()
+      .replace(/\s+/g, " ")
+      .replace(/:focus-visible/g, ":focus");
+
+  function focusFresh(html: string) {
+    const host = document.createElement("div");
+    host.innerHTML = html;
+    document.body.appendChild(host);
+    const el = host.firstElementChild as HTMLElement;
+    el.focus();
+    return { el, done: () => host.remove() };
+  }
+
+  it("손가락으로 탭을 누른 뒤 프로그램 초점이 간 제목(tabindex -1) — 기본 링을 걷는다", () => {
+    trackInputModality();
+    keydown({ key: "Tab" });
+    pointerdown();
+    const { el, done } = focusFresh('<h1 tabindex="-1">가계부</h1>');
+    expect(document.activeElement).toBe(el);
+    expect(el.matches(selector())).toBe(true);
+    done();
+  });
+
+  it("키보드로 왔으면 걷지 않는다(전역 링이 그린다) · 아직 입력이 없어도 걷지 않는다", () => {
+    trackInputModality();
+    const first = focusFresh('<h1 tabindex="-1">가계부</h1>');
+    expect(first.el.matches(selector())).toBe(false);
+    first.done();
+    keydown({ key: "Tab" });
+    const { el, done } = focusFresh('<h1 tabindex="-1">가계부</h1>');
+    expect(el.matches(selector())).toBe(false);
+    done();
+  });
+
+  it.each([
+    '<input aria-label="금액" />',
+    '<textarea aria-label="메모"></textarea>',
+    '<select aria-label="통화"><option>KRW</option></select>',
+    '<div contenteditable="true" tabindex="0">메모</div>',
+  ])("글을 넣는 칸은 브라우저 그대로 둔다 — %s", (html) => {
+    trackInputModality();
+    pointerdown();
+    const { el, done } = focusFresh(html);
+    expect(document.activeElement).toBe(el);
+    expect(el.matches(selector())).toBe(false);
+    done();
+  });
+});

@@ -79,11 +79,16 @@ vi.mock("@/widgets/calendar/ui/CalendarEventFormHost", () => ({
 vi.mock("@/features/hide-amounts", () => ({ useHideCardsSync: () => {} }));
 vi.mock("@/features/notification", () => ({ useNotificationSSE: () => {} }));
 
-const titleFocus = vi.hoisted(() => ({ calls: 0 }));
+const titleFocus = vi.hoisted(() => ({
+  calls: 0,
+  // 부를 때의 <html data-input> — 손가락으로 옮겼으면 이미 pointer 여야 한다(링 조건)
+  inputs: [] as (string | undefined)[],
+}));
 vi.mock("@/shared/ds/top-navigation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/ds/top-navigation")>()),
   focusScreenTitle: () => {
     titleFocus.calls += 1;
+    titleFocus.inputs.push(document.documentElement.dataset.input);
     // 진짜는 본문을 맨 위로도 보낸다 — 앞으로 가는 시험이 "맨 위" 를 실제로 본다
     const main = document.querySelector("main");
     if (main) main.scrollTop = 0;
@@ -98,6 +103,9 @@ const { BOTTOM_NAVIGATION_INSET } =
   await import("@/shared/ds/bottom-navigation");
 const { resetScreenMemory } = await import("../lib/screen-memory");
 const { SwipeActions } = await import("@/shared/ds/swipe-actions");
+const { resetInputModalityForTest, trackInputModality } =
+  await import("@/shared/lib/input-modality");
+const { pressKey } = await import("@/shared/lib/input-modality.test-utils");
 
 let container: HTMLDivElement;
 let root: Root;
@@ -701,5 +709,61 @@ describe("폰 셸은 문서 스크롤이다", () => {
       await frame();
       expect(top).toBe(400);
     });
+  });
+});
+
+describe("손가락으로 탭을 눌러 화면을 옮기면 — 제목 초점 때 직전 입력은 이미 pointer", () => {
+  // 2026-11-17 QA(iPhone Safari 26) — 하단 탭 터치 뒤 제목(tabindex -1)에 링이 보였다. 링을 걷는 조건(<html data-input="pointer">)이
+  // 제목 초점보다 먼저 적혀 있어야 한다 — pointerdown(잡는 단계) → click(화면 이동) → 다음 프레임 focusScreenTitle
+  afterEach(() => resetInputModalityForTest());
+
+  const Tab = () => {
+    const navigate = useNavigate();
+    return (
+      // 진짜 탭은 <a href> + onClick 의 navigate — jsdom 은 a 의 문서 이동을 흉내 내지 않으므로 같은 순서를 단추로 낸다
+      <button
+        type="button"
+        data-testid="tab-ledger"
+        onClick={() => navigate("/desk/asset")}
+      >
+        가계부
+      </button>
+    );
+  };
+
+  it("앞서 키보드를 썼어도 탭을 누르면 pointer 로 바뀐 뒤 제목에 초점이 간다", async () => {
+    setWide(false);
+    trackInputModality();
+    pressKey();
+    titleFocus.calls = 0;
+    titleFocus.inputs = [];
+    act(() =>
+      root.render(
+        <MemoryRouter initialEntries={["/desk/stats"]}>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/desk/stats" element={<Tab />} />
+              <Route
+                path="/desk/asset"
+                element={
+                  <h1 data-screen-title tabIndex={-1}>
+                    가계부
+                  </h1>
+                }
+              />
+            </Route>
+          </Routes>
+        </MemoryRouter>,
+      ),
+    );
+    expect(document.documentElement.dataset.input).toBe("keyboard");
+    const tab = q("tab-ledger")!;
+    act(() => {
+      tab.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+      tab.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await frame();
+    expect(titleFocus.calls).toBe(1);
+    expect(titleFocus.inputs).toEqual(["pointer"]);
   });
 });

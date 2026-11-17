@@ -476,6 +476,18 @@
       outline-offset: 2px;
     }
   }
+
+  /*
+   * 브라우저 기본 링도 같은 조건으로 걷는다 — 위 전역 링은 포인터 뒤에 빠지지만, 그러면 브라우저 기본 :focus-visible 링
+   * (Safari outline auto 연파랑)이 그대로 드러났다. 손가락으로 하단 탭을 눌러 화면을 옮기면 셸이 제목(tabindex -1)에 초점을 두고,
+   * Safari 는 그 프로그램 초점을 :focus-visible 로 잡는다(2026-11-17 QA · iPhone Safari 26). pointerdown(잡는 단계)이 click →
+   * 화면 이동 → 다음 프레임의 focusScreenTitle 보다 먼저라 그때 <html data-input> 은 이미 pointer 다.
+   * 글을 넣는 칸은 브라우저 그대로 둔다. :where 라 우선순위 0 — 컴포넌트 링(유틸리티 층)은 이것보다 늘 앞선다
+   */
+  :where(:root[data-input="pointer"])
+    :where(:focus-visible:not(input, textarea, select, [contenteditable])) {
+    outline: none;
+  }
 }
 
 @layer utilities {
