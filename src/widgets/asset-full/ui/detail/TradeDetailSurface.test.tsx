@@ -149,4 +149,28 @@ describe("TradeDetailSurface", () => {
       expect(cls.filter((c) => /^(hover|active):text-/.test(c))).toEqual([]);
     },
   );
+
+  // button.md "모달 footer 는 small" · dialog.md 바닥 "Button small 36" — 시트는 large 48(bottom-sheet.md 바닥).
+  // 화면은 1280 이상에서 크기를 주지 않고(size={undefined}) 바닥 부품(DialogFooter)이 small 을 넣는다 —
+  // 코드만 읽으면 기본 medium 40 으로 보이는 자리라 실제로 그린 크기를 잠근다
+  it.each([
+    ["1280 이상 대화상자", "min-h-[36px]", true],
+    ["1280 미만 시트", "min-h-[48px]", false],
+  ])("%s — 바닥 [거래 취소] 의 높이는 %s", (_, height, wide) => {
+    wideSurface = wide;
+    act(() =>
+      root.render(
+        <TradeDetailSurface
+          trade={sell}
+          mask={mask}
+          onClose={() => {}}
+          onCancelTrade={() => {}}
+        />,
+      ),
+    );
+    const btn = [...document.body.querySelectorAll("button")].find(
+      (b) => b.textContent === "trade.deleteAction",
+    )!;
+    expect(btn.className.split(/\s+/)).toContain(height);
+  });
 });

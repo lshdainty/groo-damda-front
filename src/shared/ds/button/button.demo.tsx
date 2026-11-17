@@ -108,14 +108,16 @@ export const ButtonDemo = () => (
       ))}
     </DemoBlock>
 
+    {/* 대상은 ghost + 앞 아이콘뿐이다 — 글자만 있는 ghost 에는 쓰지 않는다(button.md "가장자리 맞춤") */}
     <DemoBlock title="가장자리 맞춤(flush) — 그 방향 가로 여백만 0, ghost 는 글자색으로만 반응한다">
       <DemoRow label="flush">
         <Button variant="ghost" flush="left">
+          <Plus aria-hidden />
           왼쪽 맞춤
         </Button>
         <Button variant="ghost" flush="right">
+          <Plus aria-hidden />
           오른쪽 맞춤
-          <ChevronRight aria-hidden />
         </Button>
       </DemoRow>
     </DemoBlock>

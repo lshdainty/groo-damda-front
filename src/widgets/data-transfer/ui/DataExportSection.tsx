@@ -395,7 +395,6 @@ function ExportPane({ mobile }: { mobile: boolean }) {
                 <Button
                   variant="ghost"
                   size="small"
-                  flush="left"
                   onClick={() => setCountsTry((n) => n + 1)}
                 >
                   {dsT("common.retry")}

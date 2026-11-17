@@ -1,4 +1,3 @@
-import { cn } from "@/shared/lib/cn";
 import { Button } from "@/shared/ds/button";
 import {
   ResponsiveDialogCancel,
@@ -11,6 +10,7 @@ import { useWideSurface } from "@/shared/ds/overlay";
  * ghost + critical, 저장은 오른쪽"). 1280 이상 대화상자: 왼쪽 [삭제] · 오른쪽 [취소][저장] small 36. 미만 시트: 왼쪽 [삭제] large 48(글자만큼) ·
  * 나머지 폭 [저장] large 48(취소는 위 닫기 버튼이 맡는다). `onDelete` 가 없으면(새 항목) 평소 바닥과 같다.
  * [삭제] 는 `flush` 를 쓰지 않는다 — flush 는 글자색을 neutralSubtle 로 덮어 빨간 글자가 사라진다(button.md).
+ * 음수 여백으로 글 시작을 바닥 가장자리에 맞추지도 않는다 — 상자 여백 그대로 왼쪽에 선다(button.md 모달 footer 예시).
  */
 export function FormFooter({
   cancelLabel,
@@ -20,7 +20,6 @@ export function FormFooter({
   submitDisabled,
   deleteLabel,
   onDelete,
-  flushDelete = false,
 }: {
   cancelLabel: string;
   submitLabel: string;
@@ -30,11 +29,6 @@ export function FormFooter({
   /** 있으면 바닥 왼쪽에 [삭제] — 수정일 때만 준다 */
   deleteLabel?: string;
   onDelete?: () => void;
-  /**
-   * 시트 바닥 [삭제] 의 글 시작을 시트 좌우 여백(24)에 세운다 — large 의 안쪽 가로 여백(px-x5 20)만큼 왼쪽으로 뺀다.
-   * 대화상자(small 36)는 그대로다(바닥 규칙에 블리드 값이 없다)
-   */
-  flushDelete?: boolean;
 }) {
   const wide = useWideSurface();
   const size = wide ? "small" : "large";
@@ -47,7 +41,7 @@ export function FormFooter({
             ghostColor="critical"
             // 시트는 large 48(글자만큼 폭), 대화상자는 small 36 — 주 버튼과 같은 크기(bottom-sheet.md 바닥 · button.md 모달 footer)
             size={size}
-            className={cn("shrink-0", flushDelete && !wide && "-ml-x5")}
+            className="shrink-0"
             onClick={onDelete}
           >
             {deleteLabel}
