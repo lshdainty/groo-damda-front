@@ -74,12 +74,12 @@ export function TradeDetailSurface({
       />
     </List>
   );
+  // 바닥 왼쪽 ghost + critical(button.md 모달 footer). flush 는 ghostColor 를 덮어 빨강이 사라지므로 쓰지 않는다
   const cancel = (
     <Button
       type="button"
       variant="ghost"
       ghostColor="critical"
-      flush={wide ? undefined : "left"}
       size={wide ? undefined : "large"}
       className={wide ? "mr-auto" : "shrink-0"}
       onClick={onCancelTrade}

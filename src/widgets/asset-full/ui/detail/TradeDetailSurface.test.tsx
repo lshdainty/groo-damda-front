@@ -12,15 +12,16 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k, i18n: { language: "ko" } }),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
-// 1280 이상 대화상자 쪽을 본다(시트는 같은 본문 · 같은 바닥 단추)
+// 기본은 1280 이상 대화상자 쪽을 본다(시트는 같은 본문 · 같은 바닥 단추). 바닥 [거래 취소] 의 색은 두 폭 모두 본다
 // 연동 종목 이름은 종목 마스터 조회(useQuery)로 읽는다 — 마스터에 없으면 티커 그대로
 vi.mock("@/features/stock/model/useStockMaster", () => ({
   useStockSymbolName: () => ({ data: null }),
 }));
 vi.mock("@/shared/ds/overlay", async (orig) => ({
   ...(await orig<Record<string, unknown>>()),
-  useWideSurface: () => true,
+  useWideSurface: () => wideSurface,
 }));
+let wideSurface = true;
 
 const { TradeDetailSurface } = await import("./TradeDetailSurface");
 
@@ -39,6 +40,7 @@ let container: HTMLDivElement;
 let root: Root;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  wideSurface = true;
   // 본문 스크롤 재기(use-body-scroll)가 ResizeObserver 를 쓴다 — jsdom 에 없다
   globalThis.ResizeObserver ??= class {
     observe() {}
@@ -115,4 +117,36 @@ describe("TradeDetailSurface", () => {
     expect(text()).not.toContain("2,100,000");
     expect(text()).toContain("••••");
   });
+
+  // button.md "가장자리 맞춤" — flush 는 ghostColor 를 덮어(neutralSubtle) 빨강이 사라지므로 삭제(critical)에는 쓰지 않는다.
+  // 1280 미만 시트에서 flush="left" 를 써 [거래 취소] 가 회색으로 보였다
+  it.each([
+    ["1280 이상 대화상자", true],
+    ["1280 미만 시트", false],
+  ])(
+    "%s — [거래 취소] 는 ghost critical 빨간 글자, flush 가 없다",
+    (_, wide) => {
+      wideSurface = wide;
+      act(() =>
+        root.render(
+          <TradeDetailSurface
+            trade={sell}
+            mask={mask}
+            onClose={() => {}}
+            onCancelTrade={() => {}}
+          />,
+        ),
+      );
+      const btn = [...document.body.querySelectorAll("button")].find(
+        (b) => b.textContent === "trade.deleteAction",
+      )!;
+      const cls = btn.className.split(/\s+/);
+      expect(cls).toContain("text-fg-critical");
+      // flush 의 흔적 — 왼쪽 여백 0 · 텍스트 버튼 글자색(neutralSubtle → 누르면 fg-neutral)
+      expect(cls).not.toContain("pl-0");
+      expect(cls).not.toContain("text-fg-neutral-subtle");
+      // 누름 · 호버 글자색 반응(텍스트 버튼) — ghost critical 은 글자색이 아니라 바탕으로 반응한다
+      expect(cls.filter((c) => /^(hover|active):text-/.test(c))).toEqual([]);
+    },
+  );
 });

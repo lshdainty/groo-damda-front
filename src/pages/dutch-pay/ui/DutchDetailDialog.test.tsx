@@ -106,10 +106,13 @@ const session = (isSettled: boolean): DutchPay => ({
 let container: HTMLDivElement;
 let root: Root;
 let closed: number;
+// 1280 이상(대화상자)인가 — matchMedia 가 돌려준다. 기본은 미만(시트)
+let wideMedia = false;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   closed = 0;
+  wideMedia = false;
   if (!globalThis.ResizeObserver) {
     globalThis.ResizeObserver = class {
       observe() {}
@@ -118,7 +121,7 @@ beforeEach(() => {
     };
   }
   window.matchMedia = ((query: string) => ({
-    matches: false,
+    matches: wideMedia,
     media: query,
     addEventListener() {},
     removeEventListener() {},
@@ -191,4 +194,26 @@ describe("정산 상세 바닥 · 머리 ⋮", () => {
     expect(document.body.textContent).not.toContain("일괄 요청");
     expect(document.body.textContent).toContain("송금 요청은 곧 열려요.");
   });
+});
+
+// button.md "가장자리 맞춤" — flush 는 ghostColor 를 덮어(neutralSubtle) 빨강이 사라지므로 삭제(critical)에는 쓰지 않는다.
+// 빨강은 ghostColor="critical" 이 정한다 — className 으로 글자색을 다시 덮어씌우지 않는다(스펙 토큰 inline override 금지)
+describe("정산 상세 바닥 [삭제] 색", () => {
+  it.each([
+    ["1280 이상 대화상자", true],
+    ["1280 미만 시트", false],
+  ])(
+    "%s — [삭제] 는 ghost critical 빨간 글자, flush · 글자색 덮기가 없다",
+    (_, wide) => {
+      wideMedia = wide;
+      open(session(false));
+      const cls = byName("삭제")!.className.split(/\s+/);
+      expect(cls).toContain("text-fg-critical");
+      // flush 의 흔적 — 왼쪽 여백 0 · 텍스트 버튼 글자색
+      expect(cls).not.toContain("pl-0");
+      expect(cls).not.toContain("text-fg-neutral-subtle");
+      // 누름 · 호버 글자색을 className 으로 덮은 흔적(ghost critical 은 글자색이 아니라 바탕으로 반응한다)
+      expect(cls.filter((c) => /^(hover|active):text-/.test(c))).toEqual([]);
+    },
+  );
 });
