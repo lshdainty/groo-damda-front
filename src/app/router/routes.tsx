@@ -1,6 +1,13 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import {
+  unstable_HistoryRouter as HistoryRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { lazy, Suspense, useState } from "react";
+import { createAppHistory } from "./app-history";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { RouteErrorBoundary } from "./RouteErrorBoundary";
 
 const AppLayout = lazy(() =>
   import("@/widgets/layout/ui/AppLayout").then((m) => ({
@@ -125,100 +132,108 @@ const DsCatalogPage = import.meta.env.DEV
 const Loading = () => <div data-slot="route-loading" className="min-h-dvh" />;
 
 export const AppRouter = () => {
+  // BrowserRouter 와 같은 히스토리에 "표면 칸 되돌림이 끝난 뒤 옮기기" 를 더했다(app-history.ts)
+  const [history] = useState(createAppHistory);
   return (
-    <BrowserRouter>
-      <Suspense fallback={<Loading />}>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/auth/callback" element={<AuthCallbackPage />} />
-          {/* 해지 안내 — 로그인 없이 열린다. 방금 해지한 사람이 SSO 로그아웃을 거쳐
+    <HistoryRouter history={history}>
+      {/* 화면이 그리다 멈추면(새 배포 뒤 옛 화면 코드 조각 404 포함) 빈 화면 대신 실패 결과 — RouteErrorBoundary.tsx */}
+      <RouteErrorBoundary>
+        <Suspense fallback={<Loading />}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            {/* 해지 안내 — 로그인 없이 열린다. 방금 해지한 사람이 SSO 로그아웃을 거쳐
               돌아오는 자리이자, 해지한 계정으로 다시 들어오려다 막힌 사람이 닿는 자리다.
               ProtectedRoute 안에 두면 둘 다 못 본다(desk 토큰이 이미 없다). */}
-          <Route path="/withdrawn" element={<WithdrawnPage />} />
-          {/* 앱 받기 — 로그인 없이 열린다. 링크만 알면 누구나 받을 수 있게(사용자 결정). */}
-          <Route path="/download" element={<DownloadPage />} />
-          {DsCatalogPage && (
-            <Route path="/dev/ds" element={<DsCatalogPage />} />
-          )}
-          {/* 임베드 차트 — ProtectedRoute 밖 (querystring 의 60초 embed_token 으로 인증) */}
-          <Route
-            path="/embed/stocks/:symbol"
-            element={<EmbedStockChartPage />}
-          />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
-              <Route path="/desk" element={<DashboardPage />} />
-              <Route path="/desk/asset" element={<AssetPage />} />
-              {/* 자산 상세 — 주소가 있는 화면(I-17 34). 풀스크린 · 흰 바탕은 shell.ts 가 가른다 */}
-              <Route
-                path="/desk/asset/:assetId"
-                element={<AssetDetailPage />}
-              />
-              {/* 증권사는 경로가 고른다 — 사이드바 하위 메뉴가 가리키는 자리.
+            <Route path="/withdrawn" element={<WithdrawnPage />} />
+            {/* 앱 받기 — 로그인 없이 열린다. 링크만 알면 누구나 받을 수 있게(사용자 결정). */}
+            <Route path="/download" element={<DownloadPage />} />
+            {DsCatalogPage && (
+              <Route path="/dev/ds" element={<DsCatalogPage />} />
+            )}
+            {/* 임베드 차트 — ProtectedRoute 밖 (querystring 의 60초 embed_token 으로 인증) */}
+            <Route
+              path="/embed/stocks/:symbol"
+              element={<EmbedStockChartPage />}
+            />
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/desk" element={<DashboardPage />} />
+                <Route path="/desk/asset" element={<AssetPage />} />
+                {/* 자산 상세 — 주소가 있는 화면(I-17 34). 풀스크린 · 흰 바탕은 shell.ts 가 가른다 */}
+                <Route
+                  path="/desk/asset/:assetId"
+                  element={<AssetDetailPage />}
+                />
+                {/* 증권사는 경로가 고른다 — 사이드바 하위 메뉴가 가리키는 자리.
                   부모 `/desk/stocks` 는 남긴다(기존 북마크 · 모바일 전체 메뉴 ·
                   AppLayout FULLSCREEN_PATHS 접두사) — 들어오면 StocksPage 가 기본 증권사로 넘긴다. */}
-              <Route
-                path="/desk/stocks"
-                element={
-                  <SecuritiesGate>
-                    <StocksPage />
-                  </SecuritiesGate>
-                }
-              />
-              <Route
-                path="/desk/stocks/:broker"
-                element={
-                  <SecuritiesGate>
-                    <StocksPage />
-                  </SecuritiesGate>
-                }
-              />
-              {/* 포트폴리오 구성(정적 — 먼저) · 종목 상세. 심볼은 encodeURIComponent("BRK.B") */}
-              <Route
-                path="/desk/stocks/:broker/portfolio"
-                element={
-                  <SecuritiesGate>
-                    <StocksPage view="portfolio" />
-                  </SecuritiesGate>
-                }
-              />
-              <Route
-                path="/desk/stocks/:broker/:symbol"
-                element={
-                  <SecuritiesGate>
-                    <StocksPage view="detail" />
-                  </SecuritiesGate>
-                }
-              />
-              <Route path="/desk/expense" element={<ExpensePage />} />
-              {/* 고정 정리는 통계의 자식 주소 — 같은 StatsPage 가 이어져 고른 탭 · 기간이 남고, 화면은 1280 미만 페이지 · 이상 대화상자 */}
-              <Route path="/desk/stats" element={<StatsPage />}>
-                <Route path="fixed" element={null} />
+                <Route
+                  path="/desk/stocks"
+                  element={
+                    <SecuritiesGate>
+                      <StocksPage />
+                    </SecuritiesGate>
+                  }
+                />
+                <Route
+                  path="/desk/stocks/:broker"
+                  element={
+                    <SecuritiesGate>
+                      <StocksPage />
+                    </SecuritiesGate>
+                  }
+                />
+                {/* 포트폴리오 구성(정적 — 먼저) · 종목 상세. 심볼은 encodeURIComponent("BRK.B") */}
+                <Route
+                  path="/desk/stocks/:broker/portfolio"
+                  element={
+                    <SecuritiesGate>
+                      <StocksPage view="portfolio" />
+                    </SecuritiesGate>
+                  }
+                />
+                <Route
+                  path="/desk/stocks/:broker/:symbol"
+                  element={
+                    <SecuritiesGate>
+                      <StocksPage view="detail" />
+                    </SecuritiesGate>
+                  }
+                />
+                <Route path="/desk/expense" element={<ExpensePage />} />
+                {/* 고정 정리는 통계의 자식 주소 — 같은 StatsPage 가 이어져 고른 탭 · 기간이 남고, 화면은 1280 미만 페이지 · 이상 대화상자 */}
+                <Route path="/desk/stats" element={<StatsPage />}>
+                  <Route path="fixed" element={null} />
+                </Route>
+                <Route path="/desk/budget" element={<BudgetPage />} />
+                <Route path="/desk/calendar" element={<CalendarPage />} />
+                <Route path="/desk/todo" element={<TodoPage />} />
+                <Route path="/desk/todo/night-sky" element={<NightSkyPage />} />
+                <Route
+                  path="/desk/todo/night-sky/report"
+                  element={<ForestReportPage />}
+                />
+                <Route path="/desk/dutch-pay" element={<DutchPayPage />} />
+                <Route path="/desk/memo" element={<MemoPage />} />
+                <Route
+                  path="/desk/card-benefit"
+                  element={<CardBenefitPage />}
+                />
+                <Route path="/desk/settings" element={<SettingsPage />} />
+                <Route path="/desk/more" element={<MorePage />} />
+                <Route path="/desk/search" element={<SearchPage />} />
+                <Route
+                  path="/desk/notifications"
+                  element={<NotificationsPage />}
+                />
               </Route>
-              <Route path="/desk/budget" element={<BudgetPage />} />
-              <Route path="/desk/calendar" element={<CalendarPage />} />
-              <Route path="/desk/todo" element={<TodoPage />} />
-              <Route path="/desk/todo/night-sky" element={<NightSkyPage />} />
-              <Route
-                path="/desk/todo/night-sky/report"
-                element={<ForestReportPage />}
-              />
-              <Route path="/desk/dutch-pay" element={<DutchPayPage />} />
-              <Route path="/desk/memo" element={<MemoPage />} />
-              <Route path="/desk/card-benefit" element={<CardBenefitPage />} />
-              <Route path="/desk/settings" element={<SettingsPage />} />
-              <Route path="/desk/more" element={<MorePage />} />
-              <Route path="/desk/search" element={<SearchPage />} />
-              <Route
-                path="/desk/notifications"
-                element={<NotificationsPage />}
-              />
             </Route>
-          </Route>
-          <Route path="/" element={<Navigate to="/desk" replace />} />
-          <Route path="*" element={<Navigate to="/desk" replace />} />
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+            <Route path="/" element={<Navigate to="/desk" replace />} />
+            <Route path="*" element={<Navigate to="/desk" replace />} />
+          </Routes>
+        </Suspense>
+      </RouteErrorBoundary>
+    </HistoryRouter>
   );
 };
