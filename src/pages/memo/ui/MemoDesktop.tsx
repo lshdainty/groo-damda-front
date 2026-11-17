@@ -79,11 +79,13 @@ function MemoSections({ screen }: { screen: MemoScreen }) {
         description={t("noResultsHint")}
       />
     ) : (
+      // 넓은 화면엔 떠 있는 + 가 없다 — 안내는 제목 줄의 [메모 추가] 를 가리킨다. 버튼은 제목 줄에 있어 결과에 또 두지 않는다
+      // (프리셋 관리 데스크톱과 같다). 폰 안내(noMemosHint)는 오른쪽 아래 + 를 가리킨다
       <ResultSection
         size="medium"
         icon={<StickyNote />}
         title={t("noMemos")}
-        description={t("noMemosHint")}
+        description={t("noMemosHintDesktop")}
       />
     );
   return (

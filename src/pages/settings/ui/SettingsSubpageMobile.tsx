@@ -53,6 +53,9 @@ function PresetGate({ children }: { children: React.ReactNode }) {
 /**
  * 폰 하위 화면 껍데기(I-16 10 ~ 13) — 흐름 안 흰 면. 머리는 ds Top Navigation standard,
  * 본문은 머리 바로 아래(틈 0)에서 화면 바닥까지 흰 면이고 여백은 본문이 갖는다.
+ * 흰 면은 세로 flex 다 — 본문이 `flex-1` 로 남은 높이를 받아 화면 전체 결과(비어 있음 · 실패)를 그 가운데에
+ * 세운다(groo-design result-section.md "놓인 자리의 가운데"). 흰 면 높이는 % 로 물려받지 못한다(문서가 스크롤하는
+ * 폰 셸은 높이가 min-height 뿐이라 `min-h-full` 이 풀리지 않는다) — flex 의 늘림으로만 이어진다.
  */
 export const SettingsSubpageMobile = ({
   activeSection,
@@ -90,7 +93,10 @@ export const SettingsSubpageMobile = ({
           button
         )}
       </TopNavigation>
-      <div className="flex-1 shrink-0 bg-bg-layer-default">
+      <div
+        data-slot="settings-subpage-body"
+        className="flex flex-1 shrink-0 flex-col bg-bg-layer-default"
+      >
         {/* 임시 24 — TEMP_BODY_PADDING 에 있는 섹션만(없으면 본문이 제 24 를 갖는다) */}
         {id && TEMP_BODY_PADDING.includes(id) ? (
           <div data-temp-body-padding className="p-x6">

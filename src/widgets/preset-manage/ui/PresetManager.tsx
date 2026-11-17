@@ -247,7 +247,10 @@ export function PresetManager({
   return (
     <>
       {mobile ? (
-        <div className="flex min-h-full flex-col pb-x6">{content}</div>
+        // 흰 면(세로 flex)의 남은 높이를 받는다 — 빈 화면 · 실패가 그 가운데에 선다(min-h-full 은 높이가 풀리지 않아 위에 섰다)
+        <div data-slot="preset-phone" className="flex flex-1 flex-col pb-x6">
+          {content}
+        </div>
       ) : (
         <>
           <ManagerHead

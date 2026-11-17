@@ -71,3 +71,21 @@ describe("SettingsSubpageMobile 임시 24", () => {
     }
   });
 });
+
+// 흰 면은 세로 flex 로 화면 바닥까지 늘어난다 — 본문이 flex-1 로 남은 높이를 받아 화면 전체 결과(비어 있음 · 실패)를
+// 그 가운데에 세운다(groo-design result-section.md). 폰 셸은 높이가 min-height 뿐이라 % 높이(min-h-full)는 풀리지 않는다 —
+// 높이는 flex 늘림으로만 이어진다
+describe("SettingsSubpageMobile 흰 면 — 세로 flex", () => {
+  it("본문 상자가 세로 flex · 남은 높이 채움이다", () => {
+    const outside = SECTIONS.map((s) => s.id).filter(
+      (id) => !TEMP_BODY_PADDING.includes(id),
+    );
+    for (const id of outside) {
+      const face = renderWith(id);
+      expect(face.getAttribute("data-slot"), id).toBe("settings-subpage-body");
+      expect(face.className.split(/\s+/), id).toEqual(
+        expect.arrayContaining(["flex", "flex-1", "shrink-0", "flex-col"]),
+      );
+    }
+  });
+});

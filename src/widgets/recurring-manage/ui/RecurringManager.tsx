@@ -334,7 +334,11 @@ export function RecurringManager({
   return (
     <>
       {mobile ? (
-        body
+        // 흰 면(세로 flex)의 남은 높이를 받는다 — 빈 화면 · 실패(ResultSection 이 grow)가 그 가운데에 서고,
+        // 목록 · 스켈레톤은 늘지 않아 위에 그대로 선다(프리셋 관리와 같은 꼴)
+        <div data-slot="recurring-phone" className="flex flex-1 flex-col">
+          {body}
+        </div>
       ) : (
         <>
           <ManagerHead

@@ -24,7 +24,12 @@ vi.mock("react-i18next", () => ({
 vi.mock("react-router-dom", () => ({
   useLocation: () => ({ pathname: "/", search: "" }),
 }));
-vi.mock("./SavingGoalAddDialog", () => ({ SavingGoalAddDialog: () => null }));
+// 추가 · 수정 시트는 열렸는지(새 목표인지)만 본다 — 안의 폼은 SavingGoalAddDialog.test 가 본다
+vi.mock("./SavingGoalAddDialog", () => ({
+  SavingGoalAddDialog: (p: { goal: unknown }) => (
+    <div data-testid="goal-sheet" data-new={String(p.goal === null)} />
+  ),
+}));
 
 const goalsState = {
   q: { data: undefined, isError: false, refetch: vi.fn() } as {
@@ -135,15 +140,97 @@ describe("저축 목표 금액 가림(asset.savingGoals) — 웹도 앱처럼(I-
 });
 
 describe("저축 목표 — 빈 · 불러오는 중 · 실패(I-08 28)", () => {
-  it("목표 0개 — 빈 글 한 줄, 요약 없음", () => {
+  const classes = (el: Element) => el.getAttribute("class")?.split(/\s+/) ?? [];
+  const phone = () =>
+    container.querySelector<HTMLElement>("[data-slot=saving-goal-phone]")!;
+  const empty = () => {
     goalsState.q = {
       data: { goals: [] },
       isError: false,
       refetch: vi.fn(),
     };
+  };
+
+  it("목표 0개(폰) — 프리셋과 같은 꼴: 목록 제목 · 글 버튼 없이 결과(large) 하나, 요약 없음", () => {
+    empty();
     render();
-    expect(container.textContent).toContain("savingGoal.emptyManager");
+    const result = container.querySelector<HTMLElement>(
+      "[data-slot=result-section]",
+    )!;
+    expect(result.textContent).toContain("savingGoal.emptyTitle");
+    expect(result.textContent).toContain("savingGoal.emptyDesc");
+    // 아이콘 piggy-bank
+    expect(result.querySelector("svg.lucide-piggy-bank")).not.toBeNull();
+    // 제목 22(large)
+    expect(result.querySelector("h2")!.className).toContain("text-t8");
+    expect(container.textContent).not.toContain("savingGoal.goalCount");
     expect(container.textContent).not.toContain("savingGoal.overallProgress");
+    // [목표 추가] 는 결과의 첫 버튼 하나뿐이다(목록 제목의 글 버튼이 없다)
+    const adds = Array.from(container.querySelectorAll("button")).filter(
+      (b) => b.textContent === "addGoal",
+    );
+    expect(adds).toHaveLength(1);
+    expect(result.contains(adds[0]!)).toBe(true);
+  });
+
+  it("목표 0개(폰) — 흰 면의 남은 높이를 채우는 세로 flex 바로 아래에 결과(grow)가 선다", () => {
+    empty();
+    render();
+    expect(classes(phone())).toEqual(
+      expect.arrayContaining(["flex", "flex-1", "flex-col"]),
+    );
+    const result = phone().querySelector(":scope > [data-slot=result-section]");
+    expect(result).not.toBeNull();
+    expect(classes(result!)).toContain("grow");
+  });
+
+  it("[목표 추가] 를 누르면 추가 시트를 바로 연다(폰 · 데스크톱)", () => {
+    for (const mobile of [true, false]) {
+      empty();
+      render(mobile);
+      expect(container.querySelector("[data-testid=goal-sheet]")).toBeNull();
+      const add = container.querySelector<HTMLButtonElement>(
+        "[data-slot=result-section] button",
+      )!;
+      expect(add.textContent).toBe("addGoal");
+      act(() => add.click());
+      const sheet = container.querySelector("[data-testid=goal-sheet]");
+      expect(sheet?.getAttribute("data-new")).toBe("true");
+      act(() => root.render(<></>));
+    }
+  });
+
+  it("목표 0개(데스크톱) — 목록 카드 안 결과(medium), 목록 제목 없음", () => {
+    empty();
+    render(false);
+    const result = container.querySelector<HTMLElement>(
+      "[data-slot=card] [data-slot=result-section]",
+    )!;
+    expect(result.textContent).toContain("savingGoal.emptyTitle");
+    expect(result.querySelector("h2")!.className).toContain("text-t5");
+    expect(container.textContent).not.toContain("savingGoal.goalCount");
+  });
+
+  it("목록이 있으면(폰) 결과가 없고 늘어나는 자식이 없다 — 요약 · 목록은 위에 그대로", () => {
+    render();
+    expect(phone().querySelector("[data-slot=result-section]")).toBeNull();
+    expect(container.textContent).toContain("savingGoal.goalCount");
+    for (const child of Array.from(phone().children)) {
+      expect(classes(child)).not.toContain("grow");
+      expect(classes(child)).not.toContain("flex-1");
+    }
+  });
+
+  it("실패(폰) — 실패 결과도 남은 자리를 채우는 세로 flex 안에 선다", () => {
+    goalsState.q = { data: undefined, isError: true, refetch: vi.fn() };
+    render();
+    const wrap = phone().firstElementChild!;
+    expect(classes(wrap)).toEqual(
+      expect.arrayContaining(["flex", "flex-1", "flex-col"]),
+    );
+    expect(
+      wrap.querySelector(":scope > [data-slot=result-section]"),
+    ).not.toBeNull();
   });
   it("실패 → 다시 시도(오류 원문 없음), 누르면 다시 받는다", () => {
     goalsState.q = { data: undefined, isError: true, refetch: vi.fn() };

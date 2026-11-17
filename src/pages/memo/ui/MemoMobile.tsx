@@ -20,6 +20,7 @@ import {
   TopNavigationBackButton,
   TopNavigationTitle,
 } from "@/shared/ds/top-navigation";
+import { cn } from "@/shared/lib/cn";
 import type { Memo } from "@/entities/memo";
 import type { MemoScreen } from "../model/use-memo-screen";
 import { MemoDeleteConfirm } from "./MemoDeleteConfirm";
@@ -71,6 +72,8 @@ export function MemoMobile({ screen }: { screen: MemoScreen }) {
       </SwipeActions>
     ));
 
+  // 결과(실패 · 비어 있음 · 검색 0건)를 보이는가 — 목록 · 스켈레톤이 아니다
+  const result = failed || (!loading && filtered.length === 0);
   let body;
   if (failed) {
     body = (
@@ -137,8 +140,16 @@ export function MemoMobile({ screen }: { screen: MemoScreen }) {
         <TopNavigationBackButton fallbackHref="/desk/more" />
         <TopNavigationTitle>{t("title")}</TopNavigationTitle>
       </TopNavigation>
-      {/* 목록이 짧아도 흰 면이 화면 아래 끝까지 닿는다 — 아래 96 은 [+] 가 마지막 줄을 가리지 않게 하는 흰 면 안 여백 */}
-      <div className="relative flex-1 bg-bg-layer-default pb-[96px]">
+      {/* 목록이 짧아도 흰 면이 화면 아래 끝까지 닿는다 — 아래 96 은 [+] 가 마지막 줄을 가리지 않게 하는 흰 면 안 여백(목록 · 스켈레톤만).
+          세로 flex 라 결과(실패 · 메모 0 · 검색 0건 — ResultSection 이 grow)가 검색칸 · 칩 줄 아래 남은 자리의 가운데에 선다
+          (groo-design result-section.md "놓인 자리의 가운데"). 검색칸 · 칩 줄 · 목록은 늘지 않아 위에 그대로 선다 */}
+      <div
+        data-slot="memo-phone"
+        className={cn(
+          "relative flex flex-1 flex-col bg-bg-layer-default",
+          !result && "pb-[96px]",
+        )}
+      >
         <div className="px-global-gutter pt-x1">
           <Input
             variant="underline"

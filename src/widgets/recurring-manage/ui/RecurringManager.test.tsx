@@ -240,6 +240,53 @@ describe.each([
   });
 });
 
+// 화면 전체 결과는 흰 면의 남은 자리 세로 가운데(groo-design result-section.md) — jsdom 은 배치를 재지 않아 구조를 잠근다:
+// 폰 껍데기가 세로 flex · 남은 높이 채움(flex-1)이고, 결과(ResultSection — grow)가 그 바로 아래 자식이다.
+describe("폰 — 결과는 남은 자리 가운데, 목록은 그대로", () => {
+  const phone = () =>
+    container.querySelector<HTMLElement>("[data-slot=recurring-phone]")!;
+  const classes = (el: Element) => el.getAttribute("class")?.split(/\s+/) ?? [];
+
+  it.each([
+    ["비어 있음", false],
+    ["실패", true],
+  ])(
+    "%s — 껍데기가 세로 flex · flex-1, 결과가 바로 아래 자식(grow)",
+    (_n, err) => {
+      state.items = [];
+      state.isError = err;
+      render(true);
+      expect(classes(phone())).toEqual(
+        expect.arrayContaining(["flex", "flex-1", "flex-col"]),
+      );
+      const result = phone().querySelector(
+        ":scope > [data-slot=result-section]",
+      );
+      expect(result).not.toBeNull();
+      expect(classes(result!)).toContain("grow");
+    },
+  );
+
+  it("목록 — 결과가 없고 늘어나는 자식이 없다(위에 그대로 선다)", () => {
+    state.items = [named(1, { description: "지출줄" })];
+    render(true);
+    expect(phone().querySelector("[data-slot=result-section]")).toBeNull();
+    for (const child of Array.from(phone().children)) {
+      expect(classes(child)).not.toContain("grow");
+      expect(classes(child)).not.toContain("flex-1");
+    }
+  });
+
+  it("데스크톱은 껍데기를 두지 않는다(카드 안 결과)", () => {
+    state.items = [];
+    render(false);
+    expect(container.querySelector("[data-slot=recurring-phone]")).toBeNull();
+    expect(
+      container.querySelector("[data-slot=card] [data-slot=result-section]"),
+    ).not.toBeNull();
+  });
+});
+
 describe("줄", () => {
   const rows = () => [
     ...container.querySelectorAll<HTMLElement>("[data-slot=list-body]"),
