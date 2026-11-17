@@ -8,8 +8,10 @@ import { KEYBOARD_GAP } from "./bottom-navigation-variants";
 
 export type BottomNavigationContextValue = {
   compact: boolean;
-  /** 라벨을 보이지 않게(sr-only) — 줄어들기 시작할 때 · 다 펴질 때까지 */
+  /** 라벨을 보이지 않게(sr-only) — 줄어들기 시작할 때 · 다 펴질 때까지 · 칸이 좁을 때 */
   labelsHidden: boolean;
+  /** 칸 폭이 + 원 44 보다 좁다(320 보다 좁은 화면) — 원을 36 으로 */
+  narrow: boolean;
   scrollToTop: () => void;
 };
 

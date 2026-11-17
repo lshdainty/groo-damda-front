@@ -421,6 +421,74 @@ describe("가운데 +", () => {
   });
 });
 
+describe("좁은 칸(Layout 지원 폭 — 320 보다 좁은 화면)", () => {
+  /** 바의 안쪽 폭을 알린다 — jsdom 은 레이아웃이 없어 ResizeObserver 를 흉내 내고 콜백을 직접 부른다 */
+  let observed: { cb: ResizeObserverCallback; el: Element }[] = [];
+  beforeEach(() => {
+    observed = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(private cb: ResizeObserverCallback) {}
+        observe(el: Element) {
+          observed.push({ cb: this.cb, el });
+        }
+        unobserve() {}
+        disconnect() {
+          observed = observed.filter((o) => o.cb !== this.cb);
+        }
+      },
+    );
+  });
+  const barWidth = (content: number) =>
+    act(() => {
+      for (const o of observed.filter((x) => x.el === nav()))
+        o.cb(
+          [{ contentRect: { width: content } } as ResizeObserverEntry],
+          {} as ResizeObserver,
+        );
+    });
+  const circle = () =>
+    container.querySelector<HTMLElement>(
+      "[data-slot=bottom-navigation-add-circle]",
+    )!;
+  const labels = () =>
+    items().map((a) =>
+      a.querySelector<HTMLElement>("[data-slot=bottom-navigation-label]")!,
+    );
+
+  it("320 화면(바 292 · 안쪽 272 → 칸 52.8)과 줄어든 바(안쪽 232 → 44.8)는 그대로다 — 라벨 · 원 44", () => {
+    render(<Bar compact={false} />);
+    barWidth(272);
+    expect(nav()!.hasAttribute("data-narrow")).toBe(false);
+    expect(circle().className).toContain("size-[44px]");
+    for (const l of labels()) expect(l.className).not.toContain("sr-only");
+    // 줄어든 바의 칸 44.8 도 44 이상이라 걸리지 않는다(원 36 은 줄어든 바 몫)
+    barWidth(232);
+    expect(nav()!.hasAttribute("data-narrow")).toBe(false);
+  });
+
+  it("칸이 + 원 44 보다 좁으면(바 173 · 안쪽 153 → 칸 29) 줄어든 바처럼 라벨을 숨기고 원을 36 으로 — 이름은 남는다", () => {
+    render(<Bar compact={false} />);
+    barWidth(153);
+    const bar = nav()!;
+    expect(bar.getAttribute("data-narrow")).toBe("true");
+    // 바 높이 · 자리는 펼친 바 그대로(줄어든 건 아니다)
+    expect(bar.hasAttribute("data-compact")).toBe(false);
+    expect(bar.className).toContain("h-[66px]");
+    expect(circle().className).toContain("size-[36px]");
+    expect(circle().className).toContain("[&_svg]:size-[20px]");
+    // 라벨은 보이지 않게만 — 칸의 이름으로 남는다
+    for (const l of labels()) expect(l.className).toContain("sr-only");
+    expect(item(0).textContent).toContain("홈");
+    // 다시 넓어지면(칸 44 경계 — 안쪽 228 = 칸 44) 라벨 · 원 44 로 돌아온다
+    barWidth(228);
+    expect(nav()!.hasAttribute("data-narrow")).toBe(false);
+    expect(circle().className).toContain("size-[44px]");
+    for (const l of labels()) expect(l.className).not.toContain("sr-only");
+  });
+});
+
 describe("줄어들기", () => {
   function Live({
     scrollRoot,

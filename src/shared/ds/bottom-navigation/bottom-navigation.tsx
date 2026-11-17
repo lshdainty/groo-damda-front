@@ -17,6 +17,8 @@ import {
 import {
   ADD,
   ADD_CIRCLE,
+  CELL_COUNT,
+  CELL_GAP,
   ADD_CIRCLE_COMPACT,
   ADD_CIRCLE_REGULAR,
   EXPAND_AFTER,
@@ -26,6 +28,7 @@ import {
   ITEM_OTHER,
   LABEL,
   LABEL_SHOWN,
+  NARROW_CELL,
   ROOT,
   ROOT_COMPACT,
   ROOT_REGULAR,
@@ -51,6 +54,8 @@ import { useDsText } from "@/shared/ds/i18n";
  *   가로 스크롤 · 시트 · 대화상자 · 떠 있는 목록(팝오버) 안의 스크롤은 세지 않는다. 줄어든 바 어디를 눌러도 펴진다 — 칸을 눌렀으면 그 탭으로도 간다.
  *   줄어들어도 칸마다 이름은 남는다(라벨은 보이지 않게만 — sr-only). 라벨은 줄어들기 시작할 때 사라지고 다 펴진 뒤(200ms) 나타난다.
  *   화면 키보드가 열리면 바를 가린다(visualViewport 가 화면보다 150 넘게 작을 때).
+ * 좁은 칸 — 칸 폭이 + 원 44 보다 좁으면(320 보다 좁은 화면 — 페이지 확대, Layout "지원 폭") 줄어든 바처럼 라벨을 숨기고(이름은 sr-only 로
+ *   남는다) + 원을 36 으로 둔다. 칸 폭은 바를 재서(ResizeObserver) 안쪽 폭 − 칸 사이 ÷ 5 로 낸다 — data-narrow. 320 이상은 걸리지 않는다.
  * 다시 누르기 — 지금 탭(current)을 누르면 링크로 옮기지 않고(같은 주소를 쌓지 않는다) onReselect 를 부른다(그 칸의 onClick 대신).
  *   onReselect 를 주지 않으면: 맨 위로 스크롤하고, 지금 주소가 그 탭의 첫 화면(href)이 아니면 주소를 href 로 고쳐 간다(location.replace).
  *   라우터를 쓰는 셸은 onReselect 에서 navigate(href, { replace: true }) 와 받은 scrollToTop() 을 부른다. 탭마다 스크롤을 기억하는 것은 셸의 몫이다.
@@ -98,6 +103,7 @@ const BottomNavigation = React.forwardRef<HTMLElement, BottomNavigationProps>(
     ref,
   ) => {
     const dsT = useDsText();
+    const navRef = React.useRef<HTMLElement | null>(null);
     const [inner, setInner] = React.useState(defaultCompact);
     const controlled = compactProp !== undefined;
     const compact = controlled ? compactProp : inner;
@@ -136,7 +142,21 @@ const BottomNavigation = React.forwardRef<HTMLElement, BottomNavigationProps>(
       const timer = window.setTimeout(() => setLabelsShown(!compact), duration);
       return () => window.clearTimeout(timer);
     }, [compact]);
-    const labelsHidden = compact || !labelsShown;
+
+    // 좁은 칸 — 바 안쪽 폭에서 칸 폭을 내어 + 원 44 보다 좁으면 라벨을 숨기고 원을 36 으로(잰 값은 콜백에서만 상태로)
+    const [narrow, setNarrow] = React.useState(false);
+    React.useLayoutEffect(() => {
+      const bar = navRef.current;
+      if (!bar || typeof ResizeObserver === "undefined") return;
+      const observer = new ResizeObserver((entries) => {
+        const width = entries[0]?.contentRect.width ?? bar.clientWidth;
+        const cell = (width - CELL_GAP * (CELL_COUNT - 1)) / CELL_COUNT;
+        setNarrow(width > 0 && cell < NARROW_CELL);
+      });
+      observer.observe(bar);
+      return () => observer.disconnect();
+    }, []);
+    const labelsHidden = compact || !labelsShown || narrow;
 
     // 줄어들기 — 세로 스크롤마다 방향별로 거리를 센다(방향이 바뀌면 다시)
     const lastScrolledRef = React.useRef<Element | null>(null);
@@ -207,13 +227,18 @@ const BottomNavigation = React.forwardRef<HTMLElement, BottomNavigationProps>(
 
     return (
       <BottomNavigationContext.Provider
-        value={{ compact, labelsHidden, scrollToTop }}
+        value={{ compact, labelsHidden, narrow, scrollToTop }}
       >
         <nav
-          ref={ref}
+          ref={(node) => {
+            navRef.current = node;
+            if (typeof ref === "function") ref(node);
+            else if (ref) ref.current = node;
+          }}
           aria-label={dsT("bottomNavigation.label")}
           data-slot="bottom-navigation"
           data-compact={compact || undefined}
+          data-narrow={narrow || undefined}
           className={cn(
             ROOT,
             compact ? ROOT_COMPACT : ROOT_REGULAR,
@@ -345,7 +370,7 @@ const BottomNavigationAddButton = React.forwardRef<
   HTMLButtonElement,
   BottomNavigationAddButtonProps
 >(({ className, ...props }, ref) => {
-  const { compact } = useBottomNavigation("BottomNavigationAddButton");
+  const { compact, narrow } = useBottomNavigation("BottomNavigationAddButton");
   return (
     <button
       ref={ref}
@@ -359,7 +384,7 @@ const BottomNavigationAddButton = React.forwardRef<
         data-slot="bottom-navigation-add-circle"
         className={cn(
           ADD_CIRCLE,
-          compact ? ADD_CIRCLE_COMPACT : ADD_CIRCLE_REGULAR,
+          compact || narrow ? ADD_CIRCLE_COMPACT : ADD_CIRCLE_REGULAR,
         )}
       >
         <Plus />
