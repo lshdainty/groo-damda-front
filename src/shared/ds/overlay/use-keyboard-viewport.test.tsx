@@ -462,6 +462,48 @@ describe("초점 칸 — 키보드 · 바닥 버튼 위에 칸 전체가 보이�
     expect(body().scrollTop).toBe(200 - (100 + 20 - 60));
   });
 
+  it("키보드를 내리면 넣은 스크롤을 되돌린다 — 칸 위 라벨이 머리 밑에 가린 채 남지 않는다", async () => {
+    fakeLayout({ top: 380, bottom: 436 });
+    render(<FogSheet />);
+    body().scrollTop = 30;
+    await act(async () => document.querySelector("input")!.focus());
+    setViewport({ visual: 494 });
+    await fire(vv, "resize");
+    expect(body().scrollTop).toBe(30 + 436 - (400 - 80));
+
+    setViewport({ visual: 844 });
+    await fire(vv, "resize");
+    expect(body().scrollTop).toBe(30);
+  });
+
+  it("키보드가 바뀌며 여러 번 넣었어도 처음 자리로 — 숫자 키패드 → 글자 키보드 → 내림", async () => {
+    fakeLayout({ top: 380, bottom: 436 });
+    render(<FogSheet />);
+    await act(async () => document.querySelector("input")!.focus());
+    setViewport({ visual: 594 });
+    await fire(vv, "resize");
+    setViewport({ visual: 514 });
+    await fire(vv, "resize");
+    expect(body().scrollTop).toBe(2 * (436 - (400 - 80)));
+
+    // resize 가 늦게 오는 iOS — focusout 으로 내려가도 같다
+    setViewport({ visual: 844 });
+    await fire(document, "focusout");
+    expect(body().scrollTop).toBe(0);
+  });
+
+  it("넣은 뒤 사용자가 직접 민 스크롤은 키보드를 내려도 그대로 둔다", async () => {
+    fakeLayout({ top: 380, bottom: 436 });
+    render(<FogSheet />);
+    await act(async () => document.querySelector("input")!.focus());
+    setViewport({ visual: 494 });
+    await fire(vv, "resize");
+    body().scrollTop = 50;
+    setViewport({ visual: 844 });
+    await fire(vv, "resize");
+    expect(body().scrollTop).toBe(50);
+  });
+
   it("보이는 영역을 밀기만 할 때(scroll)는 끌어당기지 않는다 — 손으로 본문을 보는 중", async () => {
     fakeLayout({ top: 380, bottom: 436 });
     render(<FogSheet />);

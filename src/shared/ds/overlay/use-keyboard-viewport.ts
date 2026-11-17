@@ -92,6 +92,8 @@ export function keyboardBottomInset(
  *   - 초점 칸 — 키보드가 뜰 때 · 높이가 바뀔 때 · 초점이 옮겨 갈 때, 초점 칸 전체가 본문의 보이는 칸(scroll-padding —
  *     끝 흐림 위 20 · 아래 80 — 을 뺀 안쪽) 안에 오게 본문을 스크롤한다(revealFocused). 바닥 버튼은 본문 밖이라 칸이
  *     바닥 위에 선다. 보이는 영역을 밀기만 할 때(scroll)는 하지 않는다 — 손으로 본문을 보는 중에 끌어당기지 않게.
+ *   - 키보드가 내려가면 그렇게 넣은 스크롤을 되돌린다 — 본문이 다시 길어졌는데 넣은 스크롤이 남으면 칸 위 라벨이
+ *     머리 밑에 가린 채로 있다(2026-11-17 QA — 거래 추가 2단계 "거래처"). 넣은 뒤 사용자가 직접 민 스크롤은 그대로 둔다.
  *   - 쓸 수 있는 영역이 머리 · 바닥만으로 차 본문에 초점 칸 하나도 안 들어가면(가로 화면의 폰) 본문만 스크롤하는
  *     규칙을 지킬 수 없다 — 그때만 표면 전체가 스크롤하고 초점 칸을 그 안에서 보이게 한다(isCramped · setCramped).
  * 키보드가 없으면 박은 값을 모두 걷는다 — 그때는 클래스(dvh)가 정한다. 키보드가 떠 있는 동안 표면에
@@ -115,6 +117,9 @@ export function useKeyboardViewport(
     const vvAtMount = window.visualViewport;
     // 지난번에 맞춘 쓸 수 있는 높이 — 키보드가 막 떴는지 · 높이가 바뀌었는지(초점 칸을 다시 보일 때)
     let lastHeight: number | null = null;
+    // 키보드가 떠 있는 동안 초점 칸을 보이려고 넣은 스크롤 — 상자 · 넣기 전 자리(from) · 넣은 뒤 자리(to)
+    let revealed: { scroller: HTMLElement; from: number; to: number } | null =
+      null;
     const apply = (reveal: boolean) => {
       const el = targetRef.current;
       if (!el) return;
@@ -126,6 +131,12 @@ export function useKeyboardViewport(
         el.style.removeProperty(placement === "bottom" ? "bottom" : "top");
         setCramped(el, body, false);
         el.removeAttribute("data-keyboard");
+        // 넣은 스크롤을 되돌린다 — 높이 상한을 걷은 뒤라 본문이 다시 길어진 상태에서 맞춘다. 넣은 뒤 자리에서
+        // 움직였으면(사용자가 직접 밀었다) 손대지 않는다
+        if (revealed && revealed.scroller.scrollTop === revealed.to) {
+          revealed.scroller.scrollTop = revealed.from;
+        }
+        revealed = null;
         return;
       }
       const maxHeight = Math.floor(kb.height * ratio);
@@ -144,7 +155,19 @@ export function useKeyboardViewport(
       if (reveal || resized || cramped !== wasCramped) {
         // 좁을 때는 표면이, 아니면 본문이 스크롤 상자다
         const scroller = cramped ? el : body;
-        if (scroller) revealFocused(el, scroller);
+        if (scroller) {
+          const before = scroller.scrollTop;
+          revealFocused(el, scroller);
+          const after = scroller.scrollTop;
+          if (after !== before) {
+            // 지난번에 넣은 자리 그대로면 처음 자리를 이어 간다 — 사이에 사용자가 밀었으면 그 자리부터 센다
+            const from =
+              revealed?.scroller === scroller && revealed.to === before
+                ? revealed.from
+                : before;
+            revealed = { scroller, from, to: after };
+          }
+        }
       }
     };
     const onFocus = () => apply(true);
