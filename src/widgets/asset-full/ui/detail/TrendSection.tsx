@@ -57,7 +57,7 @@ export function TrendSection({
   // Y축: 0 기준 nice 눈금 — 음수 잔액(대출)도 0 아래로 확장
   const vals = data.map((d) => d.balance);
   const yAxis = niceAxis(Math.min(0, ...vals), Math.max(0, ...vals));
-  const tick = (v: number) => (hidden ? MASK : formatAxisWon(v));
+  const tick = (v: number) => (hidden ? MASK : formatAxisWon(v, yAxis.ticks));
   const axisWidth = useAxisWidth(yAxis.ticks.map(tick));
   const height = desk ? 180 : 140;
   const seriesLabel = model.isCard
@@ -110,12 +110,7 @@ export function TrendSection({
             margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
           >
             <CartesianGrid {...chartGridProps} />
-            <XAxis
-              dataKey="label"
-              interval="preserveStartEnd"
-              minTickGap={18}
-              {...chartAxisProps()}
-            />
+            <XAxis dataKey="label" {...chartAxisProps()} />
             <YAxis
               tickSize={0}
               domain={[yAxis.min, yAxis.max]}

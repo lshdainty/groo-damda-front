@@ -28,6 +28,7 @@ import {
   chartAxisProps,
   chartDonutRadii,
   chartGridProps,
+  chartXAxisProps,
   formatAxisWon,
   type ChartColor,
 } from "@/shared/ds/chart";
@@ -41,6 +42,7 @@ import {
   formatMonthDay,
   formatMonthTicks,
   formatYearMonth,
+  monthAxisTicks,
   parseLocalDate,
 } from "@/shared/lib/date";
 import { niceAxis } from "@/shared/lib/groo/chartAxis";
@@ -129,7 +131,7 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
   // Y축: 0기준 nice 눈금 (앱 net_worth_chart niceAxis 정합).
   const vals = data.map((d) => d.netWorth);
   const yAxis = niceAxis(Math.min(0, ...vals), Math.max(0, ...vals));
-  const tick = (v: number) => (hidden ? MASK : formatAxisWon(v));
+  const tick = (v: number) => (hidden ? MASK : formatAxisWon(v, yAxis.ticks));
   // 음수 축 글자가 잘리지 않게 가장 긴 눈금 글자를 재서 폭을 잡는다(D6).
   const axisWidth = useAxisWidth(yAxis.ticks.map(tick));
 
@@ -185,7 +187,10 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
           }}
         >
           <CartesianGrid {...chartGridProps} />
-          <XAxis dataKey="monthLabel" {...chartAxisProps()} />
+          <XAxis
+            dataKey="monthLabel"
+            {...chartXAxisProps(monthAxisTicks(points))}
+          />
           <YAxis
             domain={[yAxis.min, yAxis.max]}
             ticks={yAxis.ticks}

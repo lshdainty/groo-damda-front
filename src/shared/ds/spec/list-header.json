@@ -3,7 +3,7 @@
   "source": "specs/components/list-header.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "f49ebd82767d"
+    "sha256": "b484b20eae48"
   },
   "slots": {
     "root": "목록 제목 — 글자 + 오른쪽 작은 버튼 자리",

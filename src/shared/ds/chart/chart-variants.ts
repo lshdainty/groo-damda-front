@@ -152,8 +152,21 @@ export function assignChartColors<T extends object>(
 export const MINUS = "−";
 const round1 = (x: number) => Math.floor(x * 10 + 0.5) / 10;
 
-/** 눈금 글자 — 1만 미만은 쉼표 정수, 그 위는 만 · 억 · 조에 소수 한 자리(.0 은 버린다). 빼기는 U+2212 */
-export function formatAxisWon(value: number): string {
+/** 축 단위 — 눈금 가운데 가장 큰 절댓값이 그 값 이상이면 그 축의 모든 눈금이 그 단위다(큰 것부터) */
+const AXIS_UNITS = [
+  { min: 1e12, label: "조" },
+  { min: 1e8, label: "억" },
+  { min: 1e4, label: "만" },
+] as const;
+
+/**
+ * 눈금 글자 — **한 축은 한 단위**(chart.md "축 · 격자"). 그 축의 눈금([ticks]) 가운데 가장 큰 절댓값이 1억 이상이면 모든 눈금을
+ * 억 단위(0.5억 · 1억 · 1.5억), 1만 이상이면 만 단위(0.5만 · 1만 · 1.5만), 아니면 쉼표 정수(2,000 · 4,000)로 쓴다(조도 같은 셈).
+ * 값 하나만 보고 정하면 한 축에 "5,000 · 1만" · "5,000만 · 1억" 이 섞인다. 소수는 한 자리(.0 은 버린다) — 눈금 간격이
+ * 1 · 2 · 5 × 10ⁿ(`niceAxis`)이라 한 자리 안에서 글자가 눈금 위치와 맞는다. 0 은 "0", 빼기는 U+2212.
+ * [ticks] 는 그 축이 그리는 눈금 목록 그대로다 — 세로축 폭도 같은 목록 · 같은 글자로 잰다(`niceValueAxis`).
+ */
+export function formatAxisWon(value: number, ticks: readonly number[]): string {
   if (!Number.isFinite(value)) return "";
   const sign = value < 0 ? MINUS : "";
   const n = Math.abs(value);
@@ -167,18 +180,17 @@ export function formatAxisWon(value: number): string {
       }).format(n)
     );
   }
-  if (n < 10000) return sign + Math.round(n).toLocaleString("ko-KR");
-  let scaled = n / 10000;
-  let unit = "만";
-  for (const bigger of ["억", "조"]) {
-    if (round1(scaled) < 10000) break;
-    scaled /= 10000;
-    unit = bigger;
-  }
+  const axisMax = Math.max(
+    n,
+    ...ticks.filter(Number.isFinite).map((t) => Math.abs(t)),
+  );
+  const unit = AXIS_UNITS.find((u) => axisMax >= u.min);
+  if (!unit) return sign + Math.round(n).toLocaleString("ko-KR");
+  if (n === 0) return "0";
   return (
     sign +
-    round1(scaled).toLocaleString("ko-KR", { maximumFractionDigits: 1 }) +
-    unit
+    round1(n / unit.min).toLocaleString("ko-KR", { maximumFractionDigits: 1 }) +
+    unit.label
   );
 }
 
@@ -212,17 +224,78 @@ export interface ChartAxisOptions {
  */
 export const CHART_TICK_SIZE = "0.6875rem";
 
-/** XAxis · YAxis 에 펼친다 — 눈금 11 · fg-neutral-subtle(이중 축이면 계열 색) · 축 선 · 눈금 선 없음 · 눈금과 그리는 자리 사이 8 */
+/**
+ * 눈금 글자 사이 최소 거리 — `spacing-x2`(8). 겹치면 recharts 가 사이 눈금을 건너뛴다(chart.md "큰 글자" — 웹 · 앱 같음,
+ * 앱 `p_chart_cartesian` 의 칸 셈도 글자 폭 + 8). recharts 기본값 5 를 쓰지 않는다.
+ */
+export const CHART_TICK_GAP = 8;
+
+/** XAxis · YAxis 에 펼친다 — 눈금 11 · fg-neutral-subtle(이중 축이면 계열 색) · 축 선 · 눈금 선 없음 · 눈금과 그리는 자리 사이 8 · 눈금 글자 사이 최소 8 */
 export function chartAxisProps({ color }: ChartAxisOptions = {}) {
   return {
     axisLine: false,
     tickLine: false,
     tickMargin: 8,
+    minTickGap: CHART_TICK_GAP,
     tick: {
       fill: color ? chartVar(color) : "var(--color-fg-neutral-subtle)",
       fontSize: CHART_TICK_SIZE,
     },
   } as const;
+}
+
+// ── 가로 눈금 솎기 · 연도 ─────────────────────────────────────
+/** 가로 눈금 하나 — 연도 없는 글([label])과 해가 바뀔 때 쓰는 글([yearLabel]), 그 칸의 해([year]). 해가 없으면 연도를 붙이지 않는다 */
+export interface ChartXTick {
+  label: string;
+  yearLabel?: string;
+  year?: number;
+}
+
+const withYear = (t: ChartXTick, prevYear: number | undefined) =>
+  t.yearLabel != null &&
+  t.year != null &&
+  prevYear != null &&
+  t.year !== prevYear
+    ? t.yearLabel
+    : t.label;
+
+/** 모든 눈금이 보일 때의 글 — 해가 바뀌는 첫 눈금에만 연도. 눈금 글자 폭을 재는 기준이다(앱이 categories 로 재는 글과 같다) */
+export const chartXTickFullLabels = (ticks: readonly ChartXTick[]): string[] =>
+  ticks.map((t, i) => withYear(t, i > 0 ? ticks[i - 1]!.year : undefined));
+
+/**
+ * 가로 눈금 간격 — 글자 사이 최소 8(`CHART_TICK_GAP`)로 몇 칸이 들어가는지 세어, 끝(가장 최근) 눈금을 지키고 앞에서부터 건너뛴다
+ * (chart.md "큰 글자"). 앱 `p_chart_cartesian` 과 같은 셈 — 들어가는 수 = ⌊그리는 폭 ÷ (가장 긴 글 + 8)⌋, 간격 = ⌈칸 수 ÷ 들어가는 수⌉.
+ */
+export function chartXTickInterval(
+  count: number,
+  plotWidth: number,
+  labelWidth: number,
+): number {
+  const fit = Math.max(
+    1,
+    Math.floor(Math.max(0, plotWidth) / (labelWidth + CHART_TICK_GAP)),
+  );
+  return Math.max(1, Math.ceil(count / fit));
+}
+
+/**
+ * 보이는 눈금의 글 — 건너뛴 눈금은 null. 끝 눈금에서 [interval] 칸마다 남긴다.
+ * 연도는 **보이는 눈금** 기준이다: 앞에 보이는 눈금(첫 눈금이면 맨 앞 칸)과 해가 다르면 연도를 붙인다 — 해가 바뀌는 칸이
+ * 건너뛰기로 빠지면 그 뒤 처음 보이는 눈금이 연도를 이어받는다("12월 · 2026. 2. · 4월", 연도가 통째로 사라지지 않는다).
+ */
+export function chartXTickLabels(
+  ticks: readonly ChartXTick[],
+  interval: number,
+): (string | null)[] {
+  let prevYear = ticks[0]?.year;
+  return ticks.map((t, i) => {
+    if ((ticks.length - 1 - i) % Math.max(1, interval) !== 0) return null;
+    const label = withYear(t, prevYear);
+    if (t.year != null) prevYear = t.year;
+    return label;
+  });
 }
 
 /** CartesianGrid 에 펼친다 — 가로 점선(3 · 3) stroke-neutral-subtle 만. 세로 격자 · 축 선은 긋지 않는다 */

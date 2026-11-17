@@ -26,6 +26,7 @@ import {
 } from "./chart";
 import { ChartHeatmap } from "./chart-heatmap";
 import { withSeriesDefaults } from "./chart-series";
+import { chartXAxisProps } from "./chart-x-axis";
 import {
   HEAT_CUTS,
   HEAT_MIX,
@@ -51,7 +52,11 @@ import {
   assignChartColors,
   chartAxisProps,
   chartGridProps,
+  chartXTickFullLabels,
+  chartXTickInterval,
+  chartXTickLabels,
   formatAxisWon,
+  type ChartXTick,
   formatWon,
   type ChartColor,
   chartDonutRadii,
@@ -229,21 +234,79 @@ describe("색 배정 — assignChartColors", () => {
 });
 
 describe("숫자 — formatAxisWon · formatWon", () => {
-  it("축은 만 · 억 · 조로 줄이고 소수 한 자리(.0 은 버린다)", () => {
-    expect(formatAxisWon(0)).toBe("0");
-    expect(formatAxisWon(9999)).toBe("9,999");
-    expect(formatAxisWon(10000)).toBe("1만");
-    expect(formatAxisWon(12000)).toBe("1.2만");
-    expect(formatAxisWon(4000000)).toBe("400만");
-    expect(formatAxisWon(123456789)).toBe("1.2억");
-    expect(formatAxisWon(1e12)).toBe("1조");
-    expect(formatAxisWon(Number.NaN)).toBe("");
+  /** 한 축의 눈금 글자 — 눈금 목록을 함께 넘긴다 */
+  const axis = (ticks: number[]) => ticks.map((v) => formatAxisWon(v, ticks));
+
+  it("한 축은 한 단위 — 가장 큰 절댓값이 1만 이상이면 모든 눈금이 만 단위(5,000 · 1만 섞임 없음)", () => {
+    expect(axis([0, 5000, 10000, 15000])).toEqual([
+      "0",
+      "0.5만",
+      "1만",
+      "1.5만",
+    ]);
+    expect(axis([0, 10000, 20000, 30000])).toEqual(["0", "1만", "2만", "3만"]);
+  });
+
+  it("한 축은 한 단위 — 가장 큰 절댓값이 1만 미만이면 모든 눈금이 쉼표 정수", () => {
+    expect(axis([0, 2500, 5000, 7500])).toEqual([
+      "0",
+      "2,500",
+      "5,000",
+      "7,500",
+    ]);
+    expect(axis([0, 2000, 4000, 6000, 8000])).toEqual([
+      "0",
+      "2,000",
+      "4,000",
+      "6,000",
+      "8,000",
+    ]);
+  });
+
+  it("가장 큰 절댓값은 음수 쪽도 본다 — 0 아래가 1만을 넘으면 0 위 눈금도 만 단위", () => {
+    expect(axis([-10000, -5000, 0, 5000])).toEqual([
+      "−1만",
+      "−0.5만",
+      "0",
+      "0.5만",
+    ]);
+  });
+
+  it("한 축은 한 단위 — 가장 큰 절댓값이 1억 이상이면 모든 눈금이 억 단위(5,000만 · 1억 섞임 없음)", () => {
+    expect(axis([0, 50_000_000, 100_000_000, 150_000_000])).toEqual([
+      "0",
+      "0.5억",
+      "1억",
+      "1.5억",
+    ]);
+    expect(
+      axis([0, 20_000_000, 40_000_000, 60_000_000, 80_000_000, 100_000_000]),
+    ).toEqual(["0", "0.2억", "0.4억", "0.6억", "0.8억", "1억"]);
+    // 1억 미만이면 만 단위 그대로
+    expect(axis([-30_000_000, 0, 10_000_000])).toEqual([
+      "−3,000만",
+      "0",
+      "1,000만",
+    ]);
+    // 조도 같은 셈
+    expect(axis([0, 500_000_000_000, 1_000_000_000_000])).toEqual([
+      "0",
+      "0.5조",
+      "1조",
+    ]);
+  });
+
+  it("소수 한 자리(.0 은 버린다) · 값이 숫자가 아니면 빈 글", () => {
+    expect(formatAxisWon(12000, [0, 12000])).toBe("1.2만");
+    expect(formatAxisWon(123456789, [0, 123456789])).toBe("1.2억");
+    expect(formatAxisWon(4000000, [0, 4000000])).toBe("400만");
+    expect(formatAxisWon(Number.NaN, [0, 10000])).toBe("");
   });
 
   it("빼기는 U+2212 하나 — 음수 축 글자", () => {
-    expect(formatAxisWon(-30000000)).toBe("−3,000만");
-    expect(formatAxisWon(-500)).toBe("−500");
-    expect(formatAxisWon(-30000000)).not.toContain("-");
+    expect(formatAxisWon(-30000000, [-30000000, 0])).toBe("−3,000만");
+    expect(formatAxisWon(-500, [-500, 0])).toBe("−500");
+    expect(formatAxisWon(-30000000, [-30000000, 0])).not.toContain("-");
   });
 
   it("돈은 줄이지 않고 원까지 — 1억 넘는 금액도", () => {
@@ -269,6 +332,11 @@ describe("축 · 격자 · 계열 기본값", () => {
     expect(p.axisLine).toBe(false);
     expect(p.tickLine).toBe(false);
     expect(p.tickMargin).toBe(8);
+  });
+
+  it("눈금 글자 사이 최소 8(spacing-x2) — recharts 기본 5 가 아니다(앱과 같다)", () => {
+    expect(chartAxisProps().minTickGap).toBe(8);
+    expect(chartAxisProps({ color: "red" }).minTickGap).toBe(8);
   });
 
   it("이중 축이면 눈금 글자가 그 계열의 색", () => {
@@ -1561,5 +1629,109 @@ describe("ChartDataTable — 표로 보기", () => {
     const heads = qa("thead th");
     expect(heads[1]!.className).toContain("text-start");
     expect(qa("tbody tr")).toHaveLength(0);
+  });
+});
+
+/**
+ * 가로 눈금 — 글자 사이 최소 8 로 끝 눈금을 지키며 앞에서부터 건너뛰고, 연도는 **보이는** 눈금 기준(QA: 폰 402 에서
+ * 해가 바뀌는 "2026. 1." 이 건너뛰기로 빠져 연도가 통째로 사라졌다 — "12월 · 빈칸 · 2월").
+ */
+describe("가로 눈금 — 솎기 · 보이는 눈금의 연도", () => {
+  /** 월 눈금 — from(해 · 달)부터 n 칸 */
+  const months = (year: number, month: number, n: number): ChartXTick[] =>
+    Array.from({ length: n }, (_, i) => {
+      const y = year + Math.floor((month - 1 + i) / 12);
+      const m = ((month - 1 + i) % 12) + 1;
+      return { label: `${m}월`, yearLabel: `${y}. ${m}.`, year: y };
+    });
+
+  it("간격 — 들어가는 수 = ⌊폭 ÷ (가장 긴 글 + 8)⌋, 간격 = ⌈칸 수 ÷ 들어가는 수⌉(앱과 같은 셈)", () => {
+    expect(chartXTickInterval(12, 400, 24)).toBe(1); // 400 / 32 = 12 칸
+    expect(chartXTickInterval(12, 300, 24)).toBe(2); // 9 칸
+    expect(chartXTickInterval(12, 120, 24)).toBe(4); // 3 칸
+    // 글자 사이가 5(recharts 기본)였다면 12 칸이 들어갔을 폭 — 8 이라 건너뛴다
+    expect(chartXTickInterval(12, 12 * (24 + 5), 24)).toBe(2);
+    // 폭이 없으면 끝 하나
+    expect(chartXTickInterval(12, 0, 24)).toBe(12);
+  });
+
+  it("모두 보이면 해가 바뀌는 첫 눈금에만 연도(글 폭을 재는 기준)", () => {
+    const t = months(2025, 12, 12);
+    expect(chartXTickFullLabels(t).slice(0, 3)).toEqual([
+      "12월",
+      "2026. 1.",
+      "2월",
+    ]);
+    expect(chartXTickLabels(t, 1)).toEqual(chartXTickFullLabels(t));
+  });
+
+  it("해가 바뀌는 칸이 건너뛰기로 빠지면 그 뒤 처음 보이는 눈금이 연도를 이어받는다", () => {
+    // 25년 11월 ~ 26년 10월, 두 칸마다(끝에서) — 1월(해가 바뀌는 칸)이 빠진다
+    const labels = chartXTickLabels(months(2025, 11, 12), 2);
+    expect(labels).toEqual([
+      null,
+      "12월",
+      null,
+      "2026. 2.",
+      null,
+      "4월",
+      null,
+      "6월",
+      null,
+      "8월",
+      null,
+      "10월",
+    ]);
+  });
+
+  it("끝 눈금은 늘 남고, 첫 보이는 눈금도 맨 앞 칸과 해가 다르면 연도를 받는다", () => {
+    // 25년 12월 ~ 26년 11월, 두 칸마다 — 12월(맨 앞)이 빠지고 첫 보이는 1월이 연도
+    const labels = chartXTickLabels(months(2025, 12, 12), 2);
+    expect(labels[11]).toBe("11월");
+    expect(labels.filter((l) => l != null)).toEqual([
+      "2026. 1.",
+      "3월",
+      "5월",
+      "7월",
+      "9월",
+      "11월",
+    ]);
+    // 여섯 칸마다 — 해가 두 번 바뀌어도 보이는 눈금끼리 견준다
+    expect(
+      chartXTickLabels(months(2024, 12, 13), 6).filter((l) => l != null),
+    ).toEqual(["12월", "2025. 6.", "12월"]);
+  });
+
+  it("해가 없는 눈금(요일 · 주)은 연도를 붙이지 않는다", () => {
+    const t = ["1주", "2주", "3주"].map((label) => ({ label }));
+    expect(chartXTickLabels(t, 1)).toEqual(["1주", "2주", "3주"]);
+  });
+
+  it("차트에서 — 폭이 좁아 연도 눈금이 빠지면 다음 보이는 눈금에 연도가 붙는다(recharts 에 맡기지 않는다)", async () => {
+    const ticks = months(2025, 11, 12);
+    const data = chartXTickFullLabels(ticks).map((m, v) => ({ m, v }));
+    // jsdom 은 글 폭을 못 재 글자 수로 어림한다 — "2026. 1." 56, 그리는 폭 390 → 6 칸 → 두 칸마다
+    await render(
+      <BarChart width={400} height={160} data={data}>
+        <XAxis dataKey="m" {...chartXAxisProps(ticks)} />
+        <Bar dataKey="v" />
+      </BarChart>,
+    );
+    const shown = qa(".recharts-cartesian-axis-tick-value").map(
+      (el) => el.textContent,
+    );
+    expect(shown).toEqual(["12월", "2026. 2.", "4월", "6월", "8월", "10월"]);
+    // 넓으면 모두 보이고 연도는 1월에만
+    await render(
+      <BarChart width={1200} height={160} data={data}>
+        <XAxis dataKey="m" {...chartXAxisProps(ticks)} />
+        <Bar dataKey="v" />
+      </BarChart>,
+    );
+    const all = qa(".recharts-cartesian-axis-tick-value").map(
+      (el) => el.textContent,
+    );
+    expect(all).toHaveLength(12);
+    expect(all.filter((l) => l?.includes("2026"))).toEqual(["2026. 1."]);
   });
 });

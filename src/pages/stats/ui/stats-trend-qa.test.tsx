@@ -76,6 +76,7 @@ const layoutCharts = (width = 400, height = 200) =>
 const TODAY = new Date(2026, 10, 17); // 2026-11-17
 const day = (d: number, income = 0, expense = 0): TrendDatum => ({
   month: `11. ${d}.`,
+  tick: { label: `11. ${d}.` },
   income,
   expense,
   savings: income - expense,

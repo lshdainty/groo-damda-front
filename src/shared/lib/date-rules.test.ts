@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { i18n } from "@/shared/i18n/config";
 import {
+  dailyAxisTick,
+  monthAxisTicks,
   formatDailyTick,
   formatDateDowTime,
   formatDateRange,
@@ -85,6 +87,28 @@ describe("날짜 규칙 — 기간 줄 · 월 눈금 · 점 연월 (웹 B3 가.5
         { year: 2026, month: 1 },
       ]),
     ).toEqual(["12월", "2025. 1.", "12월", "2026. 1."]);
+  });
+  it("월 가로 눈금 — 월 글 · 연월 글 · 해를 함께 준다(차트가 보이는 눈금에만 연도를 붙인다)", async () => {
+    expect(
+      monthAxisTicks([
+        { year: 2025, month: 12 },
+        { year: 2026, month: 1 },
+      ]),
+    ).toEqual([
+      { label: "12월", yearLabel: "2025. 12.", year: 2025 },
+      { label: "1월", yearLabel: "2026. 1.", year: 2026 },
+    ]);
+    await i18n.changeLanguage("en");
+    expect(monthAxisTicks([{ year: 2026, month: 2 }])).toEqual([
+      { label: "Feb", yearLabel: "Feb 2026", year: 2026 },
+    ]);
+  });
+  it("일별 가로 눈금 — 날 글 · 연도 붙은 날 글 · 해", () => {
+    expect(dailyAxisTick(new Date(2026, 0, 2))).toEqual({
+      label: "1. 2.",
+      yearLabel: "2026. 1. 2.",
+      year: 2026,
+    });
   });
   it("점 연월 — 저축 목표 마감 '2026. 1.' · 영어는 'Jan 2026'", async () => {
     expect(formatYearMonthDot("2026-01-15")).toBe("2026. 1.");

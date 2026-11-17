@@ -1,4 +1,4 @@
-import { measureTickWidth, niceTickLabels } from "@/shared/lib/groo/axisWidth";
+import { niceValueAxis } from "@/shared/lib/groo/axisWidth";
 import { useState, type ReactNode } from "react";
 import {
   Area,
@@ -106,7 +106,7 @@ const Trend = ({
   specState,
   label,
   id,
-  unit = (v: number) => formatAxisWon(v),
+  unit = formatAxisWon,
 }: {
   data: Row[];
   dual?: boolean;
@@ -114,7 +114,7 @@ const Trend = ({
   specState?: string;
   label?: string;
   id: string;
-  unit?: (v: number) => string;
+  unit?: (v: number, ticks: readonly number[]) => string;
 }) => {
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const total = sumOf(data);
@@ -157,14 +157,11 @@ const Trend = ({
             <XAxis dataKey="day" {...chartAxisProps()} />
             <YAxis
               yAxisId="income"
-              tickFormatter={unit}
-              width={measureTickWidth(
-                niceTickLabels(
-                  data.flatMap((d) =>
-                    dual ? [d.income] : [d.income, d.expense],
-                  ),
-                  unit,
+              {...niceValueAxis(
+                data.flatMap((d) =>
+                  dual ? [d.income] : [d.income, d.expense],
                 ),
+                unit,
               )}
               {...chartAxisProps(dual ? { color: "blue" } : {})}
             />
@@ -172,12 +169,9 @@ const Trend = ({
               <YAxis
                 yAxisId="expense"
                 orientation="right"
-                tickFormatter={unit}
-                width={measureTickWidth(
-                  niceTickLabels(
-                    data.map((d) => d.expense),
-                    unit,
-                  ),
+                {...niceValueAxis(
+                  data.map((d) => d.expense),
+                  unit,
                 )}
                 {...chartAxisProps({ color: "red" })}
               />
@@ -264,12 +258,9 @@ const Bars = ({
             <CartesianGrid {...chartGridProps} />
             <XAxis dataKey="week" {...chartAxisProps()} />
             <YAxis
-              tickFormatter={formatAxisWon}
-              width={measureTickWidth(
-                niceTickLabels(
-                  data.flatMap((d) => [d.income, d.expense]),
-                  formatAxisWon,
-                ),
+              {...niceValueAxis(
+                data.flatMap((d) => [d.income, d.expense]),
+                formatAxisWon,
               )}
               {...chartAxisProps()}
             />

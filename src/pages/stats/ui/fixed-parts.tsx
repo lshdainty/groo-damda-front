@@ -13,7 +13,9 @@ import {
   chartAxisProps,
   chartGridProps,
   chartVar,
+  chartXAxisProps,
   formatAxisWon,
+  type ChartXTick,
 } from "@/shared/ds/chart";
 import { List, ListItem } from "@/shared/ds/list";
 import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
@@ -23,7 +25,7 @@ import {
 } from "@/shared/ds/segmented-control";
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { cn } from "@/shared/lib/cn";
-import { formatMonthTicks } from "@/shared/lib/date";
+import { formatMonthTicks, monthAxisTicks } from "@/shared/lib/date";
 import { niceCeil } from "@/shared/lib/groo/chartAxis";
 import { formatPercent } from "@/shared/lib/groo/format";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
@@ -305,6 +307,7 @@ export function FixedOverviewSection({
 // ── 월별 고정 · 변동 추이 ────────────────────────────────────────
 interface MonthRow {
   label: string;
+  tick: ChartXTick;
   fixed: number;
   variable: number;
 }
@@ -313,9 +316,15 @@ function toRows(
   src: { year: number; month: number; total: number; fixed?: number }[],
 ): MonthRow[] {
   const labels = formatMonthTicks(src);
+  const ticks = monthAxisTicks(src);
   return src.map((r, i) => {
     const s = splitFixed(r.total, r.fixed);
-    return { label: labels[i]!, fixed: s.fixed, variable: s.variable };
+    return {
+      label: labels[i]!,
+      tick: ticks[i]!,
+      fixed: s.fixed,
+      variable: s.variable,
+    };
   });
 }
 
@@ -473,15 +482,14 @@ export function FixedTrendSection({
             <CartesianGrid {...chartGridProps} />
             <XAxis
               dataKey="label"
-              interval="preserveStartEnd"
-              {...chartAxisProps()}
+              {...chartXAxisProps(rows.map((r) => r.tick))}
             />
             <YAxis
               domain={[0, axis.max]}
               ticks={axis.ticks}
-              tickFormatter={(v) => mask(formatAxisWon(Number(v)))}
+              tickFormatter={(v) => mask(formatAxisWon(Number(v), axis.ticks))}
               width={measureTickWidth(
-                axis.ticks.map((v) => mask(formatAxisWon(v))),
+                axis.ticks.map((v) => mask(formatAxisWon(v, axis.ticks))),
               )}
               {...chartAxisProps()}
             />
