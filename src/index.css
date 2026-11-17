@@ -410,6 +410,51 @@
     background: var(--bg-canvas);
     color: var(--fg-primary);
   }
+  /*
+   * 딤이 열린 동안 body 바탕색을 딤 토큰으로 — 시트(Menu Sheet 포함) · 대화상자 · 확인창 · 처리 중(BusyOverlay)의 딤이 보이는 동안.
+   *
+   * iPhone Safari 26 에서 키보드가 뜨면 키보드 위 띠는 body 의 **바탕색**(background-color)으로 칠해진다 — 입력 도구줄만 뜬 상태도,
+   * 주소 알약 · 도구줄이 함께 뜬 상태도. fixed 층은 어떤 크기 · 층으로도 닿지 않고(딤을 top −2000 · 높이 6000 · z 최대로 두어도),
+   * body 의 background-image 는 계산값에 들어가도 띠에 그리지 않는다(2026-11-18 QA 실기기 · iPhone 17 Pro · Safari 26,
+   * 시트 + 숫자 키패드: background-image 겹침 → 띠 245,246,250 그대로). 딤 넘침(overlay/dim-bounds.ts)은 그대로 둔다.
+   *
+   * 색은 새로 만들지 않는다 — body 바탕색을 딤 토큰(overlay-dim-light · 다크 overlay-dim-dark, 딤과 같은 dark 조건) 그대로 둔다.
+   * 반투명이라 그 밑의 html 바탕(위 html 규칙 — body 원래 바탕과 같은 bg-canvas)에 겹쳐 그려진다. 실측: 라이트 띠 122,122,124
+   * (위 딤 127,127,127) · 다크 띠 9,10,16(위 딤 13,14,20, html 바탕 26,31,46). **html 바탕이 body 원래 바탕과 같아야** 딤 아래
+   * 바탕과 같은 색이 된다 — 둘을 다르게 바꾸지 않는다(테스트가 지킨다). 임베드(EmbedStockChartPage)는 body 를 인라인으로 투명하게
+   * 두어 이 규칙이 닿지 않는다.
+   *
+   * 열린 동안 키보드와 상관없이 늘 건다 — 화면 안의 body 는 앱 틀(.m-app · 데스크톱 사이드바 · 본문, 셸 밖 화면의 min-h 바탕)이
+   * 불투명하게 덮어 보이지 않으므로 키보드가 없을 때 모습은 그대로다(딤이 두 번 겹쳐 보이는 곳이 없다).
+   * 표식은 딤 자신의 상태다 — body 바로 아래로 포털된 딤이 data-state=open(시트 · 대화상자 · 확인창), 처리 중은 data-visible
+   * (1초 뒤 딤이 보일 때부터). 닫힘이 시작되면(data-state=closed) 바로 걷히고, 겹친 표면은 마지막 딤이 닫힐 때 걷힌다.
+   * 카탈로그 무대 안의 비모달 견본(무대에 그려져 body 바로 아래가 아니다)은 세지 않는다.
+   * 이 글 그대로를 shared/ds/overlay/overlay-body-dim.test.tsx 가 읽어 실제 시트 · 대화상자 · 확인창 · 처리 중 딤에 맞춰 본다.
+   */
+  :root:has(
+      > body
+        > :is(
+          [data-slot="bottom-sheet-overlay"],
+          [data-slot="dialog-overlay"],
+          [data-slot="alert-dialog-overlay"]
+        )[data-state="open"],
+      > body > [data-slot="busy-overlay"][data-visible]
+    )
+    body {
+    background-color: var(--overlay-dim-light);
+  }
+  :root:has(
+      > body
+        > :is(
+          [data-slot="bottom-sheet-overlay"],
+          [data-slot="dialog-overlay"],
+          [data-slot="alert-dialog-overlay"]
+        )[data-state="open"],
+      > body > [data-slot="busy-overlay"][data-visible]
+    )
+    body:is(.dark *) {
+    background-color: var(--overlay-dim-dark);
+  }
   h1,
   h2,
   h3,
