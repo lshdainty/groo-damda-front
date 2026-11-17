@@ -6,6 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Button } from "@/shared/ds/button";
 import { SnackbarProvider } from "@/shared/ds/snackbar";
+import {
+  CLOSING_INERT,
+  __resetClosingSurfaceForTest,
+} from "@/shared/ds/overlay/closing-surface";
 
 import {
   BottomSheet,
@@ -573,5 +577,137 @@ describe("Trigger 로 연 시트는 iOS 에서도 문서 스크롤을 건드리�
       scrollTo.mockRestore();
       restore.forEach((r) => r());
     }
+  });
+});
+
+/*
+ * QA(iPhone 17 Pro · Safari 26, dev f70e3f87) — 시트를 [×] 로 닫은 직후(0.3초 안) 하단 탭을 누르면 첫 탭이 씹혔다(홈에 그대로,
+ * 두 번째 탭에 이동). 내려가는 200ms 동안 딤(Radix 인라인 pointer-events: auto)이 누름을 받고 body 는 pointer-events: none 으로
+ * 남았다. 반대로 예전 QA #14 · #36 · #37 · #57 — [저장] 따닥의 두 번째 탭이 사라지는 시트를 지나 뒤 화면(하단 탭)을 누르면 안
+ * 된다. 둘 다 아니게: 다른 자리의 첫 탭은 정확히 한 번 동작하고, 닫은 자리의 따닥만 삼킨다(overlay/closing-surface.ts).
+ * jsdom 은 히트 테스트가 없어 "어디에 떨어지나" 는 뒤 화면 요소에 직접 쏘고, 딤 · 몸통이 누름을 흘리는지는 클래스로 본다.
+ */
+describe("닫히는 동안 — 첫 탭은 한 번, 닫은 자리의 따닥만 삼킨다", () => {
+  let now = 1_000_000;
+  beforeEach(() => {
+    __resetClosingSurfaceForTest();
+    now = 1_000_000;
+    // vaul 이 시트 안 pointerdown 에서 잡는다 — jsdom 에는 없다
+    Element.prototype.setPointerCapture ??= () => {};
+    Element.prototype.releasePointerCapture ??= () => {};
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  // 손가락 한 번 — 포인터(터치) → 호환 마우스 → click(detail 1)
+  function tap(el: Element, x: number, y: number) {
+    const at = { bubbles: true, cancelable: true, clientX: x, clientY: y };
+    act(() => {
+      el.dispatchEvent(
+        new PointerEvent("pointerdown", { ...at, pointerType: "touch" }),
+      );
+      el.dispatchEvent(
+        new PointerEvent("pointerup", { ...at, pointerType: "touch" }),
+      );
+      el.dispatchEvent(new MouseEvent("mousedown", { ...at, detail: 1 }));
+      el.dispatchEvent(new MouseEvent("mouseup", { ...at, detail: 1 }));
+      el.dispatchEvent(new MouseEvent("click", { ...at, detail: 1 }));
+    });
+  }
+
+  function Screen({ onTab }: { onTab: () => void }) {
+    return (
+      <>
+        <Sheet />
+        <a
+          href="/desk/expense"
+          data-testid="tab"
+          onClick={(e) => {
+            e.preventDefault();
+            onTab();
+          }}
+        >
+          가계부
+        </a>
+      </>
+    );
+  }
+  const tab = () => document.querySelector("[data-testid=tab]")!;
+  // [×] 는 오른쪽 위(360, 40), 하단 탭은 아래(200, 780)
+  const CLOSE = [360, 40] as const;
+  const TAB = [200, 780] as const;
+
+  it("[×] 로 닫으면 내려가는 동안 딤 · 시트는 누름을 흘리고 body 막기도 풀린다", async () => {
+    render(<Screen onTab={() => {}} />);
+    open();
+    await tick();
+    expect(document.body.style.pointerEvents).toBe("none"); // 열린 동안은 Radix 가 뒤 화면을 막는다
+    tap(closeButton()!, ...CLOSE);
+    await tick();
+    // 아직 내려가는 중(애니메이션이 끝나기 전)
+    expect(sheet()?.dataset.state).toBe("closed");
+    expect(overlay()?.dataset.state).toBe("closed");
+    expect(sheet()!.className).toContain(CLOSING_INERT);
+    expect(overlay()!.className).toContain(CLOSING_INERT);
+    expect(document.body.style.pointerEvents).not.toBe("none");
+  });
+
+  it("닫자마자 다른 자리(하단 탭)를 누르면 첫 탭이 정확히 한 번 동작한다", async () => {
+    const onTab = vi.fn();
+    render(<Screen onTab={onTab} />);
+    open();
+    await tick();
+    tap(closeButton()!, ...CLOSE);
+    await tick();
+    now += 150;
+    tap(tab(), ...TAB);
+    expect(onTab).toHaveBeenCalledTimes(1);
+  });
+
+  it("[저장] 따닥처럼 닫은 자리에 곧바로 온 두 번째 탭은 뒤 화면에 닿지 않는다 — 그 다음 탭은 동작한다", async () => {
+    const onTab = vi.fn();
+    render(<Screen onTab={onTab} />);
+    open();
+    await tick();
+    // 시트 바닥 [적용] 자리(하단 탭 바로 위)를 눌러 닫았다고 본다 — 닫은 누름의 자리가 하단 탭 근처
+    tap(closeButton()!, ...TAB);
+    await tick();
+    now += 180;
+    tap(tab(), TAB[0] + 6, TAB[1] - 8); // 따닥의 두 번째 — 삼킨다
+    expect(onTab).not.toHaveBeenCalled();
+    now += 400;
+    tap(tab(), ...TAB); // 따로 누른 탭 — 동작한다
+    expect(onTab).toHaveBeenCalledTimes(1);
+  });
+
+  it("닫은 지 FOLLOW_UP 이 지난 같은 자리 · 키보드로 누른 것은 삼키지 않는다", async () => {
+    const onTab = vi.fn();
+    render(<Screen onTab={onTab} />);
+    open();
+    await tick();
+    tap(closeButton()!, ...TAB);
+    await tick();
+    // 키보드(Enter) 의 click 은 detail 0
+    act(() => {
+      tab().dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true }),
+      );
+    });
+    expect(onTab).toHaveBeenCalledTimes(1);
+    now += 600;
+    tap(tab(), ...TAB);
+    expect(onTab).toHaveBeenCalledTimes(2);
+  });
+
+  it("시트 위 확인창만 닫히면(계속 작성) 열린 시트의 뒤 화면 막기는 그대로다", async () => {
+    render(<Sheet form dirty />);
+    open();
+    await tick();
+    act(() => closeButton()!.click());
+    await tick();
+    act(() => byText("계속 작성").click());
+    await tick();
+    expect(sheet()?.dataset.state).toBe("open");
+    expect(document.body.style.pointerEvents).toBe("none");
   });
 });

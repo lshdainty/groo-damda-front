@@ -9,6 +9,7 @@ import {
   type FocusAnchor,
   mergeRefs,
   useBackClose,
+  useInertWhileClosing,
   useOpenState,
   useWideSurface,
   withButtonSize,
@@ -97,6 +98,8 @@ function AlertDialog({
     if (busy) keep();
     else setOpen(false);
   });
+  // 사라지는 동안 뒤 화면을 막지 않는다(따닥의 두 번째 탭만 삼킨다 — overlay/closing-surface.ts)
+  useInertWhileClosing(open && modal);
   return (
     <AlertContext.Provider
       value={{ busy, setActionBusy, triggerRef, container, modal }}

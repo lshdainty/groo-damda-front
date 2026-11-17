@@ -3,6 +3,7 @@
  * groo-design recipes/shadcn/components/ui/bottom-sheet.tsx 를 첫 판으로 가져왔다 — 이 파일은 모양 정의,
  * 컴포넌트는 bottom-sheet.tsx 다(컴포넌트 파일은 컴포넌트만 내보낸다 — 빠른 새로 고침).
  */
+import { CLOSING_INERT } from "@/shared/ds/overlay/closing-surface";
 
 // 딤 — 300ms enter 로 나타나고 200ms exit 로 사라진다(모션 줄이기면 150ms). 끌다 놓아 제자리로 갈 때도 200ms exit 로 돌아오고,
 // 끄는 동안(바로 뒤 시트에 .vaul-dragging)은 손가락을 바로 따른다
@@ -13,6 +14,8 @@ export const SHEET_OVERLAY = [
   "data-[state=closed]:[--sheet-anim-duration:var(--motion-duration-d4)] data-[state=closed]:[--sheet-anim-ease:var(--motion-ease-exit)]",
   "motion-reduce:data-[state]:[--sheet-anim-duration:var(--motion-duration-d3)]",
   "[&:not(:has(+.vaul-dragging))]:[transition:opacity_var(--motion-duration-d4)_var(--motion-ease-exit)]!",
+  // 내려가는 200ms 동안 누름을 흘려보낸다 — 닫자마자 누른 하단 탭이 씹히지 않게(overlay/closing-surface.ts)
+  CLOSING_INERT,
 ].join(" ");
 
 // 시트 — 최대 480 가운데, 위 모서리 r6, 내용만큼(최대 화면 높이의 90%), 바닥 아래 안전 영역. z-modal-content 101.
@@ -32,6 +35,7 @@ export const SHEET_CONTENT = [
   "motion-reduce:data-[state=open]:[animation-name:fadeIn]! motion-reduce:data-[state=closed]:[animation-name:fadeOut]!",
   "motion-reduce:data-[state]:data-[vaul-drawer]:[--sheet-anim-duration:var(--motion-duration-d3)]",
   "motion-reduce:data-[vaul-drawer]:data-[vaul-snap-points]:[--sheet-move-duration:0s]",
+  CLOSING_INERT,
 ].join(" ");
 
 // 높이 상한 비율 — 위 max-h-[90dvh] 와 같은 값. 키보드가 떠 있는 동안은 보이는 영역 높이에 이 비율을 건다(useKeyboardViewport)
