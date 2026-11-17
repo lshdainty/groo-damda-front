@@ -1,3 +1,4 @@
+import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
@@ -7,6 +8,11 @@ import {
   unstable_HistoryRouter as HistoryRouter,
 } from "react-router-dom";
 
+import {
+  BottomSheet,
+  BottomSheetBody,
+  BottomSheetContent,
+} from "@/shared/ds/bottom-sheet";
 import { useBackClose } from "@/shared/ds/overlay";
 
 import { createAppHistory } from "./app-history";
@@ -156,5 +162,156 @@ describe("앱 히스토리 — 시트 [×] 뒤 곧바로 이동", () => {
     act(() => history.push("/desk/asset"));
     expect(window.location.pathname).toBe("/desk/asset");
     expect(heading()).toBe("asset");
+  });
+});
+
+/*
+ * QA 2026-11-18(iPhone · Safari 26) — 키보드가 뜬 채 [×] 로 닫은 뒤에는 Safari 뒤로 단추가 회색 · 앞으로 단추가 켜졌다.
+ * 키보드 없는 경로에서 맞았던 되돌림 대기(#621)가 빠진 것이 아니다 — 이어 누른 탭이 문서에 오지 않아(키보드가 내려가는 동안
+ * iOS 가 버린다) 이동(pushState)이 없었고, 되돌린 칸이 앞으로 칸으로 남은 것이다(이동이 없으면 어느 경로든 앞으로 단추가 켜진다 —
+ * 위 "머문 뒤 앞으로 가기" 시험). 키보드 경로에서도 시트는 키보드가 다 내려간 뒤에 닫히고(overlay/close-after-keyboard.ts),
+ * 그 뒤 이어 누른 탭이 앞으로 칸을 잘라 뒤로는 켜지고 앞으로는 꺼진다. 키보드가 내려가며 오는 보이는 영역 resize · scroll
+ * (스크롤 되돌림)을 함께 흉내 낸다.
+ */
+type FakeViewport = EventTarget & {
+  height: number;
+  offsetTop: number;
+  scale: number;
+};
+
+function KeypadSheet() {
+  const [open, setOpen] = React.useState(true);
+  return (
+    <BottomSheet form open={open} onOpenChange={setOpen}>
+      <BottomSheetContent title="거래 추가">
+        <BottomSheetBody>
+          <input aria-label="금액" inputMode="decimal" />
+        </BottomSheetBody>
+      </BottomSheetContent>
+    </BottomSheet>
+  );
+}
+
+describe("앱 히스토리 — 키보드가 뜬 채 [×] 뒤 이동", () => {
+  function setupKeypad() {
+    if (!globalThis.ResizeObserver) {
+      globalThis.ResizeObserver = class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      };
+    }
+    window.matchMedia = ((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof window.matchMedia;
+    const vv: FakeViewport = Object.assign(new EventTarget(), {
+      height: 844,
+      offsetTop: 0,
+      scale: 1,
+    });
+    Object.defineProperty(window, "visualViewport", {
+      value: vv,
+      configurable: true,
+    });
+    Object.defineProperty(document.documentElement, "clientHeight", {
+      value: 844,
+      configurable: true,
+    });
+    window.history.pushState(null, "", "/desk");
+    const history = createAppHistory();
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    const r = createRoot(host);
+    root = r;
+    const base = window.history.length;
+    act(() =>
+      r.render(
+        <HistoryRouter history={history}>
+          <KeypadSheet />
+          <Routes>
+            <Route path="/desk" element={<h1>home</h1>} />
+            <Route path="/desk/asset" element={<h1>asset</h1>} />
+          </Routes>
+        </HistoryRouter>,
+      ),
+    );
+    /** 키보드 — 보이는 영역 resize 와 함께 iOS 가 스크롤을 되돌리며 보내는 scroll */
+    const keyboard = async (up: boolean) => {
+      vv.height = up ? 494 : 844;
+      vv.offsetTop = up ? 120 : 0;
+      await act(async () => {
+        vv.dispatchEvent(new Event("scroll"));
+        vv.dispatchEvent(new Event("resize"));
+        window.dispatchEvent(new Event("scroll"));
+      });
+    };
+    const input = document.querySelector<HTMLInputElement>("input")!;
+    act(() => input.focus());
+    return { history, base, keyboard };
+  }
+
+  const closeSheet = () =>
+    act(() => {
+      document
+        .querySelector<HTMLButtonElement>("[data-slot=bottom-sheet-close]")!
+        .dispatchEvent(
+          new MouseEvent("click", { bubbles: true, cancelable: true }),
+        );
+    });
+
+  afterEach(() => {
+    delete (document.documentElement as { clientHeight?: number }).clientHeight;
+    delete (window as { visualViewport?: unknown }).visualViewport;
+  });
+
+  it.each([
+    ["키보드가 다 내려가고 시트가 닫힌 뒤", true],
+    ["시트가 닫히는 바로 그 틱(되돌림이 끝나기 전)", false],
+  ])(
+    "%s 누른 탭은 한 번에 옮기고 — 뒤로 켜짐 · 앞으로 꺼짐(닫은 시트 칸이 앞으로 칸으로 남지 않는다)",
+    async (_when, settledFirst) => {
+      const { history, base, keyboard } = setupKeypad();
+      await keyboard(true);
+      // 시트가 쌓은 칸 하나
+      expect(window.history.length).toBe(base + 1);
+      expect(window.history.state?.grooOverlayBack).toBe(true);
+
+      closeSheet();
+      // 키보드가 내려가는 동안 시트 · 칸은 그대로다
+      expect(window.history.state?.grooOverlayBack).toBe(true);
+
+      await keyboard(false); // 닫힌다 — 칸 되돌림(history.go(-1))이 걸린다
+      if (settledFirst) await settle();
+      act(() => history.push("/desk/asset"));
+      await settle();
+
+      expect(heading()).toBe("asset");
+      expect(window.location.pathname).toBe("/desk/asset");
+      // 홈 · 자산 두 칸뿐 — 앞으로 칸이 없다(앞으로 꺼짐)
+      expect(window.history.length).toBe(base + 1);
+      expect(window.history.state?.grooOverlayBack).not.toBe(true);
+
+      // 뒤로 켜짐 — 시트를 열기 전 화면(홈)으로
+      act(() => window.history.back());
+      await settle();
+      expect(window.location.pathname).toBe("/desk");
+      expect(heading()).toBe("home");
+    },
+  );
+
+  it("키보드가 내려가는 동안 온 뒤로 가기는 시트를 닫고(칸은 브라우저가 썼다) 화면은 그대로", async () => {
+    const { base, keyboard } = setupKeypad();
+    await keyboard(true);
+    act(() => window.history.back());
+    await settle();
+    await keyboard(false);
+    await settle();
+    expect(window.location.pathname).toBe("/desk");
+    expect(heading()).toBe("home");
+    expect(window.history.state?.grooOverlayBack).not.toBe(true);
+    expect(window.history.length).toBe(base + 1);
   });
 });

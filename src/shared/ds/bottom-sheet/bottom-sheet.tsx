@@ -14,10 +14,12 @@ import {
   surfaceTookOver,
   mergeRefs,
   useBackClose,
+  useCloseAfterKeyboard,
   useInertWhileClosing,
   useKeyboardViewport,
   useOpenState,
   useRefocusAfterBusy,
+  useReleasePress,
   useWideSurface,
   withButtonSize,
   type OpenChange,
@@ -198,13 +200,18 @@ function BottomSheet({
   React.useLayoutEffect(() => {
     openRef.current = open;
   });
+  // 키보드가 떠 있으면 먼저 내리고 다 내려간 뒤에 닫는다 — 내려가는 동안 iOS 가 버리는 다음 탭이 사라진 시트 뒤에 오지 않게
+  // (overlay/close-after-keyboard.ts). 닫는 길(닫기 · Esc · 딤 · 뒤로 가기 · 끌기 · [나가기])이 모두 여기를 지난다
+  const closeAfterKeyboard = useCloseAfterKeyboard(contentRef, () =>
+    setOpen(false),
+  );
   const leave = useLeaveConfirm({
     dirty,
     contentRef,
     container,
     modal,
     busy,
-    leave: () => setOpen(false),
+    leave: closeAfterKeyboard,
   });
   useRefocusAfterBusy(busy, contentRef);
   // 열린 폼이 바뀐 값을 가졌거나 저장 중이면 새로 고침 · 탭 닫기에 브라우저 기본 확인창(판단 (3))
@@ -513,6 +520,8 @@ const BottomSheetContent = React.forwardRef<
   ) => {
     const dsT = useDsText();
     const ctx = useSheetContext("BottomSheetContent");
+    // 키보드가 뜬 채 손가락으로 누르면 뗄 때 닫는다 — click 이 빠져도 닫히게(overlay/release-press.ts)
+    const closePress = useReleasePress(() => ctx.requestClose());
     return (
       <BottomSheetSurface
         ref={ref}
@@ -572,7 +581,10 @@ const BottomSheetContent = React.forwardRef<
             aria-label={dsT("common.close")}
             data-slot="bottom-sheet-close"
             className={SHEET_CLOSE}
-            onClick={() => ctx.requestClose()}
+            {...closePress.pointerHandlers}
+            onClick={() => {
+              if (!closePress.consumeClick()) ctx.requestClose();
+            }}
           >
             <X aria-hidden strokeWidth={2} />
           </button>
