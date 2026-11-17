@@ -603,6 +603,61 @@ describe("줄어들기", () => {
     expect(onCompactChange).toHaveBeenCalledWith(false);
   });
 
+  it("줄어든 바를 눌러 펴면 거리를 처음부터 다시 센다 — 다시 20 을 내려야 준다", () => {
+    const { box, scrollTo } = makeScrollBox();
+    render(<Live scrollRoot={box} />);
+    scrollTo(100);
+    scrollTo(200); // 아래로 100 — 줄었다
+    expect(nav()?.dataset.compact).toBe("true");
+    click(nav());
+    expect(nav()?.dataset.compact).toBeUndefined();
+    scrollTo(201); // 아래로 1 — 예전엔 남은 거리 100 에 더해져 바로 다시 줄었다
+    scrollTo(215); // 합 15
+    expect(nav()?.dataset.compact).toBeUndefined();
+    scrollTo(221); // 합 21 ≥ 20
+    expect(nav()?.dataset.compact).toBe("true");
+    box.remove();
+  });
+
+  it("보는 화면(screenKey)이 바뀌면 편다 — 같은 값이면 그대로, 처음 그릴 때는 손대지 않는다", () => {
+    const { box, scrollTo } = makeScrollBox();
+    render(<Bar scrollRoot={box} screenKey="/desk/expense" />);
+    expect(nav()?.dataset.compact).toBeUndefined();
+    scrollTo(100);
+    scrollTo(200);
+    expect(nav()?.dataset.compact).toBe("true");
+    // 같은 화면(쿼리만 바뀐 셸은 같은 값을 준다) — 그대로
+    render(<Bar scrollRoot={box} screenKey="/desk/expense" />);
+    expect(nav()?.dataset.compact).toBe("true");
+    // 다른 화면 — 편다
+    render(<Bar scrollRoot={box} screenKey="/desk/stats" />);
+    expect(nav()?.dataset.compact).toBeUndefined();
+    box.remove();
+  });
+
+  it("화면이 바뀐 뒤의 스크롤 복원은 세지 않는다 — 사용자가 다시 만지면(휠 · 터치 · 키 · 누르기) 그다음부터 센다", () => {
+    const { box, scrollTo } = makeScrollBox();
+    render(<Bar scrollRoot={box} screenKey="/a" />);
+    scrollTo(100);
+    scrollTo(200);
+    expect(nav()?.dataset.compact).toBe("true");
+    render(<Bar scrollRoot={box} screenKey="/b" />);
+    expect(nav()?.dataset.compact).toBeUndefined();
+    // 짧아진 본문에 깎였다가(300) 데이터가 와서 돌려놓는다(800) — 아래로 500 이지만 세지 않는다
+    scrollTo(300);
+    scrollTo(800);
+    expect(nav()?.dataset.compact).toBeUndefined();
+    // 사용자가 만진 다음 아래로 25 — 준다
+    act(() => {
+      document.dispatchEvent(new Event("wheel"));
+    });
+    scrollTo(810);
+    expect(nav()?.dataset.compact).toBeUndefined();
+    scrollTo(825);
+    expect(nav()?.dataset.compact).toBe("true");
+    box.remove();
+  });
+
   it("펼친 바를 눌러도 알리지 않는다", () => {
     const onCompactChange = vi.fn();
     render(<Bar compact={false} onCompactChange={onCompactChange} />);

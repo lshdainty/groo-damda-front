@@ -54,6 +54,10 @@ import { useDsText } from "@/shared/ds/i18n";
  *   가로 스크롤 · 시트 · 대화상자 · 떠 있는 목록(팝오버) 안의 스크롤은 세지 않는다. 줄어든 바 어디를 눌러도 펴진다 — 칸을 눌렀으면 그 탭으로도 간다.
  *   줄어들어도 칸마다 이름은 남는다(라벨은 보이지 않게만 — sr-only). 라벨은 줄어들기 시작할 때 사라지고 다 펴진 뒤(200ms) 나타난다.
  *   화면 키보드가 열리면 바를 가린다(visualViewport 가 화면보다 150 넘게 작을 때).
+ *   보는 화면이 바뀌어도 펴진다 — 셸이 screenKey(주소 · 화면 안 Tabs 로 고른 화면)를 주면 값이 바뀔 때 편다. 같은 화면의 쿼리(?month= 등)만
+ *   바뀌면 셸이 같은 값을 주어 그대로 둔다. 새 화면의 스크롤(뒤로 와서 돌려놓는 스크롤 · 짧아진 본문에 깎인 스크롤)은 사용자가 다시 만지기
+ *   (휠 · 터치 · 키 · 누르기) 전까지 거리로 세지 않고 위치만 적는다 — 돌려놓은 스크롤이 바를 곧바로 다시 줄이지 않게.
+ *   펴질 때(누르기 · 위로 스크롤 · 화면 바뀜)는 스크롤 거리를 처음부터 다시 센다 — 남은 거리 때문에 조금만 내려도 바로 다시 줄지 않게.
  * 좁은 칸 — 칸 폭이 + 원 44 보다 좁으면(320 보다 좁은 화면 — 페이지 확대, Layout "지원 폭") 줄어든 바처럼 라벨을 숨기고(이름은 sr-only 로
  *   남는다) + 원을 36 으로 둔다. 칸 폭은 바를 재서(ResizeObserver) 안쪽 폭 − 칸 사이 ÷ 5 로 낸다 — data-narrow. 320 이상은 걸리지 않는다.
  * 다시 누르기 — 지금 탭(current)을 누르면 링크로 옮기지 않고(같은 주소를 쌓지 않는다) onReselect 를 부른다(그 칸의 onClick 대신).
@@ -86,6 +90,8 @@ export interface BottomNavigationProps extends React.HTMLAttributes<HTMLElement>
   onCompactChange?: (compact: boolean) => void;
   /** 줄어들기를 셀 스크롤 상자 — 주지 않으면 화면 안의 세로 스크롤 모두(시트 · 가로 줄 빼고) */
   scrollRoot?: ScrollRoot;
+  /** 보는 화면 — 바뀌면 바를 편다(주소 · 화면 안 Tabs 로 고른 화면). 같은 화면의 쿼리만 바뀌면 같은 값을 준다 */
+  screenKey?: string;
 }
 
 const BottomNavigation = React.forwardRef<HTMLElement, BottomNavigationProps>(
@@ -95,6 +101,7 @@ const BottomNavigation = React.forwardRef<HTMLElement, BottomNavigationProps>(
       defaultCompact = false,
       onCompactChange,
       scrollRoot,
+      screenKey,
       className,
       onClick,
       children,
@@ -158,12 +165,30 @@ const BottomNavigation = React.forwardRef<HTMLElement, BottomNavigationProps>(
     }, []);
     const labelsHidden = compact || !labelsShown || narrow;
 
-    // 줄어들기 — 세로 스크롤마다 방향별로 거리를 센다(방향이 바뀌면 다시)
+    // 줄어들기 — 세로 스크롤마다 방향별로 거리를 센다(방향이 바뀌면 다시). 펴질 때 · 화면이 바뀔 때 처음부터 다시 센다.
+    // settling — 화면이 바뀐 뒤 사용자가 다시 만지기 전의 스크롤(복원 · 깎임)은 위치만 적고 거리로 세지 않는다
+    const countRef = React.useRef({
+      direction: 0,
+      distance: 0,
+      settling: false,
+    });
+    React.useEffect(() => {
+      if (compact) return;
+      countRef.current.direction = 0;
+      countRef.current.distance = 0;
+    }, [compact]);
+    // 보는 화면이 바뀌면 편다(처음 그릴 때는 그대로)
+    const screenRef = React.useRef(screenKey);
+    React.useEffect(() => {
+      if (screenRef.current === screenKey) return;
+      screenRef.current = screenKey;
+      countRef.current = { direction: 0, distance: 0, settling: true };
+      setCompactRef.current(false);
+    }, [screenKey]);
     const lastScrolledRef = React.useRef<Element | null>(null);
     React.useEffect(() => {
       const lastY = new WeakMap<Element, number>();
-      let direction = 0;
-      let distance = 0;
+      const count = () => countRef.current;
       const doc = document;
       if (doc.scrollingElement)
         lastY.set(doc.scrollingElement, doc.scrollingElement.scrollTop);
@@ -186,29 +211,42 @@ const BottomNavigation = React.forwardRef<HTMLElement, BottomNavigationProps>(
           return;
         }
         lastScrolledRef.current = target;
+        const c = count();
         if (y <= TOP_ZONE) {
-          direction = 0;
-          distance = 0;
+          c.direction = 0;
+          c.distance = 0;
           setCompactRef.current(false);
           return;
         }
+        // 새 화면의 스크롤 복원 · 깎임 — 위치만 적었다(위)
+        if (c.settling) return;
         const next = y > prev ? 1 : -1;
-        if (next !== direction) {
-          direction = next;
-          distance = 0;
+        if (next !== c.direction) {
+          c.direction = next;
+          c.distance = 0;
         }
-        distance += Math.abs(y - prev);
-        if (direction === 1 && distance >= SHRINK_AFTER)
+        c.distance += Math.abs(y - prev);
+        if (c.direction === 1 && c.distance >= SHRINK_AFTER)
           setCompactRef.current(true);
-        else if (direction === -1 && distance >= EXPAND_AFTER)
+        else if (c.direction === -1 && c.distance >= EXPAND_AFTER)
           setCompactRef.current(false);
       };
+      // 사용자가 다시 만지면(휠 · 터치 · 키 · 누르기 — 스크롤바 끌기 포함) 그다음 스크롤부터 센다
+      const settle = () => {
+        count().settling = false;
+      };
+      const inputs = ["wheel", "touchstart", "keydown", "pointerdown"];
       doc.addEventListener("scroll", onScroll, {
         capture: true,
         passive: true,
       });
-      return () =>
+      for (const type of inputs)
+        doc.addEventListener(type, settle, { capture: true, passive: true });
+      return () => {
         doc.removeEventListener("scroll", onScroll, { capture: true });
+        for (const type of inputs)
+          doc.removeEventListener(type, settle, { capture: true });
+      };
     }, []);
 
     const keyboardOpen = useKeyboardOpen();
