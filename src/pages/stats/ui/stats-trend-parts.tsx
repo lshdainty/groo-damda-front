@@ -1,4 +1,4 @@
-import { measureTickWidth, niceTickLabels } from "@/shared/lib/groo/axisWidth";
+import { measureTickWidth, niceValueAxis } from "@/shared/lib/groo/axisWidth";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -23,6 +23,7 @@ import {
   chartAxisProps,
   chartGridProps,
   chartVar,
+  chartXAxisProps,
   formatAxisWon,
 } from "@/shared/ds/chart";
 import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
@@ -192,17 +193,19 @@ export function TrendSection({
             <CartesianGrid {...chartGridProps} yAxisId="income" />
             <XAxis
               dataKey="month"
-              interval="preserveStartEnd"
-              minTickGap={16}
-              {...chartAxisProps()}
+              {...chartXAxisProps(data.map((d) => d.tick))}
             />
             <YAxis
               yAxisId="income"
               domain={[0, incomeScale.max]}
               ticks={incomeScale.ticks}
-              tickFormatter={(v) => mask(formatAxisWon(Number(v)))}
+              tickFormatter={(v) =>
+                mask(formatAxisWon(Number(v), incomeScale.ticks))
+              }
               width={measureTickWidth(
-                incomeScale.ticks.map((v) => mask(formatAxisWon(v))),
+                incomeScale.ticks.map((v) =>
+                  mask(formatAxisWon(v, incomeScale.ticks)),
+                ),
               )}
               {...chartAxisProps(dual ? { color: "blue" } : {})}
             />
@@ -212,9 +215,13 @@ export function TrendSection({
                 orientation="right"
                 domain={[0, expenseAxis.max]}
                 ticks={expenseAxis.ticks}
-                tickFormatter={(v) => mask(formatAxisWon(Number(v)))}
+                tickFormatter={(v) =>
+                  mask(formatAxisWon(Number(v), expenseAxis.ticks))
+                }
                 width={measureTickWidth(
-                  expenseAxis.ticks.map((v) => mask(formatAxisWon(v))),
+                  expenseAxis.ticks.map((v) =>
+                    mask(formatAxisWon(v, expenseAxis.ticks)),
+                  ),
                 )}
                 {...chartAxisProps({ color: "red" })}
               />
@@ -528,16 +535,14 @@ export function SavingsBarsSection({
             <CartesianGrid {...chartGridProps} />
             <XAxis
               dataKey="month"
-              interval="preserveStartEnd"
-              minTickGap={16}
-              {...chartAxisProps()}
+              {...chartXAxisProps(data.map((d) => d.tick))}
             />
             <YAxis
               domain={[axis.min, axis.max]}
               ticks={axis.ticks}
-              tickFormatter={(v) => mask(formatAxisWon(Number(v)))}
+              tickFormatter={(v) => mask(formatAxisWon(Number(v), axis.ticks))}
               width={measureTickWidth(
-                axis.ticks.map((v) => mask(formatAxisWon(v))),
+                axis.ticks.map((v) => mask(formatAxisWon(v, axis.ticks))),
               )}
               {...chartAxisProps()}
             />
@@ -654,21 +659,22 @@ export function CatTrendSection({
         <Chart label={name} height={chartHeight(place, 180, 220)}>
           <BarChart data={rows}>
             <CartesianGrid {...chartGridProps} />
-            <XAxis dataKey="label" {...chartAxisProps()} />
+            <XAxis
+              dataKey="label"
+              {...chartXAxisProps(m.catTrendData.map((d) => d.tick))}
+            />
             <YAxis
-              tickFormatter={(v) => mask(formatAxisWon(Number(v)))}
-              width={measureTickWidth(
-                niceTickLabels(
-                  rows.map((r) =>
-                    colored.reduce(
-                      (sum, _, i) => sum + Number(r[`c${i}`] ?? 0),
-                      0,
-                    ),
-                  ),
-                  (v) => mask(formatAxisWon(v)),
-                ),
-              )}
               {...chartAxisProps()}
+              // 그리는 눈금 = 폭을 잰 눈금 = 단위를 정한 눈금(쌓은 막대 — 칸마다 합)
+              {...niceValueAxis(
+                rows.map((r) =>
+                  colored.reduce(
+                    (sum, _, i) => sum + Number(r[`c${i}`] ?? 0),
+                    0,
+                  ),
+                ),
+                (v, ticks) => mask(formatAxisWon(v, ticks)),
+              )}
             />
             <ChartTooltip
               content={

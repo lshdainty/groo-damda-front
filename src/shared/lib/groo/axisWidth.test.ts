@@ -20,17 +20,6 @@ describe("measureTickWidth 여백 (축 끝 글자)", () => {
   });
 });
 
-describe("niceTickLabels", () => {
-  it("값 범위의 nice 눈금 글자를 낸다 — 음수가 있으면 음수 눈금도", async () => {
-    const { niceTickLabels } = await import("./axisWidth");
-    const f = (v: number) => String(v);
-    expect(niceTickLabels([0, 100], f)).not.toContain("-");
-    expect(niceTickLabels([-100, 50], f).some((l) => l.startsWith("-"))).toBe(
-      true,
-    );
-  });
-});
-
 /**
  * QA B5-1 — 홈 "11월 수입 · 지출" 축이 "3만 / 2.3만 / 1.5만 / ,500 / 0" 이었다. 폭은 nice 눈금("3만")으로 재고
  * recharts 는 자기 눈금(7,500 간격)을 그려 가장 긴 "7,500" 의 앞자리가 잘렸다. niceValueAxis 는 그리는 눈금과
@@ -59,10 +48,46 @@ describe("niceValueAxis — 그리는 눈금 = 폭을 잰 눈금 (B5-1)", () => 
           : Number(l.replace(/,/g, ""));
         expect(back).toBe(v);
       }
+      // 한 축은 한 단위 — 0 말고는 모두 만 단위이거나 모두 쉼표 정수
+      const units = new Set(
+        labels.filter((l) => l !== "0").map((l) => l.endsWith("만")),
+      );
+      expect(units.size).toBe(1);
       expect(a.domain[1]).toBeGreaterThanOrEqual(max);
       expect(a.width).toBe(measureTickWidth(labels));
     },
   );
+
+  it("최대 1.5만 — '5,000 · 1만 · 1.5만' 이 아니라 '0.5만 · 1만 · 1.5만'(한 축은 한 단위), 8,000 이면 모두 쉼표 정수", async () => {
+    const { formatAxisWon } = await import("@/shared/ds/chart");
+    const man = niceValueAxis([0, 15_000], formatAxisWon);
+    expect(man.ticks.map(man.tickFormatter)).toEqual([
+      "0",
+      "0.5만",
+      "1만",
+      "1.5만",
+    ]);
+    // 폭도 그리는 글자("0.5만")로 잰다
+    expect(man.width).toBe(measureTickWidth(["0", "0.5만", "1만", "1.5만"]));
+    const won = niceValueAxis([0, 7_500], formatAxisWon);
+    expect(won.ticks.map(won.tickFormatter)).toEqual([
+      "0",
+      "2,000",
+      "4,000",
+      "6,000",
+      "8,000",
+    ]);
+  });
+
+  it("글자 함수는 눈금 목록을 함께 받는다 — 그리는 눈금과 같은 목록", () => {
+    const seen: (readonly number[])[] = [];
+    const a = niceValueAxis([0, 28_000], (v, ticks) => {
+      seen.push(ticks);
+      return String(v);
+    });
+    a.tickFormatter(10_000);
+    for (const t of seen) expect(t).toEqual(a.ticks);
+  });
 
   it("음수가 있으면 0 아래 눈금까지 재서 부호가 잘리지 않는다", () => {
     const f = (v: number) => (v < 0 ? `−${Math.abs(v)}` : String(v));

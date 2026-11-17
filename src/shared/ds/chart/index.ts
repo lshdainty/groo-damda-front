@@ -42,6 +42,9 @@ export {
   chartDonutThickness,
   chartGridProps,
   chartVar,
+  chartXTickFullLabels,
+  chartXTickInterval,
+  chartXTickLabels,
   formatAxisWon,
   formatWon,
   type AssignChartColorsOptions,
@@ -49,4 +52,6 @@ export {
   type ChartColor,
   type ChartTone,
   type ChartColored,
+  type ChartXTick,
 } from "./chart-variants";
+export { chartXAxisProps } from "./chart-x-axis";

@@ -6,8 +6,17 @@ import {
 } from "@/shared/lib/groo/fixed-bulk-path";
 import { useTranslation } from "react-i18next";
 import { formatChangeRate } from "@/shared/lib/groo/format";
-import { formatDailyTick, formatMonthTicks } from "@/shared/lib/date";
-import { assignChartColors, type ChartColored } from "@/shared/ds/chart";
+import {
+  dailyAxisTick,
+  formatDailyTick,
+  formatMonthTicks,
+  monthAxisTicks,
+} from "@/shared/lib/date";
+import {
+  assignChartColors,
+  type ChartColored,
+  type ChartXTick,
+} from "@/shared/ds/chart";
 import type { DateRange } from "@/shared/ds/date-picker";
 import { chartColorOf, type ChartKey } from "@/shared/lib/groo/chart-palette";
 import { amountFor, countableTx, splitFixed } from "@/entities/expense";
@@ -473,6 +482,7 @@ export function useStatsModel(lifted?: StatsState) {
     .sort((a, b) => b.totalAmount - a.totalAmount)
     .slice(0, 3);
   const catTrendTicks = formatMonthTicks(monthlyBuckets);
+  const catTrendAxis = monthAxisTicks(monthlyBuckets);
   const catTrendData = monthlyBuckets.map((b, i) => {
     const parts = catTrendTop3.map(
       (c) =>
@@ -482,6 +492,7 @@ export function useStatsModel(lifted?: StatsState) {
     );
     return {
       label: catTrendTicks[i]!,
+      tick: catTrendAxis[i]!,
       parts,
       sum: parts.reduce((s, v) => s + v, 0),
       isCur: i === monthlyBuckets.length - 1,
@@ -723,6 +734,8 @@ function matrixAdd(m: number[][], r: number, c: number, v: number) {
 
 export type TrendDatum = {
   month: string;
+  /** 가로 눈금 — 보이는 눈금에만 연도를 붙이도록 연도 없는 글 · 연도 글 · 해를 함께 둔다(ds `chartXAxisProps`) */
+  tick: ChartXTick;
   income: number;
   expense: number;
   savings: number;
@@ -799,7 +812,7 @@ export function buildTrendData({
     const days = Math.round((toDay.getTime() - fromDay.getTime()) / dayMs) + 1;
     const byDay = new Map<
       string,
-      { income: number; expense: number; label: string }
+      { income: number; expense: number; label: string; tick: ChartXTick }
     >();
     for (let i = 0; i < days; i++) {
       const d = new Date(fromDay);
@@ -810,6 +823,7 @@ export function buildTrendData({
         income: 0,
         expense: 0,
         label: formatDailyTick(d, newYear),
+        tick: dailyAxisTick(d),
       });
     }
     // 서버 집계와 같은 규칙 — 환불된 것 · 아직 안 온 것 · 카드 이월은 세지 않는다(`countableTx` 한 곳)
@@ -821,6 +835,7 @@ export function buildTrendData({
     }
     return Array.from(byDay.values()).map((v) => ({
       month: v.label,
+      tick: v.tick,
       income: v.income,
       expense: v.expense,
       savings: v.income - v.expense,
@@ -837,8 +852,10 @@ export function buildTrendData({
       : monthlyBuckets;
   // 모든 버킷이 같은 해면 "1월" 만, 해가 섞이면 "2026. 1." (날짜 규칙 — 0 을 채우지 않는다)
   const monthTickLabels = formatMonthTicks(buckets);
+  const monthTicks = monthAxisTicks(buckets);
   return buckets.map((b, i) => ({
     month: monthTickLabels[i]!,
+    tick: monthTicks[i]!,
     income: b.totalIncome,
     expense: b.totalExpense,
     savings: b.totalIncome - b.totalExpense,

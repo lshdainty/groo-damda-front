@@ -198,6 +198,19 @@ export const formatMonthTicks = (
   );
 
 /**
+ * 월 가로 눈금 — 차트가 **보이는 눈금**에 연도를 붙이도록 월 글 · 연월 글 · 해를 함께 넘긴다(ds `chartXAxisProps`).
+ * 눈금이 촘촘해 사이 눈금을 건너뛰면 해가 바뀌는 칸이 빠질 수 있어, 연도는 차트가 남긴 눈금 목록을 보고 붙인다.
+ */
+export const monthAxisTicks = (
+  rows: readonly { year: number; month: number }[],
+): { label: string; yearLabel: string; year: number }[] =>
+  rows.map((r) => ({
+    label: formatMonthShort(r.month),
+    yearLabel: formatYearMonthDot(new Date(r.year, r.month - 1, 1)),
+    year: r.year,
+  }));
+
+/**
  * 일별 눈금 — 점 표기(연도 없이, 0 을 채우지 않는다): ko "11. 5." / en "Nov 5".
  * `withYear` 는 해가 바뀌는 첫 눈금에만 준다: ko "2026. 1. 1." / en "Jan 1, 2026". 앱과 같다.
  */
@@ -211,6 +224,15 @@ export const formatDailyTick = (
   const md = `${d.getMonth() + 1}. ${d.getDate()}.`;
   return withYear ? `${d.getFullYear()}. ${md}` : md;
 };
+
+/** 일별 가로 눈금 하나 — 날 글 · 연도 붙은 날 글 · 해(ds `chartXAxisProps` 가 보이는 눈금에만 연도를 붙인다) */
+export const dailyAxisTick = (
+  d: Date,
+): { label: string; yearLabel: string; year: number } => ({
+  label: formatDailyTick(d),
+  yearLabel: formatDailyTick(d, true),
+  year: d.getFullYear(),
+});
 
 /**
  * 요일 · 시각 — International Design 날짜 표 "요일 · 시각": ko "11월 7일 (토) 오전 9:05" / en "Sat, Nov 7 at 9:05 AM".

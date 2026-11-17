@@ -1,4 +1,4 @@
-import { measureTickWidth, niceTickLabels } from "@/shared/lib/groo/axisWidth";
+import { niceValueAxis } from "@/shared/lib/groo/axisWidth";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { CompareBar } from "./compare-bar";
@@ -521,17 +521,15 @@ export function CompareWeekdaySection({
             <CartesianGrid {...chartGridProps} />
             <XAxis dataKey="day" {...chartAxisProps()} />
             <YAxis
-              tickFormatter={(v) => mask(formatAxisWon(Number(v)))}
-              width={measureTickWidth(
-                niceTickLabels(
-                  data.flatMap((d) => [
-                    Number(d.now ?? 0),
-                    Number(d.prev ?? 0),
-                  ]),
-                  (v) => mask(formatAxisWon(v)),
-                ),
-              )}
               {...chartAxisProps()}
+              // 그리는 눈금 = 폭을 잰 눈금 = 단위를 정한 눈금. 값은 보이는 계열만(계열을 끄면 축이 남은 계열에 맞는다)
+              {...niceValueAxis(
+                data.flatMap((d) => [
+                  ...(hidden.has("now") ? [] : [Number(d.now ?? 0)]),
+                  ...(hidden.has("prev") ? [] : [Number(d.prev ?? 0)]),
+                ]),
+                (v, ticks) => mask(formatAxisWon(v, ticks)),
+              )}
             />
             <ChartTooltip
               content={

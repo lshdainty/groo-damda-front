@@ -11,6 +11,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   chartAxisProps,
+  chartXAxisProps,
   chartGridProps,
   formatAxisWon,
 } from "@/shared/ds/chart";
@@ -20,6 +21,7 @@ import { cn } from "@/shared/lib/cn";
 import {
   formatMonthDay,
   formatMonthTicks,
+  monthAxisTicks,
   formatYearMonth,
   parseLocalDate,
 } from "@/shared/lib/date";
@@ -535,7 +537,10 @@ function IncomeExpenseChart({
           <Chart label={chartName} legendId={legendId} height={280}>
             <BarChart data={data} barGap={4}>
               <CartesianGrid {...chartGridProps} />
-              <XAxis dataKey="label" {...chartAxisProps()} />
+              <XAxis
+                dataKey="label"
+                {...chartXAxisProps(monthAxisTicks(trend))}
+              />
               <YAxis
                 {...chartAxisProps()}
                 // 그리는 눈금 = 폭을 잰 눈금(자동 눈금이면 "7,500" 이 잘렸다 — B5-1). 금액 숨기기 시 축 · 툴팁 · 타일도 가린다
@@ -544,7 +549,7 @@ function IncomeExpenseChart({
                     ...(off.has("income") ? [] : [d.income]),
                     ...(off.has("expense") ? [] : [d.expense]),
                   ]),
-                  (v) => (hidden ? MASK : formatAxisWon(v)),
+                  (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
                 )}
               />
               <ChartTooltip

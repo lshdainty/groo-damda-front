@@ -20,9 +20,10 @@ const AXIS_PAD = 16;
 const estimate = (s: string): number =>
   [...s].reduce((w, c) => w + (c > "ᄀ" ? 11 : 7), 0);
 
-export function measureTickWidth(labels: readonly string[]): number {
+/** 눈금 글자 가운데 가장 긴 것의 폭(여백 없이) — 세로축 폭 · 가로 눈금 솎기가 같이 쓴다 */
+export function measureTextWidth(labels: readonly string[]): number {
   if (typeof document === "undefined" || labels.length === 0) {
-    return Math.max(0, ...labels.map(estimate)) + AXIS_PAD;
+    return Math.max(0, ...labels.map(estimate));
   }
   const span = document.createElement("span");
   span.style.cssText = `position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0;font-size:${AXIS_TICK_FONT_SIZE};font-weight:400;font-variant-numeric:tabular-nums;`;
@@ -37,7 +38,11 @@ export function measureTickWidth(labels: readonly string[]): number {
     span.remove();
   }
   if (max === 0) max = Math.max(0, ...labels.map(estimate));
-  return Math.ceil(max) + AXIS_PAD;
+  return Math.ceil(max);
+}
+
+export function measureTickWidth(labels: readonly string[]): number {
+  return measureTextWidth(labels) + AXIS_PAD;
 }
 
 export function useAxisWidth(labels: readonly string[]): number {
@@ -54,19 +59,6 @@ export function useAxisWidth(labels: readonly string[]): number {
   return useMemo(() => measureTickWidth(labels), [key, fontTick]);
 }
 
-/**
- * 값 범위에서 nice 눈금 글자를 뽑아 폭 측정에 넘긴다. 0 은 늘 포함, 음수가 있으면 음수 눈금도 나온다.
- *
- * **눈금도 같이 넘겨야 맞는다.** 이 글자는 `niceAxis` 눈금(1·2·2.5·5×10ⁿ)의 글자인데, `YAxis` 에 `ticks` 를
- * 주지 않으면 recharts 는 자기 셈(5눈금)으로 다른 눈금을 그린다 — 3만 축에서 이 함수는 "3만" 으로 폭을 잡고
- * recharts 는 "7,500" 을 그려 앞자리가 잘렸다(QA B5-1). 새 축은 [niceValueAxis] 로 눈금 · 범위 · 폭을 한 번에 받는다.
- */
-export const niceTickLabels = (
-  values: readonly number[],
-  format: (v: number) => string,
-): string[] =>
-  niceAxis(Math.min(0, ...values), Math.max(0, ...values)).ticks.map(format);
-
 /** `YAxis` 에 펼치는 값 축 — 그리는 눈금과 폭을 잰 눈금이 같은 목록이다 */
 export interface ValueAxisProps {
   domain: [number, number];
@@ -77,18 +69,22 @@ export interface ValueAxisProps {
 
 /**
  * 값 축 하나 — `niceAxis` 눈금(앱 `niceChartAxis` 와 같은 셈)을 recharts 에 그대로 주고, 그 눈금 글자 가운데 가장 긴 것으로
- * 폭을 잰다(스펙 chart.md "세로축의 폭은 가장 긴 글자가 잘리지 않게"). `<YAxis {...niceValueAxis(값들, 글자)} {...chartAxisProps()} />`.
+ * 폭을 잰다(스펙 chart.md "세로축의 폭은 가장 긴 글자가 잘리지 않게"). `<YAxis {...niceValueAxis(값들, formatAxisWon)} {...chartAxisProps()} />`.
  * 값은 지금 보이는 계열만 넘긴다 — 계열을 끄면 축이 남은 계열에 맞게 다시 잡힌다(recharts 자동 범위와 같다).
+ *
+ * 글자([format])는 눈금 목록을 함께 받는다 — 한 축은 한 단위라(chart.md "축 · 격자") 눈금 하나의 글자도 축 전체를 보고
+ * 정한다. 그리는 글자와 폭을 잰 글자가 같은 목록 · 같은 셈이다.
  */
 export function niceValueAxis(
   values: readonly number[],
-  format: (v: number) => string,
+  format: (v: number, ticks: readonly number[]) => string,
 ): ValueAxisProps {
   const a = niceAxis(Math.min(0, ...values), Math.max(0, ...values));
+  const tickFormatter = (v: number) => format(v, a.ticks);
   return {
     domain: [a.min, a.max],
     ticks: a.ticks,
-    tickFormatter: format,
-    width: measureTickWidth(a.ticks.map(format)),
+    tickFormatter,
+    width: measureTickWidth(a.ticks.map(tickFormatter)),
   };
 }
