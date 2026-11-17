@@ -6,6 +6,7 @@ import {
   isMoneyPath,
   screenFloor,
   screenTitleKey,
+  documentTitleKey,
 } from "./shell";
 
 // 폰 화면 바탕(02-005 C) — 카드 화면 · 띠 화면 · 흰 화면
@@ -35,6 +36,21 @@ describe("screenFloor", () => {
   });
   it("옛 카드 상세 길(/desk/card/:id)은 띠 화면이 아니다 — 걷었다", () => {
     expect(screenFloor("/desk/card/12")).toBe("strip");
+  });
+});
+
+describe("documentTitleKey — 브라우저 탭 제목", () => {
+  it("가계부 묶음은 머리 제목이 모두 가계부여도 문서 제목은 고른 탭 이름이다(tabs.md)", () => {
+    expect(documentTitleKey("/desk/expense")).toBe("expense");
+    expect(documentTitleKey("/desk/asset")).toBe("asset");
+    expect(documentTitleKey("/desk/stats")).toBe("stats");
+    expect(documentTitleKey("/desk/budget")).toBe("budget");
+    // 머리 제목은 그대로 가계부
+    expect(screenTitleKey("/desk/asset")).toBe("expense");
+  });
+  it("자산 상세 · 그 밖 화면은 머리 제목과 같다", () => {
+    expect(documentTitleKey("/desk/asset/12")).toBe("assetDetail");
+    expect(documentTitleKey("/desk/todo")).toBe("todoNav");
   });
 });
 
