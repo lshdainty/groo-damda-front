@@ -120,7 +120,6 @@ export const cardKeys = {
   catalogDetail: (id: number) => [...cardKeys.all, "catalog", id] as const,
   performance: (assetRowId: number, yearMonth: string) =>
     [...cardKeys.all, "performance", assetRowId, yearMonth] as const,
-  benefitMappings: () => [...cardKeys.all, "benefit-mappings"] as const,
 };
 
 export const recurringTransactionKeys = {
