@@ -5,9 +5,13 @@
  */
 import { CLOSING_INERT } from "@/shared/ds/overlay/closing-surface";
 
+import { OVERLAY_DIM_BOUNDS } from "@/shared/ds/overlay/dim-bounds";
+
 // 딤 — overlay-dim 라이트 0.50 · 다크 0.65, z-alert 300(L5 — 열린 대화상자 · 시트 위). 100ms 로 나타나고 사라진다
 export const ALERT_OVERLAY = [
-  "fixed inset-0 z-(--z-alert) bg-[var(--overlay-dim-light)] dark:bg-[var(--overlay-dim-dark)]",
+  // 덮는 범위 — 화면 위아래로 넘친다(키보드 아래 띠까지, overlay/dim-bounds.ts)
+  OVERLAY_DIM_BOUNDS,
+  "z-(--z-alert) bg-[var(--overlay-dim-light)] dark:bg-[var(--overlay-dim-dark)]",
   "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:[--tw-animation-duration:var(--motion-duration-d2)] data-[state=open]:ease-[var(--motion-ease-enter)]",
   "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:[--tw-animation-duration:var(--motion-duration-d2)] data-[state=closed]:ease-[var(--motion-ease-exit)]",
   // 사라지는 100ms 동안 누름을 흘려보낸다(overlay/closing-surface.ts)

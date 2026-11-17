@@ -14,7 +14,21 @@ import {
   BottomSheetContent,
   BottomSheetFooter,
 } from "@/shared/ds/bottom-sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogTitle,
+} from "@/shared/ds/alert-dialog";
 import { Dialog, DialogBody, DialogContent } from "@/shared/ds/dialog";
+import {
+  MenuSheet,
+  MenuSheetContent,
+  MenuSheetGroup,
+  MenuSheetItem,
+} from "@/shared/ds/menu-sheet";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -541,139 +555,111 @@ describe("iPhone Safari 26 — 떠 있는 주소 알약 · 입력 도구줄은 �
   );
 });
 
-describe("딤 — 키보드가 떠도 inset 0 그대로, 레이아웃 뷰포트 아래 띠는 문서 쪽 거울이 덮는다", () => {
-  // 2026-11-17 QA(iPhone 17 Pro · Safari 26) — 키보드가 뜨면 보이는 영역 아래 끝 = 레이아웃 뷰포트 아래 끝(714)이고 그 아래
-  // (주소 알약 둘레 ~ 키보드 윗변, 약 98pt)에 문서가 그려진다. fixed 인 딤은 — 그 ::after 까지(#616) — 거기 그려지지 않아 뒤
-  // 페이지가 비쳤다(띠 245,246,250 · 위 딤 127). 띠는 body 에 둔 position: absolute 덮개(딤의 거울)가 덮는다.
-  const band = () =>
-    document.querySelector<HTMLElement>("[data-slot=keyboard-band]");
+describe("딤 — 늘 화면 위아래로 넘쳐 키보드 아래 띠까지 덮는다(dim-bounds.ts)", () => {
+  // 2026-11-17 QA(iPhone 17 Pro · Safari 26) — 키보드가 뜨면 레이아웃 뷰포트 아래 띠(주소 알약 · 입력 도구줄 둘레 ~ 키보드 윗변)에
+  // 뒤 페이지가 비쳤다. 딤 ::after(#616)도 body 끝 absolute 거울(#620)도 못 칠했고, fixed 인 상자 자체를 화면 위아래로 넉넉히
+  // 넘치게 둔 층만 띠 · 도구줄 뒤 · 키보드 윗변 둥근 부분까지 칠했다. 실제 그림은 실기기로만 — 여기서는 클래스 · 거울 없음 ·
+  // 표면 동작(#612 · #613)이 그대로인지를 잠근다.
+  const BOUNDS = ["fixed", "inset-x-0", "-top-[100lvh]", "-bottom-[100lvh]"];
 
-  function expectDim(overlay: HTMLElement, surface: HTMLElement) {
-    expect(overlay.nextElementSibling).toBe(surface);
-    expect(overlay.className).toMatch(/(^|\s)fixed(\s|$)/);
-    expect(overlay.className).toMatch(/(^|\s)inset-0(\s|$)/);
-    // 딤 상자 자체는 그대로 — 위치 · 높이를 인라인으로 받지 않는다. 걷어 낸 ::after 덮개(#616)는 남지 않는다
+  function expectDim(overlay: HTMLElement | null, surface?: HTMLElement) {
+    expect(overlay).not.toBeNull();
+    if (surface) expect(overlay!.nextElementSibling).toBe(surface);
+    const classes = overlay!.className.split(/\s+/);
+    expect(classes).toEqual(expect.arrayContaining(BOUNDS));
+    // 레이아웃 뷰포트만 덮던 inset-0 · 걷어 낸 ::after 덮개(#616)는 남지 않는다
+    expect(classes).not.toContain("inset-0");
+    expect(overlay!.className).not.toMatch(/:after:/);
+    // 범위는 클래스 몫 — 키보드 훅 · vaul 이 자리를 인라인으로 덮어쓰지 않는다
     for (const prop of ["top", "bottom", "height", "max-height", "inset"]) {
-      expect(overlay.style.getPropertyValue(prop)).toBe("");
+      expect(overlay!.style.getPropertyValue(prop)).toBe("");
     }
-    expect(overlay.className).not.toMatch(/:after:/);
   }
 
-  /** 덮개 — 문서 쪽(absolute · body 바로 아래)에, 딤과 같은 모양(class · data-state)으로, 레이아웃 뷰포트 아래 끝(top)부터 */
-  function expectBand(overlay: HTMLElement, top: number, layout = top) {
-    const el = band()!;
-    expect(el).not.toBeNull();
-    expect(el.parentElement).toBe(document.body);
-    expect(el.getAttribute("aria-hidden")).toBe("true");
-    expect(el.className).toBe(overlay.className);
-    expect(el.getAttribute("data-state")).toBe(
-      overlay.getAttribute("data-state"),
-    );
-    expect(el.style.position).toBe("absolute");
-    expect(el.style.top).toBe(`${top}px`);
-    expect(el.style.left).toBe("0px");
-    expect(el.style.right).toBe("0px");
-    expect(el.style.bottom).toBe("auto");
-    // 띠(화면 − 레이아웃 뷰포트)보다 넉넉히 — 화면 높이 이상
-    expect(parseFloat(el.style.height)).toBeGreaterThanOrEqual(layout);
-    // 딤처럼 누를 수 있다 — Radix 가 딤에 넣는 pointer-events 를 따른다(body 는 열린 동안 none)
-    expect(el.style.pointerEvents).toBe(overlay.style.pointerEvents);
-  }
+  const band = () => document.querySelector("[data-slot=keyboard-band]");
 
-  it("키보드가 없으면 덮개를 만들지 않는다 — 키보드 없는 시트의 모습은 그대로", async () => {
+  it("시트 · 대화상자 · 확인창 · Menu Sheet 의 딤이 모두 넘침 범위를 쓴다", async () => {
     render(<Sheet />);
-    await fire(vv, "resize");
-    expect(band()).toBeNull();
-    const overlay = document.querySelector<HTMLElement>(
-      "[data-slot=bottom-sheet-overlay]",
-    )!;
-    expectDim(overlay, sheet());
+    expectDim(
+      document.querySelector<HTMLElement>("[data-slot=bottom-sheet-overlay]"),
+      sheet(),
+    );
+    render(
+      <Dialog open>
+        <DialogContent title="거래 상세">
+          <DialogBody>내용</DialogBody>
+        </DialogContent>
+      </Dialog>,
+    );
+    expectDim(
+      document.querySelector<HTMLElement>("[data-slot=dialog-overlay]"),
+    );
+    render(
+      <AlertDialog open>
+        <AlertDialogContent>
+          <AlertDialogTitle>거래를 삭제할까요?</AlertDialogTitle>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction>삭제</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>,
+    );
+    expectDim(
+      document.querySelector<HTMLElement>("[data-slot=alert-dialog-overlay]"),
+    );
+    render(
+      <MenuSheet open>
+        <MenuSheetContent title="제어">
+          <MenuSheetGroup>
+            <MenuSheetItem label="수정" />
+          </MenuSheetGroup>
+        </MenuSheetContent>
+      </MenuSheet>,
+    );
+    expectDim(
+      document.querySelector<HTMLElement>("[data-slot=bottom-sheet-overlay]"),
+    );
   });
 
-  it("시트 — 숫자 키패드(714 · 410 · 밀림 304): 시트만 올라가고 딤은 inset 0, 덮개가 714 아래에 · 내리면 걷는다", async () => {
+  it("시트 — 키보드가 떠도 딤은 그대로(거울 덮개를 만들지 않는다), 시트만 보이는 영역에 · 내리면 시트 값만 걷는다", async () => {
     render(<Sheet />);
     const overlay = document.querySelector<HTMLElement>(
       "[data-slot=bottom-sheet-overlay]",
     )!;
+    const before = overlay.className;
+    const bodyChildren = document.body.childElementCount;
+
+    // 숫자 키패드(714 · 410 · 밀림 304) — 시트 아래 변은 보이는 영역 아래 끝(#613), 높이 상한은 보이는 높이의 90%(#612)
     setViewport({ layout: 714, visual: 410, top: 304 });
     await fire(vv, "resize");
     expect(sheet().getAttribute("data-keyboard")).toBe("fit");
+    expect(sheet().style.bottom).toBe("0px");
     expect(sheet().style.maxHeight).toBe(`${Math.floor(410 * 0.9)}px`);
     expectDim(overlay, sheet());
-    expectBand(overlay, 714);
-    // 키보드가 바뀌어도(한글 — 384 · 274) 덮개는 하나, 자리 그대로
+    expect(overlay.className).toBe(before);
+    expect(band()).toBeNull();
+    expect(document.body.childElementCount).toBe(bodyChildren);
+
+    // 한글 키보드(384 · 274) · 밀기만(scroll)도 같다
     setViewport({ layout: 714, visual: 384, top: 274 });
     await fire(vv, "resize");
-    expect(document.querySelectorAll("[data-slot=keyboard-band]")).toHaveLength(
-      1,
-    );
-    expectBand(overlay, 714);
+    await fire(vv, "scroll");
+    expect(sheet().style.maxHeight).toBe(`${Math.floor(384 * 0.9)}px`);
+    expectDim(overlay, sheet());
+    expect(band()).toBeNull();
 
     setViewport({ layout: 714, visual: 714 });
     await fire(vv, "resize");
+    expect(sheet().hasAttribute("data-keyboard")).toBe(false);
+    expect(sheet().style.bottom).toBe("");
+    expect(sheet().style.maxHeight).toBe("");
     expectDim(overlay, sheet());
-    expect(band()).toBeNull();
+    expect(overlay.className).toBe(before);
+    expect(document.body.childElementCount).toBe(bodyChildren);
   });
 
-  it("문서가 스크롤돼 있으면(폰 셸은 문서가 스크롤한다) 그만큼 아래 — 기댈 상자 위 끝에서 레이아웃 뷰포트 아래 끝까지", async () => {
-    render(<Sheet />);
-    // 문서가 300 스크롤돼 있다 — 덮개가 기대는 상자(문서)의 위 끝이 레이아웃 뷰포트에서 −300
-    const rect = Element.prototype.getBoundingClientRect;
-    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
-      function (this: Element) {
-        if (this.getAttribute("data-slot") === "keyboard-band") {
-          const top = parseFloat((this as HTMLElement).style.top) || 0;
-          return DOMRect.fromRect({ y: top - 300, width: 390, height: 1 });
-        }
-        return rect.call(this);
-      },
-    );
-    setViewport({ layout: 714, visual: 410, top: 304 });
-    await fire(vv, "resize");
-    const overlay = document.querySelector<HTMLElement>(
-      "[data-slot=bottom-sheet-overlay]",
-    )!;
-    expectBand(overlay, 714 + 300, 714);
-    // 다시 맞춰도 쌓이지 않는다
-    await fire(vv, "scroll");
-    expectBand(overlay, 714 + 300, 714);
-  });
-
-  it("딤을 따라간다 — 닫힘(data-state) · 끄는 동안 vaul 이 넣는 투명도 · 전환", async () => {
-    render(<Sheet />);
-    const overlay = document.querySelector<HTMLElement>(
-      "[data-slot=bottom-sheet-overlay]",
-    )!;
-    setViewport({ layout: 714, visual: 410, top: 304 });
-    await fire(vv, "resize");
-    await act(async () => {
-      overlay.style.transition = "none";
-      overlay.style.opacity = "0.4";
-    });
-    expect(band()!.style.opacity).toBe("0.4");
-    expect(band()!.style.transition).toBe("none");
-    await act(async () => {
-      overlay.style.removeProperty("transition");
-      overlay.style.removeProperty("opacity");
-      overlay.setAttribute("data-state", "closed");
-    });
-    expect(band()!.style.opacity).toBe("");
-    expect(band()!.style.transition).toBe("");
-    expect(band()!.getAttribute("data-state")).toBe("closed");
-    // 자리는 덮개 몫 — 딤 속성을 옮겨도 그대로
-    expectBand(overlay, 714);
-  });
-
-  it("시트가 닫혀 사라지면 덮개도 걷는다", async () => {
-    render(<Sheet />);
-    setViewport({ layout: 714, visual: 410, top: 304 });
-    await fire(vv, "resize");
-    expect(band()).not.toBeNull();
-    act(() => root.render(null));
-    expect(band()).toBeNull();
-  });
-
-  it("대화상자 — 키보드가 뜨면 가운데만 옮기고 딤은 inset 0, 덮개가 레이아웃 뷰포트 아래에", async () => {
+  it("대화상자 — 키보드가 뜨면 가운데만 옮기고 딤은 그대로, 거울 덮개 없음", async () => {
     render(
       <Dialog open form>
         <DialogContent title="거래 추가">
@@ -693,6 +679,6 @@ describe("딤 — 키보드가 떠도 inset 0 그대로, 레이아웃 뷰포트 
     await fire(vv, "resize");
     expect(box.style.top).toBe(`${100 + 624 / 2}px`);
     expectDim(overlay, box);
-    expectBand(overlay, 1024);
+    expect(band()).toBeNull();
   });
 });

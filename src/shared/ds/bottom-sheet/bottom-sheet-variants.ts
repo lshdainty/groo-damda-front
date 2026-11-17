@@ -5,10 +5,14 @@
  */
 import { CLOSING_INERT } from "@/shared/ds/overlay/closing-surface";
 
+import { OVERLAY_DIM_BOUNDS } from "@/shared/ds/overlay/dim-bounds";
+
 // 딤 — 300ms enter 로 나타나고 200ms exit 로 사라진다(모션 줄이기면 150ms). 끌다 놓아 제자리로 갈 때도 200ms exit 로 돌아오고,
 // 끄는 동안(바로 뒤 시트에 .vaul-dragging)은 손가락을 바로 따른다
 export const SHEET_OVERLAY = [
-  "fixed inset-0 z-(--z-modal) bg-[var(--overlay-dim-light)] dark:bg-[var(--overlay-dim-dark)]",
+  // 덮는 범위 — 화면 위아래로 넘친다(키보드 아래 띠까지, overlay/dim-bounds.ts)
+  OVERLAY_DIM_BOUNDS,
+  "z-(--z-modal) bg-[var(--overlay-dim-light)] dark:bg-[var(--overlay-dim-dark)]",
   "[animation-duration:var(--sheet-anim-duration)]! [animation-timing-function:var(--sheet-anim-ease)]!",
   "data-[state=open]:[--sheet-anim-duration:var(--motion-duration-d6)] data-[state=open]:[--sheet-anim-ease:var(--motion-ease-enter)]",
   "data-[state=closed]:[--sheet-anim-duration:var(--motion-duration-d4)] data-[state=closed]:[--sheet-anim-ease:var(--motion-ease-exit)]",
