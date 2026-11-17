@@ -3,7 +3,7 @@
   "source": "specs/components/resizable.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "f49ebd82767d"
+    "sha256": "b484b20eae48"
   },
   "slots": {
     "group": "나눈 자리 — 목록 | 상세 두 패널",

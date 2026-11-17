@@ -3,7 +3,7 @@
   "source": "specs/components/field.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "f49ebd82767d"
+    "sha256": "b484b20eae48"
   },
   "slots": {
     "root": "Field — 머리 · 입력 · 꼬리를 세로로 쌓는다",
@@ -278,7 +278,7 @@
       "state": "enabled",
       "slot": "headerAction",
       "prop": "marginY",
-      "note": "버튼일 때 — Button ghost · neutralSubtle · xsmall(32) · 오른쪽 flush — 머리 높이 22 를 바꾸지 않게 위아래로 넘친다. 누르는 영역은 버튼 그대로(44). 머리 값 글(Slider)은 줄 높이 22 라 넘치지 않는다(0)"
+      "note": "버튼일 때 — Button ghost · neutralSubtle · xsmall(32) — 글자만 있어 flush 없음 — 머리 높이 22 를 바꾸지 않게 위아래로 넘친다. 누르는 영역은 버튼 그대로(44). 머리 값 글(Slider)은 줄 높이 22 라 넘치지 않는다(0)"
     },
     {
       "rule": 0,
