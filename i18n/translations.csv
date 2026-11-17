@@ -29,6 +29,7 @@ common,add,추가,Add
 common,next,다음,Next
 common,prev,이전,Previous
 common,loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again in a moment.
+common,screenError,문제가 생겼어요,Something went wrong
 common,searchPlaceholder,검색...,Search...
 common,searchEmpty,검색 결과가 없어요,No results found
 common,totalCount,총 {{count}}건,{{count}} total
