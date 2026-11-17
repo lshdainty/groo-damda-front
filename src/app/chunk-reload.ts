@@ -6,7 +6,11 @@
  * "Failed to fetch dynamically imported module"(크롬). 잡는 곳이 없으면 React 가 루트를 통째로 내려 #root 가 비고 흰 화면이
  * 된다(QA 2026-11-17 web_dt_after_close3 — 배포 dfe45d5e 직후).
  *
- * Vite 는 조각 받기에 실패하면 window 에 `vite:preloadError` 를 쏜다 — 새 index.html 을 받도록 한 번 새로 고친다. 고친 뒤에도
+ * Vite 는 조각 받기에 실패하면 window 에 `vite:preloadError` 를 쏜다 — 새 index.html 을 받도록 한 번 새로 고친다. 미리 받기
+ * (modulepreload · CSS)만이 아니라 조각 자체의 import() 가 거절돼도 쏜다 — 빌드가 화면마다 import() 를 __vitePreload 로 감싸고 그
+ * 안이 `baseModule().catch(handlePreloadError)` 다(vite 8.3.8 dist/node/chunks/node.js 의 preload · 우리 빌드 산출물에서 확인).
+ * Safari 가 import() 를 TypeError("Importing a module script failed.")로 거절해도 이 길을 탄다. 감싸지 않은 import() 나
+ * Vite 밖에서 난 실패는 화면 경계 · 앱 경계가 같은 판정(isChunkLoadError)으로 받아 같은 표식으로 한 번만 고친다. 고친 뒤에도
  * 또 실패하면(서버가 정말 아픈 경우) 다시 고치지 않는다 — 고친 시각을 sessionStorage 에 남겨 RELOAD_WINDOW 안에서는 한 번만.
  * 그때는 오류가 화면 경계(router/RouteErrorBoundary)까지 가서 "문제가 생겼어요" + [다시 시도] 로 보인다.
  */
@@ -15,11 +19,14 @@ const RELOAD_WINDOW = 10_000;
 
 let reloading = false;
 
+// 엔진마다 글이 다르다 — Safari "Importing a module script failed." · 크롬 "Failed to fetch dynamically imported module: <주소>" ·
+// 파이어폭스 "error loading dynamically imported module: <주소>" · Vite 의 CSS 미리 받기 "Unable to preload CSS for <주소>"
 const CHUNK_ERROR =
   /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS/i;
 
-/** 지연 청크(화면 코드 조각)를 받지 못한 오류인가 */
+/** 지연 청크(화면 코드 조각)를 받지 못한 오류인가 — 글로 가르고, 이름이 ChunkLoadError 인 것(webpack 식 · 일부 도구)도 같다 */
 export function isChunkLoadError(error: unknown): boolean {
+  if (error instanceof Error && error.name === "ChunkLoadError") return true;
   const message = error instanceof Error ? error.message : String(error ?? "");
   return CHUNK_ERROR.test(message);
 }

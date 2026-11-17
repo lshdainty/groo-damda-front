@@ -20,8 +20,13 @@ afterEach(() => {
   host?.remove();
   root = null;
   host = null;
+  offPreload?.();
+  offPreload = null;
+  vi.doUnmock("../chunk-reload");
   vi.restoreAllMocks();
 });
+
+let offPreload: (() => void) | null = null;
 
 function Nav() {
   const navigate = useNavigate();
@@ -35,9 +40,24 @@ function Boom(): never {
   throw new TypeError("Cannot read properties of undefined (reading 'x')");
 }
 
-async function mount(asset: React.ReactNode) {
+/**
+ * reload 를 주면 새로 고침을 그 함수로 센다(jsdom 의 location.reload 는 바꿀 수 없다). 앱처럼 vite:preloadError 듣기도 건다 —
+ * 경계와 같은 모듈이라 고침 표식 · 걸어 둔 참을 함께 쓴다.
+ */
+async function mount(asset: React.ReactNode, reload?: () => void) {
   // chunk-reload 의 모듈 상태(고침을 걸어 둔 참)가 시험마다 새로 시작하게 다시 불러온다
   vi.resetModules();
+  if (reload) {
+    vi.doMock("../chunk-reload", async (importOriginal) => {
+      const m = await importOriginal<typeof import("../chunk-reload")>();
+      return {
+        ...m,
+        reloadOnceForStaleChunk: () => m.reloadOnceForStaleChunk(reload),
+      };
+    });
+    const chunk = await import("../chunk-reload");
+    offPreload = chunk.installChunkReload(reload);
+  }
   const { RouteErrorBoundary } = await import("./RouteErrorBoundary");
   // 잡은 오류를 React 가 콘솔에 남긴다 — 시험 출력만 조용히
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -108,5 +128,146 @@ describe("화면 경계", () => {
     await mount(<Stale />);
     expect(failure()).toBeTruthy();
     expect(host?.querySelector("h1")?.textContent).toBe("문제가 생겼어요");
+  });
+});
+
+/*
+ * QA(iPhone 17 Pro · Safari 26, dev f70e3f87) — 배포 전에 연 탭에서 "통계" 로 옮기자 TypeError: Importing a module script failed.
+ * 로 #root 가 비었다. 그 탭은 #621 이전 코드(복구 장치 없음)였다. 지금 코드는 두 길로 받는다 — Vite 가 감싼 import() 는
+ * vite:preloadError 를 먼저 쏘고(vite 8 의 __vitePreload: baseModule().catch(handlePreloadError)), 감싸지 않은 import() 는
+ * 거절만 온다. 어느 길이든, 어느 엔진의 글이든 새로 고침은 한 번이고 10초 안에는 되풀이하지 않는다.
+ */
+
+/** Vite 8 빌드가 화면 import() 를 감싸는 모양 그대로(dist/node/chunks/node.js 의 preload 끝부분) */
+function vitePreload<T>(baseModule: () => Promise<T>): Promise<T> {
+  return baseModule().catch((err: unknown) => {
+    const e = new Event("vite:preloadError", { cancelable: true });
+    (e as Event & { payload?: unknown }).payload = err;
+    window.dispatchEvent(e);
+    if (!e.defaultPrevented) throw err;
+    return undefined as T;
+  });
+}
+
+const chunkErrors: [string, Error][] = [
+  ["Safari", new TypeError("Importing a module script failed.")],
+  [
+    "크롬",
+    new TypeError(
+      "Failed to fetch dynamically imported module: https://x/assets/StatsPage-abc.js",
+    ),
+  ],
+  [
+    "파이어폭스",
+    new TypeError(
+      "error loading dynamically imported module: https://x/assets/StatsPage-abc.js",
+    ),
+  ],
+  [
+    "ChunkLoadError",
+    Object.assign(new Error("Loading chunk 12 failed."), {
+      name: "ChunkLoadError",
+    }),
+  ],
+];
+
+describe("엔진마다 다른 조각 받기 실패 — 새로 고침 한 번, 10초 안에는 되풀이하지 않는다", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it.each(chunkErrors)(
+    "%s — Vite 가 감싼 import()(vite:preloadError 먼저)",
+    async (_, error) => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(1_000_000);
+      const reload = vi.fn();
+      const Stale = lazy(() => vitePreload(() => Promise.reject(error)));
+      await mount(<Stale />, reload);
+      expect(reload).toHaveBeenCalledTimes(1);
+      expect(failure()).toBeNull();
+      expect(host?.querySelector('[data-slot="route-loading"]')).toBeTruthy();
+
+      // 고친 뒤 새 문서에서 5초 만에 또 실패 — 고치지 않고 실패를 보인다
+      act(() => root?.unmount());
+      offPreload?.();
+      vi.setSystemTime(1_005_000);
+      const Again = lazy(() => vitePreload(() => Promise.reject(error)));
+      await mount(<Again />, reload);
+      expect(reload).toHaveBeenCalledTimes(1);
+      expect(failure()).toBeTruthy();
+    },
+  );
+
+  it.each(chunkErrors)(
+    "%s — 감싸지 않은 import()(거절만 온다)",
+    async (_, error) => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(2_000_000);
+      const reload = vi.fn();
+      const Stale = lazy(() => Promise.reject(error));
+      await mount(<Stale />, reload);
+      expect(reload).toHaveBeenCalledTimes(1);
+      expect(failure()).toBeNull();
+
+      act(() => root?.unmount());
+      offPreload?.();
+      vi.setSystemTime(2_009_000);
+      const Again = lazy(() => Promise.reject(error));
+      await mount(<Again />, reload);
+      expect(reload).toHaveBeenCalledTimes(1);
+      expect(failure()).toBeTruthy();
+    },
+  );
+
+  it("조각 받기 실패가 아닌 오류는 새로 고치지 않는다", async () => {
+    const reload = vi.fn();
+    await mount(<Boom />, reload);
+    expect(reload).not.toHaveBeenCalled();
+    expect(failure()).toBeTruthy();
+  });
+});
+
+describe("앱 경계 — 라우터 밖에서 멈춰도 #root 가 비지 않는다", () => {
+  async function mountApp(node: React.ReactNode) {
+    vi.resetModules();
+    const reload = vi.fn();
+    vi.doMock("../chunk-reload", async (importOriginal) => {
+      const m = await importOriginal<typeof import("../chunk-reload")>();
+      return {
+        ...m,
+        reloadOnceForStaleChunk: () => m.reloadOnceForStaleChunk(reload),
+      };
+    });
+    const { AppErrorBoundary } = await import("./RouteErrorBoundary");
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    const r = createRoot(host);
+    root = r;
+    await act(async () =>
+      r.render(<AppErrorBoundary>{node}</AppErrorBoundary>),
+    );
+    await act(async () => {
+      await new Promise((res) => setTimeout(res, 0));
+    });
+    return reload;
+  }
+
+  it("라우터 밖 부품이 그리다 멈추면 실패 결과(새로 고치지 않는다)", async () => {
+    const reload = await mountApp(<Boom />);
+    expect(failure()).toBeTruthy();
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it("라우트 밖 지연 부품(시트 · 알림 안의 lazy)이 옛 조각을 못 받으면 한 번 새로 고친다", async () => {
+    const Stale = lazy(() =>
+      Promise.reject(new TypeError("Importing a module script failed.")),
+    );
+    const reload = await mountApp(
+      <Suspense fallback={null}>
+        <Stale />
+      </Suspense>,
+    );
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(failure()).toBeNull();
   });
 });
