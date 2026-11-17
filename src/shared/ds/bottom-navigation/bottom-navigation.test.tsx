@@ -716,10 +716,9 @@ describe("화면 키보드", () => {
       removeEventListener: (_: string, fn: () => void) => listeners.delete(fn),
     };
     vi.stubGlobal("visualViewport", vv);
-    Object.defineProperty(window, "innerHeight", {
-      value: 800,
-      configurable: true,
-    });
+    vi.spyOn(document.documentElement, "clientHeight", "get").mockReturnValue(
+      800,
+    );
     render(<Bar compact={false} />);
     expect(nav()?.className).not.toContain("invisible");
     act(() => {
@@ -732,5 +731,27 @@ describe("화면 키보드", () => {
       listeners.forEach((fn) => fn());
     });
     expect(nav()?.className).not.toContain("invisible");
+  });
+
+  it("키보드가 뜬 채 페이지가 스크롤돼 innerHeight 가 줄어도(iOS Safari) 키보드로 본다 — 레이아웃 화면은 clientHeight", () => {
+    const listeners = new Set<() => void>();
+    const vv = {
+      height: 800,
+      scale: 1,
+      addEventListener: (_: string, fn: () => void) => listeners.add(fn),
+      removeEventListener: (_: string, fn: () => void) => listeners.delete(fn),
+    };
+    vi.stubGlobal("visualViewport", vv);
+    vi.spyOn(document.documentElement, "clientHeight", "get").mockReturnValue(
+      800,
+    );
+    render(<Bar compact={false} />);
+    act(() => {
+      // 키보드 320 이 뜨고 페이지가 200 스크롤돼 innerHeight 만 줄었다 — innerHeight 로 재면 120 이라 키보드가 아니다
+      vi.stubGlobal("innerHeight", 600);
+      vv.height = 480;
+      listeners.forEach((fn) => fn());
+    });
+    expect(nav()?.className).toContain("invisible");
   });
 });
