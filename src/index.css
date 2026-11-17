@@ -528,8 +528,10 @@
   --safe-right: env(safe-area-inset-right, 0px);
 }
 #root {
-  border-left: env(safe-area-inset-left, 0px) solid var(--color-bg-layer-basement);
-  border-right: env(safe-area-inset-right, 0px) solid var(--color-bg-layer-basement);
+  border-left: env(safe-area-inset-left, 0px) solid
+    var(--color-bg-layer-basement);
+  border-right: env(safe-area-inset-right, 0px) solid
+    var(--color-bg-layer-basement);
   --safe-left: 0px;
   --safe-right: 0px;
 }
