@@ -201,19 +201,18 @@ export const formatDateRangeShortYear = (
 };
 
 /**
- * 월 눈금 — 모두 같은 해면 월만(ko "1월" · en "Jan", 0 을 채우지 않는다), 해가 섞이면 연월(ko "2026. 1." · en "Jan 2026").
- * 통계 추이 · 순자산 추이 같은 월별 차트의 가로 눈금. 앱 `monthLabels` 와 같다.
+ * 월 눈금 — 월만(ko "1월" · en "Jan", 0 을 채우지 않는다). 눈금 사이에 해가 바뀌면 **해가 바뀌는 첫 눈금에만** 연월
+ * (ko "2026. 1." · en "Jan 2026") — 스펙 chart.md "날짜 · 시각 눈금". 통계 추이 · 순자산 추이 같은 월별 차트의 가로 눈금.
+ * 예전엔 해가 섞이면 눈금마다 연도를 붙여 글이 길어지고 "2026. 10. 2026. 11." 처럼 맞붙었다(QA B5-2).
  */
 export const formatMonthTicks = (
   rows: readonly { year: number; month: number }[],
-): string[] => {
-  const same = rows.length > 0 && rows.every((r) => r.year === rows[0]!.year);
-  return rows.map((r) =>
-    same
-      ? formatMonthShort(r.month)
-      : formatYearMonthDot(new Date(r.year, r.month - 1, 1)),
+): string[] =>
+  rows.map((r, i) =>
+    i > 0 && r.year !== rows[i - 1]!.year
+      ? formatYearMonthDot(new Date(r.year, r.month - 1, 1))
+      : formatMonthShort(r.month),
   );
-};
 
 /**
  * 일별 눈금 — 점 표기(연도 없이, 0 을 채우지 않는다): ko "11. 5." / en "Nov 5".

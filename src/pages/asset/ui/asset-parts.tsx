@@ -175,10 +175,11 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
       >
         <LineChart
           data={data}
-          // 해가 섞이면 마지막 눈금 "2026. 11." 이 점 끝(오른쪽 가장자리)을 넘지 않게 오른쪽을 비운다
+          // 마지막 눈금이 연도를 단 칸("2026. 1." — 해가 바뀌는 첫 눈금)이면 점 끝(오른쪽 가장자리)을 넘지 않게 오른쪽을 비운다
           margin={{
             top: 8,
-            right: tickLabels.some((l) => l.length > 4) ? 32 : 8,
+            right:
+              (tickLabels[tickLabels.length - 1]?.length ?? 0) > 4 ? 32 : 8,
             left: 0,
             bottom: 0,
           }}
