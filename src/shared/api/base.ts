@@ -50,6 +50,13 @@ export type QuietRequestConfig = AxiosRequestConfig & {
   confirmWrite?: boolean;
   /** 보낼 때 기기가 오프라인이었나 — 요청 인터셉터가 적는다(검수 3차 M1). 오류가 난 때가 아니라 보낸 때로 가른다 */
   sentOffline?: boolean;
+  /**
+   * 이 요청의 401 은 "세션이 끊겼다" 가 아니라 **이 요청의 답**이다 — 응답 인터셉터가 `/login?expired=1` 로 보내지 않고
+   * 그대로 호출처에 던진다. 로그인 단계 자신(인가 코드 교환)과 로그아웃이 쓴다(`AUTH_STEP`).
+   * 교환의 401 을 세션 만료로 읽으면 로그인 화면이 곧장 그루 계정 로그인으로 다시 보내, 거절된 로그인이
+   * 실패 화면 없이 맴돈다(보안 점검 CLI-6).
+   */
+  unauthorizedIsAnswer?: boolean;
 };
 
 /**
@@ -73,6 +80,16 @@ export const SAFE_TO_RETRY: Readonly<QuietRequestConfig> = Object.freeze({
  */
 export const NOT_A_SAVE: Readonly<QuietRequestConfig> = Object.freeze({
   confirmWrite: false,
+});
+
+/**
+ * 로그인 · 로그아웃 단계 자신의 요청 표식 — 저장이 아니고(`NOT_A_SAVE`), 401 도 세션 만료가 아니라 이 단계의 답이다.
+ * 인가 코드 교환이 거절되면(401) 콜백 화면이 갈 자리를 정하고, 로그아웃의 401 은 "이미 끊긴 세션" 이라
+ * 로그아웃한 뒤 화면으로 그대로 간다.
+ */
+export const AUTH_STEP: Readonly<QuietRequestConfig> = Object.freeze({
+  confirmWrite: false,
+  unauthorizedIsAnswer: true,
 });
 
 /**
@@ -181,7 +198,11 @@ apiClient.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    if (error.response?.status === 401) {
+    if (
+      error.response?.status === 401 &&
+      // 로그인 · 로그아웃 단계 자신의 401 은 호출처가 받는다 — 세션 만료가 아니다(AUTH_STEP)
+      !(error?.config as QuietRequestConfig | undefined)?.unauthorizedIsAnswer
+    ) {
       if (!isRedirectingToLogin) {
         isRedirectingToLogin = true;
         clearAuthenticated();

@@ -617,6 +617,10 @@ group,deleteConfirm.title,그룹 삭제,Delete Group
 login,sso.description,그루 계정으로 로그인해주세요.,Sign in with your 그루 account.
 login,sso.login,그루 계정으로 로그인,Sign in with 그루
 login,authenticating,인증 중…,Authenticating…
+login,signedOut.title,로그아웃했어요.,You're signed out.
+login,signedOut.grooAccountHint,그루 계정은 이 브라우저에 아직 로그인돼 있어요. 여럿이 쓰는 컴퓨터라면 그루 계정에서도 로그아웃해주세요.,"Your 그루 account is still signed in on this browser. On a shared computer, sign out of your 그루 account too."
+login,signedOut.grooAccountLogout,그루 계정에서도 로그아웃,Sign out of 그루 account too
+login,signedOut.grooAccountDone,그루 계정에서도 로그아웃했어요.,You're signed out of your 그루 account too.
 expense,form.icon,아이콘,Icon
 expense,form.color,색상,Color
 dashboard,loading,로딩 중...,Loading...

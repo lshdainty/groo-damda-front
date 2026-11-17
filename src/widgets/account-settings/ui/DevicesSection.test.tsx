@@ -37,6 +37,7 @@ const sessions = vi.hoisted(() => ({
     isRefetching: false,
   },
   revoke: vi.fn(),
+  revokeAll: vi.fn(),
 }));
 vi.mock("@/features/session", () => ({
   useDeviceSessions: () => sessions.q,
@@ -46,7 +47,7 @@ vi.mock("@/features/session", () => ({
     variables: undefined,
   }),
   useRevokeAllDevicesMutation: () => ({
-    mutateAsync: vi.fn(),
+    mutateAsync: sessions.revokeAll,
     isPending: false,
   }),
 }));
@@ -83,7 +84,9 @@ beforeEach(() => {
     isRefetching: false,
   };
   sessions.revoke = vi.fn().mockResolvedValue(undefined);
+  sessions.revokeAll = vi.fn().mockResolvedValue(undefined);
   toastError.mockClear();
+  logout.mockClear();
 });
 afterEach(() => {
   act(() => root.unmount());
@@ -202,5 +205,46 @@ describe("DevicesSection", () => {
       toastError.mock.calls[0]![0].action.onClick();
     });
     expect(sessions.revoke).toHaveBeenCalledTimes(2);
+  });
+});
+
+// 기기를 끊으면 서버가 그 기기의 그루 계정 로그인까지 끝낸다 — 이 브라우저를 끊은 뒤의 로그아웃은
+// 계정 메뉴의 로그아웃(담다만)과 달리 그루 계정 범위다(보안 점검 CLI-6).
+describe("기기 끊기 뒤 로그아웃 범위(CLI-6)", () => {
+  const dialog = () => document.querySelector("[role=alertdialog]");
+  const confirm = () =>
+    [...dialog()!.querySelectorAll("button")].find((b) =>
+      b.className.includes("bg-bg-critical-solid"),
+    )!;
+  const rowLogout = (index: number) =>
+    container.querySelectorAll<HTMLButtonElement>(
+      "[data-slot=list-suffix] button",
+    )[index]!;
+
+  it("지금 이 브라우저를 끊으면 그루 계정 범위로 로그아웃한다(서버가 그 기기의 그루 계정 로그인까지 끝낸다)", async () => {
+    mount(true);
+    await act(async () => rowLogout(0).click());
+    await act(async () => confirm().click());
+    expect(sessions.revoke).toHaveBeenCalledWith("s1");
+    expect(logout.mock.calls).toEqual([[{ scope: "grooAccount" }]]);
+  });
+
+  it("다른 기기를 끊으면 이 브라우저는 로그아웃하지 않는다", async () => {
+    mount(true);
+    await act(async () => rowLogout(1).click());
+    await act(async () => confirm().click());
+    expect(sessions.revoke).toHaveBeenCalledWith("s2");
+    expect(logout).not.toHaveBeenCalled();
+  });
+
+  it("모든 기기에서 로그아웃하면 그루 계정 범위로 로그아웃한다", async () => {
+    mount(true);
+    const all = [...container.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("devices.logoutAll"),
+    )!;
+    await act(async () => all.click());
+    await act(async () => confirm().click());
+    expect(sessions.revokeAll).toHaveBeenCalledTimes(1);
+    expect(logout.mock.calls).toEqual([[{ scope: "grooAccount" }]]);
   });
 });

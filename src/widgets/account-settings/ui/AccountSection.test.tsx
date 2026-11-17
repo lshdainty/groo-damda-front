@@ -79,9 +79,16 @@ vi.mock("@/features/user", () => ({
       joinedAt: "2026-01-05T00:00:00",
     },
   }),
-  WithdrawDialog: () => null,
+  // 해지가 끝났다고 알리는 자리만 남긴다 — 누르면 onWithdrawn
+  WithdrawDialog: ({ onWithdrawn }: { onWithdrawn: () => void }) => (
+    <button data-withdraw-done onClick={onWithdrawn} />
+  ),
 }));
-vi.mock("@/features/auth", () => ({ useAuth: () => ({ logout: () => {} }) }));
+// 로그아웃이 어느 범위로 불리는지 잰다(보안 점검 CLI-6)
+const auth = vi.hoisted(() => ({ logout: vi.fn() }));
+vi.mock("@/features/auth", () => ({
+  useAuth: () => ({ logout: auth.logout }),
+}));
 const sec = vi.hoisted(() => ({
   wide: false,
   mounts: 0,
@@ -169,6 +176,7 @@ let root: Root;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  auth.logout.mockClear();
   toasts.error.length = 0;
   toasts.opts.length = 0;
   toasts.all.length = 0;
@@ -276,6 +284,40 @@ describe("계정 구역 줄", () => {
       d.textContent?.startsWith("namgung"),
     )!;
     expect(email.className).toContain("[overflow-wrap:anywhere]");
+  });
+});
+
+describe("로그아웃 범위(CLI-6) — 로그아웃은 담다만, 해지는 그루 계정까지", () => {
+  const rowButton = (label: string) =>
+    [
+      ...container.querySelectorAll<HTMLButtonElement>(
+        "button[data-list-action]",
+      ),
+    ].find((b) => b.textContent?.includes(label))!;
+
+  it("로그아웃 줄 → 확인: 옵션 없이 부른다(기본 = 담다만, 그루 계정은 그대로)", async () => {
+    render(true);
+    await act(async () => rowButton("account.logout.label").click());
+    const dialog = document.querySelector("[role=alertdialog]")!;
+    expect(dialog.textContent).toContain("account.logout.confirmMessage");
+    const confirm = [...dialog.querySelectorAll("button")].find(
+      (b) => b.textContent === "account.logout.label",
+    )!;
+    await act(async () => confirm.click());
+    expect(auth.logout.mock.calls).toEqual([[]]);
+  });
+
+  it("해지가 끝나면: 그루 계정까지 로그아웃하고 안내 화면으로 돌아온다 — 보던 자리는 적지 않는다", async () => {
+    render(true);
+    await act(async () => rowButton("account.withdraw.label").click());
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>("[data-withdraw-done]")!
+        .click(),
+    );
+    expect(auth.logout.mock.calls).toEqual([
+      [{ scope: "grooAccount", returnTo: "/withdrawn", remember: false }],
+    ]);
   });
 });
 

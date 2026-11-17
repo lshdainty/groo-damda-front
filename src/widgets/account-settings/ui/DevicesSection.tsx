@@ -57,6 +57,10 @@ export function DevicesSection({ mobile }: { mobile: boolean }) {
   const { t } = useTranslation("settings");
   const { t: tCommon } = useTranslation("common");
   const { t: tDs } = useTranslation("ds");
+  // 기기를 끊으면 서버가 그 기기의 그루 계정 로그인까지 끝낸다(끊긴 기기가 살아 있는 로그인으로
+  // 조용히 다시 들어오지 못하게). 그래서 지금 이 브라우저를 끊은 뒤의 로그아웃은 계정 메뉴의
+  // 로그아웃(담다만)과 달리 그루 계정 범위다 — 로그아웃 경유지를 거쳐 죽은 쿠키까지 지우고,
+  // 로그인 화면이 "그루 계정은 아직 로그인돼 있어요" 라고 잘못 안내하지 않게 한다(보안 점검 CLI-6).
   const { logout } = useAuth();
   const devicesQ = useDeviceSessions();
   const { data: devices = [], isLoading, refetch, isRefetching } = devicesQ;
@@ -98,14 +102,14 @@ export function DevicesSection({ mobile }: { mobile: boolean }) {
         () => revoke.mutateAsync(device.sessionId),
         () => {
           // 다시 시도가 성공했을 때도 지금 이 브라우저를 끊었으면 로그아웃한다
-          if (device.current) void logout();
+          if (device.current) void logout({ scope: "grooAccount" });
         },
       );
       return;
     }
     setConfirming(null);
     // 지금 이 브라우저를 끊었으면 여기 머물 이유가 없다 — 다음 요청마다 401 이 난다.
-    if (device.current) await logout();
+    if (device.current) await logout({ scope: "grooAccount" });
   };
 
   const onRevokeAll = async () => {
@@ -116,7 +120,7 @@ export function DevicesSection({ mobile }: { mobile: boolean }) {
       failed(
         error,
         () => revokeAll.mutateAsync(),
-        () => void logout(),
+        () => void logout({ scope: "grooAccount" }),
       );
       return;
     }
@@ -125,7 +129,7 @@ export function DevicesSection({ mobile }: { mobile: boolean }) {
     //
     // 성공 토스트는 띄우지 않는다 — 확인 다이얼로그에서 "다시 로그인해야 해요" 라고
     // 이미 말했고, 로그인 화면으로 떨어지는 것 자체가 결과다.
-    await logout();
+    await logout({ scope: "grooAccount" });
   };
 
   const hasList = !isLoading && !isError && devices.length > 0;
