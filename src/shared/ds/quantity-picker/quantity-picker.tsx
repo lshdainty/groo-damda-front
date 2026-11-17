@@ -49,7 +49,7 @@ import { useDsText } from "@/shared/ds/i18n";
  * 모양 — 상자는 bg-layer-default + 안쪽 1px stroke-neutral-weak(inset shadow), 오류는 안쪽 2px stroke-critical-solid(내용이 밀리지 않는다).
  *   모서리 small · medium 8 · large 12. 버튼은 정사각(상자 높이), 바탕 투명 · 아이콘 fg-neutral(16 · 18 · 22, lucide minus · plus).
  *   선 1px × 16 stroke-neutral-subtle(장식). 값 칸은 좌우 8 · 500 · fg-neutral · 고정폭 숫자, 글 t5 16 / 22(large t6 18 / 24).
- *   값 칸은 가장 긴 표시 글을 숨겨 둔 자리 글로 폭을 잡는다(SEED valueDisplayPlaceholder) — 범위가 작으면(단계 200 이하) 범위 안 가장 긴 글들, 아니면 getValueText(min) · getValueText(max) ·
+ *   값 칸은 가장 긴 표시 글을 숨겨 둔 자리 글로 폭을 잡는다(SEED valueDisplayPlaceholder) — getValueText(min) · getValueText(max) · 범위 안에서 끝값보다 긴 글(단계 200 이하일 때) ·
  *   지금 값 가운데 가장 넓은 것. max 를 주지 않으면(Number.MAX_SAFE_INTEGER) 그 글은 빼고 지금 값 · 최소로만 잡는다.
  *   누르는 자리 — 36 · 40 버튼은 보이지 않는 여백(::before)으로 44(4 · 2 씩), 52 는 그대로. 상자는 overflow 를 자르지 않는다(여백 · 링).
  * 상태 — 올림(웹) · 누름 bg-layer-default-pressed, 누르면 그 버튼만 2px 거리 축소(기준 = 버튼 높이 36 · 40 · 52, v104 — 모션 줄이기면
@@ -193,28 +193,25 @@ const QuantityPicker = React.forwardRef<HTMLDivElement, QuantityPickerProps>(
     };
 
     // 값 칸의 폭 — 가장 긴 표시 글. max 를 주지 않았으면 그 글(16자리 수)은 뺀다.
-    // 범위가 작으면(단계 200 이하) 범위 안 모든 글에서 가장 긴 것들을 고른다 — 끝값이 가장 긴 글이 아닐 수 있다
-    // ("24시간" 보다 "23시간 30분" 이 길다). 글자 수 상위 두 단계만 남겨(최대 12개) 실제로 가장 넓은 글이 칸을 잡는다
+    // 끝값이 가장 긴 글이 아닐 수 있다("24시간" 보다 "23시간 30분" 이 길다) — 범위가 작으면(단계 200 이하) 범위 안에서
+    // 끝값보다 글자가 많은 글이 있을 때 그 가운데 가장 긴 것(같으면 뒤쪽) 하나를 더 싣는다
     const text = getValueText(value);
     const bounded = max < Number.MAX_SAFE_INTEGER;
+    const ends = [getValueText(min), ...(bounded ? [getValueText(max)] : [])];
     const steps =
       bounded && step > 0 ? Math.floor((max - min) / step) : Infinity;
-    const samples =
-      steps <= 200
-        ? Array.from({ length: steps + 1 }, (_, i) =>
-            getValueText(min + i * step),
-          )
-        : [getValueText(min), ...(bounded ? [getValueText(max)] : [])];
-    const longest = Math.max(...samples.map((t) => t.length));
+    let widest: string | undefined;
+    if (steps <= 200) {
+      const endLength = Math.max(...ends.map((t) => t.length));
+      for (let i = 0; i <= steps; i++) {
+        const t = getValueText(min + i * step);
+        if (t.length > endLength && t.length >= (widest?.length ?? 0))
+          widest = t;
+      }
+    }
     const placeholders = Array.from(
-      new Set(
-        [
-          getValueText(min),
-          ...(bounded ? [getValueText(max)] : []),
-          ...samples.filter((t) => t.length >= longest - 1),
-        ].filter((t) => t !== text),
-      ),
-    ).slice(0, 12);
+      new Set([...ends, ...(widest ? [widest] : [])].filter((t) => t !== text)),
+    );
 
     const icon = (kind: "decrement" | "increment") => {
       if (busy[kind])

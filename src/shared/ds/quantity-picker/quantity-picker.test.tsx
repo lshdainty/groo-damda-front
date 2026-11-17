@@ -163,7 +163,7 @@ describe("끝 — 최소 · 최대", () => {
     // 끝값(24시간)만으로는 "23시간 30분" 같은 가장 긴 글이 들어가지 않아 값이 바뀔 때 + 가 밀렸다(QA IE-18)
     expect(placeholders).toContain("24시간");
     expect(placeholders).toContain("23시간 30분");
-    expect(placeholders.length).toBeLessThanOrEqual(12);
+    expect(placeholders).toHaveLength(2);
   });
 
   it("0 · 최대 값 — 범위 밖 value 는 고치지 않고 그대로 둔다(invalid 로 알린다)", () => {
