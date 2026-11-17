@@ -4,8 +4,6 @@
  * 컴포넌트는 bottom-sheet.tsx 다(컴포넌트 파일은 컴포넌트만 내보낸다 — 빠른 새로 고침).
  */
 
-import { KEYBOARD_DIM_EXTEND } from "@/shared/ds/overlay/keyboard-dim";
-
 // 딤 — 300ms enter 로 나타나고 200ms exit 로 사라진다(모션 줄이기면 150ms). 끌다 놓아 제자리로 갈 때도 200ms exit 로 돌아오고,
 // 끄는 동안(바로 뒤 시트에 .vaul-dragging)은 손가락을 바로 따른다
 export const SHEET_OVERLAY = [
@@ -15,8 +13,6 @@ export const SHEET_OVERLAY = [
   "data-[state=closed]:[--sheet-anim-duration:var(--motion-duration-d4)] data-[state=closed]:[--sheet-anim-ease:var(--motion-ease-exit)]",
   "motion-reduce:data-[state]:[--sheet-anim-duration:var(--motion-duration-d3)]",
   "[&:not(:has(+.vaul-dragging))]:[transition:opacity_var(--motion-duration-d4)_var(--motion-ease-exit)]!",
-  // 키보드가 떠 있는 동안은 레이아웃 뷰포트 아래(주소 알약 둘레 띠)까지 덮는다 — overlay/keyboard-dim.ts
-  KEYBOARD_DIM_EXTEND,
 ].join(" ");
 
 // 시트 — 최대 480 가운데, 위 모서리 r6, 내용만큼(최대 화면 높이의 90%), 바닥 아래 안전 영역. z-modal-content 101.

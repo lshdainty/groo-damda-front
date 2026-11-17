@@ -1,5 +1,7 @@
 import * as React from "react";
 
+import { dimBefore, keyboardBand, type KeyboardBand } from "./keyboard-band";
+
 /** 이만큼 넘게 가려야 키보드로 본다 — 주소창이 접히고 펴지는 정도(수십 px)는 키보드가 아니다. */
 export const KEYBOARD_MIN_PX = 60;
 
@@ -82,7 +84,9 @@ export function keyboardBottomInset(
  *     머리 밑에 가린 채로 있다(2026-11-17 QA — 거래 추가 2단계 "거래처"). 넣은 뒤 사용자가 직접 민 스크롤은 그대로 둔다.
  *   - 쓸 수 있는 영역이 머리 · 바닥만으로 차 본문에 초점 칸 하나도 안 들어가면(가로 화면의 폰) 본문만 스크롤하는
  *     규칙을 지킬 수 없다 — 그때만 표면 전체가 스크롤하고 초점 칸을 그 안에서 보이게 한다(isCramped · setCramped).
- * 키보드가 없으면 박은 값을 모두 걷는다 — 그때는 클래스(dvh)가 정한다. 키보드가 떠 있는 동안 표면에
+ *   - 띠 — 보이는 영역 아래 끝(= 레이아웃 뷰포트 아래 끝)과 키보드 사이에 iPhone Safari 26 이 문서를 그리는데 fixed 인 딤은
+ *     거기 그려지지 않는다. 키보드가 떠 있는 동안만 표면 바로 앞 딤의 거울을 문서 쪽에 둬 덮는다(keyboard-band.ts).
+ * 키보드가 없으면 박은 값을 모두 걷는다 — 그때는 클래스(dvh)가 정한다(띠 덮개도 걷는다). 키보드가 떠 있는 동안 표면에
  * `data-keyboard`(fit · cramped)를 단다.
  *
  * 듣는 것: visualViewport `resize` · `scroll`(iOS 는 높이를 바꾸지 않고 밀기만 하거나 resize 없이 끝난다) ·
@@ -106,12 +110,16 @@ export function useKeyboardViewport(
     // 키보드가 떠 있는 동안 초점 칸을 보이려고 넣은 스크롤 — 상자 · 넣기 전 자리(from) · 넣은 뒤 자리(to)
     let revealed: { scroller: HTMLElement; from: number; to: number } | null =
       null;
+    // 레이아웃 뷰포트 아래 띠를 덮는 딤의 거울 — 키보드가 처음 뜰 때 만든다
+    let band: KeyboardBand | null = null;
     const apply = (reveal: boolean) => {
       const el = targetRef.current;
       if (!el) return;
       const body = bodyOf(el);
-      const kb = readKeyboardViewport();
+      const layoutHeight = layoutViewportHeight();
+      const kb = readKeyboardViewport(layoutHeight);
       if (!kb) {
+        band?.hide();
         lastHeight = null;
         el.style.removeProperty("max-height");
         el.style.removeProperty(placement === "bottom" ? "bottom" : "top");
@@ -125,10 +133,15 @@ export function useKeyboardViewport(
         revealed = null;
         return;
       }
+      if (!band) {
+        const dim = dimBefore(el);
+        if (dim) band = keyboardBand(dim);
+      }
+      band?.show(layoutHeight);
       const maxHeight = Math.floor(kb.height * ratio);
       el.style.maxHeight = `${maxHeight}px`;
       if (placement === "bottom") {
-        el.style.bottom = `${keyboardBottomInset()}px`;
+        el.style.bottom = `${keyboardBottomInset(layoutHeight)}px`;
       } else {
         el.style.top = `${Math.round(kb.top + kb.height / 2)}px`;
       }
@@ -170,6 +183,7 @@ export function useKeyboardViewport(
       window.removeEventListener("resize", onChange);
       document.removeEventListener("focusin", onFocus);
       document.removeEventListener("focusout", onChange);
+      band?.hide();
     };
   }, [targetRef, placement, ratio]);
 }

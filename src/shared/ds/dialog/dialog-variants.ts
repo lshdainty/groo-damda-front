@@ -4,15 +4,11 @@
  * 컴포넌트는 dialog.tsx 다(컴포넌트 파일은 컴포넌트만 내보낸다 — 빠른 새로 고침).
  */
 
-import { KEYBOARD_DIM_EXTEND } from "@/shared/ds/overlay/keyboard-dim";
-
 // 딤 — 100ms 로 나타나고 사라진다. z-modal 100(L2)
 export const DIALOG_OVERLAY = [
   "fixed inset-0 z-(--z-modal) bg-[var(--overlay-dim-light)] dark:bg-[var(--overlay-dim-dark)]",
   "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:[--tw-animation-duration:var(--motion-duration-d2)] data-[state=open]:ease-[var(--motion-ease-enter)]",
   "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:[--tw-animation-duration:var(--motion-duration-d2)] data-[state=closed]:ease-[var(--motion-ease-exit)]",
-  // 키보드가 떠 있는 동안은 레이아웃 뷰포트 아래까지 덮는다 — overlay/keyboard-dim.ts
-  KEYBOARD_DIM_EXTEND,
 ].join(" ");
 
 // 대화상자 — 정중앙, 좌우 20 은 남긴다, 높이는 화면의 80% 까지(dvh). z-modal-content 101. 열림 200ms enter-expressive 로 1.3 배에서
