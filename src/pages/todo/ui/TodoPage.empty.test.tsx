@@ -13,7 +13,6 @@ import { readFileSync } from "node:fs";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import type { Todo } from "@/entities/todo";
 
 declare global {
@@ -128,7 +127,6 @@ let root: Root;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  __resetPointerBlockForTest();
   ctx.mobile = false;
   state.todos = [];
   if (!globalThis.ResizeObserver) {

@@ -7,7 +7,6 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -81,7 +80,6 @@ let client: QueryClient;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  __resetPointerBlockForTest();
   calls.create.length = 0;
   window.history.replaceState(null, "");
   window.matchMedia = ((query: string) => ({

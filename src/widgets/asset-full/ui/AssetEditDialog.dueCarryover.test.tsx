@@ -11,7 +11,6 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import type { Asset } from "@/entities/asset";
 import type { CardCatalogSummary } from "@/entities/card";
 import { formatDay } from "@/shared/lib/groo/format";
@@ -131,7 +130,6 @@ let updated: Record<string, unknown> | null = null;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  __resetPointerBlockForTest();
   created = null;
   updated = null;
   // 오늘은 2026-09-10 — Date 만 멈춘다(Radix 타이머는 그대로 돈다).

@@ -72,7 +72,6 @@ import { useDsText } from "@/shared/ds/i18n";
  * Groo Date Picker — 구조는 SEED Date Picker(2026-10-03). 수치 원본은 groo-design specs/components/date-picker.yaml(값은
  * src/shared/ds/spec/date-picker.json). groo-design recipes/shadcn/components/ui/date-picker.tsx 를 첫 판으로 가져왔다 —
  * 날짜 도구 · 글 · 빠른 기간 · 표기는 date-picker-dates.ts, 모양은 date-picker-variants.ts, 날짜 칸 하나는 date-picker-day.tsx.
- * 옛 Calendar(react-day-picker)를 대신한다.
  *
  *   DatePicker          달력 — selection(single · range · multiple) × visibleRange(month · twoMonths · continuous).
  *                       value · onValueChange 는 쓰는 쪽이 가진다(제어 — 시트 · 팝오버의 draft). min · max · isDateDisabled ·

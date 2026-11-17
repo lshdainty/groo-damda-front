@@ -3,7 +3,6 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import {
   click,
   row as formRow,
@@ -74,7 +73,6 @@ beforeEach(async () => {
   await appI18n.changeLanguage("ko");
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   setupFormDom(false);
-  __resetPointerBlockForTest();
   updates.length = 0;
   mocks.updateError = false;
   mocks.failSave = false;

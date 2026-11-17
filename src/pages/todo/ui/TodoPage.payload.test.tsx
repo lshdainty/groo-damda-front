@@ -12,7 +12,6 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import type { Todo } from "@/entities/todo";
 
 declare global {
@@ -103,9 +102,6 @@ let root: Root;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  // 앞 케이스의 다이얼로그가 닫히면 그 뒤 POINTER_BLOCK_MS 동안 클릭이 삼켜진다
-  // (모달 닫힘 직후 오클릭 방어) — 케이스끼리 옮지 않게 여기서 푼다.
-  __resetPointerBlockForTest();
   // 고정한 오늘 — 할 일 마감일(2026-09-30)과 같은 달. 날짜만 고정하고 타이머는 그대로 둔다
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-09-15T09:00:00"));

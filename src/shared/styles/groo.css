@@ -233,9 +233,8 @@
   gap: 8px;
 }
 
-/* Modal/Dialog 디자인은 shadcn Dialog (shared/ui/dialog.tsx) 로 이전됨.
-   .modal*, .modal-overlay, modalIn/modalOut/fadeIn/fadeOut 모두 제거.
-   호출자는 ds Dialog · Bottom Sheet (shared/ds) 를 쓴다. */
+/* Modal/Dialog 디자인은 ds Dialog · Bottom Sheet (shared/ds) 가 맡는다.
+   .modal*, .modal-overlay, modalIn/modalOut/fadeIn/fadeOut 모두 제거. */
 
 .dot-sep {
   width: 2px;
@@ -305,9 +304,6 @@
   align-self: flex-start;
   font-family: inherit;
 }
-
-/* Note: 모바일 알림은 vaul Drawer (MobileHeader > MobileNotificationSheet) 로
-   분기하므로 .notif-pop 의 모바일 변형은 제거. .notif-pop 은 데스크탑 popover 전용. */
 
 /* ── 별자리(할일 게이미피케이션) — 별 점등 팝 애니메이션 (커스텀 hero 영역) ── */
 @keyframes constellation-pop {

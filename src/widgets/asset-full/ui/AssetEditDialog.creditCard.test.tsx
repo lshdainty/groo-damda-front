@@ -11,7 +11,6 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import { formatDay } from "@/shared/lib/groo/format";
 import type { Asset } from "@/entities/asset";
 import {
@@ -111,7 +110,6 @@ let update: Record<string, unknown> | null = null;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  __resetPointerBlockForTest();
   update = null;
   installDomStubs();
   container = document.createElement("div");

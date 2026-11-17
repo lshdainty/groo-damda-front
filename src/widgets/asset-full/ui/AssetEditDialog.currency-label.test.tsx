@@ -21,7 +21,6 @@ import {
   vi,
 } from "vitest";
 import { i18n } from "@/shared/i18n/config";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import type { Asset } from "@/entities/asset";
 import type { AssetKind } from "../lib/asset-kind";
 import { installDomStubs, unitOf } from "./asset-form/test-helpers";
@@ -146,7 +145,6 @@ let container: HTMLDivElement;
 let root: Root;
 
 function open(item: Asset | null, kind?: AssetKind) {
-  __resetPointerBlockForTest();
   act(() =>
     root.render(
       <AssetEditDialog

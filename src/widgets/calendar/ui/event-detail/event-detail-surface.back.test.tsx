@@ -3,7 +3,6 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import { click, setValue, setupFormDom } from "../event-form/test-utils";
 
 import type { CalendarEventFormValues } from "@/entities/calendar";
@@ -64,7 +63,6 @@ beforeEach(async () => {
   await appI18n.changeLanguage("ko");
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   setupFormDom(false);
-  __resetPointerBlockForTest();
   updates.length = 0;
   mocks.me = 7;
   mocks.calendars = [

@@ -9,7 +9,6 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import type { Asset } from "@/entities/asset";
 import { installDomStubs } from "./asset-form/test-helpers";
 
@@ -99,7 +98,6 @@ let update: Payload | null;
 function open(item: Asset, wide = false) {
   update = null;
   installDomStubs({ wide });
-  __resetPointerBlockForTest();
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);

@@ -11,7 +11,6 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import type { Asset } from "@/entities/asset";
 import { installDomStubs } from "./asset-form/test-helpers";
 
@@ -132,7 +131,6 @@ function unmountAll() {
 
 function open(item: Asset) {
   unmountAll();
-  __resetPointerBlockForTest();
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);

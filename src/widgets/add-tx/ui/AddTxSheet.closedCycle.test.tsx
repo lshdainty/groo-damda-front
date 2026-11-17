@@ -15,7 +15,6 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import { setupFormDom } from "@/widgets/calendar/ui/event-form/test-utils";
 import type { Expense, ExpenseCategory } from "@/entities/expense";
 
@@ -240,7 +239,6 @@ let root: Root;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   setupFormDom(false);
-  __resetPointerBlockForTest();
   st.create = null;
   st.update = null;
   st.updates = 0;

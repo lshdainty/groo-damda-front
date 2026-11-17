@@ -3,7 +3,6 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import { dayKey } from "@/shared/ds/date-picker";
 
 declare global {
@@ -37,7 +36,6 @@ let container: HTMLDivElement;
 let root: Root;
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  __resetPointerBlockForTest();
   seen.props = null;
   window.matchMedia = ((q: string) => ({
     matches: false,
