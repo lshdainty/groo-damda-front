@@ -34,6 +34,9 @@ export const SHEET_CONTENT = [
   "motion-reduce:data-[vaul-drawer]:data-[vaul-snap-points]:[--sheet-move-duration:0s]",
 ].join(" ");
 
+// 높이 상한 비율 — 위 max-h-[90dvh] 와 같은 값. 키보드가 떠 있는 동안은 보이는 영역 높이에 이 비율을 건다(useKeyboardViewport)
+export const SHEET_MAX_HEIGHT_RATIO = 0.9;
+
 // 머리 — 위 24 · 아래 16 · 좌우 화면 여백 24 · 제목 ↔ 설명 8
 export const SHEET_HEADER =
   "flex shrink-0 flex-col gap-x2 px-global-gutter pb-x4 pt-x6";
