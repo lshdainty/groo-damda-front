@@ -51,7 +51,6 @@
 | **Form** | ![React Hook Form](https://img.shields.io/badge/React_Hook_Form-EC5990?style=flat-square&logo=reacthookform&logoColor=white) ![Zod](https://img.shields.io/badge/Zod_4-3E67B1?style=flat-square&logo=zod&logoColor=white) |
 | **UI Primitives** | ![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=flat-square&logo=radixui&logoColor=white) ![Lucide](https://img.shields.io/badge/Lucide-F56565?style=flat-square) |
 | **Chart** | ![Recharts](https://img.shields.io/badge/Recharts_3-22B5BF?style=flat-square) ![Lightweight Charts](https://img.shields.io/badge/Lightweight_Charts_5-2962FF?style=flat-square) |
-| **Editor** | ![Tiptap](https://img.shields.io/badge/Tiptap_3-000000?style=flat-square) |
 | **DnD** | ![dnd-kit](https://img.shields.io/badge/dnd--kit-EF4444?style=flat-square) |
 | **HTTP Client** | ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat-square&logo=axios&logoColor=white) |
 | **i18n** | ![i18next](https://img.shields.io/badge/i18next-26A69A?style=flat-square&logo=i18next&logoColor=white) |
@@ -90,6 +89,9 @@ npm install
 
 # 개발 서버 실행 (predev 훅으로 i18n:generate 자동 실행)
 npm run dev
+
+# 같은 네트워크의 실제 기기로 볼 때만 — 개발 서버를 LAN 에 연다(기본은 localhost 만)
+npm run dev:host
 
 # 프로덕션 빌드 (타입 체크 포함) — 배포·CI 와 같은 명령
 npm run build

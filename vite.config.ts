@@ -24,8 +24,9 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
+    // host 는 적지 않는다 — 기본값(localhost)이어야 같은 네트워크의 다른 기기가 개발 서버에
+    // 닿지 못한다. 실제 기기로 볼 때만 `npm run dev:host` 로 연다.
     port: 3002,
-    host: "0.0.0.0",
   },
   resolve: {
     alias: {
