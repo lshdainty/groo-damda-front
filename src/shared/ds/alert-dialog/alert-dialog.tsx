@@ -198,7 +198,10 @@ const AlertDialogContent = React.forwardRef<
           className={cn(ALERT_CONTENT, className)}
           // 처음 초점은 확인창 — 첫 버튼이 아니라 확인창(컨테이너)이다
           onOpenAutoFocus={(e) => {
-            openerRef.current = captureAnchor(document.activeElement);
+            openerRef.current = captureAnchor(
+              document.activeElement,
+              own.current,
+            );
             checkName(own.current, ariaLabel);
             onOpenAutoFocus?.(e);
             if (e.defaultPrevented) return;

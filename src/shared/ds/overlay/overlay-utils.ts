@@ -73,7 +73,15 @@ export interface FocusAnchor {
   opener: Element | null;
   row: Element | null;
   head: Element | null;
+  /** 연 자리를 품은 겹침 표면(상세 시트 · 대화상자 안의 ⋮ 에서 연 확인창) — 없으면 null */
+  surface?: Element | null;
+  /** 그 표면이 열 때 잡아 둔 둘레 — 표면째 사라졌으면 여기서 이어 찾는다 */
+  parent?: FocusAnchor | null;
 }
+
+const SURFACE_SELECTOR = '[role="dialog"],[role="alertdialog"]';
+// 열린 겹침 표면(내용 요소) → 그 표면을 열 때의 둘레. 표면이 지워지면 함께 사라진다(WeakMap)
+const surfaceAnchors = new WeakMap<Element, FocusAnchor>();
 
 const ROW_SELECTOR =
   '[data-slot="list-item"],[data-slot="list-parent-item"],[data-slot="table-row"],tr,li,[role="row"],[role="listitem"]';
@@ -108,10 +116,27 @@ function findHead(row: Element): Element | null {
   return null;
 }
 
-export function captureAnchor(el: Element | null): FocusAnchor {
+/**
+ * 열 때의 둘레를 잡는다. 겹침 표면은 자기 내용 요소를 `surface` 로 넘겨 둘레를 맡겨 둔다 — 그 표면 안에서 다른 표면을 열면
+ * (상세 → ⋮ → 삭제 확인창) 바깥 표면의 둘레를 `parent` 로 이어 둔다. 확인 뒤 상세까지 함께 사라지면 확인창의 연 자리 · 줄 · 머리는
+ * 모두 상세 안이라 남은 게 없다 — 그때 상세를 연 줄 → 그 목록 머리로 이어 가야 main 으로 빠지지 않는다.
+ */
+export function captureAnchor(
+  el: Element | null,
+  surface?: Element | null,
+): FocusAnchor {
   const opener = el instanceof Element ? el : null;
   const row = opener?.closest(ROW_SELECTOR) ?? null;
-  return { opener, row, head: row ? findHead(row) : null };
+  const host = opener?.closest(SURFACE_SELECTOR) ?? null;
+  const anchor: FocusAnchor = {
+    opener,
+    row,
+    head: row ? findHead(row) : null,
+    surface: host,
+    parent: host ? (surfaceAnchors.get(host) ?? null) : null,
+  };
+  if (surface) surfaceAnchors.set(surface, anchor);
+  return anchor;
 }
 
 /** 초점을 둘 수 있게 — 일반 요소(제목 · 줄 · main)는 tabindex -1 을 달아 준다(탭 순서에는 들어오지 않는다) */
@@ -150,19 +175,33 @@ export function focusOpener(
     opener.focus({ preventScroll: true });
     return;
   }
-  const row = a.row;
-  if (row?.isConnected) {
-    const inner = row.querySelector<HTMLElement>(
-      'a[href],button:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])',
-    );
-    if (inner) {
-      inner.focus({ preventScroll: true });
-      return;
+  // 그 줄 → 목록 머리. 둘 다 사라졌으면 연 자리를 품은 표면 — 남아 있으면 그 표면에(열린 표면 밖으로 빠지지 않게),
+  // 표면째 사라졌으면 그 표면을 연 둘레(줄 → 머리)로 거슬러 오른다. 끝까지 없으면 main
+  for (let cur: FocusAnchor | null | undefined = a; cur; cur = cur.parent) {
+    if (cur !== a && cur.opener?.isConnected && cur.opener !== document.body) {
+      if (focusPlace(cur.opener)) return;
     }
-    if (focusPlace(row)) return;
+    if (focusRow(cur.row)) return;
+    if (focusPlace(cur.head)) return;
+    if (cur.surface?.isConnected) {
+      if (focusPlace(cur.surface)) return;
+      break;
+    }
   }
-  if (focusPlace(a.head)) return;
   focusPlace(document.querySelector("main,[role=main]"));
+}
+
+/** 줄 — 안의 첫 초점 가능한 곳, 없으면 줄 자체 */
+function focusRow(row: Element | null): boolean {
+  if (!row?.isConnected) return false;
+  const inner = row.querySelector<HTMLElement>(
+    'a[href],button:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])',
+  );
+  if (inner) {
+    inner.focus({ preventScroll: true });
+    if (document.activeElement === inner) return true;
+  }
+  return focusPlace(row);
 }
 
 /**
