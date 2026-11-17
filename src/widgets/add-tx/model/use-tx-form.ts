@@ -143,6 +143,16 @@ const extractTime = (s?: string | null) => {
   return m ? m[1] : null;
 };
 
+/**
+ * 문자 해석을 사용자가 확인해야 하나 — 서버 확신이 낮거나(LOW), 금액 · 거래처 · 날짜 중 읽지 못한 칸이 있다.
+ * 서버는 카드사만 알아보면 거래처가 없어도 MEDIUM 을 준다("신한카드 12,000원 승인") — 확신만 보면 빈 거래처를 알리지 못한다(QA damda-full-1116 B3).
+ */
+const smsNeedsReview = (parsed: SmsParseResult) =>
+  parsed.confidence === "LOW" ||
+  parsed.amount == null ||
+  !parsed.merchant?.trim() ||
+  !parsed.expenseDate;
+
 /** 폼 칸의 처음 값 — 열 때 한 번, 호스트가 폼을 든 채 다른 거래로 갈아 끼울 때(`beginEdit`) 다시 쓴다 */
 function initFrom(p: {
   expense?: Expense | null;
@@ -362,7 +372,7 @@ export function useTxForm({
     parsed: SmsParseResult;
   } | null>(null);
   const [rememberCard, setRememberCard] = useState(false);
-  /** 문자 해석 확신이 낮다 — 2단계 맨 위 Callout 이 확인을 부탁한다 */
+  /** 문자를 다 읽지 못했다(확신 낮음 · 빈 칸) — 2단계 맨 위 Callout 이 확인을 부탁한다 */
   const [smsLow, setSmsLow] = useState(false);
   // 낭독기에 알린 문자 묶음인가 — 2단계가 다시 붙을 때마다(1단계로 갔다 돌아옴) 같은 경고를 또 읽지 않게
   const [smsLowAnnounced, setSmsLowAnnounced] = useState(false);
@@ -978,7 +988,7 @@ export function useTxForm({
    */
   const applySms = (text: string, parsed: SmsParseResult) => {
     setSmsDraft({ text, parsed });
-    setSmsLow(parsed.confidence === "LOW");
+    setSmsLow(smsNeedsReview(parsed));
     setSmsLowAnnounced(false);
     setActivePresetId(null);
     setRememberCard(false);
