@@ -13,7 +13,7 @@ import { join } from "node:path";
  *    - 음수 여백으로 글 시작을 가장자리에 당기지 않는다 — 모달 footer 예시는 `className="mr-auto"` 뿐이고
  *      상자 여백을 그대로 둔다(바닥 FormFooter 의 `-ml-x5` · 캘린더 관리의 `-ml-x3_5` 가 이 모양이었다).
  * 2. flush 는 ghost + **앞 아이콘**이 가장자리의 첫 · 끝 요소일 때만 쓴다 — "글자만 있는 ghost 에는 쓰지 않습니다".
- *    예외는 field.md 가 정한 칸 머리 보조 액션 하나다(ghost · neutralSubtle · xsmall · 오른쪽 flush, "예시 보기").
+ *    예외는 없다 — 칸 머리 보조 액션("예시 보기")도 글자만이라 flush 를 쓰지 않는다(field.md, groo-design#240).
  *
  * 테스트 파일은 보지 않는다 — 시험이 일부러 그리는 모양이 있다.
  */
@@ -134,12 +134,6 @@ function startsWithIcon(b: ButtonUse): boolean {
   return /^<[A-Z][\w.]*(\s[^>]*)?\/>/.test(body);
 }
 
-// field.md "머리 오른쪽 보조 액션" — Button ghost · neutralSubtle · xsmall · 오른쪽 flush(글자만)
-const isFieldHeaderAction = (b: ButtonUse) =>
-  /flush="right"/.test(b.tag) &&
-  /size="xsmall"/.test(b.tag) &&
-  /ghostColor="neutralSubtle"/.test(b.tag);
-
 const critical = ALL.filter((b) => /ghostColor="critical"/.test(b.tag));
 const flushed = ALL.filter((b) => /\bflush=/.test(b.tag));
 
@@ -175,10 +169,6 @@ describe("Button 은 button.md 를 따른다(파일 검사)", () => {
   });
 
   it("flush 는 앞 아이콘이 있는 ghost 에만 쓴다(글자만 · 뒤 아이콘만이면 쓰지 않는다)", () => {
-    expect(
-      flushed
-        .filter((b) => !startsWithIcon(b) && !isFieldHeaderAction(b))
-        .map(where),
-    ).toEqual([]);
+    expect(flushed.filter((b) => !startsWithIcon(b)).map(where)).toEqual([]);
   });
 });

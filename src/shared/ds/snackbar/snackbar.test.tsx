@@ -271,6 +271,33 @@ describe("Snackbar", () => {
     expect(band()).toBeUndefined();
   });
 
+  it("손가락으로 누른 뒤 스크립트가 옮긴 초점에는 멈추지 않는다 — :focus-visible 을 이어받아도 직전 입력이 포인터면 키보드 초점이 아니다", () => {
+    const api = mount();
+    const matches = Element.prototype.matches;
+    vi.spyOn(Element.prototype, "matches").mockImplementation(function (
+      this: Element,
+      selector: string,
+    ) {
+      return selector === ":focus-visible" || matches.call(this, selector);
+    });
+    document.documentElement.dataset.input = "pointer";
+    try {
+      act(() => api.show({ message: "첫째" }));
+      act(() => band()!.focus());
+      advance(4000);
+      expect(band()).toBeUndefined();
+
+      // 키보드로 오면 멈춘다
+      document.documentElement.dataset.input = "keyboard";
+      act(() => api.show({ message: "둘째" }));
+      act(() => band()!.focus());
+      advance(10000);
+      expect(band()).toBeDefined();
+    } finally {
+      delete document.documentElement.dataset.input;
+    }
+  });
+
   it("띠 안에 초점이 있다가 닫히면 띠에 들어오기 전 자리로 돌려준다", () => {
     const api = mount(
       <button type="button" id="here">

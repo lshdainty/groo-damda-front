@@ -2,6 +2,7 @@ import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 import { cn } from "@/shared/lib/cn";
+import { isKeyboardFocus } from "@/shared/lib/input-modality";
 import {
   BUBBLE,
   BUBBLE_POSITION,
@@ -344,11 +345,12 @@ const TooltipTrigger = React.forwardRef<
           onClick?.(e);
           ctx.flag("press");
         }}
-        // 키보드 초점(focus-visible)에만 연다 — 손가락 · 마우스로 눌러 생긴 초점에는 열지 않는다(Radix 의 열기를 건너뛴다)
+        // 키보드 초점에만 연다 — 손가락 · 마우스로 눌러 생긴 초점에는 열지 않는다(Radix 의 열기를 건너뛴다).
+        // 누른 뒤 스크립트가 옮긴 초점도 키보드 초점이 아니다(:focus-visible 을 이어받아도 직전 입력이 포인터면 — isKeyboardFocus)
         onFocus={(e) => {
           onFocus?.(e);
           if (e.defaultPrevented) return;
-          if (e.currentTarget.matches(":focus-visible")) ctx.setFocused(true);
+          if (isKeyboardFocus(e.currentTarget)) ctx.setFocused(true);
           else e.preventDefault();
         }}
         onBlur={(e) => {
