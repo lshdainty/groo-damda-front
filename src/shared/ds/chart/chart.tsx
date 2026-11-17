@@ -4,6 +4,7 @@ import * as RechartsPrimitive from "recharts";
 import { cn } from "@/shared/lib/cn";
 
 import {
+  CHART_HIDE_DOTS,
   CHART_ROOT,
   DONUT_NARROW,
   DONUT_PILL,
@@ -30,7 +31,7 @@ import { useDsText, withCommaBreaks } from "@/shared/ds/i18n";
  * SEED 그림을, 색 배정 · 범례 · 열지도 · 빈 · 실패 · 접근성은 groo 가 정했다.
  *
  *   Chart               차트 상자 — label(필수, role="img" 의 요약 이름 — "10월 수입 · 지출 추이, 수입 4,200,000원 · …") · height(px) ·
- *                       legendId(대체가 되는 범례의 id → aria-describedby). 자식은 recharts 차트 하나(ResponsiveContainer 로 감싼다) +
+ *                       legendId(대체가 되는 범례의 id → aria-describedby) · dots(늘 찍는 점 — 기본 꺼짐). 자식은 recharts 차트 하나(ResponsiveContainer 로 감싼다) +
  *                       ChartDonutCenter. 라이브러리가 svg 에 다는 role="application" · 이름 없는 tabindex 를 걷는다
  *   ChartTooltip · ChartTooltipContent   툴팁 — 떠 있는 표면 · 머리(headFormatter) · 줄 "■ 라벨 값"(valueFormatter, 기본 원까지).
  *                       ChartTooltip 은 가리킴 선(세로 점선)과 이 내용을 기본으로 단다. 보조 기술에는 숨긴다 — 같은 값은 범례 · 표로 보기가 준다
@@ -76,6 +77,11 @@ export interface ChartProps extends Omit<
   height?: number;
   /** 대체가 되는 범례(지표 타일 · 목록)의 id — aria-describedby */
   legendId?: string;
+  /**
+   * 늘 찍는 점 — 선 · 면 계열의 값마다 계열 색 원(지름 6 · 테두리 없음)을 찍는다. 기본 꺼짐(가리킨 자리에만 점).
+   * 점이 적은 추이 · 0 이 대부분인 날마다의 합(값 7 개 이하)에 켠다(chart.md "늘 찍는 점 — dots")
+   */
+  dots?: boolean;
   /** recharts 차트 하나 + ChartDonutCenter */
   children: React.ReactNode;
 }
@@ -86,6 +92,7 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
       label,
       height,
       legendId,
+      dots = false,
       className,
       style,
       children,
@@ -171,7 +178,7 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
           aria-describedby={legendId}
           tabIndex={navigable ? 0 : undefined}
           data-slot="chart"
-          className={cn(CHART_ROOT, className)}
+          className={cn(CHART_ROOT, !dots && CHART_HIDE_DOTS, className)}
           style={{ height, ...style }}
           onKeyDown={(e) => {
             onKeyDown?.(e);
@@ -221,7 +228,7 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
               height="100%"
               initialDimension={{ width: 1, height: height ?? 1 }}
             >
-              {withSeriesDefaults(chart, idPrefix)}
+              {withSeriesDefaults(chart, idPrefix, { dots })}
             </RechartsPrimitive.ResponsiveContainer>
           )}
           {overlays}

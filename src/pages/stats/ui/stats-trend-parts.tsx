@@ -43,7 +43,7 @@ import {
   PeriodButton,
   type Placement,
 } from "./stats-parts";
-import type { StatsModel } from "./stats-model";
+import { trendNeedsDots, type StatsModel } from "./stats-model";
 
 /*
  * 통계 · 추이 탭 구역(I-08 36) — 수입 · 지출 추이(ds 선 이중 축 + 지표 타일) · 저축률(고리 게이지는 화면 그림) · 월별 순저축(ds 막대, 음수 포함) ·
@@ -182,7 +182,12 @@ export function TrendSection({
           hidden={hidden}
           onHiddenChange={setHidden}
         />
-        <Chart label={name} legendId={legendId} height={height}>
+        <Chart
+          label={name}
+          legendId={legendId}
+          height={height}
+          dots={trendNeedsDots(data, hidden)}
+        >
           <AreaChart data={data}>
             <CartesianGrid {...chartGridProps} yAxisId="income" />
             <XAxis
@@ -258,6 +263,8 @@ export function TrendSection({
 }
 
 // ── 저축률 ──────────────────────────────────────────────────────
+/** 비율 자리에 낼 값이 없을 때(수입 0) — 퍼센트 규칙의 "숫자가 아니면 —" 와 같은 글자 */
+const NO_RATE = "—";
 const RING_R = 48;
 const RING_C = 2 * Math.PI * RING_R;
 
@@ -307,9 +314,13 @@ export function SavingsRateSection({
       </HeadlessBody>
     );
   }
-  const insight = t("trend.savingsInsight", {
-    pct: formatPercent(m.saveRate, "progress"),
-  });
+  // 수입이 없으면 비율 자리는 모두 "—"(DESIGN.md "퍼센트" — 숫자가 아니면), 문장은 낼 수 없다고 말한다
+  const pct = (v: number | null) =>
+    v == null ? NO_RATE : formatPercent(v, "progress");
+  const insight =
+    m.saveRate == null
+      ? t("trend.savingsNoIncome")
+      : t("trend.savingsInsight", { pct: pct(m.saveRate) });
   const rows = [
     {
       key: "in",
@@ -319,13 +330,13 @@ export function SavingsRateSection({
     },
     {
       key: "out",
-      name: `${m.statLabelOut} ${formatPercent(m.spendRate, "progress")}`,
+      name: `${m.statLabelOut} ${pct(m.spendRate)}`,
       value: mask(won(Math.round(m.avgOut))),
       dot: "bg-fg-critical",
     },
     {
       key: "save",
-      name: `${m.statLabelSave} ${formatPercent(m.saveRate, "progress")}`,
+      name: `${m.statLabelSave} ${pct(m.saveRate)}`,
       value: mask(won(Math.round(m.avgSave))),
       dot: "bg-fg-brand",
     },
@@ -366,7 +377,7 @@ export function SavingsRateSection({
                 stroke="var(--color-fg-brand)"
                 strokeWidth="10"
                 strokeLinecap="round"
-                strokeDasharray={`${(RING_C * m.saveRate) / 100} ${RING_C}`}
+                strokeDasharray={`${(RING_C * (m.saveRate ?? 0)) / 100} ${RING_C}`}
                 transform="rotate(-90 54 54)"
               />
             </svg>
@@ -374,8 +385,11 @@ export function SavingsRateSection({
               <span className="text-t2 font-medium text-fg-neutral-subtle">
                 {t("trend.savingsRate")}
               </span>
-              <span className="text-t9 font-bold tabular-nums text-fg-neutral">
-                {formatPercent(m.saveRate, "progress")}
+              <span
+                data-slot="stats-savings-ring-value"
+                className="text-t9 font-bold tabular-nums text-fg-neutral"
+              >
+                {pct(m.saveRate)}
               </span>
             </div>
           </div>
@@ -401,11 +415,11 @@ export function SavingsRateSection({
           >
             <div
               className="rounded-full bg-fg-critical"
-              style={{ width: `${m.spendRate}%` }}
+              style={{ width: `${m.spendRate ?? 0}%` }}
             />
             <div
               className="rounded-full bg-fg-brand"
-              style={{ width: `${m.saveRate}%` }}
+              style={{ width: `${m.saveRate ?? 0}%` }}
             />
           </div>
           <ul className="m-0 mt-x3 flex list-none flex-col gap-x2 p-0">
