@@ -1,7 +1,7 @@
 // 키보드가 뜨면 시트 · 대화상자가 보이는 영역 밖으로 밀리는 문제(2026-11-16 QA — iPhone Safari 에서 거래 추가 시트의
 // 머리 · 종류 칩 · 금액 칸이 화면 위로 나가 끌어도 돌아오지 않음, 가로 화면도 같음).
 //
-// iOS Safari 는 키보드가 떠도 레이아웃 뷰포트(innerHeight · dvh · fixed 의 기준)를 줄이지 않고 보이는 영역
+// iOS Safari 는 키보드가 떠도 레이아웃 뷰포트(clientHeight · dvh · fixed 의 기준)를 줄이지 않고 보이는 영역
 // (visualViewport)만 줄이고, 초점 칸을 보이려고 그 영역을 아래로 민다(offsetTop). jsdom 에는 visualViewport 가
 // 없어 이벤트를 받는 최소한을 심고, 그 값이 바뀔 때 표면의 bottom · top · max-height 가 따라가는지 잠근다.
 import { act, type ReactNode } from "react";
@@ -35,18 +35,28 @@ let container: HTMLDivElement;
 let root: Root;
 let vv: FakeViewport;
 
-/** 레이아웃 뷰포트 높이(inner) · 보이는 영역 높이(visual) · 밀린 만큼(top) · 손가락 확대 배율(scale) */
+/**
+ * 레이아웃 뷰포트 높이(layout — documentElement.clientHeight) · 보이는 영역 높이(visual) · 밀린 만큼(top) ·
+ * 손가락 확대 배율(scale) · innerHeight(inner — 주지 않으면 layout 과 같다. iOS Safari 는 키보드가 뜬 채 페이지가
+ * 스크롤되면 이것만 줄인다)
+ */
 function setViewport({
-  inner = 844,
+  layout = 844,
+  inner = layout,
   visual,
   top = 0,
   scale = 1,
 }: {
+  layout?: number;
   inner?: number;
   visual: number;
   top?: number;
   scale?: number;
 }) {
+  Object.defineProperty(document.documentElement, "clientHeight", {
+    value: layout,
+    configurable: true,
+  });
   Object.defineProperty(window, "innerHeight", {
     value: inner,
     configurable: true,
@@ -90,6 +100,8 @@ afterEach(async () => {
   act(() => root.unmount());
   container.remove();
   document.body.removeAttribute("style");
+  // 심은 clientHeight 를 걷어 다른 파일의 jsdom 기본값(0)으로 돌린다
+  delete (document.documentElement as { clientHeight?: number }).clientHeight;
   vi.restoreAllMocks();
   await new Promise((r) => setTimeout(r, 100));
 });
@@ -121,7 +133,8 @@ function Sheet({ title = "거래 추가" }: { title?: string }) {
 
 /** 시트의 위 변 · 아래 변(레이아웃 뷰포트 기준). 내용이 상한까지 찼다고 보고 상한을 높이로 쓴다 — 가장 나쁜 값 */
 function sheetEdges(el: HTMLElement) {
-  const bottom = window.innerHeight - parseFloat(el.style.bottom);
+  const bottom =
+    document.documentElement.clientHeight - parseFloat(el.style.bottom);
   return { top: bottom - parseFloat(el.style.maxHeight), bottom };
 }
 
@@ -212,6 +225,26 @@ describe("시트 — 키보드가 뜨면 보이는 영역 안에", () => {
     expect(sheet().style.bottom).toBe("350px");
   });
 
+  it("키보드가 뜬 채 페이지가 스크롤돼 innerHeight 가 줄어도(iOS Safari 714 → 625) 키보드 높이 · 시트 위치는 그대로", async () => {
+    // 그루 계정 웹 GA-02 와 같은 함정 — innerHeight 로 재면 키보드 높이가 스크롤만큼(89) 모자라 시트 아래 변이 키보드
+    // · 입력 도구줄 밑으로 들어간다. 레이아웃 뷰포트(clientHeight)는 그대로다.
+    render(<Sheet />);
+    const el = sheet();
+    setViewport({ layout: 714, visual: 364 });
+    await fire(vv, "resize");
+    expect(el.style.bottom).toBe("350px");
+    const before = el.style.maxHeight;
+    expect(before).toBe(`${Math.floor(364 * 0.9)}px`);
+
+    setViewport({ layout: 714, inner: 625, visual: 364 });
+    await fire(vv, "scroll");
+    expect(el.style.bottom).toBe("350px");
+    expect(el.style.maxHeight).toBe(before);
+    expect(el.getAttribute("data-keyboard")).toBe("fit");
+    // 아래 변이 키보드 윗변(보이는 영역 아래)에 그대로 붙어 있다
+    expect(sheetEdges(el).bottom).toBe(vv.offsetTop + vv.height);
+  });
+
   it("주소창이 접히는 정도(60 이하)는 키보드가 아니다", async () => {
     render(<Sheet />);
     setViewport({ visual: 790 });
@@ -227,9 +260,9 @@ describe("시트 — 키보드가 뜨면 보이는 영역 안에", () => {
     expect(sheet().style.maxHeight).toBe("");
   });
 
-  it("삼성 인터넷 — 레이아웃 뷰포트도 같이 줄면(innerHeight == visual) 손대지 않는다(dvh 가 이미 줄었다)", async () => {
+  it("삼성 인터넷 — 레이아웃 뷰포트도 같이 줄면(clientHeight == visual) 손대지 않는다(dvh 가 이미 줄었다)", async () => {
     render(<Sheet />);
-    setViewport({ inner: 422, visual: 422 });
+    setViewport({ layout: 422, visual: 422 });
     await fire(vv, "resize");
     expect(sheet().style.bottom).toBe("");
   });
@@ -300,7 +333,7 @@ describe("가로 화면 — 머리 · 바닥만으로 보이는 영역이 차면
       value: 874,
       configurable: true,
     });
-    setViewport({ inner: 402, visual: 150 });
+    setViewport({ layout: 402, visual: 150 });
     await fire(vv, "resize");
 
     const el = sheet();
@@ -317,7 +350,7 @@ describe("가로 화면 — 머리 · 바닥만으로 보이는 영역이 차면
     expect(el.scrollTop).toBe(256 - 135);
 
     // 키보드를 내리면 원래대로 — 본문만 스크롤
-    setViewport({ inner: 402, visual: 402 });
+    setViewport({ layout: 402, visual: 402 });
     await fire(vv, "resize");
     expect(el.style.overflowY).toBe("");
     expect(body.style.flex).toBe("");
@@ -356,7 +389,7 @@ describe("대화상자 — 키보드가 뜨면 보이는 영역 가운데", () =
     expect(box().style.top).toBe("");
 
     // 가로 태블릿 — 레이아웃 1024 중 키보드가 400 을 가리고 보이는 영역이 100 밀림
-    setViewport({ inner: 1024, visual: 624, top: 100 });
+    setViewport({ layout: 1024, visual: 624, top: 100 });
     await fire(vv, "resize");
     expect(box().style.top).toBe(`${100 + 624 / 2}px`);
     expect(box().style.maxHeight).toBe(`${Math.floor(624 * 0.8)}px`);
@@ -364,7 +397,7 @@ describe("대화상자 — 키보드가 뜨면 보이는 영역 가운데", () =
     const top = 100 + 624 / 2 - Math.floor(624 * 0.8) / 2;
     expect(top).toBeGreaterThanOrEqual(100);
 
-    setViewport({ inner: 1024, visual: 1024 });
+    setViewport({ layout: 1024, visual: 1024 });
     await fire(vv, "resize");
     expect(box().style.top).toBe("");
     expect(box().style.maxHeight).toBe("");
@@ -427,6 +460,48 @@ describe("초점 칸 — 키보드 · 바닥 버튼 위에 칸 전체가 보이�
     setViewport({ visual: 494 });
     await fire(vv, "resize");
     expect(body().scrollTop).toBe(200 - (100 + 20 - 60));
+  });
+
+  it("키보드를 내리면 넣은 스크롤을 되돌린다 — 칸 위 라벨이 머리 밑에 가린 채 남지 않는다", async () => {
+    fakeLayout({ top: 380, bottom: 436 });
+    render(<FogSheet />);
+    body().scrollTop = 30;
+    await act(async () => document.querySelector("input")!.focus());
+    setViewport({ visual: 494 });
+    await fire(vv, "resize");
+    expect(body().scrollTop).toBe(30 + 436 - (400 - 80));
+
+    setViewport({ visual: 844 });
+    await fire(vv, "resize");
+    expect(body().scrollTop).toBe(30);
+  });
+
+  it("키보드가 바뀌며 여러 번 넣었어도 처음 자리로 — 숫자 키패드 → 글자 키보드 → 내림", async () => {
+    fakeLayout({ top: 380, bottom: 436 });
+    render(<FogSheet />);
+    await act(async () => document.querySelector("input")!.focus());
+    setViewport({ visual: 594 });
+    await fire(vv, "resize");
+    setViewport({ visual: 514 });
+    await fire(vv, "resize");
+    expect(body().scrollTop).toBe(2 * (436 - (400 - 80)));
+
+    // resize 가 늦게 오는 iOS — focusout 으로 내려가도 같다
+    setViewport({ visual: 844 });
+    await fire(document, "focusout");
+    expect(body().scrollTop).toBe(0);
+  });
+
+  it("넣은 뒤 사용자가 직접 민 스크롤은 키보드를 내려도 그대로 둔다", async () => {
+    fakeLayout({ top: 380, bottom: 436 });
+    render(<FogSheet />);
+    await act(async () => document.querySelector("input")!.focus());
+    setViewport({ visual: 494 });
+    await fire(vv, "resize");
+    body().scrollTop = 50;
+    setViewport({ visual: 844 });
+    await fire(vv, "resize");
+    expect(body().scrollTop).toBe(50);
   });
 
   it("보이는 영역을 밀기만 할 때(scroll)는 끌어당기지 않는다 — 손으로 본문을 보는 중", async () => {
