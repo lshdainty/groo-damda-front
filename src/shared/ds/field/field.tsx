@@ -45,7 +45,7 @@ export interface FieldProps extends Omit<
    * `headerAction` 이 있으면 머리가 보여야 하므로 무시한다
    */
   labelHidden?: boolean;
-  /** 라벨 오른쪽 보조 액션 — Button ghost · neutralSubtle · xsmall · flush="right" */
+  /** 라벨 오른쪽 보조 액션 — Button ghost · neutralSubtle · xsmall(글자만이라 flush 없음) */
   headerAction?: React.ReactNode;
   /** 설명 — 오류가 있으면 오류가 대신한다 */
   description?: React.ReactNode;

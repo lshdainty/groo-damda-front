@@ -12,14 +12,13 @@ const LABEL_WEIGHTS = ["medium", "bold"] as const;
 // 칸은 Input(src/shared/ds/input) — Field 의 훅(useFieldControl · useTextControl)으로 라벨 연결 · 설명 · 오류 · 글자 수가
 // 실제로 움직인다. 크기는 Input 의 기본(responsive — 1280 미만 large · 이상 medium) 그대로 둔다. 견본은 Field 의 값만 잰다
 
-// 머리 오른쪽 보조 액션 — Button ghost · neutralSubtle · xsmall · 오른쪽 flush(field.md)
+// 머리 오른쪽 보조 액션 — Button ghost · neutralSubtle · xsmall(field.md). 글자만 있는 단추라 flush 는 쓰지 않는다(button.md 가장자리 맞춤)
 const ExampleAction = () => (
   <Button
     type="button"
     variant="ghost"
     ghostColor="neutralSubtle"
     size="xsmall"
-    flush="right"
   >
     예시 보기
   </Button>
