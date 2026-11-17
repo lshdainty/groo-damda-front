@@ -6,7 +6,7 @@ import { join } from "node:path";
 /**
  * 대화상자 footer 에 `<Button>` 을 손으로 놓지 않는다.
  *
- * `ModalShell` 은 footer 를 ReactNode prop 으로 받을 뿐이라, 화면마다 버튼을 직접
+ * 대화상자는 footer 를 ReactNode prop 으로 받을 뿐이라, 화면마다 버튼을 직접
  * 놓으면 그때마다 규격이 갈렸다 — `size` 를 빠뜨려 36(좌우 16·14px)이 나오고, 취소가
  * `outline`·`ghost` 가 되고, 삭제가 `flush="left"`(좌 padding 0)로 여백선에 붙었다.
  * 데스크톱·태블릿 20종 실측(2026-09-16)에서 같은 footer 안에 두 크기가 섞여 있었다.

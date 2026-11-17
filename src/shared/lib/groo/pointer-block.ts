@@ -93,7 +93,7 @@ export function isPointerBlocked(): boolean {
 /**
  * 오버레이 하나의 생애를 등록한다. `useEffect(registerOverlay, [])` 로 건다.
  *
- * **Portal 안에서 마운트되는 컴포넌트에만 건다** — dialog/drawer/alert-dialog 의
+ * **Portal 안에서 마운트되는 컴포넌트에만 건다** — dialog/alert-dialog 의
  * overlay 가 그 자리다. 바깥의 `*Content` 래퍼는 `open={false}` 여도 계속 살아 있어서
  * (확인창·시트를 controlled 로 쓰는 화면이 전부 그 패턴이다) 거기 걸면 아래 수가
  * 영원히 0 으로 안 떨어지고 차단이 한 번도 안 걸린다.

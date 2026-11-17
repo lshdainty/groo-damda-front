@@ -2,7 +2,7 @@
 //
 // 차례: 시트(ds `useBackClose`)가 닫히며 마이크로태스크에서 `history.go(-1)` 을 예약하고, 같은 커밋에서 확인창이 자기 칸을 `pushState` 한다.
 // `go(-1)` 이 지우는 칸은 확인창의 것이 되고, 그 `popstate` 를 옛 훅(걷었다 — `shared/lib/groo/use-back-close`)은 "뒤로 가기 = 확인창 닫기" 로 읽었다.
-// ds 훅은 자기가 부른 `go` 의 popstate 를 세어 건너뛴다. ModalShell · ConfirmDialog(ds AlertDialog 안의 같은 훅)이면 확인창이 남는다.
+// ds 훅은 자기가 부른 `go` 의 popstate 를 세어 건너뛴다. 시트 · ConfirmDialog(ds AlertDialog 안의 같은 훅)가 이 훅 하나를 쓰면 확인창이 남는다.
 // ConfirmDialog 는 자기 훅을 따로 두지 않는다 — ds AlertDialog 가 가진 훅 하나만 쓴다(중복 useBackClose 제거, 28-5). (#491 `detail-back-close.test.tsx` 와 같은 원인)
 //
 // 이 시험은 작성만 했고 이 묶음에서는 돌리지 않았다(heavy.sh 규칙) — 다음 전체 실행에서 확인한다.
@@ -21,12 +21,12 @@ vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 
-const { ConfirmDialog, ModalShell } = await import("./dialogs");
+const { ConfirmDialog } = await import("./dialogs");
 
 let container: HTMLDivElement;
 let root: Root;
 let cancelled = 0;
-let shellClosed = 0;
+let sheetClosed = 0;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -46,7 +46,7 @@ beforeEach(() => {
     };
   }
   cancelled = 0;
-  shellClosed = 0;
+  sheetClosed = 0;
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -144,23 +144,19 @@ describe("폼 시트 [삭제] → 확인창 (폰)", () => {
   });
 });
 
-describe("ModalShell 위의 확인창 — 같은 훅이라 뒤로 가기 한 번은 맨 위 하나만 닫는다", () => {
-  it("확인창이 ModalShell 위에 떠 있을 때 뒤로 가기는 확인창만 닫는다", async () => {
+describe("시트 위의 확인창 — 같은 훅이라 뒤로 가기 한 번은 맨 위 하나만 닫는다", () => {
+  it("확인창이 열린 시트 위에 떠 있을 때 뒤로 가기는 확인창만 닫는다", async () => {
+    /** 열린 채로 남는 시트(ds 훅) 위에 확인창을 올린다 */
     function Stack() {
       const [confirm, setConfirm] = useState(false);
+      dsBackClose(true, () => {
+        sheetClosed++;
+      });
       return (
         <>
-          <ModalShell
-            title="폼"
-            mobile
-            onClose={() => {
-              shellClosed++;
-            }}
-          >
-            <button data-testid="open" onClick={() => setConfirm(true)}>
-              open
-            </button>
-          </ModalShell>
+          <button data-testid="open" onClick={() => setConfirm(true)}>
+            open
+          </button>
           {confirm && (
             <ConfirmDialog
               title="삭제"
@@ -188,6 +184,6 @@ describe("ModalShell 위의 확인창 — 같은 훅이라 뒤로 가기 한 번
     });
     await wait();
     expect(cancelled).toBe(1);
-    expect(shellClosed).toBe(0);
+    expect(sheetClosed).toBe(0);
   });
 });
