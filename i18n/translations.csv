@@ -442,7 +442,8 @@ asset,savingGoal.deleteConfirm,삭제한 저축 목표는 되돌릴 수 없어�
 asset,savingGoal.deleteFailed,저축 목표를 삭제하지 못했어요.,Couldn't delete the saving goal.
 asset,savingGoal.overallProgress,전체 진행률,Overall progress
 asset,savingGoal.goalCount,목표 목록 · {{n}}개,Goals · {{n}}
-asset,savingGoal.emptyManager,아직 저축 목표가 없어요. [목표 추가]로 시작해보세요.,No saving goals yet. Start with [Add goal].
+asset,savingGoal.emptyTitle,아직 저축 목표가 없어요,No savings goals yet
+asset,savingGoal.emptyDesc,목표를 만들면 모은 금액과 남은 기간을 여기서 볼 수 있어요.,Create a goal to track how much you've saved and how long is left.
 asset,savingGoal.loadFailed,저축 목표를 불러오지 못했어요,Couldn't load the saving goals
 asset,savingGoal.editNamed,{{name}} 목표 수정,Edit {{name}} goal
 asset,savingGoal.deleteNamed,{{name}} 목표 삭제,Delete {{name}} goal

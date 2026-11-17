@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pencil, Target, Trash2 } from "lucide-react";
+import { Pencil, PiggyBank, Plus, Target, Trash2 } from "lucide-react";
 import { SwipeActions } from "@/shared/ds/swipe-actions";
 import { DynamicIcon } from "lucide-react/dynamic";
 import { isIconName } from "@/shared/lib";
+import { cn } from "@/shared/lib/cn";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { formatPercent } from "@/shared/lib/groo/format";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
@@ -13,13 +14,13 @@ import { Badge } from "@/shared/ds/badge";
 import { Button } from "@/shared/ds/button";
 import { Card, CardContent } from "@/shared/ds/card";
 import { List, ListButtonItem, ListItem, ListTile } from "@/shared/ds/list";
+import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
 import { ManagerHead, ManagerShell } from "@/shared/ui/groo/manager-layout";
 import {
-  BandEmpty,
   BarredItem,
   BandFailure,
   ListTitle,
@@ -279,6 +280,7 @@ export function SavingGoalManager({ mobile }: { mobile: boolean }) {
 
   const failed = goalsQ.isError && goalsQ.data === undefined;
   const loading = goalsQ.data === undefined && !goalsQ.isError;
+  const empty = !failed && !loading && goals.length === 0;
   const title = (
     <ListTitle
       id="saving-goal-list-title"
@@ -293,11 +295,6 @@ export function SavingGoalManager({ mobile }: { mobile: boolean }) {
   );
   const list = loading ? (
     <GoalsSkeleton />
-  ) : goals.length === 0 ? (
-    // 빈 목록 — R9 가운데 한 줄. 버튼은 목록 제목의 "목표 추가" 가 있어 두지 않는다
-    <div className="px-x6 pb-x3">
-      <BandEmpty>{t("savingGoal.emptyManager")}</BandEmpty>
-    </div>
   ) : (
     <List aria-labelledby="saving-goal-list-title">
       {goals.map((g) => (
@@ -321,13 +318,39 @@ export function SavingGoalManager({ mobile }: { mobile: boolean }) {
       />
     ) : null;
 
+  // 빈 화면 — 프리셋 관리와 같은 꼴: 목록 제목 · 글 버튼 없이 결과 하나, 첫 버튼 [목표 추가] 가 추가 시트를 연다.
+  // 데스크톱도 제목 줄에 추가 버튼이 없어(ManagerHead 에 동작 없음) 이 버튼이 유일한 추가 길이다
+  const emptyResult = (
+    <ResultSection
+      kind="empty"
+      size={mobile ? "large" : "medium"}
+      icon={<PiggyBank />}
+      title={t("savingGoal.emptyTitle")}
+      description={t("savingGoal.emptyDesc")}
+      primaryAction={{
+        label: t("addGoal"),
+        icon: <Plus aria-hidden />,
+        onClick: () => setEditing("new"),
+      }}
+    />
+  );
+
   const content = failed ? (
-    <div className={mobile ? "px-x6 pb-x6 pt-x2" : undefined}>
+    // 폰은 흰 면의 남은 높이를 받아 실패가 그 가운데에 선다(ResultSection 이 grow)
+    <div
+      className={mobile ? "flex flex-1 flex-col px-x6 pb-x6 pt-x2" : undefined}
+    >
       <BandFailure
         title={t("savingGoal.loadFailed")}
         onRetry={() => void goalsQ.refetch()}
       />
     </div>
+  ) : empty ? (
+    mobile ? (
+      emptyResult
+    ) : (
+      <Card body="list">{emptyResult}</Card>
+    )
   ) : (
     <>
       {summary}
@@ -349,9 +372,13 @@ export function SavingGoalManager({ mobile }: { mobile: boolean }) {
     <>
       {mobile ? (
         // 폰 — 흰 면 하나(I-08 24). 카드 · 줄 사이 선 없음, 구역 · 줄이 제 좌우 24 를 갖는다
+        // 흰 면(세로 flex)의 남은 높이를 받는다 — 빈 화면 · 실패가 그 가운데에 서고, 목록은 늘지 않아 위에 그대로 선다
         <div
           data-slot="saving-goal-phone"
-          className={summary || failed ? undefined : "pt-x4"}
+          className={cn(
+            "flex flex-1 flex-col",
+            empty ? "pb-x6" : !summary && !failed && "pt-x4",
+          )}
         >
           {content}
         </div>
