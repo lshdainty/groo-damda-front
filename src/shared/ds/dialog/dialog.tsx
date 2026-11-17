@@ -24,6 +24,7 @@ import {
   useOpenState,
   useRefocusAfterBusy,
   useInertWhileClosing,
+  useCloseAfterKeyboard,
   useWideSurface,
   withButtonSize,
   type OpenChange,
@@ -160,13 +161,17 @@ function Dialog({
   React.useLayoutEffect(() => {
     openRef.current = open;
   });
+  // 키보드가 떠 있으면 먼저 내리고 다 내려간 뒤에 닫는다(태블릿 — overlay/close-after-keyboard.ts)
+  const closeAfterKeyboard = useCloseAfterKeyboard(contentRef, () =>
+    setOpen(false),
+  );
   const leave = useLeaveConfirm({
     dirty,
     contentRef,
     container,
     modal,
     busy,
-    leave: () => setOpen(false),
+    leave: closeAfterKeyboard,
   });
   const value: DialogContextValue = {
     form,
