@@ -93,7 +93,6 @@ export function CardBilling({
                   type="button"
                   variant="ghost"
                   size="small"
-                  flush="left"
                   className={TEXT_LINK}
                   onClick={() => c.setPayoffTarget({ due, undo: true })}
                 >
@@ -106,7 +105,6 @@ export function CardBilling({
                   type="button"
                   variant="ghost"
                   size="small"
-                  flush="left"
                   className={TEXT_LINK}
                   onClick={() => c.setPayoffTarget({ due, undo: false })}
                 >
@@ -141,7 +139,6 @@ export function CardBilling({
               type="button"
               variant="ghost"
               size="small"
-              flush="left"
               aria-haspopup="dialog"
               aria-expanded={c.pickOpen}
               onClick={() => c.setPickOpen(true)}
@@ -232,7 +229,6 @@ export function CardBilling({
                 type="button"
                 variant="ghost"
                 size="small"
-                flush="right"
                 className={TEXT_LINK}
                 onClick={onEdit}
               >
