@@ -450,6 +450,8 @@ export function useStatsModel(lifted?: StatsState) {
     period,
     expenses: monthExpensesQ.data ?? [],
     monthlyBuckets,
+    // 사용자 기기 시계 — 기간 이름 "이번 달"(relativeNames)과 같은 오늘
+    today: new Date(),
   });
   const sumIn = monthlyBuckets.reduce((s, b) => s + b.totalIncome, 0);
   const sumOut = monthlyBuckets.reduce((s, b) => s + b.totalExpense, 0);
@@ -458,10 +460,10 @@ export function useStatsModel(lifted?: StatsState) {
   const avgOut = sumOut / n;
   const avgSave = avgIn - avgOut;
   const isSingle = period.segMode === "m";
-  const saveRate =
-    avgIn > 0 ? Math.max(0, Math.min(100, (avgSave / avgIn) * 100)) : 0;
-  const spendRate =
-    avgIn > 0 ? Math.max(0, Math.min(100, (avgOut / avgIn) * 100)) : 0;
+  // 수입이 없으면 비율을 낼 수 없다 — 0 으로 나누지 않고 null(화면은 "—"), "0%" 로 꾸며 말하지 않는다
+  const rates = savingsRates(avgIn, avgOut);
+  const saveRate = rates?.save ?? null;
+  const spendRate = rates?.spend ?? null;
   const statLabelIn = isSingle ? te("income") : t("trend.avgIncome");
   const statLabelOut = isSingle ? te("expense") : t("trend.avgExpense");
   const statLabelSave = isSingle ? t("trend.savings") : t("trend.avgSavings");
@@ -726,11 +728,54 @@ export type TrendDatum = {
   savings: number;
 };
 
-function buildTrendData({
+/**
+ * 저축률 · 지출 비율(0 ~ 100). 평균 수입이 0 이하면 낼 수 없어 null — 0 으로 나누지 않고, NaN · 무한 · "0%" 가 화면에 나가지 않는다
+ * (DESIGN.md "퍼센트" — 숫자가 아니면 "—").
+ */
+export function savingsRates(
+  avgIn: number,
+  avgOut: number,
+): { save: number; spend: number } | null {
+  if (!(avgIn > 0)) return null;
+  const clamp = (v: number) => Math.max(0, Math.min(100, v));
+  return {
+    save: clamp(((avgIn - avgOut) / avgIn) * 100),
+    spend: clamp((avgOut / avgIn) * 100),
+  };
+}
+
+/** 늘 찍는 점을 켜는 값 개수의 문턱(이하) — chart.md "늘 찍는 점" */
+export const TREND_DOTS_MAX_VALUES = 7;
+
+/**
+ * 0 이 대부분인 날마다의 합 — 켠 계열에서 값(0 이 아닌 점)이 있는 날이 TREND_DOTS_MAX_VALUES 개 이하이면 늘 찍는 점(`dots`)을 켠다
+ * (chart.md "늘 찍는 점"). 곡선(monotone)이 하루 값을 앞뒤 날까지 산 모양으로 이어 그려 그 사이에도 쓴 것처럼 보이므로, 점이 실제로
+ * 값이 있는 날을 짚어 준다. 선 모양 · 채움은 그대로다. 끈 계열은 세지 않는다.
+ */
+export function trendNeedsDots(
+  data: Pick<TrendDatum, "income" | "expense">[],
+  hidden: ReadonlySet<string>,
+): boolean {
+  const showIn = !hidden.has("income");
+  const showOut = !hidden.has("expense");
+  const valued = data.filter(
+    (d) => (showIn && d.income !== 0) || (showOut && d.expense !== 0),
+  ).length;
+  return valued > 0 && valued <= TREND_DOTS_MAX_VALUES;
+}
+
+/**
+ * 추이 점 — 일별(단일 월 · 짧은 직접 기간) 또는 월별. 추이 선과 일별 · 월별 순저축 막대가 같이 먹는다.
+ *
+ * 가로축은 오늘에서 끝난다 — 오늘 뒤 날짜 · 달을 0 으로 그리지 않는다(chart.md "축"). 오늘을 품은 기간만 오늘(월별은 이번 달)에서
+ * 자르고, 지난 기간은 끝까지 둔다. today 는 사용자 기기 시계(기간 이름 "이번 달" 과 같은 값)다.
+ */
+export function buildTrendData({
   useDailyTrend,
   period,
   expenses,
   monthlyBuckets,
+  today,
 }: {
   useDailyTrend: boolean;
   period: RangeState;
@@ -741,10 +786,16 @@ function buildTrendData({
     totalIncome: number;
     totalExpense: number;
   }[];
+  today: Date;
 }): TrendDatum[] {
   if (useDailyTrend) {
     const fromDay = startOfDay(period.from);
-    const toDay = startOfDay(period.to);
+    const lastDay = startOfDay(period.to);
+    const day = startOfDay(today);
+    const toDay =
+      day.getTime() >= fromDay.getTime() && day.getTime() < lastDay.getTime()
+        ? day
+        : lastDay;
     const days = Math.round((toDay.getTime() - fromDay.getTime()) / dayMs) + 1;
     const byDay = new Map<
       string,
@@ -775,9 +826,18 @@ function buildTrendData({
       savings: v.income - v.expense,
     }));
   }
+  // 서버는 기간 끝까지 0 버킷을 채워 보낸다 — 오늘을 품은 기간이면 이번 달 뒤 버킷을 뺀다(기간 전체가 앞날이면 그대로)
+  const thisMonth = today.getFullYear() * 12 + today.getMonth();
+  const indexOf = (b: { year: number; month: number }) =>
+    b.year * 12 + (b.month - 1);
+  const first = monthlyBuckets[0];
+  const buckets =
+    first && indexOf(first) <= thisMonth
+      ? monthlyBuckets.filter((b) => indexOf(b) <= thisMonth)
+      : monthlyBuckets;
   // 모든 버킷이 같은 해면 "1월" 만, 해가 섞이면 "2026. 1." (날짜 규칙 — 0 을 채우지 않는다)
-  const monthTickLabels = formatMonthTicks(monthlyBuckets);
-  return monthlyBuckets.map((b, i) => ({
+  const monthTickLabels = formatMonthTicks(buckets);
+  return buckets.map((b, i) => ({
     month: monthTickLabels[i]!,
     income: b.totalIncome,
     expense: b.totalExpense,

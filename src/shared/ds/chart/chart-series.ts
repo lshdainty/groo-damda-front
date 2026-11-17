@@ -1,11 +1,12 @@
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 
-import { ACTIVE_DOT, CHART_DRAW } from "./chart-variants";
+import { ACTIVE_DOT, CHART_DRAW, SERIES_DOT } from "./chart-variants";
 
 /*
  * 차트의 바로 아래 계열에 기본값을 넣는다 — 쓰는 쪽이 준 값이 이긴다. 컴포넌트가 아니라 요소를 고쳐 돌려주는 함수라 .ts 에 둔다(JSX 를 쓰지 않는다).
- *   Area · Line  선 2 · monotone · 점 없음(가리킨 자리에만 계열 색 점 r 4 + 카드 면 색 테두리 2) · 그려짐 300ms. Area 의 면은 같은 색 25% → 0% 세로 그라디언트
+ *   Area · Line  선 2 · monotone · 점 없음(가리킨 자리에만 계열 색 점 r 4 + 카드 면 색 테두리 2) · 그려짐 300ms. Area 의 면은 같은 색 25% → 0% 세로 그라디언트.
+ *                `dots` 를 켜면 값마다 늘 찍는 점(SERIES_DOT — 계열 선 색 r 3 · 테두리 없음)을 기본으로 둔다
  *   Bar          최대 폭 28 · 위 두 모서리 4(음수 막대는 쓰는 쪽이 radius 를 주어 아래 두 모서리로)
  *   Pie          조각 사이 0 · 테두리 없음 · 12시에서 시계 방향
  */
@@ -16,8 +17,14 @@ type AnyProps = Record<string, unknown>;
 export function withSeriesDefaults(
   chart: React.ReactElement<AnyProps>,
   idPrefix: string,
+  { dots = false }: { dots?: boolean } = {},
 ) {
   const gradients: React.ReactElement[] = [];
+  // 늘 찍는 점 — 계열 선 색 원. Area 는 면(그라디언트)이 점 색으로 번지지 않게 fill 을 선 색으로 준다
+  const dotOf = (props: AnyProps) =>
+    dots && typeof props.stroke === "string"
+      ? { ...SERIES_DOT, fill: props.stroke }
+      : false;
   const pick = (props: AnyProps, defaults: AnyProps) => {
     const out: AnyProps = {};
     for (const [key, value] of Object.entries(defaults))
@@ -33,7 +40,7 @@ export function withSeriesDefaults(
         const extra = pick(props, {
           type: "monotone",
           strokeWidth: 2,
-          dot: false,
+          dot: dotOf(props),
           activeDot: ACTIVE_DOT,
           ...CHART_DRAW,
         });
@@ -65,7 +72,7 @@ export function withSeriesDefaults(
           pick(props, {
             type: "monotone",
             strokeWidth: 2,
-            dot: false,
+            dot: dotOf(props),
             activeDot: ACTIVE_DOT,
             ...CHART_DRAW,
           }),

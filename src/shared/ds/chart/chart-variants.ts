@@ -240,6 +240,12 @@ export const ACTIVE_DOT = {
   stroke: "var(--color-bg-layer-default)",
 } as const;
 
+/**
+ * 늘 찍는 점(`dots`) — 가리킨 점에서 카드 면 색 테두리를 뺀 계열 색 원(지름 6 · 테두리 없음). 색(fill)은 계열의 선 색을 쓴다.
+ * 기본은 꺼짐이고, 켜도 가리킨 점(ACTIVE_DOT)이 그 위에 선다(chart.md "늘 찍는 점 — dots")
+ */
+export const SERIES_DOT = { r: 3, strokeWidth: 0 } as const;
+
 /** 그려짐 300ms 한 번 — 모션 줄이기면 바로(라이브러리 기본 isAnimationActive="auto" 를 강제로 켜지 않는다) */
 export const CHART_DRAW = {
   animationDuration: 300,
@@ -252,10 +258,14 @@ export const CHART_ROOT = [
   "relative w-full rounded-r2 font-sans",
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
   "[&_.recharts-cartesian-axis-tick-value]:tabular-nums",
-  // 가리킨 점의 테두리는 카드 면 색(라이브러리 기본 흰색을 덮는다) · 늘 찍는 점은 두지 않는다
-  "[&_.recharts-active-dot_.recharts-dot]:stroke-bg-layer-default [&_.recharts-line-dots]:hidden [&_.recharts-area-dots]:hidden",
+  // 가리킨 점의 테두리는 카드 면 색(라이브러리 기본 흰색을 덮는다)
+  "[&_.recharts-active-dot_.recharts-dot]:stroke-bg-layer-default",
   "[&_.recharts-surface]:outline-none [&_.recharts-wrapper]:outline-none [&_.recharts-sector]:outline-none",
 ].join(" ");
+
+// 늘 찍는 점은 두지 않는다 — `dots` 를 켜지 않은 차트(기본)에 붙인다
+export const CHART_HIDE_DOTS =
+  "[&_.recharts-line-dots]:hidden [&_.recharts-area-dots]:hidden";
 
 // 툴팁 — 떠 있는 표면: bg-layer-floating · s3 · 모서리 12 · 위아래 10 · 좌우 12 · 최소 128 · 테두리 없음 · 머리 ↔ 줄 · 줄 사이 4
 export const TOOLTIP_SURFACE =

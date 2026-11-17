@@ -2019,6 +2019,7 @@ constellation,collection.timesCollected,{{count}}회,{{count}}×
 constellation,collection.notCollected,미수집,Not yet
 constellation,detail.notMet,아직 만나지 못한 별자리예요,A constellation you haven't met yet
 stats,trend.savingsInsight,월 평균 수입의 {{pct}}를 저축하고 있어요,You're saving {{pct}} of your average income
+stats,trend.savingsNoIncome,수입이 없어 저축률을 낼 수 없어요,"No income, so there's no savings rate to show"
 stats,compare.weekdayTitle,요일별 지출 비교,Spending by weekday
 stats,compare.weekdayInsightDown,{{dow}}요일 지출이 {{prev}}보다 {{amt}}원 줄었어요.,{{dow}} spending fell {{amt}} vs {{prev}}
 stats,compare.weekdayInsightSame,{{prev}}{{josa}} 비슷해요.,Similar to {{prev}}.

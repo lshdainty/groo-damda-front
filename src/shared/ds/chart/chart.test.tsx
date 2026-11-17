@@ -37,6 +37,7 @@ import {
 import {
   ACTIVE_DOT,
   CHART_DRAW,
+  CHART_HIDE_DOTS,
   CHART_MAX_ITEMS,
   CHART_ORDER,
   DONUT_ROW,
@@ -44,6 +45,7 @@ import {
   DOT_BG,
   LEGEND_TILE,
   LEGEND_TILE_HIDDEN,
+  SERIES_DOT,
   SUBTLE_BG,
   TOOLTIP_SURFACE,
   assignChartColors,
@@ -524,6 +526,63 @@ describe("차트 상자 — 접근성 · 키보드", () => {
       radius: [0, 0, 4, 4],
     });
     expect(kids[1]!.props).toMatchObject({ strokeWidth: 3, fill: "blue" });
+  });
+
+  it("늘 찍는 점(dots) — 켜면 Area · Line 이 값마다 계열 선 색 원(r 3 · 테두리 없음), 기본은 점 없음 · 쓰는 쪽이 준 dot 이 이긴다", () => {
+    const chart = (
+      <AreaChart data={trendData}>
+        <Area dataKey="a" stroke="var(--color-chart-blue)" />
+        <Line dataKey="b" stroke="var(--color-chart-red)" />
+        <Line dataKey="c" stroke="red" dot={false} />
+      </AreaChart>
+    );
+    const on = React.Children.toArray(
+      withSeriesDefaults(chart, "p", { dots: true }).props
+        .children as React.ReactNode,
+    ) as React.ReactElement<Record<string, unknown>>[];
+    const [, area, line, own] = on;
+    // Area 의 점은 면(그라디언트)이 아니라 선 색으로 칠한다
+    expect(area!.props.dot).toEqual({
+      ...SERIES_DOT,
+      fill: "var(--color-chart-blue)",
+    });
+    expect(SERIES_DOT).toEqual({ r: 3, strokeWidth: 0 });
+    expect(line!.props.dot).toEqual({
+      ...SERIES_DOT,
+      fill: "var(--color-chart-red)",
+    });
+    expect(own!.props.dot).toBe(false);
+    // 가리킨 점은 그대로 — 늘 찍는 점 위에 선다
+    expect(area!.props.activeDot).toBe(ACTIVE_DOT);
+    const off = React.Children.toArray(
+      withSeriesDefaults(chart, "p").props.children as React.ReactNode,
+    ) as React.ReactElement<Record<string, unknown>>[];
+    expect(off[1]!.props.dot).toBe(false);
+    expect(off[2]!.props.dot).toBe(false);
+  });
+
+  it("늘 찍는 점(dots) — 켠 차트는 값마다 점을 그리고 숨김 규칙을 걷는다, 끈 차트(기본)는 숨김 규칙을 단다", async () => {
+    const chart = (dots?: boolean) => (
+      <Chart label="추이" height={200} dots={dots}>
+        <AreaChart data={trendData}>
+          <Area dataKey="income" stroke="var(--color-chart-blue)" />
+        </AreaChart>
+      </Chart>
+    );
+    await render(chart(true));
+    await layoutCharts();
+    const box = q("[data-slot=chart]")!;
+    expect(box.className).not.toContain("recharts-area-dots]:hidden");
+    const dots = qa(".recharts-area-dots circle");
+    expect(dots).toHaveLength(trendData.length);
+    for (const d of dots) {
+      expect(d.getAttribute("r")).toBe("3");
+      expect(d.getAttribute("fill")).toBe("var(--color-chart-blue)");
+    }
+    await render(chart());
+    await layoutCharts();
+    expect(q("[data-slot=chart]")!.className).toContain(CHART_HIDE_DOTS);
+    expect(qa(".recharts-area-dots circle")).toHaveLength(0);
   });
 
   it("막대 차트도 레이아웃이 잡히면 그려진다(막대 · 가리킴 선 구조가 깨지지 않는다)", async () => {
