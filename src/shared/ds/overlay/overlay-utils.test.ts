@@ -112,3 +112,43 @@ describe("focusOpener — 연 자리가 사라졌으면 그 줄 → 목록 머�
     expect(document.activeElement).toBe(document.getElementById("lh"));
   });
 });
+
+describe("focusOpener — 겹침 표면 안에서 연 표면(상세 → ⋮ → 확인창)", () => {
+  function nested() {
+    const { $ } = page();
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `<div role="dialog" id="detail" tabindex="-1"><button id="more">⋮</button><p>본문</p></div>
+       <div role="alertdialog" id="ask" tabindex="-1"></div>`,
+    );
+    // 줄 2 를 눌러 상세를 열고(상세가 둘레를 맡긴다), 상세 안 ⋮ 에서 확인창을 연다
+    captureAnchor($("menu2"), $("detail"));
+    const anchor = captureAnchor($("more"), $("ask"));
+    return { $, anchor };
+  }
+
+  it("확인창 · 상세 · 줄이 한꺼번에 사라지면 상세를 연 줄의 목록 머리로 — main 으로 빠지지 않는다", () => {
+    const { $, anchor } = nested();
+    $("row2").remove();
+    $("detail").remove();
+    $("ask").remove();
+    focusOpener(null, anchor);
+    expect(document.activeElement).toBe($("head"));
+  });
+
+  it("상세는 사라졌지만 상세를 연 줄이 남아 있으면 그 줄로", () => {
+    const { $, anchor } = nested();
+    $("detail").remove();
+    $("ask").remove();
+    focusOpener(null, anchor);
+    expect(document.activeElement).toBe($("menu2"));
+  });
+
+  it("상세가 남아 있는데 연 자리(⋮)만 사라졌으면 상세에 둔다 — 열린 상세 밖으로 빠지지 않는다", () => {
+    const { $, anchor } = nested();
+    $("more").remove();
+    $("ask").remove();
+    focusOpener(null, anchor);
+    expect(document.activeElement).toBe($("detail"));
+  });
+});

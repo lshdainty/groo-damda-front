@@ -164,6 +164,9 @@ function Texts({ title, detail, disabled, highlighted }: TextsProps) {
       >
         {title}
       </span>
+      {/* 제목과 설명 사이 — 읽는 이름이 "제목설명" 으로 붙지 않게 보이지 않는 ", " 를 둔다(list.md ARIA — 앱의 한 이름
+          "점심 · 숲길식당, 식비 · 12:10" 과 같은 끊김). 자리를 차지하지 않는다(sr-only 는 흐름 밖) */}
+      {has(detail) && <span className="sr-only">, </span>}
       {has(detail) && (
         <span
           data-slot="list-detail"

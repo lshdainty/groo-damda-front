@@ -429,7 +429,10 @@ const BottomSheetSurface = React.forwardRef<
           )}
           // 처음 초점은 시트(본문 위) — vaul 은 기본으로 아무 데도 두지 않는다
           onOpenAutoFocus={(e) => {
-            openerRef.current = captureAnchor(document.activeElement);
+            openerRef.current = captureAnchor(
+              document.activeElement,
+              own.current,
+            );
             onOpenAutoFocus?.(e);
             if (e.defaultPrevented) return;
             e.preventDefault();

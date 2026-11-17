@@ -129,5 +129,17 @@ export function screenTitleKey(pathname: string): string {
   return nav?.labelKey ?? "home";
 }
 
+/**
+ * 문서 제목(브라우저 탭)의 화면 이름 — 가계부 묶음은 머리 제목이 넷 모두 "가계부" 지만 문서 제목은 고른 탭 이름이다
+ * ("자산 - 그루 담다", tabs.md 가계부 탭). 그 밖은 머리 제목과 같다.
+ */
+export function documentTitleKey(pathname: string): string {
+  if (isMoneyPath(pathname)) {
+    const tab = MONEY_TABS.find((m) => under(pathname, m.path));
+    if (tab) return tab.labelKey;
+  }
+  return screenTitleKey(pathname);
+}
+
 /** `+` 가 여는 것과 이름 — 캘린더만 일정, 나머지는 거래(fab.ts) */
 export { fabFor } from "./fab";

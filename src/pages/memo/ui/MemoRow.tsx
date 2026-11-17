@@ -55,6 +55,8 @@ export function MemoRow({
               {memo.content}
             </span>
           ) : null}
+          {/* 본문과 메타 사이 — 읽는 이름이 "본문태그 없음" 으로 붙지 않게(제목 ↔ 설명 사이는 List 가 둔다) */}
+          {memo.content?.trim() ? <span className="sr-only">, </span> : null}
           <TagGroup size="t3" truncate>
             <TagGroupItem>{memo.tag || t("noTag")}</TagGroupItem>
             {stamp ? <TagGroupItem>{stamp}</TagGroupItem> : null}

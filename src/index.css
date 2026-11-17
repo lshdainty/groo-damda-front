@@ -66,6 +66,12 @@
 }
 
 @custom-variant dark (&:is(.dark *));
+/*
+ * 초점 링의 조건 — :focus-visible 이면서 직전 입력이 포인터가 아닐 때(shared/lib/input-modality.ts 가 <html data-input> 을 적는다).
+ * 스크립트가 옮긴 초점(화면 제목 · 닫힌 뒤 연 자리)은 브라우저가 :focus-visible 을 이어받아 손가락으로 눌러도 링이 남는다(DW 공통 5).
+ * 글을 넣는 칸은 브라우저 그대로 둔다. :where 라 우선순위는 그대로다 — 링 모양은 바꾸지 않는다
+ */
+@custom-variant focus-visible (&:focus-visible:not(:where(:root[data-input="pointer"] *:not(input, textarea, select, [contenteditable]))));
 
 /* =============================================================================
  * 그루 Design System — Foundation Tokens (SoT: groo-tokens.css `@theme {}`)
@@ -463,9 +469,12 @@
     }
   }
 
-  :focus-visible {
-    outline: 2px solid var(--border-focus);
-    outline-offset: 2px;
+  /* 전역 링 — 위 focus-visible 변형(직전 입력이 포인터면 그리지 않는다)을 쓴다 */
+  * {
+    @variant focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
   }
 }
 

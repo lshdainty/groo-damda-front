@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./alert-dialog";
+import { Dialog, DialogContent } from "../dialog";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -512,6 +513,98 @@ describe("닫힌 뒤 초점 — 연 줄이 지워졌으면", () => {
     await tick();
     expect(document.body.textContent).not.toContain("점심 지우기");
     expect(document.activeElement).toBe(document.querySelector("h2"));
+  });
+});
+
+describe("닫힌 뒤 초점 — 상세 안에서 연 확인창이 상세와 함께 사라지면", () => {
+  // 메모 · 거래 · 할 일: 줄 → 상세(대화상자 · 시트) → ⋮ → 삭제 → 확인 [삭제]. 지우고 나면 확인창과 상세가 한꺼번에 사라진다
+  function Detail() {
+    const [rows, setRows] = useState(["메모 1", "메모 2"]);
+    const [viewing, setViewing] = useState<string | null>(null);
+    const [ask, setAsk] = useState(false);
+    const shown = viewing && rows.includes(viewing) ? viewing : null;
+    return (
+      <main>
+        <h2>모든 메모</h2>
+        <ul>
+          {rows.map((r) => (
+            <li key={r}>
+              <button type="button" onClick={() => setViewing(r)}>
+                {r}
+              </button>
+            </li>
+          ))}
+        </ul>
+        {shown && (
+          <>
+            <Dialog open onOpenChange={(o) => !o && setViewing(null)}>
+              <DialogContent title={shown}>
+                <button type="button" onClick={() => setAsk(true)}>
+                  삭제하기
+                </button>
+              </DialogContent>
+            </Dialog>
+            <AlertDialog open={ask} onOpenChange={(o) => !o && setAsk(false)}>
+              <AlertDialogContent aria-label="삭제할까요?">
+                <AlertDialogDescription>지워요.</AlertDialogDescription>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>취소</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => {
+                      // 목록을 다시 받은 뒤 닫는다 — 상세는 목록에서 사라져 통째로 지워진다
+                      e.preventDefault();
+                      setRows((a) => a.filter((x) => x !== shown));
+                      setAsk(false);
+                    }}
+                  >
+                    삭제
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
+        )}
+      </main>
+    );
+  }
+
+  it("초점은 main 이 아니라 상세를 연 줄의 목록 머리로 간다(그 줄 → 목록 머리 → main)", async () => {
+    render(<Detail />);
+    const row = byText("메모 2");
+    act(() => {
+      row.focus();
+      row.click();
+    });
+    await tick();
+    const ask = byText("삭제하기");
+    act(() => {
+      ask.focus();
+      ask.click();
+    });
+    await tick();
+    expect(content()).not.toBeNull();
+    act(() => byText("삭제").click());
+    await tick();
+    await tick();
+    expect(content()).toBeNull();
+    expect(document.body.textContent).not.toContain("메모 2");
+    expect(document.activeElement).toBe(document.querySelector("h2"));
+  });
+
+  it("상세가 남아 있으면(확인창만 닫힘) 초점은 상세 안 연 자리로 돌아간다", async () => {
+    render(<Detail />);
+    act(() => byText("메모 1").click());
+    await tick();
+    const ask = byText("삭제하기");
+    act(() => {
+      ask.focus();
+      ask.click();
+    });
+    await tick();
+    act(() => byText("취소").click());
+    await tick();
+    await tick();
+    expect(document.activeElement).toBe(byText("삭제하기"));
   });
 });
 

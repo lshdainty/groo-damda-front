@@ -65,6 +65,32 @@ const render = (e: Expense, props: object = {}) =>
   act(() => root.render(<ExpenseRow expense={e} {...props} />));
 const q = (sel: string) => container.querySelector<HTMLElement>(sel);
 
+// 읽는 이름 — 보조 기술이 읽는 글(aria-hidden 은 뺀다)
+function spoken(el: Node): string {
+  if (el.nodeType === Node.TEXT_NODE) return el.textContent ?? "";
+  if (el instanceof Element && el.getAttribute("aria-hidden") === "true")
+    return "";
+  return Array.from(el.childNodes).map(spoken).join("");
+}
+
+describe("거래 줄 — 읽는 이름(DW-17)", () => {
+  it("줄 버튼은 제목, 카테고리, 시각으로 조각마다 끊긴다 — 제목 · 설명이 붙지 않고 빈 조각이 없다", () => {
+    render(
+      { ...base, merchant: null, categoryName: "교통", assetName: null },
+      { onClick: () => {} },
+    );
+    const name = spoken(q("button")!);
+    expect(name).toMatch(/^교통, 교통, \S+/);
+    expect(name).not.toMatch(/교통교통|, ,|· ,/);
+  });
+
+  it("금액은 버튼 밖 뒤 붙이개라 줄 버튼 다음에 따로 읽힌다(list.md ARIA — 웹은 값이 버튼 밖)", () => {
+    render({ ...base, amount: 9_000 }, { onClick: () => {} });
+    expect(spoken(q("button")!)).not.toContain("9,000");
+    expect(q("[data-slot=list-suffix]")?.textContent).toContain("9,000");
+  });
+});
+
 describe("거래 줄 — ds List", () => {
   it("제목은 줄을 바꾸고(말줄임 0) 설명만 한 줄 말줄임이다", () => {
     render({ ...base, amount: 1_234_567 });

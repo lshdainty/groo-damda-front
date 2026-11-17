@@ -30,7 +30,7 @@ import {
   isFullscreenPath,
   screenFloor,
   isMoneyPath,
-  screenTitleKey,
+  documentTitleKey,
 } from "../model/shell";
 import { applyShellInsets, shellInsets } from "../model/shell-insets";
 
@@ -48,7 +48,8 @@ const ScreenEffects = () => {
   const { t } = useTranslation("layout");
   const { pathname, key } = useLocation();
   const navType = useNavigationType();
-  useScreenTitle(t(screenTitleKey(pathname)));
+  // 문서 제목은 고른 가계부 탭 이름까지 — 머리 제목("가계부")과 다르다(tabs.md)
+  useScreenTitle(t(documentTitleKey(pathname)));
   // 화면 기억은 주소(pathname)가 아니라 history 칸(location.key)을 따른다 — 주소가 같고 칸만 다른 되감기도 놓치지 않는다
   const last = useRef({ pathname, key });
   const wide = useWideSurface();
