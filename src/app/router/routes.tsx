@@ -1,5 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import {
+  unstable_HistoryRouter as HistoryRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { lazy, Suspense, useState } from "react";
+import { createAppHistory } from "./app-history";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 const AppLayout = lazy(() =>
@@ -125,8 +131,10 @@ const DsCatalogPage = import.meta.env.DEV
 const Loading = () => <div data-slot="route-loading" className="min-h-dvh" />;
 
 export const AppRouter = () => {
+  // BrowserRouter 와 같은 히스토리에 "표면 칸 되돌림이 끝난 뒤 옮기기" 를 더했다(app-history.ts)
+  const [history] = useState(createAppHistory);
   return (
-    <BrowserRouter>
+    <HistoryRouter history={history}>
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -219,6 +227,6 @@ export const AppRouter = () => {
           <Route path="*" element={<Navigate to="/desk" replace />} />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </HistoryRouter>
   );
 };
