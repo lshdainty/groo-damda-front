@@ -540,3 +540,77 @@ describe("iPhone Safari 26 — 떠 있는 주소 알약 · 입력 도구줄은 �
     },
   );
 });
+
+describe("딤 — 키보드가 떠도 inset 0 그대로, 레이아웃 뷰포트 아래 띠까지 덮는다", () => {
+  // 2026-11-17 QA(iPhone 17 Pro · Safari 26) — 입력 도구줄이 없을 때 보이는 영역 아래 끝 = 레이아웃 뷰포트 아래 끝(714)이고
+  // 그 아래(주소 알약 둘레 ~ 키보드 윗변, 약 98pt)에도 문서가 그려진다. fixed inset-0 인 딤은 거기 닿지 않아 뒤 페이지가 비쳤다.
+  // 키보드 자리 맞춤은 표면에만 — 딤에는 인라인 값이 붙지 않는다. 띠는 딤의 ::after 가 바로 뒤 표면의 data-keyboard 를 보고 덮는다
+  // (jsdom 은 Tailwind 를 풀지 않으므로 클래스의 조건 선택자를 실제 DOM 에 대 본다).
+  const KEYBOARD_ON = ":has(+[data-keyboard])";
+  const extendTokens = (el: Element) =>
+    el.className
+      .split(/\s+/)
+      .filter((t) => t.startsWith(`[&${KEYBOARD_ON}]:after:`));
+
+  function expectDim(overlay: HTMLElement, surface: HTMLElement) {
+    // 표면 바로 앞 형제 — 조건 선택자(+)가 기대는 구조
+    expect(overlay.nextElementSibling).toBe(surface);
+    expect(overlay.className).toMatch(/(^|\s)fixed(\s|$)/);
+    expect(overlay.className).toMatch(/(^|\s)inset-0(\s|$)/);
+    // 딤 상자 자체는 그대로 — 위치 · 높이를 인라인으로 받지 않는다
+    for (const prop of ["top", "bottom", "height", "max-height", "inset"]) {
+      expect(overlay.style.getPropertyValue(prop)).toBe("");
+    }
+    // 띠를 덮는 ::after — 딤 바로 아래(top-full)부터 화면 높이만큼, 같은 색
+    expect(extendTokens(overlay).map((t) => t.split(":after:")[1])).toEqual([
+      "absolute",
+      "inset-x-0",
+      "top-full",
+      "h-lvh",
+      "bg-inherit",
+    ]);
+  }
+
+  it("시트 — 숫자 키패드(714 · 410 · 밀림 304): 시트만 올라가고 딤은 inset 0, 띠 덮개가 켜진다 · 내리면 꺼진다", async () => {
+    render(<Sheet />);
+    const overlay = document.querySelector<HTMLElement>(
+      "[data-slot=bottom-sheet-overlay]",
+    )!;
+    expect(overlay.matches(KEYBOARD_ON)).toBe(false);
+
+    setViewport({ layout: 714, visual: 410, top: 304 });
+    await fire(vv, "resize");
+    expect(sheet().getAttribute("data-keyboard")).toBe("fit");
+    expect(sheet().style.maxHeight).toBe(`${Math.floor(410 * 0.9)}px`);
+    expectDim(overlay, sheet());
+    expect(overlay.matches(KEYBOARD_ON)).toBe(true);
+
+    setViewport({ layout: 714, visual: 714 });
+    await fire(vv, "resize");
+    expectDim(overlay, sheet());
+    expect(overlay.matches(KEYBOARD_ON)).toBe(false);
+  });
+
+  it("대화상자 — 키보드가 뜨면 가운데만 옮기고 딤은 inset 0, 띠 덮개가 켜진다", async () => {
+    render(
+      <Dialog open form>
+        <DialogContent title="거래 추가">
+          <DialogBody>
+            <input aria-label="금액" />
+          </DialogBody>
+        </DialogContent>
+      </Dialog>,
+    );
+    const overlay = document.querySelector<HTMLElement>(
+      "[data-slot=dialog-overlay]",
+    )!;
+    const box = document.querySelector<HTMLElement>(
+      "[data-slot=dialog-content]",
+    )!;
+    setViewport({ layout: 1024, visual: 624, top: 100 });
+    await fire(vv, "resize");
+    expect(box.style.top).toBe(`${100 + 624 / 2}px`);
+    expectDim(overlay, box);
+    expect(overlay.matches(KEYBOARD_ON)).toBe(true);
+  });
+});
