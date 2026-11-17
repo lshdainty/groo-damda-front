@@ -1,9 +1,38 @@
 import * as React from "react";
 
-import { dimBefore, keyboardBand, type KeyboardBand } from "./keyboard-band";
-
 /** 이만큼 넘게 가려야 키보드로 본다 — 주소창이 접히고 펴지는 정도(수십 px)는 키보드가 아니다. */
 export const KEYBOARD_MIN_PX = 60;
+
+/**
+ * iPhone 사파리에서 바닥 고정 버튼(시트 · 대화상자 바닥)을 보이는 영역 아래 끝에서 늘 띄우는 높이 — 입력 도구줄(∧ · ∨ · 완료)
+ * 높이 56. DESIGN.md Layout › Safe Area "화면 키보드"(groo-design #241): "브라우저가 입력 도구줄을 보이는 영역에서 뺐는지
+ * 알려 주지 않는 경우(iPhone 사파리), 바닥 고정 버튼은 보이는 영역 아래 끝에서 도구줄 높이(56)만큼 늘 띄웁니다."
+ *
+ * iPhone 17 Pro · Safari 26 실기기(2026-11-17 QA)는 키보드를 올릴 때마다 두 상태가 번갈아 나오고 둘을 가를 값을 주지 않는다 —
+ *   (A) 주소 알약 · 도구줄이 뜨고 보이는 영역이 둘 다 빼고 준다(보이는 높이 384) — 56 을 띄우면 그만큼 빈틈이 생긴다.
+ *   (B) 알약이 없고 보이는 영역이 키보드 윗변까지인데(보이는 높이 484) 도구줄이 그 안에 떠 바닥 [저장] · [다음] 을 덮어 누를 수
+ *       없다(도구줄 자리의 터치를 OS 가 먹는다).
+ * (A) 의 빈틈은 결함이 아니다 — 누를 수 없는 것(기능)을 빈틈(모양)보다 먼저 막는다(#613 의 "빈틈은 결함" 판정을 이 경우에 한해
+ * 거뒀다). 토큰이 없어 스펙 값을 그대로 둔다.
+ */
+export const IPHONE_SAFARI_TOOLBAR_RESERVE_PX = 56;
+
+/**
+ * 바닥 고정 버튼을 보이는 영역 아래 끝에서 더 띄울 높이 — iPhone 사파리 26 이상이면 56, 아니면 0.
+ *
+ * 사파리만 가린다 — `Version/` 이 있고 다른 브라우저 표시(CriOS · FxiOS · EdgiOS · OPiOS)가 없는 iPhone. 26 부터 도구줄이 키보드
+ * 위에 떠서 위 (A) · (B) 가 번갈아 난다(25 이하는 도구줄이 키보드에 붙어 보이는 영역이 늘 뺀다 — #606 때의 판정 그대로). 26 은
+ * UA 의 OS 판이 18_6 으로 묶여 있어 `Version/` 으로 본다. iPad(데스크톱 UA) · 안드로이드 · 데스크톱은 0.
+ */
+export function keyboardToolbarReserve(
+  ua: string = typeof navigator === "undefined" ? "" : navigator.userAgent,
+) {
+  if (!/iPhone/.test(ua) || /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)) return 0;
+  const version = /Version\/(\d+)/.exec(ua);
+  return version && Number(version[1]) >= 26
+    ? IPHONE_SAFARI_TOOLBAR_RESERVE_PX
+    : 0;
+}
 
 /**
  * 레이아웃 뷰포트 높이 — `position: fixed` 의 기준. `documentElement.clientHeight` 로 잰다.
@@ -23,9 +52,9 @@ export type KeyboardViewport = { top: number; height: number };
 /**
  * 지금 키보드가 화면을 가리고 있으면 쓸 수 있는 영역(보이는 영역 그대로)을, 아니면 null 을 준다.
  *
- * 보이는 영역(visualViewport)이 곧 쓸 수 있는 영역이다 — 아무것도 더 빼지 않는다. iPhone Safari 26 은 키보드 위에
- * 떠 있는 주소 알약 · 입력 도구줄(∧ · ∨ · 완료)까지 이미 빼고 준다(2026-11-17 실측 · iPhone 17 Pro — 숫자 키패드 ·
- * 한글 키보드 모두 보이는 영역 아래 끝 = 알약 윗변). 더 빼면 시트 아래가 비어 뒤 페이지가 비친다.
+ * 보이는 영역(visualViewport) 그대로다 — 여기서는 아무것도 더 빼지 않는다. iPhone Safari 26 은 키보드 위에 떠 있는 주소
+ * 알약 · 입력 도구줄(∧ · ∨ · 완료)을 뺀 때와 안 뺀 때(도구줄이 보이는 영역 안에 뜬다)가 번갈아 나오는데, 바닥 고정 버튼만
+ * 그 몫을 늘 띄운다(keyboardToolbarReserve — 시트 · 대화상자의 useKeyboardViewport 가 건다).
  *
  * 가린 높이는 `레이아웃 높이 − visualViewport.height × scale` 이다 — 손가락으로 확대(scale > 1)하면 보이는
  * 높이가 배율만큼 줄 뿐 가린 것은 없으므로 배율을 되돌려 잰다. 레이아웃 뷰포트까지 함께 줄어드는
@@ -71,10 +100,11 @@ export function keyboardBottomInset(
  *
  * 규칙(Layout › Safe Area "화면 키보드" · bottom-sheet.md 키보드(폰) · "키보드로 넘친 것 — 본문만 스크롤, 머리 · 바닥은
  * 그대로", dialog.md "머리 · 바닥이 화면 밖으로 나가지 않습니다")을 쓸 수 있는 영역(readKeyboardViewport)에 건다.
+ *   - 쓸 수 있는 영역 — 보이는 영역에서 아래 끝의 도구줄 몫(keyboardToolbarReserve — iPhone 사파리 56, 그 밖 0)을 뺀 것.
  *   - 높이 상한은 **쓸 수 있는 높이 × ratio**(시트 0.9 · 대화상자 0.8 — 클래스의 dvh 비율과 같다). 넘치는 만큼
  *     본문(min-h-0 flex-1)만 줄어 스크롤하고 머리 · 바닥은 남는다.
  *   - bottom — 시트의 아래 변을 보이는 영역의 아래 변(OS 가 그린 것 가운데 가장 위 — 떠 있는 주소 알약 · 도구줄 ·
- *     키보드)에 붙인다(keyboardBottomInset). 보이는 영역이
+ *     키보드)에 붙이고(keyboardBottomInset) 도구줄 몫만큼 더 띄운다. 보이는 영역이
  *     밀려 올라가도(offsetTop) 그만큼 따라간다.
  *   - center — 대화상자의 가운데를 쓸 수 있는 영역의 가운데에 둔다(클래스의 −translate-y-1/2 는 그대로).
  *   - 초점 칸 — 키보드가 뜰 때 · 높이가 바뀔 때 · 초점이 옮겨 갈 때, 초점 칸 전체가 본문의 보이는 칸(scroll-padding —
@@ -84,10 +114,8 @@ export function keyboardBottomInset(
  *     머리 밑에 가린 채로 있다(2026-11-17 QA — 거래 추가 2단계 "거래처"). 넣은 뒤 사용자가 직접 민 스크롤은 그대로 둔다.
  *   - 쓸 수 있는 영역이 머리 · 바닥만으로 차 본문에 초점 칸 하나도 안 들어가면(가로 화면의 폰) 본문만 스크롤하는
  *     규칙을 지킬 수 없다 — 그때만 표면 전체가 스크롤하고 초점 칸을 그 안에서 보이게 한다(isCramped · setCramped).
- *   - 띠 — 보이는 영역 아래 끝(= 레이아웃 뷰포트 아래 끝)과 키보드 사이에 iPhone Safari 26 이 문서를 그리는데 fixed 인 딤은
- *     거기 그려지지 않는다. 키보드가 떠 있는 동안만 표면 바로 앞 딤의 거울을 문서 쪽에 둬 덮는다(keyboard-band.ts).
- * 키보드가 없으면 박은 값을 모두 걷는다 — 그때는 클래스(dvh)가 정한다(띠 덮개도 걷는다). 키보드가 떠 있는 동안 표면에
- * `data-keyboard`(fit · cramped)를 단다.
+ * 키보드가 없으면 박은 값을 모두 걷는다 — 그때는 클래스(dvh)가 정한다. 키보드가 떠 있는 동안 표면에
+ * `data-keyboard`(fit · cramped)를 단다. 딤은 손대지 않는다 — 늘 화면 위아래로 넘쳐 키보드 아래 띠까지 덮는다(dim-bounds.ts).
  *
  * 듣는 것: visualViewport `resize` · `scroll`(iOS 는 높이를 바꾸지 않고 밀기만 하거나 resize 없이 끝난다) ·
  * window `resize` · 문서 `focusin` · `focusout`. 마운트 때도 한 번 — 키보드가 떠 있는 채 열린 겹친 시트가 바로 맞게.
@@ -110,8 +138,6 @@ export function useKeyboardViewport(
     // 키보드가 떠 있는 동안 초점 칸을 보이려고 넣은 스크롤 — 상자 · 넣기 전 자리(from) · 넣은 뒤 자리(to)
     let revealed: { scroller: HTMLElement; from: number; to: number } | null =
       null;
-    // 레이아웃 뷰포트 아래 띠를 덮는 딤의 거울 — 키보드가 처음 뜰 때 만든다
-    let band: KeyboardBand | null = null;
     const apply = (reveal: boolean) => {
       const el = targetRef.current;
       if (!el) return;
@@ -119,7 +145,6 @@ export function useKeyboardViewport(
       const layoutHeight = layoutViewportHeight();
       const kb = readKeyboardViewport(layoutHeight);
       if (!kb) {
-        band?.hide();
         lastHeight = null;
         el.style.removeProperty("max-height");
         el.style.removeProperty(placement === "bottom" ? "bottom" : "top");
@@ -133,17 +158,15 @@ export function useKeyboardViewport(
         revealed = null;
         return;
       }
-      if (!band) {
-        const dim = dimBefore(el);
-        if (dim) band = keyboardBand(dim);
-      }
-      band?.show(layoutHeight);
-      const maxHeight = Math.floor(kb.height * ratio);
+      // 바닥 고정 버튼을 도구줄 몫만큼 띄운다 — 그만큼 쓸 수 있는 높이도 준다
+      const reserve = keyboardToolbarReserve();
+      const usable = Math.max(kb.height - reserve, 0);
+      const maxHeight = Math.floor(usable * ratio);
       el.style.maxHeight = `${maxHeight}px`;
       if (placement === "bottom") {
-        el.style.bottom = `${keyboardBottomInset(layoutHeight)}px`;
+        el.style.bottom = `${keyboardBottomInset(layoutHeight) + reserve}px`;
       } else {
-        el.style.top = `${Math.round(kb.top + kb.height / 2)}px`;
+        el.style.top = `${Math.round(kb.top + usable / 2)}px`;
       }
       const cramped = body != null && isCramped(el, body, maxHeight);
       const wasCramped = el.getAttribute("data-keyboard") === "cramped";
@@ -183,7 +206,6 @@ export function useKeyboardViewport(
       window.removeEventListener("resize", onChange);
       document.removeEventListener("focusin", onFocus);
       document.removeEventListener("focusout", onChange);
-      band?.hide();
     };
   }, [targetRef, placement, ratio]);
 }
