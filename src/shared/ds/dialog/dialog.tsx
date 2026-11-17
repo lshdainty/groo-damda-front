@@ -20,6 +20,7 @@ import {
   type FocusAnchor,
   surfaceTookOver,
   mergeRefs,
+  useKeyboardViewport,
   useOpenState,
   useRefocusAfterBusy,
   useWideSurface,
@@ -38,6 +39,7 @@ import {
   DIALOG_FOOTER,
   DIALOG_HEADER,
   DIALOG_HEADER_WITH_CLOSE,
+  DIALOG_MAX_HEIGHT_RATIO,
   DIALOG_HEADER_WITH_ACTION,
   DIALOG_HEADER_WITH_ACTION_CLOSE,
   DIALOG_HEADER_ACTION,
@@ -83,7 +85,7 @@ import { useDsText } from "@/shared/ds/i18n";
  * (설명이 없으면 걷는다). 보이는 제목이 없는 대화상자(명령 팔레트)는 aria-label 을 준다 — 숨은 제목으로 둔다.
  *
  * 모양은 dialog-variants.ts — 화면 정중앙, 폭 480 · 800(좌우 20 은 남긴다), 높이는 내용만큼 화면의 80% 까지(dvh) — 넘치는 만큼
- * 본문만 스크롤한다. 넘쳐 스크롤할 수 있는 본문은 키보드로도 스크롤하도록 Tab 이 선다(안쪽 링).
+ * 본문만 스크롤한다. 키보드가 떠 있으면 "화면" 은 보이는 영역이다 — 그 가운데 · 그 높이의 80%(overlay/use-keyboard-viewport.ts). 넘쳐 스크롤할 수 있는 본문은 키보드로도 스크롤하도록 Tab 이 선다(안쪽 링).
  * 끝 흐림(scrollFog, dialog.yaml · scroll-fog.yaml overlayBody) — 걸 본문인지는 내용의 종류로 정한다(칸 두셋처럼 늘 들어맞는 본문에는
  * 걸지 않는다). 걸면 넘쳤는지 · 스크롤 위치와 상관없이 늘 켜져 있고, 본문 안 여백이 위 20(머리가 없으면 24 그대로) · 아래 80
  * (바닥이 있어도)이 돼 끝까지 내리면 흐림이 빈 여백 위에 놓인다. 머리 아래 선은 머리의 안쪽 아래 1px 로 그린다 — 본문은 흐림 마스크가
@@ -245,6 +247,8 @@ const DialogContent = React.forwardRef<
     const ctx = React.useContext(DialogContext);
     const own = React.useRef<HTMLDivElement>(null);
     const openerRef = React.useRef<FocusAnchor | null>(null);
+    // 키보드(태블릿 · 가로 폰)가 떠 있는 동안 대화상자를 보이는 영역 가운데에 두고 높이 상한을 보이는 높이의 80% 로
+    useKeyboardViewport(own, "center", DIALOG_MAX_HEIGHT_RATIO);
     const form = ctx?.form ?? false;
     const hasHeader = title != null;
     // 닫기 버튼은 조회 · 안내의 머리에만 — 입력 폼은 바닥 [취소] 가 닫는다(닫기 버튼과 취소를 함께 두지 않는다)

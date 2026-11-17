@@ -23,6 +23,9 @@ export const DIALOG_CONTENT = [
   "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:[--tw-animation-duration:var(--motion-duration-d2)] data-[state=closed]:ease-[var(--motion-ease-exit)]",
 ].join(" ");
 
+// 높이 상한 비율 — 위 max-h-[80dvh] 와 같은 값. 키보드가 떠 있는 동안은 보이는 영역 높이에 이 비율을 건다(useKeyboardViewport)
+export const DIALOG_MAX_HEIGHT_RATIO = 0.8;
+
 export const DIALOG_SIZE = { medium: "w-[480px]", large: "w-[800px]" } as const;
 
 // 머리 — 위 24 · 좌우 24 · 아래 16 · 사이 6. 본문이 위로 스크롤되면 안쪽 아래 1px stroke-neutral-subtle(150ms) — 본문이 흐림 마스크를
