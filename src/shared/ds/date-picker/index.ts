@@ -23,4 +23,7 @@ export {
   type DatePresetName,
   type DateRange,
 } from "./date-picker-dates";
-export { DATE_PICKER_TWO_MONTHS_POPOVER } from "./date-picker-variants";
+export {
+  DATE_PICKER_CONTINUOUS_SHEET_BODY,
+  DATE_PICKER_TWO_MONTHS_POPOVER,
+} from "./date-picker-variants";

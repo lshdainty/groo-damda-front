@@ -23,6 +23,10 @@ import {
  *
  * 칸은 `<a href>` 라 라우터로 옮기도록 onClick 을 넘기고(다른 탭에서 오면 그 탭의 마지막 화면 · 스크롤 — lib/tab-memory), 지금 탭을 다시 누르면(onReselect) 그 탭의 첫 화면으로
  * replace 하며 맨 위로 스크롤한다(같은 주소를 쌓지 않는다).
+ *
+ * 보는 화면이 바뀌면 줄어든 바를 편다(bottom-navigation.md "줄어들기") — 화면은 경로 + 화면 안 Tabs 로 고른 화면(`?tab=`)이다.
+ * 같은 화면의 쿼리(`?month=` 등)만 바뀌면 그대로 둔다(앱 mobile_scaffold 와 같다). 맨 위로 스크롤해서 간접으로 펴지던 것에
+ * 기대지 않는다 — 뒤로 와서 스크롤이 40 아래로 돌아오면 펴지지 않았다.
  */
 export function AppTabBar({
   onAdd,
@@ -38,7 +42,9 @@ export function AppTabBar({
   addLabel: string;
 }) {
   const { t } = useTranslation("layout");
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const screenTab = new URLSearchParams(search).get("tab");
+  const screenKey = screenTab ? `${pathname}?tab=${screenTab}` : pathname;
   // 다시 누름(첫 화면으로)도 떠나기 가드를 먼저 — [계속 작성] 이면 기억도 지우지 않는다
   const leaveGuard = useLeaveGuard();
   const rawNavigate = useNavigate();
@@ -73,7 +79,7 @@ export function AppTabBar({
 
   return (
     <SnackbarAvoidOverlap>
-      <BottomNavigation>
+      <BottomNavigation screenKey={screenKey}>
         {tab("home", "/desk", t("home"), <Home />, isHomeTab(pathname))}
         {tab(
           "expense",

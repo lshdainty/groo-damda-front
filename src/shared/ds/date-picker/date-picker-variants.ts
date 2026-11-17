@@ -47,8 +47,10 @@ export const CONTINUOUS_MONTH_LABEL = "px-x1";
 
 // 이어지는 달 — 스크롤 칸(스크롤바 숨김) · 위에 붙는 요일 줄 · 달마다 왼쪽 이름 48 + 아래 16 · 아래 안개 96.
 // z-[2] · z-[3] 은 이 스크롤 칸 안의 쌓임(요일 줄 < 안개)이라 전역 z 토큰이 아니다
+// 시트가 낮아(320 보다 좁은 화면에서 바닥 버튼이 위아래로 쌓일 때 등) 달이 요일 줄 + 2주보다 낮아지면 그 높이에서 멈춘다 — 넘친 만큼은
+// 시트 본문이 스크롤한다(DATE_PICKER_CONTINUOUS_SHEET_BODY, Layout "지원 폭"). 요일 줄 · 주 줄 높이는 WHEEL 과 같은 셈이다
 export const CONTINUOUS_SCROLL =
-  "relative min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  "relative min-h-[calc(max(48px,var(--text-t4--line-height))_+_2_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))] flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 export const CONTINUOUS_WEEKDAYS =
   "sticky top-0 z-[2] grid min-h-[48px] grid-cols-7 bg-bg-layer-floating";
 export const CONTINUOUS_MONTH = "pb-x4";
@@ -135,6 +137,13 @@ export const CONTINUOUS_OVERSCAN = 2;
 /** 두 달 보기를 담는 PopoverContent 의 className — 팝오버 폭 744(달력 696 + 좌우 24). Popover 최대 480 의 예외(date-picker.md) */
 export const DATE_PICKER_TWO_MONTHS_POPOVER =
   "max-w-[min(744px,var(--radix-popover-content-available-width,744px))]";
+
+/**
+ * 이어지는 달(continuous)을 담는 BottomSheetBody 의 className — 세로는 본문이 스크롤하고(SHEET_BODY 의 overflow-y-auto 그대로) 가로는 자른다
+ * (칩 줄 bleed 는 본문 좌우 여백 안이라 잘리지 않는다). 보통 높이에서는 달력이 본문을 꼭 채워 본문 스크롤이 생기지 않고 달 안에서 스크롤한다.
+ * 시트가 낮아 달이 요일 줄 + 2주에서 멈추면 넘친 만큼 본문이 스크롤한다 — 머리 · 바닥은 그대로 보인다(date-picker.md · Layout "지원 폭")
+ */
+export const DATE_PICKER_CONTINUOUS_SHEET_BODY = "overflow-x-hidden";
 
 /** 이전 · 다음 버튼 — 40 px(글자 배율을 따르지 않는다 — 03-C 결정 1B, 레시피 NAV_PX) */
 export const NAV_PX = "h-[40px] w-[40px]";

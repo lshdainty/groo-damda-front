@@ -15,6 +15,7 @@ import {
   LEGEND_TILE_HIDDEN,
   SUBTLE_BG,
   TOOLTIP_SURFACE,
+  chartDonutRadii,
   formatWon,
   type ChartColor,
   type ChartTone,
@@ -59,6 +60,10 @@ import { useDsText, withCommaBreaks } from "@/shared/ds/i18n";
  *   검사기가 요소의 바탕을 읽을 수 있다). ② 표로 보기는 Table(아직 이 폴더에 없다)이 아니라 이 폴더의 단순한 <table> 이다 — Table 이 서면 바꾼다.
  *   ③ 다크가 문서가 아니라 하위 요소에 걸린 곳에서도 색이 맞게(열지도 툴팁의 띄울 자리 — chart-heatmap.tsx). ④ 도넛 구멍 · 칸 폭 같은 잰 값은
  *   ResizeObserver 콜백에서만 상태로 옮긴다(효과 안에서 바로 setState 하지 않는다 — 컴파일러 규칙). ⑤ 손 메모이제이션 없음.
+ *
+ * 도넛이 자리보다 클 때 — 그리는 자리(차트 상자 폭)가 지름(Pie 의 outerRadius × 2)보다 좁으면(320 보다 좁은 화면 — 페이지 확대,
+ *   Layout "지원 폭") 자리 폭에 맞춰 지름을 줄이고 두께도 같은 셈(지름 ÷ 10 + 6)으로 다시 낸다 — chartDonutRadii(자리 폭). 차트 상자
+ *   높이도 줄어든 만큼 줄이고 가운데 합계는 줄어든 구멍으로 잰다. 자리가 지름 이상이면 쓰는 쪽이 준 값 그대로다.
  */
 
 type AnyProps = Record<string, unknown>;
@@ -126,7 +131,53 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
             React.isValidElement(c) && c.type === RechartsPrimitive.Pie,
         )
       : undefined;
-    const inner = pie?.props.innerRadius;
+    const outer = pie?.props.outerRadius;
+    const diameter = typeof outer === "number" ? outer * 2 : null;
+
+    // 도넛이 자리보다 크면 자리 폭에 맞춘다 — 자리를 재 지름보다 좁을 때만 그 폭을 든다(넓으면 null — 준 값 그대로)
+    const [fitWidth, setFitWidth] = React.useState<number | null>(null);
+    const diameterRef = React.useRef(diameter);
+    React.useLayoutEffect(() => {
+      diameterRef.current = diameter;
+    });
+    React.useLayoutEffect(() => {
+      const root = rootRef.current;
+      if (!root || diameter == null || typeof ResizeObserver === "undefined")
+        return;
+      const observer = new ResizeObserver((entries) => {
+        const width = entries[0]?.contentRect.width ?? root.clientWidth;
+        const d = diameterRef.current;
+        setFitWidth(
+          d != null && width > 0 && width < d ? Math.floor(width) : null,
+        );
+      });
+      observer.observe(root);
+      return () => observer.disconnect();
+    }, [diameter]);
+    const fitted =
+      pie && diameter != null && fitWidth != null && fitWidth < diameter
+        ? chartDonutRadii(fitWidth)
+        : null;
+    const drawn =
+      chart && pie && fitted
+        ? React.cloneElement(
+            chart,
+            {},
+            React.Children.map(chart.props.children as React.ReactNode, (c) =>
+              React.isValidElement(c) && c.type === RechartsPrimitive.Pie
+                ? React.cloneElement(c as React.ReactElement<AnyProps>, {
+                    ...fitted,
+                  })
+                : c,
+            ),
+          )
+        : chart;
+    const boxHeight =
+      fitted && height != null && diameter != null
+        ? height - (diameter - fitted.outerRadius * 2)
+        : height;
+
+    const inner = fitted ? fitted.innerRadius : pie?.props.innerRadius;
     const hole = typeof inner === "number" ? inner * 2 : null;
 
     // 라이브러리가 svg 에 다는 role="application" · tabindex(도넛 조각 g 포함)를 걷는다 — 차트 상자가 이름 있는 role="img" 하나다
@@ -179,7 +230,8 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
           tabIndex={navigable ? 0 : undefined}
           data-slot="chart"
           className={cn(CHART_ROOT, !dots && CHART_HIDE_DOTS, className)}
-          style={{ height, ...style }}
+          data-donut-fit={fitted ? "" : undefined}
+          style={{ height: boxHeight, ...style }}
           onKeyDown={(e) => {
             onKeyDown?.(e);
             if (
@@ -222,13 +274,13 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
           }}
           {...props}
         >
-          {chart != null && (
+          {drawn != null && (
             <RechartsPrimitive.ResponsiveContainer
               width="100%"
               height="100%"
-              initialDimension={{ width: 1, height: height ?? 1 }}
+              initialDimension={{ width: 1, height: boxHeight ?? 1 }}
             >
-              {withSeriesDefaults(chart, idPrefix, { dots })}
+              {withSeriesDefaults(drawn, idPrefix, { dots })}
             </RechartsPrimitive.ResponsiveContainer>
           )}
           {overlays}

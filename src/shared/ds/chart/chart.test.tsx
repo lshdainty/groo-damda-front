@@ -362,6 +362,83 @@ describe("차트 상자 — 접근성 · 키보드", () => {
     expect(qa("svg.recharts-surface [tabindex]")).toHaveLength(0);
   });
 
+  describe("도넛이 자리보다 클 때(Layout 지원 폭 — 320 보다 좁은 화면)", () => {
+    // 자산 도넛 지름 180(두께 24) — 쓰는 쪽은 chartDonutRadii(180) 을 준다
+    const donut = () => (
+      <Chart label="카테고리" height={180}>
+        <PieChart>
+          <Pie
+            data={[{ v: 1 }, { v: 2 }]}
+            dataKey="v"
+            isAnimationActive={false}
+            {...chartDonutRadii(180)}
+          />
+        </PieChart>
+        <ChartDonutCenter label="10월 지출" amount="1,240,000원" />
+      </Chart>
+    );
+    /** 차트 상자(자리)의 폭을 알린다 — jsdom 은 레이아웃이 없다 */
+    const slot = (width: number) =>
+      act(() => {
+        const box = q("[data-slot=chart]")!;
+        for (const o of observers.filter((x) => x.el === box))
+          o.cb([{ target: box, contentRect: { width, height: 180 } }]);
+      });
+    /** 그려진 조각의 바깥 반지름 — 조각 경로의 첫 호(A rx ry) */
+    const drawnOuter = () => {
+      const d = q(".recharts-pie-sector path")?.getAttribute("d") ?? "";
+      const arc = /A\s*([\d.]+)/.exec(d);
+      return arc ? Number(arc[1]) : null;
+    };
+
+    it("자리가 지름 이상(312 · 180)이면 준 값 그대로다 — 지름 180 · 상자 높이 180", async () => {
+      await render(donut());
+      for (const width of [312, 180]) {
+        await slot(width);
+        await layoutCharts(width, 180);
+        const box = q("[data-slot=chart]")!;
+        expect(box.hasAttribute("data-donut-fit")).toBe(false);
+        expect(box.style.height).toBe("180px");
+        expect(drawnOuter()).toBe(90);
+      }
+    });
+
+    it("자리가 지름보다 좁으면(153) 자리 폭에 맞춰 지름을 줄이고 두께도 지름 ÷ 10 + 6 으로 다시 낸다", async () => {
+      await render(donut());
+      await slot(153.6);
+      const box = q("[data-slot=chart]")!;
+      expect(box.getAttribute("data-donut-fit")).toBe("");
+      // 지름 153 — 상자 높이도 줄어든 만큼(180 → 153)
+      expect(box.style.height).toBe("153px");
+      await layoutCharts(153, 153);
+      expect(drawnOuter()).toBe(76.5);
+      expect(chartDonutRadii(153)).toEqual({
+        innerRadius: 76.5 - 21,
+        outerRadius: 76.5,
+      });
+      // 가운데 합계는 줄어든 구멍(지름 111)으로 잰다 — 글 묶음 대각선 절반 55 이하 − 여유
+      const inner = q("[data-slot=chart-donut-center] > div")!;
+      Object.defineProperty(inner, "scrollWidth", {
+        configurable: true,
+        value: 100,
+      });
+      Object.defineProperty(inner, "scrollHeight", {
+        configurable: true,
+        value: 40,
+      });
+      await act(() => {
+        for (const o of observers.filter((x) => x.el === inner)) o.cb([]);
+      });
+      expect(q("[data-slot=chart-donut-center]")!.className).toContain(
+        "invisible",
+      );
+      // 자리가 다시 넓어지면 준 값으로 돌아간다
+      await slot(312);
+      expect(box.hasAttribute("data-donut-fit")).toBe(false);
+      expect(box.style.height).toBe("180px");
+    });
+  });
+
   it("데이터가 있으면 Tab 한 칸(tabindex 0), 비면 초점을 받지 않는다", async () => {
     await render(trend());
     expect(q("[data-slot=chart]")!.tabIndex).toBe(0);

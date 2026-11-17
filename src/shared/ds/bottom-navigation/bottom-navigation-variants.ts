@@ -12,6 +12,11 @@ export const BOTTOM_NAVIGATION_INSET =
 export const SHRINK_AFTER = 20;
 export const EXPAND_AFTER = 28;
 export const TOP_ZONE = 40;
+// 좁은 칸 — 칸 폭이 + 원 44 보다 좁으면(320 보다 좁은 화면 — 페이지 확대, Layout "지원 폭") 줄어든 바처럼 라벨을 숨기고 원을 36 으로.
+// 칸 폭 = (바 안쪽 폭 − 칸 사이 2 × 4) ÷ 5. 320 화면은 펼침 52.8 · 줄어듦 44.8 이라 걸리지 않는다
+export const NARROW_CELL = 44;
+export const CELL_COUNT = 5;
+export const CELL_GAP = 2;
 // 화면 키보드 — visualViewport 가 화면보다 이만큼 작으면 열렸다고 본다
 export const KEYBOARD_GAP = 150;
 // 세지 않는 스크롤 — 시트 · 대화상자 · 떠 있는 목록 안

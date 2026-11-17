@@ -5,13 +5,17 @@ import { cn } from "@/shared/lib/cn";
 
 import {
   SEGMENTED_INDICATOR,
+  SEGMENTED_ITEM_NARROW,
   SEGMENTED_LABEL,
+  SEGMENTED_LABEL_NARROW,
   SEGMENTED_NOTIFICATION,
+  SEGMENTED_TRACK_NARROW,
   segmentedControlItemVariants,
   segmentedControlVariants,
 } from "./segmented-control-variants";
 import { useDsText } from "@/shared/ds/i18n";
 import { ignoreRadioJumpKeys } from "@/shared/ds/radio-group";
+import { useBelowSupportWidth } from "@/shared/ds/support-width";
 
 /*
  * Groo Segmented Control — 구조는 SEED Segmented Control(2026-10-02). 수치 원본은 groo-design
@@ -51,6 +55,8 @@ import { ignoreRadioJumpKeys } from "@/shared/ds/radio-group";
  * 고른 칸만 tabIndex 0 이다 — Radix 의 로빙 위치는 마지막으로 포커스한 칸이라, 값이 밖에서 바뀌면 Shift+Tab 이 옛 칸에 선다.
  * 값은 이 컴포넌트가 한 번 더 쥔다(알약이 고른 칸을 따라가야 한다) — 쓰는 쪽은 value · onValueChange 또는 defaultValue.
  * 저장할 폼 값이 아니므로(폼 값은 Chip · Select) name · required 를 두지 않는다.
+ * 320 보다 좁은 화면(페이지 확대 — Layout "지원 폭")에서는 낱말 안에서 꺾지 않고 줄 전체를 가로로 스크롤한다 — 트랙에 data-narrow,
+ * 칸은 가장 긴 낱말 아래로 줄지 않고, 고른 칸이 알약을 직접 칠한다(segmented-control-variants.ts 의 *_NARROW). 320 이상은 그대로다.
  */
 
 const useIsoLayoutEffect =
@@ -77,8 +83,11 @@ function measurePress(el: HTMLElement) {
 const isPressKey = (e: React.KeyboardEvent) =>
   e.key === " " || e.key === "Enter";
 
-// 고른 값 — 칸이 고른 칸인지(tabIndex) 안다
-const SegmentedValueContext = React.createContext<string | null>(null);
+// 고른 값 — 칸이 고른 칸인지(tabIndex) 안다. narrow — 320 보다 좁은 화면(칸이 고른 알약을 직접 칠한다)
+const SegmentedValueContext = React.createContext<{
+  value: string | null;
+  narrow: boolean;
+}>({ value: null, narrow: false });
 
 export type SegmentedControlProps = Omit<
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>,
@@ -112,6 +121,7 @@ const SegmentedControl = React.forwardRef<
       onValueChange?.(next);
     };
     const warnedCount = React.useRef(false);
+    const narrow = useBelowSupportWidth();
 
     // 그린 칸을 세어 알약 자리를 넣는다(칠하기 전에)
     useIsoLayoutEffect(() => {
@@ -124,7 +134,8 @@ const SegmentedControl = React.forwardRef<
       const index = items.findIndex(
         (el) => el.getAttribute("data-state") === "checked",
       );
-      bar.hidden = index < 0;
+      // 좁은 화면은 칸 폭이 고르지 않을 수 있어 미끄러지는 알약 대신 고른 칸이 칠한다
+      bar.hidden = index < 0 || narrow;
       bar.style.setProperty(
         "--segmented-count",
         String(Math.max(items.length, 1)),
@@ -164,11 +175,16 @@ const SegmentedControl = React.forwardRef<
     }, [noValue]);
 
     return (
-      <SegmentedValueContext.Provider value={value}>
+      <SegmentedValueContext.Provider value={{ value, narrow }}>
         <RadioGroupPrimitive.Root
           ref={mergeRefs(ref, own)}
           data-slot="segmented-control"
-          className={cn(segmentedControlVariants(), className)}
+          data-narrow={narrow || undefined}
+          className={cn(
+            segmentedControlVariants(),
+            narrow && SEGMENTED_TRACK_NARROW,
+            className,
+          )}
           {...props}
           onKeyDownCapture={ignoreRadioJumpKeys(onKeyDownCapture)}
           value={value}
@@ -214,7 +230,8 @@ const SegmentedControlItem = React.forwardRef<
     ref,
   ) => {
     const dsT = useDsText();
-    const checked = React.useContext(SegmentedValueContext) === value;
+    const track = React.useContext(SegmentedValueContext);
+    const checked = track.value === value;
     return (
       <RadioGroupPrimitive.Item
         ref={ref}
@@ -222,7 +239,11 @@ const SegmentedControlItem = React.forwardRef<
         data-slot="segmented-control-item"
         data-notification={notification ? "" : undefined}
         tabIndex={checked ? 0 : -1}
-        className={cn(segmentedControlItemVariants(), className)}
+        className={cn(
+          segmentedControlItemVariants(),
+          track.narrow && SEGMENTED_ITEM_NARROW,
+          className,
+        )}
         onPointerDown={(e) => {
           measurePress(e.currentTarget);
           onPointerDown?.(e);
@@ -234,7 +255,14 @@ const SegmentedControlItem = React.forwardRef<
         }}
         {...props}
       >
-        <span data-slot="segmented-control-label" className={SEGMENTED_LABEL}>
+        <span
+          data-slot="segmented-control-label"
+          className={
+            track.narrow
+              ? cn(SEGMENTED_LABEL, SEGMENTED_LABEL_NARROW)
+              : SEGMENTED_LABEL
+          }
+        >
           {children}
           {notification && !checked && (
             <span

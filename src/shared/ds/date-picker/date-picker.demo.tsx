@@ -37,6 +37,7 @@ import {
   type DateRange,
 } from "./date-picker-dates";
 import {
+  DATE_PICKER_CONTINUOUS_SHEET_BODY,
   DATE_PICKER_TWO_MONTHS_POPOVER,
   GRID,
   WEEK,
@@ -385,7 +386,9 @@ function DateField({
               className={isRange ? "h-[90dvh]" : undefined}
             >
               <BottomSheetBody
-                className={isRange ? "overflow-hidden" : undefined}
+                className={
+                  isRange ? DATE_PICKER_CONTINUOUS_SHEET_BODY : undefined
+                }
               >
                 {picker}
               </BottomSheetBody>
