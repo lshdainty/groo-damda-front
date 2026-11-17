@@ -23,6 +23,7 @@ import {
   useKeyboardViewport,
   useOpenState,
   useRefocusAfterBusy,
+  useReleasePress,
   useInertWhileClosing,
   useCloseAfterKeyboard,
   useWideSurface,
@@ -255,6 +256,8 @@ const DialogContent = React.forwardRef<
     const ctx = React.useContext(DialogContext);
     const own = React.useRef<HTMLDivElement>(null);
     const openerRef = React.useRef<FocusAnchor | null>(null);
+    // 키보드가 뜬 채 손가락으로 누른 닫기는 뗄 때 닫는다 — click 이 빠져도 닫히게(overlay/release-press.ts)
+    const closePress = useReleasePress(() => ctx?.requestClose());
     // 키보드(태블릿 · 가로 폰)가 떠 있는 동안 대화상자를 보이는 영역 가운데에 두고 높이 상한을 보이는 높이의 80% 로
     useKeyboardViewport(own, "center", DIALOG_MAX_HEIGHT_RATIO);
     const form = ctx?.form ?? false;
@@ -374,6 +377,11 @@ const DialogContent = React.forwardRef<
                   aria-label={dsT("common.close")}
                   data-slot="dialog-close"
                   className={DIALOG_CLOSE}
+                  {...closePress.pointerHandlers}
+                  // 손을 뗄 때 이미 닫았으면 같은 누름의 click 은 Radix 의 닫기로 넘기지 않는다
+                  onClick={(e) => {
+                    if (closePress.consumeClick()) e.preventDefault();
+                  }}
                 >
                   <X aria-hidden strokeWidth={2} />
                 </DialogPrimitive.Close>

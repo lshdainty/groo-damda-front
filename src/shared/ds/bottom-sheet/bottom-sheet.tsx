@@ -19,6 +19,7 @@ import {
   useKeyboardViewport,
   useOpenState,
   useRefocusAfterBusy,
+  useReleasePress,
   useWideSurface,
   withButtonSize,
   type OpenChange,
@@ -519,6 +520,8 @@ const BottomSheetContent = React.forwardRef<
   ) => {
     const dsT = useDsText();
     const ctx = useSheetContext("BottomSheetContent");
+    // 키보드가 뜬 채 손가락으로 누르면 뗄 때 닫는다 — click 이 빠져도 닫히게(overlay/release-press.ts)
+    const closePress = useReleasePress(() => ctx.requestClose());
     return (
       <BottomSheetSurface
         ref={ref}
@@ -578,7 +581,10 @@ const BottomSheetContent = React.forwardRef<
             aria-label={dsT("common.close")}
             data-slot="bottom-sheet-close"
             className={SHEET_CLOSE}
-            onClick={() => ctx.requestClose()}
+            {...closePress.pointerHandlers}
+            onClick={() => {
+              if (!closePress.consumeClick()) ctx.requestClose();
+            }}
           >
             <X aria-hidden strokeWidth={2} />
           </button>
