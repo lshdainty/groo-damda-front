@@ -98,8 +98,12 @@ export function TxStep2({ f }: { f: TxForm }) {
         : "…"
       : null;
 
+  // 수입이면 "없음" 항목도 수입 말이다 — 프리셋 수정 폼과 같은 규칙(#578)
   const methodItems = [
-    { value: "", label: t("addTx.noMethodOption") },
+    {
+      value: "",
+      label: isIncome ? t("addTx.noIncomeMethod") : t("addTx.noMethodOption"),
+    },
     { value: "CASH", label: t("form.paymentMethod.CASH") },
     { value: "CARD", label: t("form.paymentMethod.CARD") },
     { value: "TRANSFER", label: t("paymentTransferFull") },
@@ -474,7 +478,11 @@ export function TxStep2({ f }: { f: TxForm }) {
             >
               {({ close }) => (
                 <SimplePickBody
-                  label={t("addTx.paymentMethodRow")}
+                  label={
+                    isIncome
+                      ? t("addTx.incomeMethodRow")
+                      : t("addTx.paymentMethodRow")
+                  }
                   items={methodItems}
                   value={f.paymentMethod}
                   onPick={(v) => {
