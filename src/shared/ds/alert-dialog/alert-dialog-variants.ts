@@ -3,12 +3,15 @@
  * groo-design recipes/shadcn/components/ui/alert-dialog.tsx 를 첫 판으로 가져왔다 — 이 파일은 모양 정의,
  * 컴포넌트는 alert-dialog.tsx 다(컴포넌트 파일은 컴포넌트만 내보낸다 — 빠른 새로 고침).
  */
+import { CLOSING_INERT } from "@/shared/ds/overlay/closing-surface";
 
 // 딤 — overlay-dim 라이트 0.50 · 다크 0.65, z-alert 300(L5 — 열린 대화상자 · 시트 위). 100ms 로 나타나고 사라진다
 export const ALERT_OVERLAY = [
   "fixed inset-0 z-(--z-alert) bg-[var(--overlay-dim-light)] dark:bg-[var(--overlay-dim-dark)]",
   "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:[--tw-animation-duration:var(--motion-duration-d2)] data-[state=open]:ease-[var(--motion-ease-enter)]",
   "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:[--tw-animation-duration:var(--motion-duration-d2)] data-[state=closed]:ease-[var(--motion-ease-exit)]",
+  // 사라지는 100ms 동안 누름을 흘려보낸다(overlay/closing-surface.ts)
+  CLOSING_INERT,
 ].join(" ");
 
 // 확인창 — 높이는 화면까지(max-height 100%), 넘치면 확인창 전체(버튼 포함)가 스크롤한다(03-F 1A — SEED alert-dialog.css). 최대 272, 좌우 32 를 남긴다(화면이 336 보다 좁으면 화면 폭 − 64). 안쪽 20 · 모서리 20, 그림자 없음, z-alert-content 301.
@@ -21,6 +24,8 @@ export const ALERT_CONTENT = [
   "motion-safe:data-[state=open]:zoom-in-130 motion-safe:data-[state=open]:[--tw-animation-duration:var(--motion-duration-d4)] motion-safe:data-[state=open]:ease-[var(--motion-ease-enter-expressive)]",
   "motion-reduce:data-[state=open]:[--tw-animation-duration:var(--motion-duration-d3)] motion-reduce:data-[state=open]:ease-[var(--motion-ease-enter)]",
   "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:[--tw-animation-duration:var(--motion-duration-d2)] data-[state=closed]:ease-[var(--motion-ease-exit)]",
+  // 사라지는 100ms 동안 누름을 흘려보낸다(overlay/closing-surface.ts)
+  CLOSING_INERT,
 ].join(" ");
 
 // 제목 t7 20 / 27 · 700

@@ -14,6 +14,7 @@ export {
   whenBackSlotsSettled,
 } from "./use-back-close";
 export { WIDE_QUERY, useWideSurface } from "./use-wide-surface";
+export { CLOSING_INERT, useInertWhileClosing } from "./closing-surface";
 export { useRefocusAfterBusy } from "./use-refocus-after-busy";
 export {
   keyboardBottomInset,

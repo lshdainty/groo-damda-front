@@ -135,6 +135,22 @@ describe("앱 히스토리 — 시트 [×] 뒤 곧바로 이동", () => {
     expect(heading()).toBe("home");
   });
 
+  // 되돌림이 끝나기 전에는 화면이 아직 홈이라 같은 탭을 한 번 더 누를 수 있다 — 옮김은 한 번(같은 칸이 둘 쌓이지 않는다)
+  it("[×] 뒤 되돌림을 기다리는 동안 같은 탭을 두 번 눌러도 한 번만 옮긴다", async () => {
+    const { history, rerender } = setup();
+    const base = window.history.length;
+    rerender(true);
+    rerender(false);
+    act(() => history.push("/desk/asset"));
+    act(() => history.push("/desk/asset"));
+    await settle();
+    expect(window.location.pathname).toBe("/desk/asset");
+    expect(window.history.length).toBe(base + 1);
+    act(() => window.history.back());
+    await settle();
+    expect(window.location.pathname).toBe("/desk");
+  });
+
   it("되돌릴 칸이 없으면 이동은 그 자리에서 바로 일어난다", () => {
     const { history } = setup();
     act(() => history.push("/desk/asset"));

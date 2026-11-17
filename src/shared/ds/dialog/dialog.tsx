@@ -23,6 +23,7 @@ import {
   useKeyboardViewport,
   useOpenState,
   useRefocusAfterBusy,
+  useInertWhileClosing,
   useWideSurface,
   withButtonSize,
   type OpenChange,
@@ -152,6 +153,8 @@ function Dialog({
   useRefocusAfterBusy(busy, contentRef);
   // 열린 폼이 바뀐 값을 가졌거나 저장 중이면 새로 고침 · 탭 닫기에 브라우저 기본 확인창(판단 (3))
   useBeforeUnloadWhile(open && (dirty || busy));
+  // 사라지는 동안 뒤 화면을 막지 않는다(따닥의 두 번째 탭만 삼킨다 — overlay/closing-surface.ts)
+  useInertWhileClosing(open && modal);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const openRef = React.useRef(open);
   React.useLayoutEffect(() => {

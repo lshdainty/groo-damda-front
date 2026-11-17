@@ -14,6 +14,8 @@ type AppHistory = ReturnType<typeof UNSAFE_createBrowserHistory>;
  */
 export function createAppHistory(): AppHistory {
   const base = UNSAFE_createBrowserHistory({ v5Compat: true });
+  // 되돌림을 기다리는 동안 같은 곳으로 또 옮기라 하면(아직 화면이 그대로라 탭을 한 번 더 누름) 한 번만 옮긴다 — 첫 탭은 정확히 한 번
+  let waitingHref: string | null = null;
   return {
     get action() {
       return base.action;
@@ -26,7 +28,15 @@ export function createAppHistory(): AppHistory {
     encodeLocation: (to) => base.encodeLocation(to),
     listen: (listener) => base.listen(listener),
     push: (to, state) => {
-      afterBackSlotsSettle(() => base.push(to, state));
+      const href = base.createHref(to);
+      if (waitingHref === href) return;
+      let done = false;
+      afterBackSlotsSettle(() => {
+        done = true;
+        if (waitingHref === href) waitingHref = null;
+        base.push(to, state);
+      });
+      if (!done) waitingHref = href;
     },
     replace: (to, state) => {
       afterBackSlotsSettle(() => base.replace(to, state));

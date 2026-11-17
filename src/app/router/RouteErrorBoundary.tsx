@@ -17,6 +17,12 @@ import {
  * 새 배포로 옛 화면 코드 조각을 못 받은 오류는 먼저 한 번 새로 고친다(chunk-reload.ts) — 고치는 동안은 빈 틀(높이만)이다.
  * [다시 시도] 는 문서를 새로 받는다 — 같은 트리를 다시 그리면 같은 조각 · 같은 오류로 또 멈춘다.
  * 다른 주소로 옮기면(resetKey) 경계를 풀어 그 화면을 그린다.
+ *
+ * 조각 받기 실패는 엔진마다 글이 다르다(Safari "Importing a module script failed." · 크롬 "Failed to fetch dynamically imported
+ * module" · 파이어폭스 "error loading dynamically imported module" · 이름 ChunkLoadError) — 판정은 chunk-reload.ts 의
+ * isChunkLoadError 한 곳이고, 새로 고침 표식(10초)도 vite:preloadError 와 같은 것을 쓴다.
+ *
+ * 라우터 밖(앱 맨 위의 알림 · 스낵바 자리 등)에서 멈춰도 루트가 통째로 내려가지 않게 같은 경계를 앱 맨 위에도 둔다(AppErrorBoundary).
  */
 
 function ScreenError() {
@@ -68,6 +74,11 @@ class Boundary extends React.Component<Props, State> {
       return <div data-slot="route-loading" className="min-h-dvh" />;
     return <ScreenError />;
   }
+}
+
+/** 앱 맨 위에 둔다 — 라우터 밖에서 멈춘 것을 받는다. 주소를 모르므로 풀지 않는다([다시 시도] 는 문서를 새로 받는다) */
+export function AppErrorBoundary({ children }: { children: React.ReactNode }) {
+  return <Boundary resetKey="app">{children}</Boundary>;
 }
 
 /** 라우터 안에 둔다 — 주소가 바뀌면 경계를 푼다 */

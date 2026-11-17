@@ -14,6 +14,7 @@ import {
   surfaceTookOver,
   mergeRefs,
   useBackClose,
+  useInertWhileClosing,
   useKeyboardViewport,
   useOpenState,
   useRefocusAfterBusy,
@@ -212,6 +213,8 @@ function BottomSheet({
   useBackClose(open && narrow && modal, (keep) => {
     if (!leave.request()) keep();
   });
+  // 내려가는 동안 뒤 화면을 막지 않는다 — 닫자마자 누른 탭은 그대로, 따닥의 두 번째 탭(같은 자리)만 삼킨다
+  useInertWhileClosing(open && modal);
 
   const snaps = form ? undefined : snapPoints;
   const [snapInner, setSnapInner] = React.useState<SnapPoint | null>(
@@ -461,7 +464,9 @@ const BottomSheetSurface = React.forwardRef<
             const pointer = e.detail.originalEvent;
             const secondary =
               pointer.button === 2 || (pointer.button === 0 && pointer.ctrlKey);
-            if (!form && dismissible && !secondary) requestClose();
+            // 이미 닫혀 내려가는 중이면 무시한다 — 그 누름은 뒤 화면(하단 탭 등)에 간 것이다(overlay/closing-surface.ts)
+            if (!form && dismissible && !secondary && refs.openRef.current)
+              requestClose();
           }}
           {...props}
         >

@@ -31,6 +31,13 @@ describe("chunk-reload — 새 배포 뒤 옛 조각 404", () => {
       isChunkLoadError(new Error("Unable to preload CSS for /assets/x.css")),
     ).toBe(true); // Vite CSS
     expect(
+      isChunkLoadError(
+        Object.assign(new Error("Loading chunk 12 failed."), {
+          name: "ChunkLoadError",
+        }),
+      ),
+    ).toBe(true); // 이름으로 알리는 도구(webpack 식)
+    expect(
       isChunkLoadError(new TypeError("Cannot read properties of undefined")),
     ).toBe(false);
   });
