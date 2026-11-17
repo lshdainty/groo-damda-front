@@ -26,24 +26,7 @@ import { dsText } from "@/shared/ds/i18n";
 // 로케일 소스 = i18n.language(SoT). ko('ko'/'ko-KR'/미정) → ko, en → enUS.
 const isEnLocale = (): boolean => (i18n.language ?? "").startsWith("en");
 
-export const getLocale = () => (isEnLocale() ? enUS : ko);
-
-/**
- * 다 친 날짜인가 — `YYYY-MM-DD` 이면서 **달력에 있는 날**. `2026-02-30` 은 `new Date` 가
- * 3/2 로 넘겨 버리므로 연·월·일이 그대로 돌아오는지까지 본다. 날짜 칸이 키를 누르는
- * 동안의 미완성 값을 걸러 낼 때 쓴다(`InputDatePicker` 의 `commitOnComplete`).
- */
-export const isCompleteDate = (value: string): boolean => {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
-  if (!m) return false;
-  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
-  const date = new Date(y, mo - 1, d);
-  return (
-    date.getFullYear() === y &&
-    date.getMonth() === mo - 1 &&
-    date.getDate() === d
-  );
-};
+const getLocale = () => (isEnLocale() ? enUS : ko);
 
 export const formatDate = (
   date: Date | string,

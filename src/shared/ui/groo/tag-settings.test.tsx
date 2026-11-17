@@ -9,7 +9,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18next from "i18next";
 import { I18nextProvider, initReactI18next } from "react-i18next";
 import { SnackbarProvider } from "@/shared/ds/snackbar";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import koCommon from "@/locales/ko/common.json";
 import koMemo from "@/locales/ko/memo.json";
 import koTodo from "@/locales/ko/todo.json";
@@ -85,7 +84,6 @@ const openRow = (name: string) => {
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  __resetPointerBlockForTest();
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -94,7 +92,6 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
-  __resetPointerBlockForTest();
 });
 
 describe.each([

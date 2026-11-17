@@ -1,7 +1,7 @@
 import { CircleAlert } from "lucide-react";
 
 /**
- * 금액 상한 오류 한 줄 — ds Field 밖의 금액 칸(옛 Field · 행 안의 칸)이 칸 아래에 쓴다. Field 안에서는 Field 의 꼬리가
+ * 금액 상한 오류 한 줄 — ds Field 밖의 금액 칸(행 안의 칸)이 칸 아래에 쓴다. Field 안에서는 Field 의 꼬리가
  * 같은 모양으로 그린다(field.md 오류: 14 `fg-critical` + 아이콘 16, 낱말 단위 줄바꿈). 칸은 `aria-invalid` 와
  * `aria-describedby={id}` 로 잇고, 바뀔 때는 화면 밖 polite 자리가 한 번 읽는다(Field 와 같다 — 보이는 글은 aria-hidden).
  */

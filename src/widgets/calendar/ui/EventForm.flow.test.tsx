@@ -10,7 +10,6 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import {
   click,
   field,
@@ -78,7 +77,6 @@ let closed: number;
 
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-  __resetPointerBlockForTest();
   setupFormDom();
   sent = [];
   closed = 0;

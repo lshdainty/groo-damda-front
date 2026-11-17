@@ -12,7 +12,6 @@ import { dsText } from "@/shared/ds/i18n";
  * Groo Skeleton — 구조는 SEED Skeleton(2026-10-03). 수치 원본은 groo-design specs/components/skeleton.yaml
  * (값은 src/shared/ds/spec/skeleton.json). groo-design recipes/shadcn/components/ui/skeleton.tsx 를 첫 판으로 가져왔다(앱 적용 1A).
  * 기다리는 동안의 시간표(1초 · 5초 · 10초)는 SEED Loading 패턴을 규칙으로 옮긴 것이다 — skeleton.md 의 "기다리는 동안".
- * 옛 Skeleton(깜빡임 · surface-input · 모서리 4 · 브랜드 25% 띠의 SkeletonShimmer)을 대신한다.
  *
  *   Skeleton          면 하나 — 곧 나타날 내용 하나의 자리. 크기 · 폭은 className 으로 준다
  *     radius          "0"(화면 끝에 붙는 사진) · "4" · "6"(폭 24 이하 · 48 이하의 그림 자리 — Image Frame 모서리) ·

@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority";
 
 /*
  * Groo Divider — 구조는 SEED Divider(2026-10-03). 수치 원본은 groo-design
- * specs/components/divider.yaml(값은 src/shared/ds/spec/divider.json). 옛 Separator 를 대신한다.
+ * specs/components/divider.yaml(값은 src/shared/ds/spec/divider.json).
  * groo-design recipes/shadcn/components/ui/divider.tsx 를 첫 판으로 가져왔다(앱 적용 1A) — 이 파일은 변형 정의,
  * 컴포넌트는 divider.tsx 다(컴포넌트 파일은 컴포넌트만 내보낸다 — 빠른 새로 고침).
  *

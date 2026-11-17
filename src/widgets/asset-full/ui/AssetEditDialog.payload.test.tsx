@@ -20,7 +20,6 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { __resetPointerBlockForTest } from "@/shared/lib/groo/pointer-block";
 import type { Asset } from "@/entities/asset";
 import type { AssetKind } from "../lib/asset-kind";
 import {
@@ -156,8 +155,6 @@ function unmountAll() {
 function mount() {
   // 앞 다이얼로그는 먼저 걷는다 — 모달이 겹쳐 있으면 뒤 것을 못 찾는다.
   unmountAll();
-  // 모달이 닫히면 그 뒤 POINTER_BLOCK_MS 동안 클릭이 삼켜진다(오클릭 방어) — 푼다.
-  __resetPointerBlockForTest();
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);

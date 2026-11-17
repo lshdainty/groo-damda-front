@@ -18,7 +18,7 @@ import { useDsText } from "@/shared/ds/i18n";
  * specs/components/callout.yaml(값은 src/shared/ds/spec/callout.json).
  * groo-design recipes/shadcn/components/ui/callout.tsx 를 첫 판으로 가져왔다(앱 적용 1A) — 상자 변형(cva)은
  * callout-variants.ts 다(컴포넌트 파일은 컴포넌트만 내보낸다 — 빠른 새로 고침).
- * 옛 Alert(alert.tsx — 왼쪽 4px 막대)를 대신한다. "Alert" 라는 이름은 모달(Alert Dialog)에만 쓴다.
+ * "Alert" 라는 이름은 모달(Alert Dialog)에만 쓴다.
  *
  * 화면 안, 그 기능 · 내용 가까이에 늘 보이는 안내 상자 — 팁 · 제약 · 주의, 그 자리에서 난 오류(저장 실패는 폼 맨 위
  * critical, 폼은 연 채로). 페이지 전체의 상태는 Page Banner, 잠깐 알릴 결과는 Snackbar 다.
