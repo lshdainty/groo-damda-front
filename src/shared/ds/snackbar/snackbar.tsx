@@ -4,6 +4,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { CircleAlert, CircleCheck, X } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
+import { isKeyboardFocus } from "@/shared/lib/input-modality";
 
 import {
   SnackbarContext,
@@ -308,8 +309,8 @@ function SnackbarItem({
         // 띠 밖에서 들어온 초점이면 그 자리를 기억한다 — 띠가 사라질 때 돌려준다
         if (!e.currentTarget.contains(e.relatedTarget as Node | null))
           returnFocus.current = e.relatedTarget as HTMLElement | null;
-        if ((e.target as HTMLElement).matches(":focus-visible"))
-          setKeyboard(true);
+        // 키보드 초점에만 멈춘다 — 손가락으로 누른 뒤 스크립트가 옮긴 초점은 :focus-visible 을 이어받아도 아니다
+        if (isKeyboardFocus(e.target as HTMLElement)) setKeyboard(true);
       }}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null))

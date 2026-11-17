@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  isKeyboardFocus,
   resetInputModalityForTest,
   trackInputModality,
 } from "./input-modality";
@@ -136,5 +137,36 @@ describe("index.css — 브라우저 기본 링도 포인터 뒤에는 그리지
     expect(document.activeElement).toBe(el);
     expect(el.matches(selector())).toBe(false);
     done();
+  });
+});
+
+describe("isKeyboardFocus — 초점 링과 같은 조건을 JS 에서", () => {
+  const focusVisible = (el: Element, on: boolean) => {
+    const matches = Element.prototype.matches;
+    el.matches = (selector: string) =>
+      selector === ":focus-visible" ? on : matches.call(el, selector);
+  };
+
+  it(":focus-visible 이 아니면 아니다", () => {
+    const btn = document.createElement("button");
+    focusVisible(btn, false);
+    expect(isKeyboardFocus(btn)).toBe(false);
+  });
+
+  it(":focus-visible 이어도 직전 입력이 포인터면 아니다 — 키보드 · 아직 입력 없음이면 맞다", () => {
+    const btn = document.createElement("button");
+    focusVisible(btn, true);
+    expect(isKeyboardFocus(btn)).toBe(true);
+    root().dataset.input = "pointer";
+    expect(isKeyboardFocus(btn)).toBe(false);
+    root().dataset.input = "keyboard";
+    expect(isKeyboardFocus(btn)).toBe(true);
+  });
+
+  it("글을 넣는 칸은 링처럼 그대로 둔다(직전 입력이 포인터여도)", () => {
+    const input = document.createElement("input");
+    focusVisible(input, true);
+    root().dataset.input = "pointer";
+    expect(isKeyboardFocus(input)).toBe(true);
   });
 });

@@ -187,6 +187,29 @@ describe("여는 방식", () => {
     expect(bubble()).toBeNull();
   });
 
+  it("손가락으로 누른 뒤 스크립트가 옮긴 초점에는 열지 않는다 — :focus-visible 을 이어받아도 직전 입력이 포인터면 키보드 초점이 아니다", () => {
+    render(<Pair />);
+    const t = trigger("금액 가리기");
+    vi.spyOn(t, "matches").mockImplementation(
+      (selector: string) =>
+        selector === ":focus-visible" ||
+        Element.prototype.matches.call(t, selector),
+    );
+    document.documentElement.dataset.input = "pointer";
+    try {
+      act(() => t.focus());
+      advance(2000);
+      expect(bubble()).toBeNull();
+      act(() => t.blur());
+      // 키보드로 오면 연다
+      document.documentElement.dataset.input = "keyboard";
+      act(() => t.focus());
+      expect(bubble()).not.toBeNull();
+    } finally {
+      delete document.documentElement.dataset.input;
+    }
+  });
+
   it("Esc 는 닫고 초점은 트리거에 그대로", () => {
     render(<Pair />);
     const t = trigger("금액 가리기");

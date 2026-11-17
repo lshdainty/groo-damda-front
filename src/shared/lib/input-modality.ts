@@ -37,6 +37,18 @@ export function lastInputModality(
   return value === "keyboard" || value === "pointer" ? value : undefined;
 }
 
+/**
+ * 키보드 초점인가 — 초점 링과 같은 조건(index.css `focus-visible` 변형)을 JS 에서 본다.
+ * :focus-visible 이면서 직전 입력이 포인터가 아닐 때. 글을 넣는 칸은 링처럼 그대로 둔다.
+ * 키보드 초점에만 여는 · 멈추는 자리(Tooltip 열기 · Snackbar 멈춤)가 쓴다 — 손가락으로 누른 뒤 스크립트가 옮긴 초점은
+ * 브라우저가 :focus-visible 을 이어받아 주지만 키보드 초점이 아니다(tooltip.md · snackbar.md "키보드 초점이 오면").
+ */
+export function isKeyboardFocus(el: Element): boolean {
+  if (!el.matches(":focus-visible")) return false;
+  if (el.matches("input, textarea, select, [contenteditable]")) return true;
+  return lastInputModality(el.ownerDocument) !== "pointer";
+}
+
 /** 시험용 — 듣기를 다시 걸 수 있게 */
 export function resetInputModalityForTest() {
   tracking = false;
