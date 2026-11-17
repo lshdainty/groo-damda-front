@@ -235,7 +235,7 @@
 
 /* Modal/Dialog 디자인은 shadcn Dialog (shared/ui/dialog.tsx) 로 이전됨.
    .modal*, .modal-overlay, modalIn/modalOut/fadeIn/fadeOut 모두 제거.
-   호출자는 ModalShell (shared/ui/groo/dialogs.tsx) 또는 Dialog 컴포넌트를 직접 사용. */
+   호출자는 ds Dialog · Bottom Sheet (shared/ds) 를 쓴다. */
 
 .dot-sep {
   width: 2px;

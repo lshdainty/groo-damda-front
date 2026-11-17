@@ -53,7 +53,7 @@ const clickBack = () =>
     );
   });
 
-/** 저장하면 부모가 언마운트해서 닫는 실제 패턴(groo/dialogs.tsx ModalShell). */
+/** 저장하면 부모가 언마운트해서 닫는 패턴. */
 function SaveThenClose({ children }: { children?: ReactNode }) {
   const [open, setOpen] = useState(true);
   if (!open) return null;

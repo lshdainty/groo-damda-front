@@ -9,7 +9,7 @@ import { useDeviceSize } from "@/shared/lib/groo/responsive";
  * **액션은 2개까지**(spec drawer.md 액션 구성) — 편집 폼은 `취소`·`저장` 이고 삭제를 두지
  * 않는다(삭제는 상세에서). 좌측 보조 액션이 있는 화면은 `취소` 를 빼 우상단 X 에 맡긴다.
  *
- * 웹은 ModalShell 이 footer 를 ReactNode prop 으로 받을 뿐 표준 footer 위젯이 없어
+ * 웹은 대화상자가 footer 를 ReactNode 로 받을 뿐 표준 footer 위젯이 없어
  * 각 다이얼로그가 동일 JSX(삭제 flush-left danger / 취소 ghost / 저장 primary)를 손으로
  * 복붙해 drift(flush 누락·아이콘 크기·variant 불일치)가 반복됐다. 이 컴포넌트로 수렴.
  *
@@ -20,7 +20,7 @@ import { useDeviceSize } from "@/shared/lib/groo/responsive";
  *
  * **모바일에선 size="lg"(48)** — dialog.md/drawer.md 가 규정하는 한 손 조작 폭.
  * 데스크탑·태블릿은 `default`(36 · 좌우 **양쪽 16** · 14px) — dialog.md footer.
- * 폭 배분은 ModalShell 이 맡는다(모바일 `[&>button]:flex-1` 균등분배 / 데스크탑 `justify-end`).
+ * 폭 배분은 footer 를 감싸는 대화상자 · 시트가 맡는다(모바일 `[&>button]:flex-1` 균등분배 / 데스크탑 `justify-end`).
  * 삭제만 `flex:none` 으로 균등분배에서 빠져 좌측에 붙는다 — spec drawer.md "액션 2개까지,
  * 삭제는 최좌측 분리".
  *
