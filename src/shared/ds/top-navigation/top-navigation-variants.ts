@@ -12,12 +12,12 @@ export type TopNavigationType = "root" | "standard" | "desktop";
 // 위 안전 영역은 바탕만 채우고 내용은 그 아래 56 에. 좌우는 6(desktop 왼쪽은 본문 여백 32) + 그쪽 안전 영역
 export const ROOT = [
   "sticky top-0 z-(--z-sticky) w-full shrink-0 bg-bg-layer-default pt-[env(safe-area-inset-top)] font-sans text-fg-neutral",
-  "pr-[calc(var(--spacing-x1_5)+env(safe-area-inset-right))]",
+  "pr-[calc(var(--spacing-x1_5)+var(--safe-right))]",
 ].join(" ");
 export const ROOT_LEFT: Record<TopNavigationType, string> = {
-  root: "pl-[calc(var(--spacing-x1_5)+env(safe-area-inset-left))]",
-  standard: "pl-[calc(var(--spacing-x1_5)+env(safe-area-inset-left))]",
-  desktop: "pl-[calc(var(--layout-margin)+env(safe-area-inset-left))]",
+  root: "pl-[calc(var(--spacing-x1_5)+var(--safe-left))]",
+  standard: "pl-[calc(var(--spacing-x1_5)+var(--safe-left))]",
+  desktop: "pl-[calc(var(--layout-margin)+var(--safe-left))]",
 };
 export const ROW = "flex h-[56px] items-center";
 

@@ -82,10 +82,10 @@ describe("TopNavigation — 바", () => {
     expect(bar.className).toContain("top-0");
     expect(bar.className).toContain("z-(--z-sticky)");
     expect(bar.className).toContain("bg-bg-layer-default");
-    // 위 안전 영역은 바탕만 채운다 · 좌우 6 + 안전 영역
+    // 위 안전 영역은 바탕만 채운다 · 좌우 6 + 안전 영역 — 좌우는 --safe-left/right(화면 칸 안에서는 0, 오버레이 안에서는 실제 값)
     expect(bar.className).toContain("pt-[env(safe-area-inset-top)]");
-    expect(bar.className).toContain("env(safe-area-inset-left)");
-    expect(bar.className).toContain("env(safe-area-inset-right)");
+    expect(bar.className).toContain("var(--safe-left)");
+    expect(bar.className).toContain("var(--safe-right)");
     // 스크롤해도 선 · 그림자 · 숨김이 없다
     expect(bar.className).not.toMatch(/border|shadow|translate|hidden/);
     expect(slot("top-navigation-row")?.className).toContain("h-[56px]");

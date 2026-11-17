@@ -518,3 +518,20 @@
 
 /* Note: 옛 shadcn 블루 사이드바 오버라이드 제거됨.
    다크모드 사이드바 토큰은 위쪽 .dark 블록(--sidebar-primary: var(--mossy-400) 등)에서 처리. */
+
+/* 좌우 안전 영역 칸 — groo-design Layout "Safe Area". 가로로 돌린 폰의 노치 · 옆에 선 상태 칸 자리에는 화면의 면
+   (상단 바 · 띠 · 카드 · 탭 줄)을 칠하지 않고 뒷배경만 둔다. 칸 안쪽은 --safe-left/right 를 0 으로 받아 다시 비우지 않는다.
+   body 에 붙어 화면 위에 뜨는 것(대화상자 · 시트 · 사이드 패널 · 스낵바)은 칸 밖이라 :root 의 값(실제 안전 영역)을 쓴다.
+   화면 기준으로 붙는 것(하단 탭 바 · 떠 있는 버튼)은 env() 를 그대로 쓴다. */
+:root {
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+#root {
+  border-left: env(safe-area-inset-left, 0px) solid
+    var(--color-bg-layer-basement);
+  border-right: env(safe-area-inset-right, 0px) solid
+    var(--color-bg-layer-basement);
+  --safe-left: 0px;
+  --safe-right: 0px;
+}
