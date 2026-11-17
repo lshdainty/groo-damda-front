@@ -836,6 +836,76 @@ describe("결제 문자에서 온 내역의 거래 종류 (QA #123)", () => {
     expect(document.body.textContent).not.toContain("sms.lowConfidence");
   });
 
+  it("확신이 MEDIUM 이어도 거래처를 못 읽었으면 경고가 뜬다 — 「신한카드 12,000원 승인」(QA B3)", async () => {
+    state.parsed = {
+      ...parsed,
+      confidence: "MEDIUM",
+      amount: 12000,
+      merchant: null,
+      expenseDate: null,
+    };
+    await open();
+    await pressStartingWith("sms.pasteOpen");
+    setValue(
+      document.body.querySelector<HTMLTextAreaElement>(
+        "[role=dialog] textarea",
+      )!,
+      "신한카드 12,000원 승인",
+    );
+    await press("sms.pasteAction");
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    expect(formText()).toContain("12,000");
+    const alert = [...document.body.querySelectorAll('[role="alert"]')].find(
+      (el) => el.textContent?.includes("sms.lowConfidence"),
+    );
+    expect(alert).toBeDefined();
+  });
+
+  it("거래처만 비어도(날짜 · 금액은 읽음) 경고가 뜬다", async () => {
+    state.parsed = { ...parsed, confidence: "MEDIUM", merchant: "  " };
+    await open();
+    await pressStartingWith("sms.pasteOpen");
+    setValue(
+      document.body.querySelector<HTMLTextAreaElement>(
+        "[role=dialog] textarea",
+      )!,
+      "신한카드 5,500원 승인 10/22 10:00",
+    );
+    await press("sms.pasteAction");
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    expect(document.body.textContent).toContain("sms.lowConfidence");
+  });
+
+  it("문자로 채운 직후 [×] 는 묻지 않고 닫힌다 — 채운 값이 처음 값이다(지시서 24 · QA B4 사용자 결정 2026-11-17)", async () => {
+    const onClose = vi.fn();
+    state.parsed = parsed;
+    await open({ onClose });
+    await pressStartingWith("sms.pasteOpen");
+    setValue(
+      document.body.querySelector<HTMLTextAreaElement>(
+        "[role=dialog] textarea",
+      )!,
+      "[Web발신] KB국민 5,500원 스타벅스",
+    );
+    await press("sms.pasteAction");
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    expect(formText()).toContain("5,500원");
+    click(
+      document.body.querySelector<HTMLElement>(
+        "[data-slot=bottom-sheet-close]",
+      )!,
+    );
+    await tick();
+    expect(document.body.querySelector("[role=alertdialog]")).toBeNull();
+    expect(onClose).toHaveBeenCalled();
+  });
+
   it("그대로 두면 지출로 나간다 — 종류를 한쪽으로 박아 둔 게 아니다", async () => {
     await readSms();
     await press("addTx.add");
