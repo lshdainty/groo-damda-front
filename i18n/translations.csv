@@ -619,6 +619,9 @@ group,deleteConfirm.title,그룹 삭제,Delete Group
 login,sso.description,그루 계정으로 로그인해주세요.,Sign in with your 그루 account.
 login,sso.login,그루 계정으로 로그인,Sign in with 그루
 login,authenticating,인증 중…,Authenticating…
+login,callback.failedTitle,로그인을 마치지 못했어요,Couldn't finish signing in
+login,callback.exchangeFailed,로그인 정보를 확인하지 못했어요. 그루 담다를 쓸 수 있는 그루 계정으로 다시 로그인해주세요.,We couldn't verify your sign-in. Sign in again with a 그루 account that can use 그루 담다.
+login,callback.retry,다시 로그인하기,Sign in again
 login,signedOut.title,로그아웃했어요.,You're signed out.
 login,signedOut.grooAccountHint,그루 계정은 이 브라우저에 아직 로그인돼 있어요. 여럿이 쓰는 컴퓨터라면 그루 계정에서도 로그아웃해주세요.,"Your 그루 account is still signed in on this browser. On a shared computer, sign out of your 그루 account too."
 login,signedOut.grooAccountLogout,그루 계정에서도 로그아웃,Sign out of 그루 account too

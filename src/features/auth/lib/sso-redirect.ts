@@ -16,11 +16,12 @@ import { hasSignedOut } from "./signed-out-mark";
  * 그루 계정 로그인으로 보낸다 — OAuth 2.0 Authorization Code + PKCE.
  * code_verifier · state 를 만들어 보관하고 code_challenge(S256)를 인가 요청에 붙인다.
  *
- * 사용자가 직접 로그아웃한 브라우저면(signed-out-mark.ts) `prompt=login` 을 붙인다 — 그루 계정이 살아 있는
- * 로그인을 쓰지 않고 비밀번호를 다시 받는다(보안 점검 CLI-6). 붙였는지는 PKCE 값과 함께 적어 둬 콜백이 읽는다.
+ * 사용자가 직접 로그아웃했거나 교환이 거절된 브라우저면(signed-out-mark.ts) `prompt=login` 을 붙인다 — 그루 계정이
+ * 살아 있는 로그인을 쓰지 않고 비밀번호를 다시 받는다(보안 점검 CLI-6 · 담다를 쓸 수 없는 계정에서 다른 계정으로 바꾸기).
+ * 붙였는지는 PKCE 값과 함께 적어 둬 콜백이 읽는다.
  *
  * @param options.promptLogin 표시와 상관없이 `prompt=login` 을 붙인다 — 교환이 `AUTH_030` 으로 거절된 뒤의
- *   한 번짜리 재시도가 쓴다(표시를 저장하지 못하는 브라우저에서도 붙게).
+ *   한 번짜리 재시도와 콜백 실패 화면의 [다시 로그인하기] 가 쓴다(표시를 저장하지 못하는 브라우저에서도 붙게).
  */
 export async function startSsoLogin(options?: {
   promptLogin?: boolean;
