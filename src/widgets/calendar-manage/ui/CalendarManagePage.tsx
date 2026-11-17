@@ -433,12 +433,11 @@ function ManageBody({
             </List>
           ) : (
             <div className="mt-x2">
-              {/* flush="left" 는 ghost 글자색을 neutralSubtle 로 덮어 빨강이 사라진다(button.md) — 글 시작 맞춤은 음수 여백(= 안쪽 좌우 14)으로 */}
+              {/* 확인을 여는 [삭제] — ghost + critical, 상자 여백 그대로(flush 는 빨강을 덮고, 음수 여백은 쓰지 않는다 — button.md) */}
               <Button
                 variant="ghost"
                 ghostColor="critical"
                 size="small"
-                className="-ml-x3_5"
                 onClick={() => setConfirmDelete(true)}
               >
                 {t("deleteCalendar")}

@@ -189,7 +189,6 @@ export function LabelFormDialog({
           onDelete={
             label && onRequestDelete ? () => onRequestDelete(label) : undefined
           }
-          flushDelete
         />
       </ResponsiveDialogContent>
     </ResponsiveDialog>
