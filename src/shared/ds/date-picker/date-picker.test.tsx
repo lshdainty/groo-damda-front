@@ -14,6 +14,7 @@ import {
 } from "vitest";
 
 import { DatePicker } from "./date-picker";
+import { DATE_PICKER_CONTINUOUS_SHEET_BODY } from "./date-picker-variants";
 import {
   addDays,
   addMonths,
@@ -1283,6 +1284,21 @@ describe("DatePicker — 이어지는 달(continuous)", () => {
       mar.querySelectorAll("[data-month] > [role=row]:not(.sr-only)"),
     ).toHaveLength(5);
     expect(feb.querySelectorAll("button")).toHaveLength(28);
+  });
+
+  it("달은 요일 줄 + 2주보다 낮아지지 않는다 — 시트가 낮으면 거기서 멈추고 시트 본문이 스크롤한다(Layout 지원 폭)", () => {
+    render(<Range visibleRange="continuous" today={TODAY} />);
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-slot=date-picker-scroll]",
+    )!;
+    // 요일 줄 max(48, t4 줄 높이) + 주 두 줄 max(48, t5 줄 높이 + 6) — 휠 자리(요일 줄 + 6주)와 같은 셈
+    expect(scroll.className).toContain(
+      "min-h-[calc(max(48px,var(--text-t4--line-height))_+_2_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))]",
+    );
+    expect(scroll.className).not.toContain("min-h-0");
+    // 남는 높이는 그대로 채운다
+    expect(scroll.className).toContain("flex-1");
+    expect(DATE_PICKER_CONTINUOUS_SHEET_BODY).toBe("overflow-x-hidden");
   });
 
   it("보이는 달 ± 2달만 그린다 — 수백 달을 한꺼번에 그리지 않는다, 아래 안개 96", () => {

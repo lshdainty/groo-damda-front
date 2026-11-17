@@ -9,6 +9,7 @@ import {
 } from "@/shared/ds/bottom-sheet";
 import { Button } from "@/shared/ds/button";
 import {
+  DATE_PICKER_CONTINUOUS_SHEET_BODY,
   DATE_PICKER_TWO_MONTHS_POPOVER,
   DATE_PRESETS,
   DatePicker,
@@ -119,7 +120,7 @@ export function PeriodField({
         <BottomSheet open={open} dismissible={false} onOpenChange={setOpen}>
           {trigger}
           <BottomSheetContent title={label} className="h-[90dvh]">
-            <BottomSheetBody className="overflow-hidden">
+            <BottomSheetBody className={DATE_PICKER_CONTINUOUS_SHEET_BODY}>
               {picker}
             </BottomSheetBody>
             <BottomSheetFooter>{footer}</BottomSheetFooter>

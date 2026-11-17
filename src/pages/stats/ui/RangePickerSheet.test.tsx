@@ -85,6 +85,33 @@ function mount(onConfirm = vi.fn()) {
 }
 
 describe("RangePickerSheet", () => {
+  it("시트가 낮으면 달은 요일 줄 + 2주에서 멈추고 시트 본문이 스크롤한다 — 머리 · 바닥은 그대로(Layout 지원 폭)", () => {
+    mount();
+    const body = document.querySelector<HTMLElement>(
+      "[data-slot=bottom-sheet-body]",
+    )!;
+    // 본문은 세로로 스크롤할 수 있다(예전엔 overflow-hidden 이라 줄어든 달이 13 만 남았다)
+    expect(body.className).toContain("overflow-y-auto");
+    expect(body.className).toContain("overflow-x-hidden");
+    expect(body.className).not.toMatch(/(^|\s)overflow-hidden(\s|$)/);
+    // 달력이 본문 높이를 채우는 건 그대로 — 보통 높이에서는 달 안에서 스크롤한다
+    const picker = document.querySelector<HTMLElement>(
+      "[data-slot=date-picker]",
+    )!;
+    expect(picker.className).toContain("h-full");
+    const scroll = document.querySelector<HTMLElement>(
+      "[data-slot=date-picker-scroll]",
+    )!;
+    expect(scroll.className).toContain("flex-1");
+    expect(scroll.className).not.toContain("min-h-0");
+    expect(scroll.className).toContain(
+      "min-h-[calc(max(48px,var(--text-t4--line-height))_+_2_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))]",
+    );
+    // 바닥은 본문 밖이라 스크롤에 밀려나지 않는다
+    const footer = document.querySelector("[data-slot=bottom-sheet-footer]");
+    expect(footer && !body.contains(footer)).toBe(true);
+  });
+
   it("시작 · 종료 두 칸이 없다 — 날짜 입력칸 0, 바닥은 초기화 + 완료", () => {
     mount();
     expect(document.querySelectorAll("input").length).toBe(0);
