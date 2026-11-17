@@ -64,7 +64,7 @@ import { keyboardBottomInset } from "@/shared/ds/overlay";
  *
  * 화면 키보드도 피할 자리다 — 띠는 키보드 바로 위 8 에 선다(2026-10-15 사용자 결정 Q-003-1). 폰 브라우저는 키보드가 올라와도
  *   레이아웃 화면을 줄이지 않아 position: fixed 의 아래가 키보드 뒤에 남는다 — 보이는 화면(visualViewport)의 아래 끝에서 레이아웃 화면
- *   아래까지(iPhone Safari 26+ 의 떠 있는 입력 도구줄 포함 — overlay 의 keyboardBottomInset)를 재어 피할 자리와 둘 중 큰 쪽을 쓴다. 보이는 화면이 바뀔 때 다시 잰다(손가락으로 확대한 동안은 세지 않는다).
+ *   아래까지(overlay 의 keyboardBottomInset — 키보드 위에 떠 있는 알약 · 입력 도구줄은 보이는 화면이 이미 뺐다)를 재어 피할 자리와 둘 중 큰 쪽을 쓴다. 보이는 화면이 바뀔 때 다시 잰다(손가락으로 확대한 동안은 세지 않는다).
  *
  * 손 메모이제이션을 두지 않는다 — 레시피가 useCallback · useMemo 로 묶어 두던 것(닫기 · 걷기 · 재기 · 내려 줄 값)은
  *   늘 같은 것(useReducer 의 dispatch, 처음 그릴 때 한 번 만든 값)으로 바꿨다. 테스트는 컴파일하지 않은 코드를 돌므로,
@@ -380,7 +380,7 @@ function createAvoidance(setOffset: (offset: number) => void) {
       const r = el.getBoundingClientRect();
       if (r.width > 0 && r.height > 0) top = Math.min(top, r.top);
     }
-    // 화면 키보드 — 키보드가 가린 높이(떠 있는 입력 도구줄 포함, Layout › Safe Area "화면 키보드"). 시트와 같은 잣대
+    // 화면 키보드 — 보이는 화면 밖으로 가려진 높이(Layout › Safe Area "화면 키보드"). 시트와 같은 잣대
     // (overlay 의 keyboardBottomInset) — 손가락으로 확대해 보이는 높이가 준 것은 키보드로 세지 않는다
     const keyboard = keyboardBottomInset(viewport);
     setOffset(Math.max(0, viewport - top, keyboard));

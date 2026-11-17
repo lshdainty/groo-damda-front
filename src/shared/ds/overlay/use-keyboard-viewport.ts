@@ -4,42 +4,26 @@ import * as React from "react";
 export const KEYBOARD_MIN_PX = 60;
 
 /**
- * iPhone Safari 26 이상의 입력 도구줄(∧ · ∨ · 완료 — 떠 있는 유리 알약)이 보이는 영역 아래쪽을 덮는 높이.
- *
- * 26 부터 이 줄은 키보드 위에 떠서 페이지 위에 겹쳐 그려지고 visualViewport 는 키보드 윗변까지를 보이는 영역으로
- * 준다 — 도구줄이 덮는 만큼은 재지 못한다. 그래서 키보드 높이에 이 값을 더해 "도구줄까지 넣어" 잰다
- * (Layout › Safe Area "화면 키보드"). 값은 QA 화면(2026-11-16 · iPhone 17 시뮬레이터 세로 · 가로)에서 잰 도구줄
- * 윗변 ↔ 키보드 윗변 거리 53 ~ 57 을 덮는 56 이다. iPad(도구줄이 키보드 안) · 25 이하(줄이 키보드에 붙어
- * visualViewport 가 이미 뺀다) · 다른 브라우저는 0.
- */
-export const IOS_FLOATING_ACCESSORY_PX = 56;
-
-/** 입력 도구줄이 보이는 영역 위에 떠서 겹치는 브라우저면 그 높이 — iPhone 의 Safari 26 이상. 아니면 0 */
-export function floatingAccessoryHeight(
-  ua: string = typeof navigator === "undefined" ? "" : navigator.userAgent,
-) {
-  if (!/iPhone/.test(ua)) return 0;
-  const version = /Version\/(\d+)/.exec(ua);
-  return version && Number(version[1]) >= 26 ? IOS_FLOATING_ACCESSORY_PX : 0;
-}
-
-/**
  * 레이아웃 뷰포트 높이 — `position: fixed` 의 기준. `documentElement.clientHeight` 로 잰다.
  *
  * `innerHeight` 가 아니다 — iOS Safari 는 키보드가 뜬 채 페이지가 스크롤되면 innerHeight 를 스크롤만큼 줄인다
- * (실측 714 → 625). 그걸로 재면 키보드 높이가 그만큼 모자라 시트 아래 변이 키보드 · 입력 도구줄 밑으로 들어간다
+ * (실측 714 → 625). 그걸로 재면 키보드 높이가 그만큼 모자라 시트 아래 변이 키보드 밑으로 들어간다
  * (그루 계정 웹 GA-02 와 같은 함정). clientHeight 는 그대로다. 레이아웃 뷰포트가 키보드와 함께 줄어드는
- * 브라우저(삼성 인터넷)는 clientHeight 도 같이 줄어 판정이 그대로다. 스낵바도 같은 값을 쓴다.
+ * 브라우저(삼성 인터넷)는 clientHeight 도 같이 줄어 판정이 그대로다. 스낵바 · 하단 탭 바도 같은 값을 쓴다.
  */
-function layoutViewportHeight() {
+export function layoutViewportHeight() {
   return document.documentElement.clientHeight;
 }
 
-/** 키보드가 떠 있을 때 쓸 수 있는 영역 — 레이아웃 뷰포트 기준 위치(top)와 높이(떠 있는 도구줄을 뺐다). */
+/** 키보드가 떠 있을 때 쓸 수 있는 영역 — 레이아웃 뷰포트 기준 위치(top)와 높이(= 보이는 영역). */
 export type KeyboardViewport = { top: number; height: number };
 
 /**
- * 지금 키보드가 화면을 가리고 있으면 쓸 수 있는 영역(보이는 영역에서 떠 있는 입력 도구줄을 뺀 것)을, 아니면 null 을 준다.
+ * 지금 키보드가 화면을 가리고 있으면 쓸 수 있는 영역(보이는 영역 그대로)을, 아니면 null 을 준다.
+ *
+ * 보이는 영역(visualViewport)이 곧 쓸 수 있는 영역이다 — 아무것도 더 빼지 않는다. iPhone Safari 26 은 키보드 위에
+ * 떠 있는 주소 알약 · 입력 도구줄(∧ · ∨ · 완료)까지 이미 빼고 준다(2026-11-17 실측 · iPhone 17 Pro — 숫자 키패드 ·
+ * 한글 키보드 모두 보이는 영역 아래 끝 = 알약 윗변). 더 빼면 시트 아래가 비어 뒤 페이지가 비친다.
  *
  * 가린 높이는 `레이아웃 높이 − visualViewport.height × scale` 이다 — 손가락으로 확대(scale > 1)하면 보이는
  * 높이가 배율만큼 줄 뿐 가린 것은 없으므로 배율을 되돌려 잰다. 레이아웃 뷰포트까지 함께 줄어드는
@@ -56,12 +40,13 @@ export function readKeyboardViewport(
   if (covered <= KEYBOARD_MIN_PX) return null;
   return {
     top: vv.offsetTop || 0,
-    height: Math.max(vv.height - floatingAccessoryHeight(), 0),
+    height: vv.height,
   };
 }
 
 /**
- * 레이아웃 뷰포트 아래에서 키보드(입력 도구줄 포함)가 가린 높이 — `position: fixed; bottom` 에 그대로 쓴다.
+ * 레이아웃 뷰포트 아래에서 보이는 영역 밖으로 가려진 높이(키보드와 그 위에 떠 있는 알약 · 도구줄) —
+ * `position: fixed; bottom` 에 그대로 쓴다.
  * 키보드가 없으면 0. 바닥에 서는 것(시트 · 스낵바)이 같은 값을 쓴다.
  */
 export function keyboardBottomInset(
@@ -86,7 +71,8 @@ export function keyboardBottomInset(
  * 그대로", dialog.md "머리 · 바닥이 화면 밖으로 나가지 않습니다")을 쓸 수 있는 영역(readKeyboardViewport)에 건다.
  *   - 높이 상한은 **쓸 수 있는 높이 × ratio**(시트 0.9 · 대화상자 0.8 — 클래스의 dvh 비율과 같다). 넘치는 만큼
  *     본문(min-h-0 flex-1)만 줄어 스크롤하고 머리 · 바닥은 남는다.
- *   - bottom — 시트의 아래 변을 키보드(입력 도구줄 포함) 윗변에 붙인다(keyboardBottomInset). 보이는 영역이
+ *   - bottom — 시트의 아래 변을 보이는 영역의 아래 변(OS 가 그린 것 가운데 가장 위 — 떠 있는 주소 알약 · 도구줄 ·
+ *     키보드)에 붙인다(keyboardBottomInset). 보이는 영역이
  *     밀려 올라가도(offsetTop) 그만큼 따라간다.
  *   - center — 대화상자의 가운데를 쓸 수 있는 영역의 가운데에 둔다(클래스의 −translate-y-1/2 는 그대로).
  *   - 초점 칸 — 키보드가 뜰 때 · 높이가 바뀔 때 · 초점이 옮겨 갈 때, 초점 칸 전체가 본문의 보이는 칸(scroll-padding —
@@ -104,7 +90,7 @@ export function keyboardBottomInset(
  * 그때그때 바로 고친다(다음 프레임으로 미루면 밀리는 동안 시트가 한 박자씩 늦게 따라와 흔들린다).
  *
  * vaul 의 `repositionInputs` 는 끈다(bottom-sheet.tsx) — 이 일을 vaul 도 하는데, 키보드 높이(innerHeight − height)만
- * 보고 보이는 영역이 밀린 것(offsetTop) · 떠 있는 도구줄은 보지 않으며, "열렸나" 를 뒤집기로 기억해 숫자 키패드 ↔
+ * 보고 보이는 영역이 밀린 것(offsetTop)은 보지 않으며, "열렸나" 를 뒤집기로 기억해 숫자 키패드 ↔
  * 글자 키보드에서 어긋났다(2026-09-18 · 11-10). 한 자리에서 한 규칙으로만 정한다.
  */
 export function useKeyboardViewport(

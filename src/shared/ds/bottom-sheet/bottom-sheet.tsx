@@ -77,8 +77,8 @@ import { useDsText } from "@/shared/ds/i18n";
  *
  * 모양은 bottom-sheet-variants.ts — 최대 480 으로 가운데, 위 두 모서리 r6 24, 그림자 없이 딤(overlay-dim)과 표면 색으로 뜬다.
  * 높이는 내용만큼이고 화면 높이의 90% 를 넘지 않는다(넘을 내용은 페이지로). 바닥 버튼 아래에 안전 영역을 더한다.
- * 키보드(폰)가 뜨면 "화면" 은 보이는 영역이다(Layout › Safe Area "화면 키보드") — 시트 아래 변을 키보드(떠 있는 입력 도구줄
- * 포함) 윗변에 붙이고 높이 상한을 보이는 높이의 90% 로 줄여 넘치는 만큼 본문만 스크롤하며(머리 · 바닥은 그대로), 초점 칸 전체가
+ * 키보드(폰)가 뜨면 "화면" 은 보이는 영역이다(Layout › Safe Area "화면 키보드") — 시트 아래 변을 보이는 영역 아래 변(키보드 ·
+ * 그 위에 떠 있는 주소 알약 · 입력 도구줄 가운데 가장 위)에 붙이고 높이 상한을 보이는 높이의 90% 로 줄여 넘치는 만큼 본문만 스크롤하며(머리 · 바닥은 그대로), 초점 칸 전체가
  * 바닥 위에 보이게 본문을 스크롤한다. overlay/use-keyboard-viewport.ts.
  * 끝 흐림(scrollFog, bottom-sheet.yaml · scroll-fog.yaml overlayBody) — 걸 본문인지는 내용의 종류로 정한다(칸 두셋처럼 늘 들어맞는
  * 본문에는 걸지 않는다). 걸면 늘 켜져 있고 본문 안 여백이 위 20(머리 아래 16 은 그대로) · 아래 80(바닥이 있어도 — 바닥이 없으면 그
@@ -394,7 +394,7 @@ const BottomSheetSurface = React.forwardRef<
     } = ctx;
     const own = React.useRef<HTMLDivElement>(null);
     const openerRef = React.useRef<FocusAnchor | null>(null);
-    // 키보드가 떠 있는 동안 시트를 보이는 영역(키보드 · 입력 도구줄 위)에 두고 초점 칸을 바닥 위에 보인다 — 높이 상한도
+    // 키보드가 떠 있는 동안 시트를 보이는 영역(키보드 · 떠 있는 알약 · 입력 도구줄 위)에 두고 초점 칸을 바닥 위에 보인다 — 높이 상한도
     // 보이는 높이의 90%(겹친 시트도 각자)
     useKeyboardViewport(own, "bottom", SHEET_MAX_HEIGHT_RATIO);
     // 모달이 아니면(카탈로그 · 문서 전용) vaul 문맥이 없어 Radix 부품을 바로 쓴다
