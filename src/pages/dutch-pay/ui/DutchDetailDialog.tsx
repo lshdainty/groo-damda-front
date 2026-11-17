@@ -116,17 +116,13 @@ export function DutchDetailDialog({
     }
   };
 
+  // 확인을 여는 [삭제] — 바닥 왼쪽 ghost + critical(button.md 모달 footer). flush 는 ghostColor 를 덮어 빨강이 사라지므로 쓰지 않는다
   const del = (
     <Button
       variant="ghost"
       ghostColor="critical"
-      flush="left"
       size={wide ? undefined : "large"}
-      className={
-        wide
-          ? "mr-auto text-fg-critical hover:text-fg-critical active:text-fg-critical"
-          : "shrink-0 text-fg-critical hover:text-fg-critical active:text-fg-critical"
-      }
+      className={wide ? "mr-auto" : "shrink-0"}
       onClick={() => setAskDelete(true)}
     >
       {tc("delete")}
