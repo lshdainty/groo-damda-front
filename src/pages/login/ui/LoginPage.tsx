@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useSearchParams } from "react-router-dom";
-import { config } from "@/shared/config";
 import { hasToken } from "@/shared/api";
 import {
-  generateCodeVerifier,
-  codeChallenge,
-  generateState,
-  savePkce,
-} from "@/features/auth/lib/pkce";
+  SIGNED_OUT_OF_ACCOUNT_PATH,
+  signedOutKind,
+} from "@/features/auth/lib/signed-out-landing";
+import { ssoLogoutUrl, startSsoLogin } from "@/features/auth/lib/sso-redirect";
 import { Button } from "@/shared/ds/button";
+import { Callout } from "@/shared/ds/callout";
 import { GrooTree } from "@/shared/ui/groo/groo-tree";
 
 export const LoginPage = () => {
@@ -38,33 +37,27 @@ const LoginForm = () => {
   const [isRedirecting, setIsRedirecting] = useState(expired);
   const autoStarted = useRef(false);
 
-  const startSsoRedirect = async () => {
-    const callbackUrl = `${window.location.origin}/auth/callback`;
-    // PKCE: code_verifier/state 생성 후 보관, code_challenge(S256) 을 인가 요청에 첨부.
-    const verifier = generateCodeVerifier();
-    const state = generateState();
-    savePkce(verifier, state);
-    const challenge = await codeChallenge(verifier);
-    const params = new URLSearchParams({
-      redirect_uri: callbackUrl,
-      client_id: "desk",
-      code_challenge: challenge,
-      code_challenge_method: "S256",
-      state,
-    });
-    window.location.href = `${config.ssoUrl}/login?${params.toString()}`;
-  };
+  // 로그아웃한 뒤 닿은 자리인가 — `out=1` 은 담다만, `out=all` 은 그루 계정까지(보안 점검 CLI-6).
+  const signedOut = signedOutKind(searchParams);
+  const [isLeavingAccount, setIsLeavingAccount] = useState(false);
 
+  // 그루 계정 로그인으로 보낸다(PKCE). 직접 로그아웃한 브라우저면 `prompt=login` 이 붙어 비밀번호를 다시 받는다.
   const handleSsoRedirect = () => {
     setIsRedirecting(true);
-    void startSsoRedirect();
+    void startSsoLogin();
+  };
+
+  // 그루 계정 로그아웃 경유지로 최상위 이동한다 — 그루 계정 로그인까지 끝내고 `out=all` 로 돌아온다.
+  const handleAccountLogout = () => {
+    setIsLeavingAccount(true);
+    window.location.href = ssoLogoutUrl(SIGNED_OUT_OF_ACCOUNT_PATH);
   };
 
   useEffect(() => {
     if (expired && !autoStarted.current) {
       autoStarted.current = true;
       // isRedirecting 은 expired 로 이미 true 초기화 — 여기서는 이동만 시작한다.
-      void startSsoRedirect();
+      void startSsoLogin();
     }
   }, [expired]);
 
@@ -92,17 +85,41 @@ const LoginForm = () => {
           {t("sso.description")}
         </p>
       </div>
-      {/* 버튼 — ds Button large 48 · neutralSolid(일반 CTA) · 전체 폭. 대기는 누른 버튼의 로딩이다 */}
-      <Button
-        type="button"
-        variant="neutralSolid"
-        size="large"
-        className="w-full"
-        onClick={handleSsoRedirect}
-        loading={isRedirecting}
-      >
-        {t("sso.login")}
-      </Button>
+      {/* 로그아웃한 뒤 안내 — ds Callout neutral(늘 보이는 안내 상자). 처음부터 있는 안내라 role 을 두지 않는다 */}
+      {signedOut === "service" && (
+        <Callout title={t("signedOut.title")}>
+          {t("signedOut.grooAccountHint")}
+        </Callout>
+      )}
+      {signedOut === "account" && (
+        <Callout>{t("signedOut.grooAccountDone")}</Callout>
+      )}
+      {/* 버튼 — ds Button large 48 · neutralSolid(일반 CTA) · 전체 폭. 대기는 누른 버튼의 로딩이다.
+          담다만 로그아웃한 자리에는 보조 단추(neutralWeak)가 아래에 붙는다 — 사이 8(짝 버튼과 같은 값) */}
+      <div className="flex flex-col gap-x2">
+        <Button
+          type="button"
+          variant="neutralSolid"
+          size="large"
+          className="w-full"
+          onClick={handleSsoRedirect}
+          loading={isRedirecting}
+        >
+          {t("sso.login")}
+        </Button>
+        {signedOut === "service" && (
+          <Button
+            type="button"
+            variant="neutralWeak"
+            size="large"
+            className="w-full"
+            onClick={handleAccountLogout}
+            loading={isLeavingAccount}
+          >
+            {t("signedOut.grooAccountLogout")}
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

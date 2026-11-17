@@ -6,7 +6,10 @@ import {
   getCodeVerifier,
   getSavedState,
   clearPkce,
+  wasPromptLogin,
 } from "@/features/auth/lib/pkce";
+import { markSignedOut } from "@/features/auth/lib/signed-out-mark";
+import { startSsoLogin } from "@/features/auth/lib/sso-redirect";
 import { ProgressCircle } from "@/shared/ds/progress-circle";
 import { useWaitPhase } from "@/shared/ds/skeleton";
 import { useDsText } from "@/shared/ds/i18n";
@@ -49,6 +52,8 @@ export const AuthCallbackPage = () => {
           return;
         }
         const redirectUri = `${window.location.origin}/auth/callback`;
+        // 이 시도가 비밀번호를 다시 받게(`prompt=login`) 보낸 것이었나 — clearPkce 가 지우기 전에 읽는다.
+        const promptedLogin = wasPromptLogin();
         const result = await exchangeCode({
           code,
           codeVerifier: verifier,
@@ -60,6 +65,14 @@ export const AuthCallbackPage = () => {
         // 비밀번호만 다시 넣어 보게 된다. 안내 화면이 이유를 말해 준다.
         if (!result.ok && result.withdrawn) {
           navigate("/withdrawn", { replace: true });
+          return;
+        }
+        // 담다에서 로그아웃한 그 그루 계정 로그인으로 돌아왔다(`AUTH_030`) — 그루 계정이 살아 있는 로그인을
+        // 그대로 내준 것이다. 표시를 남기고 비밀번호를 다시 받는 로그인을 **한 번** 새로 시작한다(새 PKCE).
+        // 이미 그렇게 보낸 시도가 또 거절됐으면 맴돌지 않고 아래 실패 갈래(로그인 화면)로 간다(보안 점검 CLI-6).
+        if (!result.ok && result.reloginRequired && !promptedLogin) {
+          markSignedOut();
+          await startSsoLogin({ promptLogin: true });
           return;
         }
         // 밀려나기 전에 보던 자리로 되돌린다(QA #131). 적어 둔 게 없으면 홈이다.

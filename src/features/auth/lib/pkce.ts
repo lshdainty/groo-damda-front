@@ -10,6 +10,9 @@
 
 const VERIFIER_KEY = "pkce_code_verifier";
 const STATE_KEY = "pkce_state";
+// 이 로그인 시도를 `prompt=login`(비밀번호 다시 받기)으로 보냈나 — verifier · state 와 같은 수명이다.
+// 콜백이 "다시 받게 하고도 또 거절됐다" 를 알아보는 데 쓴다(맴돌지 않게, 보안 점검 CLI-6).
+const PROMPT_LOGIN_KEY = "pkce_prompt_login";
 
 /** Uint8Array → base64url (padding 제거). */
 function toBase64Url(bytes: Uint8Array): string {
@@ -42,9 +45,24 @@ export function generateState(): string {
   return toBase64Url(bytes);
 }
 
-export function savePkce(verifier: string, state: string): void {
+/**
+ * @param promptLogin 이 시도를 `prompt=login` 으로 보내는가(기본 false). 지난 시도의 값이 남지 않게
+ *   false 면 지운다.
+ */
+export function savePkce(
+  verifier: string,
+  state: string,
+  promptLogin = false,
+): void {
   sessionStorage.setItem(VERIFIER_KEY, verifier);
   sessionStorage.setItem(STATE_KEY, state);
+  if (promptLogin) sessionStorage.setItem(PROMPT_LOGIN_KEY, "1");
+  else sessionStorage.removeItem(PROMPT_LOGIN_KEY);
+}
+
+/** 지금 돌아온 시도가 `prompt=login` 으로 나갔던 것인가. `clearPkce` 전에 읽는다. */
+export function wasPromptLogin(): boolean {
+  return sessionStorage.getItem(PROMPT_LOGIN_KEY) === "1";
 }
 
 export function getCodeVerifier(): string | null {
@@ -58,4 +76,5 @@ export function getSavedState(): string | null {
 export function clearPkce(): void {
   sessionStorage.removeItem(VERIFIER_KEY);
   sessionStorage.removeItem(STATE_KEY);
+  sessionStorage.removeItem(PROMPT_LOGIN_KEY);
 }

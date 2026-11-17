@@ -2,6 +2,7 @@ export {
   apiClient,
   isHttpStatus,
   isWriteUnconfirmed,
+  AUTH_STEP,
   NOT_A_SAVE,
   SAFE_TO_RETRY,
   WriteUnconfirmedError,

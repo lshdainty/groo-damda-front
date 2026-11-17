@@ -312,6 +312,7 @@ export function AccountSection({
           message={t("account.logout.confirmMessage")}
           confirmLabel={t("account.logout.label")}
           onCancel={() => setConfirmLogout(false)}
+          // 담다만 로그아웃한다(기본) — 그루 계정과 다른 그루 서비스는 그대로다(보안 점검 CLI-6).
           onConfirm={() => logout()}
         />
       )}
@@ -319,10 +320,15 @@ export function AccountSection({
       {confirmWithdraw && (
         <WithdrawDialog
           onClose={() => setConfirmWithdraw(false)}
+          // 해지는 로그아웃의 예외다 — 담다만이 아니라 그루 계정 로그인까지 끝낸다(`scope: "grooAccount"`).
           // 해지한 사람을 로그인 화면으로 떨어뜨리지 않는다 — 안내 화면으로 보낸다.
           // 보던 자리도 적어 두지 않는다(`remember: false`) — 돌아갈 자리가 없다.
           onWithdrawn={() =>
-            logout({ returnTo: "/withdrawn", remember: false })
+            logout({
+              scope: "grooAccount",
+              returnTo: "/withdrawn",
+              remember: false,
+            })
           }
         />
       )}
