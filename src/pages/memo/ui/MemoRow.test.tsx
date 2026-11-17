@@ -57,7 +57,29 @@ const render = (m: Memo) =>
     ),
   );
 
+// 읽는 이름 — 보조 기술이 읽는 글(aria-hidden 은 뺀다). 보이는 " · " 는 숨기고 ", " 를 읽는다(Tag Group)
+function spoken(el: Node): string {
+  if (el.nodeType === Node.TEXT_NODE) return el.textContent ?? "";
+  if (el instanceof Element && el.getAttribute("aria-hidden") === "true")
+    return "";
+  return Array.from(el.childNodes).map(spoken).join("");
+}
+
 describe("MemoRow", () => {
+  it("줄 버튼의 이름은 보이는 차례대로 조각마다 끊긴다 — 제목, 본문, 태그, 시각", () => {
+    render(memo({ title: "장보기", modifyAt: "2026-11-17T09:00:00" }));
+    const name = spoken(container.querySelector("button")!);
+    expect(name).toMatch(/^장보기, 본문 한 줄, 태그 없음, \S/);
+    expect(name).not.toMatch(/, ,|· ,|,$/);
+  });
+
+  it("본문이 없으면 제목, 태그로 바로 잇는다(빈 조각 없음)", () => {
+    render(memo({ title: "장보기", content: "  " }));
+    expect(spoken(container.querySelector("button")!)).toBe(
+      "장보기, 태그 없음",
+    );
+  });
+
   it("제목은 말줄임 없이 줄바꿈이고 위 맞춤이다", () => {
     render(memo());
     const title = container.querySelector("[data-slot=list-title]")!;

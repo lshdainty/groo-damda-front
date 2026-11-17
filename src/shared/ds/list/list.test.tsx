@@ -453,7 +453,9 @@ describe("ListButtonItem · ListLinkItem", () => {
     );
     const button = container.querySelector("button")!;
     expect(button.type).toBe("button");
-    expect(button.textContent).toBe("결제 알림결제 예정일 D-1");
+    // 제목 · 설명 사이 보이지 않는 ", " — 이름이 "결제 알림, 결제 예정일 D-1" 로 붙지 않는다(list.md ARIA)
+    expect(button.textContent).toBe("결제 알림, 결제 예정일 D-1");
+    expect(button.querySelector(".sr-only")?.textContent).toBe(", ");
     expect(button.getAttribute("data-list-action")).toBe("");
     expect(button.getAttribute("data-slot")).toBe("list-body");
     // 뒤 붙이개는 버튼 밖(형제)이다 — 값 글자가 버튼의 이름에 들지 않는다
@@ -713,7 +715,7 @@ describe("ListButtonItem · ListLinkItem", () => {
     );
     const link = container.querySelector("a")!;
     expect(link.getAttribute("href")).toBe("https://example.com/help");
-    expect(link.textContent).toBe("도움말설명서에서 알아보세요");
+    expect(link.textContent).toBe("도움말, 설명서에서 알아보세요");
     expect(link.getAttribute("data-list-action")).toBe("");
     expect(classes(link)).toEqual(
       expect.arrayContaining([
@@ -740,7 +742,7 @@ describe("ListButtonItem · ListLinkItem", () => {
     expect(links).toHaveLength(1);
     const link = links[0]!;
     expect(link.getAttribute("href")).toBe("/help");
-    expect(link.textContent).toBe("도움말설명서");
+    expect(link.textContent).toBe("도움말, 설명서");
     expect(link.getAttribute("data-list-action")).toBe("");
     expect(link.getAttribute("data-slot")).toBe("list-body");
     expect(classes(link)).toContain("after:absolute");
@@ -766,7 +768,7 @@ describe("ListSwitchItem", () => {
     const label = container.querySelector("label")!;
     const toggle = container.querySelector<HTMLButtonElement>("[role=switch]")!;
     expect(label.htmlFor).toBe(toggle.id);
-    expect(label.textContent).toBe("결제 알림결제 예정일 D-1");
+    expect(label.textContent).toBe("결제 알림, 결제 예정일 D-1");
     expect(toggle.labels?.[0]).toBe(label);
     expect(toggle.getAttribute("aria-checked")).toBe("false");
     // 제목 · 빈 자리 · 설명 어디를 눌러도 같다
@@ -878,7 +880,7 @@ describe("ListCheckItem · ListCheckGroup", () => {
       expect.arrayContaining(["size-[24px]", "active:[scale:1]"]),
     );
     expect(slot("list-prefix", items[0]).contains(check)).toBe(true);
-    expect(check.labels?.[0]?.textContent).toBe("거래 내역날짜별");
+    expect(check.labels?.[0]?.textContent).toBe("거래 내역, 날짜별");
   });
 
   it("체크는 뒤에도 둔다 — 뒤 붙이개 자리에 서고 앞에는 부르는 쪽의 앞 붙이개가 선다", () => {
@@ -1012,7 +1014,7 @@ describe("ListRadioItem · ListRadioGroup", () => {
       expect.arrayContaining(["size-[24px]", "active:[scale:1]"]),
     );
     expect(slot("list-suffix", items[0]).contains(radios()[0]!)).toBe(true);
-    expect(radios()[0]!.labels?.[0]?.textContent).toBe("대한민국 원KRW");
+    expect(radios()[0]!.labels?.[0]?.textContent).toBe("대한민국 원, KRW");
     expect(radios().map((r) => r.getAttribute("aria-checked"))).toEqual([
       "true",
       "false",
@@ -1671,17 +1673,17 @@ describe("ListParentItem — 하위 줄을 접는 부모 줄", () => {
     render(<Food defaultOpen />);
     expect(tabStops().map((el) => el.textContent)).toEqual([
       "",
-      "식비지출 · 하위 2개",
+      "식비, 지출 · 하위 2개",
       "외식",
       "배달음식",
-      "기타지출 · 하위 없음",
+      "기타, 지출 · 하위 없음",
     ]);
     expect(tabStops()[0]).toBe(expandButton());
     click(expandButton());
     expect(tabStops().map((el) => el.textContent)).toEqual([
       "",
-      "식비지출 · 하위 2개",
-      "기타지출 · 하위 없음",
+      "식비, 지출 · 하위 2개",
+      "기타, 지출 · 하위 없음",
     ]);
   });
 

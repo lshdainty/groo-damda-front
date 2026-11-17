@@ -96,8 +96,8 @@ describe("관심 Toggle", () => {
     expect(wl.toggle).not.toHaveBeenCalled();
     const rows = [...document.querySelectorAll("[data-slot=list-body]")];
     expect(rows.map((r) => r.textContent)).toEqual([
-      "가unit.count",
-      "나unit.count",
+      "가, unit.count",
+      "나, unit.count",
     ]);
     await act(async () => (rows[1] as HTMLButtonElement).click());
     expect(wl.toggle).toHaveBeenCalledWith("A", "KOSPI", 2);
