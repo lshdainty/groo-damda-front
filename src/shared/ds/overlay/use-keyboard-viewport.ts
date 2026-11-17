@@ -23,19 +23,31 @@ export function floatingAccessoryHeight(
   return version && Number(version[1]) >= 26 ? IOS_FLOATING_ACCESSORY_PX : 0;
 }
 
+/**
+ * 레이아웃 뷰포트 높이 — `position: fixed` 의 기준. `documentElement.clientHeight` 로 잰다.
+ *
+ * `innerHeight` 가 아니다 — iOS Safari 는 키보드가 뜬 채 페이지가 스크롤되면 innerHeight 를 스크롤만큼 줄인다
+ * (실측 714 → 625). 그걸로 재면 키보드 높이가 그만큼 모자라 시트 아래 변이 키보드 · 입력 도구줄 밑으로 들어간다
+ * (그루 계정 웹 GA-02 와 같은 함정). clientHeight 는 그대로다. 레이아웃 뷰포트가 키보드와 함께 줄어드는
+ * 브라우저(삼성 인터넷)는 clientHeight 도 같이 줄어 판정이 그대로다. 스낵바도 같은 값을 쓴다.
+ */
+function layoutViewportHeight() {
+  return document.documentElement.clientHeight;
+}
+
 /** 키보드가 떠 있을 때 쓸 수 있는 영역 — 레이아웃 뷰포트 기준 위치(top)와 높이(떠 있는 도구줄을 뺐다). */
 export type KeyboardViewport = { top: number; height: number };
 
 /**
  * 지금 키보드가 화면을 가리고 있으면 쓸 수 있는 영역(보이는 영역에서 떠 있는 입력 도구줄을 뺀 것)을, 아니면 null 을 준다.
  *
- * 가린 높이는 `innerHeight − visualViewport.height × scale` 이다 — 손가락으로 확대(scale > 1)하면 보이는
+ * 가린 높이는 `레이아웃 높이 − visualViewport.height × scale` 이다 — 손가락으로 확대(scale > 1)하면 보이는
  * 높이가 배율만큼 줄 뿐 가린 것은 없으므로 배율을 되돌려 잰다. 레이아웃 뷰포트까지 함께 줄어드는
  * 브라우저(삼성 인터넷)는 두 값이 같이 줄어 0 이 된다 — 그때는 dvh 가 이미 줄어 손댈 일이 없다.
- * `layoutHeight` 는 레이아웃 뷰포트 높이(기본 innerHeight — 스낵바는 documentElement.clientHeight 로 잰다).
+ * `layoutHeight` 는 레이아웃 뷰포트 높이(기본 layoutViewportHeight — documentElement.clientHeight).
  */
 export function readKeyboardViewport(
-  layoutHeight: number = window.innerHeight,
+  layoutHeight: number = layoutViewportHeight(),
 ): KeyboardViewport | null {
   const vv = window.visualViewport;
   if (!vv) return null;
@@ -52,7 +64,9 @@ export function readKeyboardViewport(
  * 레이아웃 뷰포트 아래에서 키보드(입력 도구줄 포함)가 가린 높이 — `position: fixed; bottom` 에 그대로 쓴다.
  * 키보드가 없으면 0. 바닥에 서는 것(시트 · 스낵바)이 같은 값을 쓴다.
  */
-export function keyboardBottomInset(layoutHeight: number = window.innerHeight) {
+export function keyboardBottomInset(
+  layoutHeight: number = layoutViewportHeight(),
+) {
   const kb = readKeyboardViewport(layoutHeight);
   if (!kb) return 0;
   return Math.max(Math.round(layoutHeight - (kb.top + kb.height)), 0);
