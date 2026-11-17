@@ -41,7 +41,7 @@ import { cn } from "@/shared/lib/cn";
  *   로 가려 끝에서 바탕색으로 흐려지게 한다(위 판은 뒤집어 아래로 투명). 바탕이 같은 색이라 내용을 마스크로 가린 것과 같은 모습이고,
  *   토큰(방향 없는 위 → 아래 그라데이션)을 그대로 쓴다. 안개는 띠와 겹치지 않는다(5 · 7칸에서 안개 끝 ≤ 띠 위).
  * 키보드 초점 — 키로 칼럼에 들어오면 가운데 항목 둘레 안쪽 2px 링(stroke-focus-ring · 모서리 8). 터치 · 마우스로 만지면 숨긴다
- *   (data-pointer-focus — 다음 키 입력에 지운다).
+ *   (전역 초점 링과 같은 조건 — 직전 입력이 포인터면 그리지 않는다. <html data-input>, shared/lib/input-modality.ts).
  *
  * 이름: 휠 role="group"(이름 필수 — 없으면 개발 중에 경고), 칼럼 role="spinbutton" · aria-label · aria-valuemin 0 · aria-valuemax 개수 − 1 ·
  * aria-valuenow 번호 · aria-valuetext 항목 글(getAriaValueText · ariaLabel 로 바꾼다). 항목은 보조 기술에 숨긴다.
@@ -126,13 +126,13 @@ const FOG_TOP = `${FOG} top-0 -scale-y-100`;
 const FOG_BOTTOM = `${FOG} bottom-0`;
 
 // 칼럼 — 스크롤 칸. 위아래 (보이는 수 − 1) ÷ 2 칸을 비워 첫 · 끝 항목도 가운데에 온다. 스크롤바는 숨긴다.
-// 끄는 동안 · 맞추는 동안(휠 · 놓기)은 스냅을 끈다. 키보드 링은 가운데 항목(data-selected)에 — 손으로 만진 동안은 숨긴다
+// 끄는 동안 · 맞추는 동안(휠 · 놓기)은 스냅을 끈다. 키보드 링은 가운데 항목(data-selected)에 — 직전 입력이 포인터면 숨긴다(index.css focus-visible 과 같은 조건)
 const COLUMN = [
   "h-full w-max shrink-0 cursor-grab touch-pan-y snap-y snap-mandatory overflow-y-auto overflow-x-hidden overscroll-contain outline-none",
   "py-[calc(var(--wheel-item)*(var(--wheel-count)-1)/2)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
   "data-[dragging]:cursor-grabbing data-[dragging]:snap-none data-[free]:snap-none",
   "data-[disabled]:cursor-default data-[disabled]:overflow-hidden",
-  "[&:focus-visible:not([data-pointer-focus])_[data-selected]]:outline-2 [&:focus-visible:not([data-pointer-focus])_[data-selected]]:-outline-offset-2 [&:focus-visible:not([data-pointer-focus])_[data-selected]]:outline-stroke-focus-ring",
+  "[&:focus-visible:not(:where(:root[data-input=pointer]_*))_[data-selected]]:outline-2 [&:focus-visible:not(:where(:root[data-input=pointer]_*))_[data-selected]]:-outline-offset-2 [&:focus-visible:not(:where(:root[data-input=pointer]_*))_[data-selected]]:outline-stroke-focus-ring",
 ].join(" ");
 
 // 항목 — 항목 높이 · 스냅은 가운데. 띠와 겹치면 글자를 투명하게 하고 세로 그라데이션(띠 밖 색 → 띠 위 색 → 띠 밖 색)을 글자로 자른다
@@ -679,7 +679,6 @@ const WheelPickerColumn = React.forwardRef<
 
     const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
       if (disabled) return;
-      e.currentTarget.setAttribute("data-pointer-focus", "");
       keyboardTargetRef.current = null;
       api.cancelAlign();
       wheelingRef.current = false;
@@ -701,9 +700,8 @@ const WheelPickerColumn = React.forwardRef<
     const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
       if (e.pointerType !== "mouse" || e.button !== 0 || disabled) return;
       const el = e.currentTarget;
-      // 글자 고르기 · 브라우저의 끌기를 막고 초점은 직접 준다(링은 숨긴다)
+      // 글자 고르기 · 브라우저의 끌기를 막고 초점은 직접 준다(직전 입력이 포인터라 링은 없다)
       e.preventDefault();
-      el.setAttribute("data-pointer-focus", "");
       el.focus({ preventScroll: true });
       keyboardTargetRef.current = null;
       api.clearSettle();
@@ -851,7 +849,6 @@ const WheelPickerColumn = React.forwardRef<
     };
 
     const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-      e.currentTarget.removeAttribute("data-pointer-focus");
       if (disabled || e.altKey || e.ctrlKey || e.metaKey) return;
       const L = latest.current;
       const from = keyboardTargetRef.current ?? api.nearest();
@@ -996,7 +993,6 @@ const WheelPickerColumn = React.forwardRef<
         onPointerCancel={finishDrag}
         onClickCapture={onClickCapture}
         onKeyDown={onKeyDown}
-        onBlur={(e) => e.currentTarget.removeAttribute("data-pointer-focus")}
         {...props}
       >
         {rendered.map(({ physical, option: o }) => (

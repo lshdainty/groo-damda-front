@@ -53,12 +53,12 @@ export const CARD_PRESS_WHOLE_SURFACE =
   "hover:bg-bg-layer-default-pressed active:bg-bg-layer-default-pressed";
 
 // 누름 peers — 카드를 누르는 링크를 올리거나 누르면 면 색만(축소 없음). 안의 버튼 · 링크는 카드 링크 위(z 1)에 놓여 각자 눌린다.
-// 올림은 마우스가 있는 기기에서만 — 터치에서 호버가 남지 않게
+// 올림은 마우스가 있는 기기에서만 — 터치에서 호버가 남지 않게. 링은 카드 링크의 키보드 포커스에만 — 직전 입력이 포인터면 그리지 않는다(index.css focus-visible 과 같은 조건)
 export const CARD_PRESS_PEERS = [
   "cursor-pointer",
   "[transition:background-color_var(--motion-duration-color-transition)_var(--motion-ease-easing)]",
   "[@media(hover:hover)]:has-[[data-slot=card-link]:hover]:bg-bg-layer-default-pressed has-[[data-slot=card-link]:active]:bg-bg-layer-default-pressed",
-  "has-[[data-slot=card-link]:focus-visible]:outline-2 has-[[data-slot=card-link]:focus-visible]:outline-offset-2 has-[[data-slot=card-link]:focus-visible]:outline-stroke-focus-ring",
+  "has-[[data-slot=card-link]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-2 has-[[data-slot=card-link]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-offset-2 has-[[data-slot=card-link]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-stroke-focus-ring",
   "[&_button:not([data-slot=card-link])]:relative [&_button:not([data-slot=card-link])]:z-[1] [&_a:not([data-slot=card-link])]:relative [&_a:not([data-slot=card-link])]:z-[1]",
 ].join(" ");
 

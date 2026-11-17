@@ -4,6 +4,12 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { List, ListButtonItem } from "@/shared/ds/list";
+import { trackInputModality } from "@/shared/lib/input-modality";
+import {
+  pressKey,
+  pressPointer,
+  ringTargets,
+} from "@/shared/lib/input-modality.test-utils";
 
 import {
   Card,
@@ -331,6 +337,21 @@ describe("Card — 누름", () => {
     act(() => card.querySelector("button")!.click());
     expect(onPin).toHaveBeenCalledTimes(1);
     expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("카드 링크 링은 직전 입력이 포인터면 그리지 않는다 — 키로 오면 카드 둘레에 그린다(index.css focus-visible 과 같은 조건)", () => {
+    trackInputModality();
+    const card = render(
+      <Card press="peers">
+        <CardLink href="/memo/1">장보기</CardLink>
+      </Card>,
+    );
+    act(() => slot("card-link")!.focus());
+    pressPointer();
+    expect(ringTargets(card)).toEqual([]);
+    pressKey();
+    expect(ringTargets(card)).toEqual([card]);
+    expect(ringTargets(card, "outline-offset-2")).toEqual([card]);
   });
 
   it("CardLink 는 href 가 없으면 버튼이다", () => {

@@ -171,8 +171,8 @@ export const inputChipVariants = cva(
     "bg-bg-neutral-weak text-fg-neutral shadow-[inset_0_0_0_1px_var(--color-stroke-neutral-contrast)]",
     "[transition:background-color_var(--motion-duration-color-transition)_var(--motion-ease-easing),color_var(--motion-duration-color-transition)_var(--motion-ease-easing),box-shadow_var(--motion-duration-color-transition)_var(--motion-ease-easing)]",
     "data-[disabled]:bg-bg-disabled data-[disabled]:text-fg-disabled data-[disabled]:shadow-[inset_0_0_0_1px_var(--color-stroke-neutral-solid)]",
-    // 지우기에 키보드 포커스가 있으면 칩 둘레에 링(바깥 2px · 띄움 2px)
-    "has-[[data-slot=input-chip-remove]:focus-visible]:outline-2 has-[[data-slot=input-chip-remove]:focus-visible]:outline-offset-2 has-[[data-slot=input-chip-remove]:focus-visible]:outline-stroke-focus-ring",
+    // 지우기에 키보드 포커스가 있으면 칩 둘레에 링(바깥 2px · 띄움 2px) — 직전 입력이 포인터면 그리지 않는다(index.css focus-visible 과 같은 조건)
+    "has-[[data-slot=input-chip-remove]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-2 has-[[data-slot=input-chip-remove]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-offset-2 has-[[data-slot=input-chip-remove]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-stroke-focus-ring",
   ].join(" "),
   {
     variants: {

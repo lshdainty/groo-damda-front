@@ -79,8 +79,8 @@ export const listContentVariants = cva(
     "relative flex w-full py-x3",
     "[transition:scale_var(--motion-duration-pressed-scale)_var(--motion-ease-pressed-scale)]",
     "group-has-[[data-list-action]:not([data-disabled]):active]/list-item:[scale:calc(1-2/var(--press-basis))] motion-reduce:group-has-[[data-list-action]:not([data-disabled]):active]/list-item:[scale:1]",
-    // 키보드 포커스에만 줄 안쪽 링 2px
-    "has-[[data-slot=list-body]:focus-visible]:outline-2 has-[[data-slot=list-body]:focus-visible]:-outline-offset-2 has-[[data-slot=list-body]:focus-visible]:outline-stroke-focus-ring",
+    // 키보드 포커스에만 줄 안쪽 링 2px — 직전 입력이 포인터면 그리지 않는다(index.css focus-visible 과 같은 조건)
+    "has-[[data-slot=list-body]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-2 has-[[data-slot=list-body]:focus-visible:not(:where(:root[data-input=pointer]_*))]:-outline-offset-2 has-[[data-slot=list-body]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-stroke-focus-ring",
     // 제목 낱말 상한의 앞 자리 상수 — 앞 붙이개 54(아바타 42 + 사이 12), 꺾쇠 단추 · 빈 자리 48(44 + 4)
     "has-[>[data-slot=list-prefix]]:[--list-lead-p:54px] has-[>:is([data-slot=list-expand-button],[data-slot=list-expand-slot])]:[--list-lead-e:48px]",
     // 자식의 격자 자리 — 좁은 줄(narrow)에서만 뜻이 있다. 넓은 줄은 flex 라 grid-column · grid-row 가 무시된다

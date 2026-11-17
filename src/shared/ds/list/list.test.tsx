@@ -4,6 +4,13 @@ import { act, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { trackInputModality } from "@/shared/lib/input-modality";
+import {
+  pressKey,
+  pressPointer,
+  ringTargets,
+} from "@/shared/lib/input-modality.test-utils";
+
 import * as variants from "./list-variants";
 import {
   List,
@@ -482,15 +489,32 @@ describe("ListButtonItem · ListLinkItem", () => {
     const content = classes(slot("list-content"));
     expect(content).toEqual(
       expect.arrayContaining([
-        "has-[[data-slot=list-body]:focus-visible]:outline-2",
-        "has-[[data-slot=list-body]:focus-visible]:-outline-offset-2",
-        "has-[[data-slot=list-body]:focus-visible]:outline-stroke-focus-ring",
+        "has-[[data-slot=list-body]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-2",
+        "has-[[data-slot=list-body]:focus-visible:not(:where(:root[data-input=pointer]_*))]:-outline-offset-2",
+        "has-[[data-slot=list-body]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-stroke-focus-ring",
       ]),
     );
     // 버튼 자신은 기본 링을 끈다 — 링이 둘로 겹치지 않는다
     expect(classes(container.querySelector("button")!)).toContain(
       "outline-none",
     );
+  });
+
+  it("줄 링은 직전 입력이 포인터면 그리지 않는다 — 손가락으로 누른 뒤 스크립트가 옮긴 초점에도 링이 없다(index.css focus-visible 과 같은 조건)", () => {
+    trackInputModality();
+    render(
+      <List>
+        <ListButtonItem title="계정" />
+      </List>,
+    );
+    const content = slot("list-content")!;
+    act(() => slot("list-body")!.focus());
+    pressPointer();
+    expect(ringTargets(content)).toEqual([]);
+    expect(ringTargets(content, "outline-2")).toEqual([]);
+    pressKey();
+    expect(ringTargets(content)).toEqual([content]);
+    expect(ringTargets(content, "-outline-offset-2")).toEqual([content]);
   });
 
   it("호버 · 누름은 줄의 표식을 보고 바탕 층이 좌우 6 들어와 모서리 10 · 콘텐츠 층만 2px 거리 축소 — 모션 줄이기면 축소 없음", () => {

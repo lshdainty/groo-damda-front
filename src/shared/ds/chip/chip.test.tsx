@@ -6,6 +6,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ChevronDown, Tag } from "lucide-react";
 
 import { Field } from "@/shared/ds/field";
+import { trackInputModality } from "@/shared/lib/input-modality";
+import {
+  pressKey,
+  pressPointer,
+  ringTargets,
+} from "@/shared/lib/input-modality.test-utils";
 
 import {
   Chip,
@@ -556,12 +562,26 @@ describe("InputChip (입력값)", () => {
   it("지우기에 키보드 포커스가 있으면 칩 둘레에 링을 그린다 · 눌리는 영역은 24 × 24 · 누르면 지우기만 준다", () => {
     render(<InputChip onRemove={() => {}}>김하나</InputChip>);
     expect(q("[data-slot=input-chip]").className).toContain(
-      "has-[[data-slot=input-chip-remove]:focus-visible]:outline-2",
+      "has-[[data-slot=input-chip-remove]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-2",
     );
     const cls = removes()[0]!.className;
     expect(cls).toContain("before:size-[24px]");
     expect(cls).toContain("[--press-basis:24]");
     expect(cls).toContain("active:[scale:calc(1-2/var(--press-basis))]");
+  });
+});
+
+describe("InputChip — 지우기 링의 조건", () => {
+  it("직전 입력이 포인터면 칩 링을 그리지 않는다 — 키로 오면 그린다(index.css focus-visible 과 같은 조건)", () => {
+    trackInputModality();
+    render(<InputChip onRemove={() => {}}>김하나</InputChip>);
+    const chip = q("[data-slot=input-chip]");
+    act(() => q("[data-slot=input-chip-remove]").focus());
+    pressPointer();
+    expect(ringTargets(chip)).toEqual([]);
+    pressKey();
+    expect(ringTargets(chip)).toEqual([chip]);
+    expect(ringTargets(chip, "outline-offset-2")).toEqual([chip]);
   });
 });
 

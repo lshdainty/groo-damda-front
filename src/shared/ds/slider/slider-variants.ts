@@ -78,23 +78,4 @@ export function tickMask(intervals: number) {
 // 말풍선 화살표 — 8 × 6, 아래를 가리키고 끝을 둥글린다(SEED 모서리 2)
 export const ARROW_PATH = "M0 0H8L4.67 5A0.8 0.8 0 0 1 3.33 5Z";
 
-// 마지막 입력이 키보드인가 — 손잡이에 초점이 올 때 키보드로 왔는지 가른다. 손잡이를 누르면 레시피가 손잡이에 초점을 직접 두는데,
-// 브라우저의 :focus-visible 은 그 앞의 키보드 초점을 이어받아 마우스 · 손가락으로 누른 손잡이에도 링이 뜬다(Chromium) — 링 · 말풍선은
-// 이 값과 손잡이의 키 누름으로만 건다. 문서에 한 번 단다(잡는 단계 — 다른 처리보다 먼저)
-let lastInput: "keyboard" | "pointer" = "pointer";
-export const lastInputWas = () => lastInput;
-let tracking = false;
-export function trackInput() {
-  if (tracking || typeof document === "undefined") return;
-  tracking = true;
-  document.addEventListener(
-    "keydown",
-    (e) => {
-      if (!e.metaKey && !e.ctrlKey && !e.altKey) lastInput = "keyboard";
-    },
-    true,
-  );
-  document.addEventListener("pointerdown", () => (lastInput = "pointer"), true);
-}
-
 export const defaultFormat = (v: number) => String(v);
