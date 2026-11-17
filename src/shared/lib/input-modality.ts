@@ -29,6 +29,14 @@ export function trackInputModality(doc: Document = document) {
   doc.addEventListener("pointerdown", () => set("pointer"), true);
 }
 
+/** 마지막 입력 방식 — 아직 아무 입력도 없으면 undefined. 링을 JS 로 거는 자리(Slider 손잡이)가 CSS 와 같은 값을 읽는다 */
+export function lastInputModality(
+  doc: Document = document,
+): InputModality | undefined {
+  const value = doc.documentElement.dataset.input;
+  return value === "keyboard" || value === "pointer" ? value : undefined;
+}
+
 /** 시험용 — 듣기를 다시 걸 수 있게 */
 export function resetInputModalityForTest() {
   tracking = false;

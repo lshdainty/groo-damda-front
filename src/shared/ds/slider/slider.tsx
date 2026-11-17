@@ -1,6 +1,10 @@
 import * as React from "react";
 
 import { cn } from "@/shared/lib/cn";
+import {
+  lastInputModality,
+  trackInputModality,
+} from "@/shared/lib/input-modality";
 import { useFieldGroup, useFieldGroupState } from "@/shared/ds/field";
 
 import {
@@ -11,10 +15,8 @@ import {
   defaultFormat,
   HOLD_MS,
   INSET,
-  lastInputWas,
   MOVE_PX,
   tickMask,
-  trackInput,
   type Dir,
 } from "./slider-variants";
 import { useDsText } from "@/shared/ds/i18n";
@@ -95,7 +97,10 @@ const SliderCore = React.forwardRef<HTMLDivElement, CoreProps>(
     const [dragging, setDragging] = React.useState<number | null>(null);
     const [hovered, setHovered] = React.useState<number | null>(null);
     const [keyboard, setKeyboard] = React.useState<number | null>(null);
-    React.useEffect(trackInput, []);
+    // 손잡이에 초점이 올 때 키보드로 왔는지 가른다 — 손잡이를 누르면 레시피가 초점을 직접 두는데, 브라우저의 :focus-visible 은
+    // 그 앞의 키보드 초점을 이어받아 마우스 · 손가락으로 누른 손잡이에도 링이 뜬다(Chromium). 링 · 말풍선은 전역 초점 링과 같은
+    // 마지막 입력(<html data-input>)과 손잡이의 키 누름으로만 건다
+    React.useEffect(() => trackInputModality(), []);
     const [top, setTop] = React.useState(values.length - 1);
 
     const span = max - min;
@@ -479,12 +484,12 @@ const SliderCore = React.forwardRef<HTMLDivElement, CoreProps>(
                         ? "cursor-grabbing bg-bg-neutral-inverted"
                         : "cursor-grab bg-bg-neutral-inverted",
                     "[transition:width_var(--motion-duration-d3)_var(--motion-ease-easing),height_var(--motion-duration-d3)_var(--motion-ease-easing)] motion-reduce:transition-none",
-                    // 키보드 포커스에만 링 — :focus-visible 이 아니라 키보드로 왔을 때(위 trackInput)
+                    // 키보드 포커스에만 링 — :focus-visible 이 아니라 키보드로 왔을 때(위 trackInputModality)
                     "outline-none data-[focus-visible]:outline-2 data-[focus-visible]:outline-offset-2 data-[focus-visible]:outline-solid data-[focus-visible]:outline-stroke-focus-ring",
                   )}
                   onKeyDown={onKeyDown(i)}
                   onFocus={() => {
-                    if (lastInputWas() === "keyboard") setKeyboard(i);
+                    if (lastInputModality() === "keyboard") setKeyboard(i);
                   }}
                   onBlur={() => setKeyboard((k) => (k === i ? null : k))}
                   onPointerEnter={(e) => {

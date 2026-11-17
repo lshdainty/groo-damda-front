@@ -7,6 +7,12 @@ import { Palette } from "lucide-react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Field } from "@/shared/ds/field";
+import { trackInputModality } from "@/shared/lib/input-modality";
+import {
+  pressKey,
+  pressPointer,
+  ringTargets,
+} from "@/shared/lib/input-modality.test-utils";
 
 import {
   CheckSelectBox,
@@ -642,12 +648,29 @@ describe("Select Box — 모양 · 배치 · 펼침", () => {
       "has-[[data-select-box-action]:not([data-disabled]):active]:bg-bg-layer-default-pressed",
     );
     expect(box).toContain(
-      "has-[[data-select-box-control]:focus-visible]:outline-2",
+      "has-[[data-select-box-control]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-2",
     );
     expect(box).toContain(
-      "has-[[data-select-box-control]:focus-visible]:outline-offset-2",
+      "has-[[data-select-box-control]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-offset-2",
     );
     expect(box).toContain("outline-stroke-focus-ring");
+  });
+
+  it("상자 링은 직전 입력이 포인터면 그리지 않는다 — 키로 오면 그린다(index.css focus-visible 과 같은 조건)", () => {
+    trackInputModality();
+    render(
+      <RadioSelectBoxGroup aria-label="종료">
+        <RadioSelectBox value="a" label="안 함" />
+        <RadioSelectBox value="b" label="날짜" />
+      </RadioSelectBoxGroup>,
+    );
+    const box = boxes()[0]!;
+    act(() => radios()[0]!.focus());
+    pressPointer();
+    expect(ringTargets(box)).toEqual([]);
+    pressKey();
+    expect(ringTargets(box)).toEqual([box]);
+    expect(ringTargets(box, "outline-2")).toEqual([box]);
   });
 
   it("누르는 순간 누르는 자리를 재서 --press-basis 로 넘기고, 누르는 자리만 2px 거리 축소(모션 줄이기면 없다)", () => {

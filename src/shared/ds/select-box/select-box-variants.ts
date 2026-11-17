@@ -25,7 +25,7 @@ export const selectBoxGroupVariants = cva(
   },
 );
 
-// 상자 — 테두리 1px(안쪽) · 모서리 12. 고른 테두리 2px 는 ::after(100ms). 호버(마우스만) · 누름은 누름 바탕, 키보드 포커스는 바깥 링
+// 상자 — 테두리 1px(안쪽) · 모서리 12. 고른 테두리 2px 는 ::after(100ms). 호버(마우스만) · 누름은 누름 바탕, 키보드 포커스는 바깥 링 — 직전 입력이 포인터면 그리지 않는다(index.css focus-visible 과 같은 조건)
 export const selectBoxVariants = cva(
   [
     "group/select-box relative flex h-full flex-col rounded-r3 bg-transparent shadow-[inset_0_0_0_1px_var(--color-stroke-neutral-weak)]",
@@ -34,7 +34,7 @@ export const selectBoxVariants = cva(
     "has-[[data-select-box-control][data-state=checked]:not([data-disabled])]:after:border-stroke-neutral-contrast",
     "has-[[data-select-box-control][data-state=checked][data-disabled]]:after:border-stroke-neutral-weak",
     "[@media(hover:hover)]:has-[[data-select-box-action]:not([data-disabled]):hover]:bg-bg-layer-default-pressed has-[[data-select-box-action]:not([data-disabled]):active]:bg-bg-layer-default-pressed",
-    "has-[[data-select-box-control]:focus-visible]:outline-2 has-[[data-select-box-control]:focus-visible]:outline-offset-2 has-[[data-select-box-control]:focus-visible]:outline-stroke-focus-ring",
+    "has-[[data-select-box-control]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-2 has-[[data-select-box-control]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-offset-2 has-[[data-select-box-control]:focus-visible:not(:where(:root[data-input=pointer]_*))]:outline-stroke-focus-ring",
   ].join(" "),
 );
 

@@ -12,6 +12,12 @@ import {
   vi,
 } from "vitest";
 
+import { trackInputModality } from "@/shared/lib/input-modality";
+import {
+  pressPointer,
+  ringTargets,
+} from "@/shared/lib/input-modality.test-utils";
+
 import {
   WheelPicker,
   WheelPickerColumn,
@@ -460,9 +466,11 @@ describe("WheelPicker", () => {
     expect(column("시").getAttribute("aria-valuetext")).toBe("9시");
   });
 
-  it("키보드 링은 키로 들어올 때만 — 마우스로 누르면 숨기고(data-pointer-focus) 다음 키 입력에 지운다", () => {
+  it("키보드 링은 키로 들어올 때만 — 마우스로 누르면 숨기고 다음 키 입력에 다시 그린다(index.css focus-visible 과 같은 조건)", () => {
+    trackInputModality();
     render(<Month />);
     const year = column("연도");
+    const selected = () => year.querySelector("[data-selected]");
     act(() => {
       year.dispatchEvent(
         new PointerEvent("pointerdown", {
@@ -473,15 +481,21 @@ describe("WheelPicker", () => {
         }),
       );
     });
-    expect(year.hasAttribute("data-pointer-focus")).toBe(true);
     expect(document.activeElement).toBe(year);
+    expect(ringTargets(year)).toEqual([]);
     act(() => {
       year.dispatchEvent(
         new PointerEvent("pointerup", { pointerType: "mouse", bubbles: true }),
       );
     });
     key(year, "ArrowDown");
-    expect(year.hasAttribute("data-pointer-focus")).toBe(false);
+    expect(ringTargets(year)).toEqual([selected()]);
+    expect(ringTargets(year, "-outline-offset-2")).toEqual([selected()]);
+    // 손가락으로 다른 곳을 누른 뒤 스크립트가 초점을 돌려줘도 링이 없다
+    act(() => year.blur());
+    pressPointer();
+    act(() => year.focus());
+    expect(ringTargets(year)).toEqual([]);
   });
 
   it("이름이 없으면 개발 중에 알린다", () => {
