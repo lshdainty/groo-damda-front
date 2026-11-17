@@ -4,6 +4,37 @@ import * as React from "react";
 export const KEYBOARD_MIN_PX = 60;
 
 /**
+ * iPhone 사파리에서 바닥 고정 버튼(시트 · 대화상자 바닥)을 보이는 영역 아래 끝에서 늘 띄우는 높이 — 입력 도구줄(∧ · ∨ · 완료)
+ * 높이 56. DESIGN.md Layout › Safe Area "화면 키보드"(groo-design #241): "브라우저가 입력 도구줄을 보이는 영역에서 뺐는지
+ * 알려 주지 않는 경우(iPhone 사파리), 바닥 고정 버튼은 보이는 영역 아래 끝에서 도구줄 높이(56)만큼 늘 띄웁니다."
+ *
+ * iPhone 17 Pro · Safari 26 실기기(2026-11-17 QA)는 키보드를 올릴 때마다 두 상태가 번갈아 나오고 둘을 가를 값을 주지 않는다 —
+ *   (A) 주소 알약 · 도구줄이 뜨고 보이는 영역이 둘 다 빼고 준다(보이는 높이 384) — 56 을 띄우면 그만큼 빈틈이 생긴다.
+ *   (B) 알약이 없고 보이는 영역이 키보드 윗변까지인데(보이는 높이 484) 도구줄이 그 안에 떠 바닥 [저장] · [다음] 을 덮어 누를 수
+ *       없다(도구줄 자리의 터치를 OS 가 먹는다).
+ * (A) 의 빈틈은 결함이 아니다 — 누를 수 없는 것(기능)을 빈틈(모양)보다 먼저 막는다(#613 의 "빈틈은 결함" 판정을 이 경우에 한해
+ * 거뒀다). 토큰이 없어 스펙 값을 그대로 둔다.
+ */
+export const IPHONE_SAFARI_TOOLBAR_RESERVE_PX = 56;
+
+/**
+ * 바닥 고정 버튼을 보이는 영역 아래 끝에서 더 띄울 높이 — iPhone 사파리 26 이상이면 56, 아니면 0.
+ *
+ * 사파리만 가린다 — `Version/` 이 있고 다른 브라우저 표시(CriOS · FxiOS · EdgiOS · OPiOS)가 없는 iPhone. 26 부터 도구줄이 키보드
+ * 위에 떠서 위 (A) · (B) 가 번갈아 난다(25 이하는 도구줄이 키보드에 붙어 보이는 영역이 늘 뺀다 — #606 때의 판정 그대로). 26 은
+ * UA 의 OS 판이 18_6 으로 묶여 있어 `Version/` 으로 본다. iPad(데스크톱 UA) · 안드로이드 · 데스크톱은 0.
+ */
+export function keyboardToolbarReserve(
+  ua: string = typeof navigator === "undefined" ? "" : navigator.userAgent,
+) {
+  if (!/iPhone/.test(ua) || /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)) return 0;
+  const version = /Version\/(\d+)/.exec(ua);
+  return version && Number(version[1]) >= 26
+    ? IPHONE_SAFARI_TOOLBAR_RESERVE_PX
+    : 0;
+}
+
+/**
  * 레이아웃 뷰포트 높이 — `position: fixed` 의 기준. `documentElement.clientHeight` 로 잰다.
  *
  * `innerHeight` 가 아니다 — iOS Safari 는 키보드가 뜬 채 페이지가 스크롤되면 innerHeight 를 스크롤만큼 줄인다
@@ -21,9 +52,9 @@ export type KeyboardViewport = { top: number; height: number };
 /**
  * 지금 키보드가 화면을 가리고 있으면 쓸 수 있는 영역(보이는 영역 그대로)을, 아니면 null 을 준다.
  *
- * 보이는 영역(visualViewport)이 곧 쓸 수 있는 영역이다 — 아무것도 더 빼지 않는다. iPhone Safari 26 은 키보드 위에
- * 떠 있는 주소 알약 · 입력 도구줄(∧ · ∨ · 완료)까지 이미 빼고 준다(2026-11-17 실측 · iPhone 17 Pro — 숫자 키패드 ·
- * 한글 키보드 모두 보이는 영역 아래 끝 = 알약 윗변). 더 빼면 시트 아래가 비어 뒤 페이지가 비친다.
+ * 보이는 영역(visualViewport) 그대로다 — 여기서는 아무것도 더 빼지 않는다. iPhone Safari 26 은 키보드 위에 떠 있는 주소
+ * 알약 · 입력 도구줄(∧ · ∨ · 완료)을 뺀 때와 안 뺀 때(도구줄이 보이는 영역 안에 뜬다)가 번갈아 나오는데, 바닥 고정 버튼만
+ * 그 몫을 늘 띄운다(keyboardToolbarReserve — 시트 · 대화상자의 useKeyboardViewport 가 건다).
  *
  * 가린 높이는 `레이아웃 높이 − visualViewport.height × scale` 이다 — 손가락으로 확대(scale > 1)하면 보이는
  * 높이가 배율만큼 줄 뿐 가린 것은 없으므로 배율을 되돌려 잰다. 레이아웃 뷰포트까지 함께 줄어드는
@@ -69,10 +100,11 @@ export function keyboardBottomInset(
  *
  * 규칙(Layout › Safe Area "화면 키보드" · bottom-sheet.md 키보드(폰) · "키보드로 넘친 것 — 본문만 스크롤, 머리 · 바닥은
  * 그대로", dialog.md "머리 · 바닥이 화면 밖으로 나가지 않습니다")을 쓸 수 있는 영역(readKeyboardViewport)에 건다.
+ *   - 쓸 수 있는 영역 — 보이는 영역에서 아래 끝의 도구줄 몫(keyboardToolbarReserve — iPhone 사파리 56, 그 밖 0)을 뺀 것.
  *   - 높이 상한은 **쓸 수 있는 높이 × ratio**(시트 0.9 · 대화상자 0.8 — 클래스의 dvh 비율과 같다). 넘치는 만큼
  *     본문(min-h-0 flex-1)만 줄어 스크롤하고 머리 · 바닥은 남는다.
  *   - bottom — 시트의 아래 변을 보이는 영역의 아래 변(OS 가 그린 것 가운데 가장 위 — 떠 있는 주소 알약 · 도구줄 ·
- *     키보드)에 붙인다(keyboardBottomInset). 보이는 영역이
+ *     키보드)에 붙이고(keyboardBottomInset) 도구줄 몫만큼 더 띄운다. 보이는 영역이
  *     밀려 올라가도(offsetTop) 그만큼 따라간다.
  *   - center — 대화상자의 가운데를 쓸 수 있는 영역의 가운데에 둔다(클래스의 −translate-y-1/2 는 그대로).
  *   - 초점 칸 — 키보드가 뜰 때 · 높이가 바뀔 때 · 초점이 옮겨 갈 때, 초점 칸 전체가 본문의 보이는 칸(scroll-padding —
@@ -126,12 +158,15 @@ export function useKeyboardViewport(
         revealed = null;
         return;
       }
-      const maxHeight = Math.floor(kb.height * ratio);
+      // 바닥 고정 버튼을 도구줄 몫만큼 띄운다 — 그만큼 쓸 수 있는 높이도 준다
+      const reserve = keyboardToolbarReserve();
+      const usable = Math.max(kb.height - reserve, 0);
+      const maxHeight = Math.floor(usable * ratio);
       el.style.maxHeight = `${maxHeight}px`;
       if (placement === "bottom") {
-        el.style.bottom = `${keyboardBottomInset(layoutHeight)}px`;
+        el.style.bottom = `${keyboardBottomInset(layoutHeight) + reserve}px`;
       } else {
-        el.style.top = `${Math.round(kb.top + kb.height / 2)}px`;
+        el.style.top = `${Math.round(kb.top + usable / 2)}px`;
       }
       const cramped = body != null && isCramped(el, body, maxHeight);
       const wasCramped = el.getAttribute("data-keyboard") === "cramped";

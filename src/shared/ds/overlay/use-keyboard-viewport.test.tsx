@@ -30,6 +30,11 @@ import {
   MenuSheetItem,
 } from "@/shared/ds/menu-sheet";
 
+import {
+  IPHONE_SAFARI_TOOLBAR_RESERVE_PX,
+  keyboardToolbarReserve,
+} from "./use-keyboard-viewport";
+
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
@@ -526,33 +531,113 @@ describe("초점 칸 — 키보드 · 바닥 버튼 위에 칸 전체가 보이�
   });
 });
 
-describe("iPhone Safari 26 — 떠 있는 주소 알약 · 입력 도구줄은 보이는 영역이 이미 뺐다", () => {
-  // 2026-11-17 QA 실측(iPhone 17 Pro · Safari 26 · pt) — 웹 콘텐츠 위끝이 화면 62.
-  //   숫자 키패드: 보이는 영역 410 · 밀림 304 → 아래 끝 62 + 410 = 472 = 알약 윗변(알약 473 · 도구줄 515 · 키보드 570)
-  //   한글 키보드: 보이는 영역 384 · 밀림 274 → 아래 끝 62 + 384 = 446 = 알약 윗변(알약 446 · 도구줄 489 · 키보드 545)
-  // 둘 다 알약 · 도구줄 · 키보드를 이미 빼고 준다 — 시트 아래 변 = 보이는 영역 아래 변. 도구줄 몫을 한 번 더 빼면
-  // 그만큼(56) 시트 아래가 비어 뒤 페이지가 흐림 없이 비쳤다.
+describe("iPhone 사파리 — 바닥 고정 버튼을 보이는 영역 아래 끝에서 도구줄 높이(56)만큼 늘 띄운다", () => {
+  // DESIGN.md Layout › Safe Area "화면 키보드"(groo-design #241, 사용자 결정 2026-11-17). iPhone 17 Pro · Safari 26 실기기는
+  // 키보드를 올릴 때마다 두 상태가 번갈아 나오고 둘을 가를 값을 주지 않는다(웹 콘텐츠 위끝 = 화면 62, pt).
+  //   (A) 주소 알약 · 도구줄이 뜨고 보이는 영역이 둘 다 뺐다 — 한글 키보드 384 · 밀림 274(아래 끝 446 = 알약 윗변),
+  //       숫자 키패드 410 · 밀림 304(아래 끝 472 = 알약 윗변). 56 을 띄우면 그만큼 빈틈 — 결함이 아니다.
+  //   (B) 알약이 없고 보이는 영역이 키보드 윗변까지(484)인데 도구줄(화면 약 485 ~ 530)이 그 안에 떠 바닥 버튼을 덮는다.
   const IOS26 =
     "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1";
+  const IOS26_CHROME =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/141.0.7390.96 Mobile/15E148 Safari/604.1";
+  const ANDROID_CHROME =
+    "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36";
+
+  it("UA 로 가린다 — iPhone 사파리 26 이상만 56, 18 이하 · iPhone 크롬 · 맥 사파리 · 안드로이드 · jsdom 은 0", () => {
+    expect(IPHONE_SAFARI_TOOLBAR_RESERVE_PX).toBe(56);
+    expect(keyboardToolbarReserve(IOS26)).toBe(56);
+    expect(
+      keyboardToolbarReserve(IOS26.replace("Version/26.0", "Version/27.2")),
+    ).toBe(56);
+    expect(
+      keyboardToolbarReserve(IOS26.replace("Version/26.0", "Version/18.6")),
+    ).toBe(0);
+    expect(keyboardToolbarReserve(IOS26_CHROME)).toBe(0);
+    expect(
+      keyboardToolbarReserve(
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15",
+      ),
+    ).toBe(0);
+    expect(keyboardToolbarReserve(ANDROID_CHROME)).toBe(0);
+    expect(keyboardToolbarReserve()).toBe(0);
+  });
 
   it.each([
-    { keyboard: "숫자 키패드", visual: 410, top: 304, bottom: 0 },
-    { keyboard: "한글 키보드", visual: 384, top: 274, bottom: 56 },
+    { state: "(A) 한글 키보드 · 알약 · 도구줄 뜸", visual: 384, top: 274 },
+    { state: "(A) 숫자 키패드 · 알약 · 도구줄 뜸", visual: 410, top: 304 },
+    { state: "(B) 알약 없음 · 도구줄이 보이는 영역 안", visual: 484, top: 0 },
   ])(
-    "$keyboard — 시트 bottom 은 714 − (밀림 + 보이는 높이), 높이 상한은 보이는 높이의 90%",
-    async ({ visual, top, bottom }) => {
+    "$state — 시트 아래 변이 보이는 영역 아래 끝 + 56, 높이 상한은 (보이는 높이 − 56) 의 90%",
+    async ({ visual, top }) => {
       vi.spyOn(navigator, "userAgent", "get").mockReturnValue(IOS26);
       render(<Sheet />);
       setViewport({ layout: 714, visual, top });
       await fire(vv, "resize");
       const el = sheet();
-      expect(el.style.bottom).toBe(`${714 - (top + visual)}px`);
-      expect(el.style.bottom).toBe(`${bottom}px`);
-      expect(el.style.maxHeight).toBe(`${Math.floor(visual * 0.9)}px`);
-      // 아래 변이 보이는 영역 아래 변(= 알약 윗변)에 딱 붙는다 — 사이가 비지 않는다
-      expect(sheetEdges(el).bottom).toBe(top + visual);
+      expect(el.style.bottom).toBe(`${714 - (top + visual) + 56}px`);
+      expect(el.style.maxHeight).toBe(`${Math.floor((visual - 56) * 0.9)}px`);
+      // 바닥(시트 아래 변)이 보이는 영역 아래 끝에서 56 위 — 도구줄 자리에 들어가지 않는다
+      expect(sheetEdges(el).bottom).toBe(top + visual - 56);
+      // 위 변은 보이는 영역 안
+      expect(sheetEdges(el).top).toBeGreaterThanOrEqual(top);
     },
   );
+
+  it.each([
+    { browser: "iPhone 크롬", ua: IOS26_CHROME },
+    { browser: "안드로이드 크롬", ua: ANDROID_CHROME },
+  ])(
+    "$browser — 56 을 붙이지 않는다(시트 아래 변 = 보이는 영역 아래 끝)",
+    async ({ ua }) => {
+      vi.spyOn(navigator, "userAgent", "get").mockReturnValue(ua);
+      render(<Sheet />);
+      setViewport({ layout: 714, visual: 484, top: 0 });
+      await fire(vv, "resize");
+      const el = sheet();
+      expect(el.style.bottom).toBe(`${714 - 484}px`);
+      expect(el.style.maxHeight).toBe(`${Math.floor(484 * 0.9)}px`);
+      expect(sheetEdges(el).bottom).toBe(484);
+    },
+  );
+
+  it("키보드가 없으면 띄우지 않는다 — 내리면 bottom · 높이 상한을 걷는다", async () => {
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue(IOS26);
+    render(<Sheet />);
+    await fire(vv, "resize");
+    expect(sheet().style.bottom).toBe("");
+    setViewport({ layout: 714, visual: 484, top: 0 });
+    await fire(vv, "resize");
+    expect(sheet().style.bottom).toBe(`${714 - 484 + 56}px`);
+    setViewport({ layout: 714, visual: 714 });
+    await fire(vv, "resize");
+    expect(sheet().style.bottom).toBe("");
+    expect(sheet().style.maxHeight).toBe("");
+  });
+
+  it("대화상자 — 가운데를 (보이는 영역 − 아래 56) 의 가운데에, 높이 상한은 그 80%", async () => {
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue(IOS26);
+    render(
+      <Dialog open form>
+        <DialogContent title="거래 추가">
+          <DialogBody>
+            <input aria-label="금액" />
+          </DialogBody>
+        </DialogContent>
+      </Dialog>,
+    );
+    const box = document.querySelector<HTMLElement>(
+      "[data-slot=dialog-content]",
+    )!;
+    setViewport({ layout: 714, visual: 484, top: 0 });
+    await fire(vv, "resize");
+    expect(box.style.top).toBe(`${Math.round((484 - 56) / 2)}px`);
+    expect(box.style.maxHeight).toBe(`${Math.floor((484 - 56) * 0.8)}px`);
+    // 아래 변(가운데 + 높이 상한의 절반)이 보이는 영역 아래 끝에서 56 위보다 위
+    expect(
+      parseFloat(box.style.top) + parseFloat(box.style.maxHeight) / 2,
+    ).toBeLessThanOrEqual(484 - 56);
+  });
 });
 
 describe("딤 — 늘 화면 위아래로 넘쳐 키보드 아래 띠까지 덮는다(dim-bounds.ts)", () => {
