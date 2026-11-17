@@ -13,5 +13,6 @@ export { WIDE_QUERY, useWideSurface } from "./use-wide-surface";
 export { useRefocusAfterBusy } from "./use-refocus-after-busy";
 export {
   keyboardBottomInset,
+  layoutViewportHeight,
   useKeyboardViewport,
 } from "./use-keyboard-viewport";

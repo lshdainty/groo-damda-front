@@ -16,11 +16,6 @@ import {
 } from "@/shared/ds/bottom-sheet";
 import { Dialog, DialogBody, DialogContent } from "@/shared/ds/dialog";
 
-import {
-  floatingAccessoryHeight,
-  IOS_FLOATING_ACCESSORY_PX,
-} from "./use-keyboard-viewport";
-
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
@@ -517,50 +512,31 @@ describe("초점 칸 — 키보드 · 바닥 버튼 위에 칸 전체가 보이�
   });
 });
 
-describe("떠 있는 입력 도구줄(iPhone Safari 26+)도 키보드에 넣어 잰다", () => {
+describe("iPhone Safari 26 — 떠 있는 주소 알약 · 입력 도구줄은 보이는 영역이 이미 뺐다", () => {
+  // 2026-11-17 QA 실측(iPhone 17 Pro · Safari 26 · pt) — 웹 콘텐츠 위끝이 화면 62.
+  //   숫자 키패드: 보이는 영역 410 · 밀림 304 → 아래 끝 62 + 410 = 472 = 알약 윗변(알약 473 · 도구줄 515 · 키보드 570)
+  //   한글 키보드: 보이는 영역 384 · 밀림 274 → 아래 끝 62 + 384 = 446 = 알약 윗변(알약 446 · 도구줄 489 · 키보드 545)
+  // 둘 다 알약 · 도구줄 · 키보드를 이미 빼고 준다 — 시트 아래 변 = 보이는 영역 아래 변. 도구줄 몫을 한 번 더 빼면
+  // 그만큼(56) 시트 아래가 비어 뒤 페이지가 흐림 없이 비쳤다.
   const IOS26 =
     "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1";
 
-  it("UA 로 가린다 — iPhone Safari 26 이상만, iPad · 18 이하 · 크롬은 0", () => {
-    expect(floatingAccessoryHeight(IOS26)).toBe(IOS_FLOATING_ACCESSORY_PX);
-    expect(
-      floatingAccessoryHeight(IOS26.replace("Version/26.0", "Version/27.2")),
-    ).toBe(IOS_FLOATING_ACCESSORY_PX);
-    expect(
-      floatingAccessoryHeight(IOS26.replace("Version/26.0", "Version/18.6")),
-    ).toBe(0);
-    expect(
-      floatingAccessoryHeight(
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15",
-      ),
-    ).toBe(0);
-    expect(
-      floatingAccessoryHeight(
-        "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36",
-      ),
-    ).toBe(0);
-  });
-
-  it("시트 아래 변이 도구줄 위 — bottom 에 도구줄 높이를 더하고 높이 상한은 그만큼 준다", async () => {
-    vi.spyOn(navigator, "userAgent", "get").mockReturnValue(IOS26);
-    render(<Sheet />);
-    setViewport({ visual: 494 });
-    await fire(vv, "resize");
-    const el = sheet();
-    expect(el.style.bottom).toBe(`${350 + IOS_FLOATING_ACCESSORY_PX}px`);
-    expect(el.style.maxHeight).toBe(
-      `${Math.floor((494 - IOS_FLOATING_ACCESSORY_PX) * 0.9)}px`,
-    );
-    // 밀려도 도구줄 위
-    setViewport({ visual: 494, top: 350 });
-    await fire(vv, "scroll");
-    expect(el.style.bottom).toBe(`${IOS_FLOATING_ACCESSORY_PX}px`);
-  });
-
-  it("키보드가 없으면 도구줄도 없다 — 0", async () => {
-    vi.spyOn(navigator, "userAgent", "get").mockReturnValue(IOS26);
-    render(<Sheet />);
-    await fire(vv, "resize");
-    expect(sheet().style.bottom).toBe("");
-  });
+  it.each([
+    { keyboard: "숫자 키패드", visual: 410, top: 304, bottom: 0 },
+    { keyboard: "한글 키보드", visual: 384, top: 274, bottom: 56 },
+  ])(
+    "$keyboard — 시트 bottom 은 714 − (밀림 + 보이는 높이), 높이 상한은 보이는 높이의 90%",
+    async ({ visual, top, bottom }) => {
+      vi.spyOn(navigator, "userAgent", "get").mockReturnValue(IOS26);
+      render(<Sheet />);
+      setViewport({ layout: 714, visual, top });
+      await fire(vv, "resize");
+      const el = sheet();
+      expect(el.style.bottom).toBe(`${714 - (top + visual)}px`);
+      expect(el.style.bottom).toBe(`${bottom}px`);
+      expect(el.style.maxHeight).toBe(`${Math.floor(visual * 0.9)}px`);
+      // 아래 변이 보이는 영역 아래 변(= 알약 윗변)에 딱 붙는다 — 사이가 비지 않는다
+      expect(sheetEdges(el).bottom).toBe(top + visual);
+    },
+  );
 });

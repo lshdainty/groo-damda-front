@@ -1,5 +1,7 @@
 import * as React from "react";
 
+import { layoutViewportHeight } from "@/shared/ds/overlay";
+
 import { KEYBOARD_GAP } from "./bottom-navigation-variants";
 
 /*
@@ -33,7 +35,8 @@ export type ScrollRoot =
 export const resolveRoot = (root: ScrollRoot) =>
   root && "current" in root ? root.current : (root ?? null);
 
-// 화면 키보드가 열렸는가 — visualViewport 가 화면보다 KEYBOARD_GAP 넘게 작다
+// 화면 키보드가 열렸는가 — visualViewport 가 레이아웃 화면(clientHeight)보다 KEYBOARD_GAP 넘게 작다. innerHeight 는
+// iOS Safari 가 키보드가 뜬 채 스크롤하면 줄어 키보드를 못 알아본다(overlay 의 layoutViewportHeight)
 function subscribeViewport(onChange: () => void) {
   const vv = window.visualViewport;
   vv?.addEventListener("resize", onChange);
@@ -41,7 +44,7 @@ function subscribeViewport(onChange: () => void) {
 }
 function keyboardOpenNow() {
   const vv = window.visualViewport;
-  return !!vv && window.innerHeight - vv.height * vv.scale > KEYBOARD_GAP;
+  return !!vv && layoutViewportHeight() - vv.height * vv.scale > KEYBOARD_GAP;
 }
 export function useKeyboardOpen() {
   return React.useSyncExternalStore(
