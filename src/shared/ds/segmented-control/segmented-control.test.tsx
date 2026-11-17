@@ -3,7 +3,14 @@ import { act, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { cn } from "@/shared/lib/cn";
+
 import { SegmentedControl, SegmentedControlItem } from "./segmented-control";
+import {
+  SEGMENTED_LABEL,
+  segmentedControlItemVariants,
+  segmentedControlVariants,
+} from "./segmented-control-variants";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -248,5 +255,72 @@ describe("SegmentedControl", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     render(<TodoView defaultValue="today" />);
     expect(warn).not.toHaveBeenCalled();
+  });
+});
+
+describe("320 보다 좁은 화면(Layout 지원 폭)", () => {
+  /** 화면 폭을 정해 matchMedia 를 흉내 낸다 — jsdom 은 레이아웃이 없다 */
+  const viewport = (width: number) => {
+    window.matchMedia = ((query: string) => {
+      const max = /max-width:\s*([\d.]+)px/.exec(query);
+      return {
+        matches: max ? width <= Number(max[1]) : false,
+        media: query,
+        addEventListener() {},
+        removeEventListener() {},
+      };
+    }) as unknown as typeof window.matchMedia;
+  };
+  const original = window.matchMedia;
+  afterEach(() => {
+    window.matchMedia = original;
+  });
+  const label = (name: string) =>
+    radio(name).querySelector<HTMLElement>(
+      "[data-slot=segmented-control-label]",
+    )!;
+
+  it("320 이상(320 · 360)은 그대로다 — 낱말 단위 줄바꿈 · 칸 최소 폭 없음 · 미끄러지는 알약", () => {
+    for (const width of [320, 360]) {
+      viewport(width);
+      const track = render(<TodoView defaultValue="week" />);
+      expect(track.hasAttribute("data-narrow")).toBe(false);
+      expect(track.className).toBe(cn(segmentedControlVariants()));
+      expect(radio("이번 주").className).toBe(
+        cn(segmentedControlItemVariants()),
+      );
+      expect(label("이번 주").className).toBe(SEGMENTED_LABEL);
+      expect(label("이번 주").className).toContain(
+        "[overflow-wrap:break-word]",
+      );
+      expect(pill().hidden).toBe(false);
+      act(() => root.render(null));
+    }
+  });
+
+  it("320 미만(201)은 낱말 안에서 꺾지 않고 줄 전체를 가로로 스크롤한다 — 고른 칸이 알약을 칠한다", () => {
+    viewport(201);
+    const track = render(<TodoView defaultValue="week" />);
+    expect(track.getAttribute("data-narrow")).toBe("true");
+    // 줄 전체 가로 스크롤 · 스크롤바 숨김
+    expect(track.className).toContain("overflow-x-auto");
+    expect(track.className).toContain("[scrollbar-width:none]");
+    // 칸은 가장 긴 낱말 + 좌우 여백 아래로 줄지 않는다
+    expect(radio("이번 주").className).toContain("min-w-min");
+    expect(radio("이번 주").className).not.toContain("min-w-0");
+    // 낱말 안에서 꺾지 않는다(낱말 사이 줄바꿈 break-keep 은 그대로)
+    expect(label("이번 주").className).toContain("[overflow-wrap:normal]");
+    expect(label("이번 주").className).not.toContain(
+      "[overflow-wrap:break-word]",
+    );
+    expect(label("이번 주").className).toContain("break-keep");
+    // 칸 폭이 고르지 않을 수 있어 미끄러지는 알약 대신 고른 칸이 칠한다
+    expect(pill().hidden).toBe(true);
+    expect(radio("이번 주").className).toContain(
+      "data-[state=checked]:bg-bg-layer-default",
+    );
+    // 고르기 · 키보드는 그대로다
+    act(() => radio("전체").click());
+    expect(radio("전체").getAttribute("aria-checked")).toBe("true");
   });
 });

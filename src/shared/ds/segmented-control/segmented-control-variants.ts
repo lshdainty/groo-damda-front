@@ -11,6 +11,15 @@ export const segmentedControlVariants = cva(
   "relative grid w-full grid-flow-col auto-cols-fr rounded-full bg-bg-neutral-weak-alpha p-x1 font-sans",
 );
 
+// 320 보다 좁은 화면(페이지 확대 — Layout "지원 폭") — 칸이 글보다 좁아지면 낱말 안에서 꺾지 않고 줄 전체를 가로로 스크롤한다.
+// 칸은 가장 긴 낱말 + 좌우 12 아래로 줄지 않고(min-content), 트랙이 스크롤 칸이 된다(스크롤바는 숨긴다). 칸 폭이 고르지 않을 수 있어
+// 미끄러지는 알약은 숨기고 고른 칸에 알약의 바탕 · 짙은 테두리를 칠한다(320 미만은 모양이 덜 다듬어져도 된다). 320 이상에서는 붙지 않는다
+export const SEGMENTED_TRACK_NARROW =
+  "overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+export const SEGMENTED_ITEM_NARROW =
+  "min-w-min data-[state=checked]:bg-bg-layer-default data-[state=checked]:shadow-[inset_0_0_0_1px_var(--color-stroke-neutral-contrast)]";
+export const SEGMENTED_LABEL_NARROW = "[overflow-wrap:normal]";
+
 // 고른 알약 — 칸 뒤(트랙의 첫 자식 · 칸은 relative 라 그 위에 그려진다). 폭 (트랙 − 8) ÷ 칸 수, 고른 칸 번호만큼 옮긴다.
 // --segmented-count · --segmented-index 는 그린 칸을 세어 넣는다
 export const SEGMENTED_INDICATOR = [
