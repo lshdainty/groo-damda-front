@@ -1657,6 +1657,50 @@ describe("결제 수단이 계좌 · 카드보다 먼저 — 고르면 그 수�
     ).not.toBeNull();
   });
 
+  it("수입 방식 시트 — 첫 항목(없음)이 수입 방식 없음이다, 지출은 결제 수단 없음 (QA DW02)", async () => {
+    const firstItem = () =>
+      [...document.body.querySelectorAll("[role=dialog]")]
+        .slice(-1)[0]
+        ?.querySelector("li, [role=listitem]")?.textContent ?? "";
+    // 새 거래 — 종류 칩을 수입으로 바꾼 뒤
+    await open();
+    click(lastButton("income"));
+    await tick();
+    setValue(amountInput(), "5000");
+    await press("addTx.next");
+    click(row("addTx.incomeMethodRow"));
+    await tick();
+    expect(firstItem()).toContain("addTx.noIncomeMethod");
+    expect(sheetText()).not.toContain("addTx.noMethodOption");
+    expect(
+      document.querySelector(
+        '[role=dialog] [aria-label="addTx.incomeMethodRow"]',
+      ),
+    ).not.toBeNull();
+    // 수정 — 수입 거래
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await open({
+      expense: {
+        ...expense,
+        expenseType: "INCOME",
+        categoryRowId: 21,
+      } as Expense,
+    });
+    click(row("addTx.incomeMethodRow"));
+    await tick();
+    expect(firstItem()).toContain("addTx.noIncomeMethod");
+    expect(sheetText()).not.toContain("addTx.noMethodOption");
+    // 지출은 그대로 결제 수단 없음
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await toStep2();
+    click(row("addTx.paymentMethodRow"));
+    await tick();
+    expect(firstItem()).toContain("addTx.noMethodOption");
+    expect(sheetText()).not.toContain("addTx.noIncomeMethod");
+  });
+
   it("카드를 고르면 계좌 시트에는 신용 · 체크카드만 나온다", async () => {
     await toStep2();
     await pickMethod("form.paymentMethod.CARD");
