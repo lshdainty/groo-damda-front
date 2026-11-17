@@ -508,6 +508,113 @@ describe("Snackbar", () => {
     }
   });
 
+  describe("iPhone 사파리 26+ — 키보드가 떠 있으면 도구줄 높이(56)를 더 띄운다(DESIGN.md 화면 키보드 · snackbar.md 자리)", () => {
+    // iPhone 17 Pro · Safari 26 실기기(2026-11-17 QA, pt) — 레이아웃 714. 키보드를 올릴 때마다 두 상태가 번갈아 나온다.
+    //   (A) 주소 알약 · 도구줄이 뜨고 보이는 영역이 둘 다 뺐다 — 보이는 높이 384 · 밀림 274. 56 을 더 띄운 빈틈은 결함이 아니다.
+    //   (B) 알약이 없고 보이는 영역이 키보드 윗변까지(484)인데 도구줄이 그 안에 떠 띠를 덮는다.
+    const IOS26 =
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1";
+    const IOS26_CHROME =
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/141.0.7390.96 Mobile/15E148 Safari/604.1";
+    const ANDROID_CHROME =
+      "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36";
+    const LAYOUT = 714;
+
+    let vv: EventTarget & { scale: number; offsetTop: number; height: number };
+    beforeEach(() => {
+      vi.spyOn(document.documentElement, "clientHeight", "get").mockReturnValue(
+        LAYOUT,
+      );
+      vv = Object.assign(new EventTarget(), {
+        scale: 1,
+        offsetTop: 0,
+        height: LAYOUT,
+      });
+      Object.defineProperty(window, "visualViewport", {
+        configurable: true,
+        value: vv,
+      });
+    });
+    afterEach(() => {
+      Reflect.deleteProperty(window, "visualViewport");
+    });
+
+    const avoid = () =>
+      parseFloat(region()!.style.getPropertyValue("--snackbar-avoid"));
+    function viewport(height: number, offsetTop: number) {
+      vv.height = height;
+      vv.offsetTop = offsetTop;
+      act(() => {
+        vv.dispatchEvent(new Event("resize"));
+      });
+    }
+
+    const STATES = [
+      { state: "(A) 한글 키보드 · 알약 · 도구줄 뜸", visual: 384, top: 274 },
+      { state: "(B) 알약 없음 · 도구줄이 보이는 영역 안", visual: 484, top: 0 },
+    ];
+
+    it.each(STATES)(
+      "$state — 띠 자리 아래 = 보이는 영역 아래 끝에서 56 위",
+      ({ visual, top }) => {
+        vi.spyOn(navigator, "userAgent", "get").mockReturnValue(IOS26);
+        act(() => root.render(<SnackbarProvider />));
+        expect(avoid()).toBe(0);
+        viewport(visual, top);
+        expect(avoid()).toBe(LAYOUT - (top + visual) + 56);
+        // 자리 아래 변(레이아웃 위에서 잰 값)이 보이는 영역 아래 끝보다 56 위 — 띠는 다시 그 위 8(pb-x2)
+        expect(LAYOUT - avoid()).toBe(top + visual - 56);
+      },
+    );
+
+    it.each(
+      STATES.flatMap((s) => [
+        { ...s, browser: "iPhone 크롬", ua: IOS26_CHROME },
+        { ...s, browser: "안드로이드 크롬", ua: ANDROID_CHROME },
+      ]),
+    )(
+      "$browser · $state — 56 을 더하지 않는다(띠 자리 아래 = 보이는 영역 아래 끝)",
+      ({ ua, visual, top }) => {
+        vi.spyOn(navigator, "userAgent", "get").mockReturnValue(ua);
+        act(() => root.render(<SnackbarProvider />));
+        viewport(visual, top);
+        expect(avoid()).toBe(LAYOUT - (top + visual));
+      },
+    );
+
+    it("키보드가 없으면 자리가 그대로다 — 띄웠던 56 도 키보드를 내리면 걷는다 · 확대 중에는 세지 않는다", () => {
+      vi.spyOn(navigator, "userAgent", "get").mockReturnValue(IOS26);
+      act(() => root.render(<SnackbarProvider />));
+      expect(avoid()).toBe(0);
+      viewport(484, 0);
+      expect(avoid()).toBe(LAYOUT - 484 + 56);
+      viewport(LAYOUT, 0);
+      expect(avoid()).toBe(0);
+      vv.scale = 2;
+      viewport(LAYOUT / 2, 0);
+      expect(avoid()).toBe(0);
+    });
+
+    it("키보드 없이 피할 자리(탭 바)만 있으면 iPhone 사파리여도 56 을 더하지 않는다", () => {
+      vi.spyOn(navigator, "userAgent", "get").mockReturnValue(IOS26);
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+        top: LAYOUT - 56,
+        width: 360,
+        height: 56,
+      } as DOMRect);
+      act(() =>
+        root.render(
+          <SnackbarProvider>
+            <SnackbarAvoidOverlap>
+              <nav />
+            </SnackbarAvoidOverlap>
+          </SnackbarProvider>,
+        ),
+      );
+      expect(avoid()).toBe(56);
+    });
+  });
+
   it("SnackbarAvoidOverlap 은 Provider 밖이면 자식을 그대로 그린다", () => {
     act(() =>
       root.render(
