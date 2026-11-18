@@ -50,7 +50,7 @@ import type {
 } from "@/entities/expense";
 import { useMonthlyTrend } from "@/features/expense";
 import { Body, PeriodButton, type Placement } from "./stats-parts";
-import type { StatsModel } from "./stats-model";
+import { bucketsToToday, type StatsModel } from "./stats-model";
 
 /*
  * 통계 · 고정/변동 탭 구역(I-08 38) — 한 기간의 수입 · 지출을 고정과 변동(고정 제외)으로 나눠 보여 준다.
@@ -416,7 +416,8 @@ export function FixedTrendSection({
   const trend: MonthlyTrend[] = trendQ.data ?? [];
   const rows = useRange
     ? toRows(
-        buckets.map((b) => ({
+        // 가로축은 이번 달에서 끝난다(chart.md "오늘 뒤는 그리지 않습니다") — 서버가 채워 보낸 앞날 달은 그리지 않는다
+        bucketsToToday(buckets, new Date()).map((b) => ({
           year: b.year,
           month: b.month,
           total: kind === "expense" ? b.totalExpense : b.totalIncome,
