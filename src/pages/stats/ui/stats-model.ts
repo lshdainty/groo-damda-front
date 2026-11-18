@@ -7,6 +7,11 @@ import {
 import { useTranslation } from "react-i18next";
 import { formatChangeRate } from "@/shared/lib/groo/format";
 import {
+  dailyAverage,
+  dailyAverageDays,
+  divideWonHalfUp,
+} from "@/shared/lib/groo/daily-average";
+import {
   dailyAxisTick,
   formatDailyTick,
   formatMonthTicks,
@@ -430,11 +435,15 @@ export function useStatsModel(lifted?: StatsState) {
         dayMs,
     ) + 1;
   // 평균 — 단일 월 모드는 일평균, 그 외는 월평균. custom 은 일평균.
+  // 일평균은 홈 · 예산 · 비교와 같은 셈(groo-design #259) — 오늘을 품은 기간은 첫날부터 오늘까지, 지난 기간은 전체 날수, 원 단위 half-up.
+  // 예전엔 기간 전체 날수(rangeDays)로 나눠 이번 달 평균이 다른 화면보다 작았다
   const useDailyAvg = period.segMode === "m" || period.segMode === "custom";
-  const avgDivisor = useDailyAvg
-    ? rangeDays
-    : Math.max(1, monthlyBuckets.length);
-  const avgValue = avgDivisor > 0 ? Math.round(totalExpense / avgDivisor) : 0;
+  const avgDays = useDailyAvg
+    ? dailyAverageDays(period.from, period.to)
+    : rangeDays;
+  const avgValue = useDailyAvg
+    ? divideWonHalfUp(totalExpense, avgDays)
+    : Math.round(totalExpense / Math.max(1, monthlyBuckets.length));
   const avgLabel = t(labels.avg);
   const prevTotalExpense = prevRangeQ.data?.totalExpense ?? 0;
   // 전월 대비 등락 % — 소수 둘째 자리까지 공용 formatChangeRate(▲ ▼ 가 방향을 말하니 부호 없음)
@@ -542,23 +551,6 @@ export function useStatsModel(lifted?: StatsState) {
     totalPrev > 0
       ? formatChangeRate((cmpDiff / totalPrev) * 100, { sign: "none" })
       : null;
-  const prevDays =
-    Math.round(
-      (startOfDay(prevR.to).getTime() - startOfDay(prevR.from).getTime()) /
-        dayMs,
-    ) + 1;
-  // 하루 평균 분모 — 이번 기간은 '오늘까지 경과 일수', 이전 기간은 전체 일수. 진행 중인 기간이 미래 종료일까지 계산돼 분모가 과대해지는 것 방지.
-  const cmpToday = startOfDay(new Date());
-  const cmpNowEnd =
-    startOfDay(period.to).getTime() > cmpToday.getTime()
-      ? cmpToday
-      : startOfDay(period.to);
-  const cmpNowDays = Math.max(
-    1,
-    Math.round(
-      (cmpNowEnd.getTime() - startOfDay(period.from).getTime()) / dayMs,
-    ) + 1,
-  );
   // 건수도 합계와 같은 거래만 센다 — 환불된 것 · 카드 이월 · 아직 안 온 것은 뺀다
   const nowTxCount = countableTx(monthExpensesQ.data ?? []).filter(
     (e) => e.expenseType === "EXPENSE",
@@ -570,8 +562,9 @@ export function useStatsModel(lifted?: StatsState) {
     {
       key: "daily",
       label: t("compare.metricDailyAvg"),
-      now: Math.round(totalNow / cmpNowDays),
-      prev: Math.round(totalPrev / Math.max(1, prevDays)),
+      // 하루 평균 — 홈 · 예산 · 요약과 같은 셈(groo-design #259): 이번 기간은 오늘까지, 지난 기간은 전체 날수
+      now: dailyAverage(totalNow, period.from, period.to),
+      prev: dailyAverage(totalPrev, prevR.from, prevR.to),
       count: false,
     },
     {
@@ -678,6 +671,7 @@ export function useStatsModel(lifted?: StatsState) {
     topMerchant,
     topMerchantCat,
     rangeDays,
+    avgDays,
     avgLabel,
     avgValue,
     prevTotalExpense,

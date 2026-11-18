@@ -715,7 +715,7 @@ export function HighlightsSection({
   const avgDetail =
     m.period.segMode !== "m" ? (
       <>
-        {t("avgSub.rangeTotal", { days: m.rangeDays })}{" "}
+        {t("avgSub.rangeTotal", { days: m.avgDays })}{" "}
         {mask(won(m.totalExpense))}
       </>
     ) : m.prevTotalExpense > 0 ? (

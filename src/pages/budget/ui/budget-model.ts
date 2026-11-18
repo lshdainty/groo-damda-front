@@ -8,6 +8,7 @@ import {
 import { useUserPreferences } from "@/features/user";
 import type { ExpenseBudget, ExpenseCategory } from "@/entities/expense";
 import { loadFailed } from "@/shared/api";
+import { monthDailyAverage } from "@/shared/lib/groo/daily-average";
 
 const currentMonthKey = () => {
   const n = new Date();
@@ -97,7 +98,8 @@ export function useBudgetModel(lifted?: BudgetMonth) {
       : daysInMonth;
   const daysElapsedPct = (dayOfMonth / daysInMonth) * 100;
   const daysRemaining = Math.max(1, daysInMonth - dayOfMonth);
-  const dailyActual = Math.round(totalSpent / Math.max(1, dayOfMonth));
+  // 하루 평균 — 홈 · 통계 · 예산이 같은 셈(groo-design #259): 이번 달은 1일부터 오늘까지, 지난 달은 그 달 전체, 원 단위 half-up
+  const dailyActual = monthDailyAverage(totalSpent, year, month, today);
   const dailyTarget = Math.round(
     Math.max(0, totalLimit - totalSpent) / daysRemaining,
   );

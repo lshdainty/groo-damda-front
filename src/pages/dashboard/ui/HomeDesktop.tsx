@@ -30,6 +30,7 @@ import {
   parseLocalDate,
 } from "@/shared/lib/date";
 import { MINUS, toLocalIso } from "@/shared/lib/groo/format";
+import { monthDailyAverage } from "@/shared/lib/groo/daily-average";
 import { useHideAmounts } from "@/shared/lib/groo/hide-amounts-core";
 import { useOpenHideAmountsSettings } from "@/shared/lib/groo/hide-amounts-nav";
 import { MonthTitle } from "@/shared/ui/groo/month-title";
@@ -125,11 +126,8 @@ export function HomeDesktop() {
 
   // 일평균 + 전월 대비 — 가계부 카드 요약 라인용
   const _today = new Date();
-  const _isCurMonth =
-    _today.getFullYear() === periodY && _today.getMonth() + 1 === periodM;
-  const _daysInMonth = new Date(periodY, periodM, 0).getDate();
-  const _dayOfMonth = _isCurMonth ? _today.getDate() : _daysInMonth;
-  const dailyAvg = Math.round(expense / Math.max(1, _dayOfMonth));
+  // 하루 평균 — 홈 · 통계 · 예산이 같은 셈(groo-design #259)
+  const dailyAvg = monthDailyAverage(expense, periodY, periodM, _today);
   const { months: trendArr, prevExpense } = sixMonths(
     trendQ.data?.monthlyBuckets,
     periodY,

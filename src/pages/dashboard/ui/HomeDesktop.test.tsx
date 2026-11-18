@@ -10,6 +10,10 @@ import {
   tickScale,
   yTickLabels,
 } from "@/shared/lib/groo/value-axis.test-utils";
+import {
+  DAILY_AVERAGE_CASES,
+  monthKeyOf,
+} from "@/shared/lib/groo/daily-average.test-utils";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -83,6 +87,7 @@ vi.mock("@/features/expense", () => ({
 }));
 
 const { HomeDesktop } = await import("./HomeDesktop");
+const { useMonthNote } = await import("./use-month-note");
 
 let container: HTMLDivElement;
 let root: Root;
@@ -384,4 +389,65 @@ describe("데스크톱 홈", () => {
     expect(refetch).toHaveBeenCalled();
     expect(state.asset.refetch).not.toHaveBeenCalled();
   });
+});
+
+// 하루 평균 — groo-design #259. 홈 두 곳(데스크톱 카드 안내 · 폰 useMonthNote)이 예산 · 통계와 같은 경우에서 같은 값(daily-average.test-utils)
+describe("홈 하루 평균 — 이번 달은 1일부터 오늘까지, 지난 달은 그 달 전체, 원 단위 half-up", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** "하루 평균 1,636원 썼어요" 의 금액 — "avg.dailyAverage" 글 바로 뒤의 굵은 글(앞의 잔액 굵은 글은 건너뛴다) */
+  const noteAmount = () => {
+    const p = Array.from(container.querySelectorAll("p")).find((el) =>
+      el.textContent?.includes("avg.dailyAverage"),
+    );
+    let seenLabel = false;
+    for (const n of Array.from(p?.childNodes ?? [])) {
+      if (n.textContent?.includes("avg.dailyAverage")) seenLabel = true;
+      else if (seenLabel && n.nodeName === "B") return n.textContent;
+    }
+    return undefined;
+  };
+  const wonText = (n: number) =>
+    `${n < 0 ? "\u2212" : ""}${Math.abs(n).toLocaleString("ko-KR")}원`;
+
+  for (const c of DAILY_AVERAGE_CASES) {
+    it(`데스크톱 — ${c.name}`, () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(c.today);
+      state.monthly = q({
+        totalIncome: 0,
+        totalExpense: c.total,
+        categoryBreakdown: [],
+        monthlyBuckets: [],
+      });
+      render();
+      // 지난 달 — 달 고르기(가짜)가 2026-01 을 고른다
+      if (
+        monthKeyOf(c) !==
+        `${c.today.getFullYear()}-${String(c.today.getMonth() + 1).padStart(2, "0")}`
+      ) {
+        expect(monthKeyOf(c)).toBe("2026-01");
+        act(() =>
+          container
+            .querySelector<HTMLElement>("[data-testid=month-picker]")
+            ?.click(),
+        );
+      }
+      expect(noteAmount()).toBe(wonText(c.expected));
+    });
+
+    it(`폰(useMonthNote) — ${c.name}`, () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(c.today);
+      const seen: number[] = [];
+      const Probe = () => {
+        seen.push(useMonthNote(c.year, c.month, c.total).dailyAvg);
+        return null;
+      };
+      act(() => root.render(<Probe />));
+      expect(seen[seen.length - 1]).toBe(c.expected);
+    });
+  }
 });
