@@ -1028,26 +1028,33 @@ describe("DatePicker — 빠른 기간", () => {
     expect(chip("이번 달").disabled).toBe(false);
   });
 
-  it("scroll 은 한 줄 가로 스크롤 · wrap 은 줄바꿈 — 시트(continuous)는 scroll, 그 밖은 wrap", () => {
-    render(<Range presets={PRESETS} visibleRange="continuous" />);
-    expect(
-      container
-        .querySelector("[data-slot=date-picker-presets]")!
-        .getAttribute("data-layout"),
-    ).toBe("scroll");
-    expect(container.querySelector("[data-slot=chip-scroll-row]")).toBeTruthy();
-    render(<Range key="w" presets={PRESETS} />);
-    expect(
-      container
-        .querySelector("[data-slot=date-picker-presets]")!
-        .getAttribute("data-layout"),
-    ).toBe("wrap");
-    render(<Range key="s" presets={PRESETS} presetsLayout="scroll" />);
-    expect(
-      container
-        .querySelector("[data-slot=date-picker-presets]")!
-        .getAttribute("data-layout"),
-    ).toBe("scroll");
+  // 빠른 기간 칩 줄은 시트 · 팝오버 어디서나 한 줄 가로 스크롤(groo-design #255 — date-picker.md "빠른 기간", chip.md "묶음 배치" 의 예외).
+  // 예전엔 이어지는 달(시트)만 scroll 이고 한 달 · 두 달(팝오버)은 wrap 이라 320 · 200% 에서 칩이 여러 줄로 내려갔다
+  it("폰 320 · 글자 200% — 어느 모드(한 달 · 두 달 · 이어지는 달)든 칩 줄은 한 줄 · 가로 스크롤 · 양 끝 흐림 · 화면 여백 밖까지", () => {
+    for (const visibleRange of ["month", "twoMonths", "continuous"] as const) {
+      render(
+        <Range
+          key={visibleRange}
+          presets={PRESETS}
+          visibleRange={visibleRange}
+        />,
+      );
+      const group = container.querySelector<HTMLElement>(
+        "[data-slot=date-picker-presets]",
+      )!;
+      const row = group.querySelector<HTMLElement>(
+        "[data-slot=chip-scroll-row]",
+      )!;
+      // 한 줄 — 줄을 바꾸지 않는다(칩은 모두 스크롤 칸 안), 가로로 스크롤한다
+      expect(row).toBeTruthy();
+      expect(row.className).toContain("flex-nowrap");
+      expect(row.className).toContain("overflow-x-auto");
+      expect(group.className).not.toContain("flex-wrap");
+      expect(row.querySelectorAll("[role=radio]")).toHaveLength(PRESETS.length);
+      // 양 끝 흐림(Scroll Fog) · 부모 화면 여백 밖까지(bleed)
+      expect(row.getAttribute("data-scroll-fog")).toBe("row");
+      expect(group.className).toContain("-mx-global-gutter");
+    }
   });
 
   it("하루 · 여러 날 달력에는 칩 줄이 없다", () => {
