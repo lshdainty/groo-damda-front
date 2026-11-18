@@ -9,7 +9,7 @@ import { List, ListButtonItem, ListHeader } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { Icon } from "@/shared/ui/groo/primitives";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
-import { formatChartAxis } from "@/shared/lib/groo/format";
+import { money } from "@/shared/lib/groo/format";
 import type { ExpenseTemplate } from "@/entities/expense-template";
 import type { TxForm, TxType } from "../model/use-tx-form";
 import { AmountEntry } from "./AmountEntry";
@@ -145,7 +145,8 @@ function PresetBlock({ f }: { f: TxForm }) {
                 {p.templateName}
                 {p.lockAmount === "Y" && p.amount != null && p.amount > 0 && (
                   <span className="ml-x1_5 text-fg-neutral-subtle">
-                    {formatChartAxis(p.amount)}
+                    {/* 금액 칩도 돈이라 줄이지 않는다(International Design "돈", #252) */}
+                    {money(p.amount)}
                   </span>
                 )}
               </Chip>

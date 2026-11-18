@@ -43,8 +43,11 @@ export function useAmountLimit(value: string, max: number = MAX_AMOUNT) {
   return { read, message, tick };
 }
 
-/** 상한을 글로 — ko "100억원" · "1,000억원" / en "10 billion won" · "100 billion won". 억 단위로 떨어지는 상한만 다룬다 */
+/**
+ * 상한을 글로 — ko "100억원" · "1,000억원"(한국어는 그대로) / en "₩10,000,000,000" · "₩100,000,000,000". 문장 속 돈도 영어는 통화 기호를
+ * 앞에 붙여 줄이지 않는다(International Design "돈", groo-design #252 — "won" 을 붙이지 않는다). 억 단위로 떨어지는 상한만 다룬다
+ */
 export function amountLimitText(max: number, en: boolean): string {
-  if (en) return `${(max / 1e9).toLocaleString("en-US")} billion won`;
+  if (en) return `₩${max.toLocaleString("en-US")}`;
   return `${(max / 1e8).toLocaleString("en-US")}억원`;
 }

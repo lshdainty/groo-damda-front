@@ -45,7 +45,7 @@ common,scheduled,예정,Scheduled
 common,refunded,환불됨,Refunded
 common,none,없음,None
 common,noSearchResults,검색 결과가 없어요.,No results found
-common,amountTooLarge,금액은 100억원까지 입력할 수 있어요.,Amount can be up to 10 billion won.
+common,amountTooLarge,금액은 100억원까지 입력할 수 있어요.,"Amount can be up to ₩10,000,000,000."
 common,amountTooLargeAt,금액은 {{max}}까지 입력할 수 있어요.,Amount can be up to {{max}}.
 common,recordOnly,기록만,Record only
 layout,dashboard,대시보드,Dashboard
@@ -455,7 +455,7 @@ asset,savingGoal.errAmount,목표 금액을 입력해주세요.,Enter a goal amo
 asset,savingGoal.errCurrentExceeds,현재 모은 금액이 목표 금액보다 클 수 없어요.,The amount saved can't exceed the target amount.
 asset,savingGoal.errNameTooLong,목표 이름은 12자 이내로 입력해주세요.,Keep the goal name to 12 characters or fewer.
 asset,savingGoal.errNameDuplicate,같은 이름의 목표가 이미 있어요.,A goal with that name already exists.
-asset,savingGoal.errAmountTooLarge,목표 금액은 100억원까지 입력할 수 있어요.,Target amount can be up to 10 billion won.
+asset,savingGoal.errAmountTooLarge,목표 금액은 100억원까지 입력할 수 있어요.,"Target amount can be up to ₩10,000,000,000."
 asset,subtitle,모든 계좌 · 카드 · 투자를 한 곳에서,"All accounts, cards, and investments in one place"
 asset,paymentDayLabel,{{day}}일 결제,Billed on day {{day}}
 asset,checkCardMonthLabel,이번 달 사용,Used this month
@@ -1146,7 +1146,7 @@ expense,addTx.installment,할부,Installment
 expense,addTx.lumpSum,일시불,Lump sum
 expense,addTx.installmentMonths,{{months}}개월,{{months}} months
 expense,addTx.installmentHint,매달 약 {{perMonth}}원씩 {{months}}회 청구돼요,About {{perMonth}} per month for {{months}} months
-expense,addTx.fxHint,{{original}} × {{rate}} = {{krw}}원,{{original}} × {{rate}} = {{krw}}
+expense,addTx.fxHint,{{original}} × {{rate}} = {{krw}}원,{{original}} × {{rate}} = ₩{{krw}}
 expense,txDetail.foreignPayment,해외 결제,Foreign payment
 expense,addTx.fromAccount,보내는 계좌,From account
 expense,addTx.fee,수수료,Fee
@@ -1199,7 +1199,7 @@ expense,addTx.fromAccountRow,보내는 계좌,From account
 expense,addTx.errCategory,카테고리를 골라주세요.,Choose a category.
 expense,addTx.errFrom,보내는 계좌를 골라주세요.,Choose the account to send from.
 expense,addTx.errTo,받는 계좌를 골라주세요.,Choose the account to send to.
-expense,addTx.errFx,환율을 입력하거나 원화 금액을 넣어주세요.,Enter the exchange rate or the amount in won.
+expense,addTx.errFx,환율을 입력하거나 원화 금액을 넣어주세요.,Enter the exchange rate or the amount in KRW.
 expense,addTx.errInterest,이자는 금액보다 클 수 없어요.,Interest cannot be more than the amount.
 expense,addTx.splitsLoading,나눈 내역을 불러오는 중이에요. 잠시 뒤 다시 눌러주세요.,Loading the split items. Try again in a moment.
 expense,addTx.rewriteNeedsSplits,나눈 내역을 불러온 뒤에 고쳐 쓸 수 있어요,You can rewrite once the split items are loaded
@@ -1210,7 +1210,7 @@ expense,addTx.noCategoryOfType,이 종류의 카테고리가 없어요.,There ar
 expense,addTx.noPickableAsset,이 결제 수단에 맞는 계좌 · 카드가 없어요.,No account or card fits this payment method.
 expense,addTx.noPickableDepositAsset,이 수입 방식에 맞는 입금 계좌가 없어요.,No deposit account matches this income method.
 expense,addTx.fxRateLabel,환율,Exchange rate
-expense,addTx.krwAmount,원화 금액,Amount in won
+expense,addTx.krwAmount,원화 금액,Amount in KRW
 expense,addTx.amountStepTitle,금액,Amount
 expense,addTx.memoStepTitle,메모,Memo
 expense,addTx.feeStepTitle,수수료,Fee
@@ -1227,7 +1227,7 @@ expense,savePreset.nameRequired,프리셋 이름을 입력해주세요.,Enter a 
 expense,savePreset.nameDuplicate,같은 이름의 프리셋이 있어요.,A preset with this name already exists.
 expense,savePreset.needParties,보내는 계좌와 받는 계좌를 먼저 골라주세요.,Choose the sending and receiving accounts first.
 expense,savePreset.saved,{{name}} 프리셋을 저장했어요.,Saved the {{name}} preset.
-expense,addTx.amountTooLarge,금액은 100억원까지 입력할 수 있어요.,Amount can be up to 10 billion won.
+expense,addTx.amountTooLarge,금액은 100억원까지 입력할 수 있어요.,"Amount can be up to ₩10,000,000,000."
 expense,savePreset.title,프리셋으로 저장,Save as preset
 expense,savePreset.noMerchant,내역 없음,No details
 expense,savePreset.noCategory,카테고리 미선택,No category
@@ -2936,7 +2936,7 @@ dutchPay,loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again i
 dutchPay,createLabel,정산 만들기,Create settlement
 dutchPay,memberCount,{{count}}명,{{count}} people
 dutchPay,perPersonText,1인당 {{amount}},{{amount}} per person
-dutchPay,perPersonRest,1인당 {{amount}} · {{extra}}원은 {{name}},"{{amount}} per person · {{extra}} won extra on {{name}}"
+dutchPay,perPersonRest,1인당 {{amount}} · {{extra}}원은 {{name}},{{amount}} per person · ₩{{extra}} extra on {{name}}
 dutchPay,paidProgress,{{paid}}/{{total}}명 냈어요,{{paid}}/{{total}} paid
 dutchPay,allPaid,모두 냈어요,Everyone paid
 dutchPay,stepOf,{{step}} / {{total}}단계,Step {{step}} of {{total}}
@@ -2949,7 +2949,7 @@ dutchPay,dateLabel,날짜,Date
 dutchPay,totalRequired,총 금액을 입력해주세요.,Please enter the total amount.
 dutchPay,peopleNeeded,함께 정산할 사람을 한 명 이상 더해주세요.,Add at least one person to settle with.
 dutchPay,peopleSummary,{{count}}명 · 1인당 <b>{{amount}}</b>,{{count}} people · <b>{{amount}}</b> each
-dutchPay,peopleSummaryRest,{{count}}명 · 1인당 <b>{{amount}}</b> · {{extra}}원은 {{name}},"{{count}} people · <b>{{amount}}</b> each · {{extra}} won extra on {{name}}"
+dutchPay,peopleSummaryRest,{{count}}명 · 1인당 <b>{{amount}}</b> · {{extra}}원은 {{name}},{{count}} people · <b>{{amount}}</b> each · ₩{{extra}} extra on {{name}}
 dutchPay,peopleOnly,{{count}}명,{{count}} people
 dutchPay,participantsLabel,참여자,Participants
 dutchPay,removeName,{{name}} 빼기,Remove {{name}}

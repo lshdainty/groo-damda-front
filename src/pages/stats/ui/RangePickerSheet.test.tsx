@@ -105,7 +105,7 @@ describe("RangePickerSheet", () => {
     expect(scroll.className).toContain("flex-1");
     expect(scroll.className).not.toContain("min-h-0");
     expect(scroll.className).toContain(
-      "min-h-[calc(max(48px,var(--text-t4--line-height))_+_2_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))]",
+      "min-h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_2_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))]",
     );
     // 바닥은 본문 밖이라 스크롤에 밀려나지 않는다
     const footer = document.querySelector("[data-slot=bottom-sheet-footer]");

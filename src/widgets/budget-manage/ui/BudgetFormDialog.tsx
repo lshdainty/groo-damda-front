@@ -20,7 +20,7 @@ import { List, ListButtonItem, ListTile } from "@/shared/ds/list";
 import { AmountInput } from "@/shared/ui/groo/amount-input";
 import { PickerRow } from "@/shared/ui/groo/picker-row";
 import { Icon } from "@/shared/ui/groo/primitives";
-import { money, isEn } from "@/shared/lib/groo/format";
+import { money } from "@/shared/lib/groo/format";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import type { ExpenseBudget, ExpenseCategory } from "@/entities/expense";
 
@@ -30,9 +30,7 @@ export interface BudgetDraft {
 }
 
 /**
- * 제안 칩 값 — 칩 라벨은 축약이 아니라 **우리가 고른 값의 이름**이다. 전부 만으로 나누어 떨어지므로
- * (`p % 10_000 === 0`) `10만원` · `100만원` 은 반올림 없이 값 그대로다. **값을 추가할 때는 만으로 나누어떨어지는지 먼저 본다.**
- * 15,000 같은 값을 끼우면 `(p / 10_000).toFixed(0)` 이 `2만원` 으로 깎는다 — 그때는 공용 `formatChartAxis` 로 옮긴다.
+ * 제안 칩 값 — 칩 글은 줄이지 않은 돈이다(`money` — "100,000원" · "₩100,000", International Design "돈" #252).
  * 총 예산과 카테고리 예산은 목록이 따로다(I-19 8 — 앱이 카테고리 값을 총 예산에도 쓰던 것을 가른다).
  */
 const TOTAL_PRESETS = [1_500_000, 2_000_000, 2_500_000, 3_000_000];
@@ -132,8 +130,8 @@ export function BudgetFormDialog({
   };
 
   const presets = isTotal ? TOTAL_PRESETS : CATEGORY_PRESETS;
-  const chipText = (p: number) =>
-    isEn() ? money(p) : `${(p / 10_000).toFixed(0)}만원`;
+  // 금액 칩도 돈이라 줄이지 않는다 — "500,000원" · "₩500,000"(International Design "돈", groo-design #252). 길면 칩 줄이 줄을 바꾼다
+  const chipText = (p: number) => money(p);
 
   const title = isTotal
     ? t("edit.totalTitle", { month })
