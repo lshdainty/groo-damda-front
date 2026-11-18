@@ -1213,6 +1213,18 @@ describe("프리셋 칩은 지금 종류의 것만 보여 준다", () => {
     expect(chips()).not.toContain("점심칩");
   });
 
+  it("칩 묶음은 줄을 바꾸는 묶음이다 — 폼 · 시트 안 고르기 묶음(Chip 묶음 규칙, groo-design #254)", async () => {
+    await open();
+    const group = document.querySelector('[data-testid="tx-preset-chips"]');
+    expect(group).not.toBeNull();
+    // wrap — 칩 사이 · 줄 사이가 묶음 간격(8) 하나로 정해지고, 가로 스크롤 칸은 없다
+    expect(group!.className).toContain("flex-wrap");
+    expect(group!.className).toContain("gap-between-chips");
+    expect(group!.querySelector('[data-slot="chip-scroll-row"]')).toBeNull();
+    // 칩이 화면 여백 안에 든다(스크롤 칸이 주던 좌우 여백을 묶음이 맡는다)
+    expect(group!.className).toContain("px-global-gutter");
+  });
+
   it("이체 — 이체 프리셋만(칩 줄 자체는 뜬다)", async () => {
     await open();
     click(lastButton("addTx.transfer"));

@@ -126,10 +126,11 @@ function PresetBlock({ f }: { f: TxForm }) {
           {t("addTx.noPresets")}
         </p>
       ) : (
+        // 폼 · 시트 안 고르기 묶음이라 줄을 바꾼다(Chip 묶음 규칙, groo-design #254) — 가로 스크롤은 목록 위 필터 줄만
         <ChipGroup
-          layout="scroll"
           aria-label={t("addTx.presetLoad")}
-          className="pb-x2"
+          data-testid="tx-preset-chips"
+          className="px-global-gutter pb-x2"
         >
           {f.topPresets.map((p) => {
             const on = p.rowId === f.activePresetId;
