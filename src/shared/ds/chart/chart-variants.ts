@@ -174,37 +174,39 @@ const AXIS_UNITS = [
   { min: 1e4, label: "만" },
 ] as const;
 
+/** 영어 축 단위 — 천 단위로 센다(chart.md "축 · 격자" · International Design, groo-design #250). 1,000M 이 아니라 1B */
+const AXIS_UNITS_EN = [
+  { min: 1e9, label: "B" },
+  { min: 1e6, label: "M" },
+  { min: 1e3, label: "K" },
+] as const;
+
 /**
  * 눈금 글자 — **한 축은 한 단위**(chart.md "축 · 격자"). 그 축의 눈금([ticks]) 가운데 가장 큰 절댓값이 1억 이상이면 모든 눈금을
  * 억 단위(0.5억 · 1억 · 1.5억), 1만 이상이면 만 단위(0.5만 · 1만 · 1.5만), 아니면 쉼표 정수(2,000 · 4,000)로 쓴다(조도 같은 셈).
  * 값 하나만 보고 정하면 한 축에 "5,000 · 1만" · "5,000만 · 1억" 이 섞인다. 소수는 한 자리(.0 은 버린다) — 눈금 간격이
  * 1 · 2 · 5 × 10ⁿ(`niceAxis`)이라 한 자리 안에서 글자가 눈금 위치와 맞는다. 0 은 "0", 빼기는 U+2212.
  * [ticks] 는 그 축이 그리는 눈금 목록 그대로다 — 세로축 폭도 같은 목록 · 같은 글자로 잰다(`niceValueAxis`).
+ * 영어는 천 단위로 센다 — 가장 큰 절댓값이 1B 이상이면 B, 1M 이상이면 M, 1K 이상이면 K, 아니면 쉼표 정수(0.5K · 1K · 500K · 1M ·
+ * 1.5B — 1,000M 이 아니라 1B). 예전엔 값마다 compact 로 줄여 한 축에 "500 · 1K" 가 섞였다. 언어는 앱 i18n(i18next)을 따른다.
  */
 export function formatAxisWon(value: number, ticks: readonly number[]): string {
   if (!Number.isFinite(value)) return "";
   const sign = value < 0 ? MINUS : "";
   const n = Math.abs(value);
-  if (dsLanguage().startsWith("en")) {
-    // 영어는 compact 표기 — 12K · 123K · 1.2M
-    return (
-      sign +
-      new Intl.NumberFormat("en-US", {
-        notation: "compact",
-        maximumFractionDigits: 1,
-      }).format(n)
-    );
-  }
+  // 영어는 천 단위(K · M · B), 한국어는 만 단위(만 · 억 · 조) — 한 축은 한 단위(가장 큰 절댓값으로 고른다)
+  const en = dsLanguage().startsWith("en");
+  const locale = en ? "en-US" : "ko-KR";
   const axisMax = Math.max(
     n,
     ...ticks.filter(Number.isFinite).map((t) => Math.abs(t)),
   );
-  const unit = AXIS_UNITS.find((u) => axisMax >= u.min);
-  if (!unit) return sign + Math.round(n).toLocaleString("ko-KR");
+  const unit = (en ? AXIS_UNITS_EN : AXIS_UNITS).find((u) => axisMax >= u.min);
+  if (!unit) return sign + Math.round(n).toLocaleString(locale);
   if (n === 0) return "0";
   return (
     sign +
-    round1(n / unit.min).toLocaleString("ko-KR", { maximumFractionDigits: 1 }) +
+    round1(n / unit.min).toLocaleString(locale, { maximumFractionDigits: 1 }) +
     unit.label
   );
 }

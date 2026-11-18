@@ -2675,6 +2675,20 @@ ds,datePicker.last6Months,최근 6개월,Last 6 months
 ds,datePicker.last1Year,최근 1년,Last year
 ds,datePicker.thisYear,올해,This year
 ds,datePicker.rangeSeparator,~,–
+ds,datePicker.weekday.sun,일,Su
+ds,datePicker.weekday.mon,월,Mo
+ds,datePicker.weekday.tue,화,Tu
+ds,datePicker.weekday.wed,수,We
+ds,datePicker.weekday.thu,목,Th
+ds,datePicker.weekday.fri,금,Fr
+ds,datePicker.weekday.sat,토,Sa
+ds,datePicker.weekdayNarrow.sun,일,S
+ds,datePicker.weekdayNarrow.mon,월,M
+ds,datePicker.weekdayNarrow.tue,화,T
+ds,datePicker.weekdayNarrow.wed,수,W
+ds,datePicker.weekdayNarrow.thu,목,T
+ds,datePicker.weekdayNarrow.fri,금,F
+ds,datePicker.weekdayNarrow.sat,토,S
 ds,timePicker.root,시간 선택,Select time
 ds,timePicker.period,오전/오후,AM/PM
 ds,timePicker.hour,시,Hour

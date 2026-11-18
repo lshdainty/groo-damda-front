@@ -69,7 +69,7 @@ export const GRID = "@container [--day:min(42px,calc(100cqw_/_7_-_2px))]";
 export const WEEK = "grid grid-cols-7";
 export const WEEKDAY_ROW = "grid min-h-[48px] grid-cols-7";
 export const WEEKDAY =
-  "flex items-center justify-center text-t4 font-medium text-fg-neutral-subtle";
+  "flex items-center justify-center whitespace-nowrap text-t4 font-medium text-fg-neutral-subtle";
 
 // 칸 — 높이 max(48, 숫자 줄 높이 + 6)(날짜 버튼 · 앞뒤 달 숫자의 위아래 3 이 키운다 — 100% 48 · 200% 50, 03-C 1B) · 폭 = 달력 폭 ÷ 7. 기간 띠는 칸 안의 span(원 높이, 칸 세로 가운데)
 export const CELL = "relative isolate min-h-[48px] min-w-0";
