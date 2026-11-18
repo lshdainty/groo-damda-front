@@ -12,7 +12,7 @@ import {
   plusOf,
   wonPrefix,
 } from "./format";
-import { niceAxis, niceCeil } from "./chartAxis";
+import { niceAxis } from "./chartAxis";
 
 describe("MINUS / minusOf", () => {
   it("부호는 U+2212 — 하이픈이 아니다", () => {
@@ -188,24 +188,22 @@ describe("통계 추이 축 눈금 (fmtTick = formatChartAxis)", () => {
   });
 
   it("같은 라벨을 두 번 찍지 않는다 — 만 단위를 정수로 반올림하던 게 눈금을 뭉갰다", () => {
-    // 최대 12,000원짜리 축 → 눈금 [0, 5천, 1만, 1.5만, 2만].
+    // 최대 12,000원짜리 축 → 눈금 [0, 5천, 1만, 1.5만].
     // 옛 규칙은 15,000 과 20,000 을 둘 다 `2만` 으로 찍어 눈금이 겹쳤다.
-    expect(niceCeil(12_000).ticks.map(formatChartAxis)).toEqual([
+    expect(niceAxis(0, 12_000).ticks.map(formatChartAxis)).toEqual([
       "0",
       "5,000",
       "1만",
       "1.5만",
-      "2만",
     ]);
   });
 
   it("`.0` 을 남기지 않는다 — 억대 축이 `2.0억 4.0억` 이었다", () => {
-    expect(niceCeil(500_000_000).ticks.map(formatChartAxis)).toEqual([
+    expect(niceAxis(0, 500_000_000).ticks.map(formatChartAxis)).toEqual([
       "0",
       "2억",
       "4억",
       "6억",
-      "8억",
     ]);
   });
 
@@ -237,7 +235,6 @@ describe("통계 추이 축 눈금 (fmtTick = formatChartAxis)", () => {
       for (let k = 100; k < 1000; k += 7) {
         const max = Math.round((k / 100) * 10 ** exp);
         for (const ticks of [
-          niceCeil(max).ticks,
           niceAxis(0, max).ticks,
           niceAxis(-max, max).ticks,
         ]) {

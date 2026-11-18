@@ -1,4 +1,4 @@
-import { measureTickWidth, niceValueAxis } from "@/shared/lib/groo/axisWidth";
+import { niceDualValueAxes, niceValueAxis } from "@/shared/lib/groo/axisWidth";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -29,7 +29,6 @@ import {
 import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { chartColorOf } from "@/shared/lib/groo/chart-palette";
-import { niceAxis, niceCeil } from "@/shared/lib/groo/chartAxis";
 import { MINUS, formatPercent } from "@/shared/lib/groo/format";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
 import {
@@ -140,26 +139,32 @@ export function TrendSection({
   const sumIn = data.reduce((s, d) => s + d.income, 0);
   const sumOut = data.reduce((s, d) => s + d.expense, 0);
   const dual = !hidden.has("income") && !hidden.has("expense");
-  const incomeAxis = niceCeil(Math.max(0, ...data.map((d) => d.income)));
-  const expenseAxis = niceCeil(Math.max(0, ...data.map((d) => d.expense)));
-  const singleAxis = niceCeil(
-    Math.max(
-      0,
-      ...data.map((d) =>
-        Math.max(
-          hidden.has("income") ? 0 : d.income,
-          hidden.has("expense") ? 0 : d.expense,
-        ),
-      ),
-    ),
-  );
+  // 세로 눈금 — 1 · 2 · 5 간격 nice 눈금을 그대로 그린다(chart.md "축 · 격자"). 이중 축은 두 축의 칸 수를 맞춰 왼쪽 축에 건 격자에
+  // 오른쪽 눈금도 선다(앱 p_chart_cartesian 과 같은 셈). 수입이 모두 0 이면 왼쪽은 0 ~ 1만 — 예전 0 ~ 1 은 "0 · 0 · 1 · 1 · 1" 이었다
+  const axisText = (v: number, ticks: readonly number[]) =>
+    mask(formatAxisWon(v, ticks));
+  const dualAxes = dual
+    ? niceDualValueAxes(
+        data.map((d) => d.income),
+        data.map((d) => d.expense),
+        axisText,
+      )
+    : null;
+  const incomeScale =
+    dualAxes?.left ??
+    niceValueAxis(
+      data.flatMap((d) => [
+        ...(hidden.has("income") ? [] : [d.income]),
+        ...(hidden.has("expense") ? [] : [d.expense]),
+      ]),
+      axisText,
+    );
   const legendId = `stats-trend-legend-${place}`;
   const name = t("chart.trendName", {
     period: m.periodLbl,
     income: mask(won(sumIn)),
     expense: mask(won(sumOut)),
   });
-  const incomeScale = dual ? incomeAxis : singleAxis;
   return (
     <>
       {head}
@@ -197,32 +202,14 @@ export function TrendSection({
             />
             <YAxis
               yAxisId="income"
-              domain={[0, incomeScale.max]}
-              ticks={incomeScale.ticks}
-              tickFormatter={(v) =>
-                mask(formatAxisWon(Number(v), incomeScale.ticks))
-              }
-              width={measureTickWidth(
-                incomeScale.ticks.map((v) =>
-                  mask(formatAxisWon(v, incomeScale.ticks)),
-                ),
-              )}
+              {...incomeScale}
               {...chartAxisProps(dual ? { color: "blue" } : {})}
             />
-            {dual && (
+            {dualAxes && (
               <YAxis
                 yAxisId="expense"
                 orientation="right"
-                domain={[0, expenseAxis.max]}
-                ticks={expenseAxis.ticks}
-                tickFormatter={(v) =>
-                  mask(formatAxisWon(Number(v), expenseAxis.ticks))
-                }
-                width={measureTickWidth(
-                  expenseAxis.ticks.map((v) =>
-                    mask(formatAxisWon(v, expenseAxis.ticks)),
-                  ),
-                )}
+                {...dualAxes.right}
                 {...chartAxisProps({ color: "red" })}
               />
             )}
@@ -519,10 +506,6 @@ export function SavingsBarsSection({
       </>
     );
   }
-  const axis = niceAxis(
-    Math.min(0, ...data.map((d) => d.savings)),
-    Math.max(0, ...data.map((d) => d.savings)),
-  );
   const signed = (v: number) =>
     (v > 0 ? "+" : v < 0 ? MINUS : "") + won(Math.abs(v)).replace(MINUS, "");
   const name = t("chart.savingsName", { period: m.periodLbl, unit: title });
@@ -538,11 +521,9 @@ export function SavingsBarsSection({
               {...chartXAxisProps(data.map((d) => d.tick))}
             />
             <YAxis
-              domain={[axis.min, axis.max]}
-              ticks={axis.ticks}
-              tickFormatter={(v) => mask(formatAxisWon(Number(v), axis.ticks))}
-              width={measureTickWidth(
-                axis.ticks.map((v) => mask(formatAxisWon(v, axis.ticks))),
+              {...niceValueAxis(
+                data.map((d) => d.savings),
+                (v, ticks) => mask(formatAxisWon(v, ticks)),
               )}
               {...chartAxisProps()}
             />

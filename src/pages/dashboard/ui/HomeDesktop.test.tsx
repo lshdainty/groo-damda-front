@@ -2,6 +2,12 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  installValueAxisHarness,
+  layoutCharts,
+  tickScale,
+  yTickLabels,
+} from "@/shared/lib/groo/value-axis.test-utils";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -283,6 +289,39 @@ describe("데스크톱 홈", () => {
       ).click(),
     );
     expect(calls.range.length).toBeGreaterThan(before);
+  });
+
+  it("월별 수입 · 지출 세로 눈금 — 수입 0 · 지출 5.8만 · 글자 200% 에서 0 · 2만 · 4만 · 6만 을 모두 그린다(niceValueAxis · interval 0)", async () => {
+    installValueAxisHarness();
+    tickScale.value = 2;
+    const now = new Date();
+    state.monthly = q({
+      totalIncome: 0,
+      totalExpense: 58_000,
+      categoryBreakdown: [],
+      monthlyBuckets: [0, 1, 2, 3, 4, 5].map((back) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
+        return {
+          year: d.getFullYear(),
+          month: d.getMonth() + 1,
+          totalIncome: 0,
+          totalExpense: [58_000, 12_000, 31_000, 0, 44_000, 7_000][back]!,
+        };
+      }),
+    });
+    render();
+    // 태블릿 768 의 카드 본문 폭 어림 — 높이는 차트 상자의 280
+    await layoutCharts(600);
+    const chart = Array.from(
+      container.querySelectorAll("[data-slot=chart]"),
+    ).findIndex((c) => c.querySelector(".recharts-bar"));
+    expect(yTickLabels(container, { chart })).toEqual([
+      "0",
+      "2만",
+      "4만",
+      "6만",
+    ]);
+    vi.restoreAllMocks();
   });
 
   it("한 질의가 실패하면 그 카드만 실패 — 0원 없음 · 다시 시도는 그 질의 하나만", () => {

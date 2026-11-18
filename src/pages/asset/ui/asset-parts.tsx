@@ -45,8 +45,7 @@ import {
   monthAxisTicks,
   parseLocalDate,
 } from "@/shared/lib/date";
-import { niceAxis } from "@/shared/lib/groo/chartAxis";
-import { useAxisWidth } from "@/shared/lib/groo/axisWidth";
+import { niceValueAxis } from "@/shared/lib/groo/axisWidth";
 import {
   chartColorOf,
   getPaletteByColor,
@@ -128,12 +127,6 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
     monthLabel: tickLabels[i]!,
     netWorth: p.netWorth,
   }));
-  // Y축: 0기준 nice 눈금 (앱 net_worth_chart niceAxis 정합).
-  const vals = data.map((d) => d.netWorth);
-  const yAxis = niceAxis(Math.min(0, ...vals), Math.max(0, ...vals));
-  const tick = (v: number) => (hidden ? MASK : formatAxisWon(v, yAxis.ticks));
-  // 음수 축 글자가 잘리지 않게 가장 긴 눈금 글자를 재서 폭을 잡는다(D6).
-  const axisWidth = useAxisWidth(yAxis.ticks.map(tick));
 
   if (trendQ.isLoading) {
     return (
@@ -192,10 +185,11 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
             {...chartXAxisProps(monthAxisTicks(points))}
           />
           <YAxis
-            domain={[yAxis.min, yAxis.max]}
-            ticks={yAxis.ticks}
-            tickFormatter={tick}
-            width={axisWidth}
+            // 0 기준 1 · 2 · 5 간격 nice 눈금을 그대로 그린다(앱 net_worth_chart 정합) — 폭은 가장 긴 눈금 글자로 잰다(D6)
+            {...niceValueAxis(
+              data.map((d) => d.netWorth),
+              (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
+            )}
             {...chartAxisProps()}
           />
           <ChartTooltip
