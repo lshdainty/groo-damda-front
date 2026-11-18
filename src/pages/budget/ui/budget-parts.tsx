@@ -17,8 +17,7 @@ import {
   ChartDataTable,
   ChartTooltip,
   ChartTooltipContent,
-  CHART_TICK_SIZE,
-  chartAxisProps,
+  chartXAxisProps,
 } from "@/shared/ds/chart";
 import { List, ListItem, ListTile } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
@@ -565,32 +564,6 @@ export function CategorySection({
 }
 
 // ── 최근 6개월 이행률 ───────────────────────────────────────────
-/** 달 눈금 — 이번 달(고른 달)만 700 · fg-neutral, 나머지 subtle */
-function MonthTick(props: {
-  x?: number | string;
-  y?: number | string;
-  payload?: { value?: string; index?: number };
-  activeIndex: number;
-}) {
-  const { x, y, payload, activeIndex } = props;
-  const active = payload?.index === activeIndex;
-  const yNum = typeof y === "number" ? y : Number(y ?? 0);
-  return (
-    <text
-      x={x}
-      y={yNum + 8}
-      textAnchor="middle"
-      fontSize={CHART_TICK_SIZE}
-      fontWeight={active ? 700 : 400}
-      fill={
-        active ? "var(--color-fg-neutral)" : "var(--color-fg-neutral-subtle)"
-      }
-    >
-      {payload?.value}
-    </text>
-  );
-}
-
 type ComplianceDatum = {
   label: string;
   percent: number | null;
@@ -735,9 +708,11 @@ export function ComplianceSection({
               >
                 <XAxis
                   dataKey="label"
-                  {...chartAxisProps()}
-                  interval={0}
-                  tick={(p) => <MonthTick {...p} activeIndex={activeIndex} />}
+                  // ds 가로축 길 — 글자 사이 8 로 건너뛰고 끝 달을 지키며 끝 글 반 폭을 비운다(chart.md "큰 글자"). 고른 달은 보일 때 진하게
+                  {...chartXAxisProps(
+                    data.map((d) => ({ label: d.label })),
+                    { emphasize: activeIndex },
+                  )}
                 />
                 <YAxis
                   hide

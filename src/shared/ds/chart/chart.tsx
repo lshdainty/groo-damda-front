@@ -3,6 +3,9 @@ import * as RechartsPrimitive from "recharts";
 
 import { cn } from "@/shared/lib/cn";
 import {
+  chartXAxisHeight,
+  measureTextWidth,
+  measureTickLineHeight,
   measureTickWidth,
   useTickFontVersion,
 } from "@/shared/lib/groo/axisWidth";
@@ -20,10 +23,14 @@ import {
   SUBTLE_BG,
   TOOLTIP_SURFACE,
   chartDonutRadii,
+  chartXEndReserve,
   formatWon,
   type ChartColor,
   type ChartTone,
+  type ChartXTick,
 } from "./chart-variants";
+import { chartXTicksOf, type XTickRenderProps } from "./chart-x-axis";
+import type { ChartXGroup } from "./chart-x-group";
 import { withSeriesDefaults } from "./chart-series";
 import { ChartTooltipRow } from "./chart-tooltip-row";
 import { useEscapeFirst } from "./use-escape-first";
@@ -36,7 +43,9 @@ import { useDsText, withCommaBreaks } from "@/shared/ds/i18n";
  * SEED 그림을, 색 배정 · 범례 · 열지도 · 빈 · 실패 · 접근성은 groo 가 정했다.
  *
  *   Chart               차트 상자 — label(필수, role="img" 의 요약 이름 — "10월 수입 · 지출 추이, 수입 4,200,000원 · …") · height(px) ·
- *                       legendId(대체가 되는 범례의 id → aria-describedby) · dots(늘 찍는 점 — 기본 꺼짐). 자식은 recharts 차트 하나(ResponsiveContainer 로 감싼다) +
+ *                       legendId(대체가 되는 범례의 id → aria-describedby) · dots(늘 찍는 점 — 기본 꺼짐) · xGroup(같은 화면 · 같은 기간 차트 묶음 —
+ *                       가장 좁은 차트로 가로 건너뛰기를 한 번 센다). 가로축이 chartXAxisProps 면 그리는 자리 오른쪽에 끝 글 반 폭을 비운다
+ *                       (오른쪽 세로축 폭이 먼저 덮는다). 자식은 recharts 차트 하나(ResponsiveContainer 로 감싼다) +
  *                       ChartDonutCenter. 라이브러리가 svg 에 다는 role="application" · 이름 없는 tabindex 를 걷는다
  *   ChartTooltip · ChartTooltipContent   툴팁 — 떠 있는 표면 · 머리(headFormatter) · 줄 "■ 라벨 값"(valueFormatter, 기본 원까지).
  *                       ChartTooltip 은 가리킴 선(세로 점선)과 이 내용을 기본으로 단다. 보조 기술에는 숨긴다 — 같은 값은 범례 · 표로 보기가 준다
@@ -72,6 +81,11 @@ import { useDsText, withCommaBreaks } from "@/shared/ds/i18n";
 
 type AnyProps = Record<string, unknown>;
 
+/** recharts 카르테시안 차트의 기본 바깥 여백 — 끝 글 자리(right)만 바꿀 때 나머지를 채운다 */
+const CHART_MARGIN = { top: 5, right: 5, bottom: 5, left: 5 };
+const noSubscribe = () => () => {};
+const noVersion = () => 0;
+
 // ── 차트 상자 ─────────────────────────────────────────────────
 type ChartContextValue = { hole: number | null };
 const ChartContext = React.createContext<ChartContextValue>({ hole: null });
@@ -91,6 +105,11 @@ export interface ChartProps extends Omit<
    * 점이 적은 추이 · 0 이 대부분인 날마다의 합(값 7 개 이하)에 켠다(chart.md "늘 찍는 점 — dots")
    */
   dots?: boolean;
+  /**
+   * 같은 화면 · 같은 기간 차트 묶음(`createChartXGroup`) — 묶음의 차트들은 그리는 자리가 가장 좁은 차트로 가로 눈금 건너뛰기를
+   * 한 번 세고 모두 그 날짜 글을 쓴다(chart.md "같은 화면 · 같은 기간 차트는 같은 날짜 글"). 가로축이 `chartXAxisProps` 일 때만 쓴다
+   */
+  xGroup?: ChartXGroup;
   /** recharts 차트 하나 + ChartDonutCenter */
   children: React.ReactNode;
 }
@@ -102,6 +121,7 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
       height,
       legendId,
       dots = false,
+      xGroup,
       className,
       style,
       children,
@@ -112,7 +132,8 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
     ref,
   ) => {
     const rootRef = React.useRef<HTMLDivElement>(null);
-    const idPrefix = React.useId().replace(/[^a-zA-Z0-9_-]/g, "");
+    const rawId = React.useId();
+    const idPrefix = rawId.replace(/[^a-zA-Z0-9_-]/g, "");
     const all = React.Children.toArray(children);
     const overlays = all.filter(
       (c) => React.isValidElement(c) && c.type === ChartDonutCenter,
@@ -162,7 +183,7 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
       pie && diameter != null && fitWidth != null && fitWidth < diameter
         ? chartDonutRadii(fitWidth)
         : null;
-    // 눈금 글자 크기가 바뀌면(글자 크기 설정 · 200%) 다시 그린다 — 가로 눈금 솎기 · 끝 맞춤(chartXAxisProps)과 아래 세로축 폭을 새로 잰다
+    // 눈금 글자 크기가 바뀌면(글자 크기 설정 · 200%) 다시 그린다 — 가로 눈금 건너뛰기(chartXAxisProps) · 끝 글 자리와 아래 세로축 폭을 새로 잰다
     useTickFontVersion();
     // 세로축 폭은 그리는 눈금 글 가운데 가장 긴 것이 잘리지 않게(chart.md "축 · 격자" · "큰 글자") — 눈금(ticks) · 글(tickFormatter) ·
     // 폭(width)을 준 세로축은 그 글로 다시 재 준 폭보다 넓으면 넓힌다. 쓰는 쪽이 잰 폭은 그때의 글자 크기라 커지면 모자란다
@@ -180,19 +201,80 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
       );
       return need > width ? React.cloneElement(c, { width: need }) : c;
     };
-    const drawn = chart
-      ? React.cloneElement(
-          chart,
-          {},
-          React.Children.map(chart.props.children as React.ReactNode, (c) => {
-            if (!React.isValidElement(c)) return c;
-            const el = c as React.ReactElement<AnyProps>;
-            if (fitted && el.type === RechartsPrimitive.Pie)
-              return React.cloneElement(el, { ...fitted });
-            if (el.type === RechartsPrimitive.YAxis) return fitYAxis(el);
-            return el;
+    // 같은 기간 차트 묶음 — 묶음의 간격이 바뀌면 다시 그리고, 이 차트가 사라지면 그 간격을 거둔다
+    React.useSyncExternalStore(
+      xGroup ? xGroup.subscribe : noSubscribe,
+      xGroup ? xGroup.version : noVersion,
+      noVersion,
+    );
+    React.useEffect(() => {
+      if (!xGroup) return;
+      return () => xGroup.remove(rawId);
+    }, [xGroup, rawId]);
+    // 시간 가로축(chartXAxisProps) — 묶음이면 자기 폭으로 센 간격을 알리고 묶음의 간격(가장 큰 것 = 가장 좁은 차트의 간격)을 쓴다
+    // 가로 눈금 줄 높이 = 눈금 글 줄 높이 + 8(눈금과 그리는 자리 사이) — 글자가 커지면 그리는 자리가 커진 눈금 줄만큼 줄어든다
+    // (chart.md "큰 글자"). recharts 기본(30 고정)이면 200% 글(줄 30 + 8)이 아래로 넘친다. 세로 눈금 칸 수(chartValueIntervals)도 이 줄로 센다
+    const xAxisHeight = chartXAxisHeight(measureTickLineHeight());
+    const fitXAxis = (c: React.ReactElement<AnyProps>) => {
+      const tick = c.props.tick;
+      if (!chartXTicksOf(tick)) return c;
+      if (!xGroup) return React.cloneElement(c, { height: xAxisHeight });
+      const draw = tick as (p: XTickRenderProps) => React.ReactNode;
+      return React.cloneElement(c, {
+        height: xAxisHeight,
+        tick: (p: XTickRenderProps) =>
+          draw({
+            ...p,
+            sharedInterval: (own) => {
+              xGroup.report(rawId, own);
+              return xGroup.interval() ?? own;
+            },
           }),
-        )
+      });
+    };
+    const parts: React.ReactNode[] = chart
+      ? (React.Children.map(chart.props.children as React.ReactNode, (c) => {
+          if (!React.isValidElement(c)) return c;
+          const el = c as React.ReactElement<AnyProps>;
+          if (fitted && el.type === RechartsPrimitive.Pie)
+            return React.cloneElement(el, { ...fitted });
+          if (el.type === RechartsPrimitive.YAxis) return fitYAxis(el);
+          if (el.type === RechartsPrimitive.XAxis) return fitXAxis(el);
+          return el;
+        }) ?? [])
+      : [];
+    // 끝 글 자리 — 시간 가로축이면 그리는 자리 오른쪽에 끝 눈금 글 폭의 절반을 비운다. 오른쪽 세로축 폭이 먼저 덮고 모자란 만큼만
+    // (chart.md "끝 글 자리는 비워 둡니다" — 비울 폭 = max(0, ⌈끝 글 폭 ÷ 2⌉ − 오른쪽 축 폭)). 끝 글이 차트 오른쪽 끝을 넘지 않는다
+    // 눈금 목록은 쓰는 쪽이 준 그리기 함수에서(묶음이면 위에서 감쌌다), 오른쪽 축 폭은 다시 잰 폭에서 읽는다
+    let xTicks: readonly ChartXTick[] | undefined;
+    React.Children.forEach(chart?.props.children as React.ReactNode, (c) => {
+      if (React.isValidElement(c) && c.type === RechartsPrimitive.XAxis)
+        xTicks ??= chartXTicksOf((c.props as AnyProps).tick);
+    });
+    let rightAxis = 0;
+    for (const c of parts) {
+      if (!React.isValidElement(c)) continue;
+      const el = c as React.ReactElement<AnyProps>;
+      if (
+        el.type === RechartsPrimitive.YAxis &&
+        el.props.orientation === "right" &&
+        !el.props.hide
+      )
+        rightAxis += typeof el.props.width === "number" ? el.props.width : 60;
+    }
+    const margin = xTicks
+      ? {
+          ...CHART_MARGIN,
+          ...(chart?.props.margin as object | undefined),
+          right: chartXEndReserve(
+            xTicks,
+            (l) => measureTextWidth([l]),
+            rightAxis,
+          ),
+        }
+      : undefined;
+    const drawn = chart
+      ? React.cloneElement(chart, margin ? { margin } : {}, parts)
       : chart;
     const boxHeight =
       fitted && height != null && diameter != null

@@ -1,4 +1,9 @@
-import { niceDualValueAxes, niceValueAxis } from "@/shared/lib/groo/axisWidth";
+import {
+  chartValueIntervals,
+  niceDualValueAxes,
+  niceValueAxis,
+  useTickLineHeight,
+} from "@/shared/lib/groo/axisWidth";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -94,6 +99,7 @@ export function TrendSection({
   const { t } = useTranslation("stats");
   const { t: te } = useTranslation("expense");
   const mask = useMasked("stats.trend");
+  const tickLine = useTickLineHeight();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const head = (
     <BandHead
@@ -141,13 +147,16 @@ export function TrendSection({
   const dual = !hidden.has("income") && !hidden.has("expense");
   // 세로 눈금 — 1 · 2 · 5 간격 nice 눈금을 그대로 그린다(chart.md "축 · 격자"). 이중 축은 두 축의 칸 수를 맞춰 왼쪽 축에 건 격자에
   // 오른쪽 눈금도 선다(앱 p_chart_cartesian 과 같은 셈). 수입이 모두 0 이면 왼쪽은 0 ~ 1만 — 예전 0 ~ 1 은 "0 · 0 · 1 · 1 · 1" 이었다
+  // 눈금 사이가 눈금 글 줄 높이보다 좁으면 칸 수를 줄인다(chart.md "세로 눈금이 겹치면 수를 줄입니다")
   const axisText = (v: number, ticks: readonly number[]) =>
     mask(formatAxisWon(v, ticks));
+  const room = chartValueIntervals(height, tickLine);
   const dualAxes = dual
     ? niceDualValueAxes(
         data.map((d) => d.income),
         data.map((d) => d.expense),
         axisText,
+        room,
       )
     : null;
   const incomeScale =
@@ -158,6 +167,7 @@ export function TrendSection({
         ...(hidden.has("expense") ? [] : [d.expense]),
       ]),
       axisText,
+      room,
     );
   const legendId = `stats-trend-legend-${place}`;
   const name = t("chart.trendName", {
@@ -193,6 +203,8 @@ export function TrendSection({
           legendId={legendId}
           height={height}
           dots={trendNeedsDots(data, hidden)}
+          // 순저축 막대(· 여러 달이면 주요 카테고리 월별 추이)와 같은 기간 — 가장 좁은 차트로 건너뛰기를 한 번 세고 같은 날짜 글을 쓴다
+          xGroup={m.trendXGroup}
         >
           <AreaChart data={data}>
             <CartesianGrid {...chartGridProps} yAxisId="income" />
@@ -460,6 +472,7 @@ export function SavingsBarsSection({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.trend");
+  const tickLine = useTickLineHeight();
   const title = m.useDailyTrend
     ? t("trend.dailySavings")
     : t("trend.monthlySavings");
@@ -513,7 +526,7 @@ export function SavingsBarsSection({
     <>
       {head}
       <Body place={place}>
-        <Chart label={name} height={height}>
+        <Chart label={name} height={height} xGroup={m.trendXGroup}>
           <BarChart data={data}>
             <CartesianGrid {...chartGridProps} />
             <XAxis
@@ -524,6 +537,7 @@ export function SavingsBarsSection({
               {...niceValueAxis(
                 data.map((d) => d.savings),
                 (v, ticks) => mask(formatAxisWon(v, ticks)),
+                chartValueIntervals(height, tickLine),
               )}
               {...chartAxisProps()}
             />
@@ -570,6 +584,7 @@ export function CatTrendSection({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.trend");
+  const tickLine = useTickLineHeight();
   const head = (
     <BandHead
       title={t("trend.catTrendTitle")}
@@ -618,6 +633,7 @@ export function CatTrendSection({
     return row;
   });
   const name = t("chart.catTrendName", { period: m.periodLbl });
+  const catHeight = chartHeight(place, 180, 220);
   return (
     <>
       {head}
@@ -637,7 +653,13 @@ export function CatTrendSection({
             </li>
           ))}
         </ul>
-        <Chart label={name} height={chartHeight(place, 180, 220)}>
+        <Chart
+          label={name}
+          height={catHeight}
+          // 여러 달일 때 보이는 월별 차트 — 추이(월별)와 같은 기간 · 같은 눈금 단위라 한 묶음(chart.md "같은 화면 · 같은 기간 차트", #248).
+          // 날별 추이와는 단위가 달라 묶지 않는다
+          xGroup={m.useDailyTrend ? undefined : m.trendXGroup}
+        >
           <BarChart data={rows}>
             <CartesianGrid {...chartGridProps} />
             <XAxis
@@ -655,6 +677,7 @@ export function CatTrendSection({
                   ),
                 ),
                 (v, ticks) => mask(formatAxisWon(v, ticks)),
+                chartValueIntervals(catHeight, tickLine),
               )}
             />
             <ChartTooltip

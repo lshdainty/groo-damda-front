@@ -45,7 +45,11 @@ import {
   monthAxisTicks,
   parseLocalDate,
 } from "@/shared/lib/date";
-import { niceValueAxis } from "@/shared/lib/groo/axisWidth";
+import {
+  chartValueIntervals,
+  niceValueAxis,
+  useTickLineHeight,
+} from "@/shared/lib/groo/axisWidth";
 import {
   chartColorOf,
   getPaletteByColor,
@@ -116,9 +120,13 @@ const KV_ROW = "[&_[data-slot=list-content]]:py-x2";
  * 레시피 차트는 늘 찍는 점을 `[&_.recharts-line-dots]:hidden` 으로 감춘다 — 이 화면만 className 으로 덮어 보이게 한다(I-05 57, 사용자 고침).
  * 가리킨 점은 스펙 그대로(10 · 카드 면 색 테두리 2).
  */
+/** 순자산 추이의 바깥 여백(오른쪽은 ds Chart 가 끝 글 자리로 정한다) — 세로 눈금 칸 수도 이 여백으로 센다 */
+const MARGIN = { top: 8, left: 0, bottom: 0 };
+
 export function NetWorthChart({ height = 180 }: { height?: number }) {
   const { t } = useTranslation("asset");
   const hidden = useHideAmounts("asset.netWorth");
+  const tickLine = useTickLineHeight();
   const trendQ = useNetWorthTrend(12);
   const points = trendQ.data ?? [];
   // 월 눈금 — 한 해 안이면 "5월", 해가 섞이면 "2025. 12." (통계와 같은 규칙 · 앱 monthTicks)
@@ -170,14 +178,8 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
       >
         <LineChart
           data={data}
-          // 마지막 눈금이 연도를 단 칸("2026. 1." — 해가 바뀌는 첫 눈금)이면 점 끝(오른쪽 가장자리)을 넘지 않게 오른쪽을 비운다
-          margin={{
-            top: 8,
-            right:
-              (tickLabels[tickLabels.length - 1]?.length ?? 0) > 4 ? 32 : 8,
-            left: 0,
-            bottom: 0,
-          }}
+          // 오른쪽은 ds Chart 가 끝 눈금 글 폭의 절반을 비운다(chart.md "끝 글 자리는 비워 둡니다" — 연도를 단 끝 글 "2026. 1." 도 든다)
+          margin={MARGIN}
         >
           <CartesianGrid {...chartGridProps} />
           <XAxis
@@ -189,6 +191,7 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
             {...niceValueAxis(
               data.map((d) => d.netWorth),
               (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
+              chartValueIntervals(height, tickLine, MARGIN),
             )}
             {...chartAxisProps()}
           />

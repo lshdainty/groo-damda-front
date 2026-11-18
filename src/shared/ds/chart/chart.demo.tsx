@@ -31,6 +31,7 @@ import {
   type ChartHeatmapColumn,
   type ChartHeatmapRow,
 } from "./chart-heatmap";
+import { chartXAxisProps } from "./chart-x-axis";
 import {
   assignChartColors,
   chartAxisProps,
@@ -154,7 +155,10 @@ const Trend = ({
         >
           <AreaChart data={data}>
             <CartesianGrid {...chartGridProps} yAxisId="income" />
-            <XAxis dataKey="day" {...chartAxisProps()} />
+            <XAxis
+              dataKey="day"
+              {...chartXAxisProps(data.map((d) => ({ label: d.day })))}
+            />
             <YAxis
               yAxisId="income"
               {...niceValueAxis(
@@ -256,7 +260,10 @@ const Bars = ({
         <Chart label={label} legendId={id} height={200}>
           <BarChart data={data} barGap={4}>
             <CartesianGrid {...chartGridProps} />
-            <XAxis dataKey="week" {...chartAxisProps()} />
+            <XAxis
+              dataKey="week"
+              {...chartXAxisProps(data.map((d) => ({ label: d.week })))}
+            />
             <YAxis
               {...niceValueAxis(
                 data.flatMap((d) => [d.income, d.expense]),

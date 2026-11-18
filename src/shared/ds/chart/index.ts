@@ -55,3 +55,4 @@ export {
   type ChartXTick,
 } from "./chart-variants";
 export { chartXAxisProps } from "./chart-x-axis";
+export { createChartXGroup, type ChartXGroup } from "./chart-x-group";
