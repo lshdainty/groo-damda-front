@@ -1894,3 +1894,89 @@ describe("가로 끝 글 자리 · 글자 크기가 바뀌면 다시 잰다", ()
     expect(xLabels().length).toBe(before);
   });
 });
+
+/**
+ * 계열 표식의 꼴 — 막대 모양을 따른다(chart.md "미리 잡는 일정의 값은 예외" · groo-design #251). 이음 "달마다 휴가" 는 쓴 휴가(채움)와
+ * 예정(옅은 바탕 + 1px 테두리)이 같은 파랑이라, 타일 점 · 툴팁 색 네모가 둘 다 채움이면 어느 것이 예정인지 가를 수 없다.
+ */
+describe("계열 표식 — fill · outline", () => {
+  it("지표 타일 점 — 기본은 계열 색 채움, outline 은 옅은 바탕 + 1px 계열 색 테두리", async () => {
+    await render(
+      <ChartLegendTiles
+        items={[
+          { key: "used", label: "쓴 휴가", color: "blue", total: "3일" },
+          {
+            key: "plan",
+            label: "예정",
+            color: "blue",
+            total: "2일",
+            marker: "outline",
+          },
+        ]}
+      />,
+    );
+    const [used, plan] = qa<HTMLElement>("[data-slot=chart-legend-dot]");
+    expect(used!.className.split(" ")).toContain(DOT_BG.blue);
+    expect(used!.hasAttribute("data-marker")).toBe(false);
+    expect(used!.style.borderWidth).toBe("");
+    expect(plan!.getAttribute("data-marker")).toBe("outline");
+    expect(plan!.className.split(" ")).toContain(SUBTLE_BG.blue);
+    expect(plan!.className.split(" ")).not.toContain(DOT_BG.blue);
+    expect(plan!.style.borderWidth).toBe("1px");
+    expect(plan!.style.borderStyle).toBe("solid");
+    expect(plan!.getAttribute("style")).toContain("var(--color-chart-blue)");
+    // 크기는 그대로 8(테두리는 안쪽 — border-box)
+    expect(plan!.className).toContain("size-[8px]");
+  });
+
+  it("툴팁 색 네모 — markers 로 고른 계열만 옅은 바탕(그 계열 fill) + 1px 테두리(그 계열 stroke)", async () => {
+    await render(
+      <ChartTooltipContent
+        active
+        label="11월"
+        markers={{ plan: "outline" }}
+        payload={[
+          { name: "쓴 휴가", dataKey: "used", value: 1, fill: "rgb(1, 2, 3)" },
+          {
+            name: "예정",
+            dataKey: "plan",
+            value: 0.5,
+            fill: "rgb(200, 210, 220)",
+            stroke: "rgb(1, 2, 3)",
+          },
+        ]}
+      />,
+    );
+    const [used, plan] = qa<HTMLElement>("[data-slot=chart-tooltip-swatch]");
+    expect(used!.style.background).toBe("rgb(1, 2, 3)");
+    expect(used!.style.borderWidth).toBe("");
+    expect(used!.hasAttribute("data-marker")).toBe(false);
+    expect(plan!.getAttribute("data-marker")).toBe("outline");
+    expect(plan!.style.background).toBe("rgb(200, 210, 220)");
+    expect(plan!.style.borderWidth).toBe("1px");
+    expect(plan!.style.borderStyle).toBe("solid");
+    expect(plan!.style.borderColor).toBe("rgb(1, 2, 3)");
+  });
+
+  it("툴팁 outline — 계열에 stroke 가 없으면 테두리는 그 계열 색", async () => {
+    await render(
+      <ChartTooltipContent
+        active
+        markers={{ plan: "outline" }}
+        payload={[
+          {
+            name: "예정",
+            dataKey: "plan",
+            value: 2,
+            color: "rgb(4, 5, 6)",
+            fill: "rgb(7, 8, 9)",
+          },
+        ]}
+      />,
+    );
+    const swatch = q<HTMLElement>("[data-slot=chart-tooltip-swatch]")!;
+    expect(swatch.style.background).toBe("rgb(7, 8, 9)");
+    expect(swatch.style.borderWidth).toBe("1px");
+    expect(swatch.style.borderColor).toBe("rgb(4, 5, 6)");
+  });
+});

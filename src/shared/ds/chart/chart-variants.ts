@@ -1,3 +1,4 @@
+import type * as React from "react";
 import { dsLanguage, dsMoney } from "@/shared/ds/i18n";
 /*
  * Groo Chart 의 값 · 모양 · 숫자 — 수치 원본은 groo-design specs/components/chart.yaml(값은 src/shared/ds/spec/chart.json),
@@ -39,6 +40,20 @@ export const CHART_MAX_ITEMS = 10;
 export type ChartTone = ChartColor | `${ChartColor}-weak`;
 
 export const chartVar = (color: ChartTone) => `var(--color-chart-${color})`;
+
+/**
+ * 계열 표식(지표 타일 점 · 툴팁 색 네모)의 꼴 — 막대 모양을 따른다(chart.md "미리 잡는 일정의 값은 예외" · groo-design #251).
+ * `fill` 은 계열 색 채움(기본). `outline` 은 옅은 바탕(`chart-{색}-subtle`) + 1px 계열 색 테두리 — 옅은 바탕 + 테두리로 그린 계열(예정)이
+ * 같은 색의 채운 계열(쓴 값)과 표식으로도 갈린다.
+ */
+export type ChartMarker = "fill" | "outline";
+
+/** outline 표식의 테두리 — 1px 계열 색(인라인 border, 크기는 그대로 — box-sizing border-box). 색이 var() 라 낱칸으로 적는다 */
+export const outlineMarkerStyle = (color: string): React.CSSProperties => ({
+  borderWidth: 1,
+  borderStyle: "solid",
+  borderColor: color,
+});
 
 // Tailwind 는 소스의 글자 그대로를 읽으므로 열을 다 적는다
 export const DOT_BG: Record<ChartTone, string> = {

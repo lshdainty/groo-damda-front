@@ -23,9 +23,12 @@ import {
   SUBTLE_BG,
   TOOLTIP_SURFACE,
   chartDonutRadii,
+  chartVar,
+  outlineMarkerStyle,
   chartXEndReserve,
   formatWon,
   type ChartColor,
+  type ChartMarker,
   type ChartTone,
   type ChartXTick,
 } from "./chart-variants";
@@ -435,6 +438,7 @@ type TooltipPayloadEntry = {
   dataKey?: unknown;
   color?: string;
   fill?: string;
+  stroke?: string;
   payload?: Record<string, unknown>;
   hide?: boolean;
 };
@@ -444,6 +448,11 @@ export interface ChartTooltipContentProps {
   headFormatter?: (label: React.ReactNode) => React.ReactNode;
   /** 값 — 기본 원까지("4,200,000원", 빼기 U+2212) */
   valueFormatter?: (value: number | string, key: string) => React.ReactNode;
+  /**
+   * 계열마다 색 네모의 꼴(키는 valueFormatter 의 key — dataKey). `outline` 이면 막대처럼 옅은 바탕(그 계열의 fill) + 1px 테두리(그 계열의
+   * stroke, 없으면 색)로 그린다 — 옅은 바탕 + 테두리로 그린 계열(예정)을 같은 색의 채운 계열과 가른다(chart.md · groo-design #251)
+   */
+  markers?: Readonly<Record<string, ChartMarker>>;
   className?: string;
   // recharts 가 넣는 값
   active?: boolean;
@@ -457,6 +466,7 @@ function ChartTooltipContent({
   label,
   headFormatter,
   valueFormatter,
+  markers,
   className,
 }: ChartTooltipContentProps) {
   if (!active || !payload?.length) return null;
@@ -495,10 +505,15 @@ function ChartTooltipContent({
           (typeof item.payload?.fill === "string"
             ? item.payload.fill
             : undefined);
+        const outline =
+          markers?.[key] === "outline"
+            ? (item.stroke ?? item.color ?? swatch)
+            : undefined;
         return (
           <ChartTooltipRow
             key={key}
-            swatch={swatch}
+            swatch={outline ? (item.fill ?? swatch) : swatch}
+            outline={outline}
             name={item.name}
             value={value}
           />
@@ -533,6 +548,11 @@ export interface ChartLegendItem {
   color: ChartTone;
   /** 합계 — 원까지 만든 글("4,200,000원") */
   total: React.ReactNode;
+  /**
+   * 점의 꼴 — 기본 `fill`(계열 색 채움). 옅은 바탕 + 테두리로 그린 계열(예정)은 `outline` — 옅은 바탕(`chart-{색}-subtle`) + 1px
+   * 계열 색 테두리라 같은 색의 채운 계열과 가린다(chart.md · groo-design #251)
+   */
+  marker?: ChartMarker;
 }
 
 export interface ChartLegendTilesProps extends Omit<
@@ -618,10 +638,20 @@ const ChartLegendTiles = React.forwardRef<
                   <span
                     aria-hidden
                     data-slot="chart-legend-dot"
+                    data-marker={
+                      item.marker === "outline" ? "outline" : undefined
+                    }
                     className={cn(
                       "size-[8px] shrink-0 rounded-full",
-                      DOT_BG[item.color],
+                      item.marker === "outline"
+                        ? SUBTLE_BG[item.color]
+                        : DOT_BG[item.color],
                     )}
+                    style={
+                      item.marker === "outline"
+                        ? outlineMarkerStyle(chartVar(item.color))
+                        : undefined
+                    }
                   />
                   {item.label}
                 </span>
