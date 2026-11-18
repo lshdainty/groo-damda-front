@@ -138,3 +138,32 @@ export function xTickLabels(
     })
     .sort((a, b) => a.left - b.left);
 }
+
+/**
+ * 세로축 끝 글의 자리(#250) — 차트 상자 하나에서 세로 눈금 글(눈금 선 가운데, 줄 높이 15 × 배율)의 맨 위 · 맨 아래 끝과
+ * 가로 눈금 글의 위 끝(글 줄 시작 y)을 낸다. 맨 위 ≥ 0 이면 차트 상자 안, 맨 아래 ≤ 가로 글 위 끝이면 겹치지 않는다
+ */
+export function edgeLabelBox(
+  root: ParentNode,
+  { chart = 0 }: { chart?: number } = {},
+): { yTop: number; yBottom: number; xTop: number } {
+  const box = root.querySelectorAll("[data-slot=chart]")[chart];
+  const half = (15 * tickScale.value) / 2;
+  const ys = Array.from(
+    box?.querySelectorAll(
+      ".recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value",
+    ) ?? [],
+  ).map((t) => Number(t.getAttribute("y")));
+  const xs = Array.from(
+    box?.querySelectorAll(
+      ".recharts-xAxis-tick-labels .recharts-cartesian-axis-tick-value",
+    ) ?? [],
+  )
+    .filter((t) => t.textContent)
+    .map((t) => Number(t.getAttribute("y")));
+  return {
+    yTop: Math.min(...ys) - half,
+    yBottom: Math.max(...ys) + half,
+    xTop: Math.min(...xs),
+  };
+}

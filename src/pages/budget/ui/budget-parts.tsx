@@ -49,8 +49,14 @@ import {
 import { Icon } from "@/shared/ui/groo/primitives";
 import type { BudgetModel } from "./budget-model";
 import {
+  useTickFontVersion,
+  useTickLineHeight,
+} from "@/shared/lib/groo/axisWidth";
+import {
   PERCENT_LABEL_SIZE,
-  rootFontPx,
+  BAR_VALUE_GAP,
+  barChartTop,
+  rootFontPxAt,
   visiblePercentLabels,
 } from "./percent-labels";
 
@@ -633,6 +639,9 @@ export function ComplianceSection({
 }) {
   const { t } = useTranslation("budget");
   const mask = useMasked("budget.compliance");
+  // 글자 크기가 바뀌면(페이지가 뜬 뒤에도) 막대 위 값 자리 · 겹침 셈을 다시 잰다
+  const fontVersion = useTickFontVersion();
+  const tickLine = useTickLineHeight();
   const head = (
     <BandHead
       title={t("complianceTitle")}
@@ -682,7 +691,7 @@ export function ComplianceSection({
     active: b.year === m.year && b.month === m.month,
   }));
   const activeIndex = data.findIndex((d) => d.active);
-  const rootPx = rootFontPx();
+  const rootPx = rootFontPxAt(fontVersion);
   const labelTexts = data.map((d) =>
     d.percent == null ? null : formatPercent(d.percent, "progress"),
   );
@@ -699,7 +708,8 @@ export function ComplianceSection({
               <BarChart
                 data={data}
                 margin={{
-                  top: Math.round(24 * (rootPx / 16)),
+                  // 위 여백 = max(8 + 막대 위 값 자리(값 글 줄 높이 + 4 — 고정 20 이 아니다), ⌈세로 눈금 줄 ÷ 2⌉) — 앱과 같은 식
+                  top: barChartTop(rootPx, tickLine),
                   right: 8,
                   left: 8,
                   bottom: 0,
@@ -754,7 +764,9 @@ export function ComplianceSection({
                       return (
                         <text
                           x={Number(p.x ?? 0) + w / 2}
-                          y={Number(p.y ?? 0) - 5}
+                          // 글 줄 아래 끝을 막대 위 4 에 — 줄 높이 + 4 자리 안에 선다
+                          y={Number(p.y ?? 0) - BAR_VALUE_GAP}
+                          dominantBaseline="text-after-edge"
                           textAnchor="middle"
                           fontSize={PERCENT_LABEL_SIZE}
                           fontWeight={700}

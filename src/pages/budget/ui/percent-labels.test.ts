@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { visiblePercentLabels } from "./percent-labels";
+import {
+  barChartTop,
+  barValueRoom,
+  visiblePercentLabels,
+} from "./percent-labels";
 
 describe("visiblePercentLabels — 끝을 지키고 앞에서 건너뛴다", () => {
   it("자리가 넉넉하면 모두 보인다", () => {
@@ -28,5 +32,18 @@ describe("visiblePercentLabels — 끝을 지키고 앞에서 건너뛴다", () 
       false,
       true,
     ]);
+  });
+});
+
+describe('막대 위 값 자리 — 그 글 줄 높이 + 4(chart.md "막대 위 값 자리도 글을 따릅니다", #250)', () => {
+  it("값 글 12 / 16(줄 1rem) — 100% 20 · 200% 36 · 300% 52, 고정 20 이 아니다", () => {
+    expect(barValueRoom(16)).toBe(20);
+    expect(barValueRoom(32)).toBe(36);
+    expect(barValueRoom(48)).toBe(52);
+  });
+  it("위 여백 = max(8 + 값 자리, ⌈세로 눈금 줄 ÷ 2⌉) — 100% 28 · 200% 44 · 300% 60(앱 topPad 와 같은 식)", () => {
+    expect(barChartTop(16, 15)).toBe(28);
+    expect(barChartTop(32, 30)).toBe(44);
+    expect(barChartTop(48, 45)).toBe(60);
   });
 });

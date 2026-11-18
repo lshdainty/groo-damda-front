@@ -3,6 +3,8 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  changeTickScale,
+  edgeLabelBox,
   installValueAxisHarness,
   layoutCharts,
   tickScale,
@@ -323,6 +325,43 @@ describe("데스크톱 홈", () => {
     ]);
     vi.restoreAllMocks();
   });
+
+  // 세로축 끝 글의 자리(#250) — 글자 300% 에서 맨 위 세로 글이 차트 상자(지표 타일 바로 아래) 밖으로 나가지 않고, 맨 아래 글이 첫 달 글과
+  // 겹치지 않는다. 처음부터 300% · 뜬 뒤 300% 둘 다
+  for (const after of [false, true]) {
+    it(`월별 수입 · 지출 — 글자 300%(${after ? "뜬 뒤" : "처음부터"}) 세로축 끝 글이 상자 안 · 가로 글과 겹치지 않는다`, async () => {
+      installValueAxisHarness();
+      tickScale.value = after ? 1 : 3;
+      const now = new Date();
+      state.monthly = q({
+        totalIncome: 0,
+        totalExpense: 58_000,
+        categoryBreakdown: [],
+        monthlyBuckets: [0, 1, 2, 3, 4, 5].map((back) => {
+          const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
+          return {
+            year: d.getFullYear(),
+            month: d.getMonth() + 1,
+            totalIncome: 0,
+            totalExpense: [58_000, 12_000, 31_000, 0, 44_000, 7_000][back]!,
+          };
+        }),
+      });
+      render();
+      await layoutCharts(600);
+      if (after) {
+        await changeTickScale(3);
+        await layoutCharts(600);
+      }
+      const chart = Array.from(
+        container.querySelectorAll("[data-slot=chart]"),
+      ).findIndex((c) => c.querySelector(".recharts-bar"));
+      const { yTop, yBottom, xTop } = edgeLabelBox(container, { chart });
+      expect(yTop).toBeGreaterThanOrEqual(0);
+      expect(yBottom).toBeLessThanOrEqual(xTop);
+      vi.restoreAllMocks();
+    });
+  }
 
   it("한 질의가 실패하면 그 카드만 실패 — 0원 없음 · 다시 시도는 그 질의 하나만", () => {
     const refetch = vi.fn();
