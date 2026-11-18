@@ -141,8 +141,10 @@ export interface DatePickerLabels {
   readOnlyRangeStart: string;
   /** 빠른 기간 칩 묶음 이름 */
   presets: string;
-  /** 보이는 요일(일요일부터 일곱) */
+  /** 보이는 요일(일요일부터 일곱) — 한국어 "일", 영어 두 글자 "Su" */
   weekdays: readonly string[];
+  /** 칸에 두 글자가 들지 않을 때의 요일 — 한국어 "일", 영어 한 글자 "S" */
+  weekdaysNarrow: readonly string[];
   /** 읽는 요일(일요일부터 일곱) */
   weekdaysLong: readonly string[];
   /** 구간 기호 — 한국어 "~", 영어 "–"(앞뒤를 붙여 쓴다) */
@@ -159,6 +161,9 @@ export interface DatePickerLabels {
 }
 
 const isEn = () => dsLanguage().startsWith("en");
+
+/** 요일 사전 열쇠 — 일요일부터 일곱 */
+const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 // 2023-01-01 은 일요일 — 일요일부터 일곱
 const weekdayNames = (weekday: "narrow" | "short" | "long") => {
@@ -188,7 +193,11 @@ export function datePickerLabels(): DatePickerLabels {
     readOnlyRangeStart: dsText("datePicker.readOnlyRangeStart"),
     presets: dsText("datePicker.presets"),
     rangeSeparator: dsText("datePicker.rangeSeparator"),
-    weekdays: weekdayNames("narrow"),
+    // 보이는 요일 — 글은 i18n 사전(translations.csv)이 정한다(date-picker.md ⓔ Weekday). 읽는 이름은 Intl
+    weekdays: WEEKDAY_KEYS.map((k) => dsText(`datePicker.weekday.${k}`)),
+    weekdaysNarrow: WEEKDAY_KEYS.map((k) =>
+      dsText(`datePicker.weekdayNarrow.${k}`),
+    ),
     weekdaysLong: long,
     month: (year, month) =>
       en

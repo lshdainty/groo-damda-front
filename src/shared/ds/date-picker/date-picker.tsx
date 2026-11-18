@@ -718,27 +718,28 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
       : labels.month(view.getFullYear(), view.getMonth() + 1);
 
     // 요일 줄 — 보이는 줄(위에 붙는 줄 포함)과, 이어지는 달에서 달마다 두는 숨은 줄(읽는 이름만)
-    const weekdayHeader = (hidden: boolean) => (
-      <div
-        role="row"
-        data-slot={
-          hidden ? "date-picker-weekdays-hidden" : "date-picker-weekdays"
-        }
-        className={hidden ? "sr-only" : WEEKDAY_ROW}
-      >
-        {labels.weekdays.map((w, i) => (
-          <div
-            key={i}
-            role="columnheader"
-            aria-label={labels.weekdaysLong[i]}
-            data-slot="date-picker-weekday"
-            className={WEEKDAY}
-          >
-            <span aria-hidden>{w}</span>
-          </div>
-        ))}
-      </div>
-    );
+    const weekdayHeader = (hidden: boolean) =>
+      hidden ? (
+        <div
+          role="row"
+          data-slot="date-picker-weekdays-hidden"
+          className="sr-only"
+        >
+          {labels.weekdays.map((w, i) => (
+            <div
+              key={i}
+              role="columnheader"
+              aria-label={labels.weekdaysLong[i]}
+              data-slot="date-picker-weekday"
+              className={WEEKDAY}
+            >
+              <span aria-hidden>{w}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <WeekdayRow labels={labels} className={WEEKDAY_ROW} header role="row" />
+      );
 
     const renderDay = (d: Date) => {
       const s = cellState(d);
@@ -886,17 +887,11 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
           onTouchStart={markUserScroll}
           onPointerDown={markUserScroll}
         >
-          <div
-            aria-hidden
-            data-slot="date-picker-weekdays"
+          <WeekdayRow
+            labels={labels}
             className={CONTINUOUS_WEEKDAYS}
-          >
-            {labels.weekdays.map((w, i) => (
-              <div key={i} data-slot="date-picker-weekday" className={WEEKDAY}>
-                {w}
-              </div>
-            ))}
-          </div>
+            aria-hidden
+          />
           <div aria-hidden style={{ height: topSpace }} />
           {Array.from({ length: to - from + 1 }, (_, k) => {
             const month = fromMonthNumber(firstMonth + from + k);
@@ -1064,5 +1059,83 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
   },
 );
 DatePicker.displayName = "DatePicker";
+
+/**
+ * 보이는 요일 줄 — 영어는 두 글자(Su Mo Tu We Th Fr Sa)로 맞추고, 칸에 들지 않는 폭 · 글자 크기에서만 한 글자(S M T W T F S)로 줄인다.
+ * 요일 글은 줄을 바꾸지 않는다(date-picker.md ⓔ Weekday, groo-design #250). 칸마다 두 글자 견본(보이지 않음)을 두고 그 폭이 칸 폭을
+ * 넘는 칸이 하나라도 있으면 한 글자로 — 견본 · 줄을 ResizeObserver 로 지켜, 창 폭 · 글자 크기가 바뀌면 다시 잰다. 한국어는 두 벌이 같다.
+ */
+function WeekdayRow({
+  labels,
+  className,
+  header = false,
+  ...props
+}: {
+  labels: Pick<
+    DatePickerLabels,
+    "weekdays" | "weekdaysNarrow" | "weekdaysLong"
+  >;
+  className: string;
+  /** 표의 요일 머리(role="columnheader" · 읽는 이름) — 아니면 그림(aria-hidden 은 부르는 쪽이) */
+  header?: boolean;
+} & React.HTMLAttributes<HTMLDivElement>) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [narrow, setNarrow] = React.useState(false);
+  const key = labels.weekdays.join("\u0000");
+  React.useLayoutEffect(() => {
+    const row = ref.current;
+    if (!row) return;
+    const cells = Array.from(
+      row.querySelectorAll<HTMLElement>("[data-slot=date-picker-weekday]"),
+    );
+    const probes = cells.map((c) =>
+      c.querySelector<HTMLElement>("[data-slot=date-picker-weekday-probe]"),
+    );
+    const measure = () =>
+      setNarrow(
+        cells.some(
+          (c, i) =>
+            (probes[i]?.getBoundingClientRect().width ?? 0) >
+            c.getBoundingClientRect().width,
+        ),
+      );
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(row);
+    for (const p of probes) if (p) observer.observe(p);
+    return () => observer.disconnect();
+  }, [key]);
+  const shown = narrow ? labels.weekdaysNarrow : labels.weekdays;
+  return (
+    <div
+      ref={ref}
+      data-slot="date-picker-weekdays"
+      data-narrow={narrow ? "" : undefined}
+      className={className}
+      {...props}
+    >
+      {shown.map((w, i) => (
+        <div
+          key={i}
+          role={header ? "columnheader" : undefined}
+          aria-label={header ? labels.weekdaysLong[i] : undefined}
+          data-slot="date-picker-weekday"
+          className={cn(WEEKDAY, "relative")}
+        >
+          <span aria-hidden={header || undefined}>{w}</span>
+          {/* 두 글자 견본 — 들어가는지 재는 데만 쓴다(보이지 않고 읽히지 않는다) */}
+          <span
+            aria-hidden
+            data-slot="date-picker-weekday-probe"
+            className="invisible absolute whitespace-nowrap"
+          >
+            {labels.weekdays[i]}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export { DatePicker };
