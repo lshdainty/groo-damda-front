@@ -485,22 +485,11 @@ export function useStatsModel(lifted?: StatsState) {
   const catTrendTop3 = [...periodBreakdown]
     .sort((a, b) => b.totalAmount - a.totalAmount)
     .slice(0, 3);
-  const catTrendTicks = formatMonthTicks(monthlyBuckets);
-  const catTrendAxis = monthAxisTicks(monthlyBuckets);
-  const catTrendData = monthlyBuckets.map((b, i) => {
-    const parts = catTrendTop3.map(
-      (c) =>
-        (b.categoryExpenses ?? []).find(
-          (ce) => ce.categoryRowId === c.categoryRowId,
-        )?.amount ?? 0,
-    );
-    return {
-      label: catTrendTicks[i]!,
-      tick: catTrendAxis[i]!,
-      parts,
-      sum: parts.reduce((s, v) => s + v, 0),
-      isCur: i === monthlyBuckets.length - 1,
-    };
+  const catTrendData = buildCatTrendData({
+    monthlyBuckets,
+    top3: catTrendTop3,
+    // 사용자 기기 시계 — 추이(buildTrendData)와 같은 오늘
+    today: new Date(),
   });
   const catTrendMax = Math.max(1, ...catTrendData.map((d) => d.sum));
   // 여러 달 + TOP3 지출 데이터가 있을 때만 노출(단일 월은 카테고리 탭 도넛이 담당).
@@ -788,6 +777,62 @@ export function trendNeedsDots(
  * 가로축은 오늘에서 끝난다 — 오늘 뒤 날짜 · 달을 0 으로 그리지 않는다(chart.md "축"). 오늘을 품은 기간만 오늘(월별은 이번 달)에서
  * 자르고, 지난 기간은 끝까지 둔다. today 는 사용자 기기 시계(기간 이름 "이번 달" 과 같은 값)다.
  */
+/**
+ * 월별 버킷을 이번 달에서 자른다 — 서버는 기간 끝까지 0 버킷을 채워 보내므로, 오늘을 품은(또는 오늘 앞에서 시작한) 기간이면 이번 달 뒤
+ * 버킷을 뺀다. 기간 전체가 앞날이면(첫 버킷이 이번 달 뒤) 그대로 둔다 — 그릴 것이 없어지지 않게(chart.md "오늘 뒤는 그리지 않습니다").
+ * 월별 추이 · 순저축 · 주요 카테고리 월별 추이 · 고정/변동 추이가 같은 셈을 쓴다 — 같은 기간 차트의 끝 칸(끝 글)이 같고, 표로 보기도
+ * 같은 달까지다. 앱 `bucketsToToday` 와 같은 이름 · 같은 셈이다(첫 버킷 ≤ 이번 달이면 (해, 달) ≤ (오늘의 해, 오늘의 달) 만 남긴다).
+ */
+export function bucketsToToday<T extends { year: number; month: number }>(
+  buckets: readonly T[],
+  today: Date,
+): T[] {
+  const thisMonth = today.getFullYear() * 12 + today.getMonth();
+  const indexOf = (b: { year: number; month: number }) =>
+    b.year * 12 + (b.month - 1);
+  const first = buckets[0];
+  return first && indexOf(first) <= thisMonth
+    ? buckets.filter((b) => indexOf(b) <= thisMonth)
+    : [...buckets];
+}
+
+/**
+ * 주요 카테고리 월별 추이 — 달마다 TOP3 카테고리 지출(쌓은 막대). 가로축은 이번 달에서 끝난다(`bucketsToToday` — 추이와 같은
+ * 셈이라 같은 기간 묶음의 끝 칸 · 끝 글이 같다). 예전에는 서버가 채워 보낸 앞날 달까지 0 으로 그렸다.
+ */
+export function buildCatTrendData({
+  monthlyBuckets,
+  top3,
+  today,
+}: {
+  monthlyBuckets: readonly {
+    year: number;
+    month: number;
+    categoryExpenses?: readonly { categoryRowId: number; amount: number }[];
+  }[];
+  top3: readonly { categoryRowId: number | null }[];
+  today: Date;
+}) {
+  const buckets = bucketsToToday(monthlyBuckets, today);
+  const labels = formatMonthTicks(buckets);
+  const ticks = monthAxisTicks(buckets);
+  return buckets.map((b, i) => {
+    const parts = top3.map(
+      (c) =>
+        (b.categoryExpenses ?? []).find(
+          (ce) => ce.categoryRowId === c.categoryRowId,
+        )?.amount ?? 0,
+    );
+    return {
+      label: labels[i]!,
+      tick: ticks[i]!,
+      parts,
+      sum: parts.reduce((s, v) => s + v, 0),
+      isCur: i === buckets.length - 1,
+    };
+  });
+}
+
 export function buildTrendData({
   useDailyTrend,
   period,
@@ -846,15 +891,7 @@ export function buildTrendData({
       savings: v.income - v.expense,
     }));
   }
-  // 서버는 기간 끝까지 0 버킷을 채워 보낸다 — 오늘을 품은 기간이면 이번 달 뒤 버킷을 뺀다(기간 전체가 앞날이면 그대로)
-  const thisMonth = today.getFullYear() * 12 + today.getMonth();
-  const indexOf = (b: { year: number; month: number }) =>
-    b.year * 12 + (b.month - 1);
-  const first = monthlyBuckets[0];
-  const buckets =
-    first && indexOf(first) <= thisMonth
-      ? monthlyBuckets.filter((b) => indexOf(b) <= thisMonth)
-      : monthlyBuckets;
+  const buckets = bucketsToToday(monthlyBuckets, today);
   // 모든 버킷이 같은 해면 "1월" 만, 해가 섞이면 "2026. 1." (날짜 규칙 — 0 을 채우지 않는다)
   const monthTickLabels = formatMonthTicks(buckets);
   const monthTicks = monthAxisTicks(buckets);
