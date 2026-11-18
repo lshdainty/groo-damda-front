@@ -181,3 +181,37 @@ describe("fmtCapUsd — 환율 없는 미국 시가총액(달러, 혼합 표기 
     expect(fmtCapUsd(10_000)).toBe("1만 달러");
   });
 });
+
+/**
+ * 규모 값(시가총액 · 주식 수)은 차트 축과 같은 셈으로 줄인다 — 한 단위 · 소수 한 자리, 한국어 조 · 억 · 만, 영어 T · B · M · K
+ * (International Design "돈" 예외, groo-design #252). 영어는 예전 Intl compact 대신 같은 셈 — 단위가 다음에 닿으면 올리고,
+ * T 위로는 천단위 쉼표("1,500T" — compact 는 "1500T").
+ */
+describe("시가총액 셈 경계값 — ko 조 · 억 · 만 / en T · B · M · K(#252)", () => {
+  const orig = i18n.language;
+  afterEach(async () => {
+    await i18n.changeLanguage(orig);
+  });
+
+  it("ko — 9,999 · 1만 · 1억(99,999,999 올림) · 1조(999,999,999,999 올림) · 1.2조", async () => {
+    await i18n.changeLanguage("ko");
+    expect(fmtCapKRW(9_999)).toBe("9,999원");
+    expect(fmtCapKRW(10_000)).toBe("1만원");
+    expect(fmtCapKRW(99_999_999)).toBe("1억원");
+    expect(fmtCapKRW(999_999_999_999)).toBe("1조원");
+    expect(fmtCapKRW(1_234_000_000_000)).toBe("1.2조원");
+    expect(fmtShares(12_345_678)).toBe("1,234.6만 주");
+  });
+
+  it("en — 999 · 1K · 1M(999,999 올림) · 999.9M · 1B · 1.2T · 1,500T", async () => {
+    await i18n.changeLanguage("en");
+    expect(fmtCapKRW(999)).toBe("₩999");
+    expect(fmtCapKRW(1_000)).toBe("₩1K");
+    expect(fmtCapKRW(999_999)).toBe("₩1M");
+    expect(fmtCapKRW(999_949_999)).toBe("₩999.9M");
+    expect(fmtCapKRW(1_000_000_000)).toBe("₩1B");
+    expect(fmtCapKRW(1_234_000_000_000)).toBe("₩1.2T");
+    expect(fmtCapKRW(1_500_000_000_000_000)).toBe("₩1,500T");
+    expect(fmtShares(12_345_678)).toBe("12.3M");
+  });
+});

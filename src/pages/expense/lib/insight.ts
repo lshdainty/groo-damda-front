@@ -1,4 +1,4 @@
-import { formatChartAxis, isEn } from "@/shared/lib/groo/format";
+import { money } from "@/shared/lib/groo/format";
 
 /**
  * 지난달 대비 차액이 이보다 작으면 금액을 말하지 않고 "비슷하게 쓰고 있어요" 로 넘긴다.
@@ -12,14 +12,9 @@ export const INSIGHT_SAME_MAX = 5_000;
 /**
  * "지난달보다 {{amount}} 덜/더 쓰는 중" 문장에 넣을 금액.
  *
- * 축약은 **공용 `formatChartAxis` 하나만** 통과한다. 예전엔 여기서 `KRW(Math.round(
- * diff / 10000))만원` 으로 만원 반올림을 했다 — 11,881 원 차이가 `1만원` 이 되어
- * 문장이 실제보다 16% 적게 말했다(QA #38). 지금은 `1.2만원` 이다.
- *
- * 단위는 문장 안이라 반드시 붙인다 — ko 는 뒤에 `원`, en 은 앞에 `₩`
- * (`money()` 와 같은 자리 규칙이고, 숫자부만 축약된 값이다).
+ * 문장 속 돈도 줄이지 않는다 — `money`("11,881원" · "₩11,881", International Design "돈", groo-design #252).
+ * 예전엔 `KRW(Math.round(diff / 10000))만원` 으로 만원 반올림을 해 11,881 원 차이가 `1만원` 이 되었고(QA #38),
+ * 그 뒤로는 `formatChartAxis` 로 `1.2만원` 처럼 줄였다.
  */
-export const insightDiffAmount = (diff: number): string => {
-  const short = formatChartAxis(Math.abs(diff));
-  return isEn() ? `₩${short}` : `${short}원`;
-};
+export const insightDiffAmount = (diff: number): string =>
+  money(Math.abs(diff));

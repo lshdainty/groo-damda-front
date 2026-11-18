@@ -151,8 +151,9 @@ export const wonPrefix = (): string => (isEn() ? "₩" : "");
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 
 /**
- * 금액 축약 — ko 조/억/만 / en `Intl.NumberFormat(compact)`(120M·52K).
- * 음수도 부호 prepend. App `core/format/krw.dart` formatChartAxis 와 정합.
+ * 규모 값 축약 — ko 조/억/만 / en K·M·B·T(120M · 52K · 1.2T), 소수 한 자리. 음수도 부호 prepend. App `core/format/krw.dart`
+ * formatChartAxis 와 정합. **사용자 돈(거래 · 잔액 · 평가액 · 금액 칩 · 문장 속 돈)은 줄이지 않는다** — `money` 로 쓴다
+ * (International Design "돈", groo-design #252). 줄이는 것은 규모 값(시가총액 · 주식 수)뿐이다.
  *
  * **축약하는 자리는 전부 이 함수 하나를 쓴다** — 차트 Y축, 도넛 중앙, 통계 추이 틱.
  * 통계 추이 축만 쓰던 `formatChartAmount` 가 따로 있었는데(만은 정수, 억은 고정
@@ -167,12 +168,27 @@ const round1 = (n: number): number => Math.round(n * 10) / 10;
  *
  *   ~1만   5,000 · 9,999          1만~   1만 · 1.2만 · 1,230.5만
  *   1억~   1억 · 1.2억 · 9,999억   1조~   1조 · 1.2조
+ *   en  ~1K 999 · 1K~ 1K · 1.2K · 999.9K · 1M~ 1M · 1B~ 1B · 1T~ 1.2T
  */
 export const formatChartAxis = (v: number): string => {
   const n = Math.abs(v);
   if (isEn()) {
-    // en 도 빼기는 U+2212 (I-31) — 앱 formatChartAxis(en) 과 같은 글자.
-    return `${v < 0 ? MINUS : ""}${new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n)}`;
+    // 영어는 천 단위 — K · M · B · T, 소수 한 자리(.0 은 뗀다). 차트 축과 같은 셈이다(International Design "돈" 예외 — 규모 값,
+    // groo-design #252). 예전엔 Intl compact 라 브라우저 · 값마다 꼴이 갈렸다. 빼기는 U+2212 (I-31)
+    const sign = v < 0 ? MINUS : "";
+    if (n < 1_000) return `${sign}${n.toLocaleString("en-US")}`;
+    // 반올림한 값이 다음 단위에 닿으면 올린다 — 999,999 는 `1,000K` 가 아니라 `1M`
+    let scaled = n / 1_000;
+    let unit = "K";
+    for (const bigger of ["M", "B", "T"]) {
+      if (round1(scaled) < 1_000) break;
+      scaled /= 1_000;
+      unit = bigger;
+    }
+    const digits = round1(scaled).toLocaleString("en-US", {
+      maximumFractionDigits: 1,
+    });
+    return `${sign}${digits}${unit}`;
   }
   const sign = v < 0 ? MINUS : "";
   if (n < 10_000) return `${sign}${n.toLocaleString("ko-KR")}`;

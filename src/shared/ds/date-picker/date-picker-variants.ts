@@ -50,17 +50,17 @@ export const CONTINUOUS_MONTH_LABEL = "px-x1";
 // 시트가 낮아(320 보다 좁은 화면에서 바닥 버튼이 위아래로 쌓일 때 등) 달이 요일 줄 + 2주보다 낮아지면 그 높이에서 멈춘다 — 넘친 만큼은
 // 시트 본문이 스크롤한다(DATE_PICKER_CONTINUOUS_SHEET_BODY, Layout "지원 폭"). 요일 줄 · 주 줄 높이는 WHEEL 과 같은 셈이다
 export const CONTINUOUS_SCROLL =
-  "relative min-h-[calc(max(48px,var(--text-t4--line-height))_+_2_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))] flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  "relative min-h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_2_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))] flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 export const CONTINUOUS_WEEKDAYS =
   "sticky top-0 z-[2] grid min-h-[48px] grid-cols-7 bg-bg-layer-floating";
 export const CONTINUOUS_MONTH = "pb-x4";
 export const FOG =
   "pointer-events-none sticky bottom-0 z-[3] -mt-24 h-[96px] [background:linear-gradient(to_bottom,transparent,var(--color-bg-layer-floating))]";
 
-// 연 · 월 휠 자리 — 요일 줄 + 6주를 덮는다: max(48, 요일 줄 높이) + 6 × max(48, 숫자 줄 높이 + 6) — 100% 336 · 200% 348.
+// 연 · 월 휠 자리 — 요일 줄 + 6주를 덮는다: max(48, 요일 줄 높이(200% 상한 — WEEKDAY_TEXT)) + 6 × max(48, 숫자 줄 높이 + 6) — 100% 336 · 200% 348.
 // 글이 크면 달력을 따라 늘어나 열고 닫을 때 높이가 그대로다(WEEKDAY_ROW · CELL · DAY 와 같은 셈). 휠 308 은 가운데(100% 위아래 14). 연 120 · 월 96
 export const WHEEL =
-  "flex h-[calc(max(48px,var(--text-t4--line-height))_+_6_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))] items-center bg-bg-layer-floating";
+  "flex h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_6_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))] items-center bg-bg-layer-floating";
 export const WHEEL_YEAR = "w-[120px]";
 export const WHEEL_MONTH = "w-[96px]";
 
@@ -68,8 +68,13 @@ export const WHEEL_MONTH = "w-[96px]";
 export const GRID = "@container [--day:min(42px,calc(100cqw_/_7_-_2px))]";
 export const WEEK = "grid grid-cols-7";
 export const WEEKDAY_ROW = "grid min-h-[48px] grid-cols-7";
-export const WEEKDAY =
-  "flex items-center justify-center whitespace-nowrap text-t4 font-medium text-fg-neutral-subtle";
+/**
+ * 요일 글 — text-t4 에 글자 크기 200% 상한(date-picker.md "글자 크기 설정", groo-design #252). 320 폭에서 그보다 크면 한 글자(영어 "W")도
+ * 칸에 들지 않는다 — 글자 · 줄 높이를 `min(rem 토큰, static 토큰 × 2)` 로 멈춘다(WCAG 1.4.4 의 200% 는 지킨다). 숫자 · 제목은 그대로 커진다
+ */
+export const WEEKDAY_TEXT =
+  "text-[length:min(var(--text-t4),calc(var(--text-t4-static)_*_2))] leading-[min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2))]";
+export const WEEKDAY = `flex items-center justify-center whitespace-nowrap ${WEEKDAY_TEXT} font-medium text-fg-neutral-subtle`;
 
 // 칸 — 높이 max(48, 숫자 줄 높이 + 6)(날짜 버튼 · 앞뒤 달 숫자의 위아래 3 이 키운다 — 100% 48 · 200% 50, 03-C 1B) · 폭 = 달력 폭 ÷ 7. 기간 띠는 칸 안의 span(원 높이, 칸 세로 가운데)
 export const CELL = "relative isolate min-h-[48px] min-w-0";

@@ -262,7 +262,10 @@ describe("formatChartAxis (en)", () => {
     await i18n.changeLanguage(orig);
   });
 
-  it("Intl compact 숫자부 + 빼기는 U+2212 (I-31)", () => {
+  it("K · M · B · T 한 단위 · 소수 한 자리(차트 축과 같은 셈, #252) + 빼기는 U+2212 (I-31)", () => {
+    expect(formatChartAxis(999)).toBe("999");
+    expect(formatChartAxis(999_999)).toBe("1M");
+    expect(formatChartAxis(1_500_000_000_000_000)).toBe("1,500T");
     expect(formatChartAxis(120000000)).toBe("120M");
     expect(formatChartAxis(52000)).toBe("52K");
     expect(formatChartAxis(-52000)).toBe("\u221252K");

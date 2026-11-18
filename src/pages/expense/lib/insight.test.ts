@@ -17,8 +17,8 @@ describe("지난달 대비 인사이트 금액 (ko)", () => {
     await i18n.changeLanguage("ko");
   });
 
-  it("11,881 은 `1만원` 이 아니라 `1.2만원`(QA #38)", () => {
-    expect(insightDiffAmount(11_881)).toBe("1.2만원");
+  it("11,881 은 `1만원` · `1.2만원` 이 아니라 줄이지 않은 `11,881원`(QA #38 · #252 문장 속 돈)", () => {
+    expect(insightDiffAmount(11_881)).toBe("11,881원");
     expect(insightDiffAmount(11_881)).not.toBe("1만원");
   });
 
@@ -27,9 +27,9 @@ describe("지난달 대비 인사이트 금액 (ko)", () => {
     expect(insightDiffAmount(9_999)).toBe("9,999원");
   });
 
-  it("큰 차액도 문장에 들어갈 만큼 짧다", () => {
-    expect(insightDiffAmount(1_234_000)).toBe("123.4만원");
-    expect(insightDiffAmount(120_000_000)).toBe("1.2억원");
+  it('큰 차액도 줄이지 않는다 — 문장 속 돈도 원까지(International Design "돈", #252)', () => {
+    expect(insightDiffAmount(1_234_000)).toBe("1,234,000원");
+    expect(insightDiffAmount(120_000_000)).toBe("120,000,000원");
   });
 
   it("방향은 문장이 정한다 — 금액은 늘 크기다", () => {
@@ -48,8 +48,8 @@ describe("지난달 대비 인사이트 금액 (en)", () => {
   });
 
   it("en 은 ₩ 를 앞에 — `money()` 와 같은 자리 규칙", () => {
-    expect(insightDiffAmount(11_881)).toBe("₩11.9K");
-    expect(insightDiffAmount(-11_881)).toBe("₩11.9K");
+    expect(insightDiffAmount(11_881)).toBe("₩11,881");
+    expect(insightDiffAmount(-11_881)).toBe("₩11,881");
   });
 });
 

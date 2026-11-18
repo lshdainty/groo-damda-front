@@ -126,7 +126,7 @@ describe("총 예산", () => {
     const { onSave } = mount({ kind: "total" });
     type(input(), "1234");
     expect(input().value).toBe("1,234");
-    click(byText("200만원"));
+    click(byText("2,000,000원"));
     expect(input().value).toBe("2,000,000");
     expect(
       document.querySelector("[data-slot=chip-group] [aria-pressed]"),
