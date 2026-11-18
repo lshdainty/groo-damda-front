@@ -65,6 +65,17 @@ export function installValueAxisHarness() {
   );
 }
 
+/**
+ * 페이지가 떠 있는 동안 글자 크기를 바꾼다 — 배율을 바꾸고, 눈금 글자 크기의 숨은 글(axisWidth.ts subscribeTickFont — "0000")을
+ * 지켜보는 ResizeObserver 를 부른다(판이 오르고 지켜보는 차트 · 훅이 다시 그린다)
+ */
+export const changeTickScale = (scale: number) =>
+  act(() => {
+    tickScale.value = scale;
+    for (const o of observers.filter((x) => x.el.textContent === "0000"))
+      o.cb([]);
+  });
+
 /** recharts 의 ResponsiveContainer 에 크기를 알린다 — 높이는 그 차트 상자의 높이(Chart `height`) */
 export const layoutCharts = (width: number) =>
   act(() => {

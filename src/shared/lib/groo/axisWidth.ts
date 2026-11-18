@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { niceAxis } from "./chartAxis";
 
 /**
@@ -96,6 +96,23 @@ export function useTickFontVersion(): number {
   return useSyncExternalStore(subscribeTickFont, readTickFontVersion, () => 0);
 }
 
+/*
+ * 글자 크기 판을 받는 잼 — 판([fontKeys])은 셈에 쓰지 않고 열쇠로만 받는다. 컴포넌트 · 훅이 판을 버리고(`useTickFontVersion();`)
+ * 측정만 부르면 React Compiler 가 의존 없는 셈으로 보고 처음 잰 값에 묶는다 — 페이지가 뜬 뒤 글자를 키워도 그대로였다(이음 QA
+ * 2026-11-18, `useTickLineHeight`). 판을 인자로 넘기면 판이 바뀔 때 컴파일러도 다시 잰다.
+ */
+export const measureTextWidthAt = (
+  labels: readonly string[],
+  ..._fontKeys: number[]
+): number => measureTextWidth(labels);
+export const measureTickWidthAt = (
+  labels: readonly string[],
+  ..._fontKeys: number[]
+): number => measureTickWidth(labels);
+
+/** 눈금 글 사이 구분 — 눈금 글에 나오지 않는 글자 */
+const LABEL_SEPARATOR = "\u0000";
+
 export function useAxisWidth(labels: readonly string[]): number {
   const fontVersion = useTickFontVersion();
   const [fontTick, setFontTick] = useState(0);
@@ -106,11 +123,13 @@ export function useAxisWidth(labels: readonly string[]): number {
       live = false;
     };
   }, []);
-  const key = labels.join("|");
-  return useMemo(
-    () => measureTickWidth(labels),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- key 가 labels 내용을 대신한다
-    [key, fontTick, fontVersion],
+  // 글 목록은 내용(key)으로 넘긴다 — 쓰는 쪽이 렌더마다 새 배열을 줘도 컴파일러가 같은 글이면 다시 재지 않는다.
+  // 글자 크기 판 · 웹폰트 도착도 열쇠로 넘긴다(전엔 손 useMemo + eslint-disable 이라 컴파일러가 이 훅을 통째로 건너뛰었다)
+  const key = labels.join(LABEL_SEPARATOR);
+  return measureTickWidthAt(
+    key === "" ? [] : key.split(LABEL_SEPARATOR),
+    fontVersion,
+    fontTick,
   );
 }
 
@@ -254,10 +273,17 @@ export function measureTickLineHeight(): number {
   }
 }
 
-/** 눈금 글 줄 높이 — 글자 크기가 바뀌면 다시 잰다(ds Chart 의 가로 눈금 · 세로축 폭과 같은 판) */
+/** 눈금 글 줄 높이 — 글자 크기 판([measureTextWidthAt] 와 같은 까닭으로 판을 열쇠로 받는다) */
+export const measureTickLineHeightAt = (..._fontKeys: number[]): number =>
+  measureTickLineHeight();
+
+/**
+ * 눈금 글 줄 높이 — 글자 크기가 바뀌면 다시 잰다(ds Chart 의 가로 눈금 · 세로축 폭과 같은 판). 판을 버리고 측정만 부르면
+ * React Compiler 가 처음 잰 값에 묶어, 페이지가 뜬 뒤 글자를 키워도 세로 눈금 칸 수(chartValueIntervals)가 그대로였다.
+ */
 export function useTickLineHeight(): number {
-  useTickFontVersion();
-  return measureTickLineHeight();
+  const fontVersion = useTickFontVersion();
+  return measureTickLineHeightAt(fontVersion);
 }
 
 /**
