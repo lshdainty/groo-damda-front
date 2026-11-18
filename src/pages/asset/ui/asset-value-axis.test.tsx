@@ -114,3 +114,60 @@ describe("순자산 추이 140 · 글자 300% — 세로축 끝 글이 상자 �
     });
   }
 });
+
+/**
+ * 가장 적은 축도 들지 않으면 큰 쪽 끝 글만(groo-design #253 — chart.md "큰 글자"). 순자산 추이 140(위 8 · 아래 0) · 글자 300% 면
+ * 그리는 높이 140 − 23 − 0 − (27 + 45) = 45 · 줄 45 → 한 칸뿐이다. 음수가 섞인 −1.2만 ~ 47.6만 의 가장 적은 축 −50만 · 0 · 50만(두 칸)도
+ * 넘쳐 예전엔 세 글이 겹쳤다 — 이제 절댓값이 큰 쪽 끝 "50만" 하나만, 격자선(눈금 셋)은 그대로.
+ */
+describe("순자산 추이 140 · 글자 300% 이상 — 가장 적은 축도 들지 않으면 큰 쪽 끝 글만(#253)", () => {
+  const MAN = 10_000;
+  /** −1.2만 ~ 47.6만 — 음수가 섞인 12 달 */
+  const mixed = Array.from({ length: 12 }, (_, i) => ({
+    year: 2026,
+    month: i + 1,
+    netWorth: i === 0 ? -1.2 * MAN : Math.round((i / 11) * 47.6 * MAN),
+  }));
+  /** 보이는(빈 글이 아닌) 세로 글과 그 자리 */
+  const shown = () =>
+    Array.from(
+      container.querySelectorAll(
+        ".recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value",
+      ),
+    )
+      .filter((t) => t.textContent)
+      .map((t) => ({ text: t.textContent!, y: Number(t.getAttribute("y")) }))
+      .sort((a, b) => b.y - a.y);
+
+  for (const scale of [3, 4]) {
+    it(`음수 섞임 · 글자 ${scale * 100}% — "50만" 하나만 남고 눈금(격자선) 셋은 그대로`, async () => {
+      tickScale.value = scale;
+      points = mixed;
+      await act(() => root.render(<NetWorthChart height={140} />));
+      await layoutCharts(PHONE_CHART);
+      expect(shown().map((l) => l.text)).toEqual(["50만"]);
+      // 격자선은 그대로 — 눈금 셋(−50만 · 0 · 50만)
+      expect(yTickLabels(container)).toHaveLength(3);
+      // 남은 글이 차트 상자 안
+      expect(shown()[0]!.y - (15 * scale) / 2).toBeGreaterThanOrEqual(0);
+    });
+  }
+
+  it("양수만 · 글자 300% — 0 · 50만 이 한 칸에 들면 둘 다, 겹치지 않는다", async () => {
+    tickScale.value = 3;
+    points = mixed.map((p) => ({ ...p, netWorth: Math.max(0, p.netWorth) }));
+    await act(() => root.render(<NetWorthChart height={140} />));
+    await layoutCharts(PHONE_CHART);
+    const labels = shown();
+    expect(labels.map((l) => l.text)).toEqual(["0", "50만"]);
+    expect(labels[0]!.y - labels[1]!.y).toBeGreaterThanOrEqual(45);
+  });
+
+  it("양수만 · 글자 400% — 한 칸도 들지 않으면 50만 하나", async () => {
+    tickScale.value = 4;
+    points = mixed.map((p) => ({ ...p, netWorth: Math.max(0, p.netWorth) }));
+    await act(() => root.render(<NetWorthChart height={140} />));
+    await layoutCharts(PHONE_CHART);
+    expect(shown().map((l) => l.text)).toEqual(["50만"]);
+  });
+});

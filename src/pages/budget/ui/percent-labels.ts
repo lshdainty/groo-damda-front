@@ -32,7 +32,7 @@ export const barChartTop = (rootPx: number, tickLine: number): number =>
 export const BAR_VALUE_GAP = 4;
 
 /** 굵은 글 폭(px) — 캔버스로 재고, 못 재면(jsdom) 글자 수 × 0.62em 로 어림한다 */
-function textWidth(text: string, px: number): number {
+export function textWidth(text: string, px: number): number {
   try {
     if (/jsdom/i.test(navigator.userAgent)) throw new Error("no canvas");
     const ctx = document.createElement("canvas").getContext("2d");
