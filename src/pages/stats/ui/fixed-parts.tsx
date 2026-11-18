@@ -1,4 +1,4 @@
-import { measureTickWidth } from "@/shared/lib/groo/axisWidth";
+import { niceValueAxis } from "@/shared/lib/groo/axisWidth";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -26,7 +26,6 @@ import {
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthTicks, monthAxisTicks } from "@/shared/lib/date";
-import { niceCeil } from "@/shared/lib/groo/chartAxis";
 import { formatPercent } from "@/shared/lib/groo/format";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
 import {
@@ -437,16 +436,6 @@ export function FixedTrendSection({
       </>
     );
   }
-  const axis = niceCeil(
-    Math.max(
-      0,
-      ...rows.map(
-        (r) =>
-          (hidden.has("fixed") ? 0 : r.fixed) +
-          (hidden.has("variable") ? 0 : r.variable),
-      ),
-    ),
-  );
   const sumFixed = rows.reduce((s, r) => s + r.fixed, 0);
   const sumVariable = rows.reduce((s, r) => s + r.variable, 0);
   const name = t("chart.fixedName", { kind: t(`fixed.kind.${kind}`) });
@@ -485,11 +474,14 @@ export function FixedTrendSection({
               {...chartXAxisProps(rows.map((r) => r.tick))}
             />
             <YAxis
-              domain={[0, axis.max]}
-              ticks={axis.ticks}
-              tickFormatter={(v) => mask(formatAxisWon(Number(v), axis.ticks))}
-              width={measureTickWidth(
-                axis.ticks.map((v) => mask(formatAxisWon(v, axis.ticks))),
+              // 쌓은 막대 — 칸마다 보이는 계열의 합. 1 · 2 · 5 간격 nice 눈금을 그대로 그린다(chart.md "축 · 격자")
+              {...niceValueAxis(
+                rows.map(
+                  (r) =>
+                    (hidden.has("fixed") ? 0 : r.fixed) +
+                    (hidden.has("variable") ? 0 : r.variable),
+                ),
+                (v, ticks) => mask(formatAxisWon(v, ticks)),
               )}
               {...chartAxisProps()}
             />

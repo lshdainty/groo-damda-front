@@ -15,8 +15,7 @@ import {
   SegmentedControlItem,
 } from "@/shared/ds/segmented-control";
 import { Skeleton } from "@/shared/ds/skeleton";
-import { useAxisWidth } from "@/shared/lib/groo/axisWidth";
-import { niceAxis } from "@/shared/lib/groo/chartAxis";
+import { niceValueAxis } from "@/shared/lib/groo/axisWidth";
 import { MASK, won } from "@/shared/lib/groo/money-text";
 import { BandFailure, ListTitle } from "@/shared/ui/groo/band-parts";
 import { useAssetBalanceTrend } from "@/features/asset";
@@ -54,11 +53,6 @@ export function TrendSection({
     // 원화 합계(서버 balanceInKrw — 줄 · 상세 큰 금액과 같은 한 식, I-13 길 A). 옛 서버면 balance
     balance: p.balanceInKrw ?? p.balance,
   }));
-  // Y축: 0 기준 nice 눈금 — 음수 잔액(대출)도 0 아래로 확장
-  const vals = data.map((d) => d.balance);
-  const yAxis = niceAxis(Math.min(0, ...vals), Math.max(0, ...vals));
-  const tick = (v: number) => (hidden ? MASK : formatAxisWon(v, yAxis.ticks));
-  const axisWidth = useAxisWidth(yAxis.ticks.map(tick));
   const height = desk ? 180 : 140;
   const seriesLabel = model.isCard
     ? t("assetDetail.seriesUsage")
@@ -113,10 +107,11 @@ export function TrendSection({
             <XAxis dataKey="label" {...chartAxisProps()} />
             <YAxis
               tickSize={0}
-              domain={[yAxis.min, yAxis.max]}
-              ticks={yAxis.ticks}
-              tickFormatter={tick}
-              width={axisWidth}
+              // 0 기준 1 · 2 · 5 간격 nice 눈금을 그대로 그린다 — 음수 잔액(대출)도 0 아래로 확장
+              {...niceValueAxis(
+                data.map((d) => d.balance),
+                (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
+              )}
               {...chartAxisProps()}
             />
             <ChartTooltip

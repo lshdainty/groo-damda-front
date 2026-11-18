@@ -1,7 +1,8 @@
 /**
  * Recharts 의 자동 축을 명시 nice 눈금으로 고정 — Flutter 앱(`lib/core/format/chart_axis.dart`)
- * 의 `niceAxis` 와 동일 알고리즘. `<YAxis domain={[a.min,a.max]} ticks={a.ticks} />` 로 적용하면
- * 같은 데이터에 대해 앱과 동일한 눈금이 그려진다 (0 포함 + 1·2·5×10ⁿ 딱 떨어지는 step).
+ * 의 `niceAxis` 와 동일 알고리즘. 그릴 때는 `<YAxis {...niceValueAxis(값들, 글자)} />`(axisWidth.ts — 눈금 · 범위 · 폭 ·
+ * `interval` 0)로 펼친다 — `ticks` 만 주면 recharts 가 겹친다고 본 눈금을 뺀다. 같은 데이터에 대해 앱과 동일한 눈금이 그려진다
+ * (0 포함 + 1·2·5×10ⁿ 딱 떨어지는 step).
  *
  * 간격은 **1 · 2 · 5 × 10ⁿ 계열**만 쓴다(chart.md "축 · 격자") — 2,500 같은 2.5 간격은 만 단위로 줄이면 "0.25만" 이 되어
  * 소수 한 자리로 반올림한 글자("0.3만")가 눈금 위치와 어긋난다.
@@ -51,40 +52,4 @@ export function niceAxis(
   const ticks: number[] = [];
   for (let v = min; v <= max + step * 0.5; v += step) ticks.push(Math.round(v));
   return { min, max, ticks };
-}
-
-export interface NiceCeil {
-  max: number;
-  step: number;
-  ticks: number[];
-}
-
-/**
- * dual-axis(수입·지출)용 — 0 기준 고정 [ticks]개(기본 5) 눈금으로 ceil.
- * 좌·우 축에 각각 적용하면 둘 다 같은 개수의 균등 눈금을 가져 가로 그리드가 정렬된다.
- * 앱 `stats_screen.dart` 의 `_niceCeil` 과 동일.
- */
-export function niceCeil(rawMax: number, ticks = 5): NiceCeil {
-  const n = ticks - 1;
-  if (rawMax <= 0) {
-    const step = 1 / n;
-    return {
-      max: 1,
-      step,
-      ticks: Array.from({ length: ticks }, (_, i) => i * step),
-    };
-  }
-  const roughStep = rawMax / n;
-  const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
-  const mantissa = roughStep / magnitude;
-  // 1 · 2 · 5 × 10ⁿ 계열(2.5 없음 — chart.md "축 · 격자"). 눈금 수가 정해져 있어 2 로 내려 담을 수는 없다
-  const niceMantissa =
-    mantissa <= 1 ? 1 : mantissa <= 2 ? 2 : mantissa <= 5 ? 5 : 10;
-  const step = niceMantissa * magnitude;
-  const max = step * n;
-  return {
-    max,
-    step,
-    ticks: Array.from({ length: ticks }, (_, i) => Math.round(i * step)),
-  };
 }

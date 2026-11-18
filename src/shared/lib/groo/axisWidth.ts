@@ -120,12 +120,34 @@ export interface ValueAxisProps {
   ticks: number[];
   tickFormatter: (v: number) => string;
   width: number;
+  /**
+   * 0 — 준 눈금을 하나도 빼지 않고 그린다. recharts 세로축의 기본(`"preserveEnd"`)은 **준 눈금(`ticks`)도** 글 높이 + `minTickGap`(8)
+   * 으로 겹침을 재 사이 눈금을 빼고, 그리는 자리 아래 끝에 걸친 0 도 뺀다 — 그래서 "−6만 · −4만 · 0"(−2만 빠짐) · "50조 · 150조"
+   * (0 · 100조 빠짐)처럼 고르지 않게 남았다(2026-11-18 QA). 세로 눈금은 1 · 2 · 5 간격 nice 눈금 그대로 그린다(chart.md "축 · 격자",
+   * 앱 `p_chart_cartesian` 도 세로 눈금을 칸마다 그린다 — `interval: 1`). 가로축 솎기(끝 글을 지킨다)는 `chartXAxisProps` 몫이다.
+   */
+  interval: 0;
 }
+
+const valueAxisOf = (
+  ticks: number[],
+  format: (v: number, ticks: readonly number[]) => string,
+): ValueAxisProps => {
+  const tickFormatter = (v: number) => format(v, ticks);
+  return {
+    domain: [ticks[0]!, ticks[ticks.length - 1]!],
+    ticks,
+    tickFormatter,
+    width: measureTickWidth(ticks.map(tickFormatter)),
+    interval: 0,
+  };
+};
 
 /**
  * 값 축 하나 — `niceAxis` 눈금(앱 `niceChartAxis` 와 같은 셈)을 recharts 에 그대로 주고, 그 눈금 글자 가운데 가장 긴 것으로
  * 폭을 잰다(스펙 chart.md "세로축의 폭은 가장 긴 글자가 잘리지 않게"). `<YAxis {...niceValueAxis(값들, formatAxisWon)} {...chartAxisProps()} />`.
  * 값은 지금 보이는 계열만 넘긴다 — 계열을 끄면 축이 남은 계열에 맞게 다시 잡힌다(recharts 자동 범위와 같다).
+ * 값이 모두 0 이면 0 ~ 1만(0 · 0.2만 · … · 1만)이다 — 앱 `niceChartAxis` 와 같다.
  *
  * 글자([format])는 눈금 목록을 함께 받는다 — 한 축은 한 단위라(chart.md "축 · 격자") 눈금 하나의 글자도 축 전체를 보고
  * 정한다. 그리는 글자와 폭을 잰 글자가 같은 목록 · 같은 셈이다.
@@ -134,12 +156,43 @@ export function niceValueAxis(
   values: readonly number[],
   format: (v: number, ticks: readonly number[]) => string,
 ): ValueAxisProps {
-  const a = niceAxis(Math.min(0, ...values), Math.max(0, ...values));
-  const tickFormatter = (v: number) => format(v, a.ticks);
-  return {
-    domain: [a.min, a.max],
-    ticks: a.ticks,
-    tickFormatter,
-    width: measureTickWidth(a.ticks.map(tickFormatter)),
-  };
+  return valueAxisOf(
+    niceAxis(Math.min(0, ...values), Math.max(0, ...values)).ticks,
+    format,
+  );
+}
+
+/**
+ * 이중 축(왼쪽 · 오른쪽) — 축마다 `niceAxis` 간격을 따로 잡고, 0 위 · 아래 칸 수를 둘 가운데 많은 쪽에 맞춘다(앱
+ * `p_chart_cartesian` 의 `above` · `below` 와 같은 셈). 두 축의 눈금이 같은 높이에 서서 한 축에 건 가로 격자(chart.md "이중 축")에
+ * 다른 축 눈금도 맞는다. 칸 수가 적은 축은 위(또는 아래)로 늘어난다 — 수입이 모두 0 이면 왼쪽 0 ~ 1만(다섯 칸), 지출 0 ~ 6만(세 칸)은
+ * 0 ~ 10만(다섯 칸)이 된다. 값 · 글자는 [niceValueAxis] 와 같다.
+ */
+export function niceDualValueAxes(
+  left: readonly number[],
+  right: readonly number[],
+  format: (v: number, ticks: readonly number[]) => string,
+): { left: ValueAxisProps; right: ValueAxisProps } {
+  const axes = [left, right].map((values) => {
+    const a = niceAxis(Math.min(0, ...values), Math.max(0, ...values));
+    const step = a.ticks[1]! - a.ticks[0]!;
+    return {
+      step,
+      above: Math.round(a.max / step),
+      below: Math.round(-a.min / step),
+    };
+  });
+  const above = Math.max(...axes.map((a) => a.above));
+  const below = Math.max(...axes.map((a) => a.below));
+  const [l, r] = axes.map(({ step }) =>
+    valueAxisOf(
+      Array.from(
+        { length: below + above + 1 },
+        // + 0 — 0 칸이 −0 이 되지 않게
+        (_, i) => Math.round((i - below) * step) + 0,
+      ),
+      format,
+    ),
+  );
+  return { left: l!, right: r! };
 }
