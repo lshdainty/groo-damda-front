@@ -1300,7 +1300,7 @@ describe("DatePicker — 이어지는 달(continuous)", () => {
     )!;
     // 요일 줄 max(48, t4 줄 높이) + 주 두 줄 max(48, t5 줄 높이 + 6) — 휠 자리(요일 줄 + 6주)와 같은 셈
     expect(scroll.className).toContain(
-      "min-h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_2_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))]",
+      "min-h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_2_*_max(48px,calc(min(var(--text-t5--line-height),calc(var(--text-t5-static--line-height)_*_2))_+_6px)))]",
     );
     expect(scroll.className).not.toContain("min-h-0");
     // 남는 높이는 그대로 채운다

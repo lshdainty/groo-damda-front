@@ -124,13 +124,6 @@ function txmMonthLabel(monthKey: string): string {
     : `${m}월`;
 }
 
-/** 요일 라벨 — formatDay 로케일 반환 재사용(2026-02-01 = 일요일). */
-const dowLabelList = () =>
-  Array.from(
-    { length: 7 },
-    (_, i) => formatDay(`2026-02-${TXM_PAD(i + 1)}`).dow,
-  );
-
 /** 폰 첫 진입 스켈레톤 — 틀(월 이동 · 요일 · 단추)은 그리고 서버 데이터 자리만 스켈레톤이다. */
 export function ExpenseMobileSkeleton({ month }: { month?: string }) {
   const { t } = useTranslation("expense");
@@ -162,7 +155,7 @@ export function ExpenseMobileSkeleton({ month }: { month?: string }) {
           <LedgerSumBtn disabled>{t("txm.spendSummary")}</LedgerSumBtn>
         </LedgerHead>
         <LedgerCalendar>
-          <LedgerDow labels={dowLabelList()} />
+          <LedgerDow />
           <LedgerWeek>
             {week.map((c, i) =>
               c ? (
@@ -442,8 +435,6 @@ export function ExpenseMobile({
   const pickMonth = (next: string) => setMonth(next);
   const goMonth = (dir: -1 | 1) => pickMonth(shiftMonthKey(month, dir));
 
-  const dowLabels = useMemo(() => dowLabelList(), []);
-
   const grouped = useMemo(
     () => groupLedgerByDay(expenses, transfers),
     [expenses, transfers],
@@ -662,7 +653,7 @@ export function ExpenseMobile({
             {/* 캘린더 — 접힘: 선택 주 1줄 / 펼침: 월 전체. 필터 적용 시 숨김(리스트만, 사용자 결정). 숨지 않고 남는다(Keep) — 펼친 달력도 */}
             <LedgerKeep>
               <LedgerCalendar ref={calRef}>
-                <LedgerDow labels={dowLabels} />
+                <LedgerDow />
                 {(expanded ? weeks : [weeks[selWeek] ?? []]).map((w, wi) => (
                   <LedgerWeek key={wi}>
                     {w.map((c, i) => {

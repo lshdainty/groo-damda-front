@@ -16,6 +16,8 @@ import {
 import { TOOLTIP_SURFACE, formatWon } from "./chart-variants";
 import { useEscapeFirst } from "./use-escape-first";
 import { useDsText } from "@/shared/ds/i18n";
+import { useWeekdayNarrow, WeekdayProbe } from "@/shared/ds/date-picker";
+import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 
 /*
  * Groo Chart 의 열지도 — 요일 × 시간 같은 두 축의 세기. 수치 원본은 groo-design specs/components/chart.yaml 의 heatmapCell · heatmapValue.
@@ -45,8 +47,13 @@ export interface ChartHeatmapRow {
 
 export interface ChartHeatmapColumn {
   key: string;
-  /** 요일 — "수"(12 · fg-neutral-subtle) */
+  /** 요일 — "수" · 영어 두 글자 "We"(12 · fg-neutral-subtle, 글자 크기 200% 상한 — WEEK_GRID_TEXT) */
   label: React.ReactNode;
+  /**
+   * 칸에 [label] 이 들지 않을 때의 요일 — 영어 한 글자 "W"(groo-design #256 International Design "날짜"). 주면 칸마다 [label] 견본을 두고
+   * 하나라도 칸을 넘으면 모든 칸을 이 글로 줄인다(날짜 고르기 요일 줄과 같은 판정 — `useWeekdayNarrow`). 요일 머리는 줄을 바꾸지 않는다
+   */
+  narrowLabel?: React.ReactNode;
 }
 
 export interface ChartHeatmapProps extends Omit<
@@ -113,6 +120,12 @@ const ChartHeatmap = React.forwardRef<HTMLDivElement, ChartHeatmapProps>(
       ...values.flat().map((v) => (typeof v === "number" && v > 0 ? v : 0)),
     );
     const showText = cellWidth >= textMinCellWidth;
+    // 요일 머리 — 칸에 두 글자가 들지 않으면 모든 칸을 narrowLabel 로(narrowLabel 이 없으면 견본도 두지 않는다)
+    const fits = columns.some((c) => c.narrowLabel != null);
+    const narrow = useWeekdayNarrow(
+      rootRef,
+      columns.map((c) => String(c.label)).join("\u0000"),
+    );
 
     // 칸 폭 — 창 크기 · 회전에 따라 112 를 넘나들면 글을 보이고 감춘다(글자 크기는 그대로). 관찰을 시작하면 콜백이 한 번 먼저 불린다
     React.useLayoutEffect(() => {
@@ -290,9 +303,15 @@ const ChartHeatmap = React.forwardRef<HTMLDivElement, ChartHeatmapProps>(
             key={column.key}
             aria-hidden
             data-slot="chart-heatmap-column"
-            className="text-center text-t2 text-fg-neutral-subtle"
+            className={cn(
+              "relative whitespace-nowrap text-center text-fg-neutral-subtle",
+              WEEK_GRID_TEXT.t2,
+            )}
           >
-            {column.label}
+            {narrow && column.narrowLabel != null
+              ? column.narrowLabel
+              : column.label}
+            {fits && <WeekdayProbe>{column.label}</WeekdayProbe>}
           </span>
         ))}
         {rows.map((row, r) => (

@@ -1,17 +1,18 @@
-import { useTranslation } from "react-i18next";
-
+import { useRef } from "react";
+import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
 import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
-
-const WEEK_DAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const WEEK_DAYS_KO = ["일", "월", "화", "수", "목", "금", "토"];
+import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
+import { cn } from "@/shared/lib/cn";
 
 /**
  * 주 보기의 첫 불러오기 자리 — 시간 격자의 틀(요일 머리 · 선)은 그대로 그리고 일정 자리만 ds Skeleton 이다.
  * 깜빡임(펄스)은 두지 않는다(skeleton.md) — 스펙의 반짝임 띠가 지난다.
  */
 const CalendarWeekViewSkeleton = () => {
-  const { i18n } = useTranslation();
-  const weekDays = i18n.language.startsWith("ko") ? WEEK_DAYS_KO : WEEK_DAYS_EN;
+  // 요일 머리는 주 보기와 같은 ds 요일 글 · 판정(두 글자, 칸에 들지 않으면 한 글자) · 200% 상한
+  const weekdayRef = useRef<HTMLDivElement>(null);
+  const weekday = useWeekdayFit(weekdayRef);
+  const weekDays = weekday.weekdays;
 
   const hours = Array.from({ length: 11 }, (_, i) => i + 8);
 
@@ -42,7 +43,10 @@ const CalendarWeekViewSkeleton = () => {
               {/* 요일 머리 — 요일 글은 그대로, 날짜 숫자만 자리 */}
               <div className="relative z-20 flex border-b border-stroke-neutral-subtle">
                 <div className="w-[72px]" />
-                <div className="grid flex-1 grid-cols-7 divide-x divide-stroke-neutral-subtle border-l border-stroke-neutral-subtle">
+                <div
+                  ref={weekdayRef}
+                  className="grid flex-1 grid-cols-7 divide-x divide-stroke-neutral-subtle border-l border-stroke-neutral-subtle"
+                >
                   {weekDays.map((day, index) => {
                     const color =
                       index === 0
@@ -53,9 +57,13 @@ const CalendarWeekViewSkeleton = () => {
                     return (
                       <div
                         key={index}
-                        className="py-x2 text-center text-t2 font-medium"
+                        className={cn(
+                          "relative whitespace-nowrap py-x2 text-center font-medium",
+                          WEEK_GRID_TEXT.t2,
+                        )}
                       >
                         <span className={color}>{day}</span>
+                        <WeekdayProbe>{weekday.full[index]}</WeekdayProbe>
                         <Skeleton
                           radius="4"
                           className="mx-auto mt-x1 h-[16px] w-[16px]"

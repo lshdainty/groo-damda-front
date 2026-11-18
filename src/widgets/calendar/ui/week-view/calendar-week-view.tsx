@@ -27,6 +27,8 @@ import { eventLineDetail } from "@/widgets/calendar/lib/event-line";
 import { cn } from "@/shared/lib/cn";
 import { formatMonthDayDow } from "@/shared/lib/date";
 import { dsText } from "@/shared/ds/i18n";
+import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
+import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 
 import type { IEvent } from "@/widgets/calendar/model/interfaces";
 
@@ -354,6 +356,8 @@ const CalendarWeekView = ({
 
   const weekStart = startOfWeek(selectedDate, { locale });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const weekdayRef = useRef<HTMLDivElement>(null);
+  const weekday = useWeekdayFit(weekdayRef);
 
   // 처음 스크롤 — 0시부터 열면 빈 칸만 보인다. 그 주 가장 이른 일정과 오전 8시 중 이른 쪽에서 연다
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -380,10 +384,14 @@ const CalendarWeekView = ({
             onEventClick={onEventClick}
           />
 
-          {/* Week header */}
+          {/* 요일 머리 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 요일 · 날짜 숫자 200% 상한(#258) */}
           <div className="relative z-20 flex border-b border-stroke-neutral-subtle">
             <div className="w-[72px]" />
-            <div className="grid flex-1 grid-cols-7 divide-x divide-stroke-neutral-subtle border-l border-stroke-neutral-subtle">
+            <div
+              ref={weekdayRef}
+              data-slot="week-weekdays"
+              className="grid flex-1 grid-cols-7 divide-x divide-stroke-neutral-subtle border-l border-stroke-neutral-subtle"
+            >
               {weekDays.map((day, index) => {
                 const dayOfWeek = day.getDay();
                 const isSunday = dayOfWeek === 0;
@@ -393,18 +401,24 @@ const CalendarWeekView = ({
                   : isSaturday
                     ? "text-fg-brand"
                     : "text-fg-neutral";
+                const date = (
+                  <span className="ml-x1 font-bold">{format(day, "d")}</span>
+                );
 
                 return (
                   <div
                     key={index}
-                    className="py-x2 text-center text-t2 font-medium"
+                    className={cn(
+                      "relative whitespace-nowrap py-x2 text-center font-medium",
+                      WEEK_GRID_TEXT.t2,
+                    )}
                   >
                     <div className={textColor}>
-                      {format(day, "EE", { locale })}{" "}
-                      <span className="ml-x1 font-bold">
-                        {format(day, "d")}
-                      </span>
+                      {weekday.weekdays[dayOfWeek]} {date}
                     </div>
+                    <WeekdayProbe>
+                      {weekday.full[dayOfWeek]} {date}
+                    </WeekdayProbe>
                   </div>
                 );
               })}
