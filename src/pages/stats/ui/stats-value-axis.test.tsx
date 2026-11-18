@@ -7,6 +7,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  changeTickScale,
+  edgeLabelBox,
   installValueAxisHarness,
   layoutCharts,
   tickScale,
@@ -98,27 +100,25 @@ const at200 = () => {
 };
 
 describe("수입 · 지출 추이 — 이중 축", () => {
-  it("A · B 글자 200% · 폰 320 — 왼쪽 수입 0 ~ 1만 · 오른쪽 지출 0 ~ 10만, 두 축 같은 여섯 눈금을 하나도 빼지 않는다", async () => {
+  // 200 · 200%: 그리는 높이 200 − max(5, 15) − 5 − (19 + 30) = 131 → 4 칸(#250 세로축 끝 글 자리). 다섯 칸으로 맞춘 축(왼쪽 0 ~ 1만 ·
+  // 오른쪽 0 ~ 10만)은 넘쳐, 두 축을 함께 세 칸 겨냥으로 다시 센다 — 왼쪽 0.5만 · 오른쪽 2만 간격 세 칸
+  it("A · B 글자 200% · 폰 320 — 왼쪽 수입 0 ~ 1.5만 · 오른쪽 지출 0 ~ 6만, 두 축 같은 네 눈금을 하나도 빼지 않는다", async () => {
     at200();
     await render(<TrendSection m={model()} place="band" />);
     await layoutCharts(PHONE_CHART);
     // 수입이 모두 0 — 앱 niceChartAxis 와 같은 0 ~ 1만(겹치는 "0 · 0 · 1 · 1 · 1" 이 아니다)
     expect(yTickLabels(container, { axis: 0 })).toEqual([
       "0",
-      "0.2만",
-      "0.4만",
-      "0.6만",
-      "0.8만",
+      "0.5만",
       "1만",
+      "1.5만",
     ]);
-    // 지출 0 ~ 5.8만 은 2만 간격 세 칸 — 왼쪽 다섯 칸에 맞춰 늘어 격자와 같은 높이에 선다(앱 p_chart_cartesian)
+    // 지출 0 ~ 5.8만 은 2만 간격 세 칸 — 왼쪽도 세 칸이라 격자와 같은 높이에 선다(앱 p_chart_cartesian)
     expect(yTickLabels(container, { axis: 1 })).toEqual([
       "0",
       "2만",
       "4만",
       "6만",
-      "8만",
-      "10만",
     ]);
   });
 
@@ -204,4 +204,29 @@ describe("요일별 지출 비교 — 막대 둘", () => {
     await layoutCharts(PHONE_CHART);
     expect(yTickLabels(container)).toEqual(["0", "2만", "4만", "6만"]);
   });
+});
+
+/** 세로축 끝 글의 자리(#250) — 통계 추이(이중 축 · 200) · 순저축(180), 글자 300% */
+describe("통계 추이 · 글자 300% — 세로축 끝 글이 상자 안 · 가로 글과 겹치지 않는다", () => {
+  for (const after of [false, true]) {
+    it(after ? "페이지가 뜬 뒤 300% 로 키울 때" : "처음부터 300%", async () => {
+      tickScale.value = after ? 1 : 3;
+      await render(
+        <>
+          <TrendSection m={model()} place="band" />
+          <SavingsBarsSection m={model()} place="band" />
+        </>,
+      );
+      await layoutCharts(PHONE_CHART);
+      if (after) {
+        await changeTickScale(3);
+        await layoutCharts(PHONE_CHART);
+      }
+      for (const chart of [0, 1]) {
+        const { yTop, yBottom, xTop } = edgeLabelBox(container, { chart });
+        expect(yTop).toBeGreaterThanOrEqual(0);
+        expect(yBottom).toBeLessThanOrEqual(xTop);
+      }
+    });
+  }
 });

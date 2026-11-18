@@ -253,9 +253,26 @@ export function niceDualValueAxes(
 /** 눈금 글과 그리는 자리 사이 — ds `chartAxisProps` 의 tickMargin 8 */
 const X_TICK_MARGIN = 8;
 
-/** 가로 눈금 줄 높이 — 눈금 글 줄 높이 + 8(100% 23 · 200% 38). ds Chart 가 시간 가로축(chartXAxisProps)에 준다(앱 같은 셈) */
+/**
+ * 세로 눈금 끝 글의 자리(chart.md "세로축 끝 글의 자리를 비웁니다", groo-design #250) — 세로 눈금 글은 눈금 선 가운데에 서므로 맨 위 ·
+ * 맨 아래 글이 그리는 자리 밖으로 글 줄 높이의 절반만큼 나간다(세로 · 가로 눈금 글은 같은 글꼴 · 같은 줄 높이).
+ *
+ *   위 여백        = max(지금 위 여백, ⌈줄 높이 ÷ 2⌉)                      — 맨 위 글이 차트 상자 · 지표 타일에 잘리지 않게
+ *   가로 눈금 줄 시작 = 그리는 자리 아래 max(8, ⌈줄 높이 ÷ 2⌉ + 4)         — 맨 아래 세로 글과 첫 가로 글 사이 4 이상
+ *   가로 눈금 줄 높이 = 위 시작 + 줄 높이                                  — 100% 12 + 15 = 27 · 200% 19 + 30 = 49 · 300% 27 + 45 = 72
+ *
+ * 글은 눈금 선 가운데 그대로 두고, 큰 글자에서는 그리는 자리가 그만큼 줄어든다(앱 같은 셈).
+ */
+export const chartTopMargin = (top: number, lineHeight: number): number =>
+  Math.max(top, Math.ceil(lineHeight / 2));
+
+/** 가로 눈금 글이 그리는 자리 아래에서 떨어지는 거리 — max(8, ⌈줄 높이 ÷ 2⌉ + 4)(100% 12 · 200% 19 · 300% 27) */
+export const chartXTickGap = (lineHeight: number): number =>
+  Math.max(X_TICK_MARGIN, Math.ceil(lineHeight / 2) + 4);
+
+/** 가로 눈금 줄 높이 — 위 시작([chartXTickGap]) + 눈금 글 줄 높이. ds Chart 가 시간 가로축(chartXAxisProps)에 준다(앱 같은 셈) */
 export const chartXAxisHeight = (lineHeight: number): number =>
-  Math.ceil(lineHeight) + X_TICK_MARGIN;
+  chartXTickGap(lineHeight) + Math.ceil(lineHeight);
 /** 눈금 글 줄 높이(`--text-t1--line-height` = 15 / 16rem) — 잴 수 없을 때(jsdom) 100% 값 */
 const TICK_LINE_FALLBACK = 15;
 
@@ -290,17 +307,22 @@ export function useTickLineHeight(): number {
  * 세로 눈금 글이 겹치지 않고 들어가는 칸 수 — 눈금 사이(그리는 높이 ÷ 칸 수)가 눈금 글 줄 높이 이상이어야 한다
  * (chart.md "세로 눈금이 겹치면 수를 줄입니다").
  *
- *   그리는 높이 = 차트 높이 − 위 여백 − 아래 여백 − (눈금 글 줄 높이 + 8)   — 가로 눈금 줄(chartXAxisHeight)
+ *   그리는 높이 = 차트 높이 − max(위 여백, ⌈줄 높이 ÷ 2⌉) − 아래 여백 − (max(8, ⌈줄 높이 ÷ 2⌉ + 4) + 줄 높이)
+ *                — 세로축 끝 글 자리(chartTopMargin) · 가로 눈금 줄(chartXAxisHeight), ds Chart 가 그리는 것과 같은 여백
  *   들어가는 칸 수 = max(1, ⌊그리는 높이 ÷ 눈금 글 줄 높이⌋)
  *
- * 여백은 차트에 준 margin(없으면 recharts 기본 5 · 5 — 앱엔 아래 여백이 없어 웹만 그만큼 더 뺀다). 폰 띠 140(위 8 · 아래 0) ·
- * 글자 200%(줄 30) → 그리는 높이 140 − 8 − 0 − 38 = 94 → ⌊94 ÷ 30⌋ = 3 칸(앱과 같다).
+ * 여백은 차트에 준 margin(없으면 ds Chart 기본 위 8 · 아래 5 — 앱엔 아래 여백이 없어 웹만 그만큼 더 뺀다). 폰 띠 140(위 8 · 아래 0) ·
+ * 글자 200%(줄 30) → 그리는 높이 140 − 15 − 0 − 49 = 76 → ⌊76 ÷ 30⌋ = 2 칸.
  */
 export function chartValueIntervals(
   height: number,
   lineHeight: number,
-  { top = 5, bottom = 5 }: { top?: number; bottom?: number } = {},
+  { top = 8, bottom = 5 }: { top?: number; bottom?: number } = {},
 ): number {
-  const plot = height - top - bottom - chartXAxisHeight(lineHeight);
+  const plot =
+    height -
+    chartTopMargin(top, lineHeight) -
+    bottom -
+    chartXAxisHeight(lineHeight);
   return Math.max(1, Math.floor(plot / Math.max(1, lineHeight)));
 }

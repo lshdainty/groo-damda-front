@@ -3,7 +3,9 @@ import * as RechartsPrimitive from "recharts";
 
 import { cn } from "@/shared/lib/cn";
 import {
+  chartTopMargin,
   chartXAxisHeight,
+  chartXTickGap,
   measureTextWidthAt,
   measureTickWidthAt,
   useTickFontVersion,
@@ -84,8 +86,11 @@ import { useDsText, withCommaBreaks } from "@/shared/ds/i18n";
 
 type AnyProps = Record<string, unknown>;
 
-/** recharts 카르테시안 차트의 기본 바깥 여백 — 끝 글 자리(right)만 바꿀 때 나머지를 채운다 */
-const CHART_MARGIN = { top: 5, right: 5, bottom: 5, left: 5 };
+/**
+ * 카르테시안 차트의 기본 바깥 여백 — 쓰는 쪽이 주지 않은 값을 채운다. 위는 8(앱 p_chart_cartesian 과 같은 바탕 — 세로축 끝 글 자리
+ * `chartTopMargin` 이 큰 글자에서 키운다), 나머지는 recharts 기본 5
+ */
+const CHART_MARGIN = { top: 8, right: 5, bottom: 5, left: 5 };
 const noSubscribe = () => () => {};
 const noVersion = () => 0;
 
@@ -220,14 +225,22 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
     // 시간 가로축(chartXAxisProps) — 묶음이면 자기 폭으로 센 간격을 알리고 묶음의 간격(가장 큰 것 = 가장 좁은 차트의 간격)을 쓴다
     // 가로 눈금 줄 높이 = 눈금 글 줄 높이 + 8(눈금과 그리는 자리 사이) — 글자가 커지면 그리는 자리가 커진 눈금 줄만큼 줄어든다
     // (chart.md "큰 글자"). recharts 기본(30 고정)이면 200% 글(줄 30 + 8)이 아래로 넘친다. 세로 눈금 칸 수(chartValueIntervals)도 이 줄로 센다
+    // 가로 눈금 글은 그리는 자리 아래 max(8, ⌈줄 높이 ÷ 2⌉ + 4) 에서 시작한다 — 맨 아래 세로 글(눈금 선 가운데, 줄 높이 절반이 아래로
+    // 나간다)과 겹치지 않게(chart.md "세로축 끝 글의 자리를 비웁니다", #250)
     const xAxisHeight = chartXAxisHeight(tickLine);
+    const xTickGap = chartXTickGap(tickLine);
     const fitXAxis = (c: React.ReactElement<AnyProps>) => {
       const tick = c.props.tick;
       if (!chartXTicksOf(tick)) return c;
-      if (!xGroup) return React.cloneElement(c, { height: xAxisHeight });
+      if (!xGroup)
+        return React.cloneElement(c, {
+          height: xAxisHeight,
+          tickMargin: xTickGap,
+        });
       const draw = tick as (p: XTickRenderProps) => React.ReactNode;
       return React.cloneElement(c, {
         height: xAxisHeight,
+        tickMargin: xTickGap,
         tick: (p: XTickRenderProps) =>
           draw({
             ...p,
@@ -258,9 +271,12 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
         xTicks ??= chartXTicksOf((c.props as AnyProps).tick);
     });
     let rightAxis = 0;
+    let valueAxis = false;
     for (const c of parts) {
       if (!React.isValidElement(c)) continue;
       const el = c as React.ReactElement<AnyProps>;
+      if (el.type === RechartsPrimitive.YAxis && !el.props.hide)
+        valueAxis = true;
       if (
         el.type === RechartsPrimitive.YAxis &&
         el.props.orientation === "right" &&
@@ -268,17 +284,25 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
       )
         rightAxis += typeof el.props.width === "number" ? el.props.width : 60;
     }
-    const margin = xTicks
-      ? {
-          ...CHART_MARGIN,
-          ...(chart?.props.margin as object | undefined),
-          right: chartXEndReserve(
-            xTicks,
-            (l) => measureTextWidthAt([l], fontVersion),
-            rightAxis,
-          ),
-        }
-      : undefined;
+    // 세로축 끝 글 자리 — 보이는 세로축이 있으면 위 여백을 ⌈줄 높이 ÷ 2⌉ 이상으로(맨 위 글이 차트 상자 밖으로 나가지 않게)
+    const given = {
+      ...CHART_MARGIN,
+      ...(chart?.props.margin as Partial<typeof CHART_MARGIN> | undefined),
+    };
+    const margin =
+      xTicks || valueAxis
+        ? {
+            ...given,
+            ...(valueAxis && { top: chartTopMargin(given.top, tickLine) }),
+            ...(xTicks && {
+              right: chartXEndReserve(
+                xTicks,
+                (l) => measureTextWidthAt([l], fontVersion),
+                rightAxis,
+              ),
+            }),
+          }
+        : undefined;
     const drawn = chart
       ? React.cloneElement(chart, margin ? { margin } : {}, parts)
       : chart;
