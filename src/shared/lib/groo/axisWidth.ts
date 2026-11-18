@@ -148,11 +148,35 @@ export interface ValueAxisProps {
   interval: 0;
 }
 
+/**
+ * 가장 적은 축도 들지 않으면 큰 쪽 끝 글만(chart.md "큰 글자", groo-design #253) — 눈금을 가장 적게 줄여도(0 을 품은 −50만 · 0 · 50만,
+ * 양수만이면 0 · 50만) 칸 수가 들어가는 칸 수([room] — 그리는 높이 ÷ 눈금 글 줄 높이, 소수)보다 많으면 글이 겹친다. 그때는 절댓값이 큰
+ * 쪽(값의 범위 [lo] · [hi] 로 고른다) 끝 글 하나를 남기고, 0 은 그 끝 글과 줄 높이 이상 떨어질 때만(끝 ~ 0 칸 수 ÷ 전체 칸 수 × room ≥ 1)
+ * 함께 둔다. 나머지 글은 빈 글이고 눈금(격자선)은 그대로다. 들면 null(모든 글).
+ */
+const sparseLabels = (
+  ticks: readonly number[],
+  room: number,
+  lo: number,
+  hi: number,
+): Set<number> | null => {
+  const n = ticks.length - 1;
+  if (n <= room) return null;
+  const end = Math.abs(hi) >= Math.abs(lo) ? n : 0;
+  const keep = new Set([end]);
+  const zero = ticks.indexOf(0);
+  if (zero >= 0 && zero !== end && (Math.abs(end - zero) / n) * room >= 1)
+    keep.add(zero);
+  return keep;
+};
+
 const valueAxisOf = (
   ticks: number[],
   format: (v: number, ticks: readonly number[]) => string,
+  keep: Set<number> | null = null,
 ): ValueAxisProps => {
-  const tickFormatter = (v: number) => format(v, ticks);
+  const tickFormatter = (v: number) =>
+    keep && !keep.has(ticks.indexOf(v)) ? "" : format(v, ticks);
   return {
     domain: [ticks[0]!, ticks[ticks.length - 1]!],
     ticks,
@@ -189,8 +213,9 @@ function fittedAxes<T>(
  * 글자([format])는 눈금 목록을 함께 받는다 — 한 축은 한 단위라(chart.md "축 · 격자") 눈금 하나의 글자도 축 전체를 보고
  * 정한다. 그리는 글자와 폭을 잰 글자가 같은 목록 · 같은 셈이다.
  *
- * [maxIntervals] — 세로 눈금 글이 겹치지 않고 들어가는 칸 수(`chartValueIntervals` — 화면이 그리는 높이 · 눈금 줄 높이로 잰다).
+ * [maxIntervals] — 세로 눈금 글이 겹치지 않고 들어가는 칸 수(`chartValueIntervals` — 화면이 그리는 높이 · 눈금 줄 높이로 잰다, 소수).
  * 눈금 사이가 눈금 글 줄 높이보다 좁아지면 칸 수를 줄여 1 · 2 · 5 축을 다시 센다(chart.md "세로 눈금이 겹치면 수를 줄입니다").
+ * 가장 적은 축도 들지 않으면 큰 쪽 끝 글만 남긴다([sparseLabels], #253).
  */
 export function niceValueAxis(
   values: readonly number[],
@@ -203,7 +228,7 @@ export function niceValueAxis(
     const a = niceAxis(lo, hi, t);
     return { axes: a.ticks, intervals: a.ticks.length - 1 };
   });
-  return valueAxisOf(ticks, format);
+  return valueAxisOf(ticks, format, sparseLabels(ticks, maxIntervals, lo, hi));
 }
 
 /**
@@ -237,16 +262,25 @@ export function niceDualValueAxes(
       intervals: above + below,
     };
   });
-  const [l, r] = steps.steps.map((step) =>
-    valueAxisOf(
-      Array.from(
-        { length: steps.below + steps.above + 1 },
-        // + 0 — 0 칸이 −0 이 되지 않게
-        (_, i) => Math.round((i - steps.below) * step) + 0,
-      ),
+  const [l, r] = steps.steps.map((step, k) => {
+    const ticks = Array.from(
+      { length: steps.below + steps.above + 1 },
+      // + 0 — 0 칸이 −0 이 되지 않게
+      (_, i) => Math.round((i - steps.below) * step) + 0,
+    );
+    const values = k === 0 ? left : right;
+    // 가장 적은 축도 들지 않으면 축마다 큰 쪽 끝 글만(#253) — 격자선은 두 축이 같은 눈금이라 그대로
+    return valueAxisOf(
+      ticks,
       format,
-    ),
-  );
+      sparseLabels(
+        ticks,
+        maxIntervals,
+        Math.min(0, ...values),
+        Math.max(0, ...values),
+      ),
+    );
+  });
   return { left: l!, right: r! };
 }
 
@@ -309,10 +343,11 @@ export function useTickLineHeight(): number {
  *
  *   그리는 높이 = 차트 높이 − max(위 여백, ⌈줄 높이 ÷ 2⌉) − 아래 여백 − (max(8, ⌈줄 높이 ÷ 2⌉ + 4) + 줄 높이)
  *                — 세로축 끝 글 자리(chartTopMargin) · 가로 눈금 줄(chartXAxisHeight), ds Chart 가 그리는 것과 같은 여백
- *   들어가는 칸 수 = max(1, ⌊그리는 높이 ÷ 눈금 글 줄 높이⌋)
+ *   들어가는 칸 수 = 그리는 높이 ÷ 눈금 글 줄 높이(소수 · 0 이상 — 내림한 정수가 겹치지 않는 칸 수다. 1 보다 작으면 가장 적은 축도
+ *                   들지 않아 큰 쪽 끝 글만 남긴다 — niceValueAxis, #253)
  *
  * 여백은 차트에 준 margin(없으면 ds Chart 기본 위 8 · 아래 5 — 앱엔 아래 여백이 없어 웹만 그만큼 더 뺀다). 폰 띠 140(위 8 · 아래 0) ·
- * 글자 200%(줄 30) → 그리는 높이 140 − 15 − 0 − 49 = 76 → ⌊76 ÷ 30⌋ = 2 칸.
+ * 글자 200%(줄 30) → 그리는 높이 140 − 15 − 0 − 49 = 76 → 76 ÷ 30 = 2.53 → 2 칸.
  */
 export function chartValueIntervals(
   height: number,
@@ -324,5 +359,5 @@ export function chartValueIntervals(
     chartTopMargin(top, lineHeight) -
     bottom -
     chartXAxisHeight(lineHeight);
-  return Math.max(1, Math.floor(plot / Math.max(1, lineHeight)));
+  return Math.max(0, plot / Math.max(1, lineHeight));
 }

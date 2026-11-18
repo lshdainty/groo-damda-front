@@ -65,7 +65,9 @@ describe("React Compiler 를 거친 axisWidth — 페이지가 뜬 뒤 글자를
     await changeTickScale(2);
     expect(seen[seen.length - 1]).toBe(30);
     // 세로 눈금 칸 수도 따라간다 — 차트 200: 200% 200 − 15 − 5 − (19 + 30) = 131 → 4 칸
-    expect(module.chartValueIntervals(200, seen[seen.length - 1]!)).toBe(4);
+    expect(
+      Math.floor(module.chartValueIntervals(200, seen[seen.length - 1]!)),
+    ).toBe(4);
   });
 
   it("useAxisWidth — 100% 18 + 16 → 200% 로 키우면 36 + 16, 컴파일러가 건너뛰지 않는다", async () => {

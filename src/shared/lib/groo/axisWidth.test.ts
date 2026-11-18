@@ -251,13 +251,55 @@ describe("세로 눈금 칸 수 — 눈금 글 줄 높이보다 눈금 사이가
   it("들어가는 칸 수 — 폰 띠 140(위 8 · 아래 0) 100% 7 · 200% 2 · 300% 1, 추이 200(기본 5 · 5) 200% 4", () => {
     // 세로축 끝 글 자리(#250) — 위 max(위 여백, ⌈줄 ÷ 2⌉) · 가로 눈금 줄 max(8, ⌈줄 ÷ 2⌉ + 4) + 줄
     // 100% 140 − 8 − 0 − (12 + 15) = 105 → 7 · 200% 140 − 15 − 0 − (19 + 30) = 76 → 2 · 300% 140 − 23 − 0 − (27 + 45) = 45 → 1
-    expect(chartValueIntervals(140, 15, { top: 8, bottom: 0 })).toBe(7);
-    expect(chartValueIntervals(140, 30, { top: 8, bottom: 0 })).toBe(2);
+    // 소수로 돌려준다 — 내림한 정수가 겹치지 않는 칸 수, 1 보다 작으면 가장 적은 축도 들지 않는다(#253)
+    const fit = (...a: Parameters<typeof chartValueIntervals>) =>
+      Math.floor(chartValueIntervals(...a));
+    expect(fit(140, 15, { top: 8, bottom: 0 })).toBe(7);
+    expect(fit(140, 30, { top: 8, bottom: 0 })).toBe(2);
     expect(chartValueIntervals(140, 45, { top: 8, bottom: 0 })).toBe(1);
     // 200 − 15 − 5 − 49 = 131 → 4
-    expect(chartValueIntervals(200, 30)).toBe(4);
-    // 줄 하나도 안 들어가도 한 칸(눈금 둘)은 둔다
-    expect(chartValueIntervals(40, 30)).toBe(1);
+    expect(fit(200, 30)).toBe(4);
+    // 줄 하나도 안 들어가면 0 — 축은 가장 적은 축(눈금 둘)을 두고 큰 쪽 끝 글만 남긴다(#253)
+    expect(chartValueIntervals(40, 30)).toBe(0);
+    expect(niceValueAxis([0, 95], f, 0).ticks).toEqual([0, 100]);
+  });
+
+  /**
+   * 가장 적은 축도 들지 않으면 큰 쪽 끝 글만(chart.md "큰 글자", groo-design #253) — 절댓값이 큰 쪽 끝 글 하나, 0 은 그 끝 글과 줄 높이
+   * 이상 떨어질 때만. 나머지 글은 빈 글이고 눈금(격자선)은 그대로다.
+   */
+  it("가장 적은 축도 들지 않으면 — −1.2만 ~ 47.6만 은 50만 하나, 눈금 −50만 · 0 · 50만 은 그대로", () => {
+    const won = (v: number) => (v === 0 ? "0" : `${v / 10_000}만`);
+    // 들어가는 칸 1.0(140 · 300%) — 가장 적은 축(두 칸)도 넘친다. 0 은 끝 글과 반 줄 거리라 뺀다
+    const a = niceValueAxis([-12_000, 476_000], won, 1);
+    expect(a.ticks).toEqual([-500_000, 0, 500_000]);
+    expect(a.ticks.map(a.tickFormatter)).toEqual(["", "", "50만"]);
+    // 들면(2.53) 모두
+    const b = niceValueAxis([-12_000, 476_000], won, 2.53);
+    expect(b.ticks.map(b.tickFormatter)).toEqual([won(-500_000), "0", "50만"]);
+    // 음수 쪽이 크면 아래 끝 글
+    const c = niceValueAxis([-476_000, 12_000], won, 1);
+    expect(c.ticks.map(c.tickFormatter)).toEqual([won(-500_000), "", ""]);
+  });
+
+  it("양수만 — 0 · 50만 이 들면 둘 다, 한 칸도 들지 않으면(0.6) 50만 하나", () => {
+    const won = (v: number) => (v === 0 ? "0" : `${v / 10_000}만`);
+    const fits = niceValueAxis([0, 476_000], won, 1);
+    expect(fits.ticks.map(fits.tickFormatter)).toEqual(["0", "50만"]);
+    const tight = niceValueAxis([0, 476_000], won, 0.6);
+    expect(tight.ticks).toEqual([0, 500_000]);
+    expect(tight.ticks.map(tight.tickFormatter)).toEqual(["", "50만"]);
+  });
+
+  it("이중 축도 축마다 큰 쪽 끝 글만 — 눈금 수는 두 축이 같다", () => {
+    const w = niceDualValueAxes([0, 9_000], [-12_000, 476_000], f, 1);
+    expect(w.left.ticks).toHaveLength(w.right.ticks.length);
+    expect(w.right.ticks.map(w.right.tickFormatter).filter(Boolean)).toEqual([
+      "500000",
+    ]);
+    expect(w.left.ticks.map(w.left.tickFormatter).filter(Boolean)).toHaveLength(
+      1,
+    );
   });
   it("들면 그대로, 넘치면 1 · 2 · 5 축을 더 적은 칸으로 다시 센다 — 한 축 한 단위", () => {
     // 0 ~ 0.95 → 네 칸 겨냥이면 0.2 간격 다섯 칸

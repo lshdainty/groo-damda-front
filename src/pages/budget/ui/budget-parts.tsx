@@ -57,6 +57,7 @@ import {
   BAR_VALUE_GAP,
   barChartTop,
   rootFontPxAt,
+  textWidth,
   visiblePercentLabels,
 } from "./percent-labels";
 
@@ -761,19 +762,36 @@ export function ComplianceSection({
                         0.75 * rootPx,
                       );
                       if (!labelTexts[i] || !show[i]) return null;
+                      const cx = Number(p.x ?? 0) + w / 2;
+                      // 글 줄 아래 끝을 막대 위 4 에 — 줄 높이 + 4 자리 안에 선다
+                      const bottom = Number(p.y ?? 0) - BAR_VALUE_GAP;
+                      // 값 글 상자 — 폭은 굵은 글 폭, 높이는 값 글 줄 높이(1rem = 루트 글자 크기)
+                      const boxW = textWidth(labelTexts[i], 0.75 * rootPx);
+                      const boxH = rootPx;
                       return (
-                        <text
-                          x={Number(p.x ?? 0) + w / 2}
-                          // 글 줄 아래 끝을 막대 위 4 에 — 줄 높이 + 4 자리 안에 선다
-                          y={Number(p.y ?? 0) - BAR_VALUE_GAP}
-                          dominantBaseline="text-after-edge"
-                          textAnchor="middle"
-                          fontSize={PERCENT_LABEL_SIZE}
-                          fontWeight={700}
-                          fill="var(--color-fg-neutral)"
-                        >
-                          {labelTexts[i]}
-                        </text>
+                        <g data-slot="bar-value">
+                          {/* 카드 면 색 바탕(글 상자 크기) — 100% 점선 · 격자가 글을 가로지르지 않고 글 뒤로 숨는다(chart.md
+                              "막대 위 값 자리도 글을 따릅니다", #253). 다크는 같은 카드 면 토큰이 따라간다 */}
+                          <rect
+                            data-slot="bar-value-bg"
+                            x={cx - boxW / 2}
+                            y={bottom - boxH}
+                            width={boxW}
+                            height={boxH}
+                            fill="var(--color-bg-layer-default)"
+                          />
+                          <text
+                            x={cx}
+                            y={bottom}
+                            dominantBaseline="text-after-edge"
+                            textAnchor="middle"
+                            fontSize={PERCENT_LABEL_SIZE}
+                            fontWeight={700}
+                            fill="var(--color-fg-neutral)"
+                          >
+                            {labelTexts[i]}
+                          </text>
+                        </g>
                       );
                     }}
                   />

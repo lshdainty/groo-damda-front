@@ -42,6 +42,8 @@ vi.mock("@/features/expense", () => ({
 vi.mock("@/features/user", () => ({ useUserPreferences: () => state.prefs }));
 
 const { BudgetMobile } = await import("./BudgetMobile");
+const { installValueAxisHarness, layoutCharts } =
+  await import("@/shared/lib/groo/value-axis.test-utils");
 const { setHiddenCardsLocal } =
   await import("@/shared/lib/groo/hide-amounts-core");
 
@@ -337,5 +339,57 @@ describe("금액 가리기 — 카드별(I-08 8 · 12)", () => {
     act(() => setHiddenCardsLocal(["budget.categories"]));
     expect(section("total").textContent).toContain("12,345,678,901");
     expect(section("list").textContent).not.toContain("700,000");
+  });
+});
+
+/**
+ * 막대 위 값 글 바탕(groo-design #253 — chart.md "막대 위 값 자리도 글을 따릅니다"). 값 글("100%") 뒤에 카드 면 색 바탕(글 상자 크기)을
+ * 깔아 100% 점선 · 격자가 글을 가로지르지 않고 글 뒤로 숨는다. 예전엔 점선이 "100%" 글 한가운데를 지났다.
+ */
+describe("예산 이행률 — 막대 위 값 글 바탕", () => {
+  it("값 글마다 카드 면 색(bg-layer-default) 글 상자 — 글 앞에 깔리고, 100% 점선보다 위 층", async () => {
+    installValueAxisHarness();
+    // 모션 줄이기 — 막대가 바로 그려져야 값 글(LabelList)이 선다(라이브러리 기본 "auto")
+    const media = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes("reduce"),
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+    })) as unknown as typeof window.matchMedia;
+    render();
+    await layoutCharts(272);
+    const values = Array.from(
+      section("compliance").querySelectorAll("[data-slot=bar-value]"),
+    );
+    expect(values.length).toBeGreaterThan(0);
+    for (const g of values) {
+      const bg = g.querySelector("[data-slot=bar-value-bg]")!;
+      const text = g.querySelector("text")!;
+      expect(bg.getAttribute("fill")).toBe("var(--color-bg-layer-default)");
+      // 글 상자 — 폭은 글 폭, 높이는 값 글 줄 높이(1rem), 아래 끝이 글 줄 아래 끝(막대 위 4)
+      expect(Number(bg.getAttribute("width"))).toBeGreaterThan(0);
+      expect(Number(bg.getAttribute("height"))).toBe(16);
+      expect(
+        Number(bg.getAttribute("y")) + Number(bg.getAttribute("height")),
+      ).toBe(Number(text.getAttribute("y")));
+      // 바탕이 글보다 먼저(뒤에) 그려진다
+      expect(
+        bg.compareDocumentPosition(text) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+    // 100% 점선은 값 글 층보다 아래(먼저) — 바탕이 점선을 가린다
+    const line = section("compliance").querySelector(
+      ".recharts-reference-line",
+    )!;
+    expect(line).not.toBeNull();
+    expect(
+      line.compareDocumentPosition(values[0]!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    window.matchMedia = media;
+    vi.restoreAllMocks();
   });
 });
