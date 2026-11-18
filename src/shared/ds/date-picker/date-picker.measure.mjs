@@ -87,9 +87,9 @@ export default {
     "background-color",
   ],
   "fog.height": ["[data-slot=date-picker-fog]", "px", "height"],
-  // 칩 줄 — wrap 은 묶음이, scroll 은 안쪽 스크롤 칸이 칩 사이를 벌린다. 아래 12 는 묶음
+  // 칩 줄 — 어디서나 한 줄 가로 스크롤이라 안쪽 스크롤 칸이 칩 사이를 벌린다(#255). 아래 12 는 묶음
   "presets.gap": [
-    "[data-slot=date-picker-presets][data-layout=wrap], [data-slot=date-picker-presets] [data-slot=chip-scroll-row]",
+    "[data-slot=date-picker-presets] [data-slot=chip-scroll-row]",
     "px",
     "column-gap",
   ],

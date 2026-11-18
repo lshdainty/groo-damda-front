@@ -600,7 +600,6 @@ export const DatePickerDemo = () => (
           width={696}
           caption="기간 · 두 달 나란히 696 — 달이 만나는 자리에서 띠가 이어진다"
           presets={PRESETS}
-          presetsLayout="wrap"
           value={{ start: d(2026, 10, 28), end: d(2026, 11, 3) }}
         />
         <Calendar
