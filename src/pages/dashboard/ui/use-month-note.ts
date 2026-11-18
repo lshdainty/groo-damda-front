@@ -1,4 +1,5 @@
 import { useRangeSummary } from "@/features/expense";
+import { monthDailyAverage } from "@/shared/lib/groo/daily-average";
 
 /** 폰 "이번 달 가계부" 안내 한 줄의 값 — 하루 평균 · 전월 대비(전월 합계는 따로 받는다) */
 export function useMonthNote(year: number, month: number, expense: number) {
@@ -13,12 +14,8 @@ export function useMonthNote(year: number, month: number, expense: number) {
   });
   const prevExpense = prevMonthlyQ.data?.totalExpense ?? 0;
 
-  const today = new Date();
-  const isCurMonth =
-    today.getFullYear() === year && today.getMonth() + 1 === month;
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const dayOfMonth = isCurMonth ? today.getDate() : daysInMonth;
-  const dailyAvg = Math.round(expense / Math.max(1, dayOfMonth));
+  // 하루 평균 — 홈 · 통계 · 예산이 같은 셈(groo-design #259): 이번 달은 1일부터 오늘까지, 지난 달은 그 달 전체, 원 단위 half-up
+  const dailyAvg = monthDailyAverage(expense, year, month);
   const savingsPct =
     prevExpense > 0 ? ((prevExpense - expense) / prevExpense) * 100 : 0;
   return { dailyAvg, prevExpense, savingsPct };
