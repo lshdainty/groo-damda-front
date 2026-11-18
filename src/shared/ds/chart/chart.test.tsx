@@ -12,6 +12,7 @@ import {
   Pie,
   PieChart,
   XAxis,
+  YAxis,
 } from "recharts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -27,6 +28,7 @@ import {
 import { ChartHeatmap } from "./chart-heatmap";
 import { withSeriesDefaults } from "./chart-series";
 import { chartXAxisProps } from "./chart-x-axis";
+import { measureTickWidth } from "@/shared/lib/groo/axisWidth";
 import {
   HEAT_CUTS,
   HEAT_MIX,
@@ -53,8 +55,10 @@ import {
   chartAxisProps,
   chartGridProps,
   chartXTickFullLabels,
+  chartXTickGeometry,
   chartXTickInterval,
   chartXTickLabels,
+  chartXTickLayout,
   formatAxisWon,
   type ChartXTick,
   formatWon,
@@ -1733,5 +1737,191 @@ describe("가로 눈금 — 솎기 · 보이는 눈금의 연도", () => {
     );
     expect(all).toHaveLength(12);
     expect(all.filter((l) => l?.includes("2026"))).toEqual(["2026. 1."]);
+  });
+});
+
+/**
+ * 끝 눈금 · 글자 크기가 바뀜 — 이음 QA(2026-11-18, 달마다 쓴 휴가 · 1 ~ 11월 · 최대 3일 · 차트 폭 266 · html font-size 200%).
+ * 페이지가 떠 있는 동안 글자를 키우자 ① 솎기 간격이 2 달 그대로라 글 사이가 1 까지 붙고 ② 끝 글 "11월" 이 차트 오른쪽 밖으로
+ * 8 잘리고 ③ 세로축 폭이 옛 글자 크기라 "3일" 이 왼쪽 밖으로 9 잘렸다. 끝 눈금은 그 달(오늘이 든 달)이다 — 12월은 아직 없다.
+ */
+describe("가로 끝 눈금 맞춤 · 글자 크기가 바뀌면 다시 잰다", () => {
+  const months = (n: number): ChartXTick[] =>
+    Array.from({ length: n }, (_, i) => ({ label: `${i + 1}월` }));
+  /** jsdom 은 글 폭이 없다 — 눈금 글자 크기(--text-t1)의 숨은 글은 글자 수 어림(한글 11 · 그 밖 7) × 배율로 잰다 */
+  let scale = 1;
+  const textWidth = (s: string) =>
+    [...s].reduce((w, c) => w + (c > "ᄀ" ? 11 : 7), 0) * scale;
+  beforeEach(() => {
+    scale = 1;
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: HTMLElement) {
+        const width = this.style.fontSize.includes("--text-t1")
+          ? textWidth(this.textContent ?? "")
+          : 0;
+        return {
+          width,
+          height: 0,
+          top: 0,
+          left: 0,
+          right: width,
+          bottom: 0,
+          x: 0,
+          y: 0,
+          toJSON() {},
+        } as DOMRect;
+      },
+    );
+  });
+  /** 글자 크기를 바꾼다 — 숨은 글을 지켜보는 ResizeObserver 를 부른다 */
+  const setScale = (next: number) =>
+    act(() => {
+      scale = next;
+      for (const o of observers.filter((x) => x.el.textContent === "0000"))
+        o.cb([]);
+    });
+
+  it("축의 자리 — 막대(칸 가운데 offset)와 선 · 면(offset 0) 모두 축 끝을 낸다", () => {
+    // recharts 가 그리기 함수에 준 값(축 폭 290 · 왼쪽 5 · 다섯 칸)
+    expect(
+      chartXTickGeometry({
+        coordinate: 92,
+        index: 1,
+        offset: 29,
+        width: 290,
+        count: 5,
+      }),
+    ).toEqual({ start: 5, end: 295, first: 34, step: 58 });
+    expect(
+      chartXTickGeometry({
+        coordinate: 77.5,
+        index: 1,
+        offset: 0,
+        width: 290,
+        count: 5,
+        padding: { left: 0, right: 0 },
+      }),
+    ).toEqual({ start: 5, end: 295, first: 5, step: 72.5 });
+  });
+
+  it("끝 글이 축 끝을 넘으면 안으로 옮기고, 앞 글과 8 보다 붙으면 앞 글을 뺀다", () => {
+    // 200% 글 폭: "11월" 46 · "9월" 32. 칸 사이 20 · 축 끝 261
+    const widthOf = (l: string) => (l.length === 3 ? 46 : 32);
+    const { labels, dx } = chartXTickLayout(months(11), 2, {
+      coordinate: (i) => 51 + i * 20,
+      end: 261,
+      widthOf,
+    });
+    // 끝 11월 가운데 251 → 238(오른쪽 끝 261), 9월(오른쪽 247)은 붙어서 뺀다
+    expect(dx[10]).toBe(-13);
+    expect(labels).toEqual([
+      "1월",
+      null,
+      "3월",
+      null,
+      "5월",
+      null,
+      "7월",
+      null,
+      null,
+      null,
+      "11월",
+    ]);
+    // 넘치지 않으면 그대로
+    const fits = chartXTickLayout(months(11), 2, {
+      coordinate: (i) => 51 + i * 30,
+      end: 400,
+      widthOf,
+    });
+    expect(fits.dx[10]).toBe(0);
+    expect(fits.labels[8]).toBe("9월");
+  });
+
+  it("뺀 앞 글이 연도를 가졌으면 끝 글이 연도를 이어받는다", () => {
+    const ticks: ChartXTick[] = [
+      { label: "12월", yearLabel: "2025. 12.", year: 2025 },
+      { label: "1월", yearLabel: "2026. 1.", year: 2026 },
+      { label: "2월", yearLabel: "2026. 2.", year: 2026 },
+    ];
+    const { labels } = chartXTickLayout(ticks, 1, {
+      coordinate: (i) => 20 + i * 40,
+      end: 105,
+      widthOf: (l) => l.length * 8,
+    });
+    expect(labels).toEqual(["12월", null, "2026. 2."]);
+  });
+
+  /** 달마다 쓴 휴가와 같은 막대 — 1 ~ 11월 · 최대 3일 · 세로축 폭은 쓰는 쪽이 그때 글자 크기로 잰 값 */
+  const usage = (yWidth: number) => {
+    const ticks = months(11);
+    const data = ticks.map((t, i) => ({
+      m: t.label,
+      v: [0, 1, 0, 3, 0, 0, 0.5, 0, 0, 2, 0][i]!,
+    }));
+    const fmt = (n: number) => `${n}일`;
+    return (
+      <Chart label="달마다 쓴 휴가" height={200}>
+        <BarChart data={data}>
+          <XAxis dataKey="m" {...chartXAxisProps(ticks)} />
+          <YAxis
+            domain={[0, 3]}
+            ticks={[0, 1, 2, 3]}
+            tickFormatter={fmt}
+            width={yWidth}
+            {...chartAxisProps()}
+          />
+          <Bar dataKey="v" isAnimationActive={false} />
+        </BarChart>
+      </Chart>
+    );
+  };
+  const xLabels = () =>
+    qa(".recharts-xAxis-tick-labels .recharts-cartesian-axis-tick-value")
+      .filter((el) => el.textContent)
+      .map((el) => {
+        const x = Number(el.getAttribute("x"));
+        const w = textWidth(el.textContent!);
+        return { text: el.textContent!, left: x - w / 2, right: x + w / 2 };
+      });
+  const yLeft = () =>
+    Math.min(
+      ...qa(
+        ".recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value",
+      ).map(
+        (el) => Number(el.getAttribute("x")) - textWidth(el.textContent ?? ""),
+      ),
+    );
+  const expectFits = (plotEnd: number) => {
+    const xs = xLabels();
+    // 끝 눈금(11월)이 남고 차트 안에 든다
+    expect(xs[xs.length - 1]?.text).toBe("11월");
+    expect(xs[xs.length - 1]!.right).toBeLessThanOrEqual(plotEnd + 0.01);
+    // 글 사이 8 이상
+    for (let i = 1; i < xs.length; i++)
+      expect(xs[i]!.left - xs[i - 1]!.right).toBeGreaterThanOrEqual(8);
+    // 세로축 글이 왼쪽 밖으로 잘리지 않는다
+    expect(yLeft()).toBeGreaterThanOrEqual(0);
+  };
+
+  it("글자 200% 로 처음 그릴 때 — 끝 글 11월이 차트 안에 들고 글 사이 8 이상", async () => {
+    scale = 2;
+    await render(usage(measureTickWidth(["0일", "1일", "2일", "3일"])));
+    await layoutCharts(266, 200);
+    // 차트 폭 266 · 오른쪽 여백 5 → 그리는 자리 끝 261
+    expectFits(261);
+  });
+
+  it("페이지가 떠 있는 동안 글자를 200% 로 키우면 — 솎기 · 끝 맞춤 · 세로축 폭을 다시 잰다", async () => {
+    // 100% 에서 잰 세로축 폭을 쓰는 쪽이 그대로 준다(useAxisWidth · niceValueAxis 가 그 순간 잰 값)
+    await render(usage(measureTickWidth(["0일", "1일", "2일", "3일"])));
+    await layoutCharts(266, 200);
+    expectFits(261);
+    const before = xLabels().length;
+    await setScale(2);
+    expectFits(261);
+    expect(xLabels().length).toBeLessThan(before);
+    // 다시 100% 로 — 솎기도 돌아온다
+    await setScale(1);
+    expect(xLabels().length).toBe(before);
   });
 });

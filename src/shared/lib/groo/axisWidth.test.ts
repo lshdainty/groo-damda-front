@@ -1,5 +1,12 @@
-import { describe, it, expect } from "vitest";
-import { measureTickWidth, niceValueAxis } from "./axisWidth";
+import { act, createElement } from "react";
+import { createRoot } from "react-dom/client";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import {
+  measureTickWidth,
+  niceValueAxis,
+  readTickFontVersion,
+  useAxisWidth,
+} from "./axisWidth";
 
 describe("measureTickWidth (D6)", () => {
   it("가장 긴 눈금 글자에 맞춘다 — 음수 부호가 붙은 쪽이 더 넓다", () => {
@@ -168,5 +175,65 @@ describe("niceValueAxis — 그리는 눈금 = 폭을 잰 눈금 (B5-1)", () => 
     const a = niceValueAxis([], String);
     expect(a.domain[0]).toBe(0);
     expect(a.domain[1]).toBe(10_000);
+  });
+});
+
+/**
+ * 글자 크기가 페이지가 떠 있는 동안 바뀌면 세로축 폭을 다시 잰다 — 이음 QA(2026-11-18): html font-size 를 200% 로 키우자 세로축 폭이
+ * 100% 때 값에 머물러 "3일" 이 왼쪽 밖으로 9 잘렸다("8일" 처럼 보임).
+ */
+describe("useAxisWidth — 글자 크기가 바뀌면 다시 잰다", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("눈금 글자 크기의 숨은 글 폭이 바뀌면 판이 오르고 폭이 커진다", () => {
+    (
+      globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+    let scale = 1;
+    const observed: { cb: () => void; el: Element }[] = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(private cb: () => void) {}
+        observe(el: Element) {
+          observed.push({ cb: this.cb, el });
+        }
+        disconnect() {}
+        unobserve() {}
+      },
+    );
+    // 눈금 글자 크기(--text-t1)의 글은 글자 수 어림 × 배율로 잰다(jsdom 은 폭이 없다)
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: HTMLElement) {
+        const width = this.style.fontSize.includes("--text-t1")
+          ? [...(this.textContent ?? "")].reduce(
+              (w, c) => w + (c > "ᄀ" ? 11 : 7),
+              0,
+            ) * scale
+          : 0;
+        return { width } as DOMRect;
+      },
+    );
+    const seen: number[] = [];
+    const Probe = () => {
+      seen.push(useAxisWidth(["0일", "3일"]));
+      return null;
+    };
+    const host = document.createElement("div");
+    const root = createRoot(host);
+    act(() => root.render(createElement(Probe)));
+    const small = seen[seen.length - 1]!;
+    const version = readTickFontVersion();
+    act(() => {
+      scale = 2;
+      for (const o of observed.filter((x) => x.el.textContent === "0000"))
+        o.cb();
+    });
+    expect(readTickFontVersion()).toBe(version + 1);
+    // 글 폭 18 → 36, 여백 16 은 그대로
+    expect(small).toBe(18 + 16);
+    expect(seen[seen.length - 1]).toBe(36 + 16);
+    act(() => root.unmount());
+    vi.unstubAllGlobals();
   });
 });

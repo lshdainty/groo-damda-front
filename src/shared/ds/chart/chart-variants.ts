@@ -288,14 +288,95 @@ export function chartXTickInterval(
 export function chartXTickLabels(
   ticks: readonly ChartXTick[],
   interval: number,
+  hidden: ReadonlySet<number> = new Set(),
 ): (string | null)[] {
   let prevYear = ticks[0]?.year;
   return ticks.map((t, i) => {
     if ((ticks.length - 1 - i) % Math.max(1, interval) !== 0) return null;
+    if (hidden.has(i)) return null;
     const label = withYear(t, prevYear);
     if (t.year != null) prevYear = t.year;
     return label;
   });
+}
+
+/** 가로축의 자리 — 축 시작 · 끝(그리는 자리의 왼쪽 · 오른쪽 끝), 첫 칸 가운데, 칸 사이 */
+export interface ChartXGeometry {
+  start: number;
+  end: number;
+  first: number;
+  step: number;
+}
+
+/**
+ * recharts 가 눈금 그리기 함수에 넘기는 값 하나로 축의 자리를 낸다 — 축 폭([width]) · 그 눈금의 자리([coordinate]) · 번호([index]) ·
+ * 칸 가운데까지([offset] — 막대 차트는 칸 폭의 절반, 선 · 면 차트는 0) · 축 안쪽 여백([padding]).
+ */
+export function chartXTickGeometry({
+  coordinate,
+  index,
+  offset,
+  width,
+  count,
+  padding,
+}: {
+  coordinate: number;
+  index: number;
+  offset: number;
+  width: number;
+  count: number;
+  padding?: unknown;
+}): ChartXGeometry {
+  const pad = (side: "left" | "right") =>
+    padding != null && typeof padding === "object"
+      ? Number((padding as Record<string, unknown>)[side]) || 0
+      : 0;
+  const left = pad("left");
+  const inner = Math.max(0, width - left - pad("right"));
+  const step =
+    offset > 0 ? inner / Math.max(1, count) : inner / Math.max(1, count - 1);
+  const start = coordinate - offset - index * step - left;
+  return { start, end: start + width, first: start + left + offset, step };
+}
+
+/**
+ * 보이는 눈금의 글과 옮김 — [chartXTickLabels] 에 끝 눈금 맞춤을 더한다(chart.md "큰 글자" — 끝(가장 최근) 글을 지킨다.
+ * 웹 recharts `interval="preserveEnd"` 와 같은 셈). 끝 눈금 글이 축 끝([end])을 넘으면 넘친 만큼 안으로 옮겨([dx]) 잘리지 않게 하고,
+ * 그래서 앞에 보이는 글과 사이가 8(`CHART_TICK_GAP`)보다 좁아지면 그 앞 글을 뺀다 — 연도는 남은 눈금끼리 다시 견준다.
+ * 글자가 커지면(200%) 끝 글 "11월" 이 칸 절반보다 넓어져 차트 오른쪽 밖으로 잘렸다.
+ */
+export function chartXTickLayout(
+  ticks: readonly ChartXTick[],
+  interval: number,
+  {
+    coordinate,
+    end,
+    widthOf,
+  }: {
+    coordinate: (index: number) => number;
+    end: number;
+    widthOf: (label: string) => number;
+  },
+): { labels: (string | null)[]; dx: number[] } {
+  const hidden = new Set<number>();
+  const dx = ticks.map(() => 0);
+  let labels = chartXTickLabels(ticks, interval, hidden);
+  const last = ticks.length - 1;
+  const tail = labels[last];
+  if (tail == null) return { labels, dx };
+  const tailWidth = widthOf(tail);
+  dx[last] = Math.min(0, end - tailWidth / 2 - coordinate(last));
+  const tailLeft = coordinate(last) + dx[last]! - tailWidth / 2;
+  for (;;) {
+    let prev = last - 1;
+    while (prev >= 0 && labels[prev] == null) prev -= 1;
+    if (prev < 0) break;
+    const prevRight = coordinate(prev) + widthOf(labels[prev]!) / 2;
+    if (tailLeft - prevRight >= CHART_TICK_GAP) break;
+    hidden.add(prev);
+    labels = chartXTickLabels(ticks, interval, hidden);
+  }
+  return { labels, dx };
 }
 
 /** CartesianGrid 에 펼친다 — 가로 점선(3 · 3) stroke-neutral-subtle 만. 세로 격자 · 축 선은 긋지 않는다 */

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { niceAxis } from "./chartAxis";
 
 /**
@@ -45,7 +45,59 @@ export function measureTickWidth(labels: readonly string[]): number {
   return measureTextWidth(labels) + AXIS_PAD;
 }
 
+/*
+ * 눈금 글자 크기가 바뀐 것을 알린다 — 글자 크기 설정(rem)은 페이지가 떠 있는 동안에도 바뀐다(브라우저 글자 크기 · html font-size).
+ * 바뀐 뒤에도 옛 폭 · 옛 솎기에 머물면 세로축 글이 왼쪽 밖으로 잘리고 가로 글이 맞붙는다(chart.md "큰 글자" — 글자가 커지면 다시 잰다).
+ * 눈금 글자와 같은 크기(`AXIS_TICK_FONT_SIZE`)의 숨은 글 하나를 ResizeObserver 로 지켜, 폭이 바뀔 때마다 판(version)을 올린다.
+ * 웹폰트가 늦게 도착해 글 폭이 바뀌어도 같이 잡힌다. 지켜보는 쪽이 없으면 숨은 글을 걷는다.
+ */
+let tickFontVersion = 0;
+const tickFontListeners = new Set<() => void>();
+let tickFontProbe: { el: HTMLElement; observer: ResizeObserver } | null = null;
+
+function subscribeTickFont(onChange: () => void): () => void {
+  tickFontListeners.add(onChange);
+  if (
+    !tickFontProbe &&
+    typeof document !== "undefined" &&
+    typeof ResizeObserver !== "undefined"
+  ) {
+    const el = document.createElement("span");
+    el.setAttribute("aria-hidden", "true");
+    el.style.cssText = `position:absolute;visibility:hidden;pointer-events:none;white-space:nowrap;left:-9999px;top:0;font-size:${AXIS_TICK_FONT_SIZE};font-variant-numeric:tabular-nums;`;
+    el.textContent = "0000";
+    document.body.appendChild(el);
+    let last = el.getBoundingClientRect().width;
+    const observer = new ResizeObserver(() => {
+      const width = el.getBoundingClientRect().width;
+      if (width === last) return;
+      last = width;
+      tickFontVersion += 1;
+      tickFontListeners.forEach((l) => l());
+    });
+    observer.observe(el);
+    tickFontProbe = { el, observer };
+  }
+  return () => {
+    tickFontListeners.delete(onChange);
+    if (tickFontListeners.size === 0 && tickFontProbe) {
+      tickFontProbe.observer.disconnect();
+      tickFontProbe.el.remove();
+      tickFontProbe = null;
+    }
+  };
+}
+
+/** 지금 눈금 글자 크기의 판 — 바뀔 때마다 1 씩 오른다. 잰 값을 기억해 둘 때 열쇠에 넣는다 */
+export const readTickFontVersion = (): number => tickFontVersion;
+
+/** 눈금 글자 크기가 바뀌면 다시 그린다 — 판을 돌려준다(ds Chart · useAxisWidth 가 쓴다) */
+export function useTickFontVersion(): number {
+  return useSyncExternalStore(subscribeTickFont, readTickFontVersion, () => 0);
+}
+
 export function useAxisWidth(labels: readonly string[]): number {
+  const fontVersion = useTickFontVersion();
   const [fontTick, setFontTick] = useState(0);
   useEffect(() => {
     let live = true;
@@ -55,8 +107,11 @@ export function useAxisWidth(labels: readonly string[]): number {
     };
   }, []);
   const key = labels.join("|");
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- key 가 labels 내용을 대신한다
-  return useMemo(() => measureTickWidth(labels), [key, fontTick]);
+  return useMemo(
+    () => measureTickWidth(labels),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- key 가 labels 내용을 대신한다
+    [key, fontTick, fontVersion],
+  );
 }
 
 /** `YAxis` 에 펼치는 값 축 — 그리는 눈금과 폭을 잰 눈금이 같은 목록이다 */

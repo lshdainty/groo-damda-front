@@ -2,6 +2,10 @@ import * as React from "react";
 import * as RechartsPrimitive from "recharts";
 
 import { cn } from "@/shared/lib/cn";
+import {
+  measureTickWidth,
+  useTickFontVersion,
+} from "@/shared/lib/groo/axisWidth";
 
 import {
   CHART_HIDE_DOTS,
@@ -158,20 +162,38 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
       pie && diameter != null && fitWidth != null && fitWidth < diameter
         ? chartDonutRadii(fitWidth)
         : null;
-    const drawn =
-      chart && pie && fitted
-        ? React.cloneElement(
-            chart,
-            {},
-            React.Children.map(chart.props.children as React.ReactNode, (c) =>
-              React.isValidElement(c) && c.type === RechartsPrimitive.Pie
-                ? React.cloneElement(c as React.ReactElement<AnyProps>, {
-                    ...fitted,
-                  })
-                : c,
-            ),
-          )
-        : chart;
+    // 눈금 글자 크기가 바뀌면(글자 크기 설정 · 200%) 다시 그린다 — 가로 눈금 솎기 · 끝 맞춤(chartXAxisProps)과 아래 세로축 폭을 새로 잰다
+    useTickFontVersion();
+    // 세로축 폭은 그리는 눈금 글 가운데 가장 긴 것이 잘리지 않게(chart.md "축 · 격자" · "큰 글자") — 눈금(ticks) · 글(tickFormatter) ·
+    // 폭(width)을 준 세로축은 그 글로 다시 재 준 폭보다 넓으면 넓힌다. 쓰는 쪽이 잰 폭은 그때의 글자 크기라 커지면 모자란다
+    const fitYAxis = (c: React.ReactElement<AnyProps>) => {
+      const { ticks, tickFormatter, width } = c.props;
+      if (
+        !Array.isArray(ticks) ||
+        typeof tickFormatter !== "function" ||
+        typeof width !== "number"
+      )
+        return c;
+      const format = tickFormatter as (v: unknown, i: number) => unknown;
+      const need = measureTickWidth(
+        ticks.map((v: unknown, i: number) => String(format(v, i))),
+      );
+      return need > width ? React.cloneElement(c, { width: need }) : c;
+    };
+    const drawn = chart
+      ? React.cloneElement(
+          chart,
+          {},
+          React.Children.map(chart.props.children as React.ReactNode, (c) => {
+            if (!React.isValidElement(c)) return c;
+            const el = c as React.ReactElement<AnyProps>;
+            if (fitted && el.type === RechartsPrimitive.Pie)
+              return React.cloneElement(el, { ...fitted });
+            if (el.type === RechartsPrimitive.YAxis) return fitYAxis(el);
+            return el;
+          }),
+        )
+      : chart;
     const boxHeight =
       fitted && height != null && diameter != null
         ? height - (diameter - fitted.outerRadius * 2)
