@@ -94,9 +94,12 @@ pipeline {
                 sh """
                     docker stop ${CONTAINER_NAME}-dev || true
                     docker rm ${CONTAINER_NAME}-dev || true
+                    # 메모리 한도 — 정적 파일만 내주는 컨테이너라 64MB 면 넉넉하다(실측 10~20MB).
+                    # 한도가 없으면 한 컨테이너의 폭주가 같은 서버의 DB 까지 내린다(보안 점검 INF-5).
                     docker run -d --name ${CONTAINER_NAME}-dev \
                         --hostname ${CONTAINER_NAME}-dev \
                         --restart unless-stopped \
+                        --memory=64m --memory-swap=64m \
                         --network ${env.DEV_NETWORK} \
                         ${IMAGE_NAME}:"\$APP_VERSION"
 
@@ -135,9 +138,12 @@ pipeline {
                 sh """
                     docker stop ${CONTAINER_NAME}-prod || true
                     docker rm ${CONTAINER_NAME}-prod || true
+                    # 메모리 한도 — 정적 파일만 내주는 컨테이너라 64MB 면 넉넉하다(실측 10~20MB).
+                    # 한도가 없으면 한 컨테이너의 폭주가 같은 서버의 DB 까지 내린다(보안 점검 INF-5).
                     docker run -d --name ${CONTAINER_NAME}-prod \
                         --hostname ${CONTAINER_NAME}-prod \
                         --restart unless-stopped \
+                        --memory=64m --memory-swap=64m \
                         --network ${env.PROD_NETWORK} \
                         ${IMAGE_NAME}:"\$APP_VERSION"
 
