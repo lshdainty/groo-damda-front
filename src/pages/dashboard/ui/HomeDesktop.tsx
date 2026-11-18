@@ -1,4 +1,8 @@
-import { niceValueAxis } from "@/shared/lib/groo/axisWidth";
+import {
+  chartValueIntervals,
+  niceValueAxis,
+  useTickLineHeight,
+} from "@/shared/lib/groo/axisWidth";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -457,6 +461,9 @@ function BalancePrefix({ balance }: { balance: number }) {
 }
 
 /** 수입 · 지출 — 지표 타일(ds ChartLegendTiles) → 막대 차트(ds Chart) → 아래 안내(I-06 17) */
+/** 월별 수입 · 지출 차트 높이 — 세로 눈금 칸 수도 이 높이로 센다 */
+const CHART_H = 280;
+
 function IncomeExpenseChart({
   loading,
   trendFailed,
@@ -484,6 +491,7 @@ function IncomeExpenseChart({
   const { t } = useTranslation("dashboard");
   const { t: tc } = useTranslation("common");
   const hidden = useHideAmounts("home.monthExpense");
+  const tickLine = useTickLineHeight();
   const mIn = useMasked("home.monthExpense", "income");
   const mOut = useMasked("home.monthExpense", "expense");
   const m = useMasked("home.monthExpense");
@@ -534,7 +542,7 @@ function IncomeExpenseChart({
         <EmptyLine>{tc("noData")}</EmptyLine>
       ) : (
         <>
-          <Chart label={chartName} legendId={legendId} height={280}>
+          <Chart label={chartName} legendId={legendId} height={CHART_H}>
             <BarChart data={data} barGap={4}>
               <CartesianGrid {...chartGridProps} />
               <XAxis
@@ -550,6 +558,7 @@ function IncomeExpenseChart({
                     ...(off.has("expense") ? [] : [d.expense]),
                   ]),
                   (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
+                  chartValueIntervals(CHART_H, tickLine),
                 )}
               />
               <ChartTooltip

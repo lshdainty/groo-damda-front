@@ -54,11 +54,10 @@ import {
   assignChartColors,
   chartAxisProps,
   chartGridProps,
+  chartXEndReserve,
   chartXTickFullLabels,
-  chartXTickGeometry,
   chartXTickInterval,
   chartXTickLabels,
-  chartXTickLayout,
   formatAxisWon,
   type ChartXTick,
   formatWon,
@@ -1738,6 +1737,22 @@ describe("가로 눈금 — 솎기 · 보이는 눈금의 연도", () => {
     expect(all).toHaveLength(12);
     expect(all.filter((l) => l?.includes("2026"))).toEqual(["2026. 1."]);
   });
+
+  it("강조할 칸(emphasize) — 보일 때 진하게(fg-neutral · 700), 나머지는 눈금 색 그대로", async () => {
+    const ticks = months(2026, 6, 6);
+    const data = chartXTickFullLabels(ticks).map((m, v) => ({ m, v }));
+    await render(
+      <BarChart width={1200} height={160} data={data}>
+        <XAxis dataKey="m" {...chartXAxisProps(ticks, { emphasize: 3 })} />
+        <Bar dataKey="v" />
+      </BarChart>,
+    );
+    const shown = qa(".recharts-cartesian-axis-tick-value");
+    expect(shown).toHaveLength(6);
+    expect(shown[3]!.getAttribute("font-weight")).toBe("700");
+    expect(shown[3]!.getAttribute("fill")).toBe("var(--color-fg-neutral)");
+    expect(shown[2]!.getAttribute("font-weight")).toBeNull();
+  });
 });
 
 /**
@@ -1745,7 +1760,7 @@ describe("가로 눈금 — 솎기 · 보이는 눈금의 연도", () => {
  * 페이지가 떠 있는 동안 글자를 키우자 ① 솎기 간격이 2 달 그대로라 글 사이가 1 까지 붙고 ② 끝 글 "11월" 이 차트 오른쪽 밖으로
  * 8 잘리고 ③ 세로축 폭이 옛 글자 크기라 "3일" 이 왼쪽 밖으로 9 잘렸다. 끝 눈금은 그 달(오늘이 든 달)이다 — 12월은 아직 없다.
  */
-describe("가로 끝 눈금 맞춤 · 글자 크기가 바뀌면 다시 잰다", () => {
+describe("가로 끝 글 자리 · 글자 크기가 바뀌면 다시 잰다", () => {
   const months = (n: number): ChartXTick[] =>
     Array.from({ length: n }, (_, i) => ({ label: `${i + 1}월` }));
   /** jsdom 은 글 폭이 없다 — 눈금 글자 크기(--text-t1)의 숨은 글은 글자 수 어림(한글 11 · 그 밖 7) × 배율로 잰다 */
@@ -1781,74 +1796,22 @@ describe("가로 끝 눈금 맞춤 · 글자 크기가 바뀌면 다시 잰다",
         o.cb([]);
     });
 
-  it("축의 자리 — 막대(칸 가운데 offset)와 선 · 면(offset 0) 모두 축 끝을 낸다", () => {
-    // recharts 가 그리기 함수에 준 값(축 폭 290 · 왼쪽 5 · 다섯 칸)
-    expect(
-      chartXTickGeometry({
-        coordinate: 92,
-        index: 1,
-        offset: 29,
-        width: 290,
-        count: 5,
-      }),
-    ).toEqual({ start: 5, end: 295, first: 34, step: 58 });
-    expect(
-      chartXTickGeometry({
-        coordinate: 77.5,
-        index: 1,
-        offset: 0,
-        width: 290,
-        count: 5,
-        padding: { left: 0, right: 0 },
-      }),
-    ).toEqual({ start: 5, end: 295, first: 5, step: 72.5 });
-  });
-
-  it("끝 글이 축 끝을 넘으면 안으로 옮기고, 앞 글과 8 보다 붙으면 앞 글을 뺀다", () => {
-    // 200% 글 폭: "11월" 46 · "9월" 32. 칸 사이 20 · 축 끝 261
-    const widthOf = (l: string) => (l.length === 3 ? 46 : 32);
-    const { labels, dx } = chartXTickLayout(months(11), 2, {
-      coordinate: (i) => 51 + i * 20,
-      end: 261,
-      widthOf,
-    });
-    // 끝 11월 가운데 251 → 238(오른쪽 끝 261), 9월(오른쪽 247)은 붙어서 뺀다
-    expect(dx[10]).toBe(-13);
-    expect(labels).toEqual([
-      "1월",
-      null,
-      "3월",
-      null,
-      "5월",
-      null,
-      "7월",
-      null,
-      null,
-      null,
-      "11월",
-    ]);
-    // 넘치지 않으면 그대로
-    const fits = chartXTickLayout(months(11), 2, {
-      coordinate: (i) => 51 + i * 30,
-      end: 400,
-      widthOf,
-    });
-    expect(fits.dx[10]).toBe(0);
-    expect(fits.labels[8]).toBe("9월");
-  });
-
-  it("뺀 앞 글이 연도를 가졌으면 끝 글이 연도를 이어받는다", () => {
+  it("끝 글 자리 — 축 없으면 max(8, ⌈끝 글 폭 ÷ 2⌉), 오른쪽 축이 있으면 모자란 만큼만(연도 단 글이 넓으면 그 폭)", () => {
+    const widthOf = (l: string) => l.length * 8;
+    // "11월" 24 → 12
+    expect(chartXEndReserve(months(11), widthOf)).toBe(12);
+    // 좁은 끝 글도 적어도 8 — "1" 8 → 4 → 8
+    expect(chartXEndReserve([{ label: "1" }], widthOf)).toBe(8);
+    // 오른쪽 축 40 이 덮으면 더 비우지 않는다 · 축 8 이면 모자란 4 만
+    expect(chartXEndReserve(months(11), widthOf, 40)).toBe(0);
+    expect(chartXEndReserve(months(11), widthOf, 8)).toBe(4);
+    // 끝 칸이 해가 바뀌는 칸이면 "2026. 1." 64 → 32
     const ticks: ChartXTick[] = [
       { label: "12월", yearLabel: "2025. 12.", year: 2025 },
       { label: "1월", yearLabel: "2026. 1.", year: 2026 },
-      { label: "2월", yearLabel: "2026. 2.", year: 2026 },
     ];
-    const { labels } = chartXTickLayout(ticks, 1, {
-      coordinate: (i) => 20 + i * 40,
-      end: 105,
-      widthOf: (l) => l.length * 8,
-    });
-    expect(labels).toEqual(["12월", null, "2026. 2."]);
+    expect(chartXEndReserve(ticks, widthOf)).toBe(32);
+    expect(chartXEndReserve([], widthOf)).toBe(0);
   });
 
   /** 달마다 쓴 휴가와 같은 막대 — 1 ~ 11월 · 최대 3일 · 세로축 폭은 쓰는 쪽이 그때 글자 크기로 잰 값 */
@@ -1891,11 +1854,17 @@ describe("가로 끝 눈금 맞춤 · 글자 크기가 바뀌면 다시 잰다",
         (el) => Number(el.getAttribute("x")) - textWidth(el.textContent ?? ""),
       ),
     );
-  const expectFits = (plotEnd: number) => {
+  const expectFits = (chartEnd: number) => {
     const xs = xLabels();
-    // 끝 눈금(11월)이 남고 차트 안에 든다
+    // 끝 눈금(11월)이 남고 차트 오른쪽 끝을 넘지 않는다 — 옮기지 않고, 그리는 자리 오른쪽에 끝 글 반 폭을 비웠다
     expect(xs[xs.length - 1]?.text).toBe("11월");
-    expect(xs[xs.length - 1]!.right).toBeLessThanOrEqual(plotEnd + 0.01);
+    expect(xs[xs.length - 1]!.right).toBeLessThanOrEqual(chartEnd + 0.01);
+    // 건너뛴 간격이 끝까지 고르다 — 끝 글을 당기다 앞 글을 빼지 않는다(chart.md "끝 글 자리는 비워 둡니다")
+    const gaps = xs
+      .map((x) => parseInt(x.text, 10))
+      .slice(1)
+      .map((n, i) => n - parseInt(xs[i]!.text, 10));
+    expect(new Set(gaps).size).toBeLessThanOrEqual(1);
     // 글 사이 8 이상
     for (let i = 1; i < xs.length; i++)
       expect(xs[i]!.left - xs[i - 1]!.right).toBeGreaterThanOrEqual(8);
@@ -1907,18 +1876,18 @@ describe("가로 끝 눈금 맞춤 · 글자 크기가 바뀌면 다시 잰다",
     scale = 2;
     await render(usage(measureTickWidth(["0일", "1일", "2일", "3일"])));
     await layoutCharts(266, 200);
-    // 차트 폭 266 · 오른쪽 여백 5 → 그리는 자리 끝 261
-    expectFits(261);
+    // 차트 폭 266
+    expectFits(266);
   });
 
-  it("페이지가 떠 있는 동안 글자를 200% 로 키우면 — 솎기 · 끝 맞춤 · 세로축 폭을 다시 잰다", async () => {
+  it("페이지가 떠 있는 동안 글자를 200% 로 키우면 — 건너뛰기 · 끝 글 자리 · 세로축 폭을 다시 잰다", async () => {
     // 100% 에서 잰 세로축 폭을 쓰는 쪽이 그대로 준다(useAxisWidth · niceValueAxis 가 그 순간 잰 값)
     await render(usage(measureTickWidth(["0일", "1일", "2일", "3일"])));
     await layoutCharts(266, 200);
-    expectFits(261);
+    expectFits(266);
     const before = xLabels().length;
     await setScale(2);
-    expectFits(261);
+    expectFits(266);
     expect(xLabels().length).toBeLessThan(before);
     // 다시 100% 로 — 솎기도 돌아온다
     await setScale(1);

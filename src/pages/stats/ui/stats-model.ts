@@ -14,6 +14,7 @@ import {
 } from "@/shared/lib/date";
 import {
   assignChartColors,
+  createChartXGroup,
   type ChartColored,
   type ChartXTick,
 } from "@/shared/ds/chart";
@@ -214,6 +215,9 @@ export function useStatsModel(lifted?: StatsState) {
   const { t: te } = useTranslation("expense");
   // 페이지가 상태를 건네지 않으면(단독으로 그릴 때) 제 것을 쓴다 — 훅은 늘 부른다
   const own = useStatsState();
+  // 추이 탭의 수입 · 지출 · 순저축(· 여러 달이면 주요 카테고리 월별 추이) — 같은 기간 · 같은 눈금 단위 차트라 가로 날짜 글을 한 묶음으로
+  // 센다(chart.md "같은 화면 · 같은 기간 차트는 같은 날짜 글", groo-design #248)
+  const [trendXGroup] = useState(createChartXGroup);
   const {
     tab,
     setTabState,
@@ -638,6 +642,7 @@ export function useStatsModel(lifted?: StatsState) {
   }
 
   return {
+    trendXGroup,
     // 상태
     tab,
     setTab,

@@ -288,95 +288,44 @@ export function chartXTickInterval(
 export function chartXTickLabels(
   ticks: readonly ChartXTick[],
   interval: number,
-  hidden: ReadonlySet<number> = new Set(),
 ): (string | null)[] {
   let prevYear = ticks[0]?.year;
   return ticks.map((t, i) => {
     if ((ticks.length - 1 - i) % Math.max(1, interval) !== 0) return null;
-    if (hidden.has(i)) return null;
     const label = withYear(t, prevYear);
     if (t.year != null) prevYear = t.year;
     return label;
   });
 }
 
-/** 가로축의 자리 — 축 시작 · 끝(그리는 자리의 왼쪽 · 오른쪽 끝), 첫 칸 가운데, 칸 사이 */
-export interface ChartXGeometry {
-  start: number;
-  end: number;
-  first: number;
-  step: number;
-}
-
 /**
- * recharts 가 눈금 그리기 함수에 넘기는 값 하나로 축의 자리를 낸다 — 축 폭([width]) · 그 눈금의 자리([coordinate]) · 번호([index]) ·
- * 칸 가운데까지([offset] — 막대 차트는 칸 폭의 절반, 선 · 면 차트는 0) · 축 안쪽 여백([padding]).
+ * 끝 눈금 글의 자리 — 그리는 자리 오른쪽에 비울 폭(chart.md "큰 글자" · "끝 글 자리는 비워 둡니다"). 끝 글 가운데가 그리는 자리 오른쪽
+ * 끝에 서므로 글 폭의 절반이 그 밖으로 나간다. 오른쪽 세로축이 있으면 그 축 폭이 먼저 그 자리를 덮고, 모자란 만큼만 더 비운다 —
+ * 끝 글이 차트 오른쪽 끝(오른쪽 축 바깥 끝)을 넘지 않는다.
+ *
+ *   오른쪽 축이 없으면   비울 폭 = max(8, ⌈끝 글 폭 ÷ 2⌉)
+ *   오른쪽 축이 있으면   비울 폭 = max(0, ⌈끝 글 폭 ÷ 2⌉ − 오른쪽 축 폭) — 축 폭과 더해 오른쪽 자리 = max(오른쪽 축 폭, ⌈끝 글 폭 ÷ 2⌉)
+ *                        (오른쪽 축 아래 눈금 줄은 비어 있어 끝 글이 그 자리를 같이 쓴다 — 앱 p_chart_cartesian 과 같다)
+ *
+ * 끝 글 폭은 연도를 단 글("2026. 1.")과 안 단 글 가운데 넓은 쪽이다 — 건너뛰기에 따라 끝 글에 연도가 붙을 수 있다.
+ * 끝 글을 안으로 당기다 앞 글을 빼는 일이 없어, 건너뛴 간격이 끝까지 고르다(앱 p_chart_cartesian 과 같은 셈).
  */
-export function chartXTickGeometry({
-  coordinate,
-  index,
-  offset,
-  width,
-  count,
-  padding,
-}: {
-  coordinate: number;
-  index: number;
-  offset: number;
-  width: number;
-  count: number;
-  padding?: unknown;
-}): ChartXGeometry {
-  const pad = (side: "left" | "right") =>
-    padding != null && typeof padding === "object"
-      ? Number((padding as Record<string, unknown>)[side]) || 0
-      : 0;
-  const left = pad("left");
-  const inner = Math.max(0, width - left - pad("right"));
-  const step =
-    offset > 0 ? inner / Math.max(1, count) : inner / Math.max(1, count - 1);
-  const start = coordinate - offset - index * step - left;
-  return { start, end: start + width, first: start + left + offset, step };
-}
-
-/**
- * 보이는 눈금의 글과 옮김 — [chartXTickLabels] 에 끝 눈금 맞춤을 더한다(chart.md "큰 글자" — 끝(가장 최근) 글을 지킨다.
- * 웹 recharts `interval="preserveEnd"` 와 같은 셈). 끝 눈금 글이 축 끝([end])을 넘으면 넘친 만큼 안으로 옮겨([dx]) 잘리지 않게 하고,
- * 그래서 앞에 보이는 글과 사이가 8(`CHART_TICK_GAP`)보다 좁아지면 그 앞 글을 뺀다 — 연도는 남은 눈금끼리 다시 견준다.
- * 글자가 커지면(200%) 끝 글 "11월" 이 칸 절반보다 넓어져 차트 오른쪽 밖으로 잘렸다.
- */
-export function chartXTickLayout(
+export function chartXEndReserve(
   ticks: readonly ChartXTick[],
-  interval: number,
-  {
-    coordinate,
-    end,
-    widthOf,
-  }: {
-    coordinate: (index: number) => number;
-    end: number;
-    widthOf: (label: string) => number;
-  },
-): { labels: (string | null)[]; dx: number[] } {
-  const hidden = new Set<number>();
-  const dx = ticks.map(() => 0);
-  let labels = chartXTickLabels(ticks, interval, hidden);
-  const last = ticks.length - 1;
-  const tail = labels[last];
-  if (tail == null) return { labels, dx };
-  const tailWidth = widthOf(tail);
-  dx[last] = Math.min(0, end - tailWidth / 2 - coordinate(last));
-  const tailLeft = coordinate(last) + dx[last]! - tailWidth / 2;
-  for (;;) {
-    let prev = last - 1;
-    while (prev >= 0 && labels[prev] == null) prev -= 1;
-    if (prev < 0) break;
-    const prevRight = coordinate(prev) + widthOf(labels[prev]!) / 2;
-    if (tailLeft - prevRight >= CHART_TICK_GAP) break;
-    hidden.add(prev);
-    labels = chartXTickLabels(ticks, interval, hidden);
-  }
-  return { labels, dx };
+  widthOf: (label: string) => number,
+  rightAxisWidth = 0,
+): number {
+  const tail = ticks[ticks.length - 1];
+  if (!tail) return 0;
+  const w = Math.max(
+    widthOf(tail.label),
+    tail.yearLabel != null ? widthOf(tail.yearLabel) : 0,
+  );
+  const half = Math.ceil(w / 2);
+  // 오른쪽 축이 없으면 적어도 8(앱과 같다), 있으면 축 폭이 먼저 덮고 모자란 만큼만
+  return rightAxisWidth > 0
+    ? Math.max(0, half - rightAxisWidth)
+    : Math.max(CHART_TICK_GAP, half);
 }
 
 /** CartesianGrid 에 펼친다 — 가로 점선(3 · 3) stroke-neutral-subtle 만. 세로 격자 · 축 선은 긋지 않는다 */

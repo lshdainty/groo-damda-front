@@ -8,6 +8,7 @@ import {
   ChartTooltipContent,
   chartAxisProps,
   chartGridProps,
+  chartXAxisProps,
   formatAxisWon,
 } from "@/shared/ds/chart";
 import {
@@ -15,7 +16,11 @@ import {
   SegmentedControlItem,
 } from "@/shared/ds/segmented-control";
 import { Skeleton } from "@/shared/ds/skeleton";
-import { niceValueAxis } from "@/shared/lib/groo/axisWidth";
+import {
+  chartValueIntervals,
+  niceValueAxis,
+  useTickLineHeight,
+} from "@/shared/lib/groo/axisWidth";
 import { MASK, won } from "@/shared/lib/groo/money-text";
 import { BandFailure, ListTitle } from "@/shared/ui/groo/band-parts";
 import { useAssetBalanceTrend } from "@/features/asset";
@@ -31,6 +36,9 @@ const WEEKS: Record<Period, number> = { "3m": 12, "6m": 24, "1y": 52 };
  * 05-3 순자산 추이 차트와 한 변형이다: 선 2 + 데이터 점마다 점(지름 6) · 채움 없음 · 가로 격자 점선 · 가리킴 선 · 툴팁 원까지 · U+2212.
  * 높이는 폰 140 · 데스크톱 180. 눈금 글은 가장 긴 글자를 재서 폭을 잡아 잘리지 않는다(음수 "−3억"). 금액을 가리면 눈금 · 툴팁이 "••••".
  */
+/** 잔액 추이의 바깥 여백 — 세로 눈금 칸 수도 이 여백으로 센다 */
+const MARGIN = { top: 8, right: 8, left: 0, bottom: 0 };
+
 export function TrendSection({
   asset,
   model,
@@ -47,6 +55,7 @@ export function TrendSection({
   const weeks = WEEKS[period];
   const trendQ = useAssetBalanceTrend(asset.rowId, weeks, { silent: true });
   const hidden = useAssetHidden("asset.detail", asset.isAmountHidden === "Y");
+  const tickLine = useTickLineHeight();
   const data = (trendQ.data ?? []).map((p, i) => ({
     label: t("assetDetail.weekLabel", { n: i + 1 }),
     weekStart: p.weekStart,
@@ -99,18 +108,21 @@ export function TrendSection({
           height={height}
           className="[&_.recharts-line-dots]:block"
         >
-          <LineChart
-            data={data}
-            margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-          >
+          <LineChart data={data} margin={MARGIN}>
             <CartesianGrid {...chartGridProps} />
-            <XAxis dataKey="label" {...chartAxisProps()} />
+            <XAxis
+              dataKey="label"
+              // 주 글("1주" ~ "52주")도 ds 가로축 길 — 글자 사이 8 로 건너뛰고 끝 주를 지키며, 끝 글 반 폭을 비운다(chart.md "큰 글자")
+              {...chartXAxisProps(data.map((d) => ({ label: d.label })))}
+            />
             <YAxis
               tickSize={0}
               // 0 기준 1 · 2 · 5 간격 nice 눈금을 그대로 그린다 — 음수 잔액(대출)도 0 아래로 확장
               {...niceValueAxis(
                 data.map((d) => d.balance),
                 (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
+                // 눈금 사이가 눈금 글 줄 높이보다 좁으면 칸 수를 줄인다(chart.md "세로 눈금이 겹치면 수를 줄입니다")
+                chartValueIntervals(height, tickLine, MARGIN),
               )}
               {...chartAxisProps()}
             />

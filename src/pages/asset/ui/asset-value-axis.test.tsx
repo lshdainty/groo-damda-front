@@ -9,6 +9,7 @@ import {
   layoutCharts,
   tickScale,
   yTickLabels,
+  yTickPositions,
 } from "@/shared/lib/groo/value-axis.test-utils";
 
 declare global {
@@ -72,5 +73,18 @@ describe("순자산 추이 — 조 단위", () => {
     await act(() => root.render(<NetWorthChart height={140} />));
     await layoutCharts(PHONE_CHART);
     expect(yTickLabels(container)).toEqual(["0", "0.5조", "1조", "1.5조"]);
+  });
+
+  // 폰 띠 140(위 8 · 아래 0) · 글자 200% — 그리는 높이 94(140 − 8 − 0 − 38) · 눈금 글 줄 30 → 세 칸까지. 0.35조 ~ 0.95조 는 네 칸 겨냥이면
+  // 0 ~ 1조 · 0.2조 간격 다섯 칸(눈금 사이 18.8)이라 글이 겹친다 — 칸 수를 줄여 다시 센다(chart.md "세로 눈금이 겹치면 수를 줄입니다")
+  it("폰 띠 140 · 글자 200% — 0.35조 ~ 0.95조: 0 · 0.5조 · 1조, 세로 눈금 글이 겹치지 않는다", async () => {
+    tickScale.value = 2;
+    points = series(0.35, 0.055);
+    await act(() => root.render(<NetWorthChart height={140} />));
+    await layoutCharts(PHONE_CHART);
+    expect(yTickLabels(container)).toEqual(["0", "0.5조", "1조"]);
+    const ys = yTickPositions(container);
+    for (let i = 1; i < ys.length; i++)
+      expect(ys[i - 1]! - ys[i]!).toBeGreaterThanOrEqual(30);
   });
 });

@@ -1,4 +1,8 @@
-import { niceValueAxis } from "@/shared/lib/groo/axisWidth";
+import {
+  chartValueIntervals,
+  niceValueAxis,
+  useTickLineHeight,
+} from "@/shared/lib/groo/axisWidth";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { CompareBar } from "./compare-bar";
@@ -14,6 +18,7 @@ import {
   chartAxisProps,
   chartGridProps,
   chartVar,
+  chartXAxisProps,
   formatAxisWon,
 } from "@/shared/ds/chart";
 import { List, ListItem, ListTile } from "@/shared/ds/list";
@@ -418,6 +423,7 @@ export function CompareWeekdaySection({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.compare");
+  const tickLine = useTickLineHeight();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const head = (
     <BandHead title={t("compare.weekdayTitle")} band={place === "band"} />
@@ -519,7 +525,11 @@ export function CompareWeekdaySection({
         <Chart label={name} legendId={legendId} height={height}>
           <BarChart data={data} barGap={4}>
             <CartesianGrid {...chartGridProps} />
-            <XAxis dataKey="day" {...chartAxisProps()} />
+            <XAxis
+              dataKey="day"
+              // 요일 글도 ds 가로축 길 — 글자 사이 8 로 건너뛰고 끝 요일을 지키며 끝 글 반 폭을 비운다(chart.md "큰 글자")
+              {...chartXAxisProps(data.map((d) => ({ label: d.day })))}
+            />
             <YAxis
               {...chartAxisProps()}
               // 그리는 눈금 = 폭을 잰 눈금 = 단위를 정한 눈금. 값은 보이는 계열만(계열을 끄면 축이 남은 계열에 맞는다)
@@ -529,6 +539,7 @@ export function CompareWeekdaySection({
                   ...(hidden.has("prev") ? [] : [Number(d.prev ?? 0)]),
                 ]),
                 (v, ticks) => mask(formatAxisWon(v, ticks)),
+                chartValueIntervals(height, tickLine),
               )}
             />
             <ChartTooltip

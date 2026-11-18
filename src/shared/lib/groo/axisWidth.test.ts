@@ -2,11 +2,14 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, it, expect, vi } from "vitest";
 import {
+  chartValueIntervals,
   measureTickWidth,
+  niceDualValueAxes,
   niceValueAxis,
   readTickFontVersion,
   useAxisWidth,
 } from "./axisWidth";
+import { createChartXGroup } from "@/shared/ds/chart";
 
 describe("measureTickWidth (D6)", () => {
   it("가장 긴 눈금 글자에 맞춘다 — 음수 부호가 붙은 쪽이 더 넓다", () => {
@@ -235,5 +238,67 @@ describe("useAxisWidth — 글자 크기가 바뀌면 다시 잰다", () => {
     expect(seen[seen.length - 1]).toBe(36 + 16);
     act(() => root.unmount());
     vi.unstubAllGlobals();
+  });
+});
+
+/**
+ * 세로 눈금이 겹치면 수를 줄인다(groo-design #247 — chart.md "세로 눈금이 겹치면 수를 줄입니다"). 앱과 같은 셈:
+ *   들어가는 칸 수 = max(1, ⌊(차트 높이 − 위 − 아래 − (눈금 글 줄 높이 + 8)) ÷ 눈금 글 줄 높이⌋)
+ *   네 칸 겨냥부터 겨냥하는 칸 수를 하나씩 줄여, 나온 칸 수(이중 축은 맞춘 뒤 위 + 아래)가 들어가는 칸 수 이하인 첫 축
+ */
+describe("세로 눈금 칸 수 — 눈금 글 줄 높이보다 눈금 사이가 좁으면 줄인다", () => {
+  const f = (v: number) => String(v);
+  it("들어가는 칸 수 — 폰 띠 140(위 8 · 아래 0) 100% 7 · 200% 3, 추이 200(기본 5 · 5) 200% 5", () => {
+    // 그리는 높이 140 − 8 − 0 − (15 + 8) = 109 → 7 · 200% 140 − 8 − 0 − (30 + 8) = 94 → 3(앱 예와 같다)
+    expect(chartValueIntervals(140, 15, { top: 8, bottom: 0 })).toBe(7);
+    expect(chartValueIntervals(140, 30, { top: 8, bottom: 0 })).toBe(3);
+    expect(chartValueIntervals(200, 30)).toBe(5);
+    // 줄 하나도 안 들어가도 한 칸(눈금 둘)은 둔다
+    expect(chartValueIntervals(40, 30)).toBe(1);
+  });
+  it("들면 그대로, 넘치면 1 · 2 · 5 축을 더 적은 칸으로 다시 센다 — 한 축 한 단위", () => {
+    // 0 ~ 0.95 → 네 칸 겨냥이면 0.2 간격 다섯 칸
+    expect(niceValueAxis([0, 95], f).ticks).toEqual([0, 20, 40, 60, 80, 100]);
+    expect(niceValueAxis([0, 95], f, 5).ticks).toEqual([
+      0, 20, 40, 60, 80, 100,
+    ]);
+    expect(niceValueAxis([0, 95], f, 3).ticks).toEqual([0, 50, 100]);
+    expect(niceValueAxis([0, 95], f, 1).ticks).toEqual([0, 100]);
+    // 음수 · 양수가 섞이면 한 칸 겨냥에도 0 을 사이에 둔 두 칸
+    expect(niceValueAxis([-30, 60], f, 1).ticks).toEqual([-100, 0, 100]);
+  });
+  it("이중 축 — 맞춘 뒤 칸 수(위 + 아래)로 견주고, 두 축을 함께 줄인다", () => {
+    // 왼쪽 0 ~ 1만(다섯 칸) · 오른쪽 0 ~ 5.8만(세 칸) → 맞추면 다섯 칸
+    const wide = niceDualValueAxes([0], [58_000], f);
+    expect(wide.left.ticks).toHaveLength(6);
+    expect(wide.right.ticks).toEqual([
+      0, 20_000, 40_000, 60_000, 80_000, 100_000,
+    ]);
+    // 세 칸까지 — 세 칸 겨냥: 왼쪽 0 ~ 1만 · 0.5만 간격(두 칸) · 오른쪽 0 ~ 6만 · 2만 간격(세 칸) → 맞추면 세 칸
+    const tight = niceDualValueAxes([0], [58_000], f, 3);
+    expect(tight.left.ticks).toEqual([0, 5_000, 10_000, 15_000]);
+    expect(tight.right.ticks).toEqual([0, 20_000, 40_000, 60_000]);
+    // 두 축의 눈금 수는 늘 같다(격자 하나에 둘 다 선다)
+    expect(tight.left.ticks.length).toBe(tight.right.ticks.length);
+  });
+});
+
+describe("같은 기간 차트 묶음 — 가장 큰 간격(= 가장 좁은 차트의 간격)", () => {
+  it("알린 간격 가운데 가장 큰 것 · 사라진 차트는 거둔다 · 바뀌면 그린 뒤에 알린다", async () => {
+    const g = createChartXGroup();
+    const heard = vi.fn();
+    g.subscribe(heard);
+    expect(g.interval()).toBeUndefined();
+    g.report("wide", 4);
+    g.report("narrow", 5);
+    expect(g.interval()).toBe(5);
+    const v = g.version();
+    g.report("wide", 4); // 같은 값 — 바뀌지 않는다
+    expect(g.version()).toBe(v);
+    expect(heard).not.toHaveBeenCalled(); // 그리는 도중에는 부르지 않는다
+    await Promise.resolve();
+    expect(heard).toHaveBeenCalledTimes(1);
+    g.remove("narrow");
+    expect(g.interval()).toBe(4);
   });
 });
