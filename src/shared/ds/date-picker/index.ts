@@ -27,3 +27,13 @@ export {
   DATE_PICKER_CONTINUOUS_SHEET_BODY,
   DATE_PICKER_TWO_MONTHS_POPOVER,
 } from "./date-picker-variants";
+export {
+  useWeekdayFit,
+  useWeekdayLabels,
+  useWeekdayNarrow,
+  weekdayOverflows,
+  WEEKDAY_PROBE_SLOT,
+  type WeekdayFit,
+  type WeekdayLabels,
+} from "./weekday-fit";
+export { WeekdayProbe } from "./weekday-probe";

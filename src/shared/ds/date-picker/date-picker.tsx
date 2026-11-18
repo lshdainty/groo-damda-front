@@ -8,6 +8,8 @@ import { mergeRefs } from "@/shared/ds/overlay";
 import { WheelPicker, WheelPickerColumn } from "@/shared/ds/wheel-picker";
 
 import { DayCell, OutsideCell, type DayState } from "./date-picker-day";
+import { useWeekdayNarrow } from "./weekday-fit";
+import { WeekdayProbe } from "./weekday-probe";
 import {
   datePickerLabels,
   addDays,
@@ -1058,8 +1060,8 @@ DatePicker.displayName = "DatePicker";
 
 /**
  * 보이는 요일 줄 — 영어는 두 글자(Su Mo Tu We Th Fr Sa)로 맞추고, 칸에 들지 않는 폭 · 글자 크기에서만 한 글자(S M T W T F S)로 줄인다.
- * 요일 글은 줄을 바꾸지 않는다(date-picker.md ⓔ Weekday, groo-design #250). 칸마다 두 글자 견본(보이지 않음)을 두고 그 폭이 칸 폭을
- * 넘는 칸이 하나라도 있으면 한 글자로 — 견본 · 줄을 ResizeObserver 로 지켜, 창 폭 · 글자 크기가 바뀌면 다시 잰다. 한국어는 두 벌이 같다.
+ * 요일 글은 줄을 바꾸지 않는다(date-picker.md ⓔ Weekday, groo-design #250 · #256). 판정은 화면의 요일 머리와 같은 `useWeekdayNarrow`
+ * (weekday-fit.ts — 칸마다 두 글자 견본, 줄 · 견본 크기와 글자 크기 판이 바뀌면 다시 잰다). 한국어는 두 벌이 같다.
  */
 function WeekdayRow({
   labels,
@@ -1076,32 +1078,7 @@ function WeekdayRow({
   header?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>) {
   const ref = React.useRef<HTMLDivElement>(null);
-  const [narrow, setNarrow] = React.useState(false);
-  const key = labels.weekdays.join("\u0000");
-  React.useLayoutEffect(() => {
-    const row = ref.current;
-    if (!row) return;
-    const cells = Array.from(
-      row.querySelectorAll<HTMLElement>("[data-slot=date-picker-weekday]"),
-    );
-    const probes = cells.map((c) =>
-      c.querySelector<HTMLElement>("[data-slot=date-picker-weekday-probe]"),
-    );
-    const measure = () =>
-      setNarrow(
-        cells.some(
-          (c, i) =>
-            (probes[i]?.getBoundingClientRect().width ?? 0) >
-            c.getBoundingClientRect().width,
-        ),
-      );
-    measure();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(measure);
-    observer.observe(row);
-    for (const p of probes) if (p) observer.observe(p);
-    return () => observer.disconnect();
-  }, [key]);
+  const narrow = useWeekdayNarrow(ref, labels.weekdays.join("\u0000"));
   const shown = narrow ? labels.weekdaysNarrow : labels.weekdays;
   return (
     <div
@@ -1120,14 +1097,7 @@ function WeekdayRow({
           className={cn(WEEKDAY, "relative")}
         >
           <span aria-hidden={header || undefined}>{w}</span>
-          {/* 두 글자 견본 — 들어가는지 재는 데만 쓴다(보이지 않고 읽히지 않는다) */}
-          <span
-            aria-hidden
-            data-slot="date-picker-weekday-probe"
-            className="invisible absolute whitespace-nowrap"
-          >
-            {labels.weekdays[i]}
-          </span>
+          <WeekdayProbe>{labels.weekdays[i]}</WeekdayProbe>
         </div>
       ))}
     </div>

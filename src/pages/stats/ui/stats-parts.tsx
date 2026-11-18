@@ -24,6 +24,7 @@ import {
   SegmentedControlItem,
 } from "@/shared/ds/segmented-control";
 import { withCommaBreaks } from "@/shared/ds/i18n";
+import { useWeekdayLabels } from "@/shared/ds/date-picker";
 import { cn } from "@/shared/lib/cn";
 import { getPaletteByColor } from "@/shared/lib/groo/chart-palette";
 import { formatChangeRate, formatPercent } from "@/shared/lib/groo/format";
@@ -549,6 +550,8 @@ export function HeatmapSection({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.category");
+  // 요일 머리 — ds 요일 글(영어 두 글자 · 칸에 들지 않으면 한 글자, groo-design #256). HEAT_COLS 의 dow 는 1=월 ~ 7=일, ds 글은 일요일부터
+  const weekday = useWeekdayLabels();
   const head = <BandHead title={t("heatmap.title")} band={place === "band"} />;
   if (m.heatmapQ.isError && !m.heatmapQ.data) {
     return (
@@ -615,14 +618,19 @@ export function HeatmapSection({
           }))}
           columns={HEAT_COLS.map((c) => ({
             key: String(c.dow),
-            label: t(c.labelKey),
+            label: weekday.weekdays[c.dow % 7],
+            narrowLabel: weekday.weekdaysNarrow[c.dow % 7],
           }))}
           values={m.heatmapMatrix}
           formatValue={(v) => mask(won(v))}
           valueLabel={t("chart.heatValue")}
           tooltipLabel={(row, col) => (
             <>
-              {col.label} {row.label} {row.sub}
+              {t(
+                HEAT_COLS.find((c) => String(c.dow) === col.key)?.labelKey ??
+                  "",
+              )}{" "}
+              {row.label} {row.sub}
             </>
           )}
         />

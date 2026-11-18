@@ -6,6 +6,8 @@ import { Divider } from "@/shared/ds/divider";
 import { ListHeader } from "@/shared/ds/list";
 import { ScrollAutoHide } from "@/shared/ds/scroll-auto-hide";
 import { cn } from "@/shared/lib/index";
+import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
+import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { KRW, MINUS } from "@/shared/lib/groo/format";
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
@@ -297,21 +299,25 @@ export const LedgerCalendar = React.forwardRef<
 ));
 LedgerCalendar.displayName = "LedgerCalendar";
 
-/** 요일 줄 — t2 12 / 16 · 400 · fg-neutral-subtle, 일요일 fg-critical · 토요일 fg-brand */
-export function LedgerDow({
-  labels,
-  className,
-}: {
-  labels: string[];
-  className?: string;
-}) {
+/**
+ * 요일 줄 — t2 12 / 16 · 400 · fg-neutral-subtle, 일요일 fg-critical · 토요일 fg-brand. 글은 ds 요일 글 — 영어 두 글자 Su ~ Sa, 칸에 들지
+ * 않으면 한 글자(groo-design #256) · 글자 크기 200% 상한(#258 — WEEK_GRID_TEXT). 줄을 바꾸지 않는다
+ */
+export function LedgerDow({ className }: { className?: string }) {
+  const weekdayRef = React.useRef<HTMLDivElement>(null);
+  const weekday = useWeekdayFit(weekdayRef);
   return (
-    <div className={cn("grid grid-cols-7", className)}>
-      {labels.map((d, i) => (
+    <div
+      ref={weekdayRef}
+      data-slot="ledger-dow"
+      className={cn("grid grid-cols-7", className)}
+    >
+      {weekday.weekdays.map((d, i) => (
         <span
           key={i}
           className={cn(
-            "pb-x2 pt-x1_5 text-center text-t2 font-normal",
+            "relative whitespace-nowrap pb-x2 pt-x1_5 text-center font-normal",
+            WEEK_GRID_TEXT.t2,
             i === 0
               ? "text-fg-critical"
               : i === 6
@@ -320,6 +326,7 @@ export function LedgerDow({
           )}
         >
           {d}
+          <WeekdayProbe>{weekday.full[i]}</WeekdayProbe>
         </span>
       ))}
     </div>
@@ -383,7 +390,9 @@ export function LedgerCellNum({
   return (
     <span
       className={cn(
-        "inline-flex min-h-x9 min-w-x9 items-center justify-center rounded-full px-x1 text-t5 tabular-nums",
+        // 날짜 숫자는 200% 에서 멈춘다(WEEK_GRID_TEXT — groo-design #258)
+        "inline-flex min-h-x9 min-w-x9 items-center justify-center rounded-full px-x1 tabular-nums",
+        WEEK_GRID_TEXT.t5,
         selected
           ? "bg-bg-neutral-inverted font-bold text-fg-neutral-inverted"
           : cn(

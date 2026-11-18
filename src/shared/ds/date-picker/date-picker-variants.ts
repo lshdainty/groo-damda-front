@@ -8,6 +8,8 @@
  * 모양은 같다(원 42 · 칸 가운데, 띠는 칸 세로 가운데, 링은 원 둘레 안쪽 2px).
  */
 
+import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
+
 // 달력 — bg-layer-floating. 폭은 부모(시트), 팝오버 안이면 336(칸 48 × 7 — 스펙 값 그대로), 두 달은 696(336 + 24 + 336).
 // 이어지는 달은 부모가 준 높이를 채운다
 export const ROOT =
@@ -50,17 +52,17 @@ export const CONTINUOUS_MONTH_LABEL = "px-x1";
 // 시트가 낮아(320 보다 좁은 화면에서 바닥 버튼이 위아래로 쌓일 때 등) 달이 요일 줄 + 2주보다 낮아지면 그 높이에서 멈춘다 — 넘친 만큼은
 // 시트 본문이 스크롤한다(DATE_PICKER_CONTINUOUS_SHEET_BODY, Layout "지원 폭"). 요일 줄 · 주 줄 높이는 WHEEL 과 같은 셈이다
 export const CONTINUOUS_SCROLL =
-  "relative min-h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_2_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))] flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  "relative min-h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_2_*_max(48px,calc(min(var(--text-t5--line-height),calc(var(--text-t5-static--line-height)_*_2))_+_6px)))] flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 export const CONTINUOUS_WEEKDAYS =
   "sticky top-0 z-[2] grid min-h-[48px] grid-cols-7 bg-bg-layer-floating";
 export const CONTINUOUS_MONTH = "pb-x4";
 export const FOG =
   "pointer-events-none sticky bottom-0 z-[3] -mt-24 h-[96px] [background:linear-gradient(to_bottom,transparent,var(--color-bg-layer-floating))]";
 
-// 연 · 월 휠 자리 — 요일 줄 + 6주를 덮는다: max(48, 요일 줄 높이(200% 상한 — WEEKDAY_TEXT)) + 6 × max(48, 숫자 줄 높이 + 6) — 100% 336 · 200% 348.
+// 연 · 월 휠 자리 — 요일 줄 + 6주를 덮는다: max(48, 요일 줄 높이) + 6 × max(48, 숫자 줄 높이 + 6)(둘 다 200% 상한 — WEEK_GRID_TEXT) — 100% 336 · 200% 348.
 // 글이 크면 달력을 따라 늘어나 열고 닫을 때 높이가 그대로다(WEEKDAY_ROW · CELL · DAY 와 같은 셈). 휠 308 은 가운데(100% 위아래 14). 연 120 · 월 96
 export const WHEEL =
-  "flex h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_6_*_max(48px,calc(var(--text-t5--line-height)_+_6px)))] items-center bg-bg-layer-floating";
+  "flex h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_6_*_max(48px,calc(min(var(--text-t5--line-height),calc(var(--text-t5-static--line-height)_*_2))_+_6px)))] items-center bg-bg-layer-floating";
 export const WHEEL_YEAR = "w-[120px]";
 export const WHEEL_MONTH = "w-[96px]";
 
@@ -69,12 +71,10 @@ export const GRID = "@container [--day:min(42px,calc(100cqw_/_7_-_2px))]";
 export const WEEK = "grid grid-cols-7";
 export const WEEKDAY_ROW = "grid min-h-[48px] grid-cols-7";
 /**
- * 요일 글 — text-t4 에 글자 크기 200% 상한(date-picker.md "글자 크기 설정", groo-design #252). 320 폭에서 그보다 크면 한 글자(영어 "W")도
- * 칸에 들지 않는다 — 글자 · 줄 높이를 `min(rem 토큰, static 토큰 × 2)` 로 멈춘다(WCAG 1.4.4 의 200% 는 지킨다). 숫자 · 제목은 그대로 커진다
+ * 요일 글 — text-t4 에 글자 크기 200% 상한(WEEK_GRID_TEXT — date-picker.md "글자 크기 설정", groo-design #252 · #258). 320 폭에서 그보다 크면
+ * 한 글자(영어 "W")도 칸에 들지 않는다. 날짜 숫자(DAY · OUTSIDE)도 같은 상한이고, 제목은 그대로 커진다
  */
-export const WEEKDAY_TEXT =
-  "text-[length:min(var(--text-t4),calc(var(--text-t4-static)_*_2))] leading-[min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2))]";
-export const WEEKDAY = `flex items-center justify-center whitespace-nowrap ${WEEKDAY_TEXT} font-medium text-fg-neutral-subtle`;
+export const WEEKDAY = `flex items-center justify-center whitespace-nowrap ${WEEK_GRID_TEXT.t4} font-medium text-fg-neutral-subtle`;
 
 // 칸 — 높이 max(48, 숫자 줄 높이 + 6)(날짜 버튼 · 앞뒤 달 숫자의 위아래 3 이 키운다 — 100% 48 · 200% 50, 03-C 1B) · 폭 = 달력 폭 ÷ 7. 기간 띠는 칸 안의 span(원 높이, 칸 세로 가운데)
 export const CELL = "relative isolate min-h-[48px] min-w-0";
@@ -87,8 +87,7 @@ export const BAND_SIDE = {
 } as const;
 
 // 날짜 버튼 — 칸 전체. 원(DAY_VISUAL)은 칸 가운데 --day(바탕만 color-transition), 키보드 초점 링(DAY_RING)은 원 둘레 안쪽 2px
-export const DAY =
-  "group/day relative isolate flex h-full w-full items-center justify-center border-0 bg-transparent px-0 py-[3px] font-sans text-t5 font-medium tabular-nums outline-none select-none [-webkit-tap-highlight-color:transparent]";
+export const DAY = `group/day relative isolate flex h-full w-full items-center justify-center border-0 bg-transparent px-0 py-[3px] font-sans ${WEEK_GRID_TEXT.t5} font-medium tabular-nums outline-none select-none [-webkit-tap-highlight-color:transparent]`;
 export const DAY_VISUAL =
   "pointer-events-none absolute left-1/2 top-1/2 -z-10 size-[var(--day)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent [transition:background-color_var(--motion-duration-color-transition)_var(--motion-ease-easing)]";
 export const DAY_RING =
@@ -119,8 +118,7 @@ export const DAY_VISUAL_STATE = {
 export const DAY_TODAY_WEIGHT = "font-bold";
 export const DAY_STRIKE = "line-through";
 // 앞뒤 달 — 숫자만(버튼 아님), 흐리게 · 누르지 못한다
-export const OUTSIDE =
-  "flex h-full w-full cursor-default select-none items-center justify-center py-[3px] text-t5 font-medium tabular-nums text-fg-disabled";
+export const OUTSIDE = `flex h-full w-full cursor-default select-none items-center justify-center py-[3px] ${WEEK_GRID_TEXT.t5} font-medium tabular-nums text-fg-disabled`;
 
 export const LIVE = "sr-only";
 

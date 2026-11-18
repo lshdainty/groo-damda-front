@@ -135,7 +135,6 @@ export function TodoMobileLedger({
   const { t: tc } = useTranslation("common");
   const dsT = useDsText();
   const today = useMemo(() => todayISO(), []);
-  const en = !i18n.language.startsWith("ko");
 
   const [ym, setYm] = useState(today.slice(0, 7));
   const [expanded, setExpanded] = useState(false);
@@ -198,12 +197,6 @@ export function TodoMobileLedger({
     lock(800);
     scrollToTop();
   };
-
-  const dowLabels = Array.from({ length: 7 }, (_, i) =>
-    new Date(2026, 1, i + 1).toLocaleDateString(en ? "en-US" : "ko-KR", {
-      weekday: en ? "short" : "narrow",
-    }),
-  );
 
   const lit = constellationToday
     ? Math.min(constellationToday.points, constellationToday.goal)
@@ -415,7 +408,7 @@ export function TodoMobileLedger({
         {/* 캘린더 — 접힘: 선택 주 1줄 / 펼침: 월 전체. 숨지 않고 남는다(Keep) */}
         <LedgerKeep>
           <LedgerCalendar>
-            <LedgerDow labels={dowLabels} />
+            <LedgerDow />
             {(expanded ? weeks : [weeks[selWeek] ?? []]).map((w, wi) => (
               <LedgerWeek key={wi}>
                 {w.map((c, i) => {

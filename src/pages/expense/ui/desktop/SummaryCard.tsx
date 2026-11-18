@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/ds/button";
 import { Card } from "@/shared/ds/card";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
-import { getWeekDays } from "@/shared/lib/date";
+import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
+import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 import { KRW, MINUS, minusOf } from "@/shared/lib/groo/format";
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
 import { useHideAmounts, wonPre } from "@/shared/lib/groo/hide-amounts-core";
@@ -96,7 +97,9 @@ export function SummaryCard({
   const shown = expanded
     ? weeks
     : [weeks[visibleWeekIndex(weeks, today)] ?? []];
-  const dows = getWeekDays();
+  // 7일 띠 요일 머리 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 200% 상한(#258)
+  const weekdayRef = useRef<HTMLDivElement>(null);
+  const weekday = useWeekdayFit(weekdayRef);
   return (
     <Card data-slot="summary-card" className="px-x6 pb-x6 pt-x4">
       <MonthHead month={month} onChange={onPickMonth} />
@@ -135,17 +138,19 @@ export function SummaryCard({
         aria-label={t("txm.monthCalendar")}
         className="mt-x4 flex flex-col gap-y-x1"
       >
-        <div aria-hidden className="grid grid-cols-7 gap-x1_5">
-          {dows.map((d, i) => (
+        <div ref={weekdayRef} aria-hidden className="grid grid-cols-7 gap-x1_5">
+          {weekday.weekdays.map((d, i) => (
             <span
-              key={d}
+              key={i}
               className={cn(
-                "text-center text-t3 text-fg-neutral-subtle",
+                "relative whitespace-nowrap text-center text-fg-neutral-subtle",
+                WEEK_GRID_TEXT.t3,
                 i === 0 && "text-fg-critical",
                 i === 6 && "text-fg-brand",
               )}
             >
               {d}
+              <WeekdayProbe>{weekday.full[i]}</WeekdayProbe>
             </span>
           ))}
         </div>
@@ -216,7 +221,9 @@ function WeekCell({
   const num = (
     <span
       className={cn(
-        "num flex min-h-x9 min-w-x9 items-center justify-center rounded-full px-x1 text-t5 font-bold",
+        // 날짜 숫자는 200% 에서 멈춘다(WEEK_GRID_TEXT — groo-design #258)
+        "num flex min-h-x9 min-w-x9 items-center justify-center rounded-full px-x1 font-bold",
+        WEEK_GRID_TEXT.t5,
         (future || !c.inMonth) && "font-medium text-fg-neutral-subtle",
         c.inMonth && !future && "text-fg-neutral",
         isToday && "bg-bg-neutral-weak",

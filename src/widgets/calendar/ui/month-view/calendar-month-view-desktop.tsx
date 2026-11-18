@@ -1,6 +1,6 @@
 import { getDay, isSameDay, isToday, parseISO, startOfDay } from "date-fns";
 import { useTranslation } from "react-i18next";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 import { useCalendar } from "@/widgets/calendar/model/calendar-context";
 import { useWideSurface } from "@/shared/ds/overlay";
@@ -13,36 +13,45 @@ import {
 import { Card } from "@/shared/ds/card";
 import { formatMonthDayWeekday, formatYearMonth } from "@/shared/lib/date";
 import { cn } from "@/shared/lib/cn";
+import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
+import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 
 import type { IEvent } from "@/widgets/calendar/model/interfaces";
 import { MonthChip, MonthChipSpacer, MonthMore } from "./month-chip";
 import { buildMonthModel, type ChipMetrics } from "./month-model";
 import { useChipMetrics } from "./use-chip-metrics";
 
-const WEEK_DAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const WEEK_DAYS_KO = ["일", "월", "화", "수", "목", "금", "토"];
-
 /** 칸 104 − 위 4 − 날 숫자 26 − 아래 2 − 줄 사이 2 = 70, 칩 20 · "+N개" 18 · 사이 2 (글자 100% 의 값 — 실제로는 잰다) */
 const DESKTOP_METRICS: ChipMetrics = { avail: 70, chip: 20, more: 18, gap: 2 };
 
-/** 요일 머리 — 높이 36 · t3 13/18 · fg-neutral-subtle · 아래 1px 선. 일 fg-critical · 토 fg-brand */
+/**
+ * 요일 머리 — 높이 36 · t3 13/18 · fg-neutral-subtle · 아래 1px 선. 일 fg-critical · 토 fg-brand. 글은 ds 요일 글 — 영어 두 글자 Su ~ Sa, 칸에
+ * 들지 않으면 한 글자(groo-design #256) · 글자 크기 200% 상한(#258 — WEEK_GRID_TEXT). 넓어도 세 글자(Sun)로 늘리지 않는다
+ */
 export function WeekdayHead() {
-  const { i18n } = useTranslation();
-  const weekDays = i18n.language.startsWith("ko") ? WEEK_DAYS_KO : WEEK_DAYS_EN;
+  const weekdayRef = useRef<HTMLDivElement>(null);
+  const wd = useWeekdayFit(weekdayRef);
   return (
     <div
+      ref={weekdayRef}
       aria-hidden
-      className="grid h-x9 grid-cols-7 items-center border-b border-stroke-neutral-subtle text-center text-t3 text-fg-neutral-subtle"
+      data-slot="month-weekdays"
+      className={cn(
+        "grid h-x9 grid-cols-7 items-center border-b border-stroke-neutral-subtle text-center text-fg-neutral-subtle",
+        WEEK_GRID_TEXT.t3,
+      )}
     >
-      {weekDays.map((day, index) => (
+      {wd.weekdays.map((day, index) => (
         <span
-          key={day}
+          key={index}
           className={cn(
+            "relative whitespace-nowrap",
             index === 0 && "text-fg-critical",
             index === 6 && "text-fg-brand",
           )}
         >
           {day}
+          <WeekdayProbe>{wd.full[index]}</WeekdayProbe>
         </span>
       ))}
     </div>
@@ -170,8 +179,9 @@ function MonthGrid({ singleDayEvents, multiDayEvents, onEventClick }: IProps) {
                 }
                 data-slot="month-day-number"
                 className={cn(
-                  // 원 26(글자 13/18 + 8) — 글자가 커지면 원도 따라 커진다. 왼쪽 6 · 아래 2
-                  "mb-x0_5 ml-x1_5 grid size-[calc(var(--text-t3--line-height)+8px)] shrink-0 place-items-center self-start rounded-full text-t3 font-medium tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
+                  // 원 26(글자 13/18 + 8) — 글자가 커지면 원도 따라 커진다. 왼쪽 6 · 아래 2. 날짜 숫자는 200% 에서 멈춘다(WEEK_GRID_TEXT)
+                  "mb-x0_5 ml-x1_5 grid size-[calc(min(var(--text-t3--line-height),calc(var(--text-t3-static--line-height)_*_2))_+_8px)] shrink-0 place-items-center self-start rounded-full font-medium tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
+                  WEEK_GRID_TEXT.t3,
                   selected
                     ? "bg-bg-neutral-inverted font-bold text-fg-neutral-inverted"
                     : cn(

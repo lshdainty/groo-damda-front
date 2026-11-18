@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Telescope } from "lucide-react";
 import { Badge } from "@/shared/ds/badge";
@@ -6,6 +6,8 @@ import { Button } from "@/shared/ds/button";
 import { List, ListItem } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
+import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
+import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 import {
   constellationColorVar,
   constellationName,
@@ -33,6 +35,9 @@ import {
  */
 export function WeekPicker({ m, place }: { m: ReportModel; place: Place }) {
   const { t } = useTranslation("constellation");
+  // 7일 띠 요일 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 요일 · 날짜 숫자 200% 상한(#258)
+  const weekdayRef = useRef<HTMLDivElement>(null);
+  const weekday = useWeekdayFit(weekdayRef);
   return (
     <div className={cn(place === "band" && "px-x6 pt-x1")}>
       <div className="flex items-center justify-center gap-x1">
@@ -60,11 +65,15 @@ export function WeekPicker({ m, place }: { m: ReportModel; place: Place }) {
           <ChevronRight aria-hidden />
         </Button>
       </div>
-      <div className="-mx-x3 mt-x2 grid grid-cols-[repeat(7,minmax(0,1fr))]">
+      <div
+        ref={weekdayRef}
+        className="-mx-x3 mt-x2 grid grid-cols-[repeat(7,minmax(0,1fr))]"
+      >
         {m.days.map((ds) => {
           const future = ds > m.todayISO;
           const isTodayCell = ds === m.todayISO;
           const picked = m.sel === ds;
+          const dow = new Date(`${ds}T00:00:00`).getDay();
           return (
             <button
               key={ds}
@@ -75,23 +84,30 @@ export function WeekPicker({ m, place }: { m: ReportModel; place: Place }) {
               aria-current={isTodayCell ? "date" : undefined}
               aria-label={m.dayName(ds)}
               onClick={() => m.setSel(ds)}
-              className="flex min-h-[44px] min-w-0 cursor-pointer flex-col items-center gap-x1 border-0 bg-transparent p-0 font-sans disabled:cursor-default"
+              className="relative flex min-h-[44px] min-w-0 cursor-pointer flex-col items-center gap-x1 border-0 bg-transparent p-0 font-sans disabled:cursor-default"
             >
               <span
                 aria-hidden
                 className={cn(
-                  "whitespace-nowrap text-t3",
+                  "whitespace-nowrap",
+                  WEEK_GRID_TEXT.t3,
                   isTodayCell
                     ? "font-bold text-fg-brand"
                     : "text-fg-neutral-subtle",
                 )}
               >
-                {isTodayCell ? t("report.today") : m.dowOf(ds)}
+                {isTodayCell ? t("report.today") : weekday.weekdays[dow]}
               </span>
+              {!isTodayCell && (
+                <WeekdayProbe>
+                  <span className={WEEK_GRID_TEXT.t3}>{weekday.full[dow]}</span>
+                </WeekdayProbe>
+              )}
               <span
                 aria-hidden
                 className={cn(
-                  "grid aspect-square min-h-x9 min-w-x9 place-items-center rounded-full p-[0.125rem] text-t5 tabular-nums",
+                  "grid aspect-square min-h-x9 min-w-x9 place-items-center rounded-full p-[0.125rem] tabular-nums",
+                  WEEK_GRID_TEXT.t5,
                   picked
                     ? "bg-bg-brand-solid font-bold text-static-white"
                     : future

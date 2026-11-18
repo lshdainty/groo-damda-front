@@ -1,8 +1,10 @@
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/shared/ds/card";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
-import { getWeekDays } from "@/shared/lib/date";
+import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
+import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 import { monthGrid, type CalendarDay } from "@/shared/lib/groo/calendar-grid";
 import { MonthHead } from "@/shared/ui/groo/month-head";
 import type { useTodoCellMarks } from "../todo-cell-marks";
@@ -35,7 +37,9 @@ export function TodoMiniCalendar({
 }) {
   const { t } = useTranslation("todo");
   const weeks = monthGrid(month);
-  const dows = getWeekDays();
+  // 요일 머리 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 200% 상한(#258)
+  const weekdayRef = useRef<HTMLDivElement>(null);
+  const weekday = useWeekdayFit(weekdayRef);
   return (
     <Card
       data-slot="todo-mini-calendar"
@@ -44,17 +48,22 @@ export function TodoMiniCalendar({
     >
       <MonthHead month={month} onChange={onPickMonth} />
       <div
+        ref={weekdayRef}
         role="group"
         aria-label={t("tdm.miniCalendar")}
         className="mt-x2 grid grid-cols-7"
       >
-        {dows.map((d) => (
+        {weekday.weekdays.map((d, i) => (
           <span
-            key={d}
+            key={i}
             aria-hidden
-            className="pb-x1_5 text-center text-t2 text-fg-neutral-subtle"
+            className={cn(
+              "relative whitespace-nowrap pb-x1_5 text-center text-fg-neutral-subtle",
+              WEEK_GRID_TEXT.t2,
+            )}
           >
             {d}
+            <WeekdayProbe>{weekday.full[i]}</WeekdayProbe>
           </span>
         ))}
         {weeks.flat().map((c) => (
@@ -96,7 +105,9 @@ function DayCell({
   const num = (
     <span
       className={cn(
-        "num flex min-h-x6 min-w-x7 items-center justify-center rounded-r3 px-x1 text-t3 font-medium",
+        // 날짜 숫자는 200% 에서 멈춘다(WEEK_GRID_TEXT — groo-design #258)
+        "num flex min-h-x6 min-w-x7 items-center justify-center rounded-r3 px-x1 font-medium",
+        WEEK_GRID_TEXT.t3,
         !c.inMonth && "font-normal text-fg-neutral-subtle",
         future && "text-fg-neutral-subtle",
         c.inMonth && !future && "text-fg-neutral",
