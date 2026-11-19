@@ -170,7 +170,7 @@ export default {
   "removeButton.iconSize": [`${REMOVE} > svg`, "px", "width"],
   "removeButton.iconColor": [`${REMOVE} > svg`, "color", "color"],
   "removeButton.cursor": [REMOVE, "exact", "cursor"],
-  "dropzone.height": [DROPZONE, "px", "height"],
+  "dropzone.minHeight": [DROPZONE, "px", "min-height"],
   "dropzone.gap": [DROPZONE, "px", "row-gap"],
   "dropzone.paddingX": [DROPZONE, "px", "padding-left"],
   "dropzone.radius": [DROPZONE, "px", "border-top-left-radius"],

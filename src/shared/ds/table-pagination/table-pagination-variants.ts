@@ -26,10 +26,10 @@ export const TABLE_PAGINATION_TEXT =
 // 고르기 자리 — 최소 폭 96, 글만큼 넓어진다
 export const TABLE_PAGINATION_SELECT_BOX = "w-max min-w-[96px] shrink-0";
 
-// 줄 — 높이 40 · 한 줄 · 양 끝 정렬 · 사이 16, 표 아래 12(spacing-component-default). 좁으면 표와 같은 가로 스크롤 상자 안에서
+// 줄 — 최소 높이 40(큰 글자에서 고르기 · 글을 따라 높아진다) · 한 줄 · 양 끝 정렬 · 사이 16, 표 아래 12(spacing-component-default). 좁으면 표와 같은 가로 스크롤 상자 안에서
 // 내용 폭보다 줄지 않는다(min-w-max)
 export const TABLE_PAGINATION_ROOT =
-  "mt-component-default flex h-[40px] w-full min-w-max flex-nowrap items-center justify-between gap-x4 font-sans";
+  "mt-component-default flex min-h-[40px] w-full min-w-max flex-nowrap items-center justify-between gap-x4 font-sans";
 
 // ── 쪽 계산(SEED useTablePagination 과 같다) ───────────────────
 export const DEFAULT_PAGE_SIZE_OPTIONS = [10, 25, 50] as const;
