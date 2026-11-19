@@ -115,9 +115,16 @@ export function SearchPage() {
         <div className="flex flex-col gap-x6 py-x4" aria-busy="true">
           {[3, 2].map((rows) => (
             <div key={rows} className="flex flex-col gap-x3">
-              <Skeleton className="h-[16px] w-[96px]" />
+              {/* 날짜 머리 글(t4) · 거래 줄(타일 40 + 이름 t5 · 설명 t3) — 글 자리는 올 글의 줄 높이(skeleton.md "크기") */}
+              <Skeleton text="t4" className="w-[96px]" />
               {Array.from({ length: rows }, (_, i) => (
-                <Skeleton key={i} className="h-[48px] w-full" />
+                <div key={i} className="flex items-center gap-x3">
+                  <Skeleton radius="12" className="size-x10 shrink-0" />
+                  <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
+                    <Skeleton text="t5" className="w-[160px] max-w-full" />
+                    <Skeleton text="t3" className="w-[96px] max-w-full" />
+                  </div>
+                </div>
               ))}
             </div>
           ))}

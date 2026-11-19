@@ -423,7 +423,7 @@ export function RecurringManager({
   );
 }
 
-/** 불러오는 중 — 묶음 머리 둘 + 줄 넷(타일 40 · 두 줄 · 금액) */
+/** 불러오는 중 — 묶음 머리 둘(t4) + 줄 넷(타일 40 · 이름 t5 · 설명 t3 · 금액 t5). 글 자리는 올 글의 줄 높이(skeleton.md "크기") */
 function RecurringSkeleton() {
   return (
     <div aria-hidden className="flex flex-col pb-x6">
@@ -435,8 +435,8 @@ function RecurringSkeleton() {
               g === 0 ? "mt-x2" : "mt-x4",
             )}
           >
-            <Skeleton className="h-x4 w-[96px]" />
-            <Skeleton className="h-x4 w-[128px]" />
+            <Skeleton text="t4" className="w-[96px]" />
+            <Skeleton text="t4" className="w-[128px]" />
           </div>
           {[0, 1].map((r) => (
             <div
@@ -444,11 +444,11 @@ function RecurringSkeleton() {
               className="flex items-center gap-x3 px-global-gutter py-x3"
             >
               <Skeleton className="size-x10 rounded-r3" />
-              <div className="flex min-w-0 flex-1 flex-col gap-x1_5">
-                <Skeleton className="h-x4 w-2/5" />
-                <Skeleton className="h-x3 w-3/5" />
+              <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
+                <Skeleton text="t5" className="w-2/5" />
+                <Skeleton text="t3" className="w-3/5" />
               </div>
-              <Skeleton className="h-x4 w-[80px]" />
+              <Skeleton text="t5" className="w-[80px]" />
             </div>
           ))}
         </div>
