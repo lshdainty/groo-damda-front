@@ -48,16 +48,13 @@ import {
 } from "@/shared/ui/groo/band-parts";
 import { Icon } from "@/shared/ui/groo/primitives";
 import type { BudgetModel } from "./budget-model";
-import {
-  useTickFontVersion,
-  useTickLineHeight,
-} from "@/shared/lib/groo/axisWidth";
+import { useTickFontVersion } from "@/shared/lib/groo/axisWidth";
 import {
   PERCENT_LABEL_LINE,
   PERCENT_LABEL_PX,
   PERCENT_LABEL_SIZE,
   BAR_VALUE_GAP,
-  barChartTop,
+  BAR_CHART_TOP,
   textWidth,
   visiblePercentLabels,
 } from "./percent-labels";
@@ -234,7 +231,7 @@ export function TotalSkeleton({ place }: { place: Placement }) {
             <Skeleton text="t3" className="w-1/4" />
             <Skeleton text="t3" className="mt-x1 w-3/4" />
             <Skeleton text="t9" radius="8" className="mt-x3 w-1/2" />
-            <Skeleton className="mt-x4 h-2 w-full" radius="full" />
+            <Skeleton className="mt-x4 h-[8px] w-full" radius="full" />
             <Skeleton text="t3" className="mt-x2 w-1/2" />
             <div className="mt-x3">
               <KeyValueSkeleton rows={3} />
@@ -294,7 +291,7 @@ export function PaceSection({
             className="contents"
             fallback={
               <>
-                <Skeleton className="h-2 w-full" radius="full" />
+                <Skeleton className="h-[8px] w-full" radius="full" />
                 <Skeleton text="t3" className="mt-x2 w-1/2" />
                 <div className="mt-x3">
                   <KeyValueSkeleton rows={2} />
@@ -334,7 +331,7 @@ export function PaceSection({
           <span
             aria-hidden
             data-slot="pace-marker"
-            className="pointer-events-none absolute -top-[3px] h-3.5 w-0.5 -translate-x-1/2 rounded-[1px] bg-fg-neutral"
+            className="pointer-events-none absolute -top-[3px] h-[14px] w-[2px] -translate-x-1/2 rounded-[1px] bg-fg-neutral"
             style={{ left: `${Math.min(100, Math.max(0, elapsed))}%` }}
           />
         </div>
@@ -480,7 +477,7 @@ export function CategorySection({
                       <Skeleton text="t5" className="w-x10 shrink-0" />
                     </div>
                     <div className="px-x6 pb-x3 pt-x1">
-                      <Skeleton className="h-2 w-full" radius="full" />
+                      <Skeleton className="h-[8px] w-full" radius="full" />
                     </div>
                   </div>
                 ))}
@@ -657,7 +654,6 @@ export function ComplianceSection({
   const mask = useMasked("budget.compliance");
   // 막대 위 값 글은 글자 크기 설정을 따르지 않는다(#260). 웹폰트가 도착하면(눈금 글꼴 판) 겹침 셈 · 바탕 폭을 다시 잰다
   const fontVersion = useTickFontVersion();
-  const tickLine = useTickLineHeight();
   const head = (
     <BandHead
       title={t("complianceTitle")}
@@ -725,7 +721,7 @@ export function ComplianceSection({
                 data={data}
                 margin={{
                   // 위 여백 = max(8 + 막대 위 값 자리(값 글 줄 높이 16 + 4), ⌈세로 눈금 줄 ÷ 2⌉) — 앱과 같은 식
-                  top: barChartTop(tickLine),
+                  top: BAR_CHART_TOP,
                   right: 8,
                   left: 8,
                   bottom: 0,

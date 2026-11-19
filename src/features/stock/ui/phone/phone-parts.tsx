@@ -90,7 +90,7 @@ export function KvListItem({
       title={name}
       suffix={
         loading ? (
-          <Skeleton text="t5" className="w-16" />
+          <Skeleton text="t5" className="w-[64px]" />
         ) : (
           <span
             data-slot="kv-value"
@@ -162,7 +162,7 @@ export function StockLine({
         rank != null ? (
           <span
             className={cn(
-              "w-5 text-start text-t4 font-bold tabular-nums",
+              "min-w-[20px] text-start text-t4 font-bold tabular-nums",
               rank <= 3 ? "text-fg-brand" : "text-fg-neutral-subtle",
             )}
           >
@@ -195,8 +195,8 @@ export function LineSkeletons({
           detail={<Skeleton text="t3" className="mt-x0_5 w-1/4" />}
           suffix={
             <span className="flex flex-col items-end">
-              <Skeleton text="t5" className="w-20" />
-              <Skeleton text="t3" className="mt-x0_5 w-12" />
+              <Skeleton text="t5" className="w-[80px]" />
+              <Skeleton text="t3" className="mt-x0_5 w-[48px]" />
             </span>
           }
         />

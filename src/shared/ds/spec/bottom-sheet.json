@@ -3,7 +3,7 @@
   "source": "specs/components/bottom-sheet.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "overlay": "딤 — 시트 뒤 화면 전체",
@@ -332,7 +332,7 @@
       "state": "enabled",
       "slot": "closeButton",
       "prop": "top",
-      "note": "시트 위에서 24 — 제목 첫 줄 가운데와 맞는다"
+      "note": "시트 위에서 24(글자 100%) — 제목 첫 줄 가운데와 맞는다. 큰 글자에서는 크기를 그대로 두고 제목 첫 줄 가운데를 따라 내려간다"
     },
     {
       "rule": 0,
@@ -444,7 +444,7 @@
       "state": "enabled",
       "slot": "backButton",
       "prop": "centerY",
-      "note": "시트 위 24 + 줄 높이 30 의 절반 = 39 — 글자 배율을 따라 함께 내려간다"
+      "note": "시트 위 24 + 줄 높이 30 의 절반 = 39 — 원 · 아이콘은 크기를 그대로 두고, 큰 글자에서는 제목 첫 줄 가운데를 따라 내려간다"
     },
     {
       "rule": 2,
@@ -479,7 +479,7 @@
       "state": "enabled",
       "slot": "headerAction",
       "prop": "centerY",
-      "note": "시트 위 24 + 원 28 의 절반 = 38"
+      "note": "시트 위 24 + 원 28 의 절반 = 38 — 큰 글자에서는 닫기 원과 함께 제목 첫 줄을 따라 내려간다"
     },
     {
       "rule": 3,

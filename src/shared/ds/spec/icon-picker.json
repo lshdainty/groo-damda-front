@@ -3,7 +3,7 @@
   "source": "specs/components/icon-picker.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "trigger": "트리거 — Input Button. 라벨 \"아이콘\"(Field) · 앞 지금 아이콘 · 값 = 아이콘 이름 · 뒤 chevron-down",
@@ -389,7 +389,7 @@
       "state": "enabled",
       "slot": "search",
       "prop": "height",
-      "note": "밑줄형 large — 글 18 / 24 · 돋보기 24"
+      "note": "최소 — 밑줄형 large(input.yaml minHeight) · 글 18 / 24 · 돋보기 24. 글이 커지면 칸이 따라 늘어난다"
     },
     {
       "rule": 3,
@@ -431,7 +431,7 @@
       "state": "enabled",
       "slot": "search",
       "prop": "height",
-      "note": "밑줄형 medium — 글 16 / 22 · 돋보기 20"
+      "note": "최소 — 밑줄형 medium(input.yaml minHeight) · 글 16 / 22 · 돋보기 20. 글이 커지면 칸이 따라 늘어난다"
     }
   ]
 }

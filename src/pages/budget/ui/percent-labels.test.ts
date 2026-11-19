@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   BAR_VALUE_ROOM,
   PERCENT_LABEL_SIZE,
-  barChartTop,
+  BAR_CHART_TOP,
   visiblePercentLabels,
 } from "./percent-labels";
 
@@ -42,7 +42,7 @@ describe('막대 위 값 자리 — 그 글 줄 높이 + 4(chart.md "막대 위 
     expect(PERCENT_LABEL_SIZE).toBe("12px");
     expect(BAR_VALUE_ROOM).toBe(20);
   });
-  it("위 여백 = max(8 + 값 자리, ⌈세로 눈금 줄 ÷ 2⌉) = 28(앱 topPad 와 같은 식)", () => {
-    expect(barChartTop(15)).toBe(28);
+  it("위 여백 = max(8 + 값 자리, ⌈세로 눈금 줄 ÷ 2⌉) = 28(앱 topPad 와 같은 식) — 글자 크기를 따르지 않아 상수", () => {
+    expect(BAR_CHART_TOP).toBe(28);
   });
 });

@@ -3,7 +3,7 @@
   "source": "specs/components/progress.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "묶음 — 이름 줄 · 막대 · 금액 줄",
@@ -164,7 +164,7 @@
       "state": "enabled",
       "slot": "track",
       "prop": "height",
-      "note": "웹은 rem 이라 글자 크기 설정의 배율대로 커진다(200% 에서 16). 앱은 8 그대로 — 글이 없는 상자라 OS 글자 크기를 따르지 않는다. 이름 · 오른쪽 글 · 금액 줄은 두 플랫폼 모두 글자 크기를 따른다"
+      "note": "웹 · 앱 모두 px 그대로 — 컨트롤 모양이라 글자 크기 설정을 따르지 않는다. 이름 · 오른쪽 글 · 금액 줄은 두 플랫폼 모두 글자 크기를 따른다"
     },
     {
       "rule": 0,

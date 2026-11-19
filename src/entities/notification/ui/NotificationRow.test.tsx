@@ -148,7 +148,7 @@ describe("읽음으로 바꾸는 중 (I-wrap-b1 ε 8 · 검수 L7)", () => {
     expect(circle!.getAttribute("class")).toContain("[--pc-size:24px]");
     const slot = circle!.closest("[data-slot=notification-row-progress]")!;
     expect(slot.className).toContain("h-[1em]");
-    expect(slot.className).toContain("w-6");
+    expect(slot.className).toContain("w-[24px]");
     const button = circle!.closest("button")!;
     expect(button.getAttribute("aria-busy")).toBe("true");
     // 버튼 이름에 "읽음으로 바꾸는 중" 이 섞이지 않는다

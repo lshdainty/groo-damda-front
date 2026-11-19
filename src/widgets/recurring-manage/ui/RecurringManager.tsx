@@ -215,7 +215,7 @@ export function RecurringManager({
               <Zap
                 role="img"
                 aria-label={t("autoLog")}
-                className="ml-x1 inline size-3.5 align-[-1px] text-fg-brand"
+                className="ml-x1 inline size-[14px] align-[-1px] text-fg-brand"
               />
             )}
           </>
@@ -435,8 +435,8 @@ function RecurringSkeleton() {
               g === 0 ? "mt-x2" : "mt-x4",
             )}
           >
-            <Skeleton className="h-x4 w-24" />
-            <Skeleton className="h-x4 w-32" />
+            <Skeleton className="h-x4 w-[96px]" />
+            <Skeleton className="h-x4 w-[128px]" />
           </div>
           {[0, 1].map((r) => (
             <div
@@ -448,7 +448,7 @@ function RecurringSkeleton() {
                 <Skeleton className="h-x4 w-2/5" />
                 <Skeleton className="h-x3 w-3/5" />
               </div>
-              <Skeleton className="h-x4 w-20" />
+              <Skeleton className="h-x4 w-[80px]" />
             </div>
           ))}
         </div>

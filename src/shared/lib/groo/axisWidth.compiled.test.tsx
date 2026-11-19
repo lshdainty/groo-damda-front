@@ -52,28 +52,25 @@ afterEach(() => {
 const render = (node: ReactNode) => act(() => root.render(node));
 
 describe("React Compiler 를 거친 axisWidth — 글자 크기를 키워도 눈금은 그대로", () => {
-  it("useTickLineHeight — 처음부터 300% 여도 15, 뜬 뒤 300% 에도 15", async () => {
+  it("눈금 줄 높이는 재지 않는 상수 15 — 줄 높이를 재던 훅 · 함수가 남지 않고, 300% 에도 세로 눈금 칸 수 · 가로 눈금 줄이 같다", async () => {
     const { module, code } = await importCompiled<AxisWidthModule>(
       "src/shared/lib/groo/axisWidth.ts",
     );
     expect(code).toContain("react/compiler-runtime");
-    const seen: number[] = [];
-    const Probe = () => {
-      seen.push(module.useTickLineHeight());
-      return null;
-    };
+    expect(module.CHART_TICK_LINE).toBe(15);
+    expect(module.CHART_X_TICK_GAP).toBe(12);
+    expect(module.CHART_X_AXIS_HEIGHT).toBe(27);
+    // 글자 배율을 따라 줄 높이를 다시 재던 장치는 걷었다 — 이름조차 남지 않는다
+    expect(module).not.toHaveProperty("useTickLineHeight");
+    expect(module).not.toHaveProperty("measureTickLineHeight");
+    // 세로 눈금 칸 수 — 차트 200: 200 − 8 − 5 − (12 + 15) = 160 → 10 칸. 처음부터 300% · 뜬 뒤 300% 모두 같다
     tickScale.value = 3;
-    await render(createElement(Probe));
-    expect(seen[seen.length - 1]).toBe(15);
-    act(() => root.unmount());
-    root = createRoot(container);
+    expect(module.chartValueIntervals(200)).toBe(10);
     tickScale.value = 1;
-    await render(createElement(Probe));
-    expect(seen[seen.length - 1]).toBe(15);
+    expect(module.chartValueIntervals(200)).toBe(10);
     await changeTickScale(3);
-    expect(seen[seen.length - 1]).toBe(15);
-    // 세로 눈금 칸 수도 그대로 — 차트 200: 200 − 8 − 5 − (12 + 15) = 160 → 10 칸
-    expect(module.chartValueIntervals(200, 15)).toBe(10);
+    expect(module.chartValueIntervals(200)).toBe(10);
+    expect(module.chartTopMargin(0)).toBe(8);
   });
 
   it("useAxisWidth — 300% 에도 18 + 16 그대로, 웹폰트로 눈금 글 폭이 바뀌면 다시 잰다(컴파일러가 건너뛰지 않는다)", async () => {

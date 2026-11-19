@@ -452,7 +452,7 @@ export function ReportSkeleton({ place }: { place: Place }) {
   return (
     <div aria-hidden data-slot="report-skeleton">
       <div className={cn("flex items-center gap-x3 pb-x4 pt-x4", pad)}>
-        <Skeleton radius="12" className="size-8 shrink-0" />
+        <Skeleton radius="12" className="size-[32px] shrink-0" />
         <div className="min-w-0 flex-1">
           <Skeleton text="t3" className="w-1/4" />
           <Skeleton text="t5" className="mt-x1 w-2/3" />

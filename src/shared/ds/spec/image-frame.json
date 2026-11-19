@@ -3,7 +3,7 @@
   "source": "specs/components/image-frame.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "틀 — 비율 상자. 폭은 부르는 쪽, 높이는 폭 ÷ 비율. 모서리로 자르고(overflow hidden) 안의 층을 따로 쌓는다(isolation)",
@@ -330,14 +330,14 @@
       "state": "loaded",
       "slot": "indicator",
       "prop": "typography",
-      "note": "11 / 15 — 글자 크기 설정을 따른다(rem)"
+      "note": "11 / 15 — 사진 위 표식이라 글자 크기 설정을 따르지 않는다. 읽는 글(label)은 화면 읽기 프로그램이 읽는다"
     },
     {
       "rule": 0,
       "state": "loaded",
       "slot": "indicator",
       "prop": "minHeight",
-      "note": "15 + 2 + 2 — 글이 커지면 따라 커진다"
+      "note": "15 + 2 + 2 — 글자가 그대로라 높이도 그대로"
     },
     {
       "rule": 0,

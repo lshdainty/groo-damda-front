@@ -3,13 +3,12 @@ import * as RechartsPrimitive from "recharts";
 
 import { cn } from "@/shared/lib/cn";
 import {
+  CHART_X_AXIS_HEIGHT,
+  CHART_X_TICK_GAP,
   chartTopMargin,
-  chartXAxisHeight,
-  chartXTickGap,
   measureTextWidthAt,
   measureTickWidthAt,
   useTickFontVersion,
-  useTickLineHeight,
 } from "@/shared/lib/groo/axisWidth";
 
 import {
@@ -195,7 +194,6 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
     // 그린다 — 가로 눈금 건너뛰기(chartXAxisProps) · 끝 글 자리와 아래 세로축 폭을 새로 잰다. 판은 아래 잼마다 열쇠로 넘긴다 — 값을 버리고
     // 측정만 부르면 React Compiler 가 처음 잰 값(대체 글꼴의 폭)에 묶는다(measureTextWidthAt)
     const fontVersion = useTickFontVersion();
-    const tickLine = useTickLineHeight();
     // 세로축 폭은 그리는 눈금 글 가운데 가장 긴 것이 잘리지 않게(chart.md "축 · 격자") — 눈금(ticks) · 글(tickFormatter) ·
     // 폭(width)을 준 세로축은 그 글로 다시 재 준 폭보다 넓으면 넓힌다. 쓰는 쪽이 잰 폭은 그때의 글꼴이라 웹폰트가 넓으면 모자란다
     const fitYAxis = (c: React.ReactElement<AnyProps>) => {
@@ -227,8 +225,8 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
     // 가로 눈금 줄 높이 = 위 시작 + 눈금 글 줄 높이(15 — 글자 크기 설정을 따르지 않는다). 세로 눈금 칸 수(chartValueIntervals)도 이 줄로 센다.
     // 가로 눈금 글은 그리는 자리 아래 max(8, ⌈줄 높이 ÷ 2⌉ + 4) 에서 시작한다 — 맨 아래 세로 글(눈금 선 가운데, 줄 높이 절반이 아래로
     // 나간다)과 겹치지 않게(chart.md "세로축 끝 글의 자리를 비웁니다", #250)
-    const xAxisHeight = chartXAxisHeight(tickLine);
-    const xTickGap = chartXTickGap(tickLine);
+    const xAxisHeight = CHART_X_AXIS_HEIGHT;
+    const xTickGap = CHART_X_TICK_GAP;
     const fitXAxis = (c: React.ReactElement<AnyProps>) => {
       const tick = c.props.tick;
       if (!chartXTicksOf(tick)) return c;
@@ -293,7 +291,7 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
       xTicks || valueAxis
         ? {
             ...given,
-            ...(valueAxis && { top: chartTopMargin(given.top, tickLine) }),
+            ...(valueAxis && { top: chartTopMargin(given.top) }),
             ...(xTicks && {
               right: chartXEndReserve(
                 xTicks,
@@ -863,14 +861,14 @@ function ChartDonutCenter({
         {label != null && (
           <span
             data-slot="chart-donut-center-label"
-            className="text-t2 text-fg-neutral-subtle"
+            className="text-t2-static text-fg-neutral-subtle"
           >
             {label}
           </span>
         )}
         <span
           data-slot="chart-donut-center-amount"
-          className="text-t5 font-bold whitespace-nowrap tabular-nums text-fg-neutral"
+          className="text-t5-static font-bold whitespace-nowrap tabular-nums text-fg-neutral"
         >
           {amount}
         </span>

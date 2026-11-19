@@ -39,7 +39,7 @@ function Metric({
         {label}
       </span>
       {loading ? (
-        <Skeleton text="t7" className="w-24" />
+        <Skeleton text="t7" className="w-[96px]" />
       ) : (
         <span
           data-metric=""
@@ -233,13 +233,13 @@ function WeekCell({
     <>
       {num}
       {loading && c.inMonth ? (
-        <Skeleton text="t1" className="w-x8" />
+        <Skeleton text="t1-static" className="w-x8" />
       ) : (
         <IntensityBar step={c.inMonth && out > 0 ? step : -1} hidden={hidden} />
       )}
     </>
   );
-  const base = "flex min-h-11 flex-col items-center justify-center gap-x1";
+  const base = "flex min-h-[44px] flex-col items-center justify-center gap-x1";
   if (!c.inMonth)
     return (
       <span aria-hidden className={base}>

@@ -3,7 +3,7 @@
   "source": "specs/components/chip.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "알약 — 모서리 full. 글만큼 넓어지고 줄바꿈하지 않는다. 줄보다 길면 줄 폭에서 멈추고 글 끝을 말줄임한다",
@@ -118,7 +118,7 @@
       },
       "enabled": {
         "root": {
-          "height": 32,
+          "minHeight": 32,
           "paddingX": 12
         },
         "prefixIcon": {
@@ -141,7 +141,7 @@
       },
       "enabled": {
         "root": {
-          "height": 36,
+          "minHeight": 36,
           "paddingX": 14
         },
         "prefixIcon": {
@@ -164,7 +164,7 @@
       },
       "enabled": {
         "root": {
-          "height": 40,
+          "minHeight": 40,
           "paddingX": 16
         },
         "prefixIcon": {
@@ -556,7 +556,7 @@
       "state": "enabled",
       "slot": "label",
       "prop": "typography",
-      "note": "세 크기 모두 14 / 19 — 폰트 크기 설정을 따른다. 큰 글자에서 상자 — 웹은 rem 이라 높이 · 여백 · 아이콘 · 지우기가 배율대로 커진다(200% 에서 medium 72 · 지우기 28). 앱은 높이가 최소 높이라 글을 따라 늘어나고(글 줄 높이 + 위아래 (높이 − 19) ÷ 2 — medium 200% 에서 38 + 8.5 × 2 = 55), 여백 · 아이콘 · 지우기는 그대로다. 어느 쪽도 글이 상자를 넘지 않는다. 보통 글자(100%)에서는 두 플랫폼 모두 32 · 36 · 40 그대로다"
+      "note": "세 크기 모두 14 / 19 — 글자 크기 설정을 따른다. 큰 글자에서 칩은 높이가 최소 높이라 글을 따라 늘어나고(글 줄 높이 + 위아래 (높이 − 19) ÷ 2 — medium 200% 에서 38 + 8.5 × 2 = 55), 좌우 여백 · 아이콘 · 지우기는 그대로다(웹 · 앱 같음). 줄은 하나를 지키고 글이 상자를 넘지 않는다. 보통 글자(100%)에서는 32 · 36 · 40 그대로다"
     },
     {
       "rule": 0,
@@ -660,8 +660,8 @@
       "rule": 1,
       "state": "enabled",
       "slot": "root",
-      "prop": "height",
-      "note": "웹 rem — 큰 글자에서 배율대로. 앱은 최소 높이 — 글을 따라 늘어난다(label 비고)"
+      "prop": "minHeight",
+      "note": "최소 높이 — 큰 글자에서 글을 따라 늘어난다(label 비고)"
     },
     {
       "rule": 1,
@@ -681,8 +681,8 @@
       "rule": 2,
       "state": "enabled",
       "slot": "root",
-      "prop": "height",
-      "note": "웹 rem — 큰 글자에서 배율대로. 앱은 최소 높이 — 글을 따라 늘어난다(label 비고)"
+      "prop": "minHeight",
+      "note": "최소 높이 — 큰 글자에서 글을 따라 늘어난다(label 비고)"
     },
     {
       "rule": 2,
@@ -702,8 +702,8 @@
       "rule": 3,
       "state": "enabled",
       "slot": "root",
-      "prop": "height",
-      "note": "웹 rem — 큰 글자에서 배율대로. 앱은 최소 높이 — 글을 따라 늘어난다(label 비고)"
+      "prop": "minHeight",
+      "note": "최소 높이 — 큰 글자에서 글을 따라 늘어난다(label 비고)"
     },
     {
       "rule": 3,

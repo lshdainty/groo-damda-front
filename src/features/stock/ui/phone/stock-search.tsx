@@ -66,7 +66,11 @@ const SearchEntryButton = forwardRef<
     >
       <Search
         aria-hidden
-        className={compact ? "size-6 shrink-0 lg:size-5" : "size-6 shrink-0"}
+        className={
+          compact
+            ? "size-[24px] shrink-0 lg:size-[20px]"
+            : "size-[24px] shrink-0"
+        }
       />
       <span className="min-w-0 truncate text-start">
         {t("search.placeholder")}

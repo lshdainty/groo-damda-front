@@ -51,7 +51,7 @@ export function DayEventList({
               aria-hidden
               style={{ background: tone.bg, color: tone.color }}
             >
-              <Icon className="size-5" />
+              <Icon className="size-[20px]" />
             </ListTile>
           ),
         };

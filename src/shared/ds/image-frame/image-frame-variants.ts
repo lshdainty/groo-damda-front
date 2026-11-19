@@ -84,9 +84,10 @@ export const imageFrameFloaterVariants = cva(
   },
 );
 
-// Indicator — 알약 · 검정 65%(두 모드 같다) · 흰 11/15 500 · 좌우 6 · 위아래 2 · 높이 19(글이 커지면 따라 커진다)
+// Indicator — 알약 · 검정 65%(두 모드 같다) · 흰 11/15 500 · 좌우 6 · 위아래 2 · 높이 19. 사진 위 표식이라 글자 크기 설정을 따르지 않는다
+// (text-t1-static — image-frame.yaml indicator) — 글자가 그대로라 높이도 19 그대로다
 export const imageFrameIndicatorVariants = cva(
-  "inline-flex min-h-[19px] items-center whitespace-nowrap rounded-full bg-[var(--overlay-dim-dark)] px-x1_5 py-x0_5 font-sans text-t1 font-medium text-static-white",
+  "inline-flex min-h-[19px] items-center whitespace-nowrap rounded-full bg-[var(--overlay-dim-dark)] px-x1_5 py-x0_5 font-sans text-t1-static font-medium text-static-white",
 );
 
 /** 카탈로그 · 테스트 전용 — 받는 중 상태를 붙잡아 둔다(실제로는 그림이 오면 곧 바뀌어 견본으로 잴 수 없다). 화면에서 쓰지 않는다 */
@@ -112,9 +113,8 @@ export function pickFloaters(children: React.ReactNode) {
 
 // ── 카드 면(그림 없는 아는 카드사) ───────────────────────────
 // 기관 색 한 색 + 표의 글자색. 크기는 틀의 폭으로(container image-frame): 96 미만 첫 글자 · 96 ~ 239 medium · 240 이상 large.
-// 글이 안 드는 면은 첫 글자 면으로(03-D 결정 3 A) — 틀 높이 < (회사 줄 + 카드 이름 한 줄) × 글자 배율 + 아래 여백이면 회사 · 카드 이름 대신 회사 첫 글자.
-// 틀 높이 컨테이너 쿼리(rem 이라 글자 배율을 따른다): medium 은 calc(2.1875rem + 8px) = (t2 줄 높이 16 + t4 19 = 35)rem + 아래 8,
-// large 는 calc(2.5rem + 14px) = (t3 18 + t5 22 = 40)rem + 아래 14. 글 칸을 보이는 두 규칙(medium · large)은 서로 겹치지 않는 폭 범위라 순서와 무관하다
+// 회사 · 카드 이름은 카드 그림 안 글이라 글자 크기 설정을 따르지 않는다(-static — card-art.yaml, groo-design #264). 글이 커지지 않아
+// 폭 96 이상 면에는 늘 들어가므로, 면 모양은 폭으로만 가른다
 export const CARD_FACE_TEXT: Record<InstitutionText, string> = {
   white: "text-static-white",
   dark: "text-fg-neutral dark:text-fg-neutral-inverted",
@@ -123,19 +123,14 @@ export const CARD_FACE = "relative size-full overflow-hidden font-sans";
 // 첫 글자 — 회사 첫 글자 가운데, 면 높이의 40%(정수로 · 가장 작아도 10) · 700 · 줄 높이 1 · 로마자 대문자. 글 칸이 보이면 숨긴다.
 // 줄 높이는 글자 크기 뒤에 붙인다 — tailwind-merge 는 뒤에 오는 글자 크기가 줄 높이를 지운다고 본다
 export const CARD_FACE_INITIAL = cn(
-  "absolute inset-0 flex items-center justify-center font-bold uppercase",
-  "[@container_image-frame_(width>=96px)_and_(width<240px)_and_(height>=calc(2.1875rem_+_8px))]:hidden",
-  "[@container_image-frame_(width>=240px)_and_(height>=calc(2.5rem_+_14px))]:hidden",
+  "absolute inset-0 flex items-center justify-center font-bold uppercase @min-[96px]/image-frame:hidden",
   "text-[length:max(10px,round(40cqh,1px))]",
   "leading-none",
 );
-// medium · large — 왼쪽 아래 회사 · 카드 이름. 폭이 96 이상이고 높이가 글이 들 만큼일 때만 보인다
-export const CARD_FACE_LABEL = cn(
-  "absolute inset-x-0 bottom-0 hidden flex-col px-x2_5 pb-x2 @min-[240px]/image-frame:px-x4 @min-[240px]/image-frame:pb-x3_5",
-  "[@container_image-frame_(width>=96px)_and_(width<240px)_and_(height>=calc(2.1875rem_+_8px))]:flex",
-  "[@container_image-frame_(width>=240px)_and_(height>=calc(2.5rem_+_14px))]:flex",
-);
+// medium · large — 왼쪽 아래 회사 · 카드 이름(폭 96 이상)
+export const CARD_FACE_LABEL =
+  "absolute inset-x-0 bottom-0 hidden flex-col px-x2_5 pb-x2 @min-[96px]/image-frame:flex @min-[240px]/image-frame:px-x4 @min-[240px]/image-frame:pb-x3_5";
 export const CARD_FACE_ISSUER =
-  "truncate text-t2 font-medium @min-[240px]/image-frame:text-t3";
+  "truncate text-t2-static font-medium @min-[240px]/image-frame:text-t3-static";
 export const CARD_FACE_NAME =
-  "line-clamp-1 break-keep text-t4 font-bold [overflow-wrap:break-word] @min-[240px]/image-frame:line-clamp-2 @min-[240px]/image-frame:text-t5";
+  "line-clamp-1 break-keep text-t4-static font-bold [overflow-wrap:break-word] @min-[240px]/image-frame:line-clamp-2 @min-[240px]/image-frame:text-t5-static";

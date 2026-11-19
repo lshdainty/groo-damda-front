@@ -42,7 +42,7 @@ export function BulkBar({
           role="group"
           aria-label={dsT("table.bulkBar")}
           data-slot="expense-bulk-bar"
-          className="mx-x3 mt-x3 flex min-h-12 flex-wrap items-center gap-x2 rounded-r3 bg-bg-brand-weak pl-x4 pr-x2 font-sans"
+          className="mx-x3 mt-x3 flex min-h-[48px] flex-wrap items-center gap-x2 rounded-r3 bg-bg-brand-weak pl-x4 pr-x2 font-sans"
         >
           <span aria-hidden className="text-t4 font-medium text-fg-neutral">
             {message}

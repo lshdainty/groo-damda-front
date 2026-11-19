@@ -149,8 +149,8 @@ export function ExpenseMobileSkeleton({ month }: { month?: string }) {
         </LedgerMonthNav>
         <LedgerHead>
           <div className="min-w-0 flex-auto">
-            <Skeleton text="t9" className="w-40" />
-            <Skeleton text="t4" className="mt-x1_5 w-52 max-w-full" />
+            <Skeleton text="t9" className="w-[160px]" />
+            <Skeleton text="t4" className="mt-x1_5 w-[208px] max-w-full" />
           </div>
           <LedgerSumBtn disabled>{t("txm.spendSummary")}</LedgerSumBtn>
         </LedgerHead>
@@ -613,7 +613,7 @@ export function ExpenseMobile({
               <div className="min-w-0 flex-auto">
                 <LedgerTotal className="num">
                   {isError ? null : isLoadingSummary ? (
-                    <Skeleton text="t9" className="w-40" />
+                    <Skeleton text="t9" className="w-[160px]" />
                   ) : (
                     <>
                       <MaskAmount card="ledger.monthSummary" kind="expense">
@@ -625,7 +625,10 @@ export function ExpenseMobile({
                   )}
                 </LedgerTotal>
                 {isError ? null : isLoadingSummary ? (
-                  <Skeleton text="t4" className="mt-x1_5 w-52 max-w-full" />
+                  <Skeleton
+                    text="t4"
+                    className="mt-x1_5 w-[208px] max-w-full"
+                  />
                 ) : (
                   insight && <LedgerSub>{insight}</LedgerSub>
                 )}

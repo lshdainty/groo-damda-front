@@ -42,7 +42,7 @@ export function TodoRemainCard({
       </CardHeader>
       {loading ? (
         <div aria-busy="true" className="px-x6 pb-x3 pt-x3">
-          <Skeleton text="t4" className="w-12" />
+          <Skeleton text="t4" className="w-[48px]" />
           <Skeleton text="t5" className="mt-x3 w-full" />
           <Skeleton text="t5" className="mt-x3 w-full" />
         </div>

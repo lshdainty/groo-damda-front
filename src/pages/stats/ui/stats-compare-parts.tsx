@@ -1,7 +1,6 @@
 import {
   chartValueIntervals,
   niceValueAxis,
-  useTickLineHeight,
 } from "@/shared/lib/groo/axisWidth";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -95,8 +94,8 @@ export function CompareSummarySection({
               <Skeleton text="t3" className="w-1/3" />
               <Skeleton text="t9" className="mt-x1 w-2/3" />
               <Skeleton text="t4" className="mt-x3 w-3/4" />
-              <Skeleton className="mt-x4 h-2 w-full" radius="full" />
-              <Skeleton className="mt-x2_5 h-2 w-full" radius="full" />
+              <Skeleton className="mt-x4 h-[8px] w-full" radius="full" />
+              <Skeleton className="mt-x2_5 h-[8px] w-full" radius="full" />
             </>
           }
         />
@@ -395,7 +394,7 @@ function DivergingBar({
       <span className="flex flex-1 justify-end">
         {!up && diff !== 0 && (
           <span
-            className={cn("h-2 self-center rounded-l-full", color)}
+            className={cn("h-[8px] self-center rounded-l-full", color)}
             style={{ width: w }}
           />
         )}
@@ -404,7 +403,7 @@ function DivergingBar({
       <span className="flex flex-1">
         {up && (
           <span
-            className={cn("h-2 self-center rounded-r-full", color)}
+            className={cn("h-[8px] self-center rounded-r-full", color)}
             style={{ width: w }}
           />
         )}
@@ -423,7 +422,6 @@ export function CompareWeekdaySection({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.compare");
-  const tickLine = useTickLineHeight();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const head = (
     <BandHead title={t("compare.weekdayTitle")} band={place === "band"} />
@@ -493,7 +491,10 @@ export function CompareWeekdaySection({
       });
   const insight: ReactNode = (
     <p className="m-0 mt-x3 flex items-start gap-x1_5 text-t3 text-fg-neutral-muted">
-      <Sparkles aria-hidden className="mt-x0_5 size-4 shrink-0 text-fg-brand" />
+      <Sparkles
+        aria-hidden
+        className="mt-x0_5 size-[16px] shrink-0 text-fg-brand"
+      />
       <span>{text}</span>
     </p>
   );
@@ -539,7 +540,7 @@ export function CompareWeekdaySection({
                   ...(hidden.has("prev") ? [] : [Number(d.prev ?? 0)]),
                 ]),
                 (v, ticks) => mask(formatAxisWon(v, ticks)),
-                chartValueIntervals(height, tickLine),
+                chartValueIntervals(height),
               )}
             />
             <ChartTooltip

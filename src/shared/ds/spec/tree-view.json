@@ -3,7 +3,7 @@
   "source": "specs/components/tree-view.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "나무(role=tree) — 이름 필수. Tab 정지점 하나",
@@ -375,7 +375,7 @@
       "state": "enabled",
       "slot": "chevron",
       "prop": "height",
-      "note": "이름 첫 줄 높이(t4 19)에 맞춥니다"
+      "note": "이름 첫 줄 높이(t4 19)에 맞춥니다 — 글자 크기 설정을 따라 이름 줄이 높아지면 칸도 그 줄 높이를 따르고, 아이콘 16 은 그대로 첫 줄 가운데에 섭니다"
     },
     {
       "rule": 0,
@@ -410,14 +410,14 @@
       "state": "enabled",
       "slot": "icon",
       "prop": "height",
-      "note": "이름 첫 줄에 맞춥니다"
+      "note": "이름 첫 줄 높이(t4 19)에 맞춥니다 — 글자 크기 설정을 따라 이름 줄이 높아지면 칸도 따르고, 아이콘 16 은 그대로입니다"
     },
     {
       "rule": 0,
       "state": "enabled",
       "slot": "label",
       "prop": "typography",
-      "note": "14 / 19 — Side Navigation 항목과 같은 글자입니다"
+      "note": "14 / 19 — Side Navigation 항목과 같은 글자입니다. 글자 크기 설정을 따라 커지고 줄을 바꿔 받습니다"
     },
     {
       "rule": 0,

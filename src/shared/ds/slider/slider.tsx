@@ -541,12 +541,13 @@ const SliderCore = React.forwardRef<HTMLDivElement, CoreProps>(
             );
           })}
         </div>
-        {/* 표식 — 양 끝 값(구간 2 ~ 5 면 단계마다). 끝 둘은 트랙 끝에 맞추고 가운데는 단계 자리 가운데 */}
+        {/* 표식 — 양 끝 값(구간 2 ~ 5 면 단계마다). 끝 둘은 트랙 끝에 맞추고 가운데는 단계 자리 가운데.
+            트랙에 붙은 눈금 표식이라 글자 크기 설정을 따르지 않는다(t3-static — slider.yaml markers) */}
         <div
           aria-hidden
           data-slot="slider-markers"
           className={cn(
-            "relative h-[var(--text-t3--line-height)] text-t3",
+            "relative h-[var(--text-t3-static--line-height)] text-t3-static",
             disabled ? "text-fg-disabled" : "text-fg-neutral-muted",
           )}
         >

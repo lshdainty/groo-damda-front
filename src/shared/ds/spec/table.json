@@ -3,7 +3,7 @@
   "source": "specs/components/table.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "표 상자 — 카드 안에 가장자리까지 붙습니다. 표와 넘김 줄(Table Pagination)을 담고, 넘치면 함께 가로로 밉니다",
@@ -373,7 +373,7 @@
       "state": "enabled",
       "slot": "headerRow",
       "prop": "minHeight",
-      "note": "선 1 포함 — 위아래 10 + 글 20"
+      "note": "선 1 포함 — 위아래 10 + 글 20. 최소값이라 글이 커지면 따라 높아집니다"
     },
     {
       "rule": 0,
@@ -401,14 +401,14 @@
       "state": "enabled",
       "slot": "headerCell",
       "prop": "lineHeight",
-      "note": "14 / 20 — t4(14 / 19)보다 1 높여 머리 41 · 줄 45 를 맞춥니다. 같은 부위의 lineHeight · fontWeight 가 typography 의 값을 덮습니다 — 스펙 JSON 은 typography 에 접어 14 / 20 · 500 하나로 싣습니다"
+      "note": "14 / 20 — t4(14 / 19)보다 1 높여 머리 41 · 줄 45 를 맞춥니다. 글자 크기 설정을 따라 글과 함께 커집니다(웹 rem). 같은 부위의 lineHeight · fontWeight 가 typography 의 값을 덮습니다 — 스펙 JSON 은 typography 에 접어 14 / 20 · 500 하나로 싣습니다"
     },
     {
       "rule": 0,
       "state": "enabled",
       "slot": "row",
       "prop": "minHeight",
-      "note": "선 1 포함 — 위아래 12 + 글 20. 한 표 안에서 줄 높이를 섞지 않습니다 — 썸네일 · 두 줄 칸이 하나라도 있으면 모든 줄이 72 입니다"
+      "note": "선 1 포함 — 위아래 12 + 글 20. 최소값이라 글이 커지면 따라 높아집니다. 한 표 안에서 줄 높이를 섞지 않습니다 — 썸네일 · 두 줄 칸이 하나라도 있으면 모든 줄이 72 입니다"
     },
     {
       "rule": 0,
@@ -429,7 +429,7 @@
       "state": "enabled",
       "slot": "cell",
       "prop": "lineHeight",
-      "note": "머리와 같은 14 / 20 — typography 의 19 를 덮습니다"
+      "note": "머리와 같은 14 / 20 — typography 의 19 를 덮습니다. 글자 크기 설정을 따라 글과 함께 커집니다"
     },
     {
       "rule": 0,
@@ -471,7 +471,7 @@
       "state": "enabled",
       "slot": "badge",
       "prop": "size",
-      "note": "20 · weak — 톤은 상태의 뜻입니다(badge.md). 한 열은 한 변형, 왼쪽 맞춤"
+      "note": "20 · weak — 톤은 상태의 뜻입니다(badge.md). 한 열은 한 변형, 왼쪽 맞춤. 배지 글은 글자 크기를 따르지 않습니다(Badge)"
     },
     {
       "rule": 0,

@@ -4,7 +4,6 @@
 //   · recharts 가 눈금 글을 재는 숨은 글(`recharts_measurement_span`) — 높이 = 11px × 1.5, 폭 = 글자 수 어림. 눈금 글 크기는
 //     ds `CHART_TICK_SIZE` 다(recharts 는 그 값을 숨은 글에 옮기지 않는다 — 그래서 그 값으로 배율을 정한다)
 //   · 세로축 폭을 재는 숨은 글(axisWidth.ts — font-size `AXIS_TICK_FONT_SIZE`) — 같은 폭 어림
-//   · 눈금 글 줄 높이를 재는 숨은 글(line-height `--text-t1-static--line-height`) — 15
 //   · ResizeObserver — 차트 상자마다 그 상자 높이(Chart `height`)와 [width] 를 알린다
 import { act } from "react";
 import { vi } from "vitest";
@@ -56,20 +55,12 @@ export function installValueAxisHarness() {
       const text = this.textContent ?? "";
       const recharts = this.id === "recharts_measurement_span";
       const axis = this.style.fontSize.startsWith("var(--text-t1");
-      // 눈금 글 줄 높이를 재는 숨은 글(axisWidth.ts measureTickLineHeight)
-      const line = /--text-t1(-static)?--line-height/.test(
-        this.style.lineHeight,
-      );
       const width = recharts
         ? glyphs(text) * tickTextScale()
         : axis
           ? glyphs(text) * scaleOf(this.style.fontSize)
           : 0;
-      const height = recharts
-        ? 11 * 1.5 * tickTextScale()
-        : line
-          ? 15 * scaleOf(this.style.lineHeight)
-          : 0;
+      const height = recharts ? 11 * 1.5 * tickTextScale() : 0;
       return {
         width,
         height,

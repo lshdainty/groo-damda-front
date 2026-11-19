@@ -177,8 +177,8 @@ function MonthGrid({ singleDayEvents, multiDayEvents, onEventClick }: IProps) {
                 }
                 data-slot="month-day-number"
                 className={cn(
-                  // 원 26(글자 13/18 + 8) 고정 — 날짜 숫자는 글자 크기 설정을 따르지 않는다(칸 안 글 — groo-design #260). 왼쪽 6 · 아래 2
-                  "mb-x0_5 ml-x1_5 grid size-[calc(var(--text-t3-static--line-height)_+_8px)] shrink-0 place-items-center self-start rounded-full font-medium tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring text-t3-static",
+                  // 원 26 고정(글자 13/18 + 8) — 날짜 숫자는 글자 크기 설정을 따르지 않는다(칸 안 글 — groo-design #260). 왼쪽 6 · 아래 2
+                  "mb-x0_5 ml-x1_5 grid size-[26px] shrink-0 place-items-center self-start rounded-full font-medium tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring text-t3-static",
                   selected
                     ? "bg-bg-neutral-inverted font-bold text-fg-neutral-inverted"
                     : cn(

@@ -220,7 +220,7 @@ export function PresetAllSub({ f }: { f: TxForm }) {
               prefix={
                 p.expenseType === "TRANSFER" ? (
                   <ListTile>
-                    <ArrowRightLeft aria-hidden className="size-5" />
+                    <ArrowRightLeft aria-hidden className="size-[20px]" />
                   </ListTile>
                 ) : (
                   <ListTile
@@ -307,7 +307,7 @@ export function PresetSaveSub({ f }: { f: TxForm }) {
           prefix={
             isTransfer ? (
               <ListTile>
-                <ArrowRightLeft aria-hidden className="size-5" />
+                <ArrowRightLeft aria-hidden className="size-[20px]" />
               </ListTile>
             ) : (
               <ListTile

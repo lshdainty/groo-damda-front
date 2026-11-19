@@ -24,7 +24,7 @@ const Input = React.forwardRef<
       type={type}
       ref={ref}
       className={cn(
-        "flex h-10 w-full min-w-0 rounded-r1 border border-stroke-neutral-weak bg-bg-neutral-weak px-[var(--spacing-x3)] py-[var(--spacing-x2)] font-sans text-t5 text-fg-neutral placeholder:text-fg-neutral-subtle",
+        "flex min-h-[40px] w-full min-w-0 rounded-r1 border border-stroke-neutral-weak bg-bg-neutral-weak px-[var(--spacing-x3)] py-[var(--spacing-x2)] font-sans text-t5 text-fg-neutral placeholder:text-fg-neutral-subtle",
         "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-fg-neutral",
         "transition-[color,box-shadow,border-color] duration-[var(--motion-duration-d3)] ease-[var(--motion-ease-easing)]",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
@@ -32,7 +32,7 @@ const Input = React.forwardRef<
         "disabled:cursor-not-allowed disabled:bg-bg-disabled disabled:text-fg-disabled disabled:border-stroke-neutral-weak",
         // search variant — 헤더(top__search) 정합: compact·radius-md·테두리 없음·filled·label-sm
         search &&
-          "h-9 rounded-[var(--radius-r2)] border-transparent bg-[var(--bg-muted)] text-t3 focus-visible:bg-[var(--bg-surface)] focus-visible:ring-0",
+          "min-h-[36px] rounded-[var(--radius-r2)] border-transparent bg-[var(--bg-muted)] text-t3 focus-visible:bg-[var(--bg-surface)] focus-visible:ring-0",
         className,
       )}
       {...props}

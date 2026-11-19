@@ -432,7 +432,7 @@ describe("통계 글 · 색 규칙", () => {
     const svgs = btn.querySelectorAll("svg");
     expect(svgs).toHaveLength(1);
     expect(btn.lastElementChild).toBe(svgs[0]);
-    expect(btn.className).toContain("[&_svg]:size-4");
+    expect(btn.className).toContain("[&_svg]:size-[16px]");
   });
 
   it("요일 인사이트 — 요일마다 변화가 없으면 줄을 숨기지 않고 '비슷해요' 로 보인다", () => {

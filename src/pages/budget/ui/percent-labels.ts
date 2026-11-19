@@ -1,3 +1,5 @@
+import { CHART_TICK_LINE } from "@/shared/lib/groo/axisWidth";
+
 /**
  * % 라벨(막대 위 값) 글자 — t2-static 12 / 16. 차트 그림 안 글이라 글자 크기 설정을 따르지 않는다(chart.md "글자 크기",
  * groo-design #260 — 값은 툴팁 · 표로 보기에서 크게 읽는다). SVG 글자는 var() 를 속성으로 못 받아 토큰(`--text-t2-static`)과 같은 값을
@@ -16,10 +18,12 @@ export const BAR_VALUE_ROOM = PERCENT_LABEL_LINE + 4;
 
 /**
  * 막대 위 값이 있는 차트의 위 여백 — 바탕 8 + 값 자리(앱 p_chart_cartesian `topPad = max(8 + 막대 위 값 자리, ⌈세로 눈금 줄 ÷ 2⌉)` 와
- * 같다 — 세로축이 없어도 같은 식). 값 자리가 세로 눈금 줄 절반보다 커 앞쪽이 이긴다(28)
+ * 같다 — 세로축이 없어도 같은 식). 값 자리(20)가 세로 눈금 줄 절반(8)보다 커 앞쪽이 이긴다 — 28. 둘 다 글자 크기 설정을 따르지 않아 고정값이다
  */
-export const barChartTop = (tickLine: number): number =>
-  Math.max(8 + BAR_VALUE_ROOM, Math.ceil(tickLine / 2));
+export const BAR_CHART_TOP = Math.max(
+  8 + BAR_VALUE_ROOM,
+  Math.ceil(CHART_TICK_LINE / 2),
+);
 
 /** 막대와 값 글 사이 */
 export const BAR_VALUE_GAP = 4;

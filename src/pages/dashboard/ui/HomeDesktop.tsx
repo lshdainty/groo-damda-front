@@ -1,7 +1,6 @@
 import {
   chartValueIntervals,
   niceValueAxis,
-  useTickLineHeight,
 } from "@/shared/lib/groo/axisWidth";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -493,7 +492,6 @@ function IncomeExpenseChart({
   const { t } = useTranslation("dashboard");
   const { t: tc } = useTranslation("common");
   const hidden = useHideAmounts("home.monthExpense");
-  const tickLine = useTickLineHeight();
   const mIn = useMasked("home.monthExpense", "income");
   const mOut = useMasked("home.monthExpense", "expense");
   const m = useMasked("home.monthExpense");
@@ -563,7 +561,7 @@ function IncomeExpenseChart({
                     ...(off.has("expense") ? [] : [d.expense]),
                   ]),
                   (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
-                  chartValueIntervals(CHART_H, tickLine),
+                  chartValueIntervals(CHART_H),
                 )}
               />
               <ChartTooltip

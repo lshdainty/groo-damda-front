@@ -173,7 +173,7 @@ export function WatchGroups({
       ))}
       <List className="mt-x2">
         <ListButtonItem
-          prefix={<Plus aria-hidden className="size-6 text-fg-brand" />}
+          prefix={<Plus aria-hidden className="size-[24px] text-fg-brand" />}
           title={
             <span className={cn("text-t5 font-bold text-fg-brand")}>
               {t("watch.groupAdd")}

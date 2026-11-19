@@ -99,25 +99,38 @@ describe("CardArt", () => {
     expect(label.className).toContain("@min-[240px]/image-frame:px-x4");
   });
 
-  it("글이 안 드는 면은 첫 글자 면 — 틀 높이 < (회사 줄 + 이름 한 줄) × 글자 배율 + 아래 여백(03-D 결정 3 A)", () => {
+  it("면 모양은 폭으로만 가른다 — 96 미만 첫 글자, 96 이상 회사 · 카드 이름(글자 배율로 고르는 판단 없음 — groo-design #264)", () => {
     const el = render(
       <CardArt width={110} issuer="KB국민카드" name="가람 체크" />,
     );
     const initial = el.querySelector("[data-slot=card-art-initial]")!.className;
     const label = el.querySelector("[data-slot=card-art-label]")!.className;
-    // medium(폭 96 ~ 239) — calc(2.1875rem + 8px) = (t2 16 + t4 19 = 35)rem + 아래 8. 글 칸이 보이면 첫 글자는 숨는다(둘이 같은 조건)
-    const medium =
-      "[@container_image-frame_(width>=96px)_and_(width<240px)_and_(height>=calc(2.1875rem_+_8px))]";
-    // large(폭 240 이상) — calc(2.5rem + 14px) = (t3 18 + t5 22 = 40)rem + 아래 14
-    const large =
-      "[@container_image-frame_(width>=240px)_and_(height>=calc(2.5rem_+_14px))]";
-    expect(label).toContain(`${medium}:flex`);
-    expect(label).toContain(`${large}:flex`);
-    expect(initial).toContain(`${medium}:hidden`);
-    expect(initial).toContain(`${large}:hidden`);
-    // 첫 글자 면은 기본으로 보인다 — 폭 96 미만이든 높이가 모자라든 글 칸 조건이 안 맞으면 남는다
-    expect(initial.split(" ")).toContain("flex");
-    expect(label.split(" ")).toContain("hidden");
+    expect(initial.split(" ")).toContain("@min-[96px]/image-frame:hidden");
+    expect(label.split(" ")).toContain("@min-[96px]/image-frame:flex");
+    // 높이 · rem 으로 가르던 컨테이너 쿼리(글자 배율 판단)가 남지 않는다
+    expect(initial).not.toMatch(/height|rem/);
+    expect(label).not.toMatch(/height|rem/);
+  });
+
+  it("회사 · 카드 이름은 글자 크기 설정을 따르지 않는다 — medium t2 · t4, large t3 · t5 모두 -static(card-art.yaml)", () => {
+    const el = render(
+      <CardArt width={282} issuer="KB국민카드" name="가람 체크" />,
+    );
+    const issuer = el.querySelector("[data-slot=card-art-issuer]")!.className;
+    const name = el.querySelector("[data-slot=card-art-name]")!.className;
+    expect(issuer.split(" ")).toEqual(
+      expect.arrayContaining([
+        "text-t2-static",
+        "@min-[240px]/image-frame:text-t3-static",
+      ]),
+    );
+    expect(name.split(" ")).toEqual(
+      expect.arrayContaining([
+        "text-t4-static",
+        "@min-[240px]/image-frame:text-t5-static",
+      ]),
+    );
+    expect(`${issuer} ${name}`).not.toMatch(/text-t\d+(?!\d|-static)/);
   });
 
   it("아주 긴 이름 — 회사는 한 줄 말줄임, 카드 이름은 medium 한 줄 · large 두 줄(단어 단위)", () => {

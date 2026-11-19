@@ -194,11 +194,11 @@ export function DetailSkeleton() {
       <Skeleton text="t4" className="mb-x4 w-1/2" />
       {[0, 1, 2].map((i) => (
         <div key={i} className="flex justify-between py-x3">
-          <Skeleton text="t5" className="w-16" />
-          <Skeleton text="t5" className="w-24" />
+          <Skeleton text="t5" className="w-[64px]" />
+          <Skeleton text="t5" className="w-[96px]" />
         </div>
       ))}
-      <Skeleton text="t4" className="my-x4 w-24" />
+      <Skeleton text="t4" className="my-x4 w-[96px]" />
       {[0, 1, 2].map((i) => (
         <Skeleton key={i} className="mb-x2 h-[74px] w-full" radius="16" />
       ))}

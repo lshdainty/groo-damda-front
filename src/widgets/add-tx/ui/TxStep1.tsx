@@ -57,9 +57,9 @@ function PresetTile({ p, f }: { p: ExpenseTemplate; f: TxForm }) {
     return (
       <span
         aria-hidden
-        className="flex size-5 items-center justify-center rounded-r1_5 bg-bg-neutral-weak text-fg-neutral-muted"
+        className="flex size-[20px] items-center justify-center rounded-r1_5 bg-bg-neutral-weak text-fg-neutral-muted"
       >
-        <ArrowRightLeft className="size-3" />
+        <ArrowRightLeft className="size-[12px]" />
       </span>
     );
   const cat = f.categories.find((c) => c.rowId === p.categoryRowId);
@@ -67,7 +67,7 @@ function PresetTile({ p, f }: { p: ExpenseTemplate; f: TxForm }) {
   return (
     <span
       aria-hidden
-      className="flex size-5 items-center justify-center rounded-r1_5"
+      className="flex size-[20px] items-center justify-center rounded-r1_5"
       style={{ background: palette.bg, color: palette.color }}
     >
       <Icon name={cat?.icon ?? "tag"} size={12} />
@@ -103,7 +103,7 @@ function PresetBlock({ f }: { f: TxForm }) {
       {f.templatesQ.isPending ? (
         <div aria-hidden className="flex gap-x2 px-global-gutter pb-x2">
           {[0, 1, 2].map((i) => (
-            <Skeleton key={i} radius="full" className="h-9 w-24" />
+            <Skeleton key={i} radius="full" className="h-[36px] w-[96px]" />
           ))}
         </div>
       ) : loadFailed(f.templatesQ) ? (

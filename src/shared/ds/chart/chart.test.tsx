@@ -1756,14 +1756,15 @@ describe("가로 눈금 — 솎기 · 보이는 눈금의 연도", () => {
 });
 
 /**
- * 끝 눈금 · 글자 크기가 바뀜 — 이음 QA(2026-11-18, 달마다 쓴 휴가 · 1 ~ 11월 · 최대 3일 · 차트 폭 266 · html font-size 200%).
- * 페이지가 떠 있는 동안 글자를 키우자 ① 솎기 간격이 2 달 그대로라 글 사이가 1 까지 붙고 ② 끝 글 "11월" 이 차트 오른쪽 밖으로
- * 8 잘리고 ③ 세로축 폭이 옛 글자 크기라 "3일" 이 왼쪽 밖으로 9 잘렸다. 끝 눈금은 그 달(오늘이 든 달)이다 — 12월은 아직 없다.
+ * 끝 눈금 · 눈금 글 폭이 바뀜 — 이음 QA(2026-11-18, 달마다 쓴 휴가 · 1 ~ 11월 · 최대 3일 · 차트 폭 266).
+ * 눈금 글은 글자 크기 설정을 따르지 않지만(`-static`, #260) 웹폰트가 늦게 도착하면 같은 11px 글의 폭이 바뀐다 — 그때 다시 재지 않으면
+ * ① 솎기 간격이 옛 폭 그대로라 글 사이가 붙고 ② 끝 글 "11월" 이 차트 오른쪽 밖으로 잘리고 ③ 세로축 폭이 옛 폭이라 "3일" 이 왼쪽 밖으로
+ * 잘린다(대체 글꼴로 잰 폭). 아래는 글 폭을 두 배로 넓혀(넓은 웹폰트 — 가장 나쁜 값) 본다. 끝 눈금은 그 달(오늘이 든 달)이다.
  */
-describe("가로 끝 글 자리 · 글자 크기가 바뀌면 다시 잰다", () => {
+describe("가로 끝 글 자리 · 웹폰트가 도착해 눈금 글 폭이 바뀌면 다시 잰다", () => {
   const months = (n: number): ChartXTick[] =>
     Array.from({ length: n }, (_, i) => ({ label: `${i + 1}월` }));
-  /** jsdom 은 글 폭이 없다 — 눈금 글자 크기(--text-t1)의 숨은 글은 글자 수 어림(한글 11 · 그 밖 7) × 배율로 잰다 */
+  /** jsdom 은 글 폭이 없다 — 눈금 글(--text-t1-static)의 숨은 글은 글자 수 어림(한글 11 · 그 밖 7) × 글꼴 폭 배율로 잰다 */
   let scale = 1;
   const textWidth = (s: string) =>
     [...s].reduce((w, c) => w + (c > "ᄀ" ? 11 : 7), 0) * scale;
@@ -1788,7 +1789,7 @@ describe("가로 끝 글 자리 · 글자 크기가 바뀌면 다시 잰다", ()
       },
     );
   });
-  /** 글자 크기를 바꾼다 — 숨은 글을 지켜보는 ResizeObserver 를 부른다 */
+  /** 글꼴 폭을 바꾼다(웹폰트 도착) — 숨은 글을 지켜보는 ResizeObserver 를 부른다 */
   const setScale = (next: number) =>
     act(() => {
       scale = next;
@@ -1872,7 +1873,7 @@ describe("가로 끝 글 자리 · 글자 크기가 바뀌면 다시 잰다", ()
     expect(yLeft()).toBeGreaterThanOrEqual(0);
   };
 
-  it("글자 200% 로 처음 그릴 때 — 끝 글 11월이 차트 안에 들고 글 사이 8 이상", async () => {
+  it("처음부터 넓은 글꼴(글 폭 두 배)로 그릴 때 — 끝 글 11월이 차트 안에 들고 글 사이 8 이상", async () => {
     scale = 2;
     await render(usage(measureTickWidth(["0일", "1일", "2일", "3일"])));
     await layoutCharts(266, 200);
@@ -1880,8 +1881,8 @@ describe("가로 끝 글 자리 · 글자 크기가 바뀌면 다시 잰다", ()
     expectFits(266);
   });
 
-  it("페이지가 떠 있는 동안 글자를 200% 로 키우면 — 건너뛰기 · 끝 글 자리 · 세로축 폭을 다시 잰다", async () => {
-    // 100% 에서 잰 세로축 폭을 쓰는 쪽이 그대로 준다(useAxisWidth · niceValueAxis 가 그 순간 잰 값)
+  it("페이지가 떠 있는 동안 웹폰트가 도착해 글 폭이 두 배가 되면 — 건너뛰기 · 끝 글 자리 · 세로축 폭을 다시 잰다", async () => {
+    // 대체 글꼴로 잰 세로축 폭을 쓰는 쪽이 그대로 준다(useAxisWidth · niceValueAxis 가 그 순간 잰 값)
     await render(usage(measureTickWidth(["0일", "1일", "2일", "3일"])));
     await layoutCharts(266, 200);
     expectFits(266);
@@ -1889,7 +1890,7 @@ describe("가로 끝 글 자리 · 글자 크기가 바뀌면 다시 잰다", ()
     await setScale(2);
     expectFits(266);
     expect(xLabels().length).toBeLessThan(before);
-    // 다시 100% 로 — 솎기도 돌아온다
+    // 글 폭이 돌아오면 솎기도 돌아온다
     await setScale(1);
     expect(xLabels().length).toBe(before);
   });

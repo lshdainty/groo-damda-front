@@ -3,7 +3,7 @@
   "source": "specs/components/card-art.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "카드 그림 — Image Frame ratio card(1.586). 그림이 있으면 그림, 없으면 카드 면 또는 대체 그림",
@@ -30,9 +30,6 @@
         "face": {
           "background": "기관 색",
           "foreground": "기관 글자색"
-        },
-        "label": {
-          "fit": "안 들면 첫 글자 면"
         },
         "issuer": {
           "fontWeight": 500,
@@ -140,13 +137,6 @@
     {
       "rule": 0,
       "state": "enabled",
-      "slot": "label",
-      "prop": "fit",
-      "note": "면 높이 < 회사 줄 높이 + 카드 이름 한 줄 높이 + 아래 여백(지금 글자 배율로 — 여백은 그대로)이면 회사 · 카드 이름 대신 회사 첫 글자 면(small 과 같은 모양 · 면 높이의 40%). 폭 96 ~ 123 면(높이 60.5 ~ 77.6)에서 글자 200% 면 16 × 2 + 19 × 2 + 8 = 78 이 넘친다. large(폭 240 이상 · 높이 151 이상)는 200% 에서도 든다(두 줄이어도 36 + 88 + 14 = 138). 웹 · 앱 같은 식 — 같은 격자에서도 글자 배율에 따라 면 모양이 바뀐다"
-    },
-    {
-      "rule": 0,
-      "state": "enabled",
       "slot": "issuer",
       "prop": "overflowX",
       "note": "한 줄 — 넘치면 말줄임(…)"
@@ -156,7 +146,7 @@
       "state": "enabled",
       "slot": "name",
       "prop": "lineClamp",
-      "note": "medium 은 한 줄 — 폭 96 면(높이 60.5)에 회사 16 + 두 줄 38 + 아래 8 = 62 가 넘쳐(글자 125% 면 폭 120 까지) 한 줄로 둔다. 넘치면 말줄임. 한 줄도 안 드는 큰 글자는 첫 글자 면(label.fit)"
+      "note": "medium 은 한 줄 — 폭 96 면(높이 60.5)에 회사 16 + 두 줄 38 + 아래 8 = 62 가 넘쳐(글자 125% 면 폭 120 까지) 한 줄로 둔다. 넘치면 말줄임. 회사 · 카드 이름은 카드 그림 안 글이라 글자 크기 설정을 따르지 않는다(-static)"
     },
     {
       "rule": 0,

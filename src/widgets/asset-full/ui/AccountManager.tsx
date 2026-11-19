@@ -292,7 +292,7 @@ export function AccountManager({
         {[t("accountDepositTitle"), t("group.card")].map((title, i) => (
           <div key={title}>
             <GroupHead
-              title={<Skeleton text="t4" className="w-24" />}
+              title={<Skeleton text="t4" className="w-[96px]" />}
               first={i === 0}
               mobile={mobile}
             />

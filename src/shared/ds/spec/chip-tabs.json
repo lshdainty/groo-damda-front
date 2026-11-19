@@ -3,7 +3,7 @@
   "source": "specs/components/chip-tabs.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "list": "목록 — 한 줄 가로 스크롤. 바탕 · 바닥 선이 없다",

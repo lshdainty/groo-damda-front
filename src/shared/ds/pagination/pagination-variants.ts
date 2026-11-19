@@ -108,9 +108,9 @@ export const PAGINATION_CELL_CURRENT =
 export const PAGINATION_CELL_DISABLED = "cursor-not-allowed text-fg-disabled";
 export const PAGINATION_CELL_DISABLED_CURRENT = "bg-bg-disabled";
 
-// 번호 — t4 · 700 · 숫자 폭 고정, 칸을 넘으면 말줄임
+// 번호 — t4-static · 700 · 숫자 폭 고정, 칸을 넘으면 말줄임. 칸 안 글이라 글자 크기 설정을 따르지 않는다(pagination.md)
 export const PAGINATION_LABEL =
-  "block min-w-0 max-w-full truncate text-t4 font-bold tabular-nums";
+  "block min-w-0 max-w-full truncate text-t4-static font-bold tabular-nums";
 
 // 생략 · 빈 칸 — 40 상자(생략은 점 셋 16, 누르지 않는다)
 export const PAGINATION_ELLIPSIS =

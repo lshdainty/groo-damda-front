@@ -45,29 +45,33 @@ function NotificationsPageSkeleton() {
       fallback={
         <>
           <div className="px-global-gutter py-x2">
-            <Skeleton radius="4" text="t4" className="w-32" />
+            <Skeleton radius="4" text="t4" className="w-[128px]" />
           </div>
           <div className="px-global-gutter pb-x2 pt-x2">
-            <Skeleton radius="4" text="t4" className="w-28" />
+            <Skeleton radius="4" text="t4" className="w-[112px]" />
           </div>
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
               className="flex items-start gap-x3 px-global-gutter py-x3"
             >
-              <Skeleton className="size-10 shrink-0 rounded-r3" />
+              <Skeleton className="size-[40px] shrink-0 rounded-r3" />
               <div className="min-w-0 flex-1">
                 <Skeleton
                   radius="4"
                   text="t5"
                   className={
-                    i % 3 === 0 ? "w-36" : i % 3 === 1 ? "w-28" : "w-40"
+                    i % 3 === 0
+                      ? "w-[144px]"
+                      : i % 3 === 1
+                        ? "w-[112px]"
+                        : "w-[160px]"
                   }
                 />
                 <Skeleton radius="4" text="t4" className="mt-x1 w-full" />
                 <Skeleton radius="4" text="t4" className="mt-x1 w-2/3" />
               </div>
-              <Skeleton radius="4" text="t3" className="w-8 shrink-0" />
+              <Skeleton radius="4" text="t3" className="w-[32px] shrink-0" />
             </div>
           ))}
         </>

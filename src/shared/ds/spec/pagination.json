@@ -3,7 +3,7 @@
   "source": "specs/components/pagination.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "넘김 줄 — 목록 아래 가운데. 칸을 사이 없이 잇는다",
@@ -275,6 +275,13 @@
       "slot": "item",
       "prop": "transitionProperty",
       "note": "바탕 색과 누름 축소 둘 다 — 다른 누르는 칸(card · chart …)과 같은 표기. 시간은 motion 절"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "label",
+      "prop": "typography",
+      "note": "글자 크기 설정을 따르지 않는다 — 칸 40 안에 들어가는 틀"
     },
     {
       "rule": 0,

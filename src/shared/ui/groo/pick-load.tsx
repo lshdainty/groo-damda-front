@@ -14,7 +14,7 @@ export function PickSkeleton() {
     >
       {[0, 1, 2, 3].map((i) => (
         <div key={i} className="flex items-center gap-x3">
-          <Skeleton radius="12" className="size-10 shrink-0" />
+          <Skeleton radius="12" className="size-[40px] shrink-0" />
           <Skeleton text="t5" className="w-2/3" />
         </div>
       ))}

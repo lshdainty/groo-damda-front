@@ -308,7 +308,7 @@ export function CategoryEditDialog({
             <span
               aria-hidden
               data-slot="category-preview-tile"
-              className="inline-grid size-x13 shrink-0 place-items-center rounded-r4 [&>svg]:size-5"
+              className="inline-grid size-x13 shrink-0 place-items-center rounded-r4 [&>svg]:size-[20px]"
               style={{ background: palette.bg, color: palette.color }}
             >
               <Icon name={isIconName(icon) ? icon : "tag"} size={20} />

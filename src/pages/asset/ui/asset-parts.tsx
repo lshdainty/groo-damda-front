@@ -48,7 +48,6 @@ import {
 import {
   chartValueIntervals,
   niceValueAxis,
-  useTickLineHeight,
 } from "@/shared/lib/groo/axisWidth";
 import {
   chartColorOf,
@@ -126,7 +125,6 @@ const MARGIN = { top: 8, left: 0, bottom: 0 };
 export function NetWorthChart({ height = 180 }: { height?: number }) {
   const { t } = useTranslation("asset");
   const hidden = useHideAmounts("asset.netWorth");
-  const tickLine = useTickLineHeight();
   const trendQ = useNetWorthTrend(12);
   const points = trendQ.data ?? [];
   // 월 눈금 — 한 해 안이면 "5월", 해가 섞이면 "2025. 12." (통계와 같은 규칙 · 앱 monthTicks)
@@ -191,7 +189,7 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
             {...niceValueAxis(
               data.map((d) => d.netWorth),
               (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
-              chartValueIntervals(height, tickLine, MARGIN),
+              chartValueIntervals(height, MARGIN),
             )}
             {...chartAxisProps()}
           />
@@ -300,7 +298,7 @@ export function SummarySection({
             ghostColor="neutralMuted"
             size="medium"
             layout="iconOnly"
-            className="-my-x2 [&_svg]:size-5"
+            className="-my-x2 [&_svg]:size-[20px]"
             aria-label={t("hideAmountsSettings")}
             onClick={openHide}
           >
@@ -575,7 +573,7 @@ export function AssetCompositionCard({
                     {debts.map((d) => (
                       <li
                         key={d.key}
-                        className="flex min-h-11 items-center justify-between gap-x2 text-t4"
+                        className="flex min-h-[44px] items-center justify-between gap-x2 text-t4"
                       >
                         <span className="min-w-0 text-fg-neutral">
                           {d.name}
@@ -652,9 +650,9 @@ export function CompositionSection({ g }: { g: AssetGroups }) {
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
-                        className="flex min-h-11 items-center gap-x2"
+                        className="flex min-h-[44px] items-center gap-x2"
                       >
-                        <Skeleton radius="4" className="size-2.5 shrink-0" />
+                        <Skeleton radius="4" className="size-[10px] shrink-0" />
                         <Skeleton text="t4" className="min-w-0 flex-1" />
                         <Skeleton text="t4" className="w-x10 shrink-0" />
                       </div>
@@ -1025,7 +1023,7 @@ export function SavingGoalsSection({ place }: { place: Placement }) {
                       <Skeleton text="t5" className="w-x10 shrink-0" />
                     </div>
                     <div className="px-x6 pb-x3 pt-x1">
-                      <Skeleton className="h-2 w-full" radius="full" />
+                      <Skeleton className="h-[8px] w-full" radius="full" />
                     </div>
                   </div>
                 ))}

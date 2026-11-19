@@ -88,14 +88,14 @@ export function ExpenseDesktopSkeleton() {
   const wide = useWideSurface();
   const side = (
     <Card aria-hidden className="p-x6">
-      <Skeleton text="t6" className="w-40" />
+      <Skeleton text="t6" className="w-[160px]" />
       <Skeleton text="t4" className="mt-x4 w-full" />
       <Skeleton text="t4" className="mt-x2 w-full" />
     </Card>
   );
   const list = (
     <Card aria-hidden className="p-x6">
-      <Skeleton text="t5" className="w-32" />
+      <Skeleton text="t5" className="w-[128px]" />
       <Skeleton text="t4" className="mt-x4 w-full" />
       <Skeleton text="t4" className="mt-x2 w-full" />
     </Card>

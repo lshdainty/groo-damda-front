@@ -65,7 +65,7 @@ export function RowError({
     >
       <CircleAlert
         aria-hidden
-        className="mr-x1_5 mt-[calc((var(--text-t3--line-height)_-_1rem)/2)] size-4 shrink-0"
+        className="mr-x1_5 mt-[calc((var(--text-t3--line-height)_-_16px)/2)] size-[16px] shrink-0"
       />
       <span className="min-w-0">{children}</span>
     </p>

@@ -839,7 +839,7 @@ function ManagerSkeleton({ mobile }: { mobile: boolean }) {
     <div aria-hidden>
       <Skeleton text="t3" className="w-1/4" />
       <Skeleton text="t9" radius="8" className="mt-x3 w-1/2" />
-      <Skeleton className="mt-x4 h-2 w-full" radius="full" />
+      <Skeleton className="mt-x4 h-[8px] w-full" radius="full" />
     </div>
   );
   const rows = (
@@ -855,7 +855,7 @@ function ManagerSkeleton({ mobile }: { mobile: boolean }) {
             <Skeleton text="t5" className="w-x10 shrink-0" />
           </div>
           <div className="px-x6 pb-x3 pt-x1">
-            <Skeleton className="h-2 w-full" radius="full" />
+            <Skeleton className="h-[8px] w-full" radius="full" />
           </div>
         </div>
       ))}

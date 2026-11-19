@@ -55,7 +55,7 @@ export const CONTINUOUS_WEEKDAYS =
   "sticky top-0 z-[2] grid min-h-[48px] grid-cols-7 bg-bg-layer-floating";
 export const CONTINUOUS_MONTH = "pb-x4";
 export const FOG =
-  "pointer-events-none sticky bottom-0 z-[3] -mt-24 h-[96px] [background:linear-gradient(to_bottom,transparent,var(--color-bg-layer-floating))]";
+  "pointer-events-none sticky bottom-0 z-[3] -mt-[96px] h-[96px] [background:linear-gradient(to_bottom,transparent,var(--color-bg-layer-floating))]";
 
 // 연 · 월 휠 자리 — 요일 줄 + 6주를 덮는다: 48 + 6 × 48 = 336(칸 · 요일 줄은 48 고정 — date-picker.md "글자 크기 설정"). 열고 닫아도
 // 달력 높이가 그대로다. 휠 308 은 가운데(위아래 14). 연 120 · 월 96

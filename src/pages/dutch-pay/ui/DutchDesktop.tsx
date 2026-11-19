@@ -30,10 +30,10 @@ function Kpi({
       <CardStat
         size="small"
         label={label}
-        value={loading ? <Skeleton text="t7" className="w-24" /> : value}
+        value={loading ? <Skeleton text="t7" className="w-[96px]" /> : value}
       />
       <div className="mt-[2px] text-t3 text-fg-neutral-subtle">
-        {loading ? <Skeleton text="t3" className="w-16" /> : sub}
+        {loading ? <Skeleton text="t3" className="w-[64px]" /> : sub}
       </div>
     </Card>
   );

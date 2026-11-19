@@ -611,7 +611,7 @@ export function useSplitStep(o: SplitStepOptions): TxEmbedParts {
               prefix={
                 <span
                   aria-hidden
-                  className="inline-grid size-10 place-items-center rounded-r4 border border-stroke-neutral-weak text-fg-brand"
+                  className="inline-grid size-[40px] place-items-center rounded-r4 border border-stroke-neutral-weak text-fg-brand"
                 >
                   <Plus size={22} />
                 </span>

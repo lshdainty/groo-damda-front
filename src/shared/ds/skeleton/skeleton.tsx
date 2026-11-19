@@ -86,7 +86,22 @@ export type SkeletonText =
   | "t11"
   | "t12"
   | "t13"
-  | "t14";
+  | "t14"
+  // 글자 크기 설정을 따르지 않는 자리(-static 글 — 달력 칸 · 차트 그림 · 배지 등)는 -static 줄 높이로(skeleton.md "줄 높이")
+  | "t1-static"
+  | "t2-static"
+  | "t3-static"
+  | "t4-static"
+  | "t5-static"
+  | "t6-static"
+  | "t7-static"
+  | "t8-static"
+  | "t9-static"
+  | "t10-static"
+  | "t11-static"
+  | "t12-static"
+  | "t13-static"
+  | "t14-static";
 
 // 모서리 — 화면 폭 사진 0 · 그림 자리 4 · 6 · 8(Image Frame — 폭으로) · 글 8 · 타일 12 · 카드 면 16 · 원 full
 const RADIUS: Record<SkeletonRadius, string> = {
@@ -99,7 +114,7 @@ const RADIUS: Record<SkeletonRadius, string> = {
   full: "rounded-full",
 };
 
-// 글 자리의 높이 = 그 글자의 줄 높이(--text-tN--line-height). Tailwind 는 소스의 글자 그대로를 읽으므로 열넷을 다 적는다
+// 글 자리의 높이 = 그 글자의 줄 높이(--text-tN--line-height · -static 은 --text-tN-static--line-height). Tailwind 는 소스의 글자 그대로를 읽으므로 스물여덟을 다 적는다
 const TEXT_HEIGHT: Record<SkeletonText, string> = {
   t1: "h-(--text-t1--line-height)",
   t2: "h-(--text-t2--line-height)",
@@ -115,6 +130,20 @@ const TEXT_HEIGHT: Record<SkeletonText, string> = {
   t12: "h-(--text-t12--line-height)",
   t13: "h-(--text-t13--line-height)",
   t14: "h-(--text-t14--line-height)",
+  "t1-static": "h-(--text-t1-static--line-height)",
+  "t2-static": "h-(--text-t2-static--line-height)",
+  "t3-static": "h-(--text-t3-static--line-height)",
+  "t4-static": "h-(--text-t4-static--line-height)",
+  "t5-static": "h-(--text-t5-static--line-height)",
+  "t6-static": "h-(--text-t6-static--line-height)",
+  "t7-static": "h-(--text-t7-static--line-height)",
+  "t8-static": "h-(--text-t8-static--line-height)",
+  "t9-static": "h-(--text-t9-static--line-height)",
+  "t10-static": "h-(--text-t10-static--line-height)",
+  "t11-static": "h-(--text-t11-static--line-height)",
+  "t12-static": "h-(--text-t12-static--line-height)",
+  "t13-static": "h-(--text-t13-static--line-height)",
+  "t14-static": "h-(--text-t14-static--line-height)",
 };
 
 // 면 — 블록 span, 띠를 면 모양으로 자른다

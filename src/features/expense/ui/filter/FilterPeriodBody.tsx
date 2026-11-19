@@ -189,7 +189,7 @@ export function FilterPeriodBody({
       ))}
       {badPeriod && (
         <p className="m-0 flex items-start gap-x1_5 text-t4 font-normal text-fg-critical">
-          <CircleAlert aria-hidden className="mt-x0_5 size-4 shrink-0" />
+          <CircleAlert aria-hidden className="mt-x0_5 size-[16px] shrink-0" />
           {t("filter.dateError")}
         </p>
       )}

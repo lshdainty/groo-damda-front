@@ -2,7 +2,6 @@ import {
   chartValueIntervals,
   niceDualValueAxes,
   niceValueAxis,
-  useTickLineHeight,
 } from "@/shared/lib/groo/axisWidth";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -99,7 +98,6 @@ export function TrendSection({
   const { t } = useTranslation("stats");
   const { t: te } = useTranslation("expense");
   const mask = useMasked("stats.trend");
-  const tickLine = useTickLineHeight();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const head = (
     <BandHead
@@ -150,7 +148,7 @@ export function TrendSection({
   // 눈금 사이가 눈금 글 줄 높이보다 좁으면 칸 수를 줄인다(chart.md "세로 눈금이 겹치면 수를 줄입니다")
   const axisText = (v: number, ticks: readonly number[]) =>
     mask(formatAxisWon(v, ticks));
-  const room = chartValueIntervals(height, tickLine);
+  const room = chartValueIntervals(height);
   const dualAxes = dual
     ? niceDualValueAxes(
         data.map((d) => d.income),
@@ -313,7 +311,7 @@ export function SavingsRateSection({
                 <Skeleton radius="full" className="size-[108px] shrink-0" />
                 <div className="flex-1">
                   <Skeleton text="t5" className="w-2/3" />
-                  <Skeleton className="mt-x3 h-2 w-full" radius="full" />
+                  <Skeleton className="mt-x3 h-[8px] w-full" radius="full" />
                 </div>
               </div>
             </>
@@ -419,7 +417,7 @@ export function SavingsRateSection({
           {/* 장식 막대 — 값은 아래 글이 말한다 */}
           <div
             aria-hidden
-            className="flex h-2 gap-x0_5 overflow-hidden rounded-full"
+            className="flex h-[8px] gap-x0_5 overflow-hidden rounded-full"
           >
             <div
               className="rounded-full bg-fg-critical"
@@ -439,7 +437,7 @@ export function SavingsRateSection({
                 <span className="inline-flex min-w-0 items-center gap-x2 text-fg-neutral">
                   <span
                     aria-hidden
-                    className={cn("size-2 shrink-0 rounded-full", r.dot)}
+                    className={cn("size-[8px] shrink-0 rounded-full", r.dot)}
                   />
                   {r.name}
                 </span>
@@ -474,7 +472,6 @@ export function SavingsBarsSection({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.trend");
-  const tickLine = useTickLineHeight();
   const title = m.useDailyTrend
     ? t("trend.dailySavings")
     : t("trend.monthlySavings");
@@ -539,7 +536,7 @@ export function SavingsBarsSection({
               {...niceValueAxis(
                 data.map((d) => d.savings),
                 (v, ticks) => mask(formatAxisWon(v, ticks)),
-                chartValueIntervals(height, tickLine),
+                chartValueIntervals(height),
               )}
               {...chartAxisProps()}
             />
@@ -586,7 +583,6 @@ export function CatTrendSection({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.trend");
-  const tickLine = useTickLineHeight();
   const head = (
     <BandHead
       title={t("trend.catTrendTitle")}
@@ -648,7 +644,7 @@ export function CatTrendSection({
             <li key={c.id} className="inline-flex items-center gap-x1_5">
               <span
                 aria-hidden
-                className="size-2 shrink-0 rounded-full"
+                className="size-[8px] shrink-0 rounded-full"
                 style={{ background: c.fill }}
               />
               {c.name}
@@ -679,7 +675,7 @@ export function CatTrendSection({
                   ),
                 ),
                 (v, ticks) => mask(formatAxisWon(v, ticks)),
-                chartValueIntervals(catHeight, tickLine),
+                chartValueIntervals(catHeight),
               )}
             />
             <ChartTooltip

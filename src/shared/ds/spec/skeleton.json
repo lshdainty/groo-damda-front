@@ -3,7 +3,7 @@
   "source": "specs/components/skeleton.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "면 — 곧 나타날 내용 하나의 자리(글 한 줄 · 숫자 · 카드 · 아바타 · 사진)",
@@ -163,7 +163,7 @@
       "state": "enabled",
       "slot": "root",
       "prop": "height",
-      "note": "글 · 숫자는 그 글자의 줄 높이 — t2 12 → 16 · t3 13 → 18 · t4 14 → 19 · t5 16 → 22 · t7 20 → 27. 글로 바뀌어도 세로가 움직이지 않습니다"
+      "note": "글 · 숫자는 그 글자의 줄 높이 — t2 12 → 16 · t3 13 → 18 · t4 14 → 19 · t5 16 → 22 · t7 20 → 27. 글로 바뀌어도 세로가 움직이지 않습니다. 줄 높이는 글자 크기 설정을 따라 올 글과 함께 커지고, 글자 크기를 따르지 않는 자리(-static 글 — 달력 칸 · 차트 그림 · 배지 등)는 -static 줄 높이입니다"
     },
     {
       "rule": 0,
@@ -219,7 +219,7 @@
       "state": "enabled",
       "slot": "slowText",
       "prop": "foreground",
-      "note": "문장으로 된 상태 문구라 muted"
+      "note": "문장으로 된 상태 문구라 muted. 글자 크기 설정을 따라 커지고 줄을 바꿔 받습니다"
     },
     {
       "rule": 0,

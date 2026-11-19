@@ -202,7 +202,7 @@ export function NamuStocksView({
         key: "deposit-usd",
         name: t("invest.depositUsd"),
         value: marginQ.isLoading ? (
-          <Skeleton text="t5" className="w-16" />
+          <Skeleton text="t5" className="w-[64px]" />
         ) : hasValue(deposit) ? (
           mask(fmtByCurrency(num(deposit), "USD"))
         ) : (

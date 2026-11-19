@@ -164,12 +164,12 @@ function SwitchRow({
         title={title}
         detail={
           detailLoading ? (
-            <Skeleton radius="4" text="t3" className="w-40" />
+            <Skeleton radius="4" text="t3" className="w-[160px]" />
           ) : (
             detail
           )
         }
-        suffix={<Skeleton radius="full" className="h-8 w-[52px]" />}
+        suffix={<Skeleton radius="full" className="h-[32px] w-[52px]" />}
       />
     );
   return (
@@ -222,7 +222,7 @@ function PickRow({
       <ListItem
         prefix={prefix}
         title={title}
-        suffix={<Skeleton radius="4" text="t5" className="w-16" />}
+        suffix={<Skeleton radius="4" text="t5" className="w-[64px]" />}
       />
     );
   const doneButton = done ? (
@@ -473,7 +473,7 @@ export function NotificationsManager({ mobile }: { mobile: boolean }) {
               {t("threshold.label")}
             </span>
             {isLoading ? (
-              <Skeleton radius="4" text="t5" className="w-10" />
+              <Skeleton radius="4" text="t5" className="w-[40px]" />
             ) : (
               <SliderValue>{shownThreshold}%</SliderValue>
             )}

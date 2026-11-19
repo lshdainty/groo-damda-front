@@ -334,7 +334,7 @@ function ChartBlock({
           />
         ) : availability === "no" ? (
           <div className="flex h-full flex-col items-center justify-center gap-x2 text-center text-t4 text-fg-neutral-subtle">
-            <LineChart aria-hidden className="size-7" />
+            <LineChart aria-hidden className="size-[28px]" />
             {t("chart.brokerRequired")}
           </div>
         ) : null}
@@ -416,7 +416,7 @@ export function KvBand({
 
 // ---- 호가 · 체결 ---------------------------------------------------------------
 
-const ROW = "h-8";
+const ROW = "h-[32px]";
 /** 나무 응답은 모든 칸이 null 일 수 있다 — 읽지 못하면 null (NaN 이 막대 폭 · 글로 번지지 않게) */
 const fin = (s: string | null | undefined): number | null => {
   if (s == null) return null;
@@ -722,7 +722,7 @@ function TableSkeleton({ label }: { label: string }) {
   return (
     <div aria-busy aria-label={label} className="flex flex-col gap-x2">
       {Array.from({ length: 6 }, (_, i) => (
-        <Skeleton key={i} className="h-6 w-full" />
+        <Skeleton key={i} className="h-[24px] w-full" />
       ))}
     </div>
   );
@@ -787,7 +787,7 @@ export function DailyBand({
               key={i}
               title={<Skeleton text="t5" className="w-1/4" />}
               detail={<Skeleton text="t3" className="mt-x0_5 w-1/3" />}
-              suffix={<Skeleton text="t5" className="w-20" />}
+              suffix={<Skeleton text="t5" className="w-[80px]" />}
             />
           ))}
         </List>
@@ -991,7 +991,7 @@ export function InvestorBand({ q }: { q: InvestorQuery }) {
             <ListItem
               key={i}
               title={<Skeleton text="t5" className="w-1/4" />}
-              suffix={<Skeleton text="t3" className="h-14 w-24" />}
+              suffix={<Skeleton text="t3" className="h-[56px] w-[96px]" />}
             />
           ))}
         </List>
