@@ -1444,12 +1444,82 @@ describe("DatePicker — 큰 글자 · 눌림 색 (I-04 03-C 결정 1B · 2B)", 
     expect(cls(wheel)).not.toContain("--line-height");
   });
 
-  it("이어지는 달은 달 이름 줄만 숨은 견본으로 잰다 — 이름 줄은 제목처럼 커지고, 칸 · 요일 줄은 48 고정(#261)", () => {
+  it("이어지는 달은 달 이름 줄만 숨은 견본으로 잰다 — 그 해 열두 달 이름 줄, 이름 줄은 제목처럼 커지고 칸 · 요일 줄은 48 고정(#261)", () => {
     render(<Range visibleRange="continuous" today={TODAY} />);
     const probe = container.querySelector("[data-slot=date-picker-probe]")!;
     expect(probe.getAttribute("aria-hidden")).toBe("true");
-    expect(probe.children).toHaveLength(1);
+    expect(probe.children).toHaveLength(12);
     expect(cls(probe.children[0]!)).toMatch(/(^| )text-t5( |$)/);
     expect(cls(probe)).toContain("invisible");
+  });
+
+  /**
+   * 320 · 300% — 영어 "September 2026" 은 필요 폭 386 이 자리 272 를 넘는다(QA dev f844fe49 — 한 줄 고정이라 "September 2…" 로 잘렸다).
+   * 달 이름은 커지는 글이라 낱말 사이에서 줄을 바꾼다. 달마다 줄 수가 달라도 달 위치 셈이 실제와 같게, 그 해 가장 높은 이름 줄을 모든 달
+   * 이름 줄의 높이로 쓰고, 높이가 바뀌면 보던 달을 다시 맨 위로 둔다(#261).
+   */
+  it("320 · 300% — 달 이름은 잘리지 않고 줄을 바꾼다 · 가장 높은 이름 줄로 모든 달을 맞추고 보던 달(10월)을 지킨다", () => {
+    const ONE = 22 * 3; // t5 줄 높이 22 × 300%
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: Element) {
+        const inProbe = this.closest("[data-slot=date-picker-probe]");
+        // 견본 안 이름 줄 — 9월만 두 줄(가장 긴 이름), 나머지는 한 줄
+        const h =
+          inProbe && this.parentElement === inProbe
+            ? /9월/.test(this.textContent ?? "")
+              ? ONE * 2
+              : ONE
+            : 0;
+        return {
+          width: 0,
+          height: h,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: h,
+          x: 0,
+          y: 0,
+          toJSON() {},
+        } as DOMRect;
+      },
+    );
+    render(<Range visibleRange="continuous" today={TODAY} />);
+    // 한 줄 고정(nowrap)이 아니다 — 낱말 사이에서 줄을 바꾼다
+    const label = container.querySelector<HTMLElement>(
+      "[data-slot=date-picker-month-label]",
+    )!;
+    expect(cls(label)).not.toContain("whitespace-nowrap");
+    expect(cls(label)).not.toContain("truncate");
+    expect(cls(label)).toContain("break-keep");
+    // 모든 달 이름 줄이 가장 높은 줄(두 줄 132)에 맞춰진다
+    const labels = [
+      ...container.querySelectorAll<HTMLElement>(
+        "[data-slot=date-picker-month-label]",
+      ),
+    ];
+    expect(labels.length).toBeGreaterThan(1);
+    for (const l of labels) expect(l.style.minHeight).toBe(`${ONE * 2}px`);
+    // 보던 달(10월)이 맨 위 — 스크롤 = 위 빈 자리 + 앞 달들의 (이름 줄 132 + 주 수 × 48 + 16)
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-slot=date-picker-scroll]",
+    )!;
+    const first = container.querySelector<HTMLElement>(
+      "[data-slot=date-picker-month]",
+    )!;
+    const list = first.parentElement!;
+    // 그린 첫 달 앞의 빈 자리(그리지 않은 앞 달들의 높이 합)
+    const top = parseFloat(
+      (first.previousElementSibling as HTMLElement).style.height || "0",
+    );
+    let expected = top;
+    for (const m of list.querySelectorAll("[data-slot=date-picker-month]")) {
+      if (m.querySelector("[data-month='2026-10']")) break;
+      const weeks = m.querySelectorAll(
+        "[data-month] > [role=row]:not(.sr-only)",
+      ).length;
+      expected += ONE * 2 + weeks * 48 + 16;
+    }
+    expect(scroll.scrollTop).toBe(expected);
+    vi.restoreAllMocks();
   });
 });

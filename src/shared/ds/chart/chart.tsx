@@ -12,6 +12,7 @@ import {
 } from "@/shared/lib/groo/axisWidth";
 
 import {
+  CHART_DONUT_CENTER_AMOUNT,
   CHART_HIDE_DOTS,
   CHART_ROOT,
   DONUT_NARROW,
@@ -868,7 +869,7 @@ function ChartDonutCenter({
         )}
         <span
           data-slot="chart-donut-center-amount"
-          className="text-t5-static font-bold whitespace-nowrap tabular-nums text-fg-neutral"
+          className={cn(CHART_DONUT_CENTER_AMOUNT, "text-fg-neutral")}
         >
           {amount}
         </span>
