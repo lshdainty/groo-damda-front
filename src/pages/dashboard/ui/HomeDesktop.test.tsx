@@ -25,6 +25,21 @@ vi.mock("react-i18next", () => ({
       o ? `${k}${JSON.stringify(o)}` : k,
     i18n: { language: "ko" },
   }),
+  // 문장 안 값 자리는 <b> 로 — 키 뒤에 넘긴 값(금액 · %)을 굵게 붙인다
+  Trans: ({
+    i18nKey,
+    values,
+  }: {
+    i18nKey: string;
+    values?: Record<string, string>;
+  }) => (
+    <>
+      {i18nKey}
+      {Object.values(values ?? {}).map((v) => (
+        <b key={v}>{v}</b>
+      ))}
+    </>
+  ),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 vi.mock("react-router-dom", () => ({ useNavigate: () => () => {} }));
@@ -397,14 +412,14 @@ describe("홈 하루 평균 — 이번 달은 1일부터 오늘까지, 지난 �
     vi.useRealTimers();
   });
 
-  /** "하루 평균 1,636원 썼어요" 의 금액 — "avg.dailyAverage" 글 바로 뒤의 굵은 글(앞의 잔액 굵은 글은 건너뛴다) */
+  /** "하루 평균 1,636원 썼어요" 의 금액 — "avg.daily" 문장의 굵은 값(앞의 잔액 굵은 글은 건너뛴다) */
   const noteAmount = () => {
     const p = Array.from(container.querySelectorAll("p")).find((el) =>
-      el.textContent?.includes("avg.dailyAverage"),
+      el.textContent?.includes("avg.daily"),
     );
     let seenLabel = false;
     for (const n of Array.from(p?.childNodes ?? [])) {
-      if (n.textContent?.includes("avg.dailyAverage")) seenLabel = true;
+      if (n.textContent?.includes("avg.daily")) seenLabel = true;
       else if (seenLabel && n.nodeName === "B") return n.textContent;
     }
     return undefined;

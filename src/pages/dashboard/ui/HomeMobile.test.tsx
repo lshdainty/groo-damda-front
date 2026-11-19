@@ -13,6 +13,21 @@ vi.mock("react-i18next", () => ({
       o ? `${k}${JSON.stringify(o)}` : k,
     i18n: { language: "ko" },
   }),
+  // 문장 안 값 자리는 <b> 로 — 키 뒤에 넘긴 값(금액 · %)을 굵게 붙인다
+  Trans: ({
+    i18nKey,
+    values,
+  }: {
+    i18nKey: string;
+    values?: Record<string, string>;
+  }) => (
+    <>
+      {i18nKey}
+      {Object.values(values ?? {}).map((v) => (
+        <b key={v}>{v}</b>
+      ))}
+    </>
+  ),
   initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 vi.mock("react-router-dom", () => ({ useNavigate: () => () => {} }));
