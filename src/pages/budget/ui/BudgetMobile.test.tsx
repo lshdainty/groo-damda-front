@@ -393,3 +393,59 @@ describe("예산 이행률 — 막대 위 값 글 바탕", () => {
     vi.restoreAllMocks();
   });
 });
+
+/**
+ * 예산이 없는 달(이행률 null — 막대 없음)이 앞 · 가운데 있어도 막대 위 값 글이 제 달에 선다(QA 2026-11-19). recharts 는 값 없는 막대를 빼고
+ * 남은 막대에만 값 글을 그리고 content 의 index 는 그 남은 막대 안의 자리라, 그 index 로 달 목록을 읽던 예전 코드는 이번 달에만 예산을 둔
+ * 계정에서 값 글이 0 개였다(툴팁에만 "2%"). 값 글 열쇠를 달의 자리(dataKey "index")로 바꿨다.
+ */
+describe("예산 이행률 — 예산 없는 달이 섞여도 막대 위 값 글이 제 달에", () => {
+  const reduceMotion = () => {
+    const media = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes("reduce"),
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+    })) as unknown as typeof window.matchMedia;
+    return () => {
+      window.matchMedia = media;
+    };
+  };
+  /** 달마다 이행률 10 · 20 · … · 60% — 한도 0 인 달은 예산 없음 */
+  const monthsWith = (limits: number[]) =>
+    months(limits).map((r, i) => ({ ...r, compliancePercent: 10 * (i + 1) }));
+  const valueTexts = () =>
+    Array.from(
+      section("compliance").querySelectorAll("[data-slot=bar-value] text"),
+    ).map((t) => t.textContent);
+
+  it.each([
+    ["이번 달에만 예산", [0, 0, 0, 0, 0, 100], ["60%"]],
+    [
+      "가운데 두 달이 비어 있음",
+      [100, 100, 0, 0, 100, 100],
+      ["10%", "20%", "50%", "60%"],
+    ],
+    [
+      "모든 달에 예산",
+      [100, 100, 100, 100, 100, 100],
+      ["10%", "20%", "30%", "40%", "50%", "60%"],
+    ],
+  ])("%s", async (_name, limits, expected) => {
+    installValueAxisHarness();
+    const restore = reduceMotion();
+    state.compliance = q(monthsWith(limits));
+    render();
+    await layoutCharts(272);
+    // 막대 수 = 값 글 수, 값 글은 제 달의 이행률
+    expect(
+      section("compliance").querySelectorAll(".recharts-bar-rectangle"),
+    ).toHaveLength(expected.length);
+    expect(valueTexts()).toEqual(expected);
+    restore();
+    vi.restoreAllMocks();
+  });
+});
