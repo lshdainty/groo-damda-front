@@ -48,16 +48,13 @@ import {
 } from "@/shared/ui/groo/band-parts";
 import { Icon } from "@/shared/ui/groo/primitives";
 import type { BudgetModel } from "./budget-model";
-import {
-  useTickFontVersion,
-  useTickLineHeight,
-} from "@/shared/lib/groo/axisWidth";
+import { useTickFontVersion } from "@/shared/lib/groo/axisWidth";
 import {
   PERCENT_LABEL_LINE,
   PERCENT_LABEL_PX,
   PERCENT_LABEL_SIZE,
   BAR_VALUE_GAP,
-  barChartTop,
+  BAR_CHART_TOP,
   textWidth,
   visiblePercentLabels,
 } from "./percent-labels";
@@ -657,7 +654,6 @@ export function ComplianceSection({
   const mask = useMasked("budget.compliance");
   // 막대 위 값 글은 글자 크기 설정을 따르지 않는다(#260). 웹폰트가 도착하면(눈금 글꼴 판) 겹침 셈 · 바탕 폭을 다시 잰다
   const fontVersion = useTickFontVersion();
-  const tickLine = useTickLineHeight();
   const head = (
     <BandHead
       title={t("complianceTitle")}
@@ -725,7 +721,7 @@ export function ComplianceSection({
                 data={data}
                 margin={{
                   // 위 여백 = max(8 + 막대 위 값 자리(값 글 줄 높이 16 + 4), ⌈세로 눈금 줄 ÷ 2⌉) — 앱과 같은 식
-                  top: barChartTop(tickLine),
+                  top: BAR_CHART_TOP,
                   right: 8,
                   left: 8,
                   bottom: 0,

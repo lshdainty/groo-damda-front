@@ -10,8 +10,11 @@ import { niceAxis } from "./chartAxis";
  * 돌아간다. 웹폰트가 늦게 도착하면 다시 잰다(눈금 글꼴 판 · `document.fonts.ready`).
  */
 export const AXIS_TICK_FONT_SIZE = "var(--text-t1-static)";
-/** 눈금 글 줄 높이 — `--text-t1-static--line-height`(15px) */
-const AXIS_TICK_LINE_HEIGHT = "var(--text-t1-static--line-height)";
+/**
+ * 눈금 글 줄 높이(px) — `--text-t1-static--line-height` 15px. 눈금 글은 글자 크기 설정을 따르지 않으므로(`-static`, chart.md
+ * "글자 크기", groo-design #260) 줄 높이도 늘 15 다 — 재지 않고 상수로 센다.
+ */
+export const CHART_TICK_LINE = 15;
 /**
  * 눈금 글자 옆 여백 — recharts 가 축 폭에서 따로 덜어 가는 것의 합이다. ds 차트 `chartAxisProps` 는 tickMargin 8 을 주고
  * tickLine 만 끌 뿐 tickSize(기본 6)는 그대로라 글자는 축 끝에서 6 + 8 = 14 안쪽에 놓인다. 여기에 올림 오차 2 를 더해 16.
@@ -255,70 +258,40 @@ const X_TICK_MARGIN = 8;
 
 /**
  * 세로 눈금 끝 글의 자리(chart.md "세로축 끝 글의 자리를 비웁니다", groo-design #250) — 세로 눈금 글은 눈금 선 가운데에 서므로 맨 위 ·
- * 맨 아래 글이 그리는 자리 밖으로 글 줄 높이의 절반만큼 나간다(세로 · 가로 눈금 글은 같은 글꼴 · 같은 줄 높이).
+ * 맨 아래 글이 그리는 자리 밖으로 글 줄 높이의 절반만큼 나간다(세로 · 가로 눈금 글은 같은 글꼴 · 같은 줄 높이 15).
  *
- *   위 여백        = max(지금 위 여백, ⌈줄 높이 ÷ 2⌉)                      — 맨 위 글이 차트 상자 · 지표 타일에 잘리지 않게
- *   가로 눈금 줄 시작 = 그리는 자리 아래 max(8, ⌈줄 높이 ÷ 2⌉ + 4)         — 맨 아래 세로 글과 첫 가로 글 사이 4 이상
- *   가로 눈금 줄 높이 = 위 시작 + 줄 높이                                  — 12 + 15 = 27
+ *   위 여백        = max(지금 위 여백, ⌈15 ÷ 2⌉ = 8)          — 맨 위 글이 차트 상자 · 지표 타일에 잘리지 않게
+ *   가로 눈금 줄 시작 = 그리는 자리 아래 max(8, 8 + 4) = 12      — 맨 아래 세로 글과 첫 가로 글 사이 4 이상
+ *   가로 눈금 줄 높이 = 위 시작 + 줄 높이 = 12 + 15 = 27
  *
- * 글은 눈금 선 가운데 그대로 둔다(앱 같은 셈). 눈금 글은 글자 크기 설정을 따르지 않아(`-static`, #260) 줄 높이는 늘 15 다.
+ * 글은 눈금 선 가운데 그대로 둔다(앱 같은 셈). 눈금 글은 글자 크기 설정을 따르지 않아(`-static`, #260) 셋 다 고정값이다.
  */
-export const chartTopMargin = (top: number, lineHeight: number): number =>
-  Math.max(top, Math.ceil(lineHeight / 2));
+const TICK_HALF = Math.ceil(CHART_TICK_LINE / 2);
 
-/** 가로 눈금 글이 그리는 자리 아래에서 떨어지는 거리 — max(8, ⌈줄 높이 ÷ 2⌉ + 4)(줄 15 → 12) */
-export const chartXTickGap = (lineHeight: number): number =>
-  Math.max(X_TICK_MARGIN, Math.ceil(lineHeight / 2) + 4);
+/** 세로축이 보이는 차트의 위 여백 — max(지금 위 여백, 8) */
+export const chartTopMargin = (top: number): number => Math.max(top, TICK_HALF);
 
-/** 가로 눈금 줄 높이 — 위 시작([chartXTickGap]) + 눈금 글 줄 높이. ds Chart 가 시간 가로축(chartXAxisProps)에 준다(앱 같은 셈) */
-export const chartXAxisHeight = (lineHeight: number): number =>
-  chartXTickGap(lineHeight) + Math.ceil(lineHeight);
-/** 눈금 글 줄 높이(`--text-t1-static--line-height` = 15px) — 잴 수 없을 때(jsdom) 쓰는 값 */
-const TICK_LINE_FALLBACK = 15;
+/** 가로 눈금 글이 그리는 자리 아래에서 떨어지는 거리 — max(8, 8 + 4) = 12 */
+export const CHART_X_TICK_GAP = Math.max(X_TICK_MARGIN, TICK_HALF + 4);
 
-/** 눈금 글 줄 높이(px) — px 고정 토큰이라 글자 크기 설정을 따르지 않는다(늘 15) */
-export function measureTickLineHeight(): number {
-  if (typeof document === "undefined") return TICK_LINE_FALLBACK;
-  const span = document.createElement("span");
-  span.style.cssText = `position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0;display:block;font-size:${AXIS_TICK_FONT_SIZE};line-height:${AXIS_TICK_LINE_HEIGHT};`;
-  span.textContent = "0";
-  document.body.appendChild(span);
-  try {
-    return span.getBoundingClientRect().height || TICK_LINE_FALLBACK;
-  } finally {
-    span.remove();
-  }
-}
+/** 가로 눈금 줄 높이 — 위 시작([CHART_X_TICK_GAP]) + 눈금 글 줄 높이 = 27. ds Chart 가 시간 가로축(chartXAxisProps)에 준다(앱 같은 셈) */
+export const CHART_X_AXIS_HEIGHT = CHART_X_TICK_GAP + CHART_TICK_LINE;
 
 /**
- * 눈금 글 줄 높이 — 처음 그릴 때 한 번 잰다. 눈금 글은 글자 크기 설정을 따르지 않고(`-static`, chart.md "글자 크기", groo-design #260)
- * 줄 높이는 px 토큰이라 글꼴이 늦게 도착해도 바뀌지 않는다 — 다시 잴 일이 없다.
- */
-export function useTickLineHeight(): number {
-  const [lineHeight] = useState(measureTickLineHeight);
-  return lineHeight;
-}
-
-/**
- * 세로 눈금 글이 겹치지 않고 들어가는 칸 수 — 눈금 사이(그리는 높이 ÷ 칸 수)가 눈금 글 줄 높이 이상이어야 한다
+ * 세로 눈금 글이 겹치지 않고 들어가는 칸 수 — 눈금 사이(그리는 높이 ÷ 칸 수)가 눈금 글 줄 높이(15) 이상이어야 한다
  * (chart.md "세로 눈금이 겹치면 수를 줄입니다").
  *
- *   그리는 높이 = 차트 높이 − max(위 여백, ⌈줄 높이 ÷ 2⌉) − 아래 여백 − (max(8, ⌈줄 높이 ÷ 2⌉ + 4) + 줄 높이)
- *                — 세로축 끝 글 자리(chartTopMargin) · 가로 눈금 줄(chartXAxisHeight), ds Chart 가 그리는 것과 같은 여백
- *   들어가는 칸 수 = ⌊그리는 높이 ÷ 눈금 글 줄 높이⌋(0 이상)
+ *   그리는 높이 = 차트 높이 − max(위 여백, 8) − 아래 여백 − 27
+ *                — 세로축 끝 글 자리(chartTopMargin) · 가로 눈금 줄(CHART_X_AXIS_HEIGHT), ds Chart 가 그리는 것과 같은 여백
+ *   들어가는 칸 수 = ⌊그리는 높이 ÷ 15⌋(0 이상)
  *
- * 여백은 차트에 준 margin(없으면 ds Chart 기본 위 8 · 아래 5 — 앱엔 아래 여백이 없어 웹만 그만큼 더 뺀다). 폰 띠 140(위 8 · 아래 0) ·
- * 줄 15 → 그리는 높이 140 − 8 − 0 − 27 = 105 → 105 ÷ 15 = 7 칸.
+ * 여백은 차트에 준 margin(없으면 ds Chart 기본 위 8 · 아래 5 — 앱엔 아래 여백이 없어 웹만 그만큼 더 뺀다). 폰 띠 140(위 8 · 아래 0)
+ * → 그리는 높이 140 − 8 − 0 − 27 = 105 → 105 ÷ 15 = 7 칸.
  */
 export function chartValueIntervals(
   height: number,
-  lineHeight: number,
   { top = 8, bottom = 5 }: { top?: number; bottom?: number } = {},
 ): number {
-  const plot =
-    height -
-    chartTopMargin(top, lineHeight) -
-    bottom -
-    chartXAxisHeight(lineHeight);
-  return Math.max(0, Math.floor(plot / Math.max(1, lineHeight)));
+  const plot = height - chartTopMargin(top) - bottom - CHART_X_AXIS_HEIGHT;
+  return Math.max(0, Math.floor(plot / CHART_TICK_LINE));
 }

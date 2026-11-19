@@ -48,7 +48,6 @@ import {
 import {
   chartValueIntervals,
   niceValueAxis,
-  useTickLineHeight,
 } from "@/shared/lib/groo/axisWidth";
 import {
   chartColorOf,
@@ -126,7 +125,6 @@ const MARGIN = { top: 8, left: 0, bottom: 0 };
 export function NetWorthChart({ height = 180 }: { height?: number }) {
   const { t } = useTranslation("asset");
   const hidden = useHideAmounts("asset.netWorth");
-  const tickLine = useTickLineHeight();
   const trendQ = useNetWorthTrend(12);
   const points = trendQ.data ?? [];
   // 월 눈금 — 한 해 안이면 "5월", 해가 섞이면 "2025. 12." (통계와 같은 규칙 · 앱 monthTicks)
@@ -191,7 +189,7 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
             {...niceValueAxis(
               data.map((d) => d.netWorth),
               (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
-              chartValueIntervals(height, tickLine, MARGIN),
+              chartValueIntervals(height, MARGIN),
             )}
             {...chartAxisProps()}
           />

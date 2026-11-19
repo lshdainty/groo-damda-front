@@ -1,7 +1,6 @@
 import {
   chartValueIntervals,
   niceValueAxis,
-  useTickLineHeight,
 } from "@/shared/lib/groo/axisWidth";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -423,7 +422,6 @@ export function CompareWeekdaySection({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.compare");
-  const tickLine = useTickLineHeight();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const head = (
     <BandHead title={t("compare.weekdayTitle")} band={place === "band"} />
@@ -539,7 +537,7 @@ export function CompareWeekdaySection({
                   ...(hidden.has("prev") ? [] : [Number(d.prev ?? 0)]),
                 ]),
                 (v, ticks) => mask(formatAxisWon(v, ticks)),
-                chartValueIntervals(height, tickLine),
+                chartValueIntervals(height),
               )}
             />
             <ChartTooltip

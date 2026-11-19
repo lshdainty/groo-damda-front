@@ -2,7 +2,6 @@ import {
   chartValueIntervals,
   niceDualValueAxes,
   niceValueAxis,
-  useTickLineHeight,
 } from "@/shared/lib/groo/axisWidth";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -99,7 +98,6 @@ export function TrendSection({
   const { t } = useTranslation("stats");
   const { t: te } = useTranslation("expense");
   const mask = useMasked("stats.trend");
-  const tickLine = useTickLineHeight();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const head = (
     <BandHead
@@ -150,7 +148,7 @@ export function TrendSection({
   // 눈금 사이가 눈금 글 줄 높이보다 좁으면 칸 수를 줄인다(chart.md "세로 눈금이 겹치면 수를 줄입니다")
   const axisText = (v: number, ticks: readonly number[]) =>
     mask(formatAxisWon(v, ticks));
-  const room = chartValueIntervals(height, tickLine);
+  const room = chartValueIntervals(height);
   const dualAxes = dual
     ? niceDualValueAxes(
         data.map((d) => d.income),
@@ -474,7 +472,6 @@ export function SavingsBarsSection({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.trend");
-  const tickLine = useTickLineHeight();
   const title = m.useDailyTrend
     ? t("trend.dailySavings")
     : t("trend.monthlySavings");
@@ -539,7 +536,7 @@ export function SavingsBarsSection({
               {...niceValueAxis(
                 data.map((d) => d.savings),
                 (v, ticks) => mask(formatAxisWon(v, ticks)),
-                chartValueIntervals(height, tickLine),
+                chartValueIntervals(height),
               )}
               {...chartAxisProps()}
             />
@@ -586,7 +583,6 @@ export function CatTrendSection({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.trend");
-  const tickLine = useTickLineHeight();
   const head = (
     <BandHead
       title={t("trend.catTrendTitle")}
@@ -679,7 +675,7 @@ export function CatTrendSection({
                   ),
                 ),
                 (v, ticks) => mask(formatAxisWon(v, ticks)),
-                chartValueIntervals(catHeight, tickLine),
+                chartValueIntervals(catHeight),
               )}
             />
             <ChartTooltip

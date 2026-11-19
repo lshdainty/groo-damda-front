@@ -19,7 +19,6 @@ import { Skeleton } from "@/shared/ds/skeleton";
 import {
   chartValueIntervals,
   niceValueAxis,
-  useTickLineHeight,
 } from "@/shared/lib/groo/axisWidth";
 import { MASK, won } from "@/shared/lib/groo/money-text";
 import { BandFailure, ListTitle } from "@/shared/ui/groo/band-parts";
@@ -55,7 +54,6 @@ export function TrendSection({
   const weeks = WEEKS[period];
   const trendQ = useAssetBalanceTrend(asset.rowId, weeks, { silent: true });
   const hidden = useAssetHidden("asset.detail", asset.isAmountHidden === "Y");
-  const tickLine = useTickLineHeight();
   const data = (trendQ.data ?? []).map((p, i) => ({
     label: t("assetDetail.weekLabel", { n: i + 1 }),
     weekStart: p.weekStart,
@@ -122,7 +120,7 @@ export function TrendSection({
                 data.map((d) => d.balance),
                 (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
                 // 눈금 사이가 눈금 글 줄 높이보다 좁으면 칸 수를 줄인다(chart.md "세로 눈금이 겹치면 수를 줄입니다")
-                chartValueIntervals(height, tickLine, MARGIN),
+                chartValueIntervals(height, MARGIN),
               )}
               {...chartAxisProps()}
             />

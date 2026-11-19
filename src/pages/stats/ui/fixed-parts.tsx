@@ -1,7 +1,6 @@
 import {
   chartValueIntervals,
   niceValueAxis,
-  useTickLineHeight,
 } from "@/shared/lib/groo/axisWidth";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -340,7 +339,6 @@ export function FixedTrendSection({
 }) {
   const { t } = useTranslation("stats");
   const mask = useMasked("stats.fixed");
-  const tickLine = useTickLineHeight();
   const [kind, setKind] = useState<Kind>("expense");
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   // 한 달만 고른 기간이면 막대가 하나뿐이라 의미가 없다 — 그때는 최근 6개월을 보여 준다
@@ -488,7 +486,7 @@ export function FixedTrendSection({
                     (hidden.has("variable") ? 0 : r.variable),
                 ),
                 (v, ticks) => mask(formatAxisWon(v, ticks)),
-                chartValueIntervals(height, tickLine),
+                chartValueIntervals(height),
               )}
               {...chartAxisProps()}
             />

@@ -251,11 +251,11 @@ describe("세로 눈금 칸 수 — 눈금 글 줄 높이보다 눈금 사이가
   it("들어가는 칸 수(정수) — 눈금 글 줄 15(글자 크기 설정을 따르지 않는다): 폰 띠 140(위 8 · 아래 0) 7 · 추이 200 10", () => {
     // 세로축 끝 글 자리(#250) — 위 max(위 여백, ⌈줄 ÷ 2⌉) · 가로 눈금 줄 max(8, ⌈줄 ÷ 2⌉ + 4) + 줄
     // 140 − 8 − 0 − (12 + 15) = 105 → 7 · 200 − 8 − 5 − 27 = 160 → 10
-    expect(chartValueIntervals(140, 15, { top: 8, bottom: 0 })).toBe(7);
-    expect(chartValueIntervals(200, 15)).toBe(10);
+    expect(chartValueIntervals(140, { top: 8, bottom: 0 })).toBe(7);
+    expect(chartValueIntervals(200)).toBe(10);
     // 낮은 차트 — 내림한 정수(소수를 돌려주지 않는다)
-    expect(chartValueIntervals(60, 15)).toBe(1);
-    expect(chartValueIntervals(40, 15)).toBe(0);
+    expect(chartValueIntervals(60)).toBe(1);
+    expect(chartValueIntervals(40)).toBe(0);
   });
 
   it("눈금을 줄여도 글을 빼지 않는다 — 모든 눈금에 글(#253 의 '큰 쪽 끝 글만' 은 걷었다, #260)", () => {
