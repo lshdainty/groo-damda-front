@@ -328,9 +328,11 @@ export function EventDetailSurface({
             </BottomSheetBody>
             {editable && (
               <BottomSheetFooter>
+                {/* 바닥 왼쪽 [삭제] 는 글자만큼, [수정] 이 남은 폭(bottom-sheet.md 코드 — data-fit) */}
                 <Button
                   variant="ghost"
                   ghostColor="critical"
+                  data-fit="content"
                   onClick={() => onRequestDelete(current)}
                 >
                   {tc("delete")}

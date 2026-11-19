@@ -182,8 +182,10 @@ export const buttonVariants = cva(
 // 사이 8 · 버튼마다 반 폭 바탕. 버튼은 글 폭보다 줄지 않되(flex 의 자동 최소 = 라벨 한 줄 폭) 짝의 폭은 넘지 않는다(max-w-full —
 // 자동 최소도 이 값에서 멈춘다). 라벨이 반 폭을 넘으면 줄이 넘어가고 wrap-reverse 라 뒤(주) 버튼이 위로 가며, 쌓은 뒤에도 짝 폭보다
 // 길면 라벨 끝을 "…" 로 줄인다(button.md "글자 크기 설정")
+// 글자만큼 버튼(data-fit="content" — 시트 바닥의 [삭제])은 반 폭 바탕을 받지 않고 글 폭이며, 남은 폭은 주 버튼이 채운다(bottom-sheet.md
+// "머리 · 본문 · 바닥" · "코드"). 주 버튼 라벨이 남은 폭에 들지 않으면 줄이 넘어가 주 버튼이 위(폭 전체), [삭제] 는 아래 왼쪽에 글 폭 그대로 선다
 export const RESPONSIVE_PAIR =
-  "flex flex-wrap-reverse gap-x2 [&>*]:max-w-full [&>*]:grow [&>*]:basis-[calc(50%-var(--spacing-x2)/2)]";
+  "flex flex-wrap-reverse gap-x2 [&>*]:max-w-full [&>*]:grow [&>*]:basis-[calc(50%-var(--spacing-x2)/2)] [&>[data-fit=content]]:grow-0 [&>[data-fit=content]]:basis-auto";
 
 // 라벨 — 한 줄을 지키고 넘치면 끝을 "…" 로(button.md "글자 크기 설정"). 글은 그대로 DOM 에 있어 보조 기술은 전체 라벨을 읽는다
 export const BUTTON_LABEL = "min-w-0 truncate";

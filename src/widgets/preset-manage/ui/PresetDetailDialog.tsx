@@ -177,26 +177,21 @@ export function PresetDetailDialog({
             ))}
           </List>
         </ResponsiveDialogBody>
+        {/* 버튼은 바닥의 바로 아래 자식 — 크기는 바닥이 준다. 시트에서 [삭제] 는 글자만큼(data-fit), [수정] 이 남은 폭을
+            채우고 들지 않으면 위로 쌓인다(bottom-sheet.md 코드 · button.md 긴 라벨) */}
         <ResponsiveDialogFooter>
-          <div className="flex w-full items-center gap-x2">
-            <Button
-              variant="ghost"
-              ghostColor="critical"
-              size={wide ? "small" : "large"}
-              className="shrink-0"
-              onClick={onDelete}
-            >
-              {tc("delete")}
-            </Button>
-            <Button
-              variant="neutralSolid"
-              size={wide ? "small" : "large"}
-              className={wide ? "ml-auto" : "flex-1"}
-              onClick={onEdit}
-            >
-              {tc("edit")}
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            ghostColor="critical"
+            data-fit="content"
+            className={wide ? "mr-auto" : undefined}
+            onClick={onDelete}
+          >
+            {tc("delete")}
+          </Button>
+          <Button variant="neutralSolid" onClick={onEdit}>
+            {tc("edit")}
+          </Button>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>

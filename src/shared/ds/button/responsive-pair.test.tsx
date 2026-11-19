@@ -48,6 +48,29 @@ describe("ResponsivePair", () => {
     ]);
   });
 
+  it('글자만큼 버튼(data-fit="content" — 시트 바닥 [삭제])은 반 폭 바탕 · 늘어남을 받지 않는다(bottom-sheet.md 코드)', () => {
+    act(() =>
+      root.render(
+        <ResponsivePair>
+          <button type="button" data-fit="content">
+            삭제
+          </button>
+          <button type="button">수정</button>
+        </ResponsivePair>,
+      ),
+    );
+    const pair = container.firstElementChild as HTMLElement;
+    // 레시피 RESPONSIVE_PAIR 와 같은 두 클래스 — 글 폭(basis auto) · 늘지 않음(grow 0), 남은 폭은 주 버튼이 [&>*]:grow 로 채운다
+    expect(pair.className).toContain("[&>[data-fit=content]]:grow-0");
+    expect(pair.className).toContain("[&>[data-fit=content]]:basis-auto");
+    // 그 선택자가 실제로 [삭제] 를 고른다 — 바로 아래 자식이어야 한다(감싸면 빠진다)
+    expect(
+      [...pair.querySelectorAll(":scope > [data-fit=content]")].map(
+        (c) => c.textContent,
+      ),
+    ).toEqual(["삭제"]);
+  });
+
   it("부르는 쪽의 data-slot · 클래스가 이긴다(시트 · 확인창 바닥)", () => {
     act(() =>
       root.render(

@@ -116,13 +116,14 @@ export function DutchDetailDialog({
     }
   };
 
-  // 확인을 여는 [삭제] — 바닥 왼쪽 ghost + critical(button.md 모달 footer). flush 는 ghostColor 를 덮어 빨강이 사라지므로 쓰지 않는다
+  // 확인을 여는 [삭제] — 바닥 왼쪽 ghost + critical(button.md 모달 footer). flush 는 ghostColor 를 덮어 빨강이 사라지므로 쓰지 않는다.
+  // 시트 바닥(ResponsivePair)에서는 글자만큼(data-fit) — 주 버튼이 남은 폭을 채운다(bottom-sheet.md 코드)
   const del = (
     <Button
       variant="ghost"
       ghostColor="critical"
-      size={wide ? undefined : "large"}
-      className={wide ? "mr-auto" : "shrink-0"}
+      data-fit="content"
+      className={wide ? "mr-auto" : undefined}
       onClick={() => setAskDelete(true)}
     >
       {tc("delete")}
@@ -131,8 +132,6 @@ export function DutchDetailDialog({
   const all = active ? (
     <Button
       variant="neutralSolid"
-      size={wide ? undefined : "large"}
-      className={wide ? undefined : "grow"}
       loading={pending.has("all")}
       onClick={() => void guard("all", receiveAll)}
     >
@@ -239,18 +238,11 @@ export function DutchDetailDialog({
               </List>
             </div>
           </ResponsiveDialogBody>
+          {/* 버튼은 바닥의 바로 아래 자식 — 크기는 바닥이 준다. 시트에서 [모두 받기] 라벨이 남은 폭에 들지 않으면
+              세로로 쌓고 주 버튼이 위로 간다(ResponsivePair · button.md 긴 라벨) */}
           <ResponsiveDialogFooter>
-            {wide ? (
-              <>
-                {del}
-                {all}
-              </>
-            ) : (
-              <div className="flex w-full min-w-0! flex-wrap items-center gap-x2 gap-y2">
-                {del}
-                {all}
-              </div>
-            )}
+            {del}
+            {all}
           </ResponsiveDialogFooter>
         </ResponsiveDialogContent>
       </ResponsiveDialog>

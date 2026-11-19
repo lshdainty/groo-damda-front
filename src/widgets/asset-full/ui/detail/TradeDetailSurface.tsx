@@ -74,14 +74,15 @@ export function TradeDetailSurface({
       />
     </List>
   );
-  // 바닥 왼쪽 ghost + critical(button.md 모달 footer). flush 는 ghostColor 를 덮어 빨강이 사라지므로 쓰지 않는다
+  // 바닥 왼쪽 ghost + critical(button.md 모달 footer). flush 는 ghostColor 를 덮어 빨강이 사라지므로 쓰지 않는다.
+  // 주 버튼이 없는 조회 시트라 [삭제] 하나만 왼쪽에 글자만큼 선다(bottom-sheet.md "닫기 버튼과 바닥 버튼" · 코드 — data-fit)
   const cancel = (
     <Button
       type="button"
       variant="ghost"
       ghostColor="critical"
-      size={wide ? undefined : "large"}
-      className={wide ? "mr-auto" : "shrink-0"}
+      data-fit="content"
+      className={wide ? "mr-auto" : undefined}
       onClick={onCancelTrade}
     >
       {t("trade.deleteAction")}
@@ -104,9 +105,7 @@ export function TradeDetailSurface({
         <BottomSheetBody>
           <div className="-mx-x6">{body}</div>
         </BottomSheetBody>
-        <BottomSheetFooter>
-          <div className="flex w-full items-center">{cancel}</div>
-        </BottomSheetFooter>
+        <BottomSheetFooter>{cancel}</BottomSheetFooter>
       </BottomSheetContent>
     </BottomSheet>
   );

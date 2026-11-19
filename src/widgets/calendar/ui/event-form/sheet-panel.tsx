@@ -100,28 +100,21 @@ export function EventFormSheetChildren({ flow }: { flow: EventFormFlow }) {
       </BottomSheetBody>
       {!inStep && (
         <BottomSheetFooter>
-          {/* 바닥 왼쪽 [삭제] 는 ghost + critical 글자만큼(large), 주 버튼이 남은 폭을 채운다(bottom-sheet.md 바닥 · button.md 모달 footer 꼴) */}
-          <div className="flex w-full items-center gap-x2">
-            {del && (
-              <Button
-                variant="ghost"
-                ghostColor="critical"
-                size="large"
-                className="shrink-0"
-                onClick={del}
-              >
-                {tc("delete")}
-              </Button>
-            )}
+          {/* 바닥 왼쪽 [삭제] 는 ghost + critical 글자만큼(data-fit), 주 버튼이 남은 폭을 채운다(bottom-sheet.md 바닥 · 코드,
+              button.md 모달 footer 꼴). 바로 아래 자식이라 [저장] 라벨이 남은 폭에 들지 않으면 세로로 쌓고 [저장] 이 위 */}
+          {del && (
             <Button
-              size="large"
-              className="flex-1"
-              loading={isLoading}
-              onClick={save}
+              variant="ghost"
+              ghostColor="critical"
+              data-fit="content"
+              onClick={del}
             >
-              {tc("save")}
+              {tc("delete")}
             </Button>
-          </div>
+          )}
+          <Button loading={isLoading} onClick={save}>
+            {tc("save")}
+          </Button>
         </BottomSheetFooter>
       )}
     </>

@@ -14,6 +14,11 @@ import { join } from "node:path";
  *      상자 여백을 그대로 둔다(바닥 FormFooter 의 `-ml-x5` · 캘린더 관리의 `-ml-x3_5` 가 이 모양이었다).
  * 2. flush 는 ghost + **앞 아이콘**이 가장자리의 첫 · 끝 요소일 때만 쓴다 — "글자만 있는 ghost 에는 쓰지 않습니다".
  *    예외는 없다 — 칸 머리 보조 액션("예시 보기")도 글자만이라 flush 를 쓰지 않는다(field.md, groo-design#240).
+ * 3. 시트 바닥 왼쪽 [삭제] 는 글자만큼이고 남은 폭은 주 버튼이 채운다(bottom-sheet.md "머리 · 본문 · 바닥" · "코드",
+ *    groo-design#268) — 버튼에 `data-fit="content"` 를 주면 ResponsivePair 가 반 폭 바탕을 주지 않는다.
+ *    - 글이 있는 ghost critical 은 data-fit 을 단다. 시트 바닥이 아닌 자리(화면 · 카드 · 대화상자만의 바닥)는 아래 표에 까닭과 함께 적는다.
+ *    - data-fit 을 단 바닥은 버튼을 div 로 감싸지 않는다 — 감싸면 선택자(`[&>[data-fit=content]]`)가 빠지고, 주 버튼 라벨이
+ *      남은 폭에 들지 않을 때 세로로 쌓는 판정(button.md "긴 라벨")도 빠진다.
  *
  * 테스트 파일은 보지 않는다 — 시험이 일부러 그리는 모양이 있다.
  */
@@ -170,5 +175,59 @@ describe("Button 은 button.md 를 따른다(파일 검사)", () => {
 
   it("flush 는 앞 아이콘이 있는 ghost 에만 쓴다(글자만 · 뒤 아이콘만이면 쓰지 않는다)", () => {
     expect(flushed.filter((b) => !startsWithIcon(b)).map(where)).toEqual([]);
+  });
+});
+
+// 시트 바닥이 아닌 ghost critical(글 있는 것) — 파일마다 몇 개인지. 여기 없는 자리는 모두 data-fit 을 단다
+const NOT_SHEET_FOOTER: Record<string, number> = {
+  // 요금제 화면 바닥의 [구독 해지] — 화면 단추(폰은 폭 전체), 시트 바닥이 아니다
+  "src/widgets/account-settings/ui/SubscriptionSection.tsx": 1,
+  // [모든 기기에서 로그아웃] — 목록 아래 폭 전체 · 카드 바닥 줄 오른쪽
+  "src/widgets/account-settings/ui/DevicesSection.tsx": 2,
+  // [캘린더 삭제] — 설정 화면 안의 버튼
+  "src/widgets/calendar-manage/ui/CalendarManagePage.tsx": 1,
+  // 옆 칸(카드) 바닥 — ResponsivePair 가 아니다(mr-auto)
+  "src/widgets/calendar/ui/day-panel.tsx": 1,
+  // 1280 이상 대화상자 바닥만 그린다(mr-auto) — 시트 쪽은 sheet-panel · 아래 시트 바닥이 맡는다
+  "src/widgets/calendar/ui/event-form/dialog-panel.tsx": 1,
+  "src/widgets/calendar/ui/event-detail/event-detail-surface.tsx": 1,
+};
+
+/** 바닥 부품(시트 · 반응형 대화상자)의 여는 태그부터 닫는 태그까지 */
+function footers(file: string) {
+  const src = stripComments(readFileSync(join(ROOT, file), "utf8"));
+  return [
+    ...src.matchAll(
+      /<(ResponsiveDialogFooter|BottomSheetFooter)(?=[\s>])[\s\S]*?<\/\1>/g,
+    ),
+  ].map((m) => ({
+    where: `${file}:${src.slice(0, m.index).split("\n").length}`,
+    body: m[0],
+  }));
+}
+
+describe("시트 바닥 왼쪽 [삭제] 는 글자만큼(bottom-sheet.md 코드 — data-fit)", () => {
+  const texty = critical.filter((b) => !/layout="iconOnly"/.test(b.tag));
+
+  it('글이 있는 ghost critical 은 data-fit="content" 를 단다 — 시트 바닥이 아닌 자리만 표에 적는다', () => {
+    const missing: Record<string, number> = {};
+    for (const b of texty)
+      if (!/\bdata-fit="content"/.test(b.tag))
+        missing[b.file] = (missing[b.file] ?? 0) + 1;
+    expect(missing).toEqual(NOT_SHEET_FOOTER);
+  });
+
+  it("data-fit 을 단 [삭제] 가 있다(찾는 식이 깨지지 않았다)", () => {
+    expect(
+      texty.filter((b) => /\bdata-fit="content"/.test(b.tag)).length,
+    ).toBeGreaterThan(5);
+  });
+
+  it("data-fit 을 단 바닥은 버튼을 div 로 감싸지 않는다(바로 아래 자식이어야 반 폭 · 쌓기 판정이 먹는다)", () => {
+    const wrapped = FILES.flatMap(footers)
+      .filter((f) => /data-fit="content"|\{del\}|\{cancel\}/.test(f.body))
+      .filter((f) => /<div\b/.test(f.body))
+      .map((f) => f.where);
+    expect(wrapped).toEqual([]);
   });
 });
