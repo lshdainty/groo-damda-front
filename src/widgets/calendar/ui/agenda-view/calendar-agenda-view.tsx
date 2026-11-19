@@ -1,12 +1,11 @@
 import { endOfDay, format, isSameMonth, parseISO, startOfDay } from "date-fns";
-import { enUS } from "date-fns/locale";
 import { Calendar, FunnelX, Plus } from "lucide-react";
 import { useId, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ListHeader } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
-import { formatMonthDayDow } from "@/shared/lib/date";
+import { formatMonthDayDow, formatMonthShort } from "@/shared/lib/date";
 import { eventsOnDay } from "@/widgets/calendar/lib/helpers";
 import { useCalendar } from "@/widgets/calendar/model/calendar-context";
 import { DayEventList } from "@/widgets/calendar/ui/day-event-list";
@@ -38,7 +37,7 @@ const CalendarAgendaView = ({
   emptyReason = "month",
   onAdd,
 }: IProps) => {
-  const { t, i18n } = useTranslation("calendar");
+  const { t } = useTranslation("calendar");
   const uid = useId();
   const { selectedDate } = useCalendar();
 
@@ -67,10 +66,9 @@ const CalendarAgendaView = ({
       .map((date) => ({ date, events: eventsOnDay(all, date) }));
   }, [singleDayEvents, multiDayEvents, selectedDate]);
 
-  const isKo = i18n.language.startsWith("ko");
-  const month = isKo
-    ? String(selectedDate.getMonth() + 1)
-    : format(selectedDate, "MMMM", { locale: enUS });
+  // 한국어 "{{month}}월" 은 숫자, 영어는 달 이름 "Nov"(International Design 날짜 — 영어 달은 줄임)
+  const month = selectedDate.getMonth() + 1;
+  const monthName = formatMonthShort(selectedDate);
 
   return (
     // 날짜 머리가 위에 붙어 있으니(sticky) 초점 줄이 머리 아래에 깔리지 않게 스크롤 여백을 머리 높이만큼 둔다
@@ -91,7 +89,7 @@ const CalendarAgendaView = ({
           <ResultSection
             size="medium"
             icon={<Calendar />}
-            title={t("agenda.emptyMonth", { month })}
+            title={t("agenda.emptyMonth", { month, monthName })}
             description={t("agenda.emptyMonthDesc")}
             primaryAction={
               onAdd

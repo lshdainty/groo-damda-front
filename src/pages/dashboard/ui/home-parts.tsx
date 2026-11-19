@@ -30,7 +30,7 @@ import { toggleVariants } from "@/shared/ds/toggle";
 import { Badge } from "@/shared/ds/badge";
 import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
-import { formatDateSmart } from "@/shared/lib/date";
+import { formatDateSmart, formatMonthShort } from "@/shared/lib/date";
 import {
   MINUS,
   formatChangeRate,
@@ -481,7 +481,11 @@ export function CategoryBody({
         </span>
       )}
       <Chart
-        label={t("chart.categoryName", { month, total: totalText })}
+        label={t("chart.categoryName", {
+          month,
+          monthName: formatMonthShort(month),
+          total: totalText,
+        })}
         legendId={legendId}
         height={size}
       >
@@ -531,7 +535,11 @@ export function CategoryBody({
         }))}
       />
       <ChartDataTable
-        caption={t("chart.categoryName", { month, total: totalText })}
+        caption={t("chart.categoryName", {
+          month,
+          monthName: formatMonthShort(month),
+          total: totalText,
+        })}
         columns={[
           t("chart.tableCategory"),
           t("chart.tablePercent"),

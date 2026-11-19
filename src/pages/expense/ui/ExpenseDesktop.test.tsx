@@ -71,7 +71,9 @@ vi.mock(
 vi.mock("react-i18next", () => ({
   useTranslation: (ns?: string) => ({
     t: (k: string, opts?: Record<string, unknown>) => {
-      const raw = COPY[`${ns ?? "common"}:${k}`];
+      // 복수형 키(`_one` · `_other`)는 한국어에서 늘 `_other` 다
+      const raw =
+        COPY[`${ns ?? "common"}:${k}`] ?? COPY[`${ns ?? "common"}:${k}_other`];
       if (raw == null) return k;
       return raw.replace(/\{\{(\w+)\}\}/g, (_m, name: string) =>
         String(opts?.[name] ?? ""),

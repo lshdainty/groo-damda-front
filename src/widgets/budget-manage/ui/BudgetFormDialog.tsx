@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { useTranslation } from "react-i18next";
 import { MAX_AMOUNT, parseAmount } from "@/shared/lib/groo/amount";
+import { formatMonthShort } from "@/shared/lib/date";
 import { Button } from "@/shared/ds/button";
 import { Callout } from "@/shared/ds/callout";
 import { useScrollToError } from "@/shared/hooks/useScrollToError";
@@ -134,7 +135,7 @@ export function BudgetFormDialog({
   const chipText = (p: number) => money(p);
 
   const title = isTotal
-    ? t("edit.totalTitle", { month })
+    ? t("edit.totalTitle", { month, monthName: formatMonthShort(month) })
     : isNew
       ? t("edit.addTitle")
       : t("edit.editTitle");

@@ -316,7 +316,8 @@ export function NamuStocksView({
               name={l.name}
               detail={t("holding.lineDesc", {
                 code: l.symbol,
-                count: l.qty.toLocaleString(),
+                count: l.qty,
+                countText: l.qty.toLocaleString(),
               })}
               amount={mask(amountText(l.value, l.currency))}
               pct={l.returnPct}

@@ -6,6 +6,7 @@ import { Skeleton } from "@/shared/ds/skeleton";
 import { BandFailure } from "@/shared/ui/groo/band-parts";
 import { money } from "@/shared/lib/groo/format";
 import { progressPercentText } from "@/shared/lib/percent";
+import { formatMonthShort } from "@/shared/lib/date";
 import { useAssetMask } from "../../lib/asset-groups";
 import { useCardPerformance } from "@/features/card-performance";
 import { currentYearMonth } from "./detail-shared";
@@ -53,7 +54,12 @@ export function CardPerfBadge({
   );
   const month = Number(ym.slice(5, 7));
   return (
-    <List aria-label={t("assetDetail.perfTitle", { month })}>
+    <List
+      aria-label={t("assetDetail.perfTitle", {
+        month,
+        monthName: formatMonthShort(month),
+      })}
+    >
       <ListItem
         prefix={
           <ListTile
@@ -67,7 +73,10 @@ export function CardPerfBadge({
             {done ? <Check size={20} /> : <Target size={20} />}
           </ListTile>
         }
-        title={t("assetDetail.perfTitle", { month })}
+        title={t("assetDetail.perfTitle", {
+          month,
+          monthName: formatMonthShort(month),
+        })}
         detail={m(
           `${money(p.currentAmount)} / ${money(p.requiredAmount)} · ${pct}`,
         )}

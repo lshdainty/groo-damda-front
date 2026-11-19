@@ -11,6 +11,7 @@ import { dsMoney, withCommaBreaks } from "@/shared/ds/i18n";
 import { List, ListItem } from "@/shared/ds/list";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { cn } from "@/shared/lib/cn";
+import { formatMonthDay } from "@/shared/lib/date";
 import { PresetTile } from "@/features/expense/ui/preset-row";
 import {
   presetAmountColor,
@@ -68,6 +69,7 @@ export function PresetDetailDialog({
       t("preset.noteLast", {
         month: last.getMonth() + 1,
         day: last.getDate(),
+        monthDay: formatMonthDay(last),
       }),
     );
   }

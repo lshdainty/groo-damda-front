@@ -241,7 +241,9 @@ describe("가져오기 매핑 단계 — 새로 만들 카테고리 (QA #59)", (
       newCategoryCount: 2,
     };
     await toMapping();
-    expect(container.textContent).toContain('import.newCatTitle{"count":"2"}');
+    expect(container.textContent).toContain(
+      'import.newCatTitle{"count":2,"countText":"2"}',
+    );
     expect(container.textContent).toContain("싟비");
     expect(container.textContent).toContain("식비 > 커피");
   });
@@ -489,7 +491,9 @@ describe("검수 반영 — 완료 화면(I-05 50)", () => {
     const text = container.querySelector(
       '[data-slot="result-section"]',
     )!.textContent!;
-    expect(text).toContain('import.doneTitle{"count":"1,234,567"}');
+    expect(text).toContain(
+      'import.doneTitle{"count":1234567,"countText":"1,234,567"}',
+    );
     expect(text).toContain("import.doneDetail");
     expect(text).not.toContain("import.doneCount");
   });
@@ -532,8 +536,12 @@ describe("검수 재반영 — 쉼표 · 실패 사유 자리(W5 · W6)", () => 
       createdCategoryCount: 1234,
     });
     const text = container.textContent ?? "";
-    expect(text).toContain('import.failuresTitle{"count":"1,200"}');
-    expect(text).toContain('import.createdCatTitle{"count":"1,234"}');
+    expect(text).toContain(
+      'import.failuresTitle{"count":1200,"countText":"1,200"}',
+    );
+    expect(text).toContain(
+      'import.createdCatTitle{"count":1234,"countText":"1,234"}',
+    );
     expect(text).toContain(
       'import.failuresCapped{"shown":"1","total":"1,200"}',
     );

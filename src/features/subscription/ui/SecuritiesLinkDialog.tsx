@@ -376,7 +376,7 @@ function ListStep({
                       ? null
                       : tokenCount === 0
                         ? t("apiToken.countNone")
-                        : t("apiToken.count", { n: tokenCount })}
+                        : t("apiToken.count", { count: tokenCount })}
                   <ChevronRight aria-hidden />
                 </>
               }

@@ -129,7 +129,7 @@ export function AssetRow({
     if (asset.assetType === "INVESTMENT" && held > 0) {
       tags.push(
         <TagGroupItem key="hold" shrink={0}>
-          {t("holdings.countLabel", { n: held })}
+          {t("holdings.countLabel", { count: held })}
         </TagGroupItem>,
       );
     }

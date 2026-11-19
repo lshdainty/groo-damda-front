@@ -5,7 +5,7 @@ import { Card } from "@/shared/ds/card";
 import { useDsText } from "@/shared/ds/i18n";
 import { List } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
-import { formatMonthDayDow } from "@/shared/lib/date";
+import { formatMonthDayDow, formatMonthShort } from "@/shared/lib/date";
 import {
   LedgerDayDate,
   LedgerDayGroup,
@@ -82,7 +82,10 @@ export function TodoListCard({
       <ResultSection
         size="medium"
         icon={<ListChecks />}
-        title={t("tdm.emptyMonth", { month: monthNum })}
+        title={t("tdm.emptyMonth", {
+          month: monthNum,
+          monthName: formatMonthShort(monthNum),
+        })}
         // 넓은 화면에는 떠 있는 + 가 없다 — 제목 줄 버튼을 가리킨다(폰의 "오른쪽 아래 + 버튼" 이 아니다)
         description={t("tdm.emptyMonthDescWide")}
       />

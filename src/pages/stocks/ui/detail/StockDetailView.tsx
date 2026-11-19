@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
   TopNavigation,
@@ -65,6 +66,13 @@ import {
   WatchToggle,
   type KvLine,
 } from "./detail-parts";
+
+/**
+ * "12주" · "1 share" · "1,234 shares" — 수(count)는 숫자로 넘겨 영어 단 · 복수를 고르고, 보이는 글은 쉼표를 넣은 값이다.
+ * i18next 는 count 가 문자열이면 복수형을 고르지 않는다.
+ */
+const sharesUnit = (t: TFunction<"stocks">, n: number): string =>
+  t("holding.sharesUnit", { count: n, countText: n.toLocaleString() });
 
 /**
  * 종목 상세 페이지(I-13 18 ~ 21 · 33 ~ 35). 폰은 상단 바(← "종목 상세" + 관심 Toggle) 아래 띠:
@@ -210,9 +218,7 @@ function TossBody({ symbol, desk }: { symbol: string; desk: boolean }) {
       {
         key: "qty",
         name: t("holding.quantity"),
-        value: t("holding.sharesUnit", {
-          count: num(holding.quantity).toLocaleString(),
-        }),
+        value: sharesUnit(t, num(holding.quantity)),
       },
       {
         key: "avg",
@@ -237,9 +243,7 @@ function TossBody({ symbol, desk }: { symbol: string; desk: boolean }) {
       {
         key: "sell",
         name: t("holding.sellable"),
-        value: t("holding.sharesUnit", {
-          count: num(holding.quantity).toLocaleString(),
-        }),
+        value: sharesUnit(t, num(holding.quantity)),
       },
     );
   }
@@ -342,11 +346,10 @@ function TossBody({ symbol, desk }: { symbol: string; desk: boolean }) {
           {
             key: "volume",
             name: t("today.volume"),
-            value: t("holding.sharesUnit", {
-              count: Math.round(
-                Number.parseFloat(todayBar.volume),
-              ).toLocaleString(),
-            }),
+            value: sharesUnit(
+              t,
+              Math.round(Number.parseFloat(todayBar.volume)),
+            ),
           },
         ]
       : []),
@@ -658,9 +661,7 @@ function NamuBody({ symbol, desk }: { symbol: string; desk: boolean }) {
       {
         key: "qty",
         name: t("holding.quantity"),
-        value: t("holding.sharesUnit", {
-          count: num(holding.quantity).toLocaleString(),
-        }),
+        value: sharesUnit(t, num(holding.quantity)),
       },
       {
         key: "rate",
@@ -689,9 +690,7 @@ function NamuBody({ symbol, desk }: { symbol: string; desk: boolean }) {
             {
               key: "sell",
               name: t("holding.sellable"),
-              value: t("holding.sharesUnit", {
-                count: sellable.toLocaleString(),
-              }),
+              value: sharesUnit(t, sellable),
             },
           ]
         : []),
@@ -718,9 +717,7 @@ function NamuBody({ symbol, desk }: { symbol: string; desk: boolean }) {
       todayRows.push({
         key: "volume",
         name: t("today.volume"),
-        value: t("holding.sharesUnit", {
-          count: Math.round(vol).toLocaleString(),
-        }),
+        value: sharesUnit(t, Math.round(vol)),
       });
     const up = numOrNull(q.upperLimit);
     if (up != null)
