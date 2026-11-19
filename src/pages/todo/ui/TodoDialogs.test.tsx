@@ -318,9 +318,32 @@ describe("상세 (I-10 21)", () => {
   it('메모가 없으면 "없음" 이다 · 바닥은 [삭제] [수정] 이고 삭제는 확인창을 연다', () => {
     detail({ ...base, content: null });
     expect(document.body.textContent).toContain("없음");
+    // 바닥 왼쪽 [삭제] 는 ghost + critical 글자만큼(bottom-sheet.md 코드) — 바닥의 바로 아래 자식이라 [수정] 이 남은 폭을 채운다
+    const del = byName("삭제")!;
+    expect(del.className).toContain("text-fg-critical");
+    expect(del.getAttribute("data-fit")).toBe("content");
+    expect(del.parentElement?.getAttribute("data-slot")).toBe(
+      "bottom-sheet-footer",
+    );
+    expect(del.nextElementSibling).toBe(byName("수정"));
     click(byName("삭제"));
     const alert = q("[role=alertdialog]")!;
     expect(alert.textContent).toContain("할 일 삭제");
     expect(alert.textContent).toContain("되돌릴 수 없어요");
+  });
+
+  it("1280 이상 대화상자 바닥에서 [삭제] 는 왼쪽(mr-auto) · 크기는 바닥이 준다(button.md 모달 footer)", () => {
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes("1280"),
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+    })) as unknown as typeof window.matchMedia;
+    detail(base);
+    const del = byName("삭제")!;
+    expect(del.className).toContain("text-fg-critical");
+    expect(del.className).toContain("mr-auto");
+    expect(del.parentElement?.getAttribute("data-slot")).toBe("dialog-footer");
+    expect(del.nextElementSibling).toBe(byName("수정"));
   });
 });

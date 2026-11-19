@@ -9,6 +9,7 @@ import {
   ResponsiveDialogFooter,
 } from "@/shared/ds/dialog";
 import { List, ListHeader, ListItem } from "@/shared/ds/list";
+import { useWideSurface } from "@/shared/ds/overlay";
 import { cn } from "@/shared/lib/cn";
 import { formatServerDateDowTime } from "@/shared/lib/date";
 import { dueKey } from "@/pages/todo/model/todo-ledger";
@@ -21,7 +22,7 @@ import type { Todo } from "@/entities/todo";
  * 할 일 상세 — ds Responsive Dialog 조회(1280 이상 대화상자 480 · 미만 Bottom Sheet — I-10 21). 바깥 누름 · 끌어내림으로 닫힌다.
  * 본문 맨 위는 제목(t6 · 700 · 줄바꿈, 끝냈으면 취소선 + fg-disabled) — 틴트 머리 카드 · 원 아이콘 · 가운데 맞춤은 없다.
  * 그 아래 보기만 하는 List 줄(마감일 · 태그 · 우선순위 · 상태 · 완료 일시)과, 메모는 줄 아래 따로 List Header + 본문이다.
- * 바닥은 [삭제] neutralWeak · [수정] neutralSolid. 삭제는 Alert Dialog 로 한 번 묻는다.
+ * 바닥은 왼쪽 [삭제] ghost + critical · [수정] neutralSolid(button.md 모달 footer). 삭제는 Alert Dialog 로 한 번 묻는다.
  */
 export function TodoDetailDialog({
   todo,
@@ -40,6 +41,7 @@ export function TodoDetailDialog({
   const { t } = useTranslation("todo");
   const { t: tc } = useTranslation("common");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const wide = useWideSurface();
   const done = isDone(todo);
   const key = dueKey(todo.dueDate);
   const overdue = !done && !!key && key < today;
@@ -125,9 +127,14 @@ export function TodoDetailDialog({
               </p>
             )}
           </ResponsiveDialogBody>
+          {/* 버튼은 바닥의 바로 아래 자식 — 크기는 바닥이 준다(대화상자 small 36 · 시트 large 48). 확인을 여는 [삭제] 는
+              왼쪽 ghost + critical 이고(button.md 모달 footer), 시트에서는 글자만큼(data-fit) — [수정] 이 남은 폭을 채운다(bottom-sheet.md 코드) */}
           <ResponsiveDialogFooter>
             <Button
-              variant="neutralWeak"
+              variant="ghost"
+              ghostColor="critical"
+              data-fit="content"
+              className={wide ? "mr-auto" : undefined}
               onClick={() => setConfirmDelete(true)}
             >
               {tc("delete")}
