@@ -203,3 +203,56 @@ describe("Button", () => {
     );
   });
 });
+
+/**
+ * 라벨은 한 줄을 지키고 넘치면 끝을 "…" 로 줄인다(button.md "글자 크기 설정" · groo-design #263). jsdom 은 레이아웃이 없어 클래스로 본다 —
+ * 버튼은 놓인 자리보다 넓어지지 않고(max-w-full), 이어진 글은 한 덩어리 span(min-w-0 truncate)이라 버튼 안에서 줄어든다.
+ * 글은 DOM 에 그대로라 보조 기술은 전체 라벨을 읽는다. 아이콘은 span 밖 px 그대로다.
+ */
+describe("Button — 긴 라벨은 한 줄 …", () => {
+  const LONG = "엑셀 파일로 모든 거래 내역을 내보내고 메일로 받기";
+
+  it("라벨은 한 span 에서 한 줄 말줄임 · 버튼은 놓인 자리보다 넓어지지 않는다", () => {
+    const btn = render(<Button>{LONG}</Button>);
+    const labels = btn.querySelectorAll("[data-slot=button-label]");
+    expect(labels).toHaveLength(1);
+    expect(labels[0]!.className.split(" ")).toEqual(
+      expect.arrayContaining(["min-w-0", "truncate"]),
+    );
+    expect(btn.className.split(" ")).toEqual(
+      expect.arrayContaining(["max-w-full", "whitespace-nowrap"]),
+    );
+    // 보조 기술은 전체 라벨을 읽는다
+    expect(btn.textContent).toBe(LONG);
+  });
+
+  it('나눠 쓴 글({"총 "}{n}{"개"})도 한 덩어리 — 아이콘은 span 밖 그대로(px)', () => {
+    const n = 12;
+    const btn = render(
+      <Button>
+        <svg data-testid="icon" />총 {n}개 내보내기
+      </Button>,
+    );
+    const labels = btn.querySelectorAll("[data-slot=button-label]");
+    expect(labels).toHaveLength(1);
+    expect(labels[0]!.textContent).toBe("총 12개 내보내기");
+    expect(btn.querySelector("[data-testid=icon]")!.parentElement).toBe(btn);
+    expect(btn.className).toContain("[&_svg]:size-[16px]");
+  });
+
+  it("아이콘만 있는 버튼 · asChild 는 감싸지 않는다", () => {
+    const icon = render(
+      <Button layout="iconOnly" aria-label="닫기">
+        <svg />
+      </Button>,
+    );
+    expect(icon.querySelector("[data-slot=button-label]")).toBeNull();
+    const link = render(
+      <Button asChild>
+        <a href="/x">링크</a>
+      </Button>,
+    );
+    expect(link.tagName).toBe("A");
+    expect(link.querySelector("[data-slot=button-label]")).toBeNull();
+  });
+});

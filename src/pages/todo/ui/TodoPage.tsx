@@ -3,6 +3,7 @@ import { useSnackbar } from "@/shared/ds/snackbar";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toLocalDateKey, todayLocalKey } from "@/shared/lib/date";
+import { REPEAT_TAP_GUARD_MS } from "@/shared/lib/groo/use-hold-ids";
 import { Plus } from "lucide-react";
 import {
   useTodos,
@@ -24,7 +25,6 @@ import { TodoDesktop } from "./TodoDesktop";
 import { TodoDetailDialog } from "./TodoDetailDialog";
 import { TodoFormDialog } from "./TodoFormDialog";
 import type { Todo, TodoFormValues } from "@/entities/todo";
-import { DOUBLE_CLICK_GUARD_MS } from "@/shared/ui/button";
 import { FloatingActionButton } from "@/shared/ds/floating-action-button";
 import {
   TopNavigation,
@@ -108,14 +108,14 @@ const TodoPageInner = ({
 
   // 같은 행을 따닥 눌러도 토글은 한 번만 나간다. `pendingIds` 잠금은 요청이 끝나면
   // 풀리는데(통신이 빠르면 100ms 남짓) 두 번째 탭이 그 뒤에 올 수 있고, 완료 원은
-  // 공용 Button 이 아니라 원시 <button> 이라 거기 든 더블클릭 방어도 안 걸린다.
+  // 공용 Button 이 아니라 원시 <button> 이라 Button 의 "누른 동작이 끝날 때까지 한 번" 잠금도 안 걸린다.
   const lastToggleAt = useRef(new Map<number, number>());
 
   // 완료 토글 + 별빛 토스트 — 서버가 돌려준 실제 적립량(earnedStarlight)으로만 띄운다.
   // 낙관적으로 계산하면 평생 1회 정책에 걸려 적립이 0 이어도 "+N" 이 떠서 거짓말이 된다.
   const onToggleTodo = (td: Todo) => {
     const now = Date.now();
-    if (now - (lastToggleAt.current.get(td.rowId) ?? 0) < DOUBLE_CLICK_GUARD_MS)
+    if (now - (lastToggleAt.current.get(td.rowId) ?? 0) < REPEAT_TAP_GUARD_MS)
       return;
     lastToggleAt.current.set(td.rowId, now);
     toggleStatus.mutate(td.rowId, {

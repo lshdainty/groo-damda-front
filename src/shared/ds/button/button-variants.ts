@@ -36,7 +36,8 @@ import { cva } from "class-variance-authority";
  */
 export const buttonVariants = cva(
   [
-    "relative inline-flex cursor-pointer items-center justify-center whitespace-nowrap font-sans font-bold",
+    // 놓인 자리보다 넓어지지 않는다(max-w-full) — 넘치는 라벨은 BUTTON_LABEL 이 한 줄 "…" 로 줄인다(button.md "글자 크기 설정")
+    "relative inline-flex max-w-full cursor-pointer items-center justify-center whitespace-nowrap font-sans font-bold",
     // 누르는 영역 44 — 보이는 상자보다 작으면 ::before 가 넓힌다
     "before:absolute before:left-1/2 before:top-1/2 before:h-full before:min-h-[44px] before:w-full before:min-w-[44px] before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']",
     // 색은 color-transition, 축소는 pressed-scale
@@ -178,6 +179,11 @@ export const buttonVariants = cva(
 );
 
 // 짝 버튼(ResponsivePair) — 한 라벨이 반 폭을 넘으면 세로로 쌓고 주 버튼이 위(button.md "긴 라벨", I-01 결정 6A).
-// 사이 8 · 버튼마다 반 폭 바탕 · 글 폭보다 줄지 않는다 — 넘치면 줄이 넘어가고 wrap-reverse 라 뒤(주) 버튼이 위로 간다
+// 사이 8 · 버튼마다 반 폭 바탕. 버튼은 글 폭보다 줄지 않되(flex 의 자동 최소 = 라벨 한 줄 폭) 짝의 폭은 넘지 않는다(max-w-full —
+// 자동 최소도 이 값에서 멈춘다). 라벨이 반 폭을 넘으면 줄이 넘어가고 wrap-reverse 라 뒤(주) 버튼이 위로 가며, 쌓은 뒤에도 짝 폭보다
+// 길면 라벨 끝을 "…" 로 줄인다(button.md "글자 크기 설정")
 export const RESPONSIVE_PAIR =
-  "flex flex-wrap-reverse gap-x2 [&>*]:min-w-max [&>*]:grow [&>*]:basis-[calc(50%-var(--spacing-x2)/2)]";
+  "flex flex-wrap-reverse gap-x2 [&>*]:max-w-full [&>*]:grow [&>*]:basis-[calc(50%-var(--spacing-x2)/2)]";
+
+// 라벨 — 한 줄을 지키고 넘치면 끝을 "…" 로(button.md "글자 크기 설정"). 글은 그대로 DOM 에 있어 보조 기술은 전체 라벨을 읽는다
+export const BUTTON_LABEL = "min-w-0 truncate";

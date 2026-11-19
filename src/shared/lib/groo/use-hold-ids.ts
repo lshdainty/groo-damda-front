@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
+ * 같은 행을 다시 누른 것으로 보는 시간(ms) — 할 일 완료 원처럼 누르면 바로 목록에서 빠지는 줄의 재탭 방어(TodoPage).
+ * 이 시간 안에 같은 행을 다시 누르면 버린다.
+ */
+export const REPEAT_TAP_GUARD_MS = 600;
+
+/**
  * 낙관 갱신으로 목록에서 빠질 항목을 그 자리에 잠깐 붙들어 두는 시간(ms).
  *
- * `shared/ui/button.tsx` 의 `DOUBLE_CLICK_GUARD_MS`(600) 보다 **길어야** 한다 —
+ * 재탭 방어 [REPEAT_TAP_GUARD_MS](600) 보다 **길어야** 한다 —
  * 재탭 방어가 풀린 뒤에도 행이 남아 있어야 두 번째 탭이 (이미 완료된) 같은 행에
  * 떨어진다. 두 값의 대소가 뒤집히면 방어에 틈이 생긴다.
  */

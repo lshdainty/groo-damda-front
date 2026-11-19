@@ -34,3 +34,14 @@ export const BUBBLE_POSITION = {
   arrowPadding: 14,
   collisionPadding: 16,
 } as const;
+
+// 닫기 — 38 투명 상자를 오른쪽 위 모서리에 붙인다(말풍선 여백만큼 당긴다 — 위 10 · 오른쪽 12), 아이콘 14 가 위 12 · 오른쪽 12 자리.
+// 상자 가운데는 제목 첫 줄 가운데다 — 위 여백 (t3 줄 높이 − 38) ÷ 2(100% 에서 −10)라 글자가 커져도 크기를 그대로 두고 첫 줄을 따른다.
+// 글과 4. 누르는 영역 44(::before). 누르면 2px 거리 축소만(기준 38), 키보드 포커스는 안쪽 2px 링 — 말풍선 글자색
+export const BUBBLE_CLOSE = [
+  "relative -mb-x2_5 -mr-x3 ml-x1 mt-[calc((var(--text-t3--line-height)-38px)/2)] flex size-[38px] shrink-0 cursor-pointer items-center justify-center rounded-r3 border-0 bg-transparent p-0 text-fg-neutral-inverted",
+  "[&>svg]:size-[14px] [&>svg]:pointer-events-none",
+  "before:absolute before:left-1/2 before:top-1/2 before:size-[44px] before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']",
+  "[--press-basis:38] [transition:scale_var(--motion-duration-pressed-scale)_var(--motion-ease-pressed-scale)] active:[scale:calc(1-2/var(--press-basis))] motion-reduce:active:[scale:1]",
+  "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-fg-neutral-inverted",
+].join(" ");

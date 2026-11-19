@@ -46,19 +46,21 @@ export const DIALOG_HEADER = [
 ].join(" ");
 // 닫기 버튼이 있으면 머리 오른쪽 52(24 + 아이콘 22 + 6)
 export const DIALOG_HEADER_WITH_CLOSE = "pr-x13";
-// 머리 오른쪽 동작(headerAction) — 닫기 단추가 있으면 그 왼쪽 사이 4, 없으면(입력 폼) 오른쪽 끝. 제목이 남은 폭에서 줄을 바꾼다
+// 머리 오른쪽 동작(headerAction) — 닫기 단추가 있으면 그 왼쪽 사이 4, 없으면(입력 폼) 오른쪽 끝. 제목이 남은 폭에서 줄을 바꾼다.
+// 머리 단추(닫기 · ⋮ · ←)는 모두 제목 첫 줄 가운데(위 24 + 제목 t8 줄 높이 ÷ 2 — 100% 에서 39)에 선다. 단추 · 아이콘은 px 그대로이고,
+// 큰 글자에서 제목 줄이 높아지면 그 절반만큼 따라 내려간다(dialog.yaml close · groo-design #263)
 export const DIALOG_HEADER_WITH_ACTION_CLOSE =
   "pr-[calc(var(--spacing-x13)+var(--spacing-x1)+36px+var(--spacing-x2))]";
 export const DIALOG_HEADER_WITH_ACTION =
   "pr-[calc(var(--spacing-x4)+36px+var(--spacing-x2))]";
 export const DIALOG_HEADER_ACTION_CLOSE =
-  "absolute right-[calc(var(--spacing-x6)+22px+var(--spacing-x1))] top-[39px] z-1 flex -translate-y-1/2 items-center";
+  "absolute right-[calc(var(--spacing-x6)+22px+var(--spacing-x1))] top-[calc(var(--spacing-x6)+var(--text-t8--line-height)/2)] z-1 flex -translate-y-1/2 items-center";
 export const DIALOG_HEADER_ACTION =
-  "absolute right-x4 top-[39px] z-1 flex -translate-y-1/2 items-center";
+  "absolute right-x4 top-[calc(var(--spacing-x6)+var(--text-t8--line-height)/2)] z-1 flex -translate-y-1/2 items-center";
 // 머리 왼쪽 뒤로 가기(onBack) — 시트와 같은 값: 보이는 40 · 아이콘 24 · 누르는 44, 아이콘이 왼쪽 24 에 오고 제목은 상자 오른쪽 사이 4 에서 시작한다
 export const DIALOG_TITLE_WITH_BACK = "pl-[36px]";
 export const DIALOG_BACK = [
-  "absolute left-[calc(var(--spacing-x6)-8px)] top-[calc(var(--spacing-x6)+15px)] z-1 flex size-[40px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-fg-neutral [&>svg]:size-[24px]",
+  "absolute left-[calc(var(--spacing-x6)-8px)] top-[calc(var(--spacing-x6)+var(--text-t8--line-height)/2)] z-1 flex size-[40px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-fg-neutral [&>svg]:size-[24px]",
   "before:absolute before:left-1/2 before:top-1/2 before:size-[44px] before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']",
   "[transition:background-color_var(--motion-duration-color-transition)_var(--motion-ease-easing)]",
   "hover:bg-bg-neutral-weak-pressed active:bg-bg-neutral-weak-pressed",
@@ -68,10 +70,11 @@ export const DIALOG_TITLE = "m-0 text-t8 font-bold text-fg-neutral";
 export const DIALOG_DESCRIPTION =
   "m-0 text-t5 font-normal text-fg-neutral-muted";
 
-// 닫기 — 52 투명 상자 · 아이콘 22 fg-neutral-subtle. 아이콘이 위 28 · 오른쪽 24 에 오도록 상자를 (52 − 22) ÷ 2 = 15 만큼 당긴다.
+// 닫기 — 52 투명 상자 · 아이콘 22 fg-neutral-subtle. 상자 가운데가 제목 첫 줄 가운데(위 24 + 제목 줄 높이 ÷ 2)에 오고(100% 에서
+// 아이콘 위 28), 아이콘이 오른쪽 24 에 오도록 상자를 (52 − 22) ÷ 2 = 15 만큼 당긴다. 글자가 커져도 닫기는 크기를 그대로 두고 첫 줄을 따른다.
 // 누르면 bg-layer-floating-pressed + 2px 거리 축소(기준 52 → 0.962), 호버도 누름 색
 export const DIALOG_CLOSE = [
-  "absolute right-[calc(var(--spacing-x6)-15px)] top-[calc(var(--spacing-x7)-15px)] flex size-[52px] cursor-pointer items-center justify-center",
+  "absolute right-[calc(var(--spacing-x6)-15px)] top-[calc(var(--spacing-x6)+var(--text-t8--line-height)/2-26px)] flex size-[52px] cursor-pointer items-center justify-center",
   "rounded-r3 border-0 bg-transparent p-0 text-fg-neutral-subtle [&>svg]:size-[22px]",
   "[transition:background-color_var(--motion-duration-color-transition)_var(--motion-ease-easing),scale_var(--motion-duration-pressed-scale)_var(--motion-ease-pressed-scale)]",
   "hover:bg-bg-layer-floating-pressed active:bg-bg-layer-floating-pressed [--press-basis:52] active:[scale:calc(1-2/var(--press-basis))] motion-reduce:active:[scale:1]",
@@ -89,6 +92,8 @@ export const DIALOG_BODY_PLAIN = "last:pb-x6";
 export const DIALOG_BODY_FOG =
   "pt-[20px] pb-[80px] scroll-pt-[20px] scroll-pb-[80px]";
 
-// 바닥 — 위 16 · 좌우 24 · 아래 24, 오른쪽 정렬 [취소] [저장], 사이 8. Button small 36
+// 바닥 — 위 16 · 좌우 24 · 아래 24, 오른쪽 정렬 [취소] [저장], 사이 8. Button small 36.
+// 큰 글자로 나란한 버튼이 한 줄에 들지 않으면 세로로 쌓는다 — 줄바꿈 거꾸로라 뒤(주) 버튼이 위, 쌓인 줄 사이도 8. 한 버튼이 바닥 폭보다
+// 길면 라벨 끝을 "…" 로 줄인다(button.md "글자 크기 설정" — 시트 · 확인창 바닥의 ResponsivePair 와 같은 규칙)
 export const DIALOG_FOOTER =
-  "flex shrink-0 items-center justify-end gap-x2 px-x6 pb-x6 pt-x4";
+  "flex shrink-0 flex-wrap-reverse items-center justify-end gap-x2 px-x6 pb-x6 pt-x4";
