@@ -61,7 +61,7 @@ export function ConfirmDialog({
             <AlertDialogCancel>{cancelLabel ?? t("cancel")}</AlertDialogCancel>
           )}
           {/* 누르면 ds 가 닫는데, 확정이 끝날 때까지 스피너를 띄우고 호출처가 닫는 흐름(loading)이 있어 닫지 않는다(preventDefault).
-              loading 을 안 넘긴 호출처도 확정은 비동기 작업이다 — false 라도 넘겨 Button 의 더블클릭 방어를 켠다. */}
+              loading 을 안 넘긴 호출처도 확정은 비동기 작업이다 — false 라도 넘겨 Button 의 "누른 동작이 끝날 때까지 한 번" 잠금을 켠다. */}
           <AlertDialogAction
             variant={danger && !singleAction ? "criticalSolid" : "neutralSolid"}
             loading={loading ?? false}

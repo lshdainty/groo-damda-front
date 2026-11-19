@@ -4,8 +4,7 @@
 import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { LIST_HOLD_MS, useHoldIds } from "./use-hold-ids";
-import { DOUBLE_CLICK_GUARD_MS } from "@/shared/ui/button";
+import { LIST_HOLD_MS, REPEAT_TAP_GUARD_MS, useHoldIds } from "./use-hold-ids";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -62,10 +61,10 @@ describe("useHoldIds", () => {
     expect(api.holdIds.has(7)).toBe(false); // 영구히 남으면 완료 항목이 안 사라진다
   });
 
-  it("붙드는 시간은 공용 Button 의 더블클릭 방어보다 길어야 한다", () => {
+  it("붙드는 시간은 재탭 방어보다 길어야 한다", () => {
     // 방어가 먼저 풀리고 행이 이미 빠져 있으면, 그 사이 두 번째 탭이 다시
     // *다른* 항목으로 떨어진다 — 결함이 그대로 돌아온다.
-    expect(LIST_HOLD_MS).toBeGreaterThan(DOUBLE_CLICK_GUARD_MS);
+    expect(LIST_HOLD_MS).toBeGreaterThan(REPEAT_TAP_GUARD_MS);
   });
 
   it("여러 항목을 각자 타이머로 붙든다", () => {

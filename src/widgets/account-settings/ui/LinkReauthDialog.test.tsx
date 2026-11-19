@@ -96,7 +96,7 @@ const buttonNamed = (text: string) =>
   );
 const click = (text: string) =>
   buttonNamed(text)!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-/** 같은 버튼을 연달아 누르기 전에 Button 의 더블클릭 가드가 풀리게 기다린다(WithdrawDialog.test 참고) */
+/** 같은 버튼을 연달아 누르기 전에 Button 의 "누른 동작이 끝날 때까지 한 번" 잠금이 풀리게 기다린다(WithdrawDialog.test 참고) */
 const flushClickGuard = () =>
   act(async () => {
     await new Promise((r) => setTimeout(r, 0));

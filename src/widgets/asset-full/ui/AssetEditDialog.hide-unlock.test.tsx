@@ -115,7 +115,7 @@ function open(item: Asset, wide = false) {
   );
 }
 
-/** Button 더블클릭 가드(600ms)를 지나간다 — 가드는 클릭 다음 매크로태스크에 풀린다. */
+/** Button 의 "누른 동작이 끝날 때까지 한 번" 잠금을 지나간다 — 잠금은 클릭 다음 매크로태스크에 풀린다. */
 const flushClickGuard = () =>
   act(async () => {
     await new Promise((r) => setTimeout(r, 0));
@@ -203,8 +203,8 @@ describe("금액 숨김 해제 — 폼 저장의 본인 확인", () => {
     update = null;
     click(hideSwitch()); // 다시 Y
     click(hideSwitch()); // 또 N
-    // 저장 버튼은 같은 fiber 라 Button 의 더블클릭 가드(600ms)가 두 번째 클릭을
-    // 버린다 — 가드는 다음 매크로태스크에 스스로 풀린다(WithdrawDialog.test 와 같다).
+    // 저장 버튼은 같은 fiber 라 Button 의 "누른 동작이 끝날 때까지 한 번" 잠금이 두 번째 클릭을
+    // 버린다 — 잠금은 다음 매크로태스크에 풀린다(WithdrawDialog.test 와 같다).
     await flushClickGuard();
     click(saveButton());
     expect(unlockOpen()).toBe(true);
