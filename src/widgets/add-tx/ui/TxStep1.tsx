@@ -101,11 +101,21 @@ function PresetBlock({ f }: { f: TxForm }) {
         </Button>
       </ListHeader>
       {f.templatesQ.isPending ? (
-        <div aria-hidden className="flex gap-x2 px-global-gutter pb-x2">
+        // 칩(medium)과 같은 높이 — 글 줄(t4) + 위아래 8.5(box-content). 100% 36, 큰 글자에서 칩처럼 글 줄을 따라 커진다
+        <ChipGroup
+          aria-label={t("addTx.presetLoad")}
+          aria-busy="true"
+          className="px-global-gutter pb-x2"
+        >
           {[0, 1, 2].map((i) => (
-            <Skeleton key={i} radius="full" className="h-[36px] w-[96px]" />
+            <Skeleton
+              key={i}
+              radius="full"
+              text="t4"
+              className="box-content w-[96px] py-[8.5px]"
+            />
           ))}
-        </div>
+        </ChipGroup>
       ) : loadFailed(f.templatesQ) ? (
         <div className="flex items-center justify-between gap-x2 px-global-gutter pb-x2">
           <p className="m-0 font-sans text-t4 text-fg-neutral-subtle">

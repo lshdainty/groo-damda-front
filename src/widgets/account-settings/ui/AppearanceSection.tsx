@@ -388,8 +388,9 @@ function ChoiceRow({
         title={title}
         detail={detail}
         suffix={
+          // 불러오는 동안 — 고르는 칸(Input Button)은 틀이라 스켈레톤으로 덮지 않고 값 없이 막힌 칸을 그린다(skeleton.md "틀은 먼저")
           loading ? (
-            <Skeleton radius="4" className="-my-[9px] h-x10 w-[200px]" />
+            trigger
           ) : wide ? (
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>{trigger}</PopoverTrigger>

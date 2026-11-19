@@ -9,7 +9,7 @@ import {
   BottomSheetTrigger,
 } from "@/shared/ds/bottom-sheet";
 import { Button } from "@/shared/ds/button";
-import { List } from "@/shared/ds/list";
+import { List, ListItem } from "@/shared/ds/list";
 import { useWideSurface } from "@/shared/ds/overlay";
 import {
   Popover,
@@ -102,13 +102,17 @@ export function NotificationsMenu({
   );
 
   const list: ReactNode = isLoading ? (
-    <List aria-label={t("title")}>
+    // 실제 알림 줄(NotificationRow)과 같은 List 줄 — 타일 40 · 제목 t5 · 내용 t3 · 시각 t3 글 자리만 스켈레톤(같은 최소 높이 · 여백)
+    <List aria-label={t("title")} aria-busy="true">
       {Array.from({ length: 5 }).map((_, i) => (
-        <li key={i} className="px-global-gutter py-x3">
-          {/* 알림 줄 — 제목(t5) · 내용(t3) 글 자리 */}
-          <Skeleton text="t5" className="w-2/3" />
-          <Skeleton text="t3" className="mt-x0_5 w-full" />
-        </li>
+        <ListItem
+          key={i}
+          align="top"
+          prefix={<Skeleton radius="12" className="size-x10" />}
+          title={<Skeleton text="t5" className="w-2/3" />}
+          detail={<Skeleton text="t3" className="w-full" />}
+          suffix={<Skeleton text="t3" className="w-[32px]" />}
+        />
       ))}
     </List>
   ) : isError && data === undefined ? (

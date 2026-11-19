@@ -199,9 +199,16 @@ export function DetailSkeleton() {
         </div>
       ))}
       <Skeleton text="t4" className="my-x4 w-[96px]" />
-      {[0, 1, 2].map((i) => (
-        <Skeleton key={i} className="mb-x2 h-[74px] w-full" radius="16" />
-      ))}
+      {/* 혜택 항목 — 실제 항목과 같은 Accordion 줄(separated · 같은 최소 높이 · 여백) 안에 제목 · 설명 글 자리만 스켈레톤 */}
+      <Accordion variant="separated">
+        {[0, 1, 2].map((i) => (
+          <AccordionPlainItem
+            key={i}
+            title={<Skeleton text="t5" className="w-1/3" />}
+            description={<Skeleton text="t3" className="w-2/3" />}
+          />
+        ))}
+      </Accordion>
     </div>
   );
 }

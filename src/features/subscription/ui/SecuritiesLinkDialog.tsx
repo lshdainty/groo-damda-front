@@ -19,7 +19,13 @@ import {
   ResponsiveDialogBody,
   ResponsiveDialogContent,
 } from "@/shared/ds/dialog";
-import { List, ListButtonItem, ListHeader, ListTile } from "@/shared/ds/list";
+import {
+  List,
+  ListButtonItem,
+  ListHeader,
+  ListItem,
+  ListTile,
+} from "@/shared/ds/list";
 import { LogoTile } from "@/shared/ds/logo-tile";
 import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
@@ -307,11 +313,19 @@ function ListStep({
         {t("broker.pageDesc")}
       </p>
 
+      {/* 실제 증권사 줄과 같은 줄(같은 최소 높이 · 여백) — 로고 타일 40 · 이름 · 상태 글 자리만 스켈레톤, 꺾쇠는 틀 */}
       {loading && (
-        <div className="flex flex-col gap-x3">
-          <Skeleton radius="12" className="h-[64px] w-full" />
-          <Skeleton radius="12" className="h-[64px] w-full" />
-        </div>
+        <List aria-busy="true">
+          {[0, 1].map((i) => (
+            <ListItem
+              key={i}
+              prefix={<Skeleton radius="12" className="size-x10" />}
+              title={<Skeleton text="t5" className="w-[96px] max-w-full" />}
+              detail={<Skeleton text="t3" className="w-[160px] max-w-full" />}
+              suffix={<ChevronRight aria-hidden />}
+            />
+          ))}
+        </List>
       )}
 
       {failed && (

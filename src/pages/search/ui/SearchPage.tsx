@@ -4,6 +4,7 @@ import { Receipt, Search } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ChipRadio, ChipRadioGroup } from "@/shared/ds/chip";
+import { List, ListItem } from "@/shared/ds/list";
 import { ResultSection } from "@/shared/ds/result-section";
 import { ScrollAutoHide } from "@/shared/ds/scroll-auto-hide";
 import { Skeleton } from "@/shared/ds/skeleton";
@@ -112,23 +113,35 @@ export function SearchPage() {
       );
     if (query.isLoading || query.isFetching)
       return (
-        <div className="flex flex-col gap-x6 py-x4" aria-busy="true">
+        // 실제 결과와 같은 묶음 · 날짜 머리(List Header) · 거래 줄(ExpenseRow 의 List 줄) 안에 글 자리만 스켈레톤 — 100% 에서는
+        // 실제 줄과 높이가 같고 큰 글자에서는 함께 커진다(skeleton.md "크기 — 글은 글줄 높이")
+        <LedgerList aria-busy="true">
           {[3, 2].map((rows) => (
-            <div key={rows} className="flex flex-col gap-x3">
-              {/* 날짜 머리 글(t4) · 거래 줄(타일 40 + 이름 t5 · 설명 t3) — 글 자리는 올 글의 줄 높이(skeleton.md "크기") */}
-              <Skeleton text="t4" className="w-[96px]" />
+            <LedgerDayGroup key={rows}>
+              <LedgerDayHead>
+                <Skeleton text="t4" className="w-[96px]" />
+              </LedgerDayHead>
               {Array.from({ length: rows }, (_, i) => (
-                <div key={i} className="flex items-center gap-x3">
-                  <Skeleton radius="12" className="size-x10 shrink-0" />
-                  <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
-                    <Skeleton text="t5" className="w-[160px] max-w-full" />
-                    <Skeleton text="t3" className="w-[96px] max-w-full" />
-                  </div>
-                </div>
+                <List
+                  key={i}
+                  aria-hidden
+                  className="[&_[data-slot=list-content]]:px-0"
+                >
+                  <ListItem
+                    prefix={<Skeleton radius="12" className="size-x10" />}
+                    title={
+                      <Skeleton text="t5" className="w-[160px] max-w-full" />
+                    }
+                    detail={
+                      <Skeleton text="t3" className="w-[96px] max-w-full" />
+                    }
+                    suffix={<Skeleton text="t5" className="w-[64px]" />}
+                  />
+                </List>
               ))}
-            </div>
+            </LedgerDayGroup>
           ))}
-        </div>
+        </LedgerList>
       );
     if (groups.length === 0)
       return <ResultSection icon={<Receipt />} title={t("searchNoResults")} />;
