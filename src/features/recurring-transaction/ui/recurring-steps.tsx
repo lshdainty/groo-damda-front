@@ -2,7 +2,6 @@ import { useRef, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/shared/lib/cn";
-import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 import { ChipRadio, ChipRadioGroup } from "@/shared/ds/chip";
 import { Field } from "@/shared/ds/field";
 import { Input } from "@/shared/ds/input";
@@ -180,9 +179,8 @@ function DayGrid({
             onClick={() => onChange(d)}
             onKeyDown={(e) => move(e, d)}
             className={cn(
-              // 일곱 칸 날짜 숫자 — 글자 크기 200% 에서 멈춘다(WEEK_GRID_TEXT — groo-design #258)
-              "h-x10 min-w-0 cursor-pointer rounded-full border-0 p-0 font-sans tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
-              WEEK_GRID_TEXT.t5,
+              // 일곱 칸 날짜 숫자 — 글자 크기 설정을 따르지 않는다(칸 안 글 — groo-design #260)
+              "h-x10 min-w-0 cursor-pointer rounded-full border-0 p-0 font-sans tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring text-t5-static",
               on
                 ? "bg-bg-neutral-inverted font-bold text-fg-neutral-inverted"
                 : "bg-transparent text-fg-neutral hover:bg-bg-neutral-weak-pressed",

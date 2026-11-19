@@ -3,7 +3,7 @@
   "source": "specs/components/color-swatch.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "b484b20eae48"
+    "sha256": "d1f3d7c53736"
   },
   "slots": {
     "group": "묶음 — radiogroup, 5 × 2 격자. 이름은 Field 라벨(\"색상\")",

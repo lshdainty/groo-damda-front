@@ -3,7 +3,7 @@
   "source": "specs/components/floating-action-button.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "b484b20eae48"
+    "sha256": "d1f3d7c53736"
   },
   "slots": {
     "root": "버튼 — 원 56. 오른쪽 아래에 떠 있다",

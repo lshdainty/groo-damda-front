@@ -104,9 +104,8 @@ describe("RangePickerSheet", () => {
     )!;
     expect(scroll.className).toContain("flex-1");
     expect(scroll.className).not.toContain("min-h-0");
-    expect(scroll.className).toContain(
-      "min-h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_2_*_max(48px,calc(min(var(--text-t5--line-height),calc(var(--text-t5-static--line-height)_*_2))_+_6px)))]",
-    );
+    // 요일 줄 48 + 주 두 줄 48 × 2(칸 안 글은 static — #260)
+    expect(scroll.className).toContain("min-h-[144px]");
     // 바닥은 본문 밖이라 스크롤에 밀려나지 않는다
     const footer = document.querySelector("[data-slot=bottom-sheet-footer]");
     expect(footer && !body.contains(footer)).toBe(true);

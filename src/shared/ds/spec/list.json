@@ -3,7 +3,7 @@
   "source": "specs/components/list.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "b484b20eae48"
+    "sha256": "d1f3d7c53736"
   },
   "slots": {
     "root": "목록(List) — 줄을 세로로 잇는다. 배경 · 줄 사이 간격 없음",

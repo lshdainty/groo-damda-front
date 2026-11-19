@@ -38,25 +38,23 @@ import {
   CONTINUOUS_MONTH_LABEL,
   CONTINUOUS_OVERSCAN,
   CONTINUOUS_SCROLL,
-  CELL,
   CONTINUOUS_WEEKDAYS,
-  type ContinuousMetrics,
   FOG,
   GRID,
   HEADER,
   LIVE,
-  METRICS_100,
   MONTH_GAP,
+  MONTH_LABEL_MIN,
   PROBE,
   MONTH_LABEL,
   NAV,
   NAV_END,
   NAV_PX,
   NAV_START,
-  OUTSIDE,
   PRESETS,
   ROOT,
   ROOT_SIZE,
+  ROW_HEIGHT,
   TITLE,
   TITLE_ICON,
   TWO_MONTHS,
@@ -64,6 +62,7 @@ import {
   WEEK,
   WEEKDAY,
   WEEKDAY_ROW,
+  WEEKDAY_ROW_HEIGHT,
   WHEEL,
   WHEEL_MONTH,
   WHEEL_YEAR,
@@ -389,10 +388,9 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
     const monthLabelId = (d: Date) => `${id}m${monthNumber(d)}`;
 
     // ── 이어지는 달: 달 위치 ──
-    // 이름 줄 · 칸 · 요일 줄 높이 — 견본을 재서 쓴다(글자 크기를 따라 바뀐다)
+    // 달 이름 줄 높이 — 견본을 재서 쓴다(제목 글이라 글자 크기를 따라 바뀐다). 칸 · 요일 줄은 48 고정(ROW_HEIGHT · WEEKDAY_ROW_HEIGHT)
     const probeRef = React.useRef<HTMLDivElement>(null);
-    const [metrics, setMetrics] =
-      React.useState<ContinuousMetrics>(METRICS_100);
+    const [labelHeight, setLabelHeight] = React.useState(MONTH_LABEL_MIN);
     const monthCount = continuous ? (yearEnd - yearStart + 1) * 12 : 0;
     const heights: number[] = [];
     const offsets: number[] = [];
@@ -400,8 +398,8 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
     for (let i = 0; i < monthCount; i++) {
       const d = fromMonthNumber(firstMonth + i);
       const h =
-        metrics.label +
-        weeksInMonth(d.getFullYear(), d.getMonth()) * metrics.row +
+        labelHeight +
+        weeksInMonth(d.getFullYear(), d.getMonth()) * ROW_HEIGHT +
         MONTH_GAP;
       offsets.push(total);
       heights.push(h);
@@ -415,9 +413,11 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
     const [viewport, setViewport] = React.useState(0);
     const scrollTopRef = React.useRef(scrollTop);
 
-    // 그 날이 보이게 가장 적게 스크롤할 자리 — 위에 붙은 요일 줄(100% 48) · 아래 안개 96 을 피한다
+    // 그 날이 보이게 가장 적게 스크롤할 자리 — 위에 붙은 요일 줄(48) · 아래 안개 96 을 피한다
     const revealTop = (d: Date, current: number, height: number) => {
-      const { label, row: rowH, weekday } = metrics;
+      const label = labelHeight;
+      const rowH = ROW_HEIGHT;
+      const weekday = WEEKDAY_ROW_HEIGHT;
       const row = Math.floor(
         (new Date(d.getFullYear(), d.getMonth(), 1).getDay() +
           d.getDate() -
@@ -610,32 +610,24 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
       return () => observer.disconnect();
     }, [continuous]);
 
-    // 이어지는 달 — 견본(이름 줄 · 칸 · 요일 줄)을 재고, 글자 크기가 바뀌면 다시 잰다
+    // 이어지는 달 — 달 이름 줄 견본을 재고, 글자 크기가 바뀌면(제목이 커진다) 다시 잰다
     React.useLayoutEffect(() => {
       const el = probeRef.current;
       if (!continuous || !el) return;
-      const parts = Array.from(el.children);
       const measure = () => {
-        const [label, row, weekday] = parts.map(
-          (c) => c.getBoundingClientRect().height,
-        );
-        if (!label || !row || !weekday) return;
-        setMetrics((m) =>
-          m.label === label && m.row === row && m.weekday === weekday
-            ? m
-            : { label, row, weekday },
-        );
+        const label = el.getBoundingClientRect().height;
+        if (label) setLabelHeight(label);
       };
       measure();
       const observer = new ResizeObserver(measure);
-      for (const c of parts) observer.observe(c);
+      observer.observe(el);
       return () => observer.disconnect();
     }, [continuous]);
-    // 높이가 바뀌면(처음 잰 값 · 배율 바뀜) 달 위치가 모두 움직인다 — 보던 달을 다시 맨 위로
-    const measuredRef = React.useRef(metrics);
+    // 높이가 바뀌면(처음 잰 값 · 제목 글자 크기 바뀜) 달 위치가 모두 움직인다 — 보던 달을 다시 맨 위로
+    const measuredRef = React.useRef(labelHeight);
     React.useLayoutEffect(() => {
-      if (measuredRef.current === metrics) return;
-      measuredRef.current = metrics;
+      if (measuredRef.current === labelHeight) return;
+      measuredRef.current = labelHeight;
       if (continuous) requestScroll(offsetOf(view));
     });
 
@@ -856,7 +848,7 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
     // 이어지는 달 — 보이는 달 ± 2달(Tab 자리의 달은 늘)
     let body: React.ReactNode;
     if (continuous) {
-      const height = Math.max(viewport, metrics.row * 8);
+      const height = Math.max(viewport, ROW_HEIGHT * 8);
       const topIndex = monthAt(layout.offsets, layout.heights, scrollTop);
       const bottomIndex = monthAt(
         layout.offsets,
@@ -1034,14 +1026,6 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
             <div className={cn(MONTH_LABEL, CONTINUOUS_MONTH_LABEL)}>
               {labels.month(view.getFullYear(), view.getMonth() + 1)}
             </div>
-            <div className={WEEK}>
-              <div className={CELL}>
-                <span className={OUTSIDE}>30</span>
-              </div>
-            </div>
-            <div className={WEEKDAY_ROW}>
-              <div className={WEEKDAY}>{labels.weekdays[0]}</div>
-            </div>
           </div>
         )}
         <span
@@ -1059,9 +1043,9 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
 DatePicker.displayName = "DatePicker";
 
 /**
- * 보이는 요일 줄 — 영어는 두 글자(Su Mo Tu We Th Fr Sa)로 맞추고, 칸에 들지 않는 폭 · 글자 크기에서만 한 글자(S M T W T F S)로 줄인다.
+ * 보이는 요일 줄 — 영어는 두 글자(Su Mo Tu We Th Fr Sa)로 맞추고, 칸에 들지 않는 폭에서만 한 글자(S M T W T F S)로 줄인다.
  * 요일 글은 줄을 바꾸지 않는다(date-picker.md ⓔ Weekday, groo-design #250 · #256). 판정은 화면의 요일 머리와 같은 `useWeekdayNarrow`
- * (weekday-fit.ts — 칸마다 두 글자 견본, 줄 · 견본 크기와 글자 크기 판이 바뀌면 다시 잰다). 한국어는 두 벌이 같다.
+ * (weekday-fit.ts — 칸마다 두 글자 견본, 줄 · 견본 크기가 바뀌면 다시 잰다). 요일 글은 글자 크기 설정을 따르지 않는다(#260). 한국어는 두 벌이 같다.
  */
 function WeekdayRow({
   labels,

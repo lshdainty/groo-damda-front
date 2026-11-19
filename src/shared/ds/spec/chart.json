@@ -3,7 +3,7 @@
   "source": "specs/components/chart.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "b484b20eae48"
+    "sha256": "d1f3d7c53736"
   },
   "slots": {
     "root": "차트 상자 — 카드 본문 안, 폭 100%. 높이는 쓰는 자리가 정한다",

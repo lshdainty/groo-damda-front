@@ -3,7 +3,7 @@
   "source": "specs/components/badge.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "b484b20eae48"
+    "sha256": "d1f3d7c53736"
   },
   "slots": {
     "root": "상자 — 둥근 사각. 글만큼 넓어지고 최대 폭이 없다(부모가 좁을 때만 글이 말줄임)",
@@ -490,14 +490,14 @@
       "state": "enabled",
       "slot": "label",
       "prop": "typography",
-      "note": "11 / 15 — 글자 크기 설정을 따른다(rem). 최소 높이는 그대로, 글이 커지면 상자가 따라 커진다"
+      "note": "11 / 15 — 글자 크기 설정을 따르지 않습니다(웹 text-t1-static, 앱 TextScaler.noScaling)"
     },
     {
       "rule": 2,
       "state": "enabled",
       "slot": "label",
       "prop": "typography",
-      "note": "12 / 16 — 글자 크기 설정을 따른다(rem)"
+      "note": "12 / 16 — 글자 크기 설정을 따르지 않습니다(웹 text-t2-static, 앱 TextScaler.noScaling)"
     },
     {
       "rule": 5,

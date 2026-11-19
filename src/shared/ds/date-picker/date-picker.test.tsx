@@ -1298,10 +1298,8 @@ describe("DatePicker — 이어지는 달(continuous)", () => {
     const scroll = container.querySelector<HTMLElement>(
       "[data-slot=date-picker-scroll]",
     )!;
-    // 요일 줄 max(48, t4 줄 높이) + 주 두 줄 max(48, t5 줄 높이 + 6) — 휠 자리(요일 줄 + 6주)와 같은 셈
-    expect(scroll.className).toContain(
-      "min-h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_2_*_max(48px,calc(min(var(--text-t5--line-height),calc(var(--text-t5-static--line-height)_*_2))_+_6px)))]",
-    );
+    // 요일 줄 48 + 주 두 줄 48 × 2 — 칸 안 글은 글자 크기 설정을 따르지 않아 칸 · 요일 줄이 48 고정이다(#260)
+    expect(scroll.className).toContain("min-h-[144px]");
     expect(scroll.className).not.toContain("min-h-0");
     // 남는 높이는 그대로 채운다
     expect(scroll.className).toContain("flex-1");
@@ -1369,7 +1367,7 @@ describe("DatePicker — 이어지는 달(continuous)", () => {
 describe("DatePicker — 큰 글자 · 눌림 색 (I-04 03-C 결정 1B · 2B)", () => {
   const cls = (el: Element | null) => el?.getAttribute("class") ?? "";
 
-  it("머리 · 제목 · 요일 줄 · 칸은 높이 48 고정이 아니라 최소 48 이다 — 글이 크면 그만큼만 늘어난다", () => {
+  it("머리 · 제목은 최소 48 — 제목이 크면 그만큼만 늘어난다. 요일 줄 · 칸도 최소 48(칸 안 글은 static 이라 늘 48)", () => {
     render(<Single today={TODAY} />);
     const header = container.querySelector("[data-slot=date-picker-header]");
     expect(cls(header)).toContain("min-h-[48px]");
@@ -1423,7 +1421,7 @@ describe("DatePicker — 큰 글자 · 눌림 색 (I-04 03-C 결정 1B · 2B)", 
     expect(today).not.toContain("weak-alpha-pressed");
   });
 
-  it("날짜 버튼 · 앞뒤 달 숫자에 위아래 3 — 큰 글자에서 칸이 줄 높이 + 6 이 된다(스펙 #189)", () => {
+  it("날짜 버튼 · 앞뒤 달 숫자에 위아래 3(스펙 #189) — 숫자는 t5-static 이라 줄 높이 + 6 이 늘 48 안이다", () => {
     render(<Single today={TODAY} />);
     const btn = day(2026, 10, 20);
     expect(cls(btn)).toContain("py-[3px]");
@@ -1432,23 +1430,26 @@ describe("DatePicker — 큰 글자 · 눌림 색 (I-04 03-C 결정 1B · 2B)", 
     expect(
       cls(container.querySelector("[data-slot=date-picker-outside]")),
     ).toContain("py-[3px]");
+    expect(cls(btn)).toContain("text-t5-static");
+    expect(
+      cls(container.querySelector("[data-slot=date-picker-outside]")),
+    ).toContain("text-t5-static");
   });
 
-  it("연 · 월 휠 자리는 요일 줄 + 6 × 칸을 셈한다 — 336 고정이 아니다", () => {
+  it("연 · 월 휠 자리는 요일 줄 + 6 × 칸 = 336 고정 — 칸 · 요일 줄이 48 고정이라 글자 크기를 따라 늘지 않는다(#260)", () => {
     render(<Single today={TODAY} />);
     act(() => title().click());
     const wheel = container.querySelector("[data-slot=date-picker-wheel]");
-    expect(cls(wheel)).toContain(
-      "h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))",
-    );
-    expect(cls(wheel)).not.toContain("h-[336px]");
+    expect(cls(wheel)).toContain("h-[336px]");
+    expect(cls(wheel)).not.toContain("--line-height");
   });
 
-  it("이어지는 달은 높이를 재는 숨은 견본(이름 줄 · 칸 · 요일 줄)을 가진다", () => {
+  it("이어지는 달은 달 이름 줄만 숨은 견본으로 잰다 — 이름 줄은 제목처럼 커지고, 칸 · 요일 줄은 48 고정(#261)", () => {
     render(<Range visibleRange="continuous" today={TODAY} />);
     const probe = container.querySelector("[data-slot=date-picker-probe]")!;
     expect(probe.getAttribute("aria-hidden")).toBe("true");
-    expect(probe.children).toHaveLength(3);
+    expect(probe.children).toHaveLength(1);
+    expect(cls(probe.children[0]!)).toMatch(/(^| )text-t5( |$)/);
     expect(cls(probe)).toContain("invisible");
   });
 });

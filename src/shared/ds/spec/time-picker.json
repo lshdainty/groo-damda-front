@@ -3,7 +3,7 @@
   "source": "specs/components/time-picker.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "b484b20eae48"
+    "sha256": "d1f3d7c53736"
   },
   "slots": {
     "root": "휠 — Wheel Picker medium, 칼럼 셋",

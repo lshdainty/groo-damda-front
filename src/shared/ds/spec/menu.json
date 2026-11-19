@@ -3,7 +3,7 @@
   "source": "specs/components/menu.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "b484b20eae48"
+    "sha256": "d1f3d7c53736"
   },
   "slots": {
     "content": "메뉴 — 트리거 아래(모자라면 위 · 옆) 8",

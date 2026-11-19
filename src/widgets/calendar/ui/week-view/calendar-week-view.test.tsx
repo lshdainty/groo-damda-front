@@ -120,7 +120,8 @@ describe("주 보기 일정 칩", () => {
       "focus-visible:outline-offset-2",
       "focus-visible:outline-stroke-focus-ring",
       "rounded-r1",
-      "text-t2",
+      // 칸 안 일정 이름 — 글자 크기 설정을 따르지 않는다(#260)
+      "text-t2-static",
       "font-medium",
     ])
       expect(chip.classList.contains(c)).toBe(true);

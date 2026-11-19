@@ -13,8 +13,8 @@ import { cva } from "class-variance-authority";
  *            solid — 채움 bg-{톤}-solid + 흰 글자 · 700. 한 화면에서 꼭 눈에 띄어야 할 상태 하나 · 사진 위
  *            outline — 투명 + 안쪽 1px 옅은 선 stroke-{톤}-weak + 의미 색 글자 fg-{톤} · 700. 상세 · 본문의 중간 강조
  *   tone     neutral(기본) · brand · informative · positive · warning · critical — 색은 variant × tone 두 축이 함께 정한다
- *   size     medium 20(기본) — 좌우 6 · 위아래 2 · 모서리 4 · t1 11/15 · 앞 아이콘 12
- *            large 24 — 좌우 8 · 위아래 4 · 모서리 6 · t2 12/16 · 앞 아이콘 14
+ *   size     medium 20(기본) — 좌우 6 · 위아래 2 · 모서리 4 · t1-static 11/15 · 앞 아이콘 12
+ *            large 24 — 좌우 8 · 위아래 4 · 모서리 6 · t2-static 12/16 · 앞 아이콘 14
  *
  * 중립만 짝이 다르다 — weak 는 bg-neutral-weak + fg-neutral-muted, solid 는 bg-neutral-inverted + fg-neutral-inverted(다크에서
  * 밝은 면 + 짙은 글자로 뒤집힌다), outline 은 stroke-neutral-weak + fg-neutral-muted. warning solid 는 주황 + 흰 글자다(SEED 의
@@ -23,7 +23,8 @@ import { cva } from "class-variance-authority";
  * (npm run ds:check)는 그림자를 읽지 못해 그 변수를 잰다.
  * 중립 weak 의 바탕은 회색 바탕(bg-layer-basement)과 같은 색이라 흰 표면(bg-layer-default) · 시트 위에 둔다 — 회색 위면 outline.
  *
- * 글은 글자 크기 설정을 따르고(t1 · t2 — rem) 최소 높이 20 · 24 는 px 그대로라, 글이 커지면 상자가 따라 커진다.
+ * 글은 글자 크기 설정을 따르지 않는다(t1-static · t2-static — 정해진 디자인 틀, DESIGN.md Typography "그대로 두는 것", groo-design #260).
+ * 배지가 알리는 상태는 놓인 줄 · 상세의 글로도 읽힌다(WCAG 1.4.4 의 예외).
  * 최대 폭이 없다 — 한 줄이고, 부모가 좁거나(flex 안) 쓰는 쪽이 폭을 막을 때만 글이 말줄임(…)한다. 글 전체는 DOM 에 남아
  * 보조 기술이 다 읽는다. 역할이 없는 글이라 앞뒤 글(줄 이름)과 이어 읽힌다. 앞 아이콘은 aria-hidden — 글자색을 따르고,
  * 크기는 배지가 정한다. 상태가 바뀌면 글 · 색이 바로 바뀐다(모션 없음).
@@ -49,8 +50,8 @@ export const badgeVariants = cva(
         critical: "",
       },
       size: {
-        medium: "min-h-x5 rounded-r1 px-x1_5 py-x0_5 text-t1",
-        large: "min-h-x6 rounded-r1_5 px-x2 py-x1 text-t2",
+        medium: "min-h-x5 rounded-r1 px-x1_5 py-x0_5 text-t1-static",
+        large: "min-h-x6 rounded-r1_5 px-x2 py-x1 text-t2-static",
       },
     },
     compoundVariants: [
