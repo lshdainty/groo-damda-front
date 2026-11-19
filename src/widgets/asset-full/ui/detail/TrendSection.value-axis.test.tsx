@@ -1,4 +1,5 @@
-// 자산 상세 › 최근 잔액 추이 세로 눈금 QA(2026-11-18 — 잔액 조 단위 · 폰 320 · 글자 200%).
+// 자산 상세 › 최근 잔액 추이 세로 눈금 QA(2026-11-18 — 잔액 조 단위 · 폰 320). 차트 눈금 글은 글자 크기 설정을 따르지 않는다(#260)
+// — 300% 에서도 눈금이 100% 와 같다.
 // recharts 세로축 기본(interval "preserveEnd")이 준 눈금도 글 높이 + 8 로 재 빼서 고르지 않게 남았다 —
 // niceValueAxis 눈금(1 · 2 · 5 간격 · 0 포함)을 하나도 빼지 않고 그린다.
 import { act } from "react";
@@ -6,6 +7,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Asset } from "@/entities/asset";
 import {
+  changeTickScale,
   installValueAxisHarness,
   layoutCharts,
   tickScale,
@@ -71,37 +73,39 @@ const renderTrend = () =>
   );
 
 describe("자산 상세 잔액 추이 — 조 단위", () => {
-  // 폰 차트 140(위 8 · 아래 0) · 글자 200% — 그리는 높이 140 − 8 − 0 − (줄 30 + 8) = 94, 눈금 글 줄 30 → ⌊94 ÷ 30⌋ = 3 칸.
-  // 네 칸 겨냥(0 ~ 4조 · 1조 간격 — 눈금 사이 25.5)은 줄 30 보다 좁아 글이 겹친다 — 칸 수를 줄여 1 · 2 · 5 축을 다시 센다(chart.md
-  // "세로 눈금이 겹치면 수를 줄입니다")
-  it("폰 320 · 글자 200% — 0 · 2조 · 4조, 눈금 사이가 눈금 글 줄 높이(30) 이상이라 겹치지 않는다", async () => {
-    tickScale.value = 2;
+  // 폰 차트 140(위 8 · 아래 0) — 그리는 높이 140 − 8 − 0 − (12 + 15) = 105, 눈금 글 줄 15 → 7 칸까지. 글자 크기를 키워도 그대로다
+  it("폰 320 · 글자 100% 와 300% — 0 ~ 5조 같은 눈금, 눈금 사이가 눈금 글 줄(15) 이상", async () => {
     weeks = series((i) => (2.3 + i * 0.08) * JO);
     await renderTrend();
     // 폰 320 — 좌우 거터 24 를 뺀 폭. 폰의 차트 높이는 140
     await layoutCharts(272);
-    expect(yTickLabels(container)).toEqual(["0", "2조", "4조"]);
-    const ys = yTickPositions(container);
-    for (let i = 1; i < ys.length; i++)
-      expect(ys[i - 1]! - ys[i]!).toBeGreaterThanOrEqual(30);
+    const labels100 = yTickLabels(container);
+    const ys100 = yTickPositions(container);
+    expect(labels100).toEqual(["0", "1조", "2조", "3조", "4조"]);
+    await changeTickScale(3);
+    await layoutCharts(272);
+    expect(yTickLabels(container)).toEqual(labels100);
+    expect(yTickPositions(container)).toEqual(ys100);
+    for (let i = 1; i < ys100.length; i++)
+      expect(ys100[i - 1]! - ys100[i]!).toBeGreaterThanOrEqual(15);
   });
 });
 
 /**
  * 최근 12주 잔액 추이 — QA(2026-11-18, dev 58860fea · 잔액 0 ~ 9,000원). 이 차트만 가로축이 `chartAxisProps()` 라 recharts 가 눈금을
- * 골랐다 — 200% 에서 "2주 · 4주 · … · 12주" 가 −13 겹치고 "12주" 가 오른쪽 밖으로 13 잘렸다, 100% 에서 "1 ~ 8 · 10 · 12주"(9 · 11 빠짐 ·
- * 간격 고르지 않음) · 오른쪽 1 넘침, 세로 0 ~ 1만 여섯 글이 200% 에서 겹쳤다. 이제 ds 가로축 길(chartXAxisProps — 끝 주를 지키는
- * 고른 건너뛰기 · 끝 글 반 폭 비움)과 세로 눈금 수 줄이기를 탄다.
+ * 골랐다 — "1 ~ 8 · 10 · 12주"(9 · 11 빠짐 · 간격 고르지 않음) · 오른쪽 1 넘침. 이제 ds 가로축 길(chartXAxisProps — 끝 주를 지키는
+ * 고른 건너뛰기 · 끝 글 반 폭 비움)과 세로 눈금 수 줄이기를 탄다. 눈금 글은 글자 크기 설정을 따르지 않아 300% 에서도 100% 와 같다.
  */
-describe("자산 상세 최근 12주 — 가로 · 세로 눈금이 글자 크기를 따른다", () => {
+describe("자산 상세 최근 12주 — 가로 · 세로 눈금", () => {
   const cases = [
     { width: 320, scale: 1 },
-    { width: 320, scale: 2 },
+    { width: 320, scale: 3 },
     { width: 390, scale: 1 },
-    { width: 390, scale: 2 },
+    { width: 390, scale: 3 },
   ];
+  const seen = new Map<number, string[]>();
   for (const { width, scale } of cases) {
-    it(`폰 ${width} · 글자 ${scale * 100}% — 끝 "12주" 를 지키고 고르게 건너뛰며, 잘리지도 겹치지도 않는다`, async () => {
+    it(`폰 ${width} · 글자 ${scale * 100}% — 끝 "12주" 를 지키고 고르게 건너뛰며, 잘리지도 겹치지도 않는다(300% 는 100% 와 같은 눈금)`, async () => {
       tickScale.value = scale;
       weeks = series(
         (i) =>
@@ -125,11 +129,15 @@ describe("자산 상세 최근 12주 — 가로 · 세로 눈금이 글자 크�
       expect(
         new Set(n.slice(1).map((v, i) => v - n[i]!)).size,
       ).toBeLessThanOrEqual(1);
-      // 세로 — 눈금 사이가 눈금 글 줄 높이(15 × 배율) 이상, 0 부터 1 · 2 · 5 간격
+      // 세로 — 눈금 사이가 눈금 글 줄 높이(15) 이상, 0 부터 1 · 2 · 5 간격
       const ys = yTickPositions(container);
       for (let i = 1; i < ys.length; i++)
-        expect(ys[i - 1]! - ys[i]!).toBeGreaterThanOrEqual(15 * scale);
+        expect(ys[i - 1]! - ys[i]!).toBeGreaterThanOrEqual(15);
       expect(yTickLabels(container)[0]).toBe("0");
+      // 300% 는 같은 폭의 100% 와 같은 가로 · 세로 눈금
+      const all = [...xs.map((x) => x.text), "|", ...yTickLabels(container)];
+      if (scale === 1) seen.set(width, all);
+      else expect(all).toEqual(seen.get(width));
     });
   }
 });

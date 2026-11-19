@@ -527,7 +527,7 @@ export function CompareWeekdaySection({
             <CartesianGrid {...chartGridProps} />
             <XAxis
               dataKey="day"
-              // 요일 글도 ds 가로축 길 — 글자 사이 8 로 건너뛰고 끝 요일을 지키며 끝 글 반 폭을 비운다(chart.md "큰 글자")
+              // 요일 글도 ds 가로축 길 — 글자 사이 8 로 건너뛰고 끝 요일을 지키며 끝 글 반 폭을 비운다(chart.md "가로 눈금 건너뛰기")
               {...chartXAxisProps(data.map((d) => ({ label: d.day })))}
             />
             <YAxis

@@ -1,9 +1,10 @@
-// 통계 추이 가로 눈금 — groo-design #247(chart.md "큰 글자" 아래 네 줄) · QA(2026-11-18, 11. 1. ~ 11. 18. · 폰 320).
+// 통계 추이 가로 눈금 — groo-design #247(chart.md "가로 눈금 건너뛰기" 아래 네 줄) · QA(2026-11-18, 11. 1. ~ 11. 18. · 폰 320).
 //   D-1 끝 글 자리는 비워 둔다 — 그리는 자리 오른쪽에 끝 눈금 글 폭의 절반(오른쪽 축이 있으면 모자란 만큼만). 끝 글을 안으로 당기다
 //       앞 글을 빼지 않아 건너뛴 간격이 끝까지 고르다. 예전에는 끝 글을 당기며 앞 글을 빼 "11. 3. · 11. 8. · 11. 18."(5일 · 10일)이었다
 //   D-2 같은 화면 · 같은 기간 차트(수입 · 지출과 순저축)는 그리는 자리가 가장 좁은 차트로 건너뛰기를 한 번 세고 같은 날짜 글을 쓴다.
 //       예전에는 위 "11. 3. · 11. 8. · 11. 18." · 아래 "11. 2. · 11. 6. · 11. 10. · 11. 18." 로 달랐다
-//   C  글자 200% · 축 둘이면 끝 글 하나만 — 지금대로 둔다(chart.md "끝 글 하나만 들어가면")
+//   C  가로 눈금 글이 둘도 들지 않는 폭(320 보다 좁은 화면 · 축 둘)이면 끝 글 하나만(chart.md "끝 글 하나만 들어가면")
+//   #260 눈금 글은 글자 크기 설정을 따르지 않는다 — 300% 에서도 100% 와 같은 날짜 글이다
 //   #248 같은 기간 · 같은 눈금 단위(달)면 여러 달일 때 보이는 주요 카테고리 월별 추이도 같은 묶음 — 세 차트가 같은 달 글
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -104,7 +105,8 @@ const gaps = (labels: string[]) =>
   labels.slice(1).map((l, i) => day(l) - day(labels[i]!));
 
 describe("통계 추이 — 위 · 아래 차트의 가로 날짜", () => {
-  for (const scale of [1, 2]) {
+  const at100: string[][] = [];
+  for (const scale of [1, 3]) {
     it(`폰 320 · 글자 ${scale * 100}% — 두 차트가 같은 날짜 글이고, 끝(11. 18.)까지 간격이 고르다`, async () => {
       await renderTrendTab(scale);
       const top = xTickLabels(container, { chart: 0 }).map((l) => l.text);
@@ -112,12 +114,10 @@ describe("통계 추이 — 위 · 아래 차트의 가로 날짜", () => {
       expect(top[top.length - 1]).toBe("11. 18.");
       expect(bottom).toEqual(top);
       expect(new Set(gaps(top)).size).toBeLessThanOrEqual(1);
-      if (scale === 2) {
-        // C — 글이 둘도 들어가지 않는 폭이면 끝 글 하나만(지금대로)
-        expect(top).toEqual(["11. 18."]);
-      } else {
-        expect(top.length).toBeGreaterThan(1);
-      }
+      expect(top.length).toBeGreaterThan(1);
+      // 300% 는 100% 와 같은 날짜 글(눈금 글은 그대로)
+      if (scale === 1) at100.push(top);
+      else expect(top).toEqual(at100[0]);
     });
 
     it(`폰 320 · 글자 ${scale * 100}% — 끝 글이 차트 오른쪽 끝을 넘지 않는다(이중 축 · 축 하나 모두)`, async () => {
@@ -170,7 +170,7 @@ const monthly = () =>
   }) as unknown as StatsModel;
 
 describe("통계 추이 · 여러 달 — 주요 카테고리 월별 추이까지 한 묶음(#248)", () => {
-  for (const scale of [1, 2]) {
+  for (const scale of [1, 3]) {
     it(`폰 320 · 글자 ${scale * 100}% — 세 차트가 같은 달 글이고 간격이 고르다`, async () => {
       tickScale.value = scale;
       const m = monthly();

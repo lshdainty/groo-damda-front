@@ -88,7 +88,7 @@ type AnyProps = Record<string, unknown>;
 
 /**
  * 카르테시안 차트의 기본 바깥 여백 — 쓰는 쪽이 주지 않은 값을 채운다. 위는 8(앱 p_chart_cartesian 과 같은 바탕 — 세로축 끝 글 자리
- * `chartTopMargin` 이 큰 글자에서 키운다), 나머지는 recharts 기본 5
+ * `chartTopMargin` 이 ⌈눈금 줄 ÷ 2⌉ 로 키운다), 나머지는 recharts 기본 5
  */
 const CHART_MARGIN = { top: 8, right: 5, bottom: 5, left: 5 };
 const noSubscribe = () => () => {};
@@ -191,12 +191,13 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
       pie && diameter != null && fitWidth != null && fitWidth < diameter
         ? chartDonutRadii(fitWidth)
         : null;
-    // 눈금 글자 크기가 바뀌면(글자 크기 설정 · 200%) 다시 그린다 — 가로 눈금 건너뛰기(chartXAxisProps) · 끝 글 자리와 아래 세로축 폭을 새로 잰다.
-    // 판은 아래 잼마다 열쇠로 넘긴다 — 값을 버리고 측정만 부르면 React Compiler 가 처음 잰 값에 묶는다(measureTextWidthAt)
+    // 눈금 글은 글자 크기 설정을 따르지 않는다(`-static` — chart.md "글자 크기", groo-design #260). 눈금 글꼴이 바뀌면(웹폰트 도착) 다시
+    // 그린다 — 가로 눈금 건너뛰기(chartXAxisProps) · 끝 글 자리와 아래 세로축 폭을 새로 잰다. 판은 아래 잼마다 열쇠로 넘긴다 — 값을 버리고
+    // 측정만 부르면 React Compiler 가 처음 잰 값(대체 글꼴의 폭)에 묶는다(measureTextWidthAt)
     const fontVersion = useTickFontVersion();
     const tickLine = useTickLineHeight();
-    // 세로축 폭은 그리는 눈금 글 가운데 가장 긴 것이 잘리지 않게(chart.md "축 · 격자" · "큰 글자") — 눈금(ticks) · 글(tickFormatter) ·
-    // 폭(width)을 준 세로축은 그 글로 다시 재 준 폭보다 넓으면 넓힌다. 쓰는 쪽이 잰 폭은 그때의 글자 크기라 커지면 모자란다
+    // 세로축 폭은 그리는 눈금 글 가운데 가장 긴 것이 잘리지 않게(chart.md "축 · 격자") — 눈금(ticks) · 글(tickFormatter) ·
+    // 폭(width)을 준 세로축은 그 글로 다시 재 준 폭보다 넓으면 넓힌다. 쓰는 쪽이 잰 폭은 그때의 글꼴이라 웹폰트가 넓으면 모자란다
     const fitYAxis = (c: React.ReactElement<AnyProps>) => {
       const { ticks, tickFormatter, width } = c.props;
       if (
@@ -223,8 +224,7 @@ const Chart = React.forwardRef<HTMLDivElement, ChartProps>(
       return () => xGroup.remove(rawId);
     }, [xGroup, rawId]);
     // 시간 가로축(chartXAxisProps) — 묶음이면 자기 폭으로 센 간격을 알리고 묶음의 간격(가장 큰 것 = 가장 좁은 차트의 간격)을 쓴다
-    // 가로 눈금 줄 높이 = 눈금 글 줄 높이 + 8(눈금과 그리는 자리 사이) — 글자가 커지면 그리는 자리가 커진 눈금 줄만큼 줄어든다
-    // (chart.md "큰 글자"). recharts 기본(30 고정)이면 200% 글(줄 30 + 8)이 아래로 넘친다. 세로 눈금 칸 수(chartValueIntervals)도 이 줄로 센다
+    // 가로 눈금 줄 높이 = 위 시작 + 눈금 글 줄 높이(15 — 글자 크기 설정을 따르지 않는다). 세로 눈금 칸 수(chartValueIntervals)도 이 줄로 센다.
     // 가로 눈금 글은 그리는 자리 아래 max(8, ⌈줄 높이 ÷ 2⌉ + 4) 에서 시작한다 — 맨 아래 세로 글(눈금 선 가운데, 줄 높이 절반이 아래로
     // 나간다)과 겹치지 않게(chart.md "세로축 끝 글의 자리를 비웁니다", #250)
     const xAxisHeight = chartXAxisHeight(tickLine);

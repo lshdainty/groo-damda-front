@@ -41,15 +41,15 @@ export const chartXTicksOf = (
  * 가로 눈금 글이 있는 카르테시안 차트는 모두 이 길을 탄다 — `chartAxisProps()` 만 펼치면 recharts 가 눈금을 골라 빼고(앞에서부터,
  * 간격 고르지 않음) 끝 글 자리도 비우지 않는다.
  *
- * 남길 눈금을 recharts 에 맡기지 않고 직접 정한다(chart.md "큰 글자" · "날짜 · 시각 눈금"): 글자 사이 최소 8 로 들어가는 칸을
+ * 남길 눈금을 recharts 에 맡기지 않고 직접 정한다(chart.md "가로 눈금 건너뛰기" · "날짜 · 시각 눈금"): 글자 사이 최소 8 로 들어가는 칸을
  * 세어 끝(가장 최근) 눈금을 지키고 앞에서부터 건너뛰고(앱 `p_chart_cartesian` 과 같은 셈), 연도는 **남은 눈금** 가운데 해가
  * 바뀌는 첫 눈금에 붙인다. recharts 에는 모든 칸을 그리게 하고(`interval` 0) 건너뛴 칸은 빈 자리로 둔다. 툴팁 머리는 계속 dataKey 글이다.
  *
  * 끝 글은 옮기지 않는다 — ds Chart 가 그리는 자리 오른쪽에 끝 글 폭의 절반을 비워(`chartXEndReserve`) 끝 글이 차트 끝을 넘지 않으므로
  * 건너뛴 간격이 끝까지 고르다(chart.md "끝 글 자리는 비워 둡니다"). 같은 화면 · 같은 기간 차트 묶음이면 묶음의 간격(가장 큰 것 —
  * 가장 좁은 차트의 간격)을 쓴다(`sharedInterval` — chart.md "같은 화면 · 같은 기간 차트는 같은 날짜 글").
- * 잰 값은 그리는 자리 폭 · 눈금 글자 크기의 판(`readTickFontVersion`)이 같을 때만 다시 쓴다 — 글자 크기가 페이지가 떠 있는 동안
- * 바뀌면(ds Chart 가 그 판을 지켜 다시 그린다) 건너뛰기를 새로 센다.
+ * 잰 값은 그리는 자리 폭 · 눈금 글꼴의 판(`readTickFontVersion`)이 같을 때만 다시 쓴다 — 눈금 글은 글자 크기 설정을 따르지 않아
+ * (`-static`, chart.md "글자 크기") 판은 웹폰트가 늦게 도착할 때 오르고(ds Chart 가 그 판을 지켜 다시 그린다) 건너뛰기를 새로 센다.
  */
 export function chartXAxisProps(
   ticks: readonly ChartXTick[],
@@ -62,7 +62,7 @@ export function chartXAxisProps(
 ) {
   const axis = chartAxisProps();
   const full = chartXTickFullLabels(ticks);
-  // 칸마다 불리므로 그리는 자리 폭 · 글자 크기가 같으면 한 번만 센다(글 폭을 재는 것이 비싸다)
+  // 칸마다 불리므로 그리는 자리 폭 · 글꼴이 같으면 한 번만 센다(글 폭을 재는 것이 비싸다)
   let own: { key: string; interval: number } | undefined;
   let plan: { interval: number; labels: (string | null)[] } | undefined;
   const labelsAt = (p: XTickRenderProps) => {

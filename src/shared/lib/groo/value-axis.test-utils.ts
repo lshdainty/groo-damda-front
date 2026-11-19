@@ -1,14 +1,20 @@
-// 세로 눈금 시험 받침 — jsdom 은 레이아웃이 없어 글 크기 · 차트 크기를 정해 준다(QA 조건: 폰 320 · 글자 200%).
-//   · recharts 가 눈금 글을 재는 숨은 글(`recharts_measurement_span`) — 높이 = 11px × 1.5 × 배율, 폭 = 글자 수 어림 × 배율.
-//     그 글은 position:absolute 라 블록이 되어 body 의 줄 높이(1.5 — index.css)를 받는다(200% 에서 33)
-//   · 세로축 폭을 재는 숨은 글(axisWidth.ts — font-size `--text-t1`) — 같은 폭 어림
-//   · 눈금 글 줄 높이를 재는 숨은 글(line-height `--text-t1--line-height`) — 15 × 배율(200% 에서 30)
+// 세로 눈금 시험 받침 — jsdom 은 레이아웃이 없어 글 크기 · 차트 크기를 정해 준다(QA 조건: 폰 320 · 글자 100% → 300%).
+//   · 글자 크기 배율은 그 글의 글자 크기 값이 rem(`0.6875rem` · `var(--text-t1)`)일 때만 걸린다 — px · `-static` 토큰은 그대로다.
+//     브라우저가 푸는 것과 같다(groo-design #260 — 차트 그림 안 글은 글자 크기 설정을 따르지 않는다)
+//   · recharts 가 눈금 글을 재는 숨은 글(`recharts_measurement_span`) — 높이 = 11px × 1.5, 폭 = 글자 수 어림. 눈금 글 크기는
+//     ds `CHART_TICK_SIZE` 다(recharts 는 그 값을 숨은 글에 옮기지 않는다 — 그래서 그 값으로 배율을 정한다)
+//   · 세로축 폭을 재는 숨은 글(axisWidth.ts — font-size `AXIS_TICK_FONT_SIZE`) — 같은 폭 어림
+//   · 눈금 글 줄 높이를 재는 숨은 글(line-height `--text-t1-static--line-height`) — 15
 //   · ResizeObserver — 차트 상자마다 그 상자 높이(Chart `height`)와 [width] 를 알린다
 import { act } from "react";
 import { vi } from "vitest";
 
+import { CHART_TICK_SIZE } from "@/shared/ds/chart/chart-variants";
+
 /** 글자 크기 배율 — 1 = 100%, 2 = 200% */
 export const tickScale = { value: 1 };
+/** 글꼴 폭 배율 — 웹폰트가 도착해 같은 크기의 글이 넓어진 것(1 = 대체 글꼴) */
+export const fontWidth = { value: 1 };
 
 /** 11px 글 폭 어림 — 한글 11 · 숫자 6.6(고정폭) · 점 · 쉼표 · 빈칸 2.8 · 그 밖 7 */
 const glyphs = (s: string) =>
@@ -16,7 +22,14 @@ const glyphs = (s: string) =>
     (w, c) =>
       w + (c > "ᄀ" ? 11 : /[0-9]/.test(c) ? 6.6 : /[., ]/.test(c) ? 2.8 : 7),
     0,
-  );
+  ) * fontWidth.value;
+
+/** 글자 크기 값의 배율 — rem 이면 글자 크기 설정을 따르고(배율), px · `-static` 토큰이면 그대로(1) */
+export const scaleOf = (value: string): number =>
+  /rem\b|var\(--text-t\d+(--line-height)?\)/.test(value) ? tickScale.value : 1;
+
+/** 눈금 글의 배율 — ds `CHART_TICK_SIZE` 를 푼다 */
+export const tickTextScale = () => scaleOf(CHART_TICK_SIZE);
 
 let observers: { cb: (entries: unknown[]) => void; el: Element }[] = [];
 
@@ -24,6 +37,7 @@ let observers: { cb: (entries: unknown[]) => void; el: Element }[] = [];
 export function installValueAxisHarness() {
   observers = [];
   tickScale.value = 1;
+  fontWidth.value = 1;
   globalThis.ResizeObserver = class {
     private cb: (entries: unknown[]) => void;
     constructor(cb: (entries: unknown[]) => void) {
@@ -41,14 +55,20 @@ export function installValueAxisHarness() {
     function (this: HTMLElement) {
       const text = this.textContent ?? "";
       const recharts = this.id === "recharts_measurement_span";
-      const axis = this.style.fontSize.includes("--text-t1");
-      // 눈금 글 줄 높이를 재는 숨은 글(axisWidth.ts measureTickLineHeight — line-height `--text-t1--line-height` = 15 / 16rem)
-      const line = this.style.lineHeight.includes("--text-t1--line-height");
-      const width = recharts || axis ? glyphs(text) * tickScale.value : 0;
+      const axis = this.style.fontSize.startsWith("var(--text-t1");
+      // 눈금 글 줄 높이를 재는 숨은 글(axisWidth.ts measureTickLineHeight)
+      const line = /--text-t1(-static)?--line-height/.test(
+        this.style.lineHeight,
+      );
+      const width = recharts
+        ? glyphs(text) * tickTextScale()
+        : axis
+          ? glyphs(text) * scaleOf(this.style.fontSize)
+          : 0;
       const height = recharts
-        ? 11 * 1.5 * tickScale.value
+        ? 11 * 1.5 * tickTextScale()
         : line
-          ? 15 * tickScale.value
+          ? 15 * scaleOf(this.style.lineHeight)
           : 0;
       return {
         width,
@@ -66,8 +86,9 @@ export function installValueAxisHarness() {
 }
 
 /**
- * 페이지가 떠 있는 동안 글자 크기를 바꾼다 — 배율을 바꾸고, 눈금 글자 크기의 숨은 글(axisWidth.ts subscribeTickFont — "0000")을
- * 지켜보는 ResizeObserver 를 부른다(판이 오르고 지켜보는 차트 · 훅이 다시 그린다)
+ * 페이지가 떠 있는 동안 글자 크기를 바꾼다 — 배율을 바꾸고, 눈금 글꼴 판의 숨은 글(axisWidth.ts subscribeTickFont — "0000")을
+ * 지켜보는 ResizeObserver 를 부른다(그 글 폭이 바뀌었으면 판이 오르고 지켜보는 차트 · 훅이 다시 그린다 — 눈금 글이 `-static` 이면
+ * 폭이 같아 판이 오르지 않는다)
  */
 export const changeTickScale = (scale: number) =>
   act(() => {
@@ -119,7 +140,7 @@ export function yTickPositions(
     .sort((a, b) => b - a);
 }
 
-/** 차트 상자 하나의 가로 눈금 글 — 보이는 글만, 왼쪽부터. 글 폭은 받침의 어림(배율 포함)으로 왼쪽 · 오른쪽 끝을 낸다 */
+/** 차트 상자 하나의 가로 눈금 글 — 보이는 글만, 왼쪽부터. 글 폭은 받침의 어림(눈금 글이 rem 이면 배율 포함)으로 왼쪽 · 오른쪽 끝을 낸다 */
 export function xTickLabels(
   root: ParentNode,
   { chart = 0 }: { chart?: number } = {},
@@ -133,14 +154,14 @@ export function xTickLabels(
     .filter((t) => t.textContent)
     .map((t) => {
       const x = Number(t.getAttribute("x"));
-      const w = glyphs(t.textContent!) * tickScale.value;
+      const w = glyphs(t.textContent!) * tickTextScale();
       return { text: t.textContent!, left: x - w / 2, right: x + w / 2 };
     })
     .sort((a, b) => a.left - b.left);
 }
 
 /**
- * 세로축 끝 글의 자리(#250) — 차트 상자 하나에서 세로 눈금 글(눈금 선 가운데, 줄 높이 15 × 배율)의 맨 위 · 맨 아래 끝과
+ * 세로축 끝 글의 자리(#250) — 차트 상자 하나에서 세로 눈금 글(눈금 선 가운데, 줄 높이 15 — rem 이면 × 배율)의 맨 위 · 맨 아래 끝과
  * 가로 눈금 글의 위 끝(글 줄 시작 y)을 낸다. 맨 위 ≥ 0 이면 차트 상자 안, 맨 아래 ≤ 가로 글 위 끝이면 겹치지 않는다
  */
 export function edgeLabelBox(
@@ -148,7 +169,7 @@ export function edgeLabelBox(
   { chart = 0 }: { chart?: number } = {},
 ): { yTop: number; yBottom: number; xTop: number } {
   const box = root.querySelectorAll("[data-slot=chart]")[chart];
-  const half = (15 * tickScale.value) / 2;
+  const half = (15 * tickTextScale()) / 2;
   const ys = Array.from(
     box?.querySelectorAll(
       ".recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value",
@@ -167,3 +188,11 @@ export function edgeLabelBox(
     xTop: Math.min(...xs),
   };
 }
+
+/** 웹폰트가 도착해 눈금 글 폭이 [ratio] 배가 된다 — 눈금 글꼴 판의 숨은 글을 지켜보는 ResizeObserver 를 부른다 */
+export const changeTickFont = (ratio: number) =>
+  act(() => {
+    fontWidth.value = ratio;
+    for (const o of observers.filter((x) => x.el.textContent === "0000"))
+      o.cb([]);
+  });

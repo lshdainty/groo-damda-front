@@ -69,27 +69,40 @@ describe("순자산 추이 — 조 단위", () => {
     expect(yTickLabels(container)).toEqual(["0", "50조", "100조", "150조"]);
   });
 
-  // 140 · 200%: 그리는 높이 140 − max(8, 15) − 0 − (19 + 30) = 76 → 2 칸(#250 세로축 끝 글 자리)
-  it("폰 320 · 글자 200% — 1.12조 ~ 1.46조: 0 · 1조 · 2조(두 칸)를 모두 그린다", async () => {
-    tickScale.value = 2;
-    points = series(1.12, 0.031);
-    await act(() => root.render(<NetWorthChart height={140} />));
-    await layoutCharts(PHONE_CHART);
-    expect(yTickLabels(container)).toEqual(["0", "1조", "2조"]);
-  });
-
-  // 폰 띠 140(위 8 · 아래 0) · 글자 200% — 그리는 높이 76(140 − 15 − 0 − 49) · 눈금 글 줄 30 → 두 칸까지. 0.35조 ~ 0.95조 는 네 칸 겨냥이면
-  // 0 ~ 1조 · 0.2조 간격 다섯 칸(눈금 사이 18.8)이라 글이 겹친다 — 칸 수를 줄여 다시 센다(chart.md "세로 눈금이 겹치면 수를 줄입니다")
-  it("폰 띠 140 · 글자 200% — 0.35조 ~ 0.95조: 0 · 0.5조 · 1조, 세로 눈금 글이 겹치지 않는다", async () => {
-    tickScale.value = 2;
-    points = series(0.35, 0.055);
-    await act(() => root.render(<NetWorthChart height={140} />));
-    await layoutCharts(PHONE_CHART);
-    expect(yTickLabels(container)).toEqual(["0", "0.5조", "1조"]);
-    const ys = yTickPositions(container);
-    for (let i = 1; i < ys.length; i++)
-      expect(ys[i - 1]! - ys[i]!).toBeGreaterThanOrEqual(30);
-  });
+  // 차트 그림 안 글(축 눈금)은 글자 크기 설정을 따르지 않는다(chart.md "글자 크기", #260) — 300% 에서도 눈금 글 · 수 · 자리가 100% 와
+  // 같다. 예전엔 200% 에서 그리는 자리가 줄어 두 칸(0 · 1조 · 2조)으로 줄였다
+  for (const after of [false, true]) {
+    it(`폰 띠 140 · 글자 300%(${after ? "뜬 뒤" : "처음부터"}) — 0.35조 ~ 0.95조: 눈금 글 · 자리가 100% 와 같다`, async () => {
+      points = series(0.35, 0.055);
+      await act(() => root.render(<NetWorthChart height={140} />));
+      await layoutCharts(PHONE_CHART);
+      const labels100 = yTickLabels(container);
+      const ys100 = yTickPositions(container);
+      expect(labels100).toEqual([
+        "0",
+        "0.2조",
+        "0.4조",
+        "0.6조",
+        "0.8조",
+        "1조",
+      ]);
+      if (after) {
+        await changeTickScale(3);
+      } else {
+        act(() => root.unmount());
+        root = createRoot(container);
+        tickScale.value = 3;
+        await act(() => root.render(<NetWorthChart height={140} />));
+      }
+      await layoutCharts(PHONE_CHART);
+      expect(yTickLabels(container)).toEqual(labels100);
+      expect(yTickPositions(container)).toEqual(ys100);
+      // 눈금 사이가 눈금 글 줄(15) 이상 — 겹치지 않는다
+      const ys = yTickPositions(container);
+      for (let i = 1; i < ys.length; i++)
+        expect(ys[i - 1]! - ys[i]!).toBeGreaterThanOrEqual(15);
+    });
+  }
 });
 
 /**
@@ -116,11 +129,10 @@ describe("순자산 추이 140 · 글자 300% — 세로축 끝 글이 상자 �
 });
 
 /**
- * 가장 적은 축도 들지 않으면 큰 쪽 끝 글만(groo-design #253 — chart.md "큰 글자"). 순자산 추이 140(위 8 · 아래 0) · 글자 300% 면
- * 그리는 높이 140 − 23 − 0 − (27 + 45) = 45 · 줄 45 → 한 칸뿐이다. 음수가 섞인 −1.2만 ~ 47.6만 의 가장 적은 축 −50만 · 0 · 50만(두 칸)도
- * 넘쳐 예전엔 세 글이 겹쳤다 — 이제 절댓값이 큰 쪽 끝 "50만" 하나만, 격자선(눈금 셋)은 그대로.
+ * 음수가 섞인 축도 모든 눈금에 글 — 눈금 글이 커지지 않으므로 "가장 적은 축도 들지 않으면 큰 쪽 끝 글만"(#253)은 걷었다(#260).
+ * 순자산 추이 140 · 글자 300% 에서 −1.2만 ~ 47.6만 의 눈금 글이 100% 와 같고 빈 글이 없다.
  */
-describe("순자산 추이 140 · 글자 300% 이상 — 가장 적은 축도 들지 않으면 큰 쪽 끝 글만(#253)", () => {
+describe("순자산 추이 140 · 글자 300% — 음수 섞임도 모든 눈금에 글(#253 걷음)", () => {
   const MAN = 10_000;
   /** −1.2만 ~ 47.6만 — 음수가 섞인 12 달 */
   const mixed = Array.from({ length: 12 }, (_, i) => ({
@@ -128,46 +140,19 @@ describe("순자산 추이 140 · 글자 300% 이상 — 가장 적은 축도 �
     month: i + 1,
     netWorth: i === 0 ? -1.2 * MAN : Math.round((i / 11) * 47.6 * MAN),
   }));
-  /** 보이는(빈 글이 아닌) 세로 글과 그 자리 */
-  const shown = () =>
-    Array.from(
-      container.querySelectorAll(
-        ".recharts-yAxis-tick-labels .recharts-cartesian-axis-tick-value",
-      ),
-    )
-      .filter((t) => t.textContent)
-      .map((t) => ({ text: t.textContent!, y: Number(t.getAttribute("y")) }))
-      .sort((a, b) => b.y - a.y);
 
-  for (const scale of [3, 4]) {
-    it(`음수 섞임 · 글자 ${scale * 100}% — "50만" 하나만 남고 눈금(격자선) 셋은 그대로`, async () => {
-      tickScale.value = scale;
-      points = mixed;
-      await act(() => root.render(<NetWorthChart height={140} />));
-      await layoutCharts(PHONE_CHART);
-      expect(shown().map((l) => l.text)).toEqual(["50만"]);
-      // 격자선은 그대로 — 눈금 셋(−50만 · 0 · 50만)
-      expect(yTickLabels(container)).toHaveLength(3);
-      // 남은 글이 차트 상자 안
-      expect(shown()[0]!.y - (15 * scale) / 2).toBeGreaterThanOrEqual(0);
-    });
-  }
-
-  it("양수만 · 글자 300% — 0 · 50만 이 한 칸에 들면 둘 다, 겹치지 않는다", async () => {
+  it("처음부터 300% — 눈금 글이 100% 와 같고 빈 글이 없다", async () => {
+    points = mixed;
+    await act(() => root.render(<NetWorthChart height={140} />));
+    await layoutCharts(PHONE_CHART);
+    const labels100 = yTickLabels(container);
+    act(() => root.unmount());
+    root = createRoot(container);
     tickScale.value = 3;
-    points = mixed.map((p) => ({ ...p, netWorth: Math.max(0, p.netWorth) }));
     await act(() => root.render(<NetWorthChart height={140} />));
     await layoutCharts(PHONE_CHART);
-    const labels = shown();
-    expect(labels.map((l) => l.text)).toEqual(["0", "50만"]);
-    expect(labels[0]!.y - labels[1]!.y).toBeGreaterThanOrEqual(45);
-  });
-
-  it("양수만 · 글자 400% — 한 칸도 들지 않으면 50만 하나", async () => {
-    tickScale.value = 4;
-    points = mixed.map((p) => ({ ...p, netWorth: Math.max(0, p.netWorth) }));
-    await act(() => root.render(<NetWorthChart height={140} />));
-    await layoutCharts(PHONE_CHART);
-    expect(shown().map((l) => l.text)).toEqual(["50만"]);
+    expect(yTickLabels(container)).toEqual(labels100);
+    expect(labels100.length).toBeGreaterThan(2);
+    expect(labels100.every(Boolean)).toBe(true);
   });
 });
