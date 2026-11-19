@@ -721,8 +721,11 @@ export function QuotesBand({
 function TableSkeleton({ label }: { label: string }) {
   return (
     <div aria-busy aria-label={label} className="flex flex-col gap-x2">
+      {/* 표 줄(32)마다 글 한 줄(t4) — 글 자리는 올 글의 줄 높이라 큰 글자에서 줄과 함께 커진다 */}
       {Array.from({ length: 6 }, (_, i) => (
-        <Skeleton key={i} className="h-[24px] w-full" />
+        <div key={i} className="flex min-h-[32px] items-center">
+          <Skeleton text="t4" className="w-full" />
+        </div>
       ))}
     </div>
   );
@@ -991,7 +994,14 @@ export function InvestorBand({ q }: { q: InvestorQuery }) {
             <ListItem
               key={i}
               title={<Skeleton text="t5" className="w-1/4" />}
-              suffix={<Skeleton text="t3" className="h-[56px] w-[96px]" />}
+              // 값 칸은 개인 · 외국인 · 기관 세 줄(t3) — 글 자리마다 t3 줄 높이
+              suffix={
+                <span className="flex flex-col items-end gap-x0_5">
+                  <Skeleton text="t3" className="w-[96px]" />
+                  <Skeleton text="t3" className="w-[96px]" />
+                  <Skeleton text="t3" className="w-[96px]" />
+                </span>
+              }
             />
           ))}
         </List>

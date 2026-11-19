@@ -105,7 +105,9 @@ export function NotificationsMenu({
     <List aria-label={t("title")}>
       {Array.from({ length: 5 }).map((_, i) => (
         <li key={i} className="px-global-gutter py-x3">
-          <Skeleton className="h-[40px] w-full" />
+          {/* 알림 줄 — 제목(t5) · 내용(t3) 글 자리 */}
+          <Skeleton text="t5" className="w-2/3" />
+          <Skeleton text="t3" className="mt-x0_5 w-full" />
         </li>
       ))}
     </List>

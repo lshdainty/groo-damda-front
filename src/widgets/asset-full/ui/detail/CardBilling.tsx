@@ -42,7 +42,7 @@ export function CardBilling({
     return (
       <div aria-hidden className="px-global-gutter pt-x3">
         <Skeleton text="t5" className="w-1/3" />
-        <Skeleton className="mt-x3 h-x8 w-2/3" radius="8" />
+        <Skeleton text="t9" className="mt-x3 w-2/3" radius="8" />
         <Skeleton text="t5" className="mt-x4 w-full" />
         <Skeleton className="mt-x4 h-x10 w-full" radius="8" />
       </div>

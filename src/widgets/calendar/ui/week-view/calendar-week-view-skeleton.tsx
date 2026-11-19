@@ -64,7 +64,8 @@ const CalendarWeekViewSkeleton = () => {
                         <WeekdayProbe>{weekday.full[index]}</WeekdayProbe>
                         <Skeleton
                           radius="4"
-                          className="mx-auto mt-x1 h-[16px] w-[16px]"
+                          text="t2-static"
+                          className="mx-auto mt-x1 w-[16px]"
                         />
                       </div>
                     );
@@ -86,7 +87,8 @@ const CalendarWeekViewSkeleton = () => {
                           {index !== 0 && (
                             <Skeleton
                               radius="4"
-                              className="h-[12px] w-[40px]"
+                              text="t2-static"
+                              className="w-[40px]"
                             />
                           )}
                         </div>

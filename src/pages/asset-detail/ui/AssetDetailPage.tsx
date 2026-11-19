@@ -106,7 +106,7 @@ export function AssetDetailPage() {
               <Skeleton text="t3" className="mt-x1 w-1/3" />
             </div>
           </div>
-          <Skeleton className="mt-x6 h-x8 w-2/3" radius="8" />
+          <Skeleton text="t9" className="mt-x6 w-2/3" radius="8" />
           <Skeleton className="mt-x6 h-x40 w-full" radius="8" />
         </div>
       </Frame>
