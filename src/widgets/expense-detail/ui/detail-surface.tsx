@@ -149,12 +149,13 @@ export function DetailSurface({
     footerNode != null
       ? resolveFooterNode(footerNode, () => void stepLeave.request())
       : null;
+  // 바닥 왼쪽 [삭제] — 시트 바닥(ResponsivePair)에서는 글자만큼(data-fit), 주 버튼이 남은 폭을 채운다(bottom-sheet.md 코드)
   const del = footer?.onDelete ? (
     <Button
       variant="ghost"
       ghostColor="critical"
-      size={wide ? undefined : "large"}
-      className={wide ? "mr-auto" : "shrink-0"}
+      data-fit="content"
+      className={wide ? "mr-auto" : undefined}
       loading={footer.deleting}
       onClick={footer.onDelete}
     >
@@ -247,20 +248,17 @@ export function DetailSurface({
             <BottomSheetFooter>{customFooter}</BottomSheetFooter>
           ) : footer && (del || footer.primary) ? (
             <BottomSheetFooter>
-              <div className="flex w-full items-center gap-x2">
-                {del}
-                {footer.primary && (
-                  <Button
-                    variant="neutralSolid"
-                    size="large"
-                    className="flex-1"
-                    loading={footer.primary.loading}
-                    onClick={footer.primary.onClick}
-                  >
-                    {footer.primary.label}
-                  </Button>
-                )}
-              </div>
+              {/* 바로 아래 자식 — 주 버튼 라벨이 남은 폭에 들지 않으면 세로로 쌓고 주 버튼이 위(button.md 긴 라벨) */}
+              {del}
+              {footer.primary && (
+                <Button
+                  variant="neutralSolid"
+                  loading={footer.primary.loading}
+                  onClick={footer.primary.onClick}
+                >
+                  {footer.primary.label}
+                </Button>
+              )}
             </BottomSheetFooter>
           ) : null}
         </BottomSheetContent>

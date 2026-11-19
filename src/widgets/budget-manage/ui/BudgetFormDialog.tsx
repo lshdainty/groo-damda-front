@@ -301,8 +301,9 @@ export function BudgetFormDialog({
             <Button
               variant="ghost"
               ghostColor="critical"
-              size={wide ? undefined : "large"}
-              className={wide ? "mr-auto" : "shrink-0"}
+              // 시트 바닥에서는 글자만큼 — [저장] 이 남은 폭(bottom-sheet.md 코드)
+              data-fit="content"
+              className={wide ? "mr-auto" : undefined}
               onClick={() => {
                 if (!submitting) onDelete();
               }}

@@ -210,9 +210,9 @@ export const REMOVE = [
 export const ITEM_ROOT =
   "group/attachment-item relative shrink-0 [touch-action:manipulation] data-[dragging]:z-[2]";
 
-// 드롭존(1280 이상) — 높이 120 · 1px 실선. 끌어 들어오면 테두리 · 바탕이 바뀐다. 막히면 옅은 테두리
+// 드롭존(1280 이상) — 최소 높이 120(큰 글자에서 안내 · 버튼을 따라 늘어난다) · 1px 실선. 끌어 들어오면 테두리 · 바탕이 바뀐다. 막히면 옅은 테두리
 export const DROPZONE = [
-  "group/attachment-dropzone hidden h-[120px] flex-col items-center justify-center gap-x2 rounded-r3 border border-solid border-stroke-neutral-solid bg-transparent px-x4 lg:flex",
+  "group/attachment-dropzone hidden min-h-[120px] flex-col items-center justify-center gap-x2 rounded-r3 border border-solid border-stroke-neutral-solid bg-transparent px-x4 lg:flex",
   "[transition:border-color_var(--motion-duration-color-transition)_var(--motion-ease-easing),background-color_var(--motion-duration-color-transition)_var(--motion-ease-easing)]",
   "data-[drag-over]:border-stroke-neutral-contrast data-[drag-over]:bg-bg-layer-default-pressed",
   "data-[disabled]:border-stroke-neutral-weak",

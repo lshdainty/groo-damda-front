@@ -818,7 +818,9 @@ describe("드롭존", () => {
     setup({ layout: "dropzone", accept: ".csv" });
     expect(zone().className).toContain("hidden");
     expect(zone().className).toContain("lg:flex");
-    expect(zone().className).toContain("h-[120px]");
+    // 높이는 최소값 — 큰 글자에서 안내 · 버튼을 따라 늘어난다(attachment-input.yaml dropzone.minHeight). 고정 높이면 글이 넘친다
+    expect(zone().classList.contains("min-h-[120px]")).toBe(true);
+    expect(zone().classList.contains("h-[120px]")).toBe(false);
     expect(zone().textContent).toContain("파일을 여기로 끌어다 놓으세요");
     const picks = slots("pick") as HTMLButtonElement[];
     expect(picks).toHaveLength(2);

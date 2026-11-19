@@ -20,7 +20,7 @@ const SUFFIX = "[data-slot=table-pagination-suffix]";
 const TOTAL = "[data-slot=table-pagination-total]";
 
 export default {
-  "root.height": [PG, "px", "height"],
+  "root.minHeight": [PG, "px", "min-height"],
   "root.justifyContent": [PG, "exact", "justify-content"],
   "root.gap": [PG, "px", "column-gap"],
   "root.marginTop": [PG, "px", "margin-top"],

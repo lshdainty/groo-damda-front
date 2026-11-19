@@ -104,7 +104,6 @@ function ConnectedView({
 }) {
   const { t } = useTranslation("subscription");
   const wide = useWideSurface();
-  const size = wide ? "small" : "large";
   const { displayName, primary, verifiedAt } = connection;
   const date = verifiedDate(verifiedAt);
   // 연결이 둘 이상일 때만 고를 의미가 있다 — 이미 기본이면 버튼 없이 이름 옆 배지가 말한다
@@ -140,28 +139,26 @@ function ConnectedView({
           )}
         </div>
       </ResponsiveDialogBody>
+      {/* 버튼은 바닥의 바로 아래 자식 — 크기는 바닥이 준다. 시트 바닥(ResponsivePair)에서 [연결 끊기] 는 글자만큼(data-fit),
+          주 버튼이 남은 폭을 채우고 들지 않으면 위로 쌓인다(bottom-sheet.md 코드) */}
       <ResponsiveDialogFooter>
-        <div className="flex w-full items-center gap-x2">
+        <Button
+          variant="ghost"
+          ghostColor="critical"
+          data-fit="content"
+          className={wide ? "mr-auto" : undefined}
+          onClick={() => flow.setDisconnectAsk(connection)}
+        >
+          {t("broker.disconnect")}
+        </Button>
+        {showPrimaryButton && (
           <Button
-            variant="ghost"
-            ghostColor="critical"
-            size={size}
-            className="shrink-0"
-            onClick={() => flow.setDisconnectAsk(connection)}
+            loading={flow.setPrimary.isPending}
+            onClick={() => flow.makePrimary(connection)}
           >
-            {t("broker.disconnect")}
+            {t("broker.useAsPrimary")}
           </Button>
-          {showPrimaryButton && (
-            <Button
-              size={size}
-              className={wide ? "ml-auto" : "flex-1"}
-              loading={flow.setPrimary.isPending}
-              onClick={() => flow.makePrimary(connection)}
-            >
-              {t("broker.useAsPrimary")}
-            </Button>
-          )}
-        </div>
+        )}
       </ResponsiveDialogFooter>
     </>
   );

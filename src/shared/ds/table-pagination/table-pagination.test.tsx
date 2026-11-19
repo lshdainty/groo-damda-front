@@ -104,10 +104,12 @@ describe("TablePagination — 구조 · 이름", () => {
     expect(container.textContent).not.toMatch(/rows?|page \d|go to/i);
   });
 
-  it("한 줄 40 · 줄바꿈 없음 · 양 끝 정렬 · 내용 폭보다 줄지 않는다 · 표 아래 12", () => {
+  it("한 줄 최소 40 · 줄바꿈 없음 · 양 끝 정렬 · 내용 폭보다 줄지 않는다 · 표 아래 12", () => {
     const group = render(<TablePagination totalItems={237} />);
+    // 높이는 최소값 — 큰 글자에서 고르기 · 글을 따라 높아진다(table-pagination.yaml root.minHeight). 고정 높이면 글이 잘린다
+    expect(group.classList.contains("min-h-[40px]")).toBe(true);
+    expect(group.classList.contains("h-[40px]")).toBe(false);
     for (const c of [
-      "h-[40px]",
       "flex-nowrap",
       "justify-between",
       "gap-x4",
