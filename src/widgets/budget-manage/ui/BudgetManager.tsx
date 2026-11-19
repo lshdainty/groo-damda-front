@@ -12,6 +12,7 @@ import {
 import type { ExpenseBudget, ExpenseCategory } from "@/entities/expense";
 import { isHttpStatus } from "@/shared/api";
 import { MINUS } from "@/shared/lib/groo/format";
+import { formatMonthShort } from "@/shared/lib/date";
 import { won, useMasked } from "@/shared/lib/groo/money-text";
 import { Icon } from "@/shared/ui/groo/primitives";
 import { AlertConfirm } from "@/shared/ui/groo/alert-confirm";
@@ -570,7 +571,12 @@ function TotalArea({
   const content = (
     <>
       <div className="flex items-center justify-between gap-x2">
-        <Eyebrow>{t("manager.monthlyTotal", { month })}</Eyebrow>
+        <Eyebrow>
+          {t("manager.monthlyTotal", {
+            month,
+            monthName: formatMonthShort(month),
+          })}
+        </Eyebrow>
         <Button
           type="button"
           variant="ghost"
@@ -588,7 +594,10 @@ function TotalArea({
           <BigAmount className="mt-x3" value={mask(won(monthlyLimit))} />
           <MeterBar
             className="mt-x4"
-            label={t("manager.monthlyTotal", { month })}
+            label={t("manager.monthlyTotal", {
+              month,
+              monthName: formatMonthShort(month),
+            })}
             value={totalSpent}
             max={monthlyLimit}
             formatValue={(n) => mask(won(n))}

@@ -103,8 +103,8 @@ export function HoldingRow({
       : null;
   const sub = holding.linked
     ? live && priceLabel
-      ? t("holdings.linkedSub", { n: qtyLabel, price: priceLabel })
-      : t("holdings.linkedPending", { n: qtyLabel })
+      ? t("holdings.linkedSub", { count: qty, n: qtyLabel, price: priceLabel })
+      : t("holdings.linkedPending", { count: qty, n: qtyLabel })
     : manualQty
       ? `${manualQty} · ${t("holdings.manualSub")}`
       : t("holdings.manualSub");

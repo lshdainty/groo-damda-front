@@ -30,7 +30,7 @@ export function describeAsset(
   const kind = assetTypeLabel(asset.assetType, asset.balance);
   const parts =
     groupOf(asset) === "invest"
-      ? [kind, t("holdings.countLabel", { n: heldCount }), asset.memo]
+      ? [kind, t("holdings.countLabel", { count: heldCount }), asset.memo]
       : [asset.institution, kind, asset.memo];
   return parts.filter(Boolean).join(" · ");
 }

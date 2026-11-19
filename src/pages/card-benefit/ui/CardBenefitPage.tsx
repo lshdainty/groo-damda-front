@@ -209,7 +209,10 @@ export const CardBenefitPage = () => {
       <h2 className="tabular-nums" aria-live="polite">
         {waiting || failed
           ? ""
-          : t("benefit.resultCount", { count: formatKRW(total) })}
+          : t("benefit.resultCount", {
+              count: total,
+              countText: formatKRW(total),
+            })}
       </h2>
       <Checkbox
         size="large"

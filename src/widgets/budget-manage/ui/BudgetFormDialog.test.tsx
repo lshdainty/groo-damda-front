@@ -107,7 +107,9 @@ const click = (el: Element) => act(() => (el as HTMLElement).click());
 describe("총 예산", () => {
   it("제목 · 밑줄 칸 · 칩 넷 · 머리 카드 없음 · 손잡이 없음", () => {
     mount({ kind: "total" });
-    expect(document.body.textContent).toContain('edit.totalTitle{"month":10}');
+    expect(document.body.textContent).toContain(
+      'edit.totalTitle{"month":10,"monthName":"10월"}',
+    );
     expect(
       document
         .querySelector("[data-slot=text-input]")

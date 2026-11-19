@@ -23,7 +23,7 @@ import { ResultSection } from "@/shared/ds/result-section";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { SwipeActions } from "@/shared/ds/swipe-actions";
 import { useDsText } from "@/shared/ds/i18n";
-import { formatMonthDayDow } from "@/shared/lib/date";
+import { formatMonthDayDow, formatMonthShort } from "@/shared/lib/date";
 import {
   LedgerBar,
   LedgerCalendar,
@@ -259,7 +259,10 @@ export function TodoMobileLedger({
     ) : (
       <ResultSection
         icon={<ListChecks />}
-        title={t("tdm.emptyMonth", { month: monthNum })}
+        title={t("tdm.emptyMonth", {
+          month: monthNum,
+          monthName: formatMonthShort(monthNum),
+        })}
         description={t("tdm.emptyMonthDesc")}
       />
     );

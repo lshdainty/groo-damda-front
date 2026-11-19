@@ -19,9 +19,11 @@ for (const line of readFileSync("i18n/translations.csv", "utf-8").split("\n")) {
 }
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
+    // 복수형 키(`_one` · `_other`)는 한국어에서 늘 `_other` 다
     t: (k: string, opts?: Record<string, unknown>) =>
-      (COPY[k] ?? k).replace(/\{\{(\w+)\}\}/g, (_m, n: string) =>
-        String(opts?.[n] ?? ""),
+      (COPY[k] ?? COPY[`${k}_other`] ?? k).replace(
+        /\{\{(\w+)\}\}/g,
+        (_m, n: string) => String(opts?.[n] ?? ""),
       ),
     i18n: { language: "ko" },
   }),

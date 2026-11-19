@@ -61,9 +61,9 @@ export function HoldingsEditor({ f }: { f: AssetForm }) {
         <span className="num font-sans text-t5 font-bold text-fg-neutral">
           {holdingsTotalUnknown
             ? // 시세를 모르는 연동 줄이 있으면 합계를 말하지 않는다(0 · 부분합 아님)
-              t("holdings.editSummaryUnknown", { n: holdings.length })
+              t("holdings.editSummaryUnknown", { count: holdings.length })
             : t("holdings.editSummary", {
-                n: holdings.length,
+                count: holdings.length,
                 total: KRW(holdingsTotal),
               })}
         </span>

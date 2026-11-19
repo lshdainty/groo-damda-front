@@ -56,7 +56,12 @@ describe("영어 문구의 돈 — won 0 · ₩ 앞", () => {
       "Target amount can be up to ₩10,000,000,000.",
     );
     expect(en("dutchPay", "perPersonRest")).toContain("₩{{extra}} extra");
-    expect(en("dutchPay", "peopleSummaryRest")).toContain("₩{{extra}} extra");
+    expect(en("dutchPay", "peopleSummaryRest_one")).toContain(
+      "₩{{extra}} extra",
+    );
+    expect(en("dutchPay", "peopleSummaryRest_other")).toContain(
+      "₩{{extra}} extra",
+    );
     expect(en("expense", "addTx.fxHint")).toBe(
       "{{original}} × {{rate}} = ₩{{krw}}",
     );

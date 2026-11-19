@@ -137,7 +137,12 @@ export function TotalSection({
   return (
     <>
       <Body place={place} className={place === "band" ? "pb-0" : undefined}>
-        <Eyebrow>{t("monthlyCap", { month: m.month })}</Eyebrow>
+        <Eyebrow>
+          {t("monthlyCap", {
+            month: m.month,
+            monthName: formatMonthShort(m.month),
+          })}
+        </Eyebrow>
         <Desc className="mt-x1">{t("capHint")}</Desc>
         {m.overallBudget ? (
           <>
@@ -148,7 +153,10 @@ export function TotalSection({
             />
             <div className="mt-x4">
               <MeterBar
-                label={t("monthlyCap", { month: m.month })}
+                label={t("monthlyCap", {
+                  month: m.month,
+                  monthName: formatMonthShort(m.month),
+                })}
                 value={m.totalSpent}
                 max={m.totalLimit}
                 formatValue={(n) => mask(won(n))}
@@ -844,7 +852,10 @@ export function EmptyMonth({
       size="medium"
       as="h2"
       icon={<Icon name="wallet" size={40} />}
-      title={t("emptyMonthTitle", { month: m.month })}
+      title={t("emptyMonthTitle", {
+        month: m.month,
+        monthName: formatMonthShort(m.month),
+      })}
       description={t("emptyMonthDesc")}
       primaryAction={{ label: t("manager.setBudget"), onClick: onSettings }}
       className="px-x6 [[data-slot=card]_&]:px-0"

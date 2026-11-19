@@ -26,6 +26,7 @@ import {
   formatMonthDay,
   formatMonthTicks,
   monthAxisTicks,
+  formatMonthShort,
   formatYearMonth,
   parseLocalDate,
 } from "@/shared/lib/date";
@@ -334,7 +335,10 @@ export function HomeDesktop() {
                       periodY === _today.getFullYear() &&
                       periodM === _today.getMonth() + 1
                         ? t("summary.monthlyExpense")
-                        : t("summary.monthExpenseN", { month: periodM })
+                        : t("summary.monthExpenseN", {
+                            month: periodM,
+                            monthName: formatMonthShort(periodM),
+                          })
                     }
                   />
                 )}
@@ -502,7 +506,10 @@ function IncomeExpenseChart({
     expense: x.totalExpense,
   }));
   const legendId = "home-income-expense-legend";
-  const chartName = t("chart.incomeExpenseName", { month });
+  const chartName = t("chart.incomeExpenseName", {
+    month,
+    monthName: formatMonthShort(month),
+  });
   return (
     <>
       <ChartLegendTiles

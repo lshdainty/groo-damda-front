@@ -4,6 +4,8 @@ import type { RecurringTransaction } from "@/entities/recurring-transaction";
 import {
   formatDateLong,
   formatDateSmart,
+  formatMonthDay,
+  formatYearMonth,
   parseLocalDate,
 } from "@/shared/lib/date";
 import { isEn } from "@/shared/lib/groo/format";
@@ -45,6 +47,8 @@ export function cycleSentence(r: CycleParts, t: TFunction): string {
       return t("cycle.yearly", {
         month: Number(r.startDate.slice(5, 7)),
         day: Number(r.startDate.slice(8, 10)),
+        // 영어는 달을 숫자로 쓰지 않는다 — "Nov 5"(International Design 날짜 "줄임")
+        monthDay: formatMonthDay(r.startDate),
       });
   }
 }
@@ -63,6 +67,7 @@ export function endPiece(
     return t("cycle.untilMonth", {
       year: Number(it.endDate.slice(0, 4)),
       month: Number(it.endDate.slice(5, 7)),
+      yearMonth: formatYearMonth(it.endDate),
     });
   return null;
 }
@@ -112,6 +117,7 @@ export function nextMoment(it: RecurringTransaction): string {
 export function endSentence(it: RecurringTransaction, t: TFunction): string {
   if (it.maxOccurrences != null)
     return t("endSentenceCount", {
+      count: it.maxOccurrences,
       total: it.maxOccurrences,
       done: it.executedCount,
     });

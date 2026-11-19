@@ -283,10 +283,16 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
   ) : null;
 
   const createdTitle = result
-    ? t("import.createdCatTitle", { count: fmt(result.createdCategoryCount) })
+    ? t("import.createdCatTitle", {
+        count: result.createdCategoryCount,
+        countText: fmt(result.createdCategoryCount),
+      })
     : "";
   const failuresTitle = result
-    ? t("import.failuresTitle", { count: fmt(result.failed) })
+    ? t("import.failuresTitle", {
+        count: result.failed,
+        countText: fmt(result.failed),
+      })
     : "";
   const doneResult = (size: "large" | "medium") =>
     result ? (
@@ -295,7 +301,8 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
         size={size}
         as="h2"
         title={t("import.doneTitle", {
-          count: result.imported.toLocaleString(),
+          count: result.imported,
+          countText: fmt(result.imported),
         })}
         description={t("import.doneDetail", {
           skipped: result.skipped.toLocaleString(),
@@ -417,6 +424,7 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
                   prefix={<FileSpreadsheet />}
                   title={analysis.fileName}
                   detail={t("import.rowsDetected", {
+                    count: analysis.totalRows,
                     total: fmt(analysis.totalRows),
                     valid: fmt(analysis.validRows),
                   })}
@@ -474,6 +482,7 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
             mobile={mobile}
             title={t("preview")}
             description={t("import.previewDesc", {
+              count: analysis.duplicateCount,
               dup: fmt(analysis.duplicateCount),
             })}
           >
@@ -546,6 +555,7 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
                   <ListCheckItem
                     title={t("import.optDupSkip")}
                     detail={t("import.optDupSkipDesc", {
+                      count: analysis.duplicateCount,
                       dup: fmt(analysis.duplicateCount),
                     })}
                     checked={dupSkip}
@@ -564,7 +574,8 @@ export function DataImportSection({ mobile }: { mobile: boolean }) {
                   <CategoryList
                     t={t}
                     title={t("import.newCatTitle", {
-                      count: fmt(analysis.newCategoryCount),
+                      count: analysis.newCategoryCount,
+                      countText: fmt(analysis.newCategoryCount),
                     })}
                     names={analysis.newCategories ?? []}
                     total={analysis.newCategoryCount}
