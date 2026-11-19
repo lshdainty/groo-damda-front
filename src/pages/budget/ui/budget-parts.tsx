@@ -231,7 +231,7 @@ export function TotalSkeleton({ place }: { place: Placement }) {
             <Skeleton text="t3" className="w-1/4" />
             <Skeleton text="t3" className="mt-x1 w-3/4" />
             <Skeleton text="t9" radius="8" className="mt-x3 w-1/2" />
-            <Skeleton className="mt-x4 h-2 w-full" radius="full" />
+            <Skeleton className="mt-x4 h-[8px] w-full" radius="full" />
             <Skeleton text="t3" className="mt-x2 w-1/2" />
             <div className="mt-x3">
               <KeyValueSkeleton rows={3} />
@@ -291,7 +291,7 @@ export function PaceSection({
             className="contents"
             fallback={
               <>
-                <Skeleton className="h-2 w-full" radius="full" />
+                <Skeleton className="h-[8px] w-full" radius="full" />
                 <Skeleton text="t3" className="mt-x2 w-1/2" />
                 <div className="mt-x3">
                   <KeyValueSkeleton rows={2} />
@@ -331,7 +331,7 @@ export function PaceSection({
           <span
             aria-hidden
             data-slot="pace-marker"
-            className="pointer-events-none absolute -top-[3px] h-3.5 w-0.5 -translate-x-1/2 rounded-[1px] bg-fg-neutral"
+            className="pointer-events-none absolute -top-[3px] h-[14px] w-[2px] -translate-x-1/2 rounded-[1px] bg-fg-neutral"
             style={{ left: `${Math.min(100, Math.max(0, elapsed))}%` }}
           />
         </div>
@@ -477,7 +477,7 @@ export function CategorySection({
                       <Skeleton text="t5" className="w-x10 shrink-0" />
                     </div>
                     <div className="px-x6 pb-x3 pt-x1">
-                      <Skeleton className="h-2 w-full" radius="full" />
+                      <Skeleton className="h-[8px] w-full" radius="full" />
                     </div>
                   </div>
                 ))}

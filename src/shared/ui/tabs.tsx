@@ -35,8 +35,12 @@ const tabsListVariants = cva("", {
     size: { default: "", sm: "" },
   },
   compoundVariants: [
-    { variant: "pill", size: "default", class: "h-10 p-[var(--spacing-x1)]" },
-    { variant: "pill", size: "sm", class: "h-8 p-0.5" },
+    {
+      variant: "pill",
+      size: "default",
+      class: "min-h-[40px] p-[var(--spacing-x1)]",
+    },
+    { variant: "pill", size: "sm", class: "min-h-[32px] p-0.5" },
   ],
   defaultVariants: { variant: "pill", size: "default" },
 });
@@ -61,12 +65,14 @@ const tabsTriggerVariants = cva(
       {
         variant: "pill",
         size: "default",
-        class: "min-h-8 px-[var(--spacing-x3)] py-[var(--spacing-x1)] text-t4",
+        class:
+          "min-h-[32px] px-[var(--spacing-x3)] py-[var(--spacing-x1)] text-t4",
       },
       {
         variant: "pill",
         size: "sm",
-        class: "min-h-7 px-[var(--spacing-x2)] py-[var(--spacing-x1)] text-t3",
+        class:
+          "min-h-[28px] px-[var(--spacing-x2)] py-[var(--spacing-x1)] text-t3",
       },
       // pills default — px-x3 py-x2 label-md (페이지 nav). sm — 얇은 pill(모바일 카테고리 필터).
       {
@@ -77,7 +83,8 @@ const tabsTriggerVariants = cva(
       {
         variant: "pills",
         size: "sm",
-        class: "min-h-7 px-[var(--spacing-x2)] py-[var(--spacing-x1)] text-t3",
+        class:
+          "min-h-[28px] px-[var(--spacing-x2)] py-[var(--spacing-x1)] text-t3",
       },
     ],
     defaultVariants: { variant: "pill", size: "default" },

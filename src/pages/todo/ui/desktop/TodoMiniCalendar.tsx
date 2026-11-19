@@ -127,11 +127,15 @@ function DayCell({
       )}
     >
       {c.inMonth &&
-        (loading ? <Skeleton text="t1" className="w-x8" /> : marks.glyph(c.ds))}
+        (loading ? (
+          <Skeleton text="t1-static" className="w-x8" />
+        ) : (
+          marks.glyph(c.ds)
+        ))}
     </span>
   );
   const base =
-    "flex min-h-11 flex-col items-center justify-center gap-px border-0 bg-transparent p-0";
+    "flex min-h-[44px] flex-col items-center justify-center gap-px border-0 bg-transparent p-0";
   if (!c.inMonth) {
     return (
       <span aria-hidden className={base}>

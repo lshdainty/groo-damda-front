@@ -167,7 +167,7 @@ export const PasswordChangeDialog = ({
               description={
                 confirm !== "" && !mismatch ? (
                   <span className="flex items-center gap-x1 text-fg-positive">
-                    <Check aria-hidden className="size-4 shrink-0" />
+                    <Check aria-hidden className="size-[16px] shrink-0" />
                     {t("passwordMatched")}
                   </span>
                 ) : undefined
@@ -213,7 +213,7 @@ function PasswordRules({ password }: { password: string }) {
               ok ? "text-fg-positive" : "text-fg-neutral-subtle"
             }`}
           >
-            <Icon aria-hidden className="size-4 shrink-0" />
+            <Icon aria-hidden className="size-[16px] shrink-0" />
             <span>{t(rule.key)}</span>
           </li>
         );

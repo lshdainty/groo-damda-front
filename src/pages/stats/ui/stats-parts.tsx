@@ -137,7 +137,7 @@ export function PeriodButton({ m }: { m: StatsModel }) {
           })}
           aria-haspopup="dialog"
           aria-expanded={m.pickerOpen}
-          className="h-auto min-h-9 shrink-0 whitespace-normal py-x1_5 text-center [&_svg]:size-4"
+          className="h-auto min-h-[36px] shrink-0 whitespace-normal py-x1_5 text-center [&_svg]:size-[16px]"
           onClick={onClick}
         >
           <span>{text}</span>
@@ -263,7 +263,7 @@ function DonutBody({ m, place }: { m: StatsModel; place: Placement }) {
                   <div className="flex w-full flex-col gap-x3">
                     {[0, 1, 2, 3, 4].map((i) => (
                       <div key={i} className="flex items-center gap-x2">
-                        <Skeleton radius="4" className="size-2.5 shrink-0" />
+                        <Skeleton radius="4" className="size-[10px] shrink-0" />
                         <Skeleton text="t4" className="flex-1" />
                         <Skeleton text="t4" className="w-x10 shrink-0" />
                         <Skeleton text="t4" className="w-x16 shrink-0" />
@@ -470,7 +470,10 @@ export function MerchantsSection({
                         <Skeleton text="t5" className="w-1/3" />
                         <Skeleton text="t5" className="w-x16 shrink-0" />
                       </div>
-                      <Skeleton className="mt-x1_5 h-2 w-full" radius="full" />
+                      <Skeleton
+                        className="mt-x1_5 h-[8px] w-full"
+                        radius="full"
+                      />
                     </div>
                   </div>
                 ))}
@@ -519,7 +522,7 @@ export function MerchantsSection({
               <div
                 aria-hidden
                 data-slot="stats-merchant-bar"
-                className="mt-x1_5 h-2 overflow-hidden rounded-full bg-bg-neutral-weak"
+                className="mt-x1_5 h-[8px] overflow-hidden rounded-full bg-bg-neutral-weak"
               >
                 <div
                   className="h-full rounded-full"
@@ -640,7 +643,7 @@ export function HeatmapSection({
             {HEAT_STEP_SWATCH.map((c) => (
               <span
                 key={c}
-                className="h-2.5 w-x4 rounded-r1"
+                className="h-[10px] w-x4 rounded-r1"
                 style={{ background: c }}
               />
             ))}

@@ -65,7 +65,7 @@ export function CompositionBody({
   if (loading)
     return (
       <div aria-busy className="flex flex-col items-center gap-x3 px-x6 py-x6">
-        <Skeleton radius="full" className="size-28" />
+        <Skeleton radius="full" className="size-[112px]" />
         <Skeleton text="t5" className="w-full" />
         <Skeleton text="t5" className="w-full" />
       </div>

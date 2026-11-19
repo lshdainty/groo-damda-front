@@ -137,8 +137,8 @@ export function CalendarMonthViewMobile({
                 aria-hidden
                 data-slot="month-day-number"
                 className={cn(
-                  // 원 26(글자 14/19 + 7) 고정 — 날짜 숫자는 글자 크기 설정을 따르지 않는다(칸 안 글 — groo-design #260)
-                  "grid size-[calc(var(--text-t4-static--line-height)_+_7px)] shrink-0 place-items-center self-center rounded-full font-medium tabular-nums text-t4-static",
+                  // 원 26 고정(글자 14/19 + 7) — 날짜 숫자는 글자 크기 설정을 따르지 않는다(칸 안 글 — groo-design #260)
+                  "grid size-[26px] shrink-0 place-items-center self-center rounded-full font-medium tabular-nums text-t4-static",
                   !currentMonth
                     ? "text-fg-disabled"
                     : holiday || sunday

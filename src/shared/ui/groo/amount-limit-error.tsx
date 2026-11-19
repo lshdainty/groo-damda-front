@@ -23,7 +23,7 @@ export function AmountLimitError({
         >
           <CircleAlert
             aria-hidden
-            className="mr-x1_5 mt-[calc((var(--text-t4--line-height)_-_1rem)/2)] size-[16px] shrink-0"
+            className="mr-x1_5 mt-[calc((var(--text-t4--line-height)_-_16px)/2)] size-[16px] shrink-0"
           />
           <span className="min-w-0">{message}</span>
         </p>

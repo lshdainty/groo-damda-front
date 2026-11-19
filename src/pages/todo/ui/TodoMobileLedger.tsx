@@ -348,7 +348,7 @@ export function TodoMobileLedger({
           <div className="min-w-0 flex-auto">
             <LedgerTotal>
               {loading ? (
-                <Skeleton text="t9" className="w-40" />
+                <Skeleton text="t9" className="w-[160px]" />
               ) : todayLeft > 0 ? (
                 t("tdm.todayLeft", { count: todayLeft })
               ) : (
@@ -449,7 +449,7 @@ export function TodoMobileLedger({
                         }
                       >
                         {loading ? (
-                          <Skeleton text="t1" className="w-x8" />
+                          <Skeleton text="t1-static" className="w-x8" />
                         ) : (
                           cellMark(c.ds)
                         )}

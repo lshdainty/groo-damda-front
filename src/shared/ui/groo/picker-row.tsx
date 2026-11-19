@@ -119,7 +119,7 @@ export const PickerRow = React.forwardRef<HTMLButtonElement, PickerRowProps>(
           <span
             aria-hidden
             data-slot="picker-row-glyph"
-            className="mr-x2 inline-block align-middle text-fg-neutral-muted [&>svg]:size-5"
+            className="mr-x2 inline-block align-middle text-fg-neutral-muted [&>svg]:size-[20px]"
           >
             {glyph}
           </span>
@@ -136,7 +136,7 @@ export const PickerRow = React.forwardRef<HTMLButtonElement, PickerRowProps>(
             aria-label={clearLabel}
             data-slot="picker-row-clear"
             onClick={onClear}
-            className="relative flex size-[22px] shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-fg-neutral-subtle before:absolute before:left-1/2 before:top-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring [&>svg]:size-[22px]"
+            className="relative flex size-[22px] shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-fg-neutral-subtle before:absolute before:left-1/2 before:top-1/2 before:size-[44px] before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring [&>svg]:size-[22px]"
           >
             <CircleX aria-hidden />
           </button>
@@ -159,7 +159,7 @@ export const PickerRow = React.forwardRef<HTMLButtonElement, PickerRowProps>(
       >
         <CircleAlert
           aria-hidden
-          className="mr-x1_5 mt-[calc((var(--text-t4--line-height)_-_1rem)/2)] size-4 shrink-0"
+          className="mr-x1_5 mt-[calc((var(--text-t4--line-height)_-_16px)/2)] size-[16px] shrink-0"
         />
         <span className="min-w-0">{errorMessage}</span>
       </p>

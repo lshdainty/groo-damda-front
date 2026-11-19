@@ -173,8 +173,8 @@ export function TagSettings<T extends TagLike>({
           <div key={i} className="flex items-center gap-x3 px-x6 py-x3">
             <Skeleton className="size-x10 shrink-0" radius="12" />
             <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
-              <Skeleton text="t5" className="w-28" />
-              <Skeleton text="t3" className="w-20" />
+              <Skeleton text="t5" className="w-[112px]" />
+              <Skeleton text="t3" className="w-[80px]" />
             </div>
           </div>
         ))}

@@ -49,8 +49,8 @@ export function CompareBar({
     <div
       aria-hidden
       className={cn(
-        "h-2 overflow-hidden rounded-full",
-        wide ? "min-w-[4rem] flex-1" : "w-full",
+        "h-[8px] overflow-hidden rounded-full",
+        wide ? "min-w-[64px] flex-1" : "w-full",
       )}
     >
       <div

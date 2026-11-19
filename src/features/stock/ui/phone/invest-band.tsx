@@ -131,7 +131,7 @@ export function InvestBand({
                     className="m-0 mt-x1 text-t5 font-bold tabular-nums text-fg-neutral [&_[data-slot=line-value]]:max-w-none [&_[data-slot=line-value]]:items-start"
                   >
                     {loading ? (
-                      <Skeleton text="t5" className="w-16" />
+                      <Skeleton text="t5" className="w-[64px]" />
                     ) : typeof r.value === "string" ? (
                       withCommaBreaks(r.value)
                     ) : (

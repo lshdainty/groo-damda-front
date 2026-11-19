@@ -33,12 +33,12 @@ function SummaryRow({
       <div className="min-w-0">
         <div className="text-t4 text-fg-neutral-subtle">{label}</div>
         <div className="text-t3 text-fg-neutral-subtle">
-          {loading ? <Skeleton text="t3" className="w-20" /> : sub}
+          {loading ? <Skeleton text="t3" className="w-[80px]" /> : sub}
         </div>
       </div>
       <div className="ml-auto text-t9 font-bold text-fg-neutral">
         {loading ? (
-          <Skeleton text="t9" className="w-32" />
+          <Skeleton text="t9" className="w-[128px]" />
         ) : (
           <Won amount={amount} card="dutchpay.summary" />
         )}

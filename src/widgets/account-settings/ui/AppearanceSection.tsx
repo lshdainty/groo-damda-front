@@ -338,7 +338,7 @@ function ChoiceRow({
   }
 
   const suffixValue = loading ? (
-    <Skeleton radius="4" text="t5" className="w-16" />
+    <Skeleton radius="4" text="t5" className="w-[64px]" />
   ) : showValue ? (
     value
   ) : undefined;

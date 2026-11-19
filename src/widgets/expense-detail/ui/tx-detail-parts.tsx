@@ -434,7 +434,7 @@ export function SplitSkeleton() {
   return (
     <div aria-hidden>
       <div className="px-global-gutter pb-x2 pt-x4">
-        <Skeleton text="t4" className="w-28" />
+        <Skeleton text="t4" className="w-[112px]" />
       </div>
       {[0, 1].map((i) => (
         <div
@@ -443,9 +443,9 @@ export function SplitSkeleton() {
         >
           <Skeleton radius="12" className="size-x10 shrink-0" />
           <div className="flex-1">
-            <Skeleton text="t5" className="w-32" />
+            <Skeleton text="t5" className="w-[128px]" />
           </div>
-          <Skeleton text="t5" className="w-16" />
+          <Skeleton text="t5" className="w-[64px]" />
         </div>
       ))}
     </div>
@@ -515,22 +515,22 @@ export function TxDetailSkeleton() {
       <div className="px-global-gutter pb-x3">
         <div className="flex items-center gap-x3">
           <Skeleton radius="16" className="size-x12 shrink-0" />
-          <Skeleton text="t7" className="w-40" />
+          <Skeleton text="t7" className="w-[160px]" />
         </div>
-        <Skeleton text="t9" className="mt-x3 w-52" />
-        <Skeleton text="t4" className="mt-x0_5 w-32" />
+        <Skeleton text="t9" className="mt-x3 w-[208px]" />
+        <Skeleton text="t4" className="mt-x0_5 w-[128px]" />
       </div>
       {[0, 1, 2, 3].map((i) => (
         <div
           key={i}
           className="flex items-center justify-between gap-x3 px-global-gutter py-x3"
         >
-          <Skeleton text="t5" className="w-16" />
-          <Skeleton text="t5" className="w-28" />
+          <Skeleton text="t5" className="w-[64px]" />
+          <Skeleton text="t5" className="w-[112px]" />
         </div>
       ))}
       <div className="px-global-gutter pb-x2 pt-x4">
-        <Skeleton text="t4" className="w-16" />
+        <Skeleton text="t4" className="w-[64px]" />
       </div>
       {[0, 1, 2, 3].map((i) => (
         <div
@@ -538,7 +538,7 @@ export function TxDetailSkeleton() {
           className="flex items-center gap-x3 px-global-gutter py-x3"
         >
           <Skeleton radius="8" className="size-[22px] shrink-0" />
-          <Skeleton text="t5" className="w-24" />
+          <Skeleton text="t5" className="w-[96px]" />
         </div>
       ))}
     </div>

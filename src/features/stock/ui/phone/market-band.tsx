@@ -131,7 +131,7 @@ export function MarketBand({
               data-slot="market-states-loading"
               className="px-x6 pb-x1 pt-x1"
             >
-              <Skeleton text="t4" className="w-48 max-w-full" />
+              <Skeleton text="t4" className="w-[192px] max-w-full" />
             </div>
           )}
           {markets.length > 0 && (
@@ -144,7 +144,7 @@ export function MarketBand({
                   <span
                     aria-hidden
                     className={cn(
-                      "size-1.5 shrink-0 rounded-full",
+                      "size-[6px] shrink-0 rounded-full",
                       m.open ? "bg-fg-positive" : "bg-stroke-neutral-solid",
                     )}
                   />
@@ -153,7 +153,7 @@ export function MarketBand({
                     {m.pending ? (
                       <Skeleton
                         text="t4"
-                        className="inline-block w-16 align-middle"
+                        className="inline-block w-[64px] align-middle"
                         data-slot="market-state-pending"
                       />
                     ) : (
@@ -171,7 +171,7 @@ export function MarketBand({
                     key={i}
                     title={<Skeleton text="t5" className="w-1/4" />}
                     className="[&_[data-slot=list-content]]:py-x2_5"
-                    suffix={<Skeleton text="t5" className="w-20" />}
+                    suffix={<Skeleton text="t5" className="w-[80px]" />}
                   />
                 ))
               : indices.map((i) => (
@@ -213,7 +213,7 @@ export function MarketBand({
                 className="[&_[data-slot=list-content]]:py-x2_5"
                 suffix={
                   fx.loading ? (
-                    <Skeleton text="t5" className="w-20" />
+                    <Skeleton text="t5" className="w-[80px]" />
                   ) : fx.value == null ? (
                     <span className="text-end text-t4 text-fg-neutral-subtle">
                       {t("namu.fxUnavailableShort")}

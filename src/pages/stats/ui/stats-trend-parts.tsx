@@ -311,7 +311,7 @@ export function SavingsRateSection({
                 <Skeleton radius="full" className="size-[108px] shrink-0" />
                 <div className="flex-1">
                   <Skeleton text="t5" className="w-2/3" />
-                  <Skeleton className="mt-x3 h-2 w-full" radius="full" />
+                  <Skeleton className="mt-x3 h-[8px] w-full" radius="full" />
                 </div>
               </div>
             </>
@@ -417,7 +417,7 @@ export function SavingsRateSection({
           {/* 장식 막대 — 값은 아래 글이 말한다 */}
           <div
             aria-hidden
-            className="flex h-2 gap-x0_5 overflow-hidden rounded-full"
+            className="flex h-[8px] gap-x0_5 overflow-hidden rounded-full"
           >
             <div
               className="rounded-full bg-fg-critical"
@@ -437,7 +437,7 @@ export function SavingsRateSection({
                 <span className="inline-flex min-w-0 items-center gap-x2 text-fg-neutral">
                   <span
                     aria-hidden
-                    className={cn("size-2 shrink-0 rounded-full", r.dot)}
+                    className={cn("size-[8px] shrink-0 rounded-full", r.dot)}
                   />
                   {r.name}
                 </span>
@@ -644,7 +644,7 @@ export function CatTrendSection({
             <li key={c.id} className="inline-flex items-center gap-x1_5">
               <span
                 aria-hidden
-                className="size-2 shrink-0 rounded-full"
+                className="size-[8px] shrink-0 rounded-full"
                 style={{ background: c.fill }}
               />
               {c.name}

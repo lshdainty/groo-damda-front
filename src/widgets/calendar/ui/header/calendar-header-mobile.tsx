@@ -53,7 +53,7 @@ const CalendarHeaderMobile = () => {
               {formattedDate}
               <ChevronDown
                 aria-hidden
-                className="size-4 text-fg-neutral-muted"
+                className="size-[16px] text-fg-neutral-muted"
               />
             </button>
           }

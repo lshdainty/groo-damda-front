@@ -68,7 +68,7 @@ function Swatch({ fixed }: { fixed: boolean }) {
   return (
     <span
       aria-hidden
-      className="inline-block size-2.5 shrink-0 rounded-[2px]"
+      className="inline-block size-[10px] shrink-0 rounded-[2px]"
       style={{ background: swatchColor(fixed) }}
     />
   );
@@ -90,7 +90,7 @@ function RatioBar({
     <div
       role="img"
       aria-label={ariaLabel}
-      className="flex h-7 overflow-hidden rounded-r2 bg-bg-neutral-weak"
+      className="flex min-h-[28px] overflow-hidden rounded-r2 bg-bg-neutral-weak"
     >
       {split.fixed > 0 && (
         <div
@@ -171,7 +171,7 @@ export function FixedOverviewSection({
             className="contents"
             fallback={
               <>
-                <Skeleton className="h-7 w-full" radius="8" />
+                <Skeleton className="h-[28px] w-full" radius="8" />
                 <Skeleton text="t5" className="mt-x4 w-1/2" />
                 <Skeleton text="t5" className="mt-x2 w-2/3" />
               </>
@@ -619,7 +619,10 @@ export function FixedCategorySection({
                   {[0, 1, 2].map((i) => (
                     <div key={i}>
                       <Skeleton text="t4" className="w-1/2" />
-                      <Skeleton className="mt-x1_5 h-2 w-full" radius="full" />
+                      <Skeleton
+                        className="mt-x1_5 h-[8px] w-full"
+                        radius="full"
+                      />
                     </div>
                   ))}
                 </div>
@@ -658,7 +661,7 @@ export function FixedCategorySection({
                 {/* 장식 막대 — 값은 옆 금액이 말한다 */}
                 <div
                   aria-hidden
-                  className="mt-x1_5 h-2 overflow-hidden rounded-full bg-bg-neutral-weak"
+                  className="mt-x1_5 h-[8px] overflow-hidden rounded-full bg-bg-neutral-weak"
                 >
                   <div
                     className="flex h-full overflow-hidden rounded-full"
@@ -695,7 +698,7 @@ export function FixedCategorySection({
         {/* 바닥 버튼 영역 — 위 끝까지 선 1px */}
         <div className="-mx-x6 mt-x5 flex flex-wrap items-center justify-between gap-x3 border-t border-solid border-stroke-neutral-subtle px-x6 pt-x4">
           <span className="inline-flex items-center gap-x1_5 text-t3 text-fg-neutral-subtle">
-            <Pin aria-hidden className="size-4 shrink-0" />
+            <Pin aria-hidden className="size-[16px] shrink-0" />
             {t("fixed.manageHint")}
           </span>
           <Button

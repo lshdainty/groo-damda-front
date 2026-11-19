@@ -158,7 +158,7 @@ function StockSearchList({
                 ))}
               <SearchableListItem
                 value={MANUAL}
-                prefix={<Plus className="size-5" />}
+                prefix={<Plus className="size-[20px]" />}
                 title={t("holdings.addManual", { name: query })}
               />
             </SearchableListResults>

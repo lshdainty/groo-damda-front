@@ -160,8 +160,8 @@ export function DayPanel({
               <ListItem
                 key={i}
                 prefix={<Skeleton radius="12" className="size-x10" />}
-                title={<Skeleton text="t5" className="w-32 max-w-full" />}
-                detail={<Skeleton text="t3" className="w-24 max-w-full" />}
+                title={<Skeleton text="t5" className="w-[128px] max-w-full" />}
+                detail={<Skeleton text="t3" className="w-[96px] max-w-full" />}
               />
             ))}
           </List>

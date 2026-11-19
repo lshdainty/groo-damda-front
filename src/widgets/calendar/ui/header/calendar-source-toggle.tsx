@@ -37,7 +37,7 @@ import type { IBuiltinSource } from "@/widgets/calendar/model/types";
 const CalendarDot = ({ color }: { color: string }) => (
   <span
     aria-hidden
-    className="size-2.5 shrink-0 rounded-full"
+    className="size-[10px] shrink-0 rounded-full"
     style={{ backgroundColor: color }}
   />
 );
@@ -113,7 +113,7 @@ const BuiltinSourceItem = ({ source }: { source: IBuiltinSource }) => {
       prefix={
         <Flag
           aria-hidden
-          className="size-4 shrink-0"
+          className="size-[16px] shrink-0"
           style={{
             color: source.enabled
               ? getPaletteByColor(source.color).color
@@ -219,7 +219,7 @@ const CalendarSourceToggle = () => {
         {dotColors.map((color, i) => (
           <span
             key={i}
-            className={`size-2 shrink-0 rounded-full ${i > 0 ? "-ml-0.5" : ""}`}
+            className={`size-[8px] shrink-0 rounded-full ${i > 0 ? "-ml-0.5" : ""}`}
             style={{ backgroundColor: color }}
           />
         ))}

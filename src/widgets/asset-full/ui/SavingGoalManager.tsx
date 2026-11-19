@@ -195,7 +195,7 @@ function GoalsSkeleton() {
           </div>
           <div className="px-x6 pb-x3 pt-x1">
             <Skeleton text="t3" className="w-1/2" />
-            <Skeleton className="mt-x1_5 h-2 w-full" radius="full" />
+            <Skeleton className="mt-x1_5 h-[8px] w-full" radius="full" />
           </div>
         </div>
       ))}

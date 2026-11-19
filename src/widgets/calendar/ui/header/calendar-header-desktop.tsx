@@ -62,7 +62,7 @@ const CalendarHeaderDesktop = () => {
               {formattedDate}
               <ChevronDown
                 aria-hidden
-                className="size-4 text-fg-neutral-muted"
+                className="size-[16px] text-fg-neutral-muted"
               />
             </button>
           }
@@ -75,7 +75,7 @@ const CalendarHeaderDesktop = () => {
               variant="neutralOutline"
               size="small"
               layout="iconOnly"
-              className="[&_svg]:size-4"
+              className="[&_svg]:size-[16px]"
               onClick={handlePrevious}
             >
               <ChevronLeft />
@@ -85,7 +85,7 @@ const CalendarHeaderDesktop = () => {
               variant="neutralOutline"
               size="small"
               layout="iconOnly"
-              className="[&_svg]:size-4"
+              className="[&_svg]:size-[16px]"
               onClick={handleNext}
             >
               <ChevronRight />

@@ -11,12 +11,12 @@ export function TodoDayGroupSkeleton({
   return (
     <div className={className}>
       <div className="flex items-center justify-between px-global-gutter py-x2">
-        <Skeleton text="t4" className="w-32" />
-        <Skeleton text="t4" className="w-12" />
+        <Skeleton text="t4" className="w-[128px]" />
+        <Skeleton text="t4" className="w-[48px]" />
       </div>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-start gap-x3 px-global-gutter py-x3">
-          <Skeleton className="size-6 shrink-0" radius="4" />
+          <Skeleton className="size-[24px] shrink-0" radius="4" />
           <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
             <Skeleton text="t5" className="w-3/4" />
             <Skeleton text="t3" className="w-1/3" />

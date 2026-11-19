@@ -129,7 +129,7 @@ export function AccountSection({
 
   const badge =
     planKnown === "loading" ? (
-      <Skeleton radius="4" text="t3" className="w-10" />
+      <Skeleton radius="4" text="t3" className="w-[40px]" />
     ) : planKnown === "error" ? null : (
       <Badge variant="weak" tone={isPro ? "brand" : "neutral"}>
         {isPro ? "Pro" : "Free"}
@@ -410,7 +410,7 @@ function GoogleRow() {
   const failed = loadFailed(providersQ);
 
   let detail: React.ReactNode;
-  if (loading) detail = <Skeleton radius="4" text="t3" className="w-24" />;
+  if (loading) detail = <Skeleton radius="4" text="t3" className="w-[96px]" />;
   else if (failed) detail = t("account.providersError");
   else detail = linked ? t("account.linked") : t("account.notLinked");
 
@@ -529,7 +529,7 @@ export function SubscriptionRow({
   // 값 + 꺾쇠는 Fragment — 좁은 줄에서 값만 본문 아래로 내려가고 꺾쇠는 줄 끝에 남는다
   let value: React.ReactNode = null;
   if (isPro && priceLoading)
-    value = <Skeleton radius="4" text="t3" className="w-20" />;
+    value = <Skeleton radius="4" text="t3" className="w-[80px]" />;
   else if (isPro && price != null)
     value = `${money(price)} ${
       durationMonths === 12
@@ -544,7 +544,7 @@ export function SubscriptionRow({
       rootProps={{ className: "tabular-nums" }}
       detail={
         planKnown === "loading" ? (
-          <Skeleton radius="4" text="t3" className="w-40" />
+          <Skeleton radius="4" text="t3" className="w-[160px]" />
         ) : planKnown === "error" ? undefined : isPro ? (
           periodLabel
         ) : (

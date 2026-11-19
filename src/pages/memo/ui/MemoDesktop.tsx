@@ -265,7 +265,7 @@ export function MemoDesktop({ screen }: { screen: MemoScreen }) {
                         key={i}
                         className="flex items-center justify-between px-global-gutter py-x3"
                       >
-                        <Skeleton text="t5" className="w-24" />
+                        <Skeleton text="t5" className="w-[96px]" />
                         <Skeleton text="t4" className="w-x4" />
                       </div>
                     ))}

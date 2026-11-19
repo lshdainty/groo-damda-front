@@ -154,7 +154,7 @@ export function TossStocksView({
         key,
         name,
         value: q.isLoading ? (
-          <Skeleton text="t5" className="w-16" />
+          <Skeleton text="t5" className="w-[64px]" />
         ) : has ? (
           mask(format(num(v)))
         ) : (

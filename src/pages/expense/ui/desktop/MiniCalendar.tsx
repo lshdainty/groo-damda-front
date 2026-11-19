@@ -40,7 +40,7 @@ export function IntensityBar({
       data-slot="intensity-bar"
       data-step={visible ? step : undefined}
       className={cn(
-        "block h-x1 w-5 shrink-0 rounded-r0_5 bg-bg-brand-solid dark:bg-fg-brand",
+        "block h-x1 w-[20px] shrink-0 rounded-r0_5 bg-bg-brand-solid dark:bg-fg-brand",
         !visible && "invisible",
         className,
       )}
@@ -137,8 +137,8 @@ export function MiniCalendar({
       )}
       {!hidden && !failed && (
         <p className="mb-x1 mt-x2 flex flex-wrap items-center gap-x1 text-t2 text-fg-neutral-subtle">
-          <IntensityBar step={1} hidden={false} className="w-3" />
-          <IntensityBar step={4} hidden={false} className="w-3" />
+          <IntensityBar step={1} hidden={false} className="w-[12px]" />
+          <IntensityBar step={4} hidden={false} className="w-[12px]" />
           {t("calendar.legend")}
         </p>
       )}
@@ -223,12 +223,12 @@ function DayCell({
   );
   const bar =
     loading && c.inMonth ? (
-      <Skeleton text="t1" className="w-x8" />
+      <Skeleton text="t1-static" className="w-x8" />
     ) : (
       <IntensityBar step={out > 0 ? step : -1} hidden={hidden} />
     );
   const base =
-    "flex min-h-11 flex-col items-center justify-center gap-x0_5 border-0 bg-transparent p-0";
+    "flex min-h-[44px] flex-col items-center justify-center gap-x0_5 border-0 bg-transparent p-0";
   if (!c.inMonth) {
     return (
       <span aria-hidden className={base}>

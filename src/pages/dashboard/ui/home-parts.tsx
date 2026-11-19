@@ -565,8 +565,8 @@ export function CategorySkeleton({ size }: { size: number }) {
             {/* 범례 줄 높이 = 실제 줄(min-h-11 — 44) */}
             <div className="mt-x4 flex flex-col">
               {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="flex min-h-11 items-center gap-x2">
-                  <Skeleton radius="4" className="size-2.5 shrink-0" />
+                <div key={i} className="flex min-h-[44px] items-center gap-x2">
+                  <Skeleton radius="4" className="size-[10px] shrink-0" />
                   <Skeleton text="t4" className="min-w-0 flex-1" />
                   <Skeleton text="t4" className="w-x10 shrink-0" />
                 </div>
@@ -620,7 +620,7 @@ export function BudgetSkeleton() {
             {[0, 1, 2].map((i) => (
               <div key={i} className="flex flex-col gap-x1_5">
                 <Skeleton text="t4" className="w-1/3" />
-                <Skeleton className="h-2 w-full" radius="full" />
+                <Skeleton className="h-[8px] w-full" radius="full" />
                 <Skeleton text="t2" className="w-1/2" />
               </div>
             ))}

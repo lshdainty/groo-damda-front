@@ -43,23 +43,23 @@ export const buttonVariants = cva(
         warm: "bg-[var(--bg-section-warm)] text-[var(--fg-on-warm)] hover:bg-bg-neutral-weak",
       },
       size: {
-        default: "h-9 px-4 py-[9px] text-sm [&_svg]:size-4",
-        xs: "h-6 px-2 py-1 text-xs gap-1 rounded-[var(--radius-r1)] [&_svg]:size-3.5",
+        default: "min-h-[36px] px-4 py-[9px] text-sm [&_svg]:size-[16px]",
+        xs: "min-h-[24px] px-2 py-1 text-xs gap-1 rounded-[var(--radius-r1)] [&_svg]:size-[14px]",
         // sm 은 spec 매핑 그대로 (button.md Sizes: h-8 px-2 py-1 12px(t2) + BASE gap 8)
         // — 기존 호환층(px-3·13px·gap-5)이 앱 PButton sm 보다 커 보이던 문제 정리.
-        sm: "h-8 px-2 py-1 text-t2 rounded-[var(--radius-r1)] [&_svg]:size-3.5",
+        sm: "min-h-[32px] px-2 py-1 text-t2 rounded-[var(--radius-r1)] [&_svg]:size-[14px]",
         // md 글자는 t4(14px) — button.yaml medium 라벨. 옛 15px(body-md)는 같은 값의 t 단계가 없어
         // 스펙 값으로 옮겼다(2026-11-16). text-t4 가 weight 400 을 물고 오지만, 생성 CSS 가
         // font-weight:var(--tw-font-weight, ...) 라 base 의 font-medium(500)이 이긴다.
-        md: "h-10 px-3 py-2 text-t4 [&_svg]:size-4",
+        md: "min-h-[40px] px-3 py-2 text-t4 [&_svg]:size-[16px]",
         // lg 은 모바일 sheet/dialog footer 의 한 손 조작 폭 — 48×48(touch-comfortable),
         // radius r2(8px). 앱 PButton lg 및 button.md Sizes 표와 같은 값이다.
         // 예전 h-11(44)·rounded-r1(4)·px-5 는 앱보다 납작하고 각졌다.
-        lg: "h-12 px-4 py-3 text-t5 rounded-r2 [&_svg]:size-[18px]",
-        icon: "h-9 w-9 p-0 rounded-r2 [&_svg]:size-4",
+        lg: "min-h-[48px] px-4 py-3 text-t5 rounded-r2 [&_svg]:size-[18px]",
+        icon: "h-[36px] w-[36px] p-0 rounded-r2 [&_svg]:size-[16px]",
         // 모바일 크롬 헤더(m-header) 전용 — 36×36 원형 + glyph 20px.
         // ghost 조합에서도 보조톤 약화 없이 중립(text-primary) 유지. button.md v97.
-        iconLg: "h-9 w-9 p-0 rounded-full [&_svg]:size-5",
+        iconLg: "h-[36px] w-[36px] p-0 rounded-full [&_svg]:size-[20px]",
       },
       // flush — 컨테이너 edge 에 붙는 ghost + 아이콘 버튼의 광학 정렬용. 해당 방향 좌/우
       // padding 만 제거해 아이콘이 본문 콘텐츠 열에 맞는다. 아래 compound variant 가

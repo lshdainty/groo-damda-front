@@ -81,7 +81,7 @@ export function TodoLedgerCard({
         <div className="min-w-0 flex-auto">
           <LedgerTotal>
             {loading ? (
-              <Skeleton text="t9" className="w-40" />
+              <Skeleton text="t9" className="w-[160px]" />
             ) : todayLeft > 0 ? (
               t("tdm.todayLeft", { count: todayLeft })
             ) : (
@@ -239,10 +239,14 @@ function WeekCell({
       )}
     >
       {c.inMonth &&
-        (loading ? <Skeleton text="t1" className="w-x8" /> : marks.glyph(c.ds))}
+        (loading ? (
+          <Skeleton text="t1-static" className="w-x8" />
+        ) : (
+          marks.glyph(c.ds)
+        ))}
     </span>
   );
-  const base = "flex min-h-11 flex-col items-center justify-center gap-x1";
+  const base = "flex min-h-[44px] flex-col items-center justify-center gap-x1";
   if (!c.inMonth)
     return (
       <span aria-hidden className={base}>

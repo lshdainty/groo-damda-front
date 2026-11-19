@@ -29,7 +29,7 @@ export function StocksCard({
         <CardTitle id="stocks-list-title">{t("list.title")}</CardTitle>
         <StockSearchEntry
           compact
-          className="w-60 shrink-0"
+          className="w-[240px] shrink-0"
           onPick={(item) => onPick(item.symbol)}
         />
       </CardHeader>

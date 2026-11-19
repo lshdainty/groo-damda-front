@@ -277,7 +277,7 @@ const CalendarTimeline = ({
       style={{ top: `${position}%` }}
     >
       <div className="absolute left-0 top-0 size-[12px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-bg-brand-solid" />
-      <div className="absolute -left-[72px] flex w-[64px] -translate-y-1/2 justify-end bg-bg-layer-default pr-x1 text-t2 font-medium text-fg-brand">
+      <div className="absolute -left-[72px] flex w-[64px] -translate-y-1/2 justify-end bg-bg-layer-default pr-x1 text-t2-static font-medium text-fg-brand">
         {format(now, timeFormat, { locale })}
       </div>
     </div>
@@ -438,7 +438,7 @@ const CalendarWeekView = ({
                 <div key={hour} className="relative" style={{ height: "96px" }}>
                   <div className="absolute -top-[12px] right-x2 flex h-[24px] items-center">
                     {index !== 0 && (
-                      <span className="text-t2 text-fg-neutral-subtle">
+                      <span className="text-t2-static text-fg-neutral-subtle">
                         {format(
                           new Date().setHours(hour, 0, 0, 0),
                           hourFormat,

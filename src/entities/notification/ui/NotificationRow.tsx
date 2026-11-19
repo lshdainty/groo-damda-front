@@ -62,7 +62,7 @@ export function NotificationRow({
             // 원은 장식이다 — 기다림은 줄 버튼의 aria-busy 가 알린다(버튼 이름에 섞지 않는다, 검수 L7)
             <span
               data-slot="notification-row-progress"
-              className="relative ml-x1_5 inline-block h-[1em] w-6 align-middle"
+              className="relative ml-x1_5 inline-block h-[1em] w-[24px] align-middle"
             >
               <ProgressCircle
                 size="24"
@@ -75,7 +75,7 @@ export function NotificationRow({
               <>
                 <span
                   aria-hidden
-                  className="ml-x1_5 inline-block size-1.5 shrink-0 rounded-full bg-fg-brand align-middle"
+                  className="ml-x1_5 inline-block size-[6px] shrink-0 rounded-full bg-fg-brand align-middle"
                 />
                 <span className="sr-only">{t("row.unread")}</span>
               </>

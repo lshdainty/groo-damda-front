@@ -88,7 +88,7 @@ export const DownloadPage = () => {
           <h2 className="flex items-center gap-x2 text-t6 font-bold text-fg-neutral">
             <Smartphone
               aria-hidden
-              className="size-5 shrink-0 text-fg-neutral"
+              className="size-[20px] shrink-0 text-fg-neutral"
             />
             {t("android.title")}
           </h2>
@@ -126,7 +126,10 @@ export const DownloadPage = () => {
         {/* iOS — 서명이 없어 그대로는 안 깔린다. 무엇이 필요한지 먼저 알린다. */}
         <section className="mt-x8">
           <h2 className="flex items-center gap-x2 text-t6 font-bold text-fg-neutral">
-            <Apple aria-hidden className="size-5 shrink-0 text-fg-neutral" />
+            <Apple
+              aria-hidden
+              className="size-[20px] shrink-0 text-fg-neutral"
+            />
             {t("ios.title")}
           </h2>
           <Callout tone="warning" className="mt-x3 mb-x4">

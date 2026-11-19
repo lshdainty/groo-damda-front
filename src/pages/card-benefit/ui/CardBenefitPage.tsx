@@ -61,7 +61,7 @@ function RowsSkeleton({ count }: { count: number }) {
     <div aria-busy="true">
       {Array.from({ length: count }, (_, i) => (
         <div key={i} className="flex items-start gap-x4 px-global-gutter py-x3">
-          <Skeleton className="aspect-[1.586] w-14 shrink-0" radius="6" />
+          <Skeleton className="aspect-[1.586] w-[56px] shrink-0" radius="6" />
           <div className="flex min-w-0 flex-1 flex-col gap-x0_5">
             <Skeleton text="t5" className="w-3/4" />
             <Skeleton text="t3" className="w-1/2" />

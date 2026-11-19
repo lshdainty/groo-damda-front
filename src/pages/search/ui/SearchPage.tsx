@@ -115,9 +115,9 @@ export function SearchPage() {
         <div className="flex flex-col gap-x6 py-x4" aria-busy="true">
           {[3, 2].map((rows) => (
             <div key={rows} className="flex flex-col gap-x3">
-              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-[16px] w-[96px]" />
               {Array.from({ length: rows }, (_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
+                <Skeleton key={i} className="h-[48px] w-full" />
               ))}
             </div>
           ))}
