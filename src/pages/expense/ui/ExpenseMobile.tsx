@@ -147,9 +147,12 @@ export function ExpenseMobileSkeleton({ month }: { month?: string }) {
             <Plus />
           </LedgerNavBtn>
         </LedgerMonthNav>
+        {/* 금액 자리 스켈레톤도 금액 표지(LedgerTotal) 안에 둔다 — 머리가 그 폭으로 단추 자리를 판정해 실제 금액일 때와 같이 놓인다 */}
         <LedgerHead>
           <div className="min-w-0 flex-auto">
-            <Skeleton text="t9" className="w-[160px]" />
+            <LedgerTotal className="num">
+              <Skeleton text="t9" className="w-[160px]" />
+            </LedgerTotal>
             <Skeleton text="t4" className="mt-x1_5 w-[208px] max-w-full" />
           </div>
           <LedgerSumBtn disabled>{t("txm.spendSummary")}</LedgerSumBtn>
