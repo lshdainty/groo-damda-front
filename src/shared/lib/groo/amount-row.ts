@@ -19,9 +19,13 @@ export const AMOUNT_ROW_GAP = 12;
 /** 금액 요소의 표지 — 줄 안에서 이 요소의 한 줄 폭을 잰다 */
 export const AMOUNT_ROW_AMOUNT = "data-amount-row-amount";
 
-/** 요소를 줄바꿈 없이 그렸을 때의 폭 — 잠깐 nowrap · max-content 로 바꿔 재고 되돌린다(그리기 전이라 화면에 보이지 않는다) */
+/**
+ * 요소를 줄바꿈 없이 그렸을 때의 폭 — 잠깐 nowrap · max-content 로 바꿔 재고 되돌린다(그리기 전이라 화면에 보이지 않는다).
+ * flex 는 끈다 — 줄의 직접 자식(표지가 없을 때 재는 왼쪽 묶음)은 flex-1(기준 0%)이라 width 를 무시하고 남는 폭으로 잡힌다
+ */
 function oneLineWidth(el: HTMLElement): number {
   const prev = el.style.cssText;
+  el.style.flex = "none";
   el.style.whiteSpace = "nowrap";
   el.style.width = "max-content";
   el.style.maxWidth = "none";
@@ -32,11 +36,16 @@ function oneLineWidth(el: HTMLElement): number {
 
 /**
  * 단추를 금액 아래로 내려야 하는지 — [row] 는 줄(flex), 금액은 그 안의 `[data-amount-row-amount]`, 단추는 줄의 마지막 자식.
+ * 금액 표지가 없으면(표지 없이 스켈레톤만 둔 기다림 자리 등) 왼쪽 묶음(첫 자식) 전체의 한 줄 폭으로 판정한다 — 표지가 없다고 "옆" 으로
+ * 두면 왼쪽 묶음(min-w-0 · flex-1)이 0 폭으로 줄고 안의 스켈레톤(폭 고정)이 단추와 겹친다(QA 2026-11-19, 가계부 폰 첫 기다림 300%).
  * [_keys] 는 판(version)을 열쇠로만 받는다 — 판을 버리고 재기만 부르면 React Compiler 가 처음 잰 값에 묶는다(axisWidth.ts measureTextWidthAt 와 같은 함정).
  */
 export function amountRowStacks(row: HTMLElement, ..._keys: number[]): boolean {
-  const amount = row.querySelector<HTMLElement>(`[${AMOUNT_ROW_AMOUNT}]`);
   const action = row.lastElementChild as HTMLElement | null;
+  const first = row.firstElementChild as HTMLElement | null;
+  const amount =
+    row.querySelector<HTMLElement>(`[${AMOUNT_ROW_AMOUNT}]`) ??
+    (first !== action ? first : null);
   if (!amount || !action || action.contains(amount)) return false;
   const rowWidth = row.clientWidth;
   if (rowWidth <= 0) return false;

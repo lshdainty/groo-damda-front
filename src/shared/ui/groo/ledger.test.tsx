@@ -25,6 +25,7 @@ import {
 } from "./ledger";
 import { useLedgerScroll } from "./use-ledger-scroll";
 import { SCROLL_AUTO_HIDE_SYNC_EVENT } from "@/shared/ds/scroll-auto-hide";
+import { Skeleton } from "@/shared/ds/skeleton";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -198,9 +199,23 @@ describe("머리 단추 자리 — 금액이 먼저", () => {
         const el = this as HTMLElement;
         const text = el.textContent ?? "";
         let width = 0;
+        // 한 줄로 잴 때(nowrap)만 내용 폭 — 글 폭과 안의 스켈레톤(폭 고정 w-[Npx], 글자 배율을 따르지 않는다) 가운데 넓은 쪽
+        const oneLine = () =>
+          Math.max(
+            glyphs(text, 24),
+            ...[el, ...el.querySelectorAll("[data-slot=skeleton]")].map(
+              (s) =>
+                Number(
+                  /w-\[(\d+)px\]/.exec(s.getAttribute("class") ?? "")?.[1],
+                ) || 0,
+            ),
+          );
         if (el.hasAttribute("data-amount-row-amount"))
-          width = el.style.whiteSpace === "nowrap" ? glyphs(text, 24) : 0;
+          width = el.style.whiteSpace === "nowrap" ? oneLine() : 0;
         else if (el.tagName === "BUTTON") width = glyphs(text, 14) + 28;
+        // 줄의 직접 자식(왼쪽 묶음)은 flex-1(기준 0%) — flex 를 끄지 않으면 width: max-content 가 먹지 않아 내용 폭이 나오지 않는다
+        else if (el.style.whiteSpace === "nowrap")
+          width = el.style.flexBasis === "auto" ? oneLine() : 0;
         return {
           width,
           height: 0,
@@ -261,6 +276,43 @@ describe("머리 단추 자리 — 금액이 먼저", () => {
     scale = 1;
     act(() => resize.forEach((cb) => cb()));
     expect(stacked()).toBe(false);
+  });
+
+  /**
+   * 기다리는 중(QA 2026-11-19, 가계부 폰 첫 기다림 300%) — 금액 글이 없어 판정이 걸리지 않으면 왼쪽 묶음(min-w-0 · flex-1)이 0 폭으로 줄고
+   * 폭 고정 스켈레톤(160)이 단추와 겹쳤다(스켈레톤 24~184 · 단추 36~400). 금액 자리 스켈레톤은 금액 표지 안에 두어 실제 금액과 같이 판정한다
+   */
+  const loadingHead = (marked: boolean) => {
+    const amount = <Skeleton text="t9" className="w-[160px]" />;
+    render(
+      <LedgerHead>
+        <div className="min-w-0 flex-auto">
+          {marked ? <LedgerTotal>{amount}</LedgerTotal> : amount}
+          <Skeleton text="t4" className="mt-x1_5 w-[208px] max-w-full" />
+        </div>
+        <LedgerSumBtn disabled>Spending summary</LedgerSumBtn>
+      </LedgerHead>,
+    );
+  };
+
+  it("기다리는 중 · 금액 표지 안 스켈레톤 — 그 폭(160)으로 판정: 412 폰(머리 364) 100% 는 옆(160 + 12 + 단추 ≈ 162 ≤ 364), 300% 는 아래", () => {
+    headWidth = 364;
+    loadingHead(true);
+    expect(stacked()).toBe(false);
+    scale = 3;
+    act(() => resize.forEach((cb) => cb()));
+    expect(stacked()).toBe(true);
+  });
+
+  it("기다리는 중 · 금액 표지가 없어도 왼쪽 묶음을 0 폭으로 줄이지 않는다 — 왼쪽 묶음 한 줄 폭(가장 넓은 208)으로 판정한다", () => {
+    // 412 폰(머리 364) · 100% — 208 + 12 + 단추 ≈ 162 > 364 라 아래. 0 으로 재면(표지 없음 · flex-1 기준 0%) 옆에 두어 겹친다
+    headWidth = 364;
+    loadingHead(false);
+    expect(stacked()).toBe(true);
+    expect(el().className).toContain("[&>:first-child]:basis-full");
+    scale = 3;
+    act(() => resize.forEach((cb) => cb()));
+    expect(stacked()).toBe(true);
   });
 
   it("반 폭 규칙(카드 머리 제목 줄 전용)을 쓰지 않는다 — 왼쪽 묶음을 절반으로 잡지 않는다", () => {

@@ -117,7 +117,8 @@ import { useDsText } from "@/shared/ds/i18n";
  *   Shift + PageUp PageDown 한 해 · Enter Space 고르기(막힌 날 · 읽기 전용은 무시). 보이는 달 밖으로 옮기면 달이 따라 넘어간다.
  *   보이는 달이 바뀌면 숨은 aria-live="polite" 가 "2026년 11월" 을 읽는다(두 달 보기는 "2026년 10월~2026년 11월" — 물결표를 붙여 쓴다, International Design).
  * autoFocus — 처음 그릴 때 그 날짜(고른 날, 없으면 오늘)에 초점을 둔다. 시트 · 팝오버가 처음 초점을 둔 뒤(바깥 표면의 effect 가
- * 나중에 돈다) 그리기 전에 옮긴다 — 표면은 연 자리(트리거)를 그대로 기억해 닫으면 초점이 칸으로 돌아온다.
+ * 나중에 돈다) 그리기 전에 옮긴다 — 표면은 연 자리(트리거)를 그대로 기억해 닫으면 초점이 칸으로 돌아온다. 이어지는 달은 그 날이
+ * 보이게 스크롤하되 그 날이 든 달의 맨 위를 넘지 않는다 — 달 이름 줄이 위에 붙은 요일 줄 뒤로 들어가지 않는다.
  *
  * 이름: 달력 role="group"(aria-label 기본 "날짜 선택" — 칸 라벨이 있으면 aria-labelledby), 달마다 role="grid" + 달 제목으로
  * aria-labelledby · 기간 · 여러 날은 aria-multiselectable. 요일은 columnheader(이름 "일요일" — 보이는 "일" 은 숨긴다. 이어지는 달은
@@ -636,14 +637,21 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
       if (continuous) requestScroll(offsetOf(view));
     });
 
+    // 열 때 그 날이 보이게 옮길 자리 — 가장 적게 스크롤하되 그 날이 든 달의 맨 위(달 이름 줄이 요일 줄 바로 아래)를 넘지 않는다.
+    // 열면 보던 달을 맨 위에 둔다(#261). 달 이름 줄이 커지면(300% · 좁은 폭에서 두 줄 132) 시트가 낮을 때 그 날 줄을 안개 위로 올리려다
+    // 이름 줄이 위에 붙은 요일 줄 뒤로 들어갔다(QA 2026-11-19 — 320 · 412, 300% 에서 48 가림). 그 날이 안개 · 아래 끝에 걸려도 이름 줄이 먼저다 —
+    // 키로 옮기면(moveFocus) 그때 가장 적게 스크롤한다
+    const openTop = (d: Date, current: number, height: number) =>
+      Math.min(revealTop(d, current, height), offsetOf(d));
+
     // autoFocus — 처음 그릴 때만. 시트 · 팝오버가 처음 초점을 둔 뒤 그리기 전에(바깥 표면의 effect 가 나중에 돈다 — 그다음 차례).
     // 지금 값은 ref 로 읽는다
     const autoFocusRef = React.useRef(autoFocus);
     const focusedRef = React.useRef(focused);
-    const revealRef = React.useRef(revealTop);
+    const openTopRef = React.useRef(openTop);
     React.useLayoutEffect(() => {
       focusedRef.current = focused;
-      revealRef.current = revealTop;
+      openTopRef.current = openTop;
     });
     React.useEffect(() => {
       if (!autoFocusRef.current) return;
@@ -655,7 +663,7 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
         if (el) {
           const top = Math.max(
             0,
-            revealRef.current(target, el.scrollTop, el.clientHeight),
+            openTopRef.current(target, el.scrollTop, el.clientHeight),
           );
           if (top !== el.scrollTop) {
             el.scrollTop = top;

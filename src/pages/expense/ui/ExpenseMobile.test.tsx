@@ -623,6 +623,16 @@ describe("첫 진입 스켈레톤 — 실제 달력과 같은 주 · 같은 칸"
     expect(subtle).toEqual(["16", "17"]);
   });
 
+  it("머리 금액 자리 스켈레톤은 금액 표지 안 — 머리가 그 폭으로 단추 자리를 판정한다(300% 에서 단추와 겹치지 않는다)", () => {
+    renderSkel("2026-10");
+    const head = container.querySelector("[data-slot=ledger-head]")!;
+    const amount = head.querySelector("[data-amount-row-amount]");
+    expect(amount).not.toBeNull();
+    expect(
+      amount!.querySelector("[data-slot=skeleton][data-text=t9]"),
+    ).not.toBeNull();
+  });
+
   it("?month= 가 다른 달이면 그 달 첫 주 — 달 밖 자리는 숫자 없는 빈 칸이다", () => {
     renderSkel("2026-09");
     const cs = cells();
