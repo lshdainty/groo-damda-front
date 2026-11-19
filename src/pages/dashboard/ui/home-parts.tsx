@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Pie, PieChart } from "recharts";
 import { Eye, EyeOff, Wallet } from "lucide-react";
 import {
@@ -361,26 +361,33 @@ export function MonthNote({
 }) {
   const { t } = useTranslation("dashboard");
   const m = useMasked("home.monthExpense", "expense");
+  // 둘째 자리까지 반올림해 0 이면 "같음" — "0.00% 더 썼어요" 처럼 %를 붙이지 않는다(등락률 표기와 같은 반올림)
+  const rate = formatChangeRate(Math.abs(savingsPct), { sign: "none" });
+  const same = rate === formatChangeRate(0, { sign: "none" });
+  const strong = <b className="font-bold tabular-nums text-fg-neutral" />;
+  // 문장은 둘 — 하루 평균 · 전월 대비. 조각을 이어 붙이지 않는다(영어 어순이 깨진다) — 값 자리만 <b> 로 굵게
   return (
     <p className="m-0 text-t3 text-fg-neutral-subtle">
       {prefix}
-      {t("avg.dailyAverage")}{" "}
-      <b className="font-bold tabular-nums text-fg-neutral">
-        {m(won(dailyAvg))}
-      </b>{" "}
-      {t("avg.spent")}
+      <Trans
+        t={t}
+        i18nKey="avg.daily"
+        values={{ amount: m(won(dailyAvg)) }}
+        components={{ b: strong }}
+      />
       {prevExpense > 0 && (
         <>
           {" "}
-          {t("avg.vsPrev")}{" "}
-          <b className="font-bold tabular-nums text-fg-neutral">
-            {formatChangeRate(Math.abs(savingsPct), { sign: "none" })}
-          </b>{" "}
-          {savingsPct > 0
-            ? t("avg.saving")
-            : savingsPct < 0
-              ? t("avg.spentMore")
-              : t("avg.same")}
+          {same ? (
+            t("avg.vsPrevSame")
+          ) : (
+            <Trans
+              t={t}
+              i18nKey={savingsPct > 0 ? "avg.vsPrevLess" : "avg.vsPrevMore"}
+              values={{ rate }}
+              components={{ b: strong }}
+            />
+          )}
         </>
       )}
     </p>

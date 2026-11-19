@@ -1846,12 +1846,10 @@ dashboard,calendar.empty,예정 일정이 없어요,No upcoming events
 dashboard,summary.monthExpenseBook,{{month}}월 가계부,Monthly Expenses
 dashboard,summary.monthExpenseN,{{month}}월 지출,{{monthName}} expense
 dashboard,summary.monthIncomeExpense,{{month}}월 수입 · 지출,Monthly Income & Expense
-dashboard,avg.dailyAverage,하루 평균,Daily avg.
-dashboard,avg.spent,썼어요.,spent.
-dashboard,avg.vsPrev,전월 대비,vs. last month
-dashboard,avg.saving,절약 중이에요.,saved.
-dashboard,avg.spentMore,더 썼어요.,spent more.
-dashboard,avg.same,동일해요.,no change.
+dashboard,avg.daily,하루 평균 <b>{{amount}}</b> 썼어요.,You spent <b>{{amount}}</b> a day on average.
+dashboard,avg.vsPrevLess,전월 대비 <b>{{rate}}</b> 절약 중이에요.,You spent <b>{{rate}}</b> less than last month.
+dashboard,avg.vsPrevMore,전월 대비 <b>{{rate}}</b> 더 썼어요.,You spent <b>{{rate}}</b> more than last month.
+dashboard,avg.vsPrevSame,전월과 같아요.,You spent the same as last month.
 dashboard,hideAmountsSettings,금액 가리기 설정,Hide amounts settings
 dashboard,budgetName,{{name}} 예산,{{name}} budget
 dashboard,allBudget,총 예산,Total budget
