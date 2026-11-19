@@ -9,6 +9,8 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
+import { classFontPx } from "@/shared/ds/date-picker/weekday-fit.test-utils";
+
 const ROOT = path.resolve(__dirname, "..");
 const DIRS = [
   "src/pages",
@@ -88,5 +90,30 @@ describe("화면 쪽 상자 · 아이콘 · 색 점 · 막대는 px 다", () => 
       ),
     ).toEqual([]);
     expect([..."size-[1rem]".matchAll(REM_ICON)]).toHaveLength(1);
+  });
+
+  it("별자리 도장은 72 px 고정 원 · 안 글은 static — 300% 에도 도장 크기 · 안 글이 100% 와 같다(저축률 고리와 같은 판정)", () => {
+    const src = readFileSync(
+      path.join(ROOT, "src/widgets/constellation/ui/report-parts.tsx"),
+      "utf8",
+    );
+    const block = src.slice(src.indexOf('data-slot="report-stamp"'));
+    const stamp = block.match(/className="([^"]+)"/)?.[1];
+    expect(stamp).toBeDefined();
+    // 고정 — 최소 크기가 아니라 72 그대로(글이 커져도 도장이 자라지 않는다)
+    expect(stamp!.split(" ")).toEqual(
+      expect.arrayContaining(["size-[72px]", "p-x3"]),
+    );
+    expect(stamp).not.toMatch(/min-[hw]-|rem\]/);
+    // 안 글 둘(날 수 · 이름표) — static 토큰이라 300% 에도 100% 와 같은 크기
+    const inner = [...block.matchAll(/<span aria-hidden className="([^"]+)"/g)]
+      .slice(0, 2)
+      .map((m) => m[1]!);
+    expect(inner).toHaveLength(2);
+    for (const cls of inner) {
+      expect(classFontPx(cls, 1)).not.toBeNull();
+      expect(classFontPx(cls, 3)).toBe(classFontPx(cls, 1));
+    }
+    expect(inner.map((c) => classFontPx(c, 3))).toEqual([14, 11]);
   });
 });

@@ -167,7 +167,10 @@ describe("Popover — 스펙 값", () => {
     const close = BASE.closeButton!;
     // 아이콘은 52 상자 안에서 (52 − 22) ÷ 2 = 15 안쪽이다
     const inset = (Number(close.size) - Number(close.iconSize)) / 2;
-    expect(POPOVER_CLOSE).toContain(`top-[${Number(close.top) - inset}px]`);
+    // 100% 에서 위 27 − 15 = 12, 제목(t7 27) 줄이 높아지면 늘어난 만큼의 절반을 더 내린다(첫 줄 가운데 — header-button-position.test)
+    expect(POPOVER_CLOSE).toContain(
+      `top-[calc(${Number(close.top) - inset}px+(var(--text-t7--line-height)_-_27px)/2)]`,
+    );
     expect(POPOVER_CLOSE).toContain(`-${inset}px`);
     expect(POPOVER_CLOSE).toContain("active:bg-bg-layer-floating-pressed");
     expect(POPOVER_CLOSE).toContain("[--press-basis:52]");

@@ -195,17 +195,19 @@ export function ResultSection({ m, place }: { m: ReportModel; place: Place }) {
             {value}
           </p>
         </div>
+        {/* 도장 — 72 px 고정 원(모양). 안 글도 도장(틀)의 일부라 글자 크기 설정을 따르지 않는다(-static — 저축률 고리 안 글과 같은
+            판정, groo-design #260). 읽는 이름은 aria-label 이 알린다 */}
         {m.isToday && streak > 0 && (
           <span
             role="img"
             aria-label={t("report.stampName", { count: streak })}
             data-slot="report-stamp"
-            className="grid aspect-square min-h-[4.5rem] min-w-[4.5rem] shrink-0 -rotate-[8deg] place-content-center rounded-full bg-bg-critical-weak p-[0.75rem] text-center text-fg-critical-contrast shadow-[inset_0_0_0_2px_var(--color-stroke-critical-solid)]"
+            className="grid size-[72px] shrink-0 -rotate-[8deg] place-content-center rounded-full bg-bg-critical-weak p-x3 text-center text-fg-critical-contrast shadow-[inset_0_0_0_2px_var(--color-stroke-critical-solid)]"
           >
-            <span aria-hidden className="text-t4 font-bold">
+            <span aria-hidden className="text-t4-static font-bold">
               {t("report.stampDays", { count: streak })}
             </span>
-            <span aria-hidden className="text-t1 font-bold">
+            <span aria-hidden className="text-t1-static font-bold">
               {t("report.stampLabel")}
             </span>
           </span>

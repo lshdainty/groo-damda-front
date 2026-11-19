@@ -54,14 +54,15 @@ export const SHEET_TITLE_WITH_CLOSE = "pr-x10";
 // 머리 오른쪽 동작(headerAction) — 닫기 단추 왼쪽 사이 4, 36 ghost iconOnly 단추 하나. 제목은 남은 폭(닫기 40 + 사이 4 + 동작 36)을 비운다
 export const SHEET_TITLE_WITH_ACTION =
   "pr-[calc(var(--spacing-x10)+var(--spacing-x1)+36px)]";
-// 닫기(28 px) 왼쪽 사이 4 · 세로는 닫기 가운데에 맞춘다(동작 단추는 36 px)
+// 닫기(28 px) 왼쪽 사이 4 · 세로는 닫기 가운데에 맞춘다(동작 단추는 36 px) — 큰 글자에서는 닫기 원과 함께 제목 첫 줄을 따라 내려간다
 export const SHEET_HEADER_ACTION =
-  "absolute right-[calc(var(--spacing-global-gutter)+28px+var(--spacing-x1))] top-[calc(var(--spacing-x6)+14px)] z-1 flex -translate-y-1/2 items-center";
+  "absolute right-[calc(var(--spacing-global-gutter)+28px+var(--spacing-x1))] top-[calc(var(--spacing-x6)+14px+0.9375rem-15px)] z-1 flex -translate-y-1/2 items-center";
 // 머리 왼쪽 뒤로 가기(onBack) — 보이는 40 · 아이콘 24 · 누르는 44(::before). 아이콘이 화면 여백 24 에 오도록 상자를 8 당기고,
-// 세로는 제목 첫 줄(30) 가운데에 맞춘다. 제목은 상자 오른쪽 사이 4 에서 시작한다(36 px)
+// 세로는 제목 첫 줄(30) 가운데에 맞춘다(위 24 + 15 — 15 는 0.9375rem 이라 큰 글자에서 제목 첫 줄을 따라 내려간다). 제목은 상자 오른쪽
+// 사이 4 에서 시작한다(36 px)
 export const SHEET_TITLE_WITH_BACK = "pl-[36px]";
 export const SHEET_BACK = [
-  "absolute left-[calc(var(--spacing-global-gutter)-8px)] top-[calc(var(--spacing-x6)+15px)] z-1 flex size-[40px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-fg-neutral [&>svg]:size-[24px]",
+  "absolute left-[calc(var(--spacing-global-gutter)-8px)] top-[calc(var(--spacing-x6)+0.9375rem)] z-1 flex size-[40px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-fg-neutral [&>svg]:size-[24px]",
   "before:absolute before:left-1/2 before:top-1/2 before:size-[44px] before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']",
   "[transition:background-color_var(--motion-duration-color-transition)_var(--motion-ease-easing)]",
   "hover:bg-bg-neutral-weak-pressed active:bg-bg-neutral-weak-pressed",
@@ -71,9 +72,10 @@ export const SHEET_BACK = [
 export const SHEET_DESCRIPTION =
   "m-0 text-t5 font-normal text-fg-neutral-muted";
 
-// 닫기 — 28 원 · 아이콘 14, 누르는 영역 44(::before). 누르면 bg-neutral-weak-pressed + 2px 거리 축소(기준 28 → 0.929), 호버도 누름 색
+// 닫기 — 28 원 · 아이콘 14(px), 누르는 영역 44(::before). 누르면 bg-neutral-weak-pressed + 2px 거리 축소(기준 28 → 0.929), 호버도 누름 색.
+// 원 위 24(글자 100%) — 큰 글자에서는 크기를 그대로 두고 제목 첫 줄 가운데(줄 높이 30 = 1.875rem 의 절반)를 따라 내려간다
 export const SHEET_CLOSE = [
-  "absolute right-global-gutter top-x6 flex size-[28px] cursor-pointer items-center justify-center rounded-full border-0 bg-bg-neutral-weak p-0 text-fg-neutral [&>svg]:size-[14px]",
+  "absolute right-global-gutter top-[calc(var(--spacing-x6)+0.9375rem-15px)] flex size-[28px] cursor-pointer items-center justify-center rounded-full border-0 bg-bg-neutral-weak p-0 text-fg-neutral [&>svg]:size-[14px]",
   "before:absolute before:left-1/2 before:top-1/2 before:size-[44px] before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']",
   "[transition:background-color_var(--motion-duration-color-transition)_var(--motion-ease-easing),scale_var(--motion-duration-pressed-scale)_var(--motion-ease-pressed-scale)]",
   "hover:bg-bg-neutral-weak-pressed active:bg-bg-neutral-weak-pressed [--press-basis:28] active:[scale:calc(1-2/var(--press-basis))] motion-reduce:active:[scale:1]",
