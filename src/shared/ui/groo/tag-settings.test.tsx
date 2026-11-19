@@ -121,7 +121,9 @@ describe.each([
     expect(container.querySelector("[data-slot=card]")).toBeNull();
     // 줄 끝 ⋮ 는 없다(좁은 목록 줄) · 이름은 말줄임 없이 줄바꿈
     expect(container.querySelector('button[aria-label$="더보기"]')).toBeNull();
-    expect(container.innerHTML).not.toMatch(/text-ellipsis|truncate/);
+    // (버튼 라벨의 한 줄 "…" 는 Button 몫이라 뺀다 — button.md "글자 크기 설정")
+    for (const el of container.querySelectorAll(".truncate, .text-ellipsis"))
+      expect(el.getAttribute("data-slot")).toBe("button-label");
   });
 
   it("데스크톱 — 안내 상자 없이 카드 하나, 줄 끝 ⋮ · 휴지통 · 꺾쇠가 없다(list.md 줄 끝 ⋮ 금지 — 줄 → 수정 폼 → [삭제])", () => {

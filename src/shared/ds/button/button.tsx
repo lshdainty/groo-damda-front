@@ -5,7 +5,7 @@ import type { VariantProps } from "class-variance-authority";
 import { cn } from "@/shared/lib/cn";
 import { ProgressCircle } from "@/shared/ds/progress-circle";
 
-import { buttonVariants } from "./button-variants";
+import { BUTTON_LABEL, buttonVariants } from "./button-variants";
 
 // 변형 · 크기 · 상태는 button-variants.ts 머리 주석과 groo-design specs/components/button.yaml 이 정한다.
 
@@ -34,6 +34,38 @@ function setPressBasis(e: React.PointerEvent<HTMLElement>) {
   const el = e.currentTarget;
   const basis = Math.max(el.offsetHeight, el.offsetWidth / 4, 24);
   el.style.setProperty("--press-basis", String(basis));
+}
+
+/**
+ * 라벨 감싸기 — 이어진 글(문자열 · 숫자)을 한 덩어리 span 으로 묶어 한 줄 "…" 로 줄인다. 아이콘 · 요소는 그대로 둔다(아이콘은 px).
+ * 글을 나눠 쓴 자식({"총 "}{n}{"개"})도 한 span 이라 한꺼번에 줄어든다.
+ */
+function wrapLabel(children: React.ReactNode): React.ReactNode {
+  const out: React.ReactNode[] = [];
+  let text: (string | number)[] = [];
+  const flush = () => {
+    if (text.length === 0) return;
+    out.push(
+      <span
+        key={`label-${out.length}`}
+        data-slot="button-label"
+        className={BUTTON_LABEL}
+      >
+        {text.join("")}
+      </span>,
+    );
+    text = [];
+  };
+  // toArray — 요소에 열쇠를 달고 빈 값(null · 참거짓)을 걷는다
+  for (const c of React.Children.toArray(children)) {
+    if (typeof c === "string" || typeof c === "number") text.push(c);
+    else {
+      flush();
+      out.push(c);
+    }
+  }
+  flush();
+  return out;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -98,7 +130,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         onClick={loading ? swallow : handleClick}
         {...props}
       >
-        {children}
+        {wrapLabel(children)}
         {loading && (
           <ProgressCircle
             size="inherit"

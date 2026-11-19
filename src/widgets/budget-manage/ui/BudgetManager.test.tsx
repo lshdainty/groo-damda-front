@@ -173,7 +173,12 @@ describe("예산 설정 폰 — 흰 면 하나(I-08 18 · 21)", () => {
     expect(container.textContent).toContain(
       "주거·관리비·공과금·통신 요금 자동이체 묶음",
     );
-    expect(container.querySelector(".truncate, .text-ellipsis")).toBeNull();
+    // 이름은 말줄임 없이(버튼 라벨의 한 줄 "…" 는 Button 몫이라 뺀다)
+    expect(
+      container.querySelector(
+        ":is(.truncate, .text-ellipsis):not([data-slot=button-label])",
+      ),
+    ).toBeNull();
     expect(
       container.querySelector("[data-slot=list-title]")?.className ?? "",
     ).not.toContain("nowrap");

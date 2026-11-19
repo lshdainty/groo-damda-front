@@ -36,7 +36,9 @@ describe("ResponsivePair", () => {
     const pair = container.firstElementChild as HTMLElement;
     expect(pair.dataset.slot).toBe("responsive-pair");
     expect(pair.className).toContain("flex-wrap-reverse");
-    expect(pair.className).toContain("[&>*]:min-w-max");
+    // 버튼은 짝 폭을 넘지 않는다 — 자동 최소(라벨 한 줄 폭)도 짝 폭에서 멈추고, 넘친 라벨은 "…"(min-w-max 면 짝 밖으로 나갔다)
+    expect(pair.className).toContain("[&>*]:max-w-full");
+    expect(pair.className).not.toContain("min-w-max");
     expect(pair.className).toContain(
       "[&>*]:basis-[calc(50%-var(--spacing-x2)/2)]",
     );

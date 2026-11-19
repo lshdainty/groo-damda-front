@@ -92,6 +92,8 @@ export const DIALOG_BODY_PLAIN = "last:pb-x6";
 export const DIALOG_BODY_FOG =
   "pt-[20px] pb-[80px] scroll-pt-[20px] scroll-pb-[80px]";
 
-// 바닥 — 위 16 · 좌우 24 · 아래 24, 오른쪽 정렬 [취소] [저장], 사이 8. Button small 36
+// 바닥 — 위 16 · 좌우 24 · 아래 24, 오른쪽 정렬 [취소] [저장], 사이 8. Button small 36.
+// 큰 글자로 나란한 버튼이 한 줄에 들지 않으면 세로로 쌓는다 — 줄바꿈 거꾸로라 뒤(주) 버튼이 위, 쌓인 줄 사이도 8. 한 버튼이 바닥 폭보다
+// 길면 라벨 끝을 "…" 로 줄인다(button.md "글자 크기 설정" — 시트 · 확인창 바닥의 ResponsivePair 와 같은 규칙)
 export const DIALOG_FOOTER =
-  "flex shrink-0 items-center justify-end gap-x2 px-x6 pb-x6 pt-x4";
+  "flex shrink-0 flex-wrap-reverse items-center justify-end gap-x2 px-x6 pb-x6 pt-x4";

@@ -473,6 +473,10 @@ describe("본문 · 바닥", () => {
     expect(
       document.querySelector("[data-slot=dialog-footer]")!.className,
     ).toContain("justify-end");
+    // 큰 글자로 한 줄에 들지 않으면 세로로 쌓는다 — 뒤(주) 버튼이 위(button.md "글자 크기 설정")
+    expect(
+      document.querySelector("[data-slot=dialog-footer]")!.className,
+    ).toContain("flex-wrap-reverse");
     expect(byText("신청").className).toContain("h-[36px]");
     expect(byText("취소").className).toContain("bg-bg-neutral-weak");
   });
