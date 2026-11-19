@@ -720,13 +720,20 @@ export function QuotesBand({
 
 function TableSkeleton({ label }: { label: string }) {
   return (
-    <div aria-busy aria-label={label} className="flex flex-col gap-x2">
-      {/* 표 줄(32)마다 글 한 줄(t4) — 글 자리는 올 글의 줄 높이라 큰 글자에서 줄과 함께 커진다 */}
-      {Array.from({ length: 6 }, (_, i) => (
-        <div key={i} className="flex min-h-[32px] items-center">
-          <Skeleton text="t4" className="w-full" />
-        </div>
-      ))}
+    // 실제 표와 같은 줄(tr 32 — 표 줄은 최소 높이처럼 글을 따라 늘어난다) 안에 글 한 줄(t4) 자리만 스켈레톤 — 사이를 따로 두지 않아
+    // 100% 에서는 실제 표와 높이가 같고, 큰 글자에서는 줄과 함께 커진다
+    <div aria-busy aria-label={label}>
+      <table aria-hidden className="w-full border-collapse">
+        <tbody>
+          {Array.from({ length: 6 }, (_, i) => (
+            <tr key={i} className={ROW}>
+              <td className="p-0">
+                <Skeleton text="t4" className="w-full" />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -279,12 +279,19 @@ function FixedBulkBody({
   const px = padded ? "px-x6" : "";
   let list: ReactNode;
   if (q.isLoading) {
+    // 실제 줄과 같은 체크 줄(같은 최소 높이 · 여백) 안에 글 자리만 스켈레톤 — 100% 에서는 실제 줄과 높이가 같고 큰 글자에서는
+    // 함께 커진다. 체크는 틀이라 막힌 칸으로 그린다(skeleton.md "틀은 먼저, 데이터 자리만 스켈레톤")
     list = (
-      <div aria-hidden className={`flex flex-col gap-x2 ${px}`}>
+      <ListCheckGroup aria-label={t("fixed.bulk.title")} aria-busy="true">
         {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-[52px] w-full" radius="12" />
+          <ListCheckItem
+            key={i}
+            disabled
+            title={<Skeleton text="t5" className="w-[160px] max-w-full" />}
+            detail={<Skeleton text="t3" className="w-[200px] max-w-full" />}
+          />
         ))}
-      </div>
+      </ListCheckGroup>
     );
   } else if (q.isError && !q.data) {
     // 실패는 빈 목록이 아니다 — 불러오지 못했다고 말하고 그 자리 [다시 시도]. 서버 글은 그리지 않는다

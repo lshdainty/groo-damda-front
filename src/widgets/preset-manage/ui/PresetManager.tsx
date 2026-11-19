@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import { Bookmark, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -193,7 +193,7 @@ export function PresetManager({
 
   let content: React.ReactNode;
   if (isLoading) {
-    content = <PresetListSkeleton />;
+    content = <PresetListSkeleton sortControl={sortControl} />;
   } else if (failed) {
     content = (
       <BandFailure
@@ -310,18 +310,23 @@ export function PresetManager({
   );
 }
 
-/** 불러오는 중 — 목록 제목 · 정렬 자리는 그대로, 줄만 Skeleton 넷(타일 40 · 두 줄 · 오른쪽 두 줄) */
-function PresetListSkeleton() {
+/**
+ * 불러오는 중 — 정렬(Segmented Control)은 로컬 상태로 그릴 수 있는 틀이라 실제 부품을 그린다(skeleton.md "틀은 먼저, 데이터 자리만
+ * 스켈레톤"). 목록 제목(건수) · 줄만 Skeleton(타일 40 · 두 줄 · 오른쪽 두 줄)
+ */
+function PresetListSkeleton({ sortControl }: { sortControl: ReactNode }) {
   return (
-    <div aria-hidden>
-      <div className="px-global-gutter py-x2">
+    <div>
+      <div aria-hidden className="px-global-gutter py-x2">
         <Skeleton text="t4" className="w-1/4" />
       </div>
-      <div className="px-global-gutter py-x1">
-        <Skeleton radius="full" className="h-x10 w-full" />
-      </div>
+      {sortControl}
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="flex items-start gap-x3 px-global-gutter py-x3">
+        <div
+          key={i}
+          aria-hidden
+          className="flex items-start gap-x3 px-global-gutter py-x3"
+        >
           <Skeleton radius="12" className="size-x10 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-x1">
             <Skeleton text="t5" className="w-1/2" />

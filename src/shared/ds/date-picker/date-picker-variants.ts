@@ -40,9 +40,10 @@ export const TWO_MONTHS_HEADER =
 export const NAV_START = "absolute left-0 top-x1";
 export const NAV_END = "absolute right-0 top-x1";
 
-// 달 이름 48 — 두 달 보기는 가운데, 이어지는 달은 왼쪽(좌우 4)에 붙고 달 아래 16
+// 달 이름 48 — 두 달 보기는 가운데, 이어지는 달은 왼쪽(좌우 4)에 붙고 달 아래 16. 달 이름은 글자 크기 설정을 따라 커지는 글이라
+// 한 줄에 들지 않으면 낱말 사이에서 줄을 바꾸고 줄이 높아진다(최소 48 — date-picker.yaml monthLabel, groo-design #261)
 export const MONTH_LABEL =
-  "flex min-h-[48px] items-center whitespace-nowrap text-t5 font-bold text-fg-neutral";
+  "flex min-h-[48px] min-w-0 items-center break-keep text-t5 font-bold text-fg-neutral [overflow-wrap:break-word]";
 export const CONTINUOUS_MONTH_LABEL = "px-x1";
 
 // 이어지는 달 — 스크롤 칸(스크롤바 숨김) · 위에 붙는 요일 줄 · 달마다 왼쪽 이름 48 + 아래 16 · 아래 안개 96.
@@ -128,7 +129,7 @@ export const MONTH_GAP = 16;
 export const ROW_HEIGHT = 48;
 export const WEEKDAY_ROW_HEIGHT = 48;
 export const MONTH_LABEL_MIN = 48;
-// 견본 — 보이지 않고 보조 기술에도 숨긴다. 달 이름 줄 하나
+// 견본 — 보이지 않고 보조 기술에도 숨긴다. 그 해 열두 달 이름 줄(가장 높은 줄이 모든 달 이름 줄의 높이가 된다)
 export const PROBE =
   "pointer-events-none invisible absolute inset-x-0 top-0 -z-10";
 export const CONTINUOUS_FOG = 96;

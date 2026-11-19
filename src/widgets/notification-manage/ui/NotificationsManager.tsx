@@ -157,9 +157,11 @@ function SwitchRow({
   disabled?: boolean;
   onChange: (next: boolean) => void;
 }) {
+  // 불러오는 동안 — 스위치는 틀 부품이라 스켈레톤으로 덮지 않고 실제 스위치를 막힌(끔) 상태로 그린다(skeleton.md "틀은 먼저,
+  // 데이터 자리만 스켈레톤"). 값에 따라 바뀌는 설명 글만 글 자리 스켈레톤이다
   if (loading)
     return (
-      <ListItem
+      <ListSwitchItem
         prefix={icon}
         title={title}
         detail={
@@ -169,7 +171,9 @@ function SwitchRow({
             detail
           )
         }
-        suffix={<Skeleton radius="full" className="h-[32px] w-[52px]" />}
+        checked={false}
+        disabled
+        onCheckedChange={onChange}
       />
     );
   return (

@@ -40,11 +40,19 @@ export function CardBilling({
 
   if (c.isLoading) {
     return (
-      <div aria-hidden className="px-global-gutter pt-x3">
-        <Skeleton text="t5" className="w-1/3" />
-        <Skeleton text="t9" className="mt-x3 w-2/3" radius="8" />
-        <Skeleton text="t5" className="mt-x4 w-full" />
-        <Skeleton className="mt-x4 h-x10 w-full" radius="8" />
+      <div>
+        <div aria-hidden className="px-global-gutter pt-x3">
+          <Skeleton text="t5" className="w-1/3" />
+          <Skeleton text="t9" className="mt-x3 w-2/3" radius="8" />
+          <Skeleton text="t5" className="mt-x4 w-full" />
+        </div>
+        {/* 바닥 버튼은 정해진 글로 그릴 수 있는 틀이라 스켈레톤으로 덮지 않고 실제 버튼을 막힌 상태로 그린다(skeleton.md "틀은 먼저") */}
+        <ResponsivePair className="px-global-gutter pt-x4">
+          <Button type="button" variant="neutralWeak" size="medium" disabled>
+            <Zap aria-hidden />
+            {t("assetDetail.payNow")}
+          </Button>
+        </ResponsivePair>
       </div>
     );
   }

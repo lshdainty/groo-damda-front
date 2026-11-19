@@ -171,7 +171,12 @@ export function FixedOverviewSection({
             className="contents"
             fallback={
               <>
-                <Skeleton className="h-[28px] w-full" radius="8" />
+                {/* 비율 막대는 안에 % 글(t2)이 있다 — 글 줄 높이(t2)를 따르되 막대 최소 28 은 지킨다(실제 막대 min-h 28 과 같은 셈) */}
+                <Skeleton
+                  text="t2"
+                  className="min-h-[28px] w-full"
+                  radius="8"
+                />
                 <Skeleton text="t5" className="mt-x4 w-1/2" />
                 <Skeleton text="t5" className="mt-x2 w-2/3" />
               </>

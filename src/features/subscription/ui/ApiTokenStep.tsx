@@ -168,11 +168,26 @@ export function ApiTokenStep({ flow }: { flow: SecuritiesLinkFlow }) {
                 : t("apiToken.issueFailed")}
             </Callout>
           )}
+          {/* 실제 토큰 줄과 같은 줄(같은 최소 높이 · 여백) 안에 이름 · 설명 글 자리만 스켈레톤, [폐기] 는 틀이라 막힌 버튼 */}
           {isLoading && (
-            <div className="flex flex-col gap-x3">
-              <Skeleton radius="12" className="h-[56px] w-full" />
-              <Skeleton radius="12" className="h-[56px] w-full" />
-            </div>
+            <List aria-busy="true">
+              {[0, 1].map((i) => (
+                <ListItem
+                  key={i}
+                  title={
+                    <Skeleton text="t5" className="w-[128px] max-w-full" />
+                  }
+                  detail={
+                    <Skeleton text="t3" className="w-[200px] max-w-full" />
+                  }
+                  suffix={
+                    <Button variant="neutralWeak" size="small" disabled>
+                      {t("apiToken.revoke")}
+                    </Button>
+                  }
+                />
+              ))}
+            </List>
           )}
           {tokens && tokens.length > 0 && (
             <List>

@@ -431,3 +431,10 @@ export const DONUT_PILL = [
   "[transition:background-color_var(--motion-duration-color-transition)_var(--motion-ease-easing)]",
   "group-hover/donut-row:bg-bg-layer-default-pressed group-active/donut-row:bg-bg-layer-default-pressed",
 ].join(" ");
+
+/**
+ * 도넛 가운데 합계 글 — 16 / 22 · 700 · 고정폭 숫자, 글자 크기 설정을 따르지 않는다(t5-static — chart.md "글자 크기", #260).
+ * 가운데에 들어가는지 재는 숨은 글도 이 값을 쓴다 — 판정과 그림이 같은 글이어야 큰 글자에서 들어가는 합계를 아래 줄로 옮기지 않는다
+ */
+export const CHART_DONUT_CENTER_AMOUNT =
+  "text-t5-static font-bold whitespace-nowrap tabular-nums";

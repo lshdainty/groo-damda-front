@@ -388,7 +388,9 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
     const monthLabelId = (d: Date) => `${id}m${monthNumber(d)}`;
 
     // ── 이어지는 달: 달 위치 ──
-    // 달 이름 줄 높이 — 견본을 재서 쓴다(제목 글이라 글자 크기를 따라 바뀐다). 칸 · 요일 줄은 48 고정(ROW_HEIGHT · WEEKDAY_ROW_HEIGHT)
+    // 달 이름 줄 높이 — 견본을 재서 쓴다(제목 글이라 글자 크기를 따라 바뀌고, 좁으면 줄을 바꿔 높아진다). 달마다 이름 길이가 달라
+    // 줄 수가 다를 수 있어 그 해 열두 달 이름 가운데 가장 높은 줄을 모든 달 이름 줄의 높이로 쓴다 — 그래야 달 위치 셈(offsets)이 실제와
+    // 같다. 칸 · 요일 줄은 48 고정(ROW_HEIGHT · WEEKDAY_ROW_HEIGHT)
     const probeRef = React.useRef<HTMLDivElement>(null);
     const [labelHeight, setLabelHeight] = React.useState(MONTH_LABEL_MIN);
     const monthCount = continuous ? (yearEnd - yearStart + 1) * 12 : 0;
@@ -610,12 +612,15 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
       return () => observer.disconnect();
     }, [continuous]);
 
-    // 이어지는 달 — 달 이름 줄 견본을 재고, 글자 크기가 바뀌면(제목이 커진다) 다시 잰다
+    // 이어지는 달 — 달 이름 줄 견본(열두 달)을 재고, 글자 크기 · 폭이 바뀌면(제목이 커지거나 줄이 바뀐다) 다시 잰다
     React.useLayoutEffect(() => {
       const el = probeRef.current;
       if (!continuous || !el) return;
       const measure = () => {
-        const label = el.getBoundingClientRect().height;
+        const label = Math.max(
+          0,
+          ...Array.from(el.children, (c) => c.getBoundingClientRect().height),
+        );
         if (label) setLabelHeight(label);
       };
       measure();
@@ -896,6 +901,8 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
                   id={labelId}
                   data-slot="date-picker-month-label"
                   className={cn(MONTH_LABEL, CONTINUOUS_MONTH_LABEL)}
+                  // 모든 달 이름 줄을 견본이 잰 가장 높은 줄에 맞춘다 — 달 위치 셈과 그린 높이가 같다
+                  style={{ minHeight: labelHeight }}
                 >
                   {labels.month(month.getFullYear(), month.getMonth() + 1)}
                 </div>
@@ -1023,9 +1030,11 @@ const DatePicker = React.forwardRef<HTMLDivElement, DatePickerProps>(
             data-slot="date-picker-probe"
             className={PROBE}
           >
-            <div className={cn(MONTH_LABEL, CONTINUOUS_MONTH_LABEL)}>
-              {labels.month(view.getFullYear(), view.getMonth() + 1)}
-            </div>
+            {Array.from({ length: 12 }, (_, m) => (
+              <div key={m} className={cn(MONTH_LABEL, CONTINUOUS_MONTH_LABEL)}>
+                {labels.month(view.getFullYear(), m + 1)}
+              </div>
+            ))}
           </div>
         )}
         <span

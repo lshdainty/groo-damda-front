@@ -201,12 +201,13 @@ describe("기본 통화는 서버에 저장한다 (QA #124)", () => {
       ...document.body.querySelectorAll<HTMLButtonElement>("button"),
     ].find((b) => b.getAttribute("aria-label") === "currency.label");
 
-    // 받는 동안 칸 자리는 Skeleton — 누를 칸이 없고(고를 수 없다) 원화 글도 없다
-    expect(trigger).toBeUndefined();
+    // 받는 동안 — 고르는 칸은 틀이라 스켈레톤으로 덮지 않고 값 없이 막힌 칸을 그린다(skeleton.md "틀은 먼저"). 고를 수 없고 원화 글도 없다
+    expect(trigger).toBeDefined();
+    expect(trigger!.disabled).toBe(true);
     const row = [
       ...document.body.querySelectorAll("[data-slot=list-item]"),
     ].find((li) => li.textContent?.includes("currency.desc"))!;
-    expect(row.querySelector("[data-slot=skeleton]")).not.toBeNull();
+    expect(row.querySelector("[data-slot=skeleton]")).toBeNull();
     expect(row.textContent).not.toContain("KRW");
     expect(row.textContent).not.toContain("currency.KRW");
   });

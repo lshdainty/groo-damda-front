@@ -12,6 +12,7 @@ import {
   Delta,
 } from "@/shared/ds/card";
 import {
+  CHART_DONUT_CENTER_AMOUNT,
   Chart,
   ChartDataTable,
   ChartDonutCenter,
@@ -475,7 +476,11 @@ export function CategoryBody({
         <span
           ref={measureRef}
           aria-hidden
-          className="pointer-events-none invisible absolute whitespace-nowrap text-t5 font-bold tabular-nums"
+          // 가운데 합계와 같은 글(static) — 판정과 그림이 같은 글이라야 큰 글자에서도 가운데에 든다(ds CHART_DONUT_CENTER_AMOUNT)
+          className={cn(
+            "pointer-events-none invisible absolute",
+            CHART_DONUT_CENTER_AMOUNT,
+          )}
         >
           {totalText}
         </span>
