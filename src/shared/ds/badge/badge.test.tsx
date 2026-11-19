@@ -40,7 +40,7 @@ describe("Badge", () => {
     expect(badge.className).toContain("text-fg-neutral-muted");
     expect(badge.className).toContain("font-medium");
     expect(badge.className).toContain("min-h-x5");
-    expect(badge.className).toContain("text-t1");
+    expect(badge.className).toContain("text-t1-static");
   });
 
   it("누르지 않는다 — 역할 · 포커스가 없고 글이 앞뒤 글과 이어 읽힌다", () => {
@@ -118,13 +118,13 @@ describe("Badge", () => {
     expect(badge.className).not.toMatch(/(^|\s)border(-|\s|$)/);
   });
 
-  it("large 는 24 · 좌우 8 · 위아래 4 · 모서리 6 · t2", () => {
+  it("large 는 24 · 좌우 8 · 위아래 4 · 모서리 6 · t2-static", () => {
     const badge = render(<Badge size="large">신용</Badge>);
     expect(badge.className).toContain("min-h-x6");
     expect(badge.className).toContain("px-x2");
     expect(badge.className).toContain("py-x1");
     expect(badge.className).toContain("rounded-r1_5");
-    expect(badge.className).toContain("text-t2");
+    expect(badge.className).toContain("text-t2-static");
   });
 
   it("쓰는 쪽의 className · ref 를 받는다", () => {

@@ -4,8 +4,8 @@ import type { ChipMetrics } from "./month-model";
 
 /**
  * 칸 안 칩 자리의 실제 크기를 잰다(I-09 10) — 칩 자리 높이(`stackRef`) · 칩 한 줄(`chipRef`) · "+N개" 줄(`moreRef`).
- * 글자 크기가 바뀌면 칩이 따라 커지므로 ResizeObserver 로 다시 잰다. 레이아웃이 없는 환경(시험)에서는 0 이 나오므로
- * `fallback`(글자 100% 의 값)을 쓴다.
+ * 칩 글은 글자 크기 설정을 따르지 않지만(칸 안 글 — groo-design #260) 칸 높이 · 웹폰트가 바뀌면 크기가 바뀌므로 ResizeObserver 로
+ * 다시 잰다. 레이아웃이 없는 환경(시험)에서는 0 이 나오므로 `fallback`(스펙 값)을 쓴다.
  */
 export function useChipMetrics(fallback: ChipMetrics) {
   const stackRef = useRef<HTMLDivElement>(null);

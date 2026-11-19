@@ -8,7 +8,7 @@ import type { ChipSlot } from "./month-model";
 /**
  * 월 격자 칸 안의 글자 칩 (I-09 10 · 16) — 일정 색의 옅은 바탕(`chart-{색}-weak`) + 그 위 글(`-contrast`).
  * 폰은 높이 18 · 좌우 3, 데스크톱 · 태블릿은 높이 20 · 좌우 6. t2 12 · 500 · 한 줄 · 끝 말줄임.
- * 글자가 커지면 높이가 따라 커진다(최소 높이 + 줄 높이). 이어지는 일정은 지금 모양 그대로 — 첫 · 사이 · 끝 조각이
+ * 칸 안 일정 이름은 글자 크기 설정을 따르지 않는다(text-t2-static — 넘치면 칸에서 자른다, groo-design #260). 이어지는 일정은 지금 모양 그대로 — 첫 · 사이 · 끝 조각이
  * 이웃 칸으로 이어지고 제목은 행마다 한 번 띠 가운데에 그린다.
  */
 export type ChipDensity = "phone" | "wide";
@@ -60,7 +60,7 @@ export function MonthChip({
       data-slot="month-chip"
       data-part={part}
       className={cn(
-        "relative block select-none whitespace-nowrap rounded-r1 text-t2 font-medium",
+        "relative block select-none whitespace-nowrap rounded-r1 text-t2-static font-medium",
         BOX[density],
         part === "none" && "truncate",
         part === "first" && "z-10 rounded-r-none",
@@ -104,20 +104,20 @@ export function MonthChip({
   );
 }
 
-/** 비어 있는 줄 — 띠가 줄을 맞추려고 남긴 자리. 칩과 같은 높이(글자 크기를 따른다)를 차지한다 */
+/** 비어 있는 줄 — 띠가 줄을 맞추려고 남긴 자리. 칩과 같은 높이를 차지한다 */
 export function MonthChipSpacer({ density }: { density: ChipDensity }) {
   return (
     <div
       aria-hidden
       data-slot="month-chip-spacer"
-      className={cn("invisible block text-t2 font-medium", BOX[density])}
+      className={cn("invisible block text-t2-static font-medium", BOX[density])}
     >
       &nbsp;
     </div>
   );
 }
 
-/** 접힌 일정 수 "+N개" — t2 12/16 · 700 · fg-neutral-muted. 폰은 좌우 3, 데스크톱은 왼쪽 10 · 위 2 */
+/** 접힌 일정 수 "+N개" — t2 12/16 · 700 · fg-neutral-muted(칸 안 글이라 글자 크기 설정을 따르지 않는다 — #260). 폰은 좌우 3, 데스크톱은 왼쪽 10 · 위 2 */
 export function MonthMore({
   count,
   density,
@@ -131,8 +131,8 @@ export function MonthMore({
       aria-hidden
       data-slot="month-more"
       className={cn(
-        "whitespace-nowrap text-t2 font-bold text-fg-neutral-muted",
-        // 폰 칸은 좁아 큰 글자에서 "+N개" 가 칸보다 넓을 수 있다 — 말줄임("+…")으로 수를 잃지 않고 이웃 칸으로 살짝 넘긴다
+        "whitespace-nowrap text-t2-static font-bold text-fg-neutral-muted",
+        // 폰 칸은 좁아 "+N개"(영어 "+N more")가 칸보다 넓을 수 있다 — 말줄임("+…")으로 수를 잃지 않고 이웃 칸으로 살짝 넘긴다
         density === "phone" ? "px-[3px]" : "truncate px-x2_5 pt-x0_5",
       )}
     >

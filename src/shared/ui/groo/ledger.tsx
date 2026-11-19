@@ -7,7 +7,6 @@ import { ListHeader } from "@/shared/ds/list";
 import { ScrollAutoHide } from "@/shared/ds/scroll-auto-hide";
 import { cn } from "@/shared/lib/index";
 import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
-import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { KRW, MINUS } from "@/shared/lib/groo/format";
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
@@ -301,7 +300,7 @@ LedgerCalendar.displayName = "LedgerCalendar";
 
 /**
  * 요일 줄 — t2 12 / 16 · 400 · fg-neutral-subtle, 일요일 fg-critical · 토요일 fg-brand. 글은 ds 요일 글 — 영어 두 글자 Su ~ Sa, 칸에 들지
- * 않으면 한 글자(groo-design #256) · 글자 크기 200% 상한(#258 — WEEK_GRID_TEXT). 줄을 바꾸지 않는다
+ * 않으면 한 글자(groo-design #256) · 글자 크기 설정을 따르지 않는다(#260 — text-t2-static). 줄을 바꾸지 않는다
  */
 export function LedgerDow({ className }: { className?: string }) {
   const weekdayRef = React.useRef<HTMLDivElement>(null);
@@ -316,8 +315,7 @@ export function LedgerDow({ className }: { className?: string }) {
         <span
           key={i}
           className={cn(
-            "relative whitespace-nowrap pb-x2 pt-x1_5 text-center font-normal",
-            WEEK_GRID_TEXT.t2,
+            "relative whitespace-nowrap pb-x2 pt-x1_5 text-center font-normal text-t2-static",
             i === 0
               ? "text-fg-critical"
               : i === 6
@@ -369,7 +367,7 @@ export function LedgerCell({
 /**
  * 날 숫자 — 지난 날 · 오늘 fg-neutral, **오는 날 fg-neutral-subtle**(불투명도로 흐리지 않는다), 일요일 fg-critical · 토요일 fg-brand
  * (캘린더 정합). 고른 날은 짙은 원(`bg-neutral-inverted` + `fg-neutral-inverted`), 오늘은 옅은 원(`bg-neutral-weak`) + 700
- * (date-picker.md State — 브랜드 색으로 채우지 않는다. 고르면 고름이 이기고 700 은 남는다. 원은 앱과 같은 36 — 큰 글자에서는 글을 따라 늘어난다).
+ * (date-picker.md State — 브랜드 색으로 채우지 않는다. 고르면 고름이 이기고 700 은 남는다. 원은 앱과 같은 36 — 날 숫자는 글자 크기 설정을 따르지 않는다, #260).
  */
 export function LedgerCellNum({
   className,
@@ -390,9 +388,8 @@ export function LedgerCellNum({
   return (
     <span
       className={cn(
-        // 날짜 숫자는 200% 에서 멈춘다(WEEK_GRID_TEXT — groo-design #258)
-        "inline-flex min-h-x9 min-w-x9 items-center justify-center rounded-full px-x1 tabular-nums",
-        WEEK_GRID_TEXT.t5,
+        // 날짜 숫자는 글자 크기 설정을 따르지 않는다(칸 안 글 — groo-design #260)
+        "inline-flex min-h-x9 min-w-x9 items-center justify-center rounded-full px-x1 tabular-nums text-t5-static",
         selected
           ? "bg-bg-neutral-inverted font-bold text-fg-neutral-inverted"
           : cn(
@@ -412,7 +409,7 @@ export function LedgerCellNum({
   );
 }
 
-/** 칸 빈 자리 · 한 글자 표시 — t1 11 · 700 · 고정폭. **금액에는 쓰지 않는다**(금액은 LedgerCellMoney — 말줄임 없음). 지출 fg-neutral · 수입 `tone="income"` fg-brand */
+/** 칸 빈 자리 · 한 글자 표시 — t1 11 · 700 · 고정폭(칸 아래 표시는 칸 안 글이라 글자 크기 설정을 따르지 않는다 — text-t1-static, groo-design #261). **금액에는 쓰지 않는다**(금액은 LedgerCellMoney — 말줄임 없음). 지출 fg-neutral · 수입 `tone="income"` fg-brand */
 export function LedgerCellAmt({
   className,
   tone,
@@ -421,7 +418,7 @@ export function LedgerCellAmt({
   return (
     <span
       className={cn(
-        "num max-w-full overflow-hidden whitespace-nowrap text-t1 font-bold tabular-nums",
+        "num max-w-full overflow-hidden whitespace-nowrap text-t1-static font-bold tabular-nums",
         "min-h-x3",
         tone === "income" ? "text-fg-brand" : "text-fg-neutral",
         className,
@@ -436,7 +433,8 @@ export function LedgerCellAmt({
  * 말줄임 `…` 는 쓰지 않는다 — 잘린 값은 틀린 값처럼 읽히므로 줄이지 않고 글을 뺀다(10-08 규칙).
  *
  * - 들어가는지는 **실제 폭**으로 잰다: 금액 글(점일 때도 눈에 안 보이게 남겨 둔다)의 폭 ↔ 칸 폭.
- *   자리수 규칙이 아니다 — 글자 200% 에서는 여섯 자리도 안 들어간다. ResizeObserver 가 칸 · 글 둘 다 지켜 폭 · 글자 크기가 바뀌면 다시 잰다.
+ *   자리수 규칙이 아니다 — 좁은 칸에서는 여섯 자리도 안 들어간다. ResizeObserver 가 칸 · 글 둘 다 지켜 폭 · 웹폰트가 바뀌면 다시 잰다.
+ * - 칸 금액은 칸 안 글이라 글자 크기 설정을 따르지 않는다(text-t1-static — groo-design #261). 전체 금액은 그날 묶음 머리 · 칸 읽는 이름에서 읽힌다.
  * - 점은 금액 글과 같은 줄(t1)이라 줄 높이가 안 바뀐다. 색은 지출 fg-neutral · 수입 fg-brand 그대로.
  * - 점은 aria-hidden — 금액은 부르는 쪽이 날 칸 이름(aria-label)에 원까지 넣는다. 금액 가림(MaskAmount)은 children 안에서 그대로 걸린다.
  */
@@ -475,7 +473,7 @@ export function LedgerCellMoney({
       data-slot="ledger-cell-money"
       data-dot={!fits || undefined}
       className={cn(
-        "num relative max-w-full overflow-hidden whitespace-nowrap text-t1 font-bold tabular-nums",
+        "num relative max-w-full overflow-hidden whitespace-nowrap text-t1-static font-bold tabular-nums",
         "min-h-x3",
         tone === "income" ? "text-fg-brand" : "text-fg-neutral",
         className,

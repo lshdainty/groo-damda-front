@@ -4,7 +4,6 @@ import { Card } from "@/shared/ds/card";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
-import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 import { monthGrid, type CalendarDay } from "@/shared/lib/groo/calendar-grid";
 import { MonthHead } from "@/shared/ui/groo/month-head";
 import type { useTodoCellMarks } from "../todo-cell-marks";
@@ -37,7 +36,7 @@ export function TodoMiniCalendar({
 }) {
   const { t } = useTranslation("todo");
   const weeks = monthGrid(month);
-  // 요일 머리 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 200% 상한(#258)
+  // 요일 머리 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 글자 크기 설정을 따르지 않는다(#260)
   const weekdayRef = useRef<HTMLDivElement>(null);
   const weekday = useWeekdayFit(weekdayRef);
   return (
@@ -58,8 +57,7 @@ export function TodoMiniCalendar({
             key={i}
             aria-hidden
             className={cn(
-              "relative whitespace-nowrap pb-x1_5 text-center text-fg-neutral-subtle",
-              WEEK_GRID_TEXT.t2,
+              "relative whitespace-nowrap pb-x1_5 text-center text-fg-neutral-subtle text-t2-static",
             )}
           >
             {d}
@@ -105,9 +103,8 @@ function DayCell({
   const num = (
     <span
       className={cn(
-        // 날짜 숫자는 200% 에서 멈춘다(WEEK_GRID_TEXT — groo-design #258)
-        "num flex min-h-x6 min-w-x7 items-center justify-center rounded-r3 px-x1 font-medium",
-        WEEK_GRID_TEXT.t3,
+        // 날짜 숫자는 글자 크기 설정을 따르지 않는다(칸 안 글 — groo-design #260)
+        "num flex min-h-x6 min-w-x7 items-center justify-center rounded-r3 px-x1 font-medium text-t3-static",
         !c.inMonth && "font-normal text-fg-neutral-subtle",
         future && "text-fg-neutral-subtle",
         c.inMonth && !future && "text-fg-neutral",
@@ -117,13 +114,13 @@ function DayCell({
       {c.day}
     </span>
   );
-  // 표시 자리 — 높이 15(t1 줄 높이)로 칸마다 같다. 장식이라 낭독기는 칸 이름만 읽는다
+  // 표시 자리 — 높이 15(t1 줄 높이)로 칸마다 같다. 칸 안 글이라 글자 크기 설정을 따르지 않는다(#261). 장식이라 낭독기는 칸 이름만 읽는다
   const mark = (
     <span
       aria-hidden
       data-slot="todo-cell-mark"
       className={cn(
-        "num inline-flex min-h-[1lh] max-w-full items-center justify-center text-t1",
+        "num inline-flex min-h-[1lh] max-w-full items-center justify-center text-t1-static",
         c.inMonth && marks.isTodayLeft(c.ds)
           ? "font-bold text-fg-brand"
           : "font-normal text-fg-neutral-subtle",

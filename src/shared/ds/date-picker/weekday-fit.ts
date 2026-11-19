@@ -1,18 +1,16 @@
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 
-import { useTickFontVersion } from "@/shared/lib/groo/axisWidth";
-
 import { datePickerLabels } from "./date-picker-dates";
 
 /*
  * 일곱 칸 위 요일 머리의 두 글자 / 한 글자 판정 — groo-design #250(date-picker.md ⓔ Weekday) · #256(International Design "날짜").
- * 날짜 고르기 달력 · 캘린더 화면 · 열지도 어디서나 영어는 두 글자 Su Mo Tu We Th Fr Sa 이고, 칸에 들지 않는 폭 · 글자 크기에서만 한 글자
+ * 날짜 고르기 달력 · 캘린더 화면 · 열지도 어디서나 영어는 두 글자 Su Mo Tu We Th Fr Sa 이고, 칸에 들지 않는 폭에서만 한 글자
  * S M T W T F S 로 줄인다. 줄을 바꾸지 않고, 넓은 화면이라도 세 글자(Sun)로 늘리지 않는다. 한국어는 두 벌이 같다(일 ~ 토).
+ * 요일 글은 글자 크기 설정을 따르지 않으므로(칸 안 글 `-static` — groo-design #260) 판정은 칸 폭 · 언어 · 글꼴만 본다.
  *
  * 셈 — 칸마다 두 글자 견본(`WeekdayProbe`, 보이지 않음)을 두고, 견본 폭이 그 칸(견본의 부모) 폭을 넘는 칸이 하나라도 있으면 한 글자.
- * 다시 재는 때 — ① 줄 · 견본의 크기가 바뀔 때(ResizeObserver — 창 폭 · 회전 · 웹폰트 도착) ② 글자 크기가 바뀔 때(글자 크기 판
- * `useTickFontVersion` — 페이지가 뜬 뒤 html font-size 를 바꾸는 경우, 차트 축과 같은 판) ③ 요일 글이 바뀔 때(언어).
+ * 다시 재는 때 — ① 줄 · 견본의 크기가 바뀔 때(ResizeObserver — 창 폭 · 회전 · 웹폰트 도착) ② 요일 글이 바뀔 때(언어).
  * 잴 때마다 그 순간 줄 안의 견본을 다시 찾는다 — 쓰는 쪽이 칸을 새로 그려도 처음 찾은(떨어져 나간) 칸에 묶이지 않는다.
  */
 
@@ -40,8 +38,6 @@ export function useWeekdayNarrow(
   ref: React.RefObject<HTMLElement | null>,
   textKey: string,
 ): boolean {
-  // 글자 크기 판 — 셈에 쓰지 않고 다시 잴 열쇠로만 받는다(판을 버리면 React Compiler 가 처음 잰 값에 묶는다, axisWidth.ts)
-  const fontVersion = useTickFontVersion();
   const [narrow, setNarrow] = React.useState(false);
   React.useLayoutEffect(() => {
     const root = ref.current;
@@ -56,7 +52,7 @@ export function useWeekdayNarrow(
     ))
       observer.observe(probe);
     return () => observer.disconnect();
-  }, [ref, textKey, fontVersion]);
+  }, [ref, textKey]);
   return narrow;
 }
 
@@ -114,7 +110,7 @@ export interface WeekdayFit {
  * </div>
  * ```
  * 칸은 `relative`(견본이 칸 안에 뜬다) · `whitespace-nowrap`(줄을 바꾸지 않는다), key 는 자리(i)로 — 한 글자 글은 겹친다(T · T).
- * 견본에는 칸에 보일 두 글자 모습 그대로를 넣는다(요일 뒤에 날짜가 붙는 칸이면 날짜까지). 글자는 `WEEK_GRID_TEXT`(200% 상한)로.
+ * 견본에는 칸에 보일 두 글자 모습 그대로를 넣는다(요일 뒤에 날짜가 붙는 칸이면 날짜까지). 글자는 `-static`(글자 크기 설정을 따르지 않는다)으로.
  */
 export function useWeekdayFit(
   ref: React.RefObject<HTMLElement | null>,

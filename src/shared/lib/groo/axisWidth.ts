@@ -5,11 +5,13 @@ import { niceAxis } from "./chartAxis";
  * 세로축(Y) 폭 — 눈금 글자 중 **가장 긴 것**을 실제로 재서 잡는다(스펙 chart.md "세로축의 폭은 가장
  * 긴 글자('−3,000만')가 잘리지 않게", 결함 D6). 고정 폭(44 · 52)은 음수 부호 하나로 첫 글자가 잘렸다.
  *
- * 숨은 span 에 눈금 글자와 같은 글꼴 · 크기(`--text-t1`, rem 이라 글자 크기 200% 도 따라간다)를
- * 주고 `getBoundingClientRect().width` 를 읽는다. 레이아웃이 없는 환경(jsdom)이면 글자 수 추정치로 돌아간다.
- * 웹폰트가 늦게 도착하면 `document.fonts.ready` 뒤에 한 번 더 잰다.
+ * 숨은 span 에 눈금 글자와 같은 글꼴 · 크기(`--text-t1-static` 11px — 차트 그림 안 글은 글자 크기 설정을 따르지 않는다, chart.md
+ * "글자 크기" · groo-design #260)를 주고 `getBoundingClientRect().width` 를 읽는다. 레이아웃이 없는 환경(jsdom)이면 글자 수 추정치로
+ * 돌아간다. 웹폰트가 늦게 도착하면 다시 잰다(눈금 글꼴 판 · `document.fonts.ready`).
  */
-export const AXIS_TICK_FONT_SIZE = "var(--text-t1)";
+export const AXIS_TICK_FONT_SIZE = "var(--text-t1-static)";
+/** 눈금 글 줄 높이 — `--text-t1-static--line-height`(15px) */
+const AXIS_TICK_LINE_HEIGHT = "var(--text-t1-static--line-height)";
 /**
  * 눈금 글자 옆 여백 — recharts 가 축 폭에서 따로 덜어 가는 것의 합이다. ds 차트 `chartAxisProps` 는 tickMargin 8 을 주고
  * tickLine 만 끌 뿐 tickSize(기본 6)는 그대로라 글자는 축 끝에서 6 + 8 = 14 안쪽에 놓인다. 여기에 올림 오차 2 를 더해 16.
@@ -46,10 +48,10 @@ export function measureTickWidth(labels: readonly string[]): number {
 }
 
 /*
- * 눈금 글자 크기가 바뀐 것을 알린다 — 글자 크기 설정(rem)은 페이지가 떠 있는 동안에도 바뀐다(브라우저 글자 크기 · html font-size).
- * 바뀐 뒤에도 옛 폭 · 옛 솎기에 머물면 세로축 글이 왼쪽 밖으로 잘리고 가로 글이 맞붙는다(chart.md "큰 글자" — 글자가 커지면 다시 잰다).
- * 눈금 글자와 같은 크기(`AXIS_TICK_FONT_SIZE`)의 숨은 글 하나를 ResizeObserver 로 지켜, 폭이 바뀔 때마다 판(version)을 올린다.
- * 웹폰트가 늦게 도착해 글 폭이 바뀌어도 같이 잡힌다. 지켜보는 쪽이 없으면 숨은 글을 걷는다.
+ * 눈금 글꼴이 바뀐 것을 알린다 — 눈금 글자 크기는 px 고정이라(`-static` — 글자 크기 설정을 따르지 않는다, groo-design #260) 판이 오르는
+ * 때는 웹폰트가 늦게 도착해 글 폭이 바뀔 때다. 바뀐 뒤에도 대체 글꼴로 잰 옛 폭 · 옛 솎기에 머물면 세로축 글이 왼쪽 밖으로 잘리고 가로
+ * 글이 맞붙는다. 눈금 글자와 같은 글꼴 · 크기(`AXIS_TICK_FONT_SIZE`)의 숨은 글 하나를 ResizeObserver 로 지켜, 폭이 바뀔 때마다
+ * 판(version)을 올린다. 지켜보는 쪽이 없으면 숨은 글을 걷는다.
  */
 let tickFontVersion = 0;
 const tickFontListeners = new Set<() => void>();
@@ -91,15 +93,15 @@ function subscribeTickFont(onChange: () => void): () => void {
 /** 지금 눈금 글자 크기의 판 — 바뀔 때마다 1 씩 오른다. 잰 값을 기억해 둘 때 열쇠에 넣는다 */
 export const readTickFontVersion = (): number => tickFontVersion;
 
-/** 눈금 글자 크기가 바뀌면 다시 그린다 — 판을 돌려준다(ds Chart · useAxisWidth 가 쓴다) */
+/** 눈금 글꼴이 바뀌면(웹폰트 도착) 다시 그린다 — 판을 돌려준다(ds Chart · useAxisWidth 가 쓴다) */
 export function useTickFontVersion(): number {
   return useSyncExternalStore(subscribeTickFont, readTickFontVersion, () => 0);
 }
 
 /*
- * 글자 크기 판을 받는 잼 — 판([fontKeys])은 셈에 쓰지 않고 열쇠로만 받는다. 컴포넌트 · 훅이 판을 버리고(`useTickFontVersion();`)
- * 측정만 부르면 React Compiler 가 의존 없는 셈으로 보고 처음 잰 값에 묶는다 — 페이지가 뜬 뒤 글자를 키워도 그대로였다(이음 QA
- * 2026-11-18, `useTickLineHeight`). 판을 인자로 넘기면 판이 바뀔 때 컴파일러도 다시 잰다.
+ * 글꼴 판을 받는 잼 — 판([fontKeys])은 셈에 쓰지 않고 열쇠로만 받는다. 컴포넌트 · 훅이 판을 버리고(`useTickFontVersion();`)
+ * 측정만 부르면 React Compiler 가 의존 없는 셈으로 보고 처음 잰 값에 묶는다(이음 QA 2026-11-18) — 웹폰트가 도착해도 대체 글꼴로 잰
+ * 폭에 머문다. 판을 인자로 넘기면 판이 바뀔 때 컴파일러도 다시 잰다.
  */
 export const measureTextWidthAt = (
   labels: readonly string[],
@@ -124,7 +126,7 @@ export function useAxisWidth(labels: readonly string[]): number {
     };
   }, []);
   // 글 목록은 내용(key)으로 넘긴다 — 쓰는 쪽이 렌더마다 새 배열을 줘도 컴파일러가 같은 글이면 다시 재지 않는다.
-  // 글자 크기 판 · 웹폰트 도착도 열쇠로 넘긴다(전엔 손 useMemo + eslint-disable 이라 컴파일러가 이 훅을 통째로 건너뛰었다)
+  // 글꼴 판 · 웹폰트 도착도 열쇠로 넘긴다(전엔 손 useMemo + eslint-disable 이라 컴파일러가 이 훅을 통째로 건너뛰었다)
   const key = labels.join(LABEL_SEPARATOR);
   return measureTickWidthAt(
     key === "" ? [] : key.split(LABEL_SEPARATOR),
@@ -148,35 +150,11 @@ export interface ValueAxisProps {
   interval: 0;
 }
 
-/**
- * 가장 적은 축도 들지 않으면 큰 쪽 끝 글만(chart.md "큰 글자", groo-design #253) — 눈금을 가장 적게 줄여도(0 을 품은 −50만 · 0 · 50만,
- * 양수만이면 0 · 50만) 칸 수가 들어가는 칸 수([room] — 그리는 높이 ÷ 눈금 글 줄 높이, 소수)보다 많으면 글이 겹친다. 그때는 절댓값이 큰
- * 쪽(값의 범위 [lo] · [hi] 로 고른다) 끝 글 하나를 남기고, 0 은 그 끝 글과 줄 높이 이상 떨어질 때만(끝 ~ 0 칸 수 ÷ 전체 칸 수 × room ≥ 1)
- * 함께 둔다. 나머지 글은 빈 글이고 눈금(격자선)은 그대로다. 들면 null(모든 글).
- */
-const sparseLabels = (
-  ticks: readonly number[],
-  room: number,
-  lo: number,
-  hi: number,
-): Set<number> | null => {
-  const n = ticks.length - 1;
-  if (n <= room) return null;
-  const end = Math.abs(hi) >= Math.abs(lo) ? n : 0;
-  const keep = new Set([end]);
-  const zero = ticks.indexOf(0);
-  if (zero >= 0 && zero !== end && (Math.abs(end - zero) / n) * room >= 1)
-    keep.add(zero);
-  return keep;
-};
-
 const valueAxisOf = (
   ticks: number[],
   format: (v: number, ticks: readonly number[]) => string,
-  keep: Set<number> | null = null,
 ): ValueAxisProps => {
-  const tickFormatter = (v: number) =>
-    keep && !keep.has(ticks.indexOf(v)) ? "" : format(v, ticks);
+  const tickFormatter = (v: number) => format(v, ticks);
   return {
     domain: [ticks[0]!, ticks[ticks.length - 1]!],
     ticks,
@@ -213,9 +191,8 @@ function fittedAxes<T>(
  * 글자([format])는 눈금 목록을 함께 받는다 — 한 축은 한 단위라(chart.md "축 · 격자") 눈금 하나의 글자도 축 전체를 보고
  * 정한다. 그리는 글자와 폭을 잰 글자가 같은 목록 · 같은 셈이다.
  *
- * [maxIntervals] — 세로 눈금 글이 겹치지 않고 들어가는 칸 수(`chartValueIntervals` — 화면이 그리는 높이 · 눈금 줄 높이로 잰다, 소수).
+ * [maxIntervals] — 세로 눈금 글이 겹치지 않고 들어가는 칸 수(`chartValueIntervals` — 화면이 그리는 높이 · 눈금 줄 높이로 잰다).
  * 눈금 사이가 눈금 글 줄 높이보다 좁아지면 칸 수를 줄여 1 · 2 · 5 축을 다시 센다(chart.md "세로 눈금이 겹치면 수를 줄입니다").
- * 가장 적은 축도 들지 않으면 큰 쪽 끝 글만 남긴다([sparseLabels], #253).
  */
 export function niceValueAxis(
   values: readonly number[],
@@ -228,7 +205,7 @@ export function niceValueAxis(
     const a = niceAxis(lo, hi, t);
     return { axes: a.ticks, intervals: a.ticks.length - 1 };
   });
-  return valueAxisOf(ticks, format, sparseLabels(ticks, maxIntervals, lo, hi));
+  return valueAxisOf(ticks, format);
 }
 
 /**
@@ -262,24 +239,13 @@ export function niceDualValueAxes(
       intervals: above + below,
     };
   });
-  const [l, r] = steps.steps.map((step, k) => {
+  const [l, r] = steps.steps.map((step) => {
     const ticks = Array.from(
       { length: steps.below + steps.above + 1 },
       // + 0 — 0 칸이 −0 이 되지 않게
       (_, i) => Math.round((i - steps.below) * step) + 0,
     );
-    const values = k === 0 ? left : right;
-    // 가장 적은 축도 들지 않으면 축마다 큰 쪽 끝 글만(#253) — 격자선은 두 축이 같은 눈금이라 그대로
-    return valueAxisOf(
-      ticks,
-      format,
-      sparseLabels(
-        ticks,
-        maxIntervals,
-        Math.min(0, ...values),
-        Math.max(0, ...values),
-      ),
-    );
+    return valueAxisOf(ticks, format);
   });
   return { left: l!, right: r! };
 }
@@ -293,28 +259,28 @@ const X_TICK_MARGIN = 8;
  *
  *   위 여백        = max(지금 위 여백, ⌈줄 높이 ÷ 2⌉)                      — 맨 위 글이 차트 상자 · 지표 타일에 잘리지 않게
  *   가로 눈금 줄 시작 = 그리는 자리 아래 max(8, ⌈줄 높이 ÷ 2⌉ + 4)         — 맨 아래 세로 글과 첫 가로 글 사이 4 이상
- *   가로 눈금 줄 높이 = 위 시작 + 줄 높이                                  — 100% 12 + 15 = 27 · 200% 19 + 30 = 49 · 300% 27 + 45 = 72
+ *   가로 눈금 줄 높이 = 위 시작 + 줄 높이                                  — 12 + 15 = 27
  *
- * 글은 눈금 선 가운데 그대로 두고, 큰 글자에서는 그리는 자리가 그만큼 줄어든다(앱 같은 셈).
+ * 글은 눈금 선 가운데 그대로 둔다(앱 같은 셈). 눈금 글은 글자 크기 설정을 따르지 않아(`-static`, #260) 줄 높이는 늘 15 다.
  */
 export const chartTopMargin = (top: number, lineHeight: number): number =>
   Math.max(top, Math.ceil(lineHeight / 2));
 
-/** 가로 눈금 글이 그리는 자리 아래에서 떨어지는 거리 — max(8, ⌈줄 높이 ÷ 2⌉ + 4)(100% 12 · 200% 19 · 300% 27) */
+/** 가로 눈금 글이 그리는 자리 아래에서 떨어지는 거리 — max(8, ⌈줄 높이 ÷ 2⌉ + 4)(줄 15 → 12) */
 export const chartXTickGap = (lineHeight: number): number =>
   Math.max(X_TICK_MARGIN, Math.ceil(lineHeight / 2) + 4);
 
 /** 가로 눈금 줄 높이 — 위 시작([chartXTickGap]) + 눈금 글 줄 높이. ds Chart 가 시간 가로축(chartXAxisProps)에 준다(앱 같은 셈) */
 export const chartXAxisHeight = (lineHeight: number): number =>
   chartXTickGap(lineHeight) + Math.ceil(lineHeight);
-/** 눈금 글 줄 높이(`--text-t1--line-height` = 15 / 16rem) — 잴 수 없을 때(jsdom) 100% 값 */
+/** 눈금 글 줄 높이(`--text-t1-static--line-height` = 15px) — 잴 수 없을 때(jsdom) 쓰는 값 */
 const TICK_LINE_FALLBACK = 15;
 
-/** 눈금 글 줄 높이(px) — rem 이라 글자 크기 설정을 따른다(100% 15 · 200% 30) */
+/** 눈금 글 줄 높이(px) — px 고정 토큰이라 글자 크기 설정을 따르지 않는다(늘 15) */
 export function measureTickLineHeight(): number {
   if (typeof document === "undefined") return TICK_LINE_FALLBACK;
   const span = document.createElement("span");
-  span.style.cssText = `position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0;display:block;font-size:${AXIS_TICK_FONT_SIZE};line-height:var(--text-t1--line-height);`;
+  span.style.cssText = `position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0;display:block;font-size:${AXIS_TICK_FONT_SIZE};line-height:${AXIS_TICK_LINE_HEIGHT};`;
   span.textContent = "0";
   document.body.appendChild(span);
   try {
@@ -324,17 +290,13 @@ export function measureTickLineHeight(): number {
   }
 }
 
-/** 눈금 글 줄 높이 — 글자 크기 판([measureTextWidthAt] 와 같은 까닭으로 판을 열쇠로 받는다) */
-export const measureTickLineHeightAt = (..._fontKeys: number[]): number =>
-  measureTickLineHeight();
-
 /**
- * 눈금 글 줄 높이 — 글자 크기가 바뀌면 다시 잰다(ds Chart 의 가로 눈금 · 세로축 폭과 같은 판). 판을 버리고 측정만 부르면
- * React Compiler 가 처음 잰 값에 묶어, 페이지가 뜬 뒤 글자를 키워도 세로 눈금 칸 수(chartValueIntervals)가 그대로였다.
+ * 눈금 글 줄 높이 — 처음 그릴 때 한 번 잰다. 눈금 글은 글자 크기 설정을 따르지 않고(`-static`, chart.md "글자 크기", groo-design #260)
+ * 줄 높이는 px 토큰이라 글꼴이 늦게 도착해도 바뀌지 않는다 — 다시 잴 일이 없다.
  */
 export function useTickLineHeight(): number {
-  const fontVersion = useTickFontVersion();
-  return measureTickLineHeightAt(fontVersion);
+  const [lineHeight] = useState(measureTickLineHeight);
+  return lineHeight;
 }
 
 /**
@@ -343,11 +305,10 @@ export function useTickLineHeight(): number {
  *
  *   그리는 높이 = 차트 높이 − max(위 여백, ⌈줄 높이 ÷ 2⌉) − 아래 여백 − (max(8, ⌈줄 높이 ÷ 2⌉ + 4) + 줄 높이)
  *                — 세로축 끝 글 자리(chartTopMargin) · 가로 눈금 줄(chartXAxisHeight), ds Chart 가 그리는 것과 같은 여백
- *   들어가는 칸 수 = 그리는 높이 ÷ 눈금 글 줄 높이(소수 · 0 이상 — 내림한 정수가 겹치지 않는 칸 수다. 1 보다 작으면 가장 적은 축도
- *                   들지 않아 큰 쪽 끝 글만 남긴다 — niceValueAxis, #253)
+ *   들어가는 칸 수 = ⌊그리는 높이 ÷ 눈금 글 줄 높이⌋(0 이상)
  *
  * 여백은 차트에 준 margin(없으면 ds Chart 기본 위 8 · 아래 5 — 앱엔 아래 여백이 없어 웹만 그만큼 더 뺀다). 폰 띠 140(위 8 · 아래 0) ·
- * 글자 200%(줄 30) → 그리는 높이 140 − 15 − 0 − 49 = 76 → 76 ÷ 30 = 2.53 → 2 칸.
+ * 줄 15 → 그리는 높이 140 − 8 − 0 − 27 = 105 → 105 ÷ 15 = 7 칸.
  */
 export function chartValueIntervals(
   height: number,
@@ -359,5 +320,5 @@ export function chartValueIntervals(
     chartTopMargin(top, lineHeight) -
     bottom -
     chartXAxisHeight(lineHeight);
-  return Math.max(0, plot / Math.max(1, lineHeight));
+  return Math.max(0, Math.floor(plot / Math.max(1, lineHeight)));
 }

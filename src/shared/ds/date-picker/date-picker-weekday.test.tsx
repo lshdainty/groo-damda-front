@@ -1,4 +1,4 @@
-// 영어 요일 — groo-design #250(date-picker.md ⓔ Weekday). 영어는 두 글자 Su Mo Tu We Th Fr Sa 로 맞추고, 칸에 들지 않는 폭 · 글자 크기
+// 영어 요일 — groo-design #250(date-picker.md ⓔ Weekday). 영어는 두 글자 Su Mo Tu We Th Fr Sa 로 맞추고, 칸에 들지 않는 폭
 // 에서만 한 글자 S M T W T F S 로 줄인다. 요일 글은 줄을 바꾸지 않는다. 예전엔 늘 Intl narrow(S M T W T F S)였다.
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -20,7 +20,6 @@ import koDs from "@/locales/ko/ds.json";
 import { DatePicker } from "./date-picker";
 import { datePickerLabels } from "./date-picker-dates";
 import { WEEKDAY } from "./date-picker-variants";
-import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 import { WEEKDAY_PROBE_SLOT } from "./weekday-fit";
 
 declare global {
@@ -143,27 +142,19 @@ describe("영어 요일 — 두 글자, 칸에 들지 않을 때만 한 글자",
     ).toBe("Sunday");
   });
 
-  it("칸에 두 글자가 들지 않는 폭 · 글자 크기 — 한 글자 S M T W T F S", () => {
-    cellWidth = 30;
-    probeWidth = 2 * 0.62 * 42; // 300%
+  it("칸에 두 글자가 들지 않는 폭 — 한 글자 S M T W T F S", () => {
+    cellWidth = 15;
+    probeWidth = 2 * 0.62 * 14; // 요일 글 14 고정
     act(() => root.render(<DatePicker today={new Date(2026, 10, 18)} />));
     expect(shown()).toEqual(["S", "M", "T", "W", "T", "F", "S"]);
   });
 
-  // 요일 글은 200% 에서 멈춘다(date-picker.md "글자 크기 설정", #252) — 320 · 300% 면 text-t4 가 42 라 한 글자 "W"(26)도 칸(38.9)에
-  // 거의 차고 두 글자(52)는 넘는다. 상한(28)이면 두 글자 34.7 이 칸에 든다
-  it("폰 320 · 글자 300% — 요일 글은 200%(28) 에서 멈춰 두 글자가 칸 안 · 한 줄", () => {
-    // 상한 — rem 토큰과 static 토큰 × 2 가운데 작은 값(글자 · 줄 높이 모두)
-    expect(WEEKDAY).toContain(WEEK_GRID_TEXT.t4);
-    expect(WEEK_GRID_TEXT.t4).toContain(
-      "text-[length:min(var(--text-t4),calc(var(--text-t4-static)_*_2))]",
-    );
-    expect(WEEK_GRID_TEXT.t4).toContain(
-      "leading-[min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2))]",
-    );
+  // 요일 글은 글자 크기 설정을 따르지 않는다(date-picker.md "글자 크기 설정", #260) — 320 · 300% 에서도 14 그대로라 두 글자(17.4)가
+  // 칸(38.9)에 든다
+  it("폰 320 · 글자 300% — 요일 글은 14 고정(text-t4-static)이라 두 글자가 칸 안 · 한 줄", () => {
+    expect(WEEKDAY).toContain("text-t4-static");
     expect(WEEKDAY).not.toMatch(/(^| )text-t4( |$)/);
-    // 견본 폭 = 두 글자 × 0.62 × min(14 × 3, 28)
-    const font = Math.min(14 * 3, 14 * 2);
+    const font = 14;
     cellWidth = 272 / 7;
     probeWidth = 2 * 0.62 * font;
     act(() => root.render(<DatePicker today={new Date(2026, 10, 18)} />));

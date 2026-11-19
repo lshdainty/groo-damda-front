@@ -53,10 +53,11 @@ import {
   useTickLineHeight,
 } from "@/shared/lib/groo/axisWidth";
 import {
+  PERCENT_LABEL_LINE,
+  PERCENT_LABEL_PX,
   PERCENT_LABEL_SIZE,
   BAR_VALUE_GAP,
   barChartTop,
-  rootFontPxAt,
   textWidth,
   visiblePercentLabels,
 } from "./percent-labels";
@@ -654,7 +655,7 @@ export function ComplianceSection({
 }) {
   const { t } = useTranslation("budget");
   const mask = useMasked("budget.compliance");
-  // 글자 크기가 바뀌면(페이지가 뜬 뒤에도) 막대 위 값 자리 · 겹침 셈을 다시 잰다
+  // 막대 위 값 글은 글자 크기 설정을 따르지 않는다(#260). 웹폰트가 도착하면(눈금 글꼴 판) 겹침 셈 · 바탕 폭을 다시 잰다
   const fontVersion = useTickFontVersion();
   const tickLine = useTickLineHeight();
   const head = (
@@ -707,7 +708,6 @@ export function ComplianceSection({
     active: b.year === m.year && b.month === m.month,
   }));
   const activeIndex = data.findIndex((d) => d.active);
-  const rootPx = rootFontPxAt(fontVersion);
   const labelTexts = data.map((d) =>
     d.percent == null ? null : formatPercent(d.percent, "progress"),
   );
@@ -724,8 +724,8 @@ export function ComplianceSection({
               <BarChart
                 data={data}
                 margin={{
-                  // 위 여백 = max(8 + 막대 위 값 자리(값 글 줄 높이 + 4 — 고정 20 이 아니다), ⌈세로 눈금 줄 ÷ 2⌉) — 앱과 같은 식
-                  top: barChartTop(rootPx, tickLine),
+                  // 위 여백 = max(8 + 막대 위 값 자리(값 글 줄 높이 16 + 4), ⌈세로 눈금 줄 ÷ 2⌉) — 앱과 같은 식
+                  top: barChartTop(tickLine),
                   right: 8,
                   left: 8,
                   bottom: 0,
@@ -734,7 +734,7 @@ export function ComplianceSection({
               >
                 <XAxis
                   dataKey="label"
-                  // ds 가로축 길 — 글자 사이 8 로 건너뛰고 끝 달을 지키며 끝 글 반 폭을 비운다(chart.md "큰 글자"). 고른 달은 보일 때 진하게
+                  // ds 가로축 길 — 글자 사이 8 로 건너뛰고 끝 달을 지키며 끝 글 반 폭을 비운다(chart.md "가로 눈금 건너뛰기"). 고른 달은 보일 때 진하게
                   {...chartXAxisProps(
                     data.map((d) => ({ label: d.label })),
                     { emphasize: activeIndex },
@@ -775,19 +775,24 @@ export function ComplianceSection({
                       const show = visiblePercentLabels(
                         labelTexts,
                         w * 2,
-                        0.75 * rootPx,
+                        PERCENT_LABEL_PX,
+                        fontVersion,
                       );
                       if (!labelTexts[i] || !show[i]) return null;
                       const cx = Number(p.x ?? 0) + w / 2;
                       // 글 줄 아래 끝을 막대 위 4 에 — 줄 높이 + 4 자리 안에 선다
                       const bottom = Number(p.y ?? 0) - BAR_VALUE_GAP;
-                      // 값 글 상자 — 폭은 굵은 글 폭, 높이는 값 글 줄 높이(1rem = 루트 글자 크기)
-                      const boxW = textWidth(labelTexts[i], 0.75 * rootPx);
-                      const boxH = rootPx;
+                      // 값 글 상자 — 폭은 굵은 글 폭, 높이는 값 글 줄 높이(16)
+                      const boxW = textWidth(
+                        labelTexts[i],
+                        PERCENT_LABEL_PX,
+                        fontVersion,
+                      );
+                      const boxH = PERCENT_LABEL_LINE;
                       return (
                         <g data-slot="bar-value">
                           {/* 카드 면 색 바탕(글 상자 크기) — 100% 점선 · 격자가 글을 가로지르지 않고 글 뒤로 숨는다(chart.md
-                              "막대 위 값 자리도 글을 따릅니다", #253). 다크는 같은 카드 면 토큰이 따라간다 */}
+                              "막대 위 값 자리", #253). 다크는 같은 카드 면 토큰이 따라간다 */}
                           <rect
                             data-slot="bar-value-bg"
                             x={cx - boxW / 2}

@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
 import { Skeleton, LoadingRegion } from "@/shared/ds/skeleton";
-import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 import { cn } from "@/shared/lib/cn";
 
 /**
@@ -9,7 +8,7 @@ import { cn } from "@/shared/lib/cn";
  * 깜빡임(펄스)은 두지 않는다(skeleton.md) — 스펙의 반짝임 띠가 지난다.
  */
 const CalendarWeekViewSkeleton = () => {
-  // 요일 머리는 주 보기와 같은 ds 요일 글 · 판정(두 글자, 칸에 들지 않으면 한 글자) · 200% 상한
+  // 요일 머리는 주 보기와 같은 ds 요일 글 · 판정(두 글자, 칸에 들지 않으면 한 글자) · 글자 크기 설정을 따르지 않는다(#260)
   const weekdayRef = useRef<HTMLDivElement>(null);
   const weekday = useWeekdayFit(weekdayRef);
   const weekDays = weekday.weekdays;
@@ -58,8 +57,7 @@ const CalendarWeekViewSkeleton = () => {
                       <div
                         key={index}
                         className={cn(
-                          "relative whitespace-nowrap py-x2 text-center font-medium",
-                          WEEK_GRID_TEXT.t2,
+                          "relative whitespace-nowrap py-x2 text-center font-medium text-t2-static",
                         )}
                       >
                         <span className={color}>{day}</span>

@@ -112,7 +112,7 @@ export function TrendSection({
             <CartesianGrid {...chartGridProps} />
             <XAxis
               dataKey="label"
-              // 주 글("1주" ~ "52주")도 ds 가로축 길 — 글자 사이 8 로 건너뛰고 끝 주를 지키며, 끝 글 반 폭을 비운다(chart.md "큰 글자")
+              // 주 글("1주" ~ "52주")도 ds 가로축 길 — 글자 사이 8 로 건너뛰고 끝 주를 지키며, 끝 글 반 폭을 비운다(chart.md "가로 눈금 건너뛰기")
               {...chartXAxisProps(data.map((d) => ({ label: d.label })))}
             />
             <YAxis

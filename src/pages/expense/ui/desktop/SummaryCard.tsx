@@ -6,7 +6,6 @@ import { Card } from "@/shared/ds/card";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
-import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 import { KRW, MINUS, minusOf } from "@/shared/lib/groo/format";
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
 import { useHideAmounts, wonPre } from "@/shared/lib/groo/hide-amounts-core";
@@ -97,7 +96,7 @@ export function SummaryCard({
   const shown = expanded
     ? weeks
     : [weeks[visibleWeekIndex(weeks, today)] ?? []];
-  // 7일 띠 요일 머리 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 200% 상한(#258)
+  // 7일 띠 요일 머리 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 글자 크기 설정을 따르지 않는다(#260)
   const weekdayRef = useRef<HTMLDivElement>(null);
   const weekday = useWeekdayFit(weekdayRef);
   return (
@@ -143,8 +142,7 @@ export function SummaryCard({
             <span
               key={i}
               className={cn(
-                "relative whitespace-nowrap text-center text-fg-neutral-subtle",
-                WEEK_GRID_TEXT.t3,
+                "relative whitespace-nowrap text-center text-fg-neutral-subtle text-t3-static",
                 i === 0 && "text-fg-critical",
                 i === 6 && "text-fg-brand",
               )}
@@ -221,9 +219,8 @@ function WeekCell({
   const num = (
     <span
       className={cn(
-        // 날짜 숫자는 200% 에서 멈춘다(WEEK_GRID_TEXT — groo-design #258)
-        "num flex min-h-x9 min-w-x9 items-center justify-center rounded-full px-x1 font-bold",
-        WEEK_GRID_TEXT.t5,
+        // 날짜 숫자는 글자 크기 설정을 따르지 않는다(칸 안 글 — groo-design #260)
+        "num flex min-h-x9 min-w-x9 items-center justify-center rounded-full px-x1 font-bold text-t5-static",
         (future || !c.inMonth) && "font-medium text-fg-neutral-subtle",
         c.inMonth && !future && "text-fg-neutral",
         isToday && "bg-bg-neutral-weak",

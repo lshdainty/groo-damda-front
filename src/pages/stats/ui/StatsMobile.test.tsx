@@ -4,6 +4,12 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  fontPx,
+  fontPxAt100,
+  grid,
+} from "@/shared/ds/date-picker/weekday-fit.test-utils";
+
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
@@ -364,12 +370,12 @@ describe("통계 글 · 색 규칙", () => {
     expect(legend?.className).toContain("bg-(--chart-prev-period)");
   });
 
-  it("저축률 가운데 %는 t9, 비율 막대 글은 차트 색 위 글자색(fg-neutral-inverted, 흰색 고정 아님)", () => {
+  it("저축률 가운데 %는 t9-static, 비율 막대 글은 차트 색 위 글자색(fg-neutral-inverted, 흰색 고정 아님)", () => {
     state.range = q({ ...summary(), fixedExpense: 1_000_000_000 });
     render();
     clickTab("tab.trend");
     expect(
-      container.querySelector("[data-section=rate] .text-t9"),
+      container.querySelector("[data-section=rate] .text-t9-static"),
     ).not.toBeNull();
     clickTab("tab.fixed");
     const bar = container.querySelector("[data-section=expense] [role=img]")!;
@@ -383,11 +389,12 @@ describe("통계 글 · 색 규칙", () => {
     expect(panel.style.touchAction).toBe("");
   });
 
-  it("저축률 고리 — 가운데 글은 소수 없는 정수 %, 크기는 rem 이라 글자 크기를 따라 커진다", () => {
+  it("저축률 고리 — 가운데 글은 소수 없는 정수 %, 고리는 108 px · 안 글은 static(글자 크기 300% 에도 그대로 — #260)", () => {
     render();
     clickTab("tab.trend");
     const ring = container.querySelector("[data-slot=stats-savings-ring]")!;
-    expect(ring.className).toContain("size-[6.75rem]");
+    expect(ring.className).toContain("size-[108px]");
+    expect(ring.className).not.toMatch(/rem\]/);
     expect(ring.querySelector("svg")!.getAttribute("viewBox")).toBe(
       "0 0 108 108",
     );
@@ -395,7 +402,20 @@ describe("통계 글 · 색 규칙", () => {
       /%/.test(e.textContent ?? ""),
     )!;
     expect(center.textContent).toMatch(/^\d+%$/);
-    expect(center.className).toContain("text-t9");
+    expect(center.className).toContain("text-t9-static");
+    // 300% — 고리 안 글(이름 · 값)은 100% 와 같고, 옆 문장(같은 % 를 읽는 글)은 세 배
+    grid.scale = 3;
+    try {
+      for (const el of ring.querySelectorAll("span"))
+        expect(fontPx(el)).toBe(fontPxAt100(el));
+      const readable = container.querySelector(
+        "[data-slot=stats-savings-insight]",
+      )!;
+      expect(readable.textContent).toContain(center.textContent!);
+      expect(fontPx(readable)).toBe(fontPxAt100(readable) * 3);
+    } finally {
+      grid.scale = 1;
+    }
     // 옆 안내 문장 — 문장 칸이 8em 보다 좁으면 고리 아래로 내려가는 줄바꿈 줄
     const insight = container.querySelector(
       "[data-slot=stats-savings-insight]",

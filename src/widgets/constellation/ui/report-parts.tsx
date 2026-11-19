@@ -7,7 +7,6 @@ import { List, ListItem } from "@/shared/ds/list";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
-import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 import {
   constellationColorVar,
   constellationName,
@@ -35,7 +34,7 @@ import {
  */
 export function WeekPicker({ m, place }: { m: ReportModel; place: Place }) {
   const { t } = useTranslation("constellation");
-  // 7일 띠 요일 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 요일 · 날짜 숫자 200% 상한(#258)
+  // 7일 띠 요일 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 요일 · 날짜 숫자는 글자 크기 설정을 따르지 않는다(#260)
   const weekdayRef = useRef<HTMLDivElement>(null);
   const weekday = useWeekdayFit(weekdayRef);
   return (
@@ -89,8 +88,7 @@ export function WeekPicker({ m, place }: { m: ReportModel; place: Place }) {
               <span
                 aria-hidden
                 className={cn(
-                  "whitespace-nowrap",
-                  WEEK_GRID_TEXT.t3,
+                  "whitespace-nowrap text-t3-static",
                   isTodayCell
                     ? "font-bold text-fg-brand"
                     : "text-fg-neutral-subtle",
@@ -100,14 +98,13 @@ export function WeekPicker({ m, place }: { m: ReportModel; place: Place }) {
               </span>
               {!isTodayCell && (
                 <WeekdayProbe>
-                  <span className={WEEK_GRID_TEXT.t3}>{weekday.full[dow]}</span>
+                  <span className="text-t3-static">{weekday.full[dow]}</span>
                 </WeekdayProbe>
               )}
               <span
                 aria-hidden
                 className={cn(
-                  "grid aspect-square min-h-x9 min-w-x9 place-items-center rounded-full p-[0.125rem] tabular-nums",
-                  WEEK_GRID_TEXT.t5,
+                  "grid aspect-square min-h-x9 min-w-x9 place-items-center rounded-full p-[0.125rem] tabular-nums text-t5-static",
                   picked
                     ? "bg-bg-brand-solid font-bold text-static-white"
                     : future
@@ -376,9 +373,10 @@ export function AnalysisSection({
                     ))}
                   </div>
                 </div>
+                {/* 요일 막대 아래 요일 원 — 그림 안 글이라 글자 크기 설정을 따르지 않는다(groo-design #261) */}
                 <span
                   className={cn(
-                    "mt-x2 grid min-h-x7 min-w-x7 place-items-center rounded-full text-t3",
+                    "mt-x2 grid min-h-x7 min-w-x7 place-items-center rounded-full text-t3-static",
                     m.sel === ds
                       ? "bg-bg-brand-solid font-bold text-static-white"
                       : "text-fg-neutral-subtle",

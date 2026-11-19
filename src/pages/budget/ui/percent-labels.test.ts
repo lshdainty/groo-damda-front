@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  BAR_VALUE_ROOM,
+  PERCENT_LABEL_SIZE,
   barChartTop,
-  barValueRoom,
   visiblePercentLabels,
 } from "./percent-labels";
 
@@ -35,15 +36,13 @@ describe("visiblePercentLabels — 끝을 지키고 앞에서 건너뛴다", () 
   });
 });
 
-describe('막대 위 값 자리 — 그 글 줄 높이 + 4(chart.md "막대 위 값 자리도 글을 따릅니다", #250)', () => {
-  it("값 글 12 / 16(줄 1rem) — 100% 20 · 200% 36 · 300% 52, 고정 20 이 아니다", () => {
-    expect(barValueRoom(16)).toBe(20);
-    expect(barValueRoom(32)).toBe(36);
-    expect(barValueRoom(48)).toBe(52);
+describe('막대 위 값 자리 — 그 글 줄 높이 + 4(chart.md "막대 위 값 자리" · "글자 크기", #260)', () => {
+  it("값 글은 글자 크기 설정을 따르지 않는다 — 12px(t2-static) · 자리 16 + 4 = 20", () => {
+    // rem 이면 글자 크기 300% 에서 막대 위 값이 커진다 — 차트 그림 안 글은 px 고정
+    expect(PERCENT_LABEL_SIZE).toBe("12px");
+    expect(BAR_VALUE_ROOM).toBe(20);
   });
-  it("위 여백 = max(8 + 값 자리, ⌈세로 눈금 줄 ÷ 2⌉) — 100% 28 · 200% 44 · 300% 60(앱 topPad 와 같은 식)", () => {
-    expect(barChartTop(16, 15)).toBe(28);
-    expect(barChartTop(32, 30)).toBe(44);
-    expect(barChartTop(48, 45)).toBe(60);
+  it("위 여백 = max(8 + 값 자리, ⌈세로 눈금 줄 ÷ 2⌉) = 28(앱 topPad 와 같은 식)", () => {
+    expect(barChartTop(15)).toBe(28);
   });
 });

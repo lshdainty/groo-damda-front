@@ -17,7 +17,6 @@ import { TOOLTIP_SURFACE, formatWon } from "./chart-variants";
 import { useEscapeFirst } from "./use-escape-first";
 import { useDsText } from "@/shared/ds/i18n";
 import { useWeekdayNarrow, WeekdayProbe } from "@/shared/ds/date-picker";
-import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 
 /*
  * Groo Chart 의 열지도 — 요일 × 시간 같은 두 축의 세기. 수치 원본은 groo-design specs/components/chart.yaml 의 heatmapCell · heatmapValue.
@@ -30,7 +29,9 @@ import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
  * 좁으면 글 없이 세기 색만 — 글자를 줄이거나 돈을 줄여("3.5만") 쓰지 않는다. 값은 툴팁 · 표로 보기가 준다.
  * 칸 글자색은 단계마다 한 번 정한다 — 그 단계 바탕 위 fg-neutral 이 4.5 를 넘으면 fg-neutral, 아니면 static-white.
  * 툴팁(머리 tooltipLabel · 줄 "■ {valueLabel} 값", 네모는 그 칸의 세기 색)은 가리키면(마우스) · 누르면(터치 — 다른 곳을 누를 때까지) ·
- * 키보드로 옮기면 뜬다 — 글이 보이는 넓은 칸에서도. 키보드: 상자(Tab 한 칸)에서 ← → 요일 · ↑ ↓ 시간대(처음 누르면 첫 칸), 지금 칸에
+ * 키보드로 옮기면 뜬다 — 글이 보이는 넓은 칸에서도.
+ * 열지도의 글(시간대 라벨 · 요일 머리 · 칸 값)은 글자 크기 설정을 따르지 않는다(`-static` — chart.md "글자 크기", groo-design #260).
+ * 툴팁 · 표로 보기는 커지고, 값은 그 자리에서 크게 읽는다. 키보드: 상자(Tab 한 칸)에서 ← → 요일 · ↑ ↓ 시간대(처음 누르면 첫 칸), 지금 칸에
  * 바깥 2px 링(띄움 2), Esc · 떠나면 닫는다. 툴팁은 화면 위 떠 있는 층(z-floating 200, 포털)이라 카드 모서리에 잘리지 않는다.
  *
  * 레시피와 다른 자리 — ① 칸 글자색 · 툴팁 자리를 상태가 아니라 DOM(CSS 변수 · style)에 쓴다(효과 안에서 setState 하지 않는다 — 컴파일러 규칙).
@@ -47,7 +48,7 @@ export interface ChartHeatmapRow {
 
 export interface ChartHeatmapColumn {
   key: string;
-  /** 요일 — "수" · 영어 두 글자 "We"(12 · fg-neutral-subtle, 글자 크기 200% 상한 — WEEK_GRID_TEXT) */
+  /** 요일 — "수" · 영어 두 글자 "We"(12 · fg-neutral-subtle, 글자 크기 설정을 따르지 않는다 — text-t2-static) */
   label: React.ReactNode;
   /**
    * 칸에 [label] 이 들지 않을 때의 요일 — 영어 한 글자 "W"(groo-design #256 International Design "날짜"). 주면 칸마다 [label] 견본을 두고
@@ -304,8 +305,7 @@ const ChartHeatmap = React.forwardRef<HTMLDivElement, ChartHeatmapProps>(
             aria-hidden
             data-slot="chart-heatmap-column"
             className={cn(
-              "relative whitespace-nowrap text-center text-fg-neutral-subtle",
-              WEEK_GRID_TEXT.t2,
+              "relative whitespace-nowrap text-center text-fg-neutral-subtle text-t2-static",
             )}
           >
             {narrow && column.narrowLabel != null
@@ -321,11 +321,11 @@ const ChartHeatmap = React.forwardRef<HTMLDivElement, ChartHeatmapProps>(
               data-slot="chart-heatmap-row"
               className="flex min-w-0 flex-col justify-center"
             >
-              <span className="text-t3 font-bold text-fg-neutral">
+              <span className="text-t3-static font-bold text-fg-neutral">
                 {row.label}
               </span>
               {row.sub != null && (
-                <span className="text-t1 text-fg-neutral-subtle">
+                <span className="text-t1-static text-fg-neutral-subtle">
                   {row.sub}
                 </span>
               )}
@@ -345,7 +345,7 @@ const ChartHeatmap = React.forwardRef<HTMLDivElement, ChartHeatmapProps>(
                   data-step={step}
                   data-active={isActive ? active.source : undefined}
                   className={cn(
-                    "flex aspect-square min-w-0 items-center justify-center overflow-hidden rounded-r1 text-t1 font-bold whitespace-nowrap tabular-nums",
+                    "flex aspect-square min-w-0 items-center justify-center overflow-hidden rounded-r1 text-t1-static font-bold whitespace-nowrap tabular-nums",
                     step < 0
                       ? "bg-bg-neutral-weak text-fg-neutral-subtle"
                       : cn(HEAT_STEP_BG[step], HEAT_STEP_TEXT[step]),

@@ -235,14 +235,15 @@ export interface ChartAxisOptions {
 }
 
 /**
- * 눈금 글자 크기 — 11 / 15(rem 이라 설정의 글자 크기 · 200% 를 따른다) · 고정폭 숫자.
- * SVG 글자는 var() 를 속성으로 못 받아 토큰(`--text-t1` = 0.6875rem)과 같은 값을 적는다.
- * 세로축 폭 측정(`axisWidth.ts` AXIS_TICK_FONT_SIZE)이 같은 토큰이라 폭 · 글자가 늘 같이 움직인다.
+ * 눈금 글자 크기 — 11 / 15 고정 · 고정폭 숫자. 차트 그림 안 글(축 눈금 · 막대 위 값)은 글자 크기 설정을 따르지 않는다 — 그림 칸이 정해진
+ * 디자인 틀이다(chart.md "글자 크기", DESIGN.md Typography "그대로 두는 것", groo-design #260). 값은 지표 타일 · 툴팁 · 표로 보기에서 크게 읽는다.
+ * SVG 글자는 var() 를 속성으로 못 받아 토큰(`--text-t1-static` = 11px)과 같은 값을 적는다.
+ * 세로축 폭 측정(`axisWidth.ts` AXIS_TICK_FONT_SIZE)이 같은 토큰이다.
  */
-export const CHART_TICK_SIZE = "0.6875rem";
+export const CHART_TICK_SIZE = "11px";
 
 /**
- * 눈금 글자 사이 최소 거리 — `spacing-x2`(8). 겹치면 recharts 가 사이 눈금을 건너뛴다(chart.md "큰 글자" — 웹 · 앱 같음,
+ * 눈금 글자 사이 최소 거리 — `spacing-x2`(8). 겹치면 recharts 가 사이 눈금을 건너뛴다(chart.md "가로 눈금 건너뛰기" — 웹 · 앱 같음,
  * 앱 `p_chart_cartesian` 의 칸 셈도 글자 폭 + 8). recharts 기본값 5 를 쓰지 않는다.
  */
 export const CHART_TICK_GAP = 8;
@@ -283,7 +284,7 @@ export const chartXTickFullLabels = (ticks: readonly ChartXTick[]): string[] =>
 
 /**
  * 가로 눈금 간격 — 글자 사이 최소 8(`CHART_TICK_GAP`)로 몇 칸이 들어가는지 세어, 끝(가장 최근) 눈금을 지키고 앞에서부터 건너뛴다
- * (chart.md "큰 글자"). 앱 `p_chart_cartesian` 과 같은 셈 — 들어가는 수 = ⌊그리는 폭 ÷ (가장 긴 글 + 8)⌋, 간격 = ⌈칸 수 ÷ 들어가는 수⌉.
+ * (chart.md "가로 눈금 건너뛰기"). 앱 `p_chart_cartesian` 과 같은 셈 — 들어가는 수 = ⌊그리는 폭 ÷ (가장 긴 글 + 8)⌋, 간격 = ⌈칸 수 ÷ 들어가는 수⌉.
  */
 export function chartXTickInterval(
   count: number,
@@ -316,7 +317,7 @@ export function chartXTickLabels(
 }
 
 /**
- * 끝 눈금 글의 자리 — 그리는 자리 오른쪽에 비울 폭(chart.md "큰 글자" · "끝 글 자리는 비워 둡니다"). 끝 글 가운데가 그리는 자리 오른쪽
+ * 끝 눈금 글의 자리 — 그리는 자리 오른쪽에 비울 폭(chart.md "가로 눈금 건너뛰기" · "끝 글 자리는 비워 둡니다"). 끝 글 가운데가 그리는 자리 오른쪽
  * 끝에 서므로 글 폭의 절반이 그 밖으로 나간다. 오른쪽 세로축이 있으면 그 축 폭이 먼저 그 자리를 덮고, 모자란 만큼만 더 비운다 —
  * 끝 글이 차트 오른쪽 끝(오른쪽 축 바깥 끝)을 넘지 않는다.
  *

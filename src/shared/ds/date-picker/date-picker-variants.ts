@@ -8,8 +8,6 @@
  * 모양은 같다(원 42 · 칸 가운데, 띠는 칸 세로 가운데, 링은 원 둘레 안쪽 2px).
  */
 
-import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
-
 // 달력 — bg-layer-floating. 폭은 부모(시트), 팝오버 안이면 336(칸 48 × 7 — 스펙 값 그대로), 두 달은 696(336 + 24 + 336).
 // 이어지는 달은 부모가 준 높이를 채운다
 export const ROOT =
@@ -49,20 +47,19 @@ export const CONTINUOUS_MONTH_LABEL = "px-x1";
 
 // 이어지는 달 — 스크롤 칸(스크롤바 숨김) · 위에 붙는 요일 줄 · 달마다 왼쪽 이름 48 + 아래 16 · 아래 안개 96.
 // z-[2] · z-[3] 은 이 스크롤 칸 안의 쌓임(요일 줄 < 안개)이라 전역 z 토큰이 아니다
-// 시트가 낮아(320 보다 좁은 화면에서 바닥 버튼이 위아래로 쌓일 때 등) 달이 요일 줄 + 2주보다 낮아지면 그 높이에서 멈춘다 — 넘친 만큼은
-// 시트 본문이 스크롤한다(DATE_PICKER_CONTINUOUS_SHEET_BODY, Layout "지원 폭"). 요일 줄 · 주 줄 높이는 WHEEL 과 같은 셈이다
+// 시트가 낮아(320 보다 좁은 화면에서 바닥 버튼이 위아래로 쌓일 때 등) 달이 요일 줄 + 2주(48 + 2 × 48)보다 낮아지면 그 높이에서 멈춘다 — 넘친 만큼은
+// 시트 본문이 스크롤한다(DATE_PICKER_CONTINUOUS_SHEET_BODY, Layout "지원 폭"). 요일 줄 · 칸은 48 고정이다(칸 안 글은 글자 크기 설정을 따르지 않는다)
 export const CONTINUOUS_SCROLL =
-  "relative min-h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_2_*_max(48px,calc(min(var(--text-t5--line-height),calc(var(--text-t5-static--line-height)_*_2))_+_6px)))] flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  "relative min-h-[144px] flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 export const CONTINUOUS_WEEKDAYS =
   "sticky top-0 z-[2] grid min-h-[48px] grid-cols-7 bg-bg-layer-floating";
 export const CONTINUOUS_MONTH = "pb-x4";
 export const FOG =
   "pointer-events-none sticky bottom-0 z-[3] -mt-24 h-[96px] [background:linear-gradient(to_bottom,transparent,var(--color-bg-layer-floating))]";
 
-// 연 · 월 휠 자리 — 요일 줄 + 6주를 덮는다: max(48, 요일 줄 높이) + 6 × max(48, 숫자 줄 높이 + 6)(둘 다 200% 상한 — WEEK_GRID_TEXT) — 100% 336 · 200% 348.
-// 글이 크면 달력을 따라 늘어나 열고 닫을 때 높이가 그대로다(WEEKDAY_ROW · CELL · DAY 와 같은 셈). 휠 308 은 가운데(100% 위아래 14). 연 120 · 월 96
-export const WHEEL =
-  "flex h-[calc(max(48px,min(var(--text-t4--line-height),calc(var(--text-t4-static--line-height)_*_2)))_+_6_*_max(48px,calc(min(var(--text-t5--line-height),calc(var(--text-t5-static--line-height)_*_2))_+_6px)))] items-center bg-bg-layer-floating";
+// 연 · 월 휠 자리 — 요일 줄 + 6주를 덮는다: 48 + 6 × 48 = 336(칸 · 요일 줄은 48 고정 — date-picker.md "글자 크기 설정"). 열고 닫아도
+// 달력 높이가 그대로다. 휠 308 은 가운데(위아래 14). 연 120 · 월 96
+export const WHEEL = "flex h-[336px] items-center bg-bg-layer-floating";
 export const WHEEL_YEAR = "w-[120px]";
 export const WHEEL_MONTH = "w-[96px]";
 
@@ -71,12 +68,13 @@ export const GRID = "@container [--day:min(42px,calc(100cqw_/_7_-_2px))]";
 export const WEEK = "grid grid-cols-7";
 export const WEEKDAY_ROW = "grid min-h-[48px] grid-cols-7";
 /**
- * 요일 글 — text-t4 에 글자 크기 200% 상한(WEEK_GRID_TEXT — date-picker.md "글자 크기 설정", groo-design #252 · #258). 320 폭에서 그보다 크면
- * 한 글자(영어 "W")도 칸에 들지 않는다. 날짜 숫자(DAY · OUTSIDE)도 같은 상한이고, 제목은 그대로 커진다
+ * 요일 글 — t4 14 / 19 고정(text-t4-static). 달력 칸 안 글(요일 · 날짜 숫자)은 글자 크기 설정을 따르지 않는다 — 칸 폭이 화면 폭 ÷ 7 로
+ * 정해진 디자인 틀이다(date-picker.md "글자 크기 설정", DESIGN.md Typography "그대로 두는 것", groo-design #260). 머리 제목만 커진다
  */
-export const WEEKDAY = `flex items-center justify-center whitespace-nowrap ${WEEK_GRID_TEXT.t4} font-medium text-fg-neutral-subtle`;
+export const WEEKDAY =
+  "flex items-center justify-center whitespace-nowrap text-t4-static font-medium text-fg-neutral-subtle";
 
-// 칸 — 높이 max(48, 숫자 줄 높이 + 6)(날짜 버튼 · 앞뒤 달 숫자의 위아래 3 이 키운다 — 100% 48 · 200% 50, 03-C 1B) · 폭 = 달력 폭 ÷ 7. 기간 띠는 칸 안의 span(원 높이, 칸 세로 가운데)
+// 칸 — 높이 48 고정(숫자 t5-static 22 + 위아래 3 은 늘 48 안이다) · 폭 = 달력 폭 ÷ 7. 기간 띠는 칸 안의 span(원 높이, 칸 세로 가운데)
 export const CELL = "relative isolate min-h-[48px] min-w-0";
 export const BAND =
   "pointer-events-none absolute top-1/2 h-[var(--day)] -translate-y-1/2 bg-bg-neutral-weak";
@@ -87,7 +85,8 @@ export const BAND_SIDE = {
 } as const;
 
 // 날짜 버튼 — 칸 전체. 원(DAY_VISUAL)은 칸 가운데 --day(바탕만 color-transition), 키보드 초점 링(DAY_RING)은 원 둘레 안쪽 2px
-export const DAY = `group/day relative isolate flex h-full w-full items-center justify-center border-0 bg-transparent px-0 py-[3px] font-sans ${WEEK_GRID_TEXT.t5} font-medium tabular-nums outline-none select-none [-webkit-tap-highlight-color:transparent]`;
+export const DAY =
+  "group/day relative isolate flex h-full w-full items-center justify-center border-0 bg-transparent px-0 py-[3px] font-sans text-t5-static font-medium tabular-nums outline-none select-none [-webkit-tap-highlight-color:transparent]";
 export const DAY_VISUAL =
   "pointer-events-none absolute left-1/2 top-1/2 -z-10 size-[var(--day)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent [transition:background-color_var(--motion-duration-color-transition)_var(--motion-ease-easing)]";
 export const DAY_RING =
@@ -118,20 +117,18 @@ export const DAY_VISUAL_STATE = {
 export const DAY_TODAY_WEIGHT = "font-bold";
 export const DAY_STRIKE = "line-through";
 // 앞뒤 달 — 숫자만(버튼 아님), 흐리게 · 누르지 못한다
-export const OUTSIDE = `flex h-full w-full cursor-default select-none items-center justify-center py-[3px] ${WEEK_GRID_TEXT.t5} font-medium tabular-nums text-fg-disabled`;
+export const OUTSIDE =
+  "flex h-full w-full cursor-default select-none items-center justify-center py-[3px] text-t5-static font-medium tabular-nums text-fg-disabled";
 
 export const LIVE = "sr-only";
 
-// 이어지는 달의 높이 — 달 이름 줄 + 칸 × 주 + 아래 16. 이름 줄 · 칸 · 요일 줄은 글자가 크면 늘어나(200% 에서 칸 50)
-// 숨은 견본(PROBE)으로 잰다. 처음 값은 100% 의 48 · 48 · 48
+// 이어지는 달의 높이 — 달 이름 줄 + 칸 × 주 + 아래 16(date-picker.md "글자 크기 설정"). 칸 · 요일 줄은 48 고정이고(칸 안 글은 글자 크기
+// 설정을 따르지 않는다), 달 이름 줄(t5 · 최소 48)만 글자가 크면 늘어나 숨은 견본(PROBE)으로 잰다. 처음 값은 48
 export const MONTH_GAP = 16;
-export type ContinuousMetrics = { label: number; row: number; weekday: number };
-export const METRICS_100: ContinuousMetrics = {
-  label: 48,
-  row: 48,
-  weekday: 48,
-};
-// 견본 — 보이지 않고 보조 기술에도 숨긴다. 달 이름 줄 · 칸 한 줄(앞뒤 달 숫자 — 날짜 버튼과 같은 높이) · 요일 줄 차례
+export const ROW_HEIGHT = 48;
+export const WEEKDAY_ROW_HEIGHT = 48;
+export const MONTH_LABEL_MIN = 48;
+// 견본 — 보이지 않고 보조 기술에도 숨긴다. 달 이름 줄 하나
 export const PROBE =
   "pointer-events-none invisible absolute inset-x-0 top-0 -z-10";
 export const CONTINUOUS_FOG = 96;

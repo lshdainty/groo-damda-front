@@ -1,4 +1,5 @@
-// 통계 세로 눈금 QA(2026-11-18, dev f3d43f81 — 수입 0원 · 하루 지출 최대 5.8만 · 폰 320 · 글자 200%).
+// 통계 세로 눈금 QA(2026-11-18, dev f3d43f81 — 수입 0원 · 하루 지출 최대 5.8만 · 폰 320). 차트 눈금 글은 글자 크기 설정을 따르지
+// 않는다(#260) — 아래는 모두 글자 300% 에서 100% 와 같은 눈금이다.
 //   A 수입이 모두 0 이면 왼쪽 수입 축이 "0 · 0 · 1 · 1 · 1"(0 ~ 1 을 다섯 칸으로) — 앱 niceChartAxis 처럼 0 ~ 1만
 //   B recharts 세로축 기본(interval "preserveEnd")이 준 눈금도 글 높이 + 8 로 재 빼서 "−6만 · −4만 · 0"(−2만 빠짐),
 //     "0 · 4만 · 8만"(2만 · 6만 빠짐)처럼 고르지 않았다 — niceValueAxis 눈금(1 · 2 · 5 간격 · 0 포함)을 하나도 빼지 않고 그린다
@@ -95,35 +96,40 @@ const model = (over: Partial<Record<keyof StatsModel, unknown>> = {}) =>
     ...over,
   }) as unknown as StatsModel;
 
-const at200 = () => {
-  tickScale.value = 2;
+/** 글자 300% — 눈금 글은 그대로라 100% 와 같은 눈금이 나와야 한다 */
+const at300 = () => {
+  tickScale.value = 3;
 };
 
 describe("수입 · 지출 추이 — 이중 축", () => {
-  // 200 · 200%: 그리는 높이 200 − max(5, 15) − 5 − (19 + 30) = 131 → 4 칸(#250 세로축 끝 글 자리). 다섯 칸으로 맞춘 축(왼쪽 0 ~ 1만 ·
-  // 오른쪽 0 ~ 10만)은 넘쳐, 두 축을 함께 세 칸 겨냥으로 다시 센다 — 왼쪽 0.5만 · 오른쪽 2만 간격 세 칸
-  it("A · B 글자 200% · 폰 320 — 왼쪽 수입 0 ~ 1.5만 · 오른쪽 지출 0 ~ 6만, 두 축 같은 네 눈금을 하나도 빼지 않는다", async () => {
-    at200();
+  // 200 · 300%: 그리는 높이 200 − 8 − 5 − (12 + 15) = 160 → 10 칸(눈금 글 줄 15 그대로 — 예전 200% 는 4 칸으로 줄였다). 다섯 칸으로
+  // 맞춘 축(왼쪽 0 ~ 1만 · 오른쪽 0 ~ 10만)이 그대로 든다
+  it("A · B 글자 300% · 폰 320 — 왼쪽 수입 0 ~ 1만 · 오른쪽 지출 0 ~ 10만, 두 축 같은 여섯 눈금을 하나도 빼지 않는다(100% 와 같다)", async () => {
+    at300();
     await render(<TrendSection m={model()} place="band" />);
     await layoutCharts(PHONE_CHART);
     // 수입이 모두 0 — 앱 niceChartAxis 와 같은 0 ~ 1만(겹치는 "0 · 0 · 1 · 1 · 1" 이 아니다)
     expect(yTickLabels(container, { axis: 0 })).toEqual([
       "0",
-      "0.5만",
+      "0.2만",
+      "0.4만",
+      "0.6만",
+      "0.8만",
       "1만",
-      "1.5만",
     ]);
-    // 지출 0 ~ 5.8만 은 2만 간격 세 칸 — 왼쪽도 세 칸이라 격자와 같은 높이에 선다(앱 p_chart_cartesian)
+    // 지출 0 ~ 5.8만 은 2만 간격 — 왼쪽이 다섯 칸이라 0 ~ 10만, 격자와 같은 높이에 선다(앱 p_chart_cartesian)
     expect(yTickLabels(container, { axis: 1 })).toEqual([
       "0",
       "2만",
       "4만",
       "6만",
+      "8만",
+      "10만",
     ]);
   });
 
   it("한 계열을 끄면 남은 계열의 축 하나 — 지출만 0 ~ 6만", async () => {
-    at200();
+    at300();
     const Wrapped = () => <TrendSection m={model()} place="band" />;
     await render(<Wrapped />);
     await layoutCharts(PHONE_CHART);
@@ -139,8 +145,8 @@ describe("수입 · 지출 추이 — 이중 축", () => {
 });
 
 describe("날별 순저축 — 음수 막대", () => {
-  it("B 글자 200% · 폰 320 — −6만 · −4만 · −2만 · 0 을 모두 그린다", async () => {
-    at200();
+  it("B 글자 300% · 폰 320 — −6만 · −4만 · −2만 · 0 을 모두 그린다", async () => {
+    at300();
     await render(<SavingsBarsSection m={model()} place="band" />);
     await layoutCharts(PHONE_CHART);
     expect(yTickLabels(container)).toEqual([
@@ -153,8 +159,8 @@ describe("날별 순저축 — 음수 막대", () => {
 });
 
 describe("고정 · 변동 추이 — 쌓은 막대", () => {
-  it("B 글자 200% · 폰 320 — 칸마다 합의 nice 눈금(0 ~ 60만 · 20만 간격)을 모두 그린다", async () => {
-    at200();
+  it("B 글자 300% · 폰 320 — 칸마다 합의 nice 눈금(0 ~ 60만 · 20만 간격)을 모두 그린다", async () => {
+    at300();
     const bucket = (month: number, total: number, fixed: number) => ({
       year: 2026,
       month,
@@ -188,8 +194,8 @@ describe("고정 · 변동 추이 — 쌓은 막대", () => {
 });
 
 describe("요일별 지출 비교 — 막대 둘", () => {
-  it("B 글자 200% · 폰 320 — 0 ~ 6만 을 모두 그린다", async () => {
-    at200();
+  it("B 글자 300% · 폰 320 — 0 ~ 6만 을 모두 그린다", async () => {
+    at300();
     const q = { isLoading: false, isError: false, data: [] };
     const m = model({
       monthExpensesQ: q,

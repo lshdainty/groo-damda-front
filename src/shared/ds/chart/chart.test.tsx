@@ -327,10 +327,10 @@ describe("숫자 — formatAxisWon · formatWon", () => {
 });
 
 describe("축 · 격자 · 계열 기본값", () => {
-  it("눈금 11(0.6875rem) · fg-neutral-subtle · 축 선 · 눈금 선 없음 · 눈금과 사이 8", () => {
+  it("눈금 11px(t1-static) · fg-neutral-subtle · 축 선 · 눈금 선 없음 · 눈금과 사이 8", () => {
     const p = chartAxisProps();
-    // rem — 글자 크기 설정(200%)을 따른다. 0.6875rem = 11px(--text-t1)
-    expect(p.tick.fontSize).toBe("0.6875rem");
+    // px — 차트 그림 안 글은 글자 크기 설정을 따르지 않는다(chart.md "글자 크기", #260). 11px = --text-t1-static
+    expect(p.tick.fontSize).toBe("11px");
     expect(p.tick.fill).toBe("var(--color-fg-neutral-subtle)");
     expect(p.axisLine).toBe(false);
     expect(p.tickLine).toBe(false);

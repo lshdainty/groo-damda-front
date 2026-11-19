@@ -28,7 +28,6 @@ import { cn } from "@/shared/lib/cn";
 import { formatMonthDayDow } from "@/shared/lib/date";
 import { dsText } from "@/shared/ds/i18n";
 import { useWeekdayFit, WeekdayProbe } from "@/shared/ds/date-picker";
-import { WEEK_GRID_TEXT } from "@/shared/ds/week-grid-text";
 
 import type { IEvent } from "@/widgets/calendar/model/interfaces";
 
@@ -72,7 +71,7 @@ function EventChipButton({
       data-slot="week-chip"
       data-part={part}
       className={cn(
-        "block cursor-pointer select-none overflow-hidden whitespace-nowrap rounded-r1 text-left text-t2 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
+        "block cursor-pointer select-none overflow-hidden whitespace-nowrap rounded-r1 text-left text-t2-static font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stroke-focus-ring",
         className,
       )}
       style={{ background: tone.bg, color: tone.fg, ...style }}
@@ -384,7 +383,7 @@ const CalendarWeekView = ({
             onEventClick={onEventClick}
           />
 
-          {/* 요일 머리 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 요일 · 날짜 숫자 200% 상한(#258) */}
+          {/* 요일 머리 — ds 요일 글(영어 두 글자, 칸에 들지 않으면 한 글자 — groo-design #256) · 요일 · 날짜 숫자는 글자 크기 설정을 따르지 않는다(#260) */}
           <div className="relative z-20 flex border-b border-stroke-neutral-subtle">
             <div className="w-[72px]" />
             <div
@@ -409,8 +408,7 @@ const CalendarWeekView = ({
                   <div
                     key={index}
                     className={cn(
-                      "relative whitespace-nowrap py-x2 text-center font-medium",
-                      WEEK_GRID_TEXT.t2,
+                      "relative whitespace-nowrap py-x2 text-center font-medium text-t2-static",
                     )}
                   >
                     <div className={textColor}>
