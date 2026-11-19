@@ -1522,4 +1522,71 @@ describe("DatePicker — 큰 글자 · 눌림 색 (I-04 03-C 결정 1B · 2B)", 
     expect(scroll.scrollTop).toBe(expected);
     vi.restoreAllMocks();
   });
+
+  /**
+   * QA 2026-11-19(#654) — 320 · 412, 300% 에서 처음 열면 보던 달 이름 줄(두 줄 132)의 첫 줄이 위에 붙은 요일 줄 뒤로 48 가려졌다.
+   * 열면 보던 달을 맨 위에 둔 뒤, autoFocus 가 그 날 줄을 안개 위로 올리려고 더 스크롤했다(시트가 낮아 이름 줄 132 + 그 날 줄이 안개 위에
+   * 다 들지 않는다). 열 때는 그 날이 든 달의 맨 위를 넘지 않는다 — 이름 줄 전체가 요일 줄 아래에 보인다.
+   */
+  it("320 · 300% · 낮은 시트 — autoFocus 로 열어도 보던 달 이름 줄 전체가 요일 줄 아래에 보인다(그 달 맨 위를 넘지 않는다)", async () => {
+    vi.useRealTimers();
+    const LABEL = 22 * 3 * 2; // t5 줄 높이 22 × 300% × 두 줄
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: Element) {
+        const inProbe = this.closest("[data-slot=date-picker-probe]");
+        const h = inProbe && this.parentElement === inProbe ? LABEL : 0;
+        return {
+          width: 0,
+          height: h,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: h,
+          x: 0,
+          y: 0,
+          toJSON() {},
+        } as DOMRect;
+      },
+    );
+    // 스크롤 칸 높이 276 — QA 그림의 시트(320 × 900, 300%: 제목 두 줄 · 칩 줄 · 바닥 버튼 둘). 요일 줄 48 + 이름 줄 132 + 오늘 줄(셋째 주)
+    // 은 안개 96 위(276 − 96 = 180)에 들지 않는다
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockImplementation(
+      function (this: HTMLElement) {
+        return this.dataset.slot === "date-picker-scroll" ? 276 : 0;
+      },
+    );
+    render(
+      <DatePicker
+        selection="range"
+        visibleRange="continuous"
+        today={TODAY}
+        autoFocus
+      />,
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(document.activeElement).toBe(day(2026, 10, 15));
+    const scroll = container.querySelector<HTMLElement>(
+      "[data-slot=date-picker-scroll]",
+    )!;
+    const first = container.querySelector<HTMLElement>(
+      "[data-slot=date-picker-month]",
+    )!;
+    let monthTop = parseFloat(
+      (first.previousElementSibling as HTMLElement).style.height || "0",
+    );
+    for (const m of first.parentElement!.querySelectorAll(
+      "[data-slot=date-picker-month]",
+    )) {
+      if (m.querySelector("[data-month='2026-10']")) break;
+      const weeks = m.querySelectorAll(
+        "[data-month] > [role=row]:not(.sr-only)",
+      ).length;
+      monthTop += LABEL + weeks * 48 + 16;
+    }
+    // 보던 달(10월)의 맨 위 — 이름 줄이 요일 줄 바로 아래에서 시작한다(더 내려가면 이름 줄이 요일 줄 뒤로 들어간다)
+    expect(scroll.scrollTop).toBe(monthTop);
+    vi.restoreAllMocks();
+  });
 });
