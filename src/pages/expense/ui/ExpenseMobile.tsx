@@ -167,7 +167,7 @@ export function ExpenseMobileSkeleton({ month }: { month?: string }) {
                   >
                     {c.d}
                   </LedgerCellNum>
-                  <Skeleton text="t1" className="w-x8" />
+                  <Skeleton text="t1-static" className="w-x8" />
                 </LedgerCell>
               ) : (
                 <LedgerCell key={`e${i}`} empty />
@@ -728,7 +728,7 @@ export function ExpenseMobile({
                           )}
                           {!data &&
                             (isLoadingList ? (
-                              <Skeleton text="t1" className="w-x8" />
+                              <Skeleton text="t1-static" className="w-x8" />
                             ) : (
                               <LedgerCellAmt />
                             ))}

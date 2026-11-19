@@ -321,3 +321,115 @@ describe("블록 스켈레톤 — 틀은 실제 부품, 데이터 줄은 실제 
     expect(barHeight(3)).toBe(48);
   });
 });
+
+/**
+ * 달력 보기는 격자째 기다린다(groo-design #266 — skeleton.md "예외 — 달력 보기는 격자째 기다립니다") — 캘린더 월 · 주 보기와
+ * 가계부 · 할 일 달력의 격자 스켈레톤 안 날짜 · 요일 · 칸 표시 자리는 칸 안 글이라 `tN-static`(px 줄 높이)이다. `tN`(rem)이면
+ * 큰 글자에서 칸 안 자리만 커져 실제 칸(text-t1-static)과 어긋난다. 달력 위 머리(달 이름 · 이전 · 다음 · 보기 고르기)는 기다리는
+ * 동안에도 실제로 그린다.
+ */
+describe("달력 격자 스켈레톤 — 칸 안 자리는 -static, 머리는 실제로(#266)", () => {
+  /** 파일 안의 [start, end) 조각 전부 — end 가 없으면 파일 끝까지 */
+  const slices = (file: string, start: string, end?: string) => {
+    const src = read(file);
+    const out: string[] = [];
+    let a = src.indexOf(start);
+    while (a >= 0) {
+      const b = end ? src.indexOf(end, a + start.length) : src.length;
+      expect(b, `${file}: ${end}`).toBeGreaterThan(a);
+      out.push(src.slice(a, b));
+      a = src.indexOf(start, b);
+    }
+    expect(out.length, `${file}: ${start}`).toBeGreaterThan(0);
+    return out;
+  };
+  const grids: [string, string[]][] = [
+    [
+      "src/pages/expense/ui/ExpenseMobile.tsx",
+      slices(
+        "src/pages/expense/ui/ExpenseMobile.tsx",
+        "<LedgerCalendar",
+        "</LedgerCalendar>",
+      ),
+    ],
+    [
+      "src/pages/todo/ui/TodoMobileLedger.tsx",
+      slices(
+        "src/pages/todo/ui/TodoMobileLedger.tsx",
+        "<LedgerCalendar",
+        "</LedgerCalendar>",
+      ),
+    ],
+    [
+      "src/pages/todo/ui/desktop/TodoLedgerCard.tsx",
+      slices(
+        "src/pages/todo/ui/desktop/TodoLedgerCard.tsx",
+        "function WeekCell",
+      ),
+    ],
+    [
+      "src/pages/expense/ui/desktop/MiniCalendar.tsx",
+      slices(
+        "src/pages/expense/ui/desktop/MiniCalendar.tsx",
+        "function DayCell",
+      ),
+    ],
+    [
+      "src/pages/todo/ui/desktop/TodoMiniCalendar.tsx",
+      slices(
+        "src/pages/todo/ui/desktop/TodoMiniCalendar.tsx",
+        "function DayCell",
+      ),
+    ],
+    ...[
+      "src/widgets/calendar/ui/month-view/calendar-month-view-desktop-skeleton.tsx",
+      "src/widgets/calendar/ui/month-view/calendar-month-view-mobile-skeleton.tsx",
+      "src/widgets/calendar/ui/week-view/calendar-week-view-skeleton.tsx",
+    ].map((f): [string, string[]] => [f, [read(f)]]),
+  ];
+
+  it("격자 안 글 자리 스켈레톤은 -static — 큰 글자에서 칸 안 자리가 커지지 않는다", () => {
+    const bad: string[] = [];
+    let seen = 0;
+    for (const [file, parts] of grids)
+      for (const part of parts)
+        for (const m of part.matchAll(/<Skeleton\b[^>]*\btext="([^"]+)"/g)) {
+          seen++;
+          if (!m[1]!.endsWith("-static")) bad.push(`${file} text="${m[1]}"`);
+        }
+    expect(bad).toEqual([]);
+    // 가계부 폰(기다림 · 주 달력) · 할 일 폰 · 할 일 주 · 가계부 · 할 일 미니 달력 · 주 보기
+    expect(seen).toBeGreaterThanOrEqual(7);
+  });
+
+  it("격자 스켈레톤은 머리를 덮지 않는다 — 달 이름 · 이전 · 다음 · 보기 고르기는 기다리는 갈래 앞에서 실제로", () => {
+    const desktop = read("src/widgets/calendar/ui/CalendarDesktop.tsx");
+    expect(desktop.indexOf("<CalendarHeaderDesktop />")).toBeGreaterThan(0);
+    expect(desktop.indexOf("<CalendarHeaderDesktop />")).toBeLessThan(
+      desktop.indexOf('{view === "month" &&'),
+    );
+    const mobile = read("src/widgets/calendar/ui/CalendarMobile.tsx");
+    const head = mobile.indexOf("<CalendarHeaderMobile />");
+    expect(head).toBeGreaterThan(0);
+    expect(head).toBeLessThan(mobile.indexOf("{isLoading ? ("));
+    // 가계부 폰 첫 기다림 — 달 줄은 실제 글(MonthTitleStatic) · 단추
+    const [nav] = slices(
+      "src/pages/expense/ui/ExpenseMobile.tsx",
+      "<LedgerMonthNav>",
+      "</LedgerMonthNav>",
+    );
+    expect(nav).toContain("<MonthTitleStatic");
+    expect(nav).not.toContain("<Skeleton");
+    // 미니 달력 — 달 머리는 기다림과 상관없이
+    for (const f of [
+      "src/pages/expense/ui/desktop/MiniCalendar.tsx",
+      "src/pages/todo/ui/desktop/TodoMiniCalendar.tsx",
+    ])
+      expect(read(f), f).toMatch(/^\s*<MonthHead\b/m);
+    for (const [file, parts] of grids)
+      for (const part of parts)
+        expect(part, file).not.toMatch(
+          /<(CalendarHeader\w*|MonthHead|MonthTitle\w*|LedgerMonthNav)\b/,
+        );
+  });
+});
