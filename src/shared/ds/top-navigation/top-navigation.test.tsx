@@ -496,6 +496,13 @@ describe("화면을 옮길 때", () => {
     const box = slot("top-navigation-search") as HTMLElement;
     expect(box.getAttribute("role")).toBe("search");
     expect(box.className).toContain("flex-1");
+    // 칸 글자(Input medium t4)는 제목과 같이 1.2배까지 — 칸 40 · 바 56 이 그대로(top-navigation.md "글자 크기 설정", #263)
+    expect(box.className).toContain(
+      "[&_[data-slot=text-input]]:text-[length:clamp(var(--text-t4-static),var(--text-t4),calc(var(--text-t4-static)*1.2))]",
+    );
+    expect(box.className).toContain(
+      "[&_[data-slot=text-input]]:leading-[clamp(var(--text-t4-static--line-height),var(--text-t4--line-height),calc(var(--text-t4-static--line-height)*1.2))]",
+    );
 
     render(
       <TopNavigation type="desktop">

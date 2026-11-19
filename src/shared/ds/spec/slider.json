@@ -3,7 +3,7 @@
   "source": "specs/components/slider.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "Slider — 손잡이 줄 + 표식. 폭은 놓인 자리",
@@ -428,6 +428,13 @@
       "rule": 0,
       "state": "enabled",
       "slot": "valueIndicator",
+      "prop": "typography",
+      "note": "글자 크기 설정을 따라 커집니다 — 상자는 아래 끝(손잡이 위 12)을 지키고 위로 늘어납니다"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "valueIndicator",
       "prop": "numerals",
       "note": "끄는 동안 숫자 폭이 흔들리지 않게"
     },
@@ -486,6 +493,13 @@
       "slot": "valueIndicator",
       "prop": "exitOpacity",
       "note": "사라질 때 투명 0 · 아래 5 로(확대는 그대로 1)"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "markers",
+      "prop": "typography",
+      "note": "트랙에 붙은 눈금 표식이라 글자 크기를 따르지 않습니다(WCAG 1.4.4 예외) — 지금 값은 머리 값 · 말풍선이 크게 보입니다"
     },
     {
       "rule": 0,

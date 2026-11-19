@@ -3,7 +3,7 @@
   "source": "specs/components/switch.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "Switch 한 줄 — 스위치 + 라벨, 누르는 영역",
@@ -357,6 +357,13 @@
       "slot": "thumb",
       "prop": "transitionProperty",
       "note": "색은 트랙과 같이 50ms · 20ms 뒤"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "label",
+      "prop": "foreground",
+      "note": "글자 크기 설정을 따라 커지고 줄을 바꿔 받습니다 — 스위치(트랙 · 엄지, px)는 라벨 첫 줄 가운데에 섭니다"
     },
     {
       "rule": 0,

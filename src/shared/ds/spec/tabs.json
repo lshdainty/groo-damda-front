@@ -3,7 +3,7 @@
   "source": "specs/components/tabs.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "list": "목록 — 탭을 담는 줄. 놓인 화면 · 구역 폭을 채우고 바닥에 구획 선",
@@ -287,6 +287,13 @@
       "rule": 0,
       "state": "enabled",
       "slot": "notification",
+      "prop": "size",
+      "note": "px — 글자 크기를 따르지 않습니다"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "notification",
       "prop": "background",
       "note": "브랜드 글자색 — 목록 바탕과 Desk 8.38 · 6.10 · HR 8.17 · 6.07(bg-brand-solid 는 다크에서 Desk · HR 1.73 이라 안 보인다). 고른 탭에는 없다 — 내용을 보면 사라진다"
     },
@@ -398,16 +405,30 @@
     {
       "rule": 4,
       "state": "enabled",
+      "slot": "list",
+      "prop": "minHeight",
+      "note": "최소값 — 글자 크기 설정을 따라 글이 커지면 목록 · 탭이 따라 높아집니다"
+    },
+    {
+      "rule": 4,
+      "state": "enabled",
       "slot": "label",
       "prop": "typography",
-      "note": "14 / 19 — 글은 아래 10, 위 11"
+      "note": "14 / 19 — 글은 아래 10, 위 11. 글자 크기 설정을 따라 커집니다"
+    },
+    {
+      "rule": 5,
+      "state": "enabled",
+      "slot": "list",
+      "prop": "minHeight",
+      "note": "최소값 — 글자 크기 설정을 따라 글이 커지면 목록 · 탭이 따라 높아집니다"
     },
     {
       "rule": 5,
       "state": "enabled",
       "slot": "label",
       "prop": "typography",
-      "note": "16 / 22 — 글은 아래 10, 위 12"
+      "note": "16 / 22 — 글은 아래 10, 위 12. 글자 크기 설정을 따라 커집니다"
     }
   ]
 }

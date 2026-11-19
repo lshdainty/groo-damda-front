@@ -174,9 +174,9 @@ export const BACKDROP_UPLOADING =
   "bg-[var(--overlay-dim-light)] dark:bg-[var(--overlay-dim-dark)]";
 export const BACKDROP_ERROR = "bg-[var(--overlay-dim-dark)]";
 
-// 대표 띠 — 첫 사진 아래 24, 두 모드 0.65
+// 대표 띠 — 첫 사진 아래 24, 두 모드 0.65. 사진 위 표식이라 글 · 띠 높이 모두 글자 크기 설정을 따르지 않는다
 export const BADGE =
-  "absolute inset-x-0 bottom-0 flex h-x6 items-center justify-center rounded-b-r3 bg-[var(--overlay-dim-dark)] px-x1 text-t2 font-medium text-static-white";
+  "absolute inset-x-0 bottom-0 flex h-x6 items-center justify-center rounded-b-r3 bg-[var(--overlay-dim-dark)] px-x1 text-t2-static font-medium text-static-white";
 export const BADGE_LABEL = "truncate";
 
 // 다시 시도 — 항목 위에 겹친 형제(항목이 단추일 수 있다). 누르면 이것만 2px 거리 축소(기준 80)

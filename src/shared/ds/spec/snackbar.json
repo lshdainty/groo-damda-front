@@ -3,7 +3,7 @@
   "source": "specs/components/snackbar.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "region": "자리 — 화면 아래 가운데. 탭 바 · 플로팅 버튼 · 바닥 버튼을 피해 그 위에 섭니다",
@@ -213,6 +213,13 @@
       "rule": 0,
       "state": "enabled",
       "slot": "root",
+      "prop": "minHeight",
+      "note": "최소값 — 글이 커지거나 줄이 늘면 띠가 따라 높아집니다"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "root",
       "prop": "background",
       "note": "다크에서는 밝은 띠"
     },
@@ -263,7 +270,14 @@
       "state": "enabled",
       "slot": "message",
       "prop": "typography",
-      "note": "단어 단위 줄바꿈 — 줄 수를 자르지 않습니다. 두 줄 안에서 끝나게 씁니다"
+      "note": "글자 크기 설정을 따라 커집니다. 단어 단위 줄바꿈 — 줄 수를 자르지 않습니다. 두 줄 안에서 끝나게 씁니다(100% 기준)"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "action",
+      "prop": "typography",
+      "note": "글자 크기 설정을 따라 커지고 한 줄을 지킵니다"
     },
     {
       "rule": 0,

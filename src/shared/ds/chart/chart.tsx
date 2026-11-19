@@ -861,14 +861,14 @@ function ChartDonutCenter({
         {label != null && (
           <span
             data-slot="chart-donut-center-label"
-            className="text-t2 text-fg-neutral-subtle"
+            className="text-t2-static text-fg-neutral-subtle"
           >
             {label}
           </span>
         )}
         <span
           data-slot="chart-donut-center-amount"
-          className="text-t5 font-bold whitespace-nowrap tabular-nums text-fg-neutral"
+          className="text-t5-static font-bold whitespace-nowrap tabular-nums text-fg-neutral"
         >
           {amount}
         </span>

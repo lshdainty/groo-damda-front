@@ -3,7 +3,7 @@
   "source": "specs/components/chart.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "차트 상자 — 카드 본문 안, 폭 100%. 높이는 쓰는 자리가 정한다",
@@ -584,7 +584,7 @@
       "state": "enabled",
       "slot": "tickLabel",
       "prop": "typography",
-      "note": "11 / 15 — 돈 축은 \"만\" 단위로 줄인다(400만 · 1.2만, 빼기 U+2212). 축의 폭은 가장 긴 글자(\"−3,000만\")가 잘리지 않게. 글자 크기 설정을 따른다(-static 아님 — 웹 rem · 앱 OS 배율). 커지면 축 폭을 다시 재고 가로 눈금은 겹치지 않게 건너뛴다 — 겹치면 끝(가장 최근) 글을 지키고 앞에서부터 건너뛴다(웹 recharts interval preserveEnd · 앱 같은 셈). 눈금이 통째로 사라지지 않는다"
+      "note": "11 / 15 — 돈 축은 \"만\" 단위로 줄인다(400만 · 1.2만, 빼기 U+2212). 축의 폭은 가장 긴 글자(\"−3,000만\")가 잘리지 않게. 글자 크기 설정을 따르지 않는다(웹 text-t1-static, 앱 TextScaler.noScaling) — 값은 툴팁 · 표로 보기에서 크게 읽는다. 가로 눈금은 겹치지 않게 건너뛴다 — 겹치면 끝(가장 최근) 글을 지키고 앞에서부터 건너뛴다(웹 recharts interval preserveEnd · 앱 같은 셈). 눈금이 통째로 사라지지 않는다"
     },
     {
       "rule": 0,
@@ -703,7 +703,7 @@
       "state": "enabled",
       "slot": "donutCenter",
       "prop": "typography",
-      "note": "합계 16 / 22 · 700 — 돈은 줄이지 않는다. 가운데에 들어가지 않으면 가운데 글을 빼고 범례 위 합계로. 위 라벨 12 · fg-neutral-subtle"
+      "note": "합계 16 / 22 · 700 — 돈은 줄이지 않는다. 가운데에 들어가지 않으면 가운데 글을 빼고 범례 위 합계로. 위 라벨 12(text-t2-static) · fg-neutral-subtle. 도넛 모양과 함께 글자 크기 설정을 따르지 않는다(웹 -static, 앱 TextScaler.noScaling) — 합계는 범례 · 목록에서 크게 읽는다"
     },
     {
       "rule": 0,
@@ -794,7 +794,7 @@
       "state": "enabled",
       "slot": "heatmapValue",
       "prop": "typography",
-      "note": "11 / 15 — 금액은 원까지(\"123,456,789원\" 84 · \"99,999,999,999원\" 107 — 999억까지 칸 112 에 들어간다). 값이 없는 칸은 \"—\"(fg-neutral-subtle — 5.09 · 다크 4.68)"
+      "note": "11 / 15 — 글자 크기 설정을 따르지 않는다(웹 text-t1-static, 앱 TextScaler.noScaling). 금액은 원까지(\"123,456,789원\" 84 · \"99,999,999,999원\" 107 — 999억까지 칸 112 에 들어간다). 값이 없는 칸은 \"—\"(fg-neutral-subtle — 5.09 · 다크 4.68)"
     },
     {
       "rule": 0,
@@ -843,7 +843,7 @@
       "state": "enabled",
       "slot": "barValue",
       "prop": "typography",
-      "note": "막대 바로 위 — 막대가 적어(예산 이행률 6개월) 값 글이 막대 사이에 들어갈 때만 둔다. 많으면 툴팁 · 표로 보기로 읽는다"
+      "note": "막대 바로 위 — 글자 크기 설정을 따르지 않는다(웹 text-t2-static, 앱 TextScaler.noScaling). 막대가 적어(예산 이행률 6개월) 값 글이 막대 사이에 들어갈 때만 둔다. 많으면 툴팁 · 표로 보기로 읽는다"
     },
     {
       "rule": 3,
@@ -885,7 +885,7 @@
       "state": "enabled",
       "slot": "heatmapCell",
       "prop": "gap",
-      "note": "칸 사이 6 — 가로 · 세로 같다. 왼쪽 시간대 라벨 열 56(이름 13 · 700 + 시간 11 · fg-neutral-subtle), 위 요일 머리 12 · fg-neutral-subtle"
+      "note": "칸 사이 6 — 가로 · 세로 같다. 왼쪽 시간대 라벨 열 56(이름 13 · 700 + 시간 11 · fg-neutral-subtle), 위 요일 머리 12 · fg-neutral-subtle — 라벨 · 머리도 글자 크기 설정을 따르지 않는다(웹 -static, 앱 TextScaler.noScaling)"
     },
     {
       "rule": 4,

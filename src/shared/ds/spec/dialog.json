@@ -3,7 +3,7 @@
   "source": "specs/components/dialog.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "overlay": "딤 — 대화상자 뒤 화면 전체",
@@ -307,7 +307,7 @@
       "state": "enabled",
       "slot": "closeButton",
       "prop": "top",
-      "note": "아이콘이 대화상자 위에서 28 · 오른쪽 24 — 제목 첫 줄 가운데와 맞는다"
+      "note": "아이콘이 대화상자 위에서 28 · 오른쪽 24 — 자리를 px 로 박지 않고 제목 첫 줄 가운데(위 24 + 제목 줄 높이 ÷ 2)를 따른다. 제목 글자가 커져도 닫기는 크기를 그대로 둔다"
     },
     {
       "rule": 0,
@@ -384,7 +384,7 @@
       "state": "enabled",
       "slot": "headerAction",
       "prop": "centerY",
-      "note": "대화상자 위 24 + 줄 높이 30 의 절반 = 39 — 닫기 아이콘 가운데와 같다"
+      "note": "대화상자 위 24 + 제목 줄 높이의 절반(30 이면 39) — 닫기 아이콘 · 머리 ← 가운데와 같다. 제목 글자가 커지면 줄 높이를 따라 내려간다"
     },
     {
       "rule": 3,

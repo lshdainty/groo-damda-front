@@ -3,7 +3,7 @@
   "source": "specs/components/table-pagination.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "줄 — 표 아래, 한 줄. 왼쪽 줄 수 · 오른쪽 범위 · 이전 · 다음",
@@ -26,7 +26,7 @@
       "when": {},
       "enabled": {
         "root": {
-          "height": 40,
+          "minHeight": 40,
           "justifyContent": "space-between",
           "gap": 16,
           "marginTop": 12
@@ -182,8 +182,8 @@
       "rule": 0,
       "state": "enabled",
       "slot": "root",
-      "prop": "height",
-      "note": "한 줄 — 줄바꿈하지 않습니다. 좁으면 표와 같은 가로 스크롤 상자 안에 둡니다"
+      "prop": "minHeight",
+      "note": "한 줄 — 줄바꿈하지 않습니다. 최소값이라 글자 크기 설정을 따라 고르기 · 글이 커지면 따라 높아집니다. 좁으면 표와 같은 가로 스크롤 상자 안에 둡니다"
     },
     {
       "rule": 0,
@@ -260,7 +260,7 @@
       "state": "enabled",
       "slot": "arrow",
       "prop": "iconSize",
-      "note": "lucide chevron-left · chevron-right"
+      "note": "lucide chevron-left · chevron-right. 칸 · 아이콘은 px — 글자 크기를 따르지 않습니다"
     },
     {
       "rule": 0,

@@ -50,8 +50,14 @@ export const TITLE_TYPE: Record<
 };
 
 // ── 검색칸 ───────────────────────────────────────────────────
-// 높이 40(바 56 의 가운데 — 위아래 8)은 Input medium 이 정한다. standard — ← 다음 6 부터 남은 폭 · desktop — 머리 왼쪽 폭 360
-export const SEARCH = "min-w-0";
+// 높이 40(바 56 의 가운데 — 위아래 8)은 Input medium 이 정한다. standard — ← 다음 6 부터 남은 폭 · desktop — 머리 왼쪽 폭 360.
+// 칸 글자(Input outline medium t4 14 / 19)는 제목과 같이 글자 크기 설정을 1.2배까지만 따른다(top-navigation.md "검색칸" · "글자 크기
+// 설정") — 1.2배여도 6 + 22.8 + 6 = 34.8 이라 칸 40 · 바 56 이 그대로다. 넘친 값은 칸 안에서 가로로 스크롤한다(Input)
+export const SEARCH = [
+  "min-w-0",
+  "[&_[data-slot=text-input]]:text-[length:clamp(var(--text-t4-static),var(--text-t4),calc(var(--text-t4-static)*1.2))]",
+  "[&_[data-slot=text-input]]:leading-[clamp(var(--text-t4-static--line-height),var(--text-t4--line-height),calc(var(--text-t4-static--line-height)*1.2))]",
+].join(" ");
 export const SEARCH_TYPE: Record<TopNavigationType, string> = {
   root: "ml-x2_5 flex-1",
   standard: "ml-x1_5 first:ml-[50px] flex-1",

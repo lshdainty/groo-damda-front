@@ -3,7 +3,7 @@
   "source": "specs/components/accordion.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "root": "아코디언 — 항목을 세로로 잇는다. 항목은 2개 이상(하나면 Collapsible)",
@@ -165,7 +165,7 @@
           }
         },
         "expandAll": {
-          "height": 36,
+          "minHeight": 36,
           "paddingLeft": 14,
           "paddingRight": 14,
           "radius": 8,
@@ -605,8 +605,8 @@
       "rule": 0,
       "state": "enabled",
       "slot": "expandAll",
-      "prop": "height",
-      "note": "보이는 상자 — Card 머리 동작과 같은 모양(card.yaml headerAction)"
+      "prop": "minHeight",
+      "note": "보이는 상자 — Card 머리 동작과 같은 모양(card.yaml headerAction). 최소 높이라 큰 글자에서 글을 따라 늘어나고, 한 줄을 지킨다"
     },
     {
       "rule": 0,

@@ -3,7 +3,7 @@
   "source": "specs/components/select.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "trigger": "트리거 — Input Button 과 같은 상자. 누르면 목록이 열린다",
@@ -308,7 +308,7 @@
         "item": {
           "paddingY": 12,
           "gap": 12,
-          "height": 46
+          "minHeight": 46
         },
         "itemIcon": {
           "size": 22
@@ -380,7 +380,7 @@
         "item": {
           "paddingY": 10,
           "gap": 8,
-          "height": 39
+          "minHeight": 39
         },
         "itemIcon": {
           "size": 18
@@ -632,15 +632,15 @@
       "rule": 1,
       "state": "enabled",
       "slot": "item",
-      "prop": "height",
-      "note": "한 줄 — 설명이 있으면 66"
+      "prop": "minHeight",
+      "note": "한 줄 — 설명이 있으면 66. 최소 높이라 글자가 커지면 줄을 바꿔 받고 늘어난다"
     },
     {
       "rule": 2,
       "state": "enabled",
       "slot": "item",
-      "prop": "height",
-      "note": "한 줄 — 설명이 있으면 57"
+      "prop": "minHeight",
+      "note": "한 줄 — 설명이 있으면 57. 최소 높이(large 비고)"
     },
     {
       "rule": 3,

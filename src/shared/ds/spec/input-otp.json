@@ -3,7 +3,7 @@
   "source": "specs/components/input-otp.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "field": "코드 칸 — Input 상자형 한 칸. 이름은 Field 라벨(\"인증 코드\")",
@@ -305,7 +305,7 @@
       "state": "enabled",
       "slot": "resend",
       "prop": "height",
-      "note": "Button medium — 칸 옆이 아니라 아래에 둬 칸(52 · 40)과 높이를 맞출 일이 없다"
+      "note": "최소 — Button medium, 글이 커지면 따라 높아진다. 칸 옆이 아니라 아래에 둬 칸(52 · 40)과 높이를 맞출 일이 없다"
     },
     {
       "rule": 0,

@@ -3,7 +3,7 @@
   "source": "specs/components/menu.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "d1f3d7c53736"
+    "sha256": "91ea036bd903"
   },
   "slots": {
     "content": "메뉴 — 트리거 아래(모자라면 위 · 옆) 8",
@@ -253,7 +253,7 @@
       "state": "enabled",
       "slot": "content",
       "prop": "width",
-      "note": "글이 길면 줄을 바꾼다 — 폭을 늘리지 않는다"
+      "note": "고정 — 글이 길거나 글자가 커지면 줄을 바꿔 높이가 늘어난다. 폭을 늘리지 않는다"
     },
     {
       "rule": 0,
@@ -288,7 +288,7 @@
       "state": "enabled",
       "slot": "item",
       "prop": "height",
-      "note": "한 줄 — 설명이 있으면 57. 글이 길면 줄을 바꿔 늘어난다(말줄임 없음)"
+      "note": "최소 · 한 줄 — 설명이 있으면 57. 글이 길거나 글자가 커지면 줄을 바꿔 늘어난다(말줄임 없음)"
     },
     {
       "rule": 0,
