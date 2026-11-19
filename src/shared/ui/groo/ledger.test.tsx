@@ -2,7 +2,7 @@
 import * as React from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   LedgerCell,
   LedgerCellNum,
@@ -21,6 +21,7 @@ import {
   LedgerNavBtn,
   LedgerPin,
   LedgerSumBtn,
+  LedgerTotal,
 } from "./ledger";
 import { useLedgerScroll } from "./use-ledger-scroll";
 import { SCROLL_AUTO_HIDE_SYNC_EVENT } from "@/shared/ds/scroll-auto-hide";
@@ -159,19 +160,112 @@ describe("날 숫자 · 날짜 머리", () => {
   });
 });
 
-describe("머리 단추 내림", () => {
-  it("왼쪽 묶음 기본 폭이 절반 − 간격이라 단추가 절반을 넘을 때만 아래로 내려간다(앱 LedgerTotalRow)", () => {
+/**
+ * 머리 단추 자리 — 금액이 먼저(groo-design #265 card.md "금액 옆 동작은 금액이 먼저입니다"): 금액 한 줄 폭 + 사이 12 + 단추 폭 ≤ 머리 폭이면
+ * 옆, 넘으면 금액 아래 줄 오른쪽 끝. jsdom 은 레이아웃이 없어 글 폭을 어림한다 — 금액(t9 24, rem)은 한 줄로 잴 때(nowrap)만 글 폭,
+ * 단추(t4 14, rem)는 글 폭 + 좌우 28. 둘 다 글자 배율을 따른다. 머리 폭은 폰 콘텐츠 폭(360 − 48 = 312) 또는 좁은 폭.
+ */
+describe("머리 단추 자리 — 금액이 먼저", () => {
+  let scale = 1;
+  let headWidth = 312;
+  let resize: (() => void)[] = [];
+  const glyphs = (s: string, px: number) =>
+    [...s].reduce(
+      (w, c) => w + (/[\d,]/.test(c) ? 0.6 : c > "ᄀ" ? 1 : 0.6),
+      0,
+    ) *
+    px *
+    scale;
+  beforeEach(() => {
+    scale = 1;
+    headWidth = 312;
+    resize = [];
+    globalThis.ResizeObserver = class {
+      constructor(cb: () => void) {
+        resize.push(cb);
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as never;
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(
+      function (this: HTMLElement) {
+        return this.dataset.slot === "ledger-head" ? headWidth : 0;
+      },
+    );
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(
+      function (this: Element) {
+        const el = this as HTMLElement;
+        const text = el.textContent ?? "";
+        let width = 0;
+        if (el.hasAttribute("data-amount-row-amount"))
+          width = el.style.whiteSpace === "nowrap" ? glyphs(text, 24) : 0;
+        else if (el.tagName === "BUTTON") width = glyphs(text, 14) + 28;
+        return {
+          width,
+          height: 0,
+          top: 0,
+          left: 0,
+          right: width,
+          bottom: 0,
+          x: 0,
+          y: 0,
+          toJSON() {},
+        } as DOMRect;
+      },
+    );
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  const head = () =>
     render(
       <LedgerHead>
-        <div>합계</div>
+        <div>
+          <LedgerTotal>1,234,567원</LedgerTotal>
+        </div>
         <LedgerSumBtn>소비 요약</LedgerSumBtn>
       </LedgerHead>,
     );
-    const head = container.firstElementChild!;
-    expect(head.className).toContain("flex-wrap");
-    expect(head.className).toContain(
-      "[&>:first-child]:basis-[calc(50%-var(--spacing-x3))]",
-    );
+  const el = () =>
+    container.querySelector<HTMLElement>("[data-slot=ledger-head]")!;
+  const stacked = () => el().hasAttribute("data-stacked");
+
+  it("100% · 폰 폭 312 — 금액 한 줄(≈ 159) + 12 + 단추(≈ 98)가 들어가 단추는 금액 옆, 줄을 감지 않는다", () => {
+    head();
+    expect(stacked()).toBe(false);
+    expect(el().className).toContain("flex-nowrap");
+    expect(el().className).toContain("[&>:first-child]:flex-1");
+  });
+
+  it("좁은 폭(240) · 100% — 금액 한 줄 + 사이 + 단추가 넘쳐 단추를 금액 아래 줄 오른쪽 끝으로(금액은 한 줄 전체 폭)", () => {
+    headWidth = 240;
+    head();
+    expect(stacked()).toBe(true);
+    expect(el().className).toContain("flex-wrap");
+    expect(el().className).toContain("[&>:first-child]:basis-full");
+    expect(container.querySelector("button")!.className).toContain("ml-auto");
+  });
+
+  it("처음부터 300% — 단추는 아래, 금액은 한 줄(≈ 476 > 312 라 쉼표 뒤 줄바꿈만 남는다)", () => {
+    scale = 3;
+    head();
+    expect(stacked()).toBe(true);
+  });
+
+  it("뜬 뒤 100% → 300% → 100% — 글자 크기가 바뀌면 다시 판정한다", () => {
+    head();
+    expect(stacked()).toBe(false);
+    scale = 3;
+    act(() => resize.forEach((cb) => cb()));
+    expect(stacked()).toBe(true);
+    scale = 1;
+    act(() => resize.forEach((cb) => cb()));
+    expect(stacked()).toBe(false);
+  });
+
+  it("반 폭 규칙(카드 머리 제목 줄 전용)을 쓰지 않는다 — 왼쪽 묶음을 절반으로 잡지 않는다", () => {
+    head();
+    expect(el().className).not.toContain("50%");
   });
 });
 

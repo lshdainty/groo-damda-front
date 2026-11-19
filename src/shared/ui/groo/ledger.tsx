@@ -12,6 +12,10 @@ import { KRW, MINUS } from "@/shared/lib/groo/format";
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
 import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
 import { useShellScroller } from "@/shared/lib/groo/shell-scroller";
+import {
+  AMOUNT_ROW_AMOUNT,
+  useAmountRowStacks,
+} from "@/shared/lib/groo/amount-row";
 import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
 
 /*
@@ -207,18 +211,28 @@ export function LedgerNavBtn({
 // ─── 헤드(총액/타이틀 + 우측 토글) ──────────────────────────
 
 /**
- * 머리 — 단추가 머리 폭의 절반을 넘을 때만 아래 줄 오른쪽으로 내려간다(03G-029 A · 앱 LedgerTotalRow 와 같은 반 폭 판정, I-29 P8).
- * 왼쪽 묶음(첫 자식)의 기본 폭을 `절반 − 간격`으로 잡아, 단추 + 간격이 남은 절반에 안 들어갈 때(단추 > 절반)만 감는다.
- * 왼쪽 묶음의 글 길이는 판정에 들어가지 않는다 — 별빛 줄이 길다고 단추가 내려가지 않는다. 왼쪽 묶음은 `min-w-0 flex-auto`.
+ * 머리 — 금액 · 지표 줄 옆 단추는 금액이 먼저다(groo-design #265 card.md "금액 옆 동작은 금액이 먼저입니다" · 앱 LedgerTotalRow 와 같은 판정).
+ * 금액(LedgerTotal) 한 줄 폭 + 사이 12 + 단추 폭 ≤ 머리 폭이면 단추를 금액 옆에, 넘으면 금액 아래 줄 오른쪽 끝으로 내린다 — 금액이 쉼표
+ * 뒤에서 여러 줄로 갈리지 않는다(쉼표 뒤 줄바꿈은 금액 한 줄이 머리 폭보다 길 때만). 금액 한 줄 폭은 실제로 잰다(글자 크기 · 웹폰트 반영,
+ * shared/lib/groo/amount-row). 카드 머리의 반 폭 규칙(card.md 머리)은 제목 줄 전용이라 여기에 쓰지 않는다.
+ * 자식은 [왼쪽 묶음(금액 · 아래 한 줄), 단추] 둘이다. 왼쪽 묶음의 아래 한 줄(LedgerSub) 길이는 판정에 들어가지 않는다.
  */
 export function LedgerHead({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const stacked = useAmountRowStacks(ref);
   return (
     <div
+      ref={ref}
+      data-slot="ledger-head"
+      data-stacked={stacked || undefined}
       className={cn(
-        "flex flex-wrap items-start gap-x3 pt-x2 [&>:first-child]:basis-[calc(50%-var(--spacing-x3))]",
+        "flex items-start gap-x3 pt-x2",
+        stacked
+          ? "flex-wrap [&>:first-child]:basis-full"
+          : "flex-nowrap [&>:first-child]:min-w-0 [&>:first-child]:flex-1",
         className,
       )}
       {...props}
@@ -226,13 +240,14 @@ export function LedgerHead({
   );
 }
 
-/** 지표 — t9 24 / 32 · 700 · 고정폭 */
+/** 지표 — t9 24 / 32 · 700 · 고정폭. 머리(LedgerHead)가 이 글의 한 줄 폭으로 옆 단추 자리를 판정한다 */
 export function LedgerTotal({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   return (
     <div
+      {...{ [AMOUNT_ROW_AMOUNT]: "" }}
       className={cn(
         "text-t9 font-bold tabular-nums text-fg-neutral",
         className,
