@@ -572,6 +572,12 @@ export function CategorySection({
 
 // ── 최근 6개월 이행률 ───────────────────────────────────────────
 type ComplianceDatum = {
+  /**
+   * 이 달의 자리(0 부터) — 막대 위 값 글(LabelList)이 제 달을 찾는 열쇠. recharts 는 값이 없는 달(예산 없음 · null)의 막대를 빼고
+   * 남은 막대에만 값 글을 그리며, 값 글 content 의 `index` 는 그 남은 막대 안의 자리다. 그 index 로 달 목록을 읽으면 앞에 빈 달이
+   * 있을 때 값 글이 모두 사라지거나 엉뚱한 달의 글이 섰다(QA 2026-11-19 — 예산을 이번 달에만 둔 계정에서 값 글 0 개)
+   */
+  index: number;
   label: string;
   percent: number | null;
   limit: number;
@@ -682,7 +688,8 @@ export function ComplianceSection({
     );
   }
   const rows = m.complianceQ.data ?? [];
-  const data: ComplianceDatum[] = rows.map((b) => ({
+  const data: ComplianceDatum[] = rows.map((b, index) => ({
+    index,
     label: formatMonthShort(b.month),
     percent: b.totalLimit > 0 ? b.compliancePercent : null,
     limit: b.totalLimit,
@@ -746,14 +753,15 @@ export function ComplianceSection({
                     />
                   ))}
                   <LabelList
-                    dataKey="percent"
+                    // 값은 달의 자리(index) — content 가 받는 index 는 그려진 막대 안의 자리라 빈 달이 앞에 있으면 어긋난다
+                    dataKey="index"
                     content={(p: {
                       x?: number | string;
                       y?: number | string;
                       width?: number | string;
-                      index?: number;
+                      value?: number | string | boolean | null;
                     }) => {
-                      const i = p.index ?? -1;
+                      const i = typeof p.value === "number" ? p.value : -1;
                       const w = Number(p.width ?? 0);
                       // barCategoryGap 25% 는 칸 양쪽에 걸리므로 막대 폭 = 한 칸의 50% → 한 칸 = 폭 × 2
                       const show = visiblePercentLabels(
