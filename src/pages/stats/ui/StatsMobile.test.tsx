@@ -234,6 +234,19 @@ describe("금액은 원까지(I-08 32 · 39)", () => {
     ).toBeNull();
   });
 
+  it("합계 줄 — 라벨 옆에 들지 않으면 금액 낱말을 통째로 아래 줄로(쉼표 뒤 꺾기는 줄보다 길 때만, Typography v114)", () => {
+    render();
+    const total = container.querySelector("[data-slot=stats-donut-total]")!;
+    expect(total.className.split(/\s+/)).toContain("flex-wrap");
+    const [label, amount] = Array.from(total.children) as HTMLElement[];
+    expect(label!.className.split(/\s+/)).toEqual(
+      expect.arrayContaining(["min-w-[8rem]", "flex-1"]),
+    );
+    const a = amount!.className.split(/\s+/);
+    expect(a).toEqual(expect.arrayContaining(["ms-auto", "max-w-full"]));
+    expect(a).not.toContain("min-w-0");
+  });
+
   it("범례 이름이 줄바꿈(말줄임 없음) — 24자 이름 전체 + 금액 원까지", () => {
     render();
     const legend = container.querySelector("[data-slot=chart-donut-legend]")!;

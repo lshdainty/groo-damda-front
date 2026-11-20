@@ -525,12 +525,16 @@ export function CategoryBody({
       {showRow && (
         <div
           data-slot="home-donut-total"
-          className="mt-x4 flex items-baseline justify-between gap-x3"
+          className="mt-x4 flex flex-wrap items-baseline gap-x-x3"
         >
-          <span className="text-t3 text-fg-neutral-subtle">
+          <span className="min-w-[8rem] flex-1 text-t3 text-fg-neutral-subtle">
             {totalLabel ?? t("summary.monthlyExpense")}
           </span>
-          <span className="min-w-0 text-end text-t5 font-bold tabular-nums text-fg-neutral">
+          {/* 라벨 옆에 들지 않으면 금액 낱말을 통째로 아래 줄로(Typography v114) — 쉼표 뒤 꺾기는 금액 하나가 줄보다 길 때만 */}
+          <span
+            data-slot="donut-total-amount"
+            className="ms-auto max-w-full text-end text-t5 font-bold tabular-nums text-fg-neutral"
+          >
             {withCommaBreaks(totalText)}
           </span>
         </div>

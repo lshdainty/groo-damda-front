@@ -152,6 +152,34 @@ describe("자산 구성 도넛 합계", () => {
     expect(out).not.toContain("0만");
   });
 
+  it("합계 줄 — 라벨 옆에 들지 않으면 금액 낱말을 통째로 아래 줄로(쉼표 뒤 꺾기는 줄보다 길 때만, Typography v114)", () => {
+    // 큰 글자 — 가운데 합계가 구멍에 들지 않아 도넛 옆 합계 줄로 옮겨진 경우(재는 글 폭을 크게)
+    globalThis.ResizeObserver = class {
+      constructor(private cb: (entries: unknown[]) => void) {}
+      observe() {
+        this.cb([]);
+      }
+      unobserve() {}
+      disconnect() {}
+    } as never;
+    const rect = vi
+      .spyOn(Element.prototype, "getBoundingClientRect")
+      .mockReturnValue({ width: 1000 } as DOMRect);
+    renderComposition(29_430);
+    rect.mockRestore();
+    const total = container.querySelector("[data-slot=asset-donut-total]")!;
+    expect(total).not.toBeNull();
+    expect(total.className.split(/\s+/)).toContain("flex-wrap");
+    const [label, amount] = Array.from(total.children) as HTMLElement[];
+    expect(label!.className.split(/\s+/)).toEqual(
+      expect.arrayContaining(["min-w-[8rem]", "flex-1"]),
+    );
+    const a = amount!.className.split(/\s+/);
+    expect(a).toEqual(expect.arrayContaining(["ms-auto", "max-w-full"]));
+    expect(a).not.toContain("min-w-0");
+    expect(amount!.innerHTML).toBe("29,<wbr>430원");
+  });
+
   it("조각이 하나도 없으면 도넛 대신 빈 안내를 그린다", () => {
     act(() =>
       root.render(
