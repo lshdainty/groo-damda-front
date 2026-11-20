@@ -1033,6 +1033,25 @@ describe("ChartDonutLegend · ChartDonutCenter", () => {
     );
   });
 
+  it("이름이 줄을 바꿔도 색 네모 · % · 금액은 줄 전체의 세로 가운데 — 내린 모양에서도 위 맞춤 없음(groo-design#269)", async () => {
+    await render(<ChartDonutLegend items={items} />);
+    const rowClasses = q("[data-slot=chart-donut-row]")!.className.split(/\s+/);
+    expect(rowClasses).toContain("items-center");
+    expect(rowClasses).toContain("@max-[16rem]/donut:items-center");
+    expect(rowClasses.some((c) => /items-start|items-baseline/.test(c))).toBe(
+      false,
+    );
+    // 내린 모양 — 색 네모는 이름 줄 · 값 줄 두 칸에 걸쳐 그 가운데. 첫 줄에 붙이는 위 여백이 없다
+    const swatch = q("[data-slot=chart-donut-swatch]")!.className.split(/\s+/);
+    expect(swatch).toContain("@max-[16rem]/donut:row-span-2");
+    for (const slot of ["swatch", "label", "percent", "amount"]) {
+      const cls = q(`[data-slot=chart-donut-${slot}]`)!.className;
+      expect(cls).not.toMatch(
+        /(^|[\s:])(-?m[ty]-|-?p[ty]-|translate-y|self-start)/,
+      );
+    }
+  });
+
   it("금액은 쉼표 뒤에서만 줄을 바꾼다", async () => {
     await render(
       <ChartDonutLegend
