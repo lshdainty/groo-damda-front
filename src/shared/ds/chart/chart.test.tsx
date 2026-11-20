@@ -1023,13 +1023,50 @@ describe("ChartDonutLegend · ChartDonutCenter", () => {
     const row = q("[data-slot=chart-donut-row]")!;
     expect(row.className).toContain("@max-[16rem]/donut:grid");
     expect(q("[data-slot=chart-donut-label]")!.className).toContain(
-      "@max-[16rem]/donut:col-span-2",
+      "@max-[16rem]/donut:col-start-2",
     );
-    expect(q("[data-slot=chart-donut-percent]")!.className).toContain(
+    expect(q("[data-slot=chart-donut-value]")!.className).toContain(
       "@max-[16rem]/donut:row-start-2",
     );
-    expect(q("[data-slot=chart-donut-amount]")!.className).toContain(
-      "@max-[16rem]/donut:col-start-3",
+  });
+
+  it("내린 값 줄 — % · 금액은 줄 전체 폭 한 칸의 flex 줄바꿈: % 옆에 들지 않으면 금액을 통째로 아래 줄로, 쉼표 뒤 꺾기는 금액이 줄보다 길 때만(Typography v114)", async () => {
+    // QA 2026-11-20(412 · 300%, ₩10,000,040,005) — 금액이 % 옆 남은 칸(188)에 남아 "₩10, / 000, / 040,005" 세 줄로 꺾였다.
+    // 금액 낱말(377)이 줄(364)보다 길어 쉼표 뒤 꺾기는 맞지만, 칸은 % 옆 자리가 아니라 값 줄 전체 폭이다 — % 아래 줄로 먼저 내리면 두 줄.
+    // jsdom 은 레이아웃이 없어 줄 구조를 클래스로 본다
+    await render(
+      <ChartDonutLegend
+        items={[{ ...items[1]!, percent: "100.0%", amount: "₩10,000,040,005" }]}
+      />,
+    );
+    const value = q("[data-slot=chart-donut-value]")!;
+    const v = value.className.split(/\s+/);
+    // 넓은 줄 — 칸이 없는 것처럼(display: contents) % · 금액이 줄의 flex 항목 그대로
+    expect(v).toContain("contents");
+    // 좁은 줄 — 이름 아래 한 칸(줄 전체 폭)에 flex 줄바꿈
+    expect(v).toEqual(
+      expect.arrayContaining([
+        "@max-[16rem]/donut:col-start-2",
+        "@max-[16rem]/donut:row-start-2",
+        "@max-[16rem]/donut:flex",
+        "@max-[16rem]/donut:flex-wrap",
+      ]),
+    );
+    const [percent, amount] = Array.from(value.children) as HTMLElement[];
+    expect(percent!.getAttribute("data-slot")).toBe("chart-donut-percent");
+    expect(amount!.getAttribute("data-slot")).toBe("chart-donut-amount");
+    // % 와 금액을 격자 칸 둘로 나누면 금액이 % 옆 남은 칸에 갇힌다 — QA 결함의 원인
+    for (const el of [percent!, amount!]) {
+      expect(el.className).not.toMatch(/col-start|row-start/);
+    }
+    // 금액 칸은 눌리지 않고(min-w-0 없음) 줄 폭까지만 큰다 — 줄보다 길 때만 안의 쉼표 뒤 자리가 먹는다
+    const a = amount!.className.split(/\s+/);
+    expect(a).toContain("@max-[16rem]/donut:max-w-full");
+    expect(a.some((c) => /min-w-0/.test(c))).toBe(false);
+    expect(amount!.innerHTML).toBe("₩10,<wbr>000,<wbr>040,<wbr>005");
+    // 격자는 색 네모 칸 + 글 칸 둘 — % 칸을 따로 두지 않는다
+    expect(q("[data-slot=chart-donut-row]")!.className).toContain(
+      "@max-[16rem]/donut:grid-cols-[auto_minmax(0,1fr)]",
     );
   });
 

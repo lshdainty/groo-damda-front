@@ -409,16 +409,20 @@ export const LEGEND_TILE_HIDDEN =
 // 내린다(list.md:142-148 "큰 글자에서 값을 본문 아래로"). 줄(li)이 컨테이너다.
 // 이름이 줄을 바꿔도 색 네모 · % · 금액은 줄 전체의 세로 가운데(chart.md 도넛 범례, groo-design#269) — 내린 모양에서도 색 네모는
 // 두 줄(이름 · 값)에 걸쳐 그 가운데에 선다. 첫 줄에 붙이는 위 맞춤(items-start · mt)은 쓰지 않는다
+// 내린 값 줄(% · 금액)은 줄 전체 폭을 쓰는 한 줄 글이다(Typography v114 "띄어쓰기에서 먼저 넘긴다") — % 옆에 금액이 한 줄로 들지 않으면
+// 금액을 통째로 % 아래 줄(줄 전체 폭)로 먼저 내리고, 금액 하나가 그 줄보다도 길 때만 쉼표 뒤에서 꺾는다. 그래서 % · 금액을 격자 칸 둘로
+// 나누지 않고 한 칸(chart-donut-value)의 flex 줄바꿈으로 둔다 — 금액 칸은 눌리지 않고(min-w-0 없음) 줄 폭까지만(max-w-full) 큰다.
+// 넓은 줄에서는 그 칸이 display: contents 라 % · 금액이 예전처럼 줄의 flex 항목이다
 export const DONUT_ROW = [
   "relative isolate flex min-h-[44px] w-full items-center gap-x2 text-start font-sans text-t4",
-  "@max-[16rem]/donut:grid @max-[16rem]/donut:grid-cols-[auto_auto_minmax(0,1fr)] @max-[16rem]/donut:items-center @max-[16rem]/donut:gap-y-x0_5 @max-[16rem]/donut:py-x2",
+  "@max-[16rem]/donut:grid @max-[16rem]/donut:grid-cols-[auto_minmax(0,1fr)] @max-[16rem]/donut:items-center @max-[16rem]/donut:gap-y-x0_5 @max-[16rem]/donut:py-x2",
 ].join(" ");
 export const DONUT_NARROW = {
   swatch: "@max-[16rem]/donut:row-span-2",
-  label: "@max-[16rem]/donut:col-span-2",
-  percent: "@max-[16rem]/donut:col-start-2 @max-[16rem]/donut:row-start-2",
-  amount:
-    "@max-[16rem]/donut:col-start-3 @max-[16rem]/donut:row-start-2 @max-[16rem]/donut:justify-self-start",
+  label: "@max-[16rem]/donut:col-start-2",
+  value:
+    "contents @max-[16rem]/donut:col-start-2 @max-[16rem]/donut:row-start-2 @max-[16rem]/donut:flex @max-[16rem]/donut:flex-wrap @max-[16rem]/donut:items-baseline @max-[16rem]/donut:gap-x-x2",
+  amount: "@max-[16rem]/donut:max-w-full",
 } as const;
 
 // 누르는 줄 — List 줄처럼 카드 끝까지(본문 여백 24 를 되돌린다), 글자는 그대로 24 에 선다. 키보드 포커스에만 안쪽 2px 링
