@@ -19,6 +19,8 @@ import { join } from "node:path";
  *    - 글이 있는 ghost critical 은 data-fit 을 단다. 시트 바닥이 아닌 자리(화면 · 카드 · 대화상자만의 바닥)는 아래 표에 까닭과 함께 적는다.
  *    - data-fit 을 단 바닥은 버튼을 div 로 감싸지 않는다 — 감싸면 선택자(`[&>[data-fit=content]]`)가 빠지고, 주 버튼 라벨이
  *      남은 폭에 들지 않을 때 세로로 쌓는 판정(button.md "긴 라벨")도 빠진다.
+ *    - 바닥의 [삭제] 는 ghost critical 이다 — 다른 꼴(neutralWeak 반 폭 등)로 두지 않는다(button.md 모달 footer ·
+ *      bottom-sheet.md "닫기 버튼과 바닥 버튼"). 할 일 상세가 neutralWeak 반 폭이었다.
  *
  * 테스트 파일은 보지 않는다 — 시험이 일부러 그리는 모양이 있다.
  */
@@ -221,6 +223,25 @@ describe("시트 바닥 왼쪽 [삭제] 는 글자만큼(bottom-sheet.md 코드 
     expect(
       texty.filter((b) => /\bdata-fit="content"/.test(b.tag)).length,
     ).toBeGreaterThan(5);
+  });
+
+  it("바닥(시트 · 반응형 대화상자)의 [삭제] 는 ghost critical 이다 — neutralWeak 등 다른 꼴로 두지 않는다", () => {
+    const dels = FILES.flatMap(footers).flatMap((f) =>
+      [...f.body.matchAll(/<Button(?=[\s/>])[\s\S]*?<\/Button>/g)]
+        .filter((b) => /\(\s*"delete"\s*\)/.test(b[0]))
+        .map((b) => ({ where: f.where, button: b[0] })),
+    );
+    // 찾는 식이 깨져 0 건이면 초록불이 난다
+    expect(dels.length).toBeGreaterThan(5);
+    expect(
+      dels
+        .filter(
+          (d) =>
+            !/variant="ghost"/.test(d.button) ||
+            !/ghostColor="critical"/.test(d.button),
+        )
+        .map((d) => d.where),
+    ).toEqual([]);
   });
 
   it("data-fit 을 단 바닥은 버튼을 div 로 감싸지 않는다(바로 아래 자식이어야 반 폭 · 쌓기 판정이 먹는다)", () => {
