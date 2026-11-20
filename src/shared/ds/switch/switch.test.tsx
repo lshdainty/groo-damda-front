@@ -132,6 +132,29 @@ describe("Switch", () => {
     expect(thumb().className).toContain("bg-static-white");
     expect(row.querySelector(":scope > span")!.className).toContain("text-t5");
   });
+
+  // 큰 글자 · 좁은 폭에서 라벨이 여러 줄이 되면 스위치(px 그대로)는 라벨 전체의 세로 가운데에 선다(groo-design#270 — switch.md
+  // "글자 크기 설정"). 옛 레시피는 둘 다 위에 붙이고(items-start) 첫 줄 높이만큼 각자 내렸다(mt-[calc((max(24px,…)…)/2)]).
+  // jsdom 은 레이아웃을 재지 못해 클래스로 잠근다 — 줄은 가운데 맞춤, 스위치 · 라벨은 위로 붙이는 여백 · 이동이 없다.
+  it("라벨이 여러 줄이어도 스위치는 라벨 전체의 세로 가운데 — 첫 줄에 붙이는 위 맞춤 · 여백 없음", () => {
+    for (const size of ["16", "24", "32"] as const) {
+      const row = render(
+        <div style={{ width: 120 }}>
+          <Switch size={size} label="휴가 신청이 승인되면 메일로 알림 받기" />
+        </div>,
+      ).firstElementChild as HTMLElement;
+      const rowClasses = row.className.split(/\s+/);
+      expect(rowClasses).toContain("items-center");
+      expect(rowClasses.some((c) => /items-(start|baseline)/.test(c))).toBe(
+        false,
+      );
+      for (const el of [control(), row.querySelector(":scope > span")!]) {
+        expect(el.className).not.toMatch(
+          /(^|[\s:])(-?m[ty]-|-?p[ty]-|translate-y|self-start)/,
+        );
+      }
+    }
+  });
 });
 
 describe("Switchmark", () => {
