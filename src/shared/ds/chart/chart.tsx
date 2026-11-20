@@ -732,23 +732,22 @@ function DonutLegendBody({ item }: { item: ChartDonutLegendItem }) {
       >
         {item.label}
       </span>
-      <span
-        data-slot="chart-donut-percent"
-        className={cn(
-          "whitespace-nowrap tabular-nums text-fg-neutral-subtle",
-          DONUT_NARROW.percent,
-        )}
-      >
-        {item.percent}
-      </span>
-      <span
-        data-slot="chart-donut-amount"
-        className={cn(
-          "font-bold tabular-nums text-fg-neutral",
-          DONUT_NARROW.amount,
-        )}
-      >
-        {withCommaBreaks(item.amount)}
+      <span data-slot="chart-donut-value" className={DONUT_NARROW.value}>
+        <span
+          data-slot="chart-donut-percent"
+          className="whitespace-nowrap tabular-nums text-fg-neutral-subtle"
+        >
+          {item.percent}
+        </span>
+        <span
+          data-slot="chart-donut-amount"
+          className={cn(
+            "font-bold tabular-nums text-fg-neutral",
+            DONUT_NARROW.amount,
+          )}
+        >
+          {withCommaBreaks(item.amount)}
+        </span>
       </span>
     </>
   );
