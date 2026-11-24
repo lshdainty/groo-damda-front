@@ -873,8 +873,8 @@ user,passwordChangeSuccess,비밀번호를 바꿨어요.,Changed your password.
 user,passwordChangeError,비밀번호를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change your password. Please try again shortly.
 user,withdraw.title,그루 담다 이용 해지,Stop using 그루 담다
 user,withdraw.intro,이용을 해지하면 바로 로그인이 막히고 되돌릴 수 없어요.,Stopping 그루 담다 signs you out immediately and cannot be undone.
-user,impact.calendarsOwned_one,내가 만든 공유 캘린더 {{count}}개가 삭제되고 멤버도 볼 수 없어요,{{count}} shared calendar you created will be deleted — members lose access too
-user,impact.calendarsOwned_other,내가 만든 공유 캘린더 {{count}}개가 삭제되고 멤버도 볼 수 없어요,{{count}} shared calendars you created will be deleted — members lose access too
+user,impact.calendarsOwned_one,내가 만든 캘린더 {{count}}개가 삭제돼요,{{count}} calendar you created will be deleted
+user,impact.calendarsOwned_other,내가 만든 캘린더 {{count}}개가 삭제돼요,{{count}} calendars you created will be deleted
 user,impact.calendarMemberships_one,참여 중인 캘린더 {{count}}개에서 빠져요,You will be removed from {{count}} calendar you joined
 user,impact.calendarMemberships_other,참여 중인 캘린더 {{count}}개에서 빠져요,You will be removed from {{count}} calendars you joined
 user,impact.dutchPaysOwned_one,내가 만든 정산 {{count}}개가 삭제돼요,{{count}} settlement you created will be deleted
