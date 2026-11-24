@@ -1,5 +1,6 @@
 // 캘린더 관리 페이지 (I-09b 21 ~ 31) — 소유자 · 공유받은 · 기본 캘린더의 구성, 틀린 id → 부모로 replace,
 // 이름은 줄에서 열리는 폼이고 저장은 이름만 보낸다, 멤버 ⋮ 는 내보낼 수 있는 줄에만.
+// 공유 캘린더(멤버가 남음)는 지우지 않고 [소유자 넘기고 나가기], 공유받은 캘린더는 [캘린더 나가기](2026-11-24).
 import { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, useLocation, useNavigationType } from "react-router-dom";
@@ -14,6 +15,8 @@ const state = vi.hoisted(() => ({
   members: [] as unknown[],
   updateCalls: [] as unknown[],
   deleted: [] as number[],
+  transfers: [] as unknown[],
+  left: [] as number[],
   where: "",
   navType: "",
   hasPrev: false,
@@ -85,6 +88,18 @@ vi.mock("@/features/user-calendar", () => {
       isPending: false,
     }),
     useRemoveCalendarMember: idle,
+    useTransferCalendarOwnership: () => ({
+      mutateAsync: async (v: unknown) => {
+        state.transfers.push(v);
+      },
+      isPending: false,
+    }),
+    useLeaveCalendar: () => ({
+      mutateAsync: async (id: number) => {
+        state.left.push(id);
+      },
+      isPending: false,
+    }),
   };
 });
 
@@ -109,6 +124,8 @@ beforeEach(() => {
   state.members = [];
   state.updateCalls = [];
   state.deleted = [];
+  state.transfers = [];
+  state.left = [];
   state.roleCalls = [];
   state.hasPrev = false;
   state.failList = false;
@@ -175,8 +192,8 @@ function render(id: number | null, mobile = true, withList = false) {
 }
 
 describe("캘린더 관리 페이지", () => {
-  it("소유자 — 이름 · 색상 줄, 초대 코드, 멤버, 캘린더 삭제 줄이 차례로 있다(꺾쇠 없음)", () => {
-    state.cals = [cal(2)];
+  it("소유자 — 이름 · 색상 줄, 초대 코드, 멤버, 맨 아래 넘기고 나가기 줄이 차례로 있다(꺾쇠 없음)", () => {
+    state.cals = [cal(2, { memberCount: 2 })];
     state.members = [member(1, 1, "OWNER"), member(2, 7, "EDIT")];
     render(2);
     const heads = [
@@ -188,7 +205,9 @@ describe("캘린더 관리 페이지", () => {
       "shareSection.members · 2",
     ]);
     expect(container.textContent).toContain("AB12CD34");
-    expect(container.textContent).toContain("deleteCalendar");
+    // 멤버가 남은 캘린더는 지우지 않는다 — 삭제 대신 넘기고 나가기
+    expect(container.textContent).toContain("shareSection.transferAndLeave");
+    expect(container.textContent).not.toContain("deleteCalendar");
     // 이름 · 색상 줄은 시트 · 팝오버를 여는 줄 — 꺾쇠를 달지 않는다(list.md:122)
     expect(container.querySelectorAll("svg.lucide-chevron-right").length).toBe(
       0,
@@ -280,7 +299,7 @@ describe("캘린더 관리 페이지", () => {
   });
 
   it("캘린더 삭제 — 앞 화면(목록)이 있으면 history 뒤로(목록이 두 번 남지 않는다)", async () => {
-    state.cals = [cal(2)];
+    state.cals = [cal(2, { memberCount: 1 })];
     state.members = [member(1, 1, "OWNER")];
     state.hasPrev = true;
     render(2, true, true);
@@ -300,7 +319,7 @@ describe("캘린더 관리 페이지", () => {
   });
 
   it("캘린더 삭제 — 기록이 없을 때(바로 들어옴)만 부모로 replace", async () => {
-    state.cals = [cal(2)];
+    state.cals = [cal(2, { memberCount: 1 })];
     state.members = [member(1, 1, "OWNER")];
     state.hasPrev = false;
     render(2);
@@ -318,7 +337,7 @@ describe("캘린더 관리 페이지", () => {
     expect(state.navType).toBe("REPLACE");
   });
 
-  it("공유받은 캘린더 — 멤버만 있다(이름 · 색 · 초대 코드 · 삭제 · 나가기 없음)", () => {
+  it("공유받은 캘린더 — 멤버와 [캘린더 나가기] 만 있다(이름 · 색 · 초대 코드 · 삭제 없음)", () => {
     state.cals = [cal(4, { isOwner: false, myRole: "READ", inviteCode: null })];
     state.members = [member(1, 9, "OWNER"), member(2, 1, "READ")];
     render(4);
@@ -327,6 +346,10 @@ describe("캘린더 관리 페이지", () => {
     ].map((e) => e.textContent?.trim());
     expect(heads).toEqual(["shareSection.members · 2"]);
     expect(container.textContent).not.toContain("deleteCalendar");
+    expect(container.textContent).toContain("shareSection.leaveCalendar");
+    expect(container.textContent).not.toContain(
+      "shareSection.transferAndLeave",
+    );
     expect(
       [...container.querySelectorAll("button")].some((b) =>
         b.getAttribute("aria-label")?.startsWith("shareSection.manageOf"),
@@ -334,11 +357,99 @@ describe("캘린더 관리 페이지", () => {
     ).toBe(false);
   });
 
-  it("기본 캘린더 — 삭제 줄이 없다", () => {
-    state.cals = [cal(1, { isDefault: true })];
+  it("기본 캘린더 — 혼자면 삭제 줄이 없다", () => {
+    state.cals = [cal(1, { isDefault: true, memberCount: 1 })];
     state.members = [member(1, 1, "OWNER")];
     render(1);
     expect(container.textContent).not.toContain("deleteCalendar");
+    expect(container.textContent).not.toContain(
+      "shareSection.transferAndLeave",
+    );
+  });
+
+  it("기본 캘린더도 멤버가 남으면 넘기고 나갈 수 있다", () => {
+    state.cals = [cal(1, { isDefault: true, memberCount: 2 })];
+    state.members = [member(1, 1, "OWNER"), member(2, 7, "EDIT")];
+    render(1);
+    expect(container.textContent).toContain("shareSection.transferAndLeave");
+  });
+
+  it("넘기고 나가기 — 편집 가능 멤버만 고를 수 있고, 고르면 확인 뒤 그 멤버 행 id 로 넘긴 다음 목록으로 간다", async () => {
+    state.cals = [cal(2, { memberCount: 3 })];
+    state.members = [
+      member(1, 1, "OWNER"),
+      member(2, 7, "EDIT"),
+      member(3, 8, "READ"),
+    ];
+    render(2);
+    const open = [...container.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("shareSection.transferAndLeave"),
+    ) as HTMLButtonElement;
+    act(() => open.click());
+    const items = [
+      ...document.body.querySelectorAll("button, [role=menuitem]"),
+    ].filter((b) => b.textContent?.includes("멤버 "));
+    const editor = items.find((b) =>
+      b.textContent?.includes("멤버 2"),
+    ) as HTMLElement;
+    const reader = items.find((b) =>
+      b.textContent?.includes("멤버 3"),
+    ) as HTMLElement;
+    expect(
+      reader.hasAttribute("disabled") ||
+        reader.getAttribute("aria-disabled") === "true",
+    ).toBe(true);
+    expect(editor.hasAttribute("disabled")).toBe(false);
+    await act(async () => {
+      editor.click();
+      await new Promise((r) => setTimeout(r, 1100));
+    });
+    expect(document.body.textContent).toContain(
+      "shareSection.transferMessage:멤버 2",
+    );
+    const ok = [...document.body.querySelectorAll("button")]
+      .filter((b) => b.textContent?.trim() === "shareSection.transferAction")
+      .pop() as HTMLButtonElement;
+    await act(async () => {
+      ok.click();
+    });
+    expect(state.transfers).toEqual([{ id: 2, memberId: 2 }]);
+    expect(state.where).toBe(LIST);
+  });
+
+  it("넘기고 나가기 — 편집 가능 멤버가 없으면 읽기 전용 멤버를 고를 수 있다", () => {
+    state.cals = [cal(2, { memberCount: 2 })];
+    state.members = [member(1, 1, "OWNER"), member(3, 8, "READ")];
+    render(2);
+    const open = [...container.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("shareSection.transferAndLeave"),
+    ) as HTMLButtonElement;
+    act(() => open.click());
+    const reader = [
+      ...document.body.querySelectorAll("button, [role=menuitem]"),
+    ].find((b) => b.textContent?.includes("멤버 3")) as HTMLElement;
+    expect(reader.hasAttribute("disabled")).toBe(false);
+    expect(document.body.textContent).toContain(
+      "shareSection.transferPickReadOnly",
+    );
+  });
+
+  it("공유받은 캘린더 나가기 — 확인 뒤 leave 를 부르고 목록으로 간다", async () => {
+    state.cals = [cal(4, { isOwner: false, myRole: "EDIT", inviteCode: null })];
+    state.members = [member(1, 9, "OWNER"), member(2, 1, "EDIT")];
+    render(4);
+    const open = [...container.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("shareSection.leaveCalendar"),
+    ) as HTMLButtonElement;
+    act(() => open.click());
+    const ok = [...document.body.querySelectorAll("button")]
+      .filter((b) => b.textContent?.trim() === "shareSection.leaveAction")
+      .pop() as HTMLButtonElement;
+    await act(async () => {
+      ok.click();
+    });
+    expect(state.left).toEqual([4]);
+    expect(state.where).toBe(LIST);
   });
 
   it("목록에 없는 id 는 부모(캘린더 관리·공유)로 replace 한다", () => {

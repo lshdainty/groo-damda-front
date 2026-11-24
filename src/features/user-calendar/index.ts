@@ -11,4 +11,6 @@ export {
   useJoinCalendar,
   useRemoveCalendarMember,
   useChangeCalendarMemberRole,
+  useTransferCalendarOwnership,
+  useLeaveCalendar,
 } from "./model/useUserCalendars";

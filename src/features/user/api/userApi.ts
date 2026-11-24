@@ -66,7 +66,7 @@ export interface UserPreferences {
  * "모든 데이터가 삭제됩니다" 는 아무것도 알려 주지 않는다.
  */
 export interface WithdrawalCheck {
-  /** 막는 사유. 비어 있어야 해지할 수 있다. 지금은 `SUBSCRIPTION_ACTIVE` 하나뿐. */
+  /** 막는 사유. 비어 있어야 해지할 수 있다. `SUBSCRIPTION_ACTIVE` · `SHARED_CALENDAR_OWNED` 가 함께 올 수 있다. */
   blocked: string[];
   /**
    * 구독이 막고 있을 때 **언제부터 가능한지**(ISO, 서버 UTC).
@@ -75,6 +75,11 @@ export interface WithdrawalCheck {
   subscriptionPeriodEnd: string | null;
   /** 내가 만든 공유 캘린더 — 해지하면 삭제되고 멤버도 못 본다 */
   sharedCalendarsOwned: number;
+  /**
+   * 다른 멤버가 남은 내 캘린더 수 — 하나라도 있으면 `SHARED_CALENDAR_OWNED` 로 막힌다(소유자를 먼저 넘긴다).
+   * 서버가 이 칸을 아직 안 주는 옛 배포에서는 없다
+   */
+  sharedCalendarsToTransfer?: number;
   /** 남의 캘린더에 들어가 있는 수 — 거기서 빠진다 */
   calendarMemberships: number;
   /** 내가 만든 정산 — 삭제된다 */
@@ -94,6 +99,13 @@ export interface WithdrawalCheck {
  * 이 값은 **서버 코드에서 확인**해야 한다.
  */
 export const WITHDRAW_BLOCK_SUBSCRIPTION = "SUBSCRIPTION_ACTIVE";
+
+/**
+ * 멤버가 남은 공유 캘린더를 소유해 막힌 사유 — desk-back `WithdrawalServiceImpl.blockers`
+ * 가 넣는 문자열(groo-damda-back#449). 해지 실행이 같은 까닭으로 막히면 `USER_022`(409)다.
+ */
+export const WITHDRAW_BLOCK_SHARED_CALENDAR = "SHARED_CALENDAR_OWNED";
+export const WITHDRAW_BLOCKED_SHARED_CALENDAR_CODE = "USER_022";
 
 /**
  * 재인증 티켓을 어디에 쓸지. 서버(SSO)가 티켓에 새겨 두고 쓰는 자리에서 맞는지 본다 —
