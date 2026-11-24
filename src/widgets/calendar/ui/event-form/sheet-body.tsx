@@ -106,6 +106,7 @@ export function EventFormSheetBody({
   const {
     form,
     selectableCalendars,
+    calendarLocked,
     calendarsLoading,
     refetchCalendars,
     recurrence,
@@ -224,6 +225,9 @@ export function EventFormSheetBody({
                 <ListButtonItem
                   prefix={<Calendar className={ROW_ICON} />}
                   title={t("form.calendar")}
+                  detail={
+                    calendarLocked ? t("form.calendarSharedLocked") : undefined
+                  }
                   suffixText
                   suffix={
                     cal ? (
