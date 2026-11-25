@@ -42,4 +42,49 @@ describe("가린 금액 점(공용 상수)", () => {
       path.join("pages", "expense", "ui", "ExpenseMobile.tsx"),
     ]);
   });
+
+  it("가리면 점만 — 부호 · 단위를 가림 밖에 붙인 코드가 없다", () => {
+    // `MINUS + m(…)` · `${sign}${mask(…)}` · `${m(…)}원` 처럼 붙이면 가린 금액 앞뒤에 부호 · 단위가 남는다
+    const outside =
+      /(MINUS|sign|"[+−]")\s*\+\s*(m|mask|masked)\(|\$\{(MINUS|sign)\}\$\{(m|mask|masked)\(|\b(m|mask|masked)\([^()]*(\([^()]*\))?[^()]*\)\}(원|₩)/;
+    const hits = sources
+      .flatMap(({ file, text }) =>
+        text.split("\n").map((line, i) => ({ file, i, line })),
+      )
+      .filter(({ line }) => outside.test(line))
+      .map(({ file, i, line }) => `${file}:${i + 1}: ${line.trim()}`);
+    expect(hits).toEqual([]);
+  });
+
+  it("단위를 자리표시자 옆에 둔 문장은 가린 값을 받지 않는 것뿐이다", () => {
+    // 가린 값이 들어가는 문장은 단위를 값 안에 담아 넘긴다(가리면 점만 — "••••원" · "₩••••" 이 되지 않게).
+    // 아래는 가리지 않는 자리(입력 폼 · 카드 상품 정보 · 문장째 가리는 오늘 변동)다. 새 문장이 여기 걸리면 값에 단위를 담을 것.
+    const csv = readFileSync(
+      path.resolve(SRC, "../i18n/translations.csv"),
+      "utf8",
+    );
+    const keys = csv
+      .split("\n")
+      .filter((l) => /\{\{\w+\}\}원|₩\{\{/.test(l))
+      .map((l) => l.split(",").slice(0, 2).join(":"));
+    expect(keys).toEqual([
+      "asset:editDialog.annualFeeValue",
+      "card:benefit.annualFeeAmount",
+      "card:benefit.performanceAmount",
+      "card:benefit.annualFeeDomestic",
+      "card:benefit.performanceAtLeast",
+      "category:overBudgetMessage",
+      "expense:addTx.installmentHint",
+      "expense:addTx.fxHint",
+      "expense:addTx.interestSplit",
+      "expense:addTx.splitDiffOver",
+      "expense:addTx.splitDiffShort",
+      "expense:addTx.splitMismatchBody",
+      "subscription:pricePerMonthNote",
+      "asset:holdings.avgPriceInline",
+      "asset:holdings.todayChange",
+      "asset:holdings.editSummary_one",
+      "asset:holdings.editSummary_other",
+    ]);
+  });
 });

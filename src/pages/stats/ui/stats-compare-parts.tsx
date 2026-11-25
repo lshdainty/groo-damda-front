@@ -481,7 +481,7 @@ export function CompareWeekdaySection({
           : "compare.weekdayInsightUp",
         {
           dow: t(dk),
-          amt: mask(KRW(Math.abs(m.wkDelta.delta))),
+          amt: mask(won(Math.abs(m.wkDelta.delta))),
           prev: m.periodPrevInline,
         },
       )
