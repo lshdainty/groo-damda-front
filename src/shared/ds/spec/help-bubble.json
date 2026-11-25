@@ -3,7 +3,7 @@
   "source": "specs/components/help-bubble.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "7b3ba0bb826a"
+    "sha256": "d7063d55db82"
   },
   "slots": {
     "root": "말풍선 — 짙은 바탕, 트리거 쪽에 화살표",
@@ -28,6 +28,7 @@
       "enabled": {
         "root": {
           "maxWidth": 280,
+          "maxHeight": "남은 높이",
           "paddingY": 10,
           "paddingX": 12,
           "radius": 12,
@@ -151,6 +152,13 @@
       "slot": "root",
       "prop": "maxWidth",
       "note": "여백을 포함한 폭 — 한 줄 20자 안팎, 2 ~ 3줄이면 넘지 않는다. 쓸 수 있는 폭(화면 − 양쪽 16)이 더 좁으면 그만큼"
+    },
+    {
+      "rule": 0,
+      "state": "enabled",
+      "slot": "root",
+      "prop": "maxHeight",
+      "note": "고른 쪽(위 · 아래)에서 가장자리 16 을 뺀 높이까지 — 큰 글자로 넘치면 글만 말풍선 안에서 스크롤한다. 가장자리는 안전 영역 경계부터 잰다"
     },
     {
       "rule": 0,

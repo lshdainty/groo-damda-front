@@ -62,7 +62,10 @@ const OnNext = ({
 const USERS = Array.from({ length: 237 }, (_, i) => `사용자 ${i + 1}`);
 
 // 표와 같이 움직이는 줄 — 넘기면 표 맨 위로 스크롤 · 줄 수를 바꾸면 첫 범위로
-const WithTable = () => {
+// 열이 넘치는 표(wide) — 표만 가로로 밀리고 넘김 줄은 표 상자의 보이는 폭에 붙어 그대로다(groo-design #272)
+const WIDE_COLUMNS = ["직위", "입사일", "이메일", "전화", "근무지"] as const;
+
+const WithTable = ({ wide = false }: { wide?: boolean }) => {
   const [value, setValue] = useState<TablePaginationValue>({
     page: 1,
     pageSize: 10,
@@ -76,6 +79,7 @@ const WithTable = () => {
         ref={boxRef}
         caption="사용자"
         className="max-h-72"
+        tableClassName={wide ? "min-w-[960px]" : undefined}
         stickyHeader
         pagination={
           <TablePagination
@@ -90,6 +94,8 @@ const WithTable = () => {
           <TableRow>
             <TableHead>이름</TableHead>
             <TableHead>부서</TableHead>
+            {wide &&
+              WIDE_COLUMNS.map((c) => <TableHead key={c}>{c}</TableHead>)}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -97,6 +103,8 @@ const WithTable = () => {
             <TableRow key={u} onClick={noop}>
               <TableRowHeader>{u}</TableRowHeader>
               <TableCell>개발팀</TableCell>
+              {wide &&
+                WIDE_COLUMNS.map((c) => <TableCell key={c}>{c}</TableCell>)}
             </TableRow>
           ))}
         </TableBody>
@@ -105,7 +113,7 @@ const WithTable = () => {
   );
 };
 
-/** 카탈로그(/dev/ds) — 전체 수를 앎 · 모름 · 0개, 호버 · 누름 · 포커스, 끝에서 막힘, 표와 함께 움직이는 줄 */
+/** 카탈로그(/dev/ds) — 전체 수를 앎 · 모름 · 0개, 호버 · 누름 · 포커스, 끝에서 막힘, 표 아래 보이는 폭에 붙는 줄 */
 export const TablePaginationDemo = () => (
   <div className="flex flex-col gap-x8">
     <DemoBlock title="전체 수를 앎 — 줄 수 고르기 + 씩 보기 · 범위 고르기 + / 총 N개 · 이전 · 다음(40)">
@@ -230,13 +238,22 @@ export const TablePaginationDemo = () => (
       </DemoRow>
     </DemoBlock>
 
-    <DemoBlock title="표와 함께 — 표 상자 안에서 넘김 줄이 함께 가로로 밀리고, 넘기면 표 맨 위로 스크롤한다">
+    <DemoBlock title="표와 함께 — 넘김 줄은 표 상자의 보이는 폭에 붙어 열이 넘쳐 표를 가로로 밀어도 그대로 있고, 넘기면 표 맨 위로 스크롤한다">
       <DemoRow label="with Table">
         <div
           style={{ width: 640 }}
           className="rounded-r3 bg-bg-layer-basement p-x4"
         >
           <WithTable />
+        </div>
+      </DemoRow>
+      <DemoRow label="wide Table">
+        <div
+          style={{ width: 640 }}
+          className="rounded-r3 bg-bg-layer-basement p-x4"
+          data-demo="table-pagination-wide"
+        >
+          <WithTable wide />
         </div>
       </DemoRow>
     </DemoBlock>
