@@ -25,7 +25,6 @@ const updates = vi.hoisted(
 );
 const mocks = vi.hoisted(() => ({
   me: 7,
-  roles: { 1: "READ" } as Record<number, string>,
   calendars: [] as unknown[],
 }));
 vi.mock("@/features/user", () => ({
@@ -68,18 +67,27 @@ beforeEach(async () => {
   mocks.calendars = [
     {
       rowId: 1,
-      myRole: "READ",
+      myRole: "OWNER",
       color: "#2c70bf",
       calendarName: "내 캘린더",
       isDefault: true,
       isVisible: true,
-      isOwner: false,
+      isOwner: true,
     },
     {
       rowId: 2,
       myRole: "EDIT",
       color: "#5e60c8",
       calendarName: "팀",
+      isDefault: false,
+      isVisible: true,
+      isOwner: false,
+    },
+    {
+      rowId: 3,
+      myRole: "READ",
+      color: "#3f9a5b",
+      calendarName: "구독",
       isDefault: false,
       isVisible: true,
       isOwner: false,

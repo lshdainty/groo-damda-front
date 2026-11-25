@@ -33,7 +33,6 @@ const mocks = vi.hoisted(() => ({
   failSave: false,
   resets: 0,
   me: 7,
-  roles: { 1: "READ" } as Record<number, string>,
   calendars: [] as unknown[],
 }));
 vi.mock("@/features/user", () => ({
@@ -81,18 +80,27 @@ beforeEach(async () => {
   mocks.calendars = [
     {
       rowId: 1,
-      myRole: "READ",
+      myRole: "OWNER",
       color: "#2c70bf",
       calendarName: "내 캘린더",
       isDefault: true,
       isVisible: true,
-      isOwner: false,
+      isOwner: true,
     },
     {
       rowId: 2,
       myRole: "EDIT",
       color: "#5e60c8",
       calendarName: "팀",
+      isDefault: false,
+      isVisible: true,
+      isOwner: false,
+    },
+    {
+      rowId: 3,
+      myRole: "READ",
+      color: "#3f9a5b",
+      calendarName: "구독",
       isDefault: false,
       isVisible: true,
       isOwner: false,
@@ -230,15 +238,15 @@ describe("수정 · 삭제 버튼은 서버가 허락하는 사람에게만 (7)"
     phone([e]);
     press(rows()[0]!);
   };
-  it("읽기 전용 캘린더의 내가 만든 일정에는 있다", () => {
+  it("소유 캘린더의 내 일정에는 [삭제][수정] 이 있다", () => {
     open(event(1));
     expect(footerButtons().map((b) => b.textContent)).toEqual([
       "delete",
       "edit",
     ]);
   });
-  it("읽기 전용 캘린더의 남이 만든 일정에는 바닥 자체가 없다", () => {
-    open(event(1, { userRowId: 99 }));
+  it("읽기 전용 캘린더에서는 내가 만든 일정에도 바닥 자체가 없다", () => {
+    open(event(1, { calendarRowId: 3 }));
     expect(sheet().querySelector("[data-slot=bottom-sheet-footer]")).toBeNull();
   });
   it("편집 가능 캘린더에서는 남이 만든 일정에도 있다", () => {
@@ -715,13 +723,13 @@ describe("1280 이상 주 · 목록 보기 — 가운데 대화상자 480 (17)",
     expect(dialog()!.textContent).toContain("일정 1");
   });
 
-  it("바닥 [삭제][수정] — 읽기 전용(남이 만든 읽기 전용 캘린더)이면 바닥이 없다", () => {
+  it("바닥 [삭제][수정] — 읽기 전용 캘린더면 내 일정이어도 바닥이 없다", () => {
     wideOpen();
     expect(btn("delete")).toBeTruthy();
     expect(btn("edit")).toBeTruthy();
     act(() => root.unmount());
     root = createRoot(container);
-    wideOpen({ userRowId: 99 });
+    wideOpen({ calendarRowId: 3 });
     expect(dialog()!.querySelector("[data-slot=dialog-footer]")).toBeNull();
   });
 
