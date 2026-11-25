@@ -15,6 +15,7 @@ import {
 } from "@/shared/lib/groo/currency";
 import { MINUS, formatChangeRate } from "@/shared/lib/groo/format";
 import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
+import { HIDE_AMOUNTS_MASK } from "@/shared/lib/groo/hide-amounts-core";
 import { won } from "@/shared/lib/groo/money-text";
 import { BarCaption, BarredItem, MeterBar } from "@/shared/ui/groo/band-parts";
 import { holdingsOf, type InvestValuation } from "@/features/asset";
@@ -183,10 +184,10 @@ export function AssetRow({
         {investVal?.changePct != null && (
           <Delta
             direction={investVal.changePct >= 0 ? "up" : "down"}
-            // 가림이 켜져도 줄은 둔다 — 값만 "•••"(다른 금액 가림과 같은 규칙)
+            // 가림이 켜져도 줄은 둔다 — 값만 점(다른 금액 가림과 같은 상수)
             value={
               hiddenNow
-                ? "•••"
+                ? HIDE_AMOUNTS_MASK
                 : `${formatChangeRate(investVal.changePct, { sign: "none" })}${
                     investVal.changeAmt != null
                       ? ` (${investVal.changeAmt >= 0 ? "+" : MINUS}${won(Math.abs(investVal.changeAmt))})`

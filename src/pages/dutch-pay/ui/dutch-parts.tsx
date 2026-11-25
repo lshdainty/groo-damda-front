@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { withCommaBreaks } from "@/shared/ds/i18n";
 import { KRW } from "@/shared/lib/groo/format";
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
-import { wonPre } from "@/shared/lib/groo/hide-amounts-core";
+import { HIDE_AMOUNTS_MASK, wonPre } from "@/shared/lib/groo/hide-amounts-core";
 import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
 import type { PerPerson } from "../model/dutch-model";
 import { wonText } from "../model/dutch-format";
@@ -18,7 +18,7 @@ export function Won({
 }) {
   return (
     <span className="inline-block max-w-full tabular-nums">
-      <MaskAmount card={card} mask="••••">
+      <MaskAmount card={card}>
         {withCommaBreaks(`${wonPre()}${KRW(amount)}`)}
       </MaskAmount>
       <WonUnit card={card} />
@@ -65,7 +65,7 @@ export function PerPersonText({
     <MaskedText
       card={card}
       text={make(wonText(info.amount))}
-      masked={make("••••")}
+      masked={make(HIDE_AMOUNTS_MASK)}
     />
   );
 }

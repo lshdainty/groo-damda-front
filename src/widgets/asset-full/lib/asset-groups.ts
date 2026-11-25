@@ -1,7 +1,9 @@
 import { assetKrw, type Asset, type AssetType } from "@/entities/asset";
-import { MASK } from "@/shared/lib/groo/money-text";
 import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
-import { useHideAmounts } from "@/shared/lib/groo/hide-amounts-core";
+import {
+  HIDE_AMOUNTS_MASK,
+  useHideAmounts,
+} from "@/shared/lib/groo/hide-amounts-core";
 
 /*
  * 자산 묶음 · 합계 · 줄 셈 — 자산 화면과 계좌 · 카드 관리가 **한 함수**를 쓴다(I-17 27).
@@ -44,10 +46,10 @@ export function useAssetHidden(card: HideCardKey, force = false) {
   return useHideAmounts(card) || force;
 }
 
-/** 이 카드가 가려졌거나 이 자산만 가렸으면 "••••" — 화면 카드와 자산 하나의 합집합 */
+/** 이 카드가 가려졌거나 이 자산만 가렸으면 점(HIDE_AMOUNTS_MASK) — 화면 카드와 자산 하나의 합집합 */
 export function useAssetMask(card: HideCardKey, force = false) {
   const hidden = useAssetHidden(card, force);
-  return (text: string) => (hidden ? MASK : text);
+  return (text: string) => (hidden ? HIDE_AMOUNTS_MASK : text);
 }
 
 /**

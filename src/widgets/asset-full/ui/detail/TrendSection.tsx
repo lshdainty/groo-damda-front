@@ -20,7 +20,8 @@ import {
   chartValueIntervals,
   niceValueAxis,
 } from "@/shared/lib/groo/axisWidth";
-import { MASK, won } from "@/shared/lib/groo/money-text";
+import { HIDE_AMOUNTS_MASK } from "@/shared/lib/groo/hide-amounts-core";
+import { won } from "@/shared/lib/groo/money-text";
 import { BandFailure, ListTitle } from "@/shared/ui/groo/band-parts";
 import { useAssetBalanceTrend } from "@/features/asset";
 import type { Asset } from "@/entities/asset";
@@ -33,7 +34,7 @@ const WEEKS: Record<Period, number> = { "3m": 12, "6m": 24, "1y": 52 };
 /**
  * 잔액 추이(I-17 48) — 목록 제목 "최근 {12주} {잔액 추이}" + ds Segmented Control(3개월 · 6개월 · 1년) + ds Chart 선.
  * 05-3 순자산 추이 차트와 한 변형이다: 선 2 + 데이터 점마다 점(지름 6) · 채움 없음 · 가로 격자 점선 · 가리킴 선 · 툴팁 원까지 · U+2212.
- * 높이는 폰 140 · 데스크톱 180. 눈금 글은 가장 긴 글자를 재서 폭을 잡아 잘리지 않는다(음수 "−3억"). 금액을 가리면 눈금 · 툴팁이 "••••".
+ * 높이는 폰 140 · 데스크톱 180. 눈금 글은 가장 긴 글자를 재서 폭을 잡아 잘리지 않는다(음수 "−3억"). 금액을 가리면 눈금 · 툴팁이 점(HIDE_AMOUNTS_MASK).
  */
 /** 잔액 추이의 바깥 여백 — 세로 눈금 칸 수도 이 여백으로 센다 */
 const MARGIN = { top: 8, right: 8, left: 0, bottom: 0 };
@@ -98,7 +99,7 @@ export function TrendSection({
     );
   } else {
     const latest = data[data.length - 1]!.balance;
-    const summary = `${title}, ${hidden ? MASK : won(latest)}`;
+    const summary = `${title}, ${hidden ? HIDE_AMOUNTS_MASK : won(latest)}`;
     body = (
       <>
         <Chart
@@ -118,7 +119,8 @@ export function TrendSection({
               // 0 기준 1 · 2 · 5 간격 nice 눈금을 그대로 그린다 — 음수 잔액(대출)도 0 아래로 확장
               {...niceValueAxis(
                 data.map((d) => d.balance),
-                (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
+                (v, ticks) =>
+                  hidden ? HIDE_AMOUNTS_MASK : formatAxisWon(v, ticks),
                 // 눈금 사이가 눈금 글 줄 높이보다 좁으면 칸 수를 줄인다(chart.md "세로 눈금이 겹치면 수를 줄입니다")
                 chartValueIntervals(height, MARGIN),
               )}
@@ -127,7 +129,9 @@ export function TrendSection({
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  valueFormatter={(v) => (hidden ? MASK : won(Number(v)))}
+                  valueFormatter={(v) =>
+                    hidden ? HIDE_AMOUNTS_MASK : won(Number(v))
+                  }
                 />
               }
             />
@@ -142,7 +146,10 @@ export function TrendSection({
         <ChartDataTable
           caption={summary}
           columns={[t("assetDetail.tableWeek"), seriesLabel]}
-          rows={data.map((d) => [d.label, hidden ? MASK : won(d.balance)])}
+          rows={data.map((d) => [
+            d.label,
+            hidden ? HIDE_AMOUNTS_MASK : won(d.balance),
+          ])}
         />
       </>
     );

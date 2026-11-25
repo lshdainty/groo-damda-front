@@ -50,7 +50,7 @@ export function BulkBar({
           <span className="num min-w-0 flex-1 whitespace-nowrap text-t4 text-fg-neutral">
             {t("bulk.sum")}{" "}
             <b className="font-bold">
-              <MaskAmount card="ledger.txList" kind="net" mask="••••">
+              <MaskAmount card="ledger.txList" kind="net">
                 {plusOf(sum)}
                 {wonPre()}
                 {KRW(Math.abs(sum))}

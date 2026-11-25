@@ -59,9 +59,12 @@ import {
   formatPercent,
 } from "@/shared/lib/groo/format";
 import type { HideCardKey } from "@/shared/lib/groo/hide-amounts-cards";
-import { useHideAmounts } from "@/shared/lib/groo/hide-amounts-core";
+import {
+  HIDE_AMOUNTS_MASK,
+  useHideAmounts,
+} from "@/shared/lib/groo/hide-amounts-core";
 import { useOpenHideAmountsSettings } from "@/shared/lib/groo/hide-amounts-nav";
-import { MASK, won } from "@/shared/lib/groo/money-text";
+import { won } from "@/shared/lib/groo/money-text";
 import {
   BandEmpty,
   BandFailure,
@@ -90,7 +93,7 @@ import { AssetRow, GroupRowsSkeleton } from "@/widgets/asset-full";
 /*
  * 자산 화면의 구역 부품(I-05 54 ~ 63) — 폰 띠(band)와 데스크톱 카드(card)가 같은 내용을 같은 부품으로 그린다.
  * 띠 안은 구역이 제 좌우 24 를 갖고(band), 카드 안은 카드 본문(CardContent)이 24 를 갖는다.
- * 금액은 원까지 · 가리면 "••••". 카드마다 따로 불러오고 따로 실패한다(화면 전체 게이트 없음 — 62).
+ * 금액은 원까지 · 가리면 점(HIDE_AMOUNTS_MASK). 카드마다 따로 불러오고 따로 실패한다(화면 전체 게이트 없음 — 62).
  */
 
 type Placement = "band" | "card";
@@ -166,7 +169,7 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
     );
   }
   const latest = data[data.length - 1]!.netWorth;
-  const latestText = hidden ? MASK : won(latest);
+  const latestText = hidden ? HIDE_AMOUNTS_MASK : won(latest);
   return (
     <>
       <Chart
@@ -188,7 +191,8 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
             // 0 기준 1 · 2 · 5 간격 nice 눈금을 그대로 그린다(앱 net_worth_chart 정합) — 폭은 가장 긴 눈금 글자로 잰다(D6)
             {...niceValueAxis(
               data.map((d) => d.netWorth),
-              (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
+              (v, ticks) =>
+                hidden ? HIDE_AMOUNTS_MASK : formatAxisWon(v, ticks),
               chartValueIntervals(height, MARGIN),
             )}
             {...chartAxisProps()}
@@ -196,7 +200,9 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
           <ChartTooltip
             content={
               <ChartTooltipContent
-                valueFormatter={(v) => (hidden ? MASK : won(Number(v)))}
+                valueFormatter={(v) =>
+                  hidden ? HIDE_AMOUNTS_MASK : won(Number(v))
+                }
               />
             }
           />
@@ -211,7 +217,10 @@ export function NetWorthChart({ height = 180 }: { height?: number }) {
       <ChartDataTable
         caption={t("chart.netWorthName", { amount: latestText })}
         columns={[t("chart.tableMonth"), t("netWorth")]}
-        rows={data.map((d) => [d.monthLabel, hidden ? MASK : won(d.netWorth)])}
+        rows={data.map((d) => [
+          d.monthLabel,
+          hidden ? HIDE_AMOUNTS_MASK : won(d.netWorth),
+        ])}
       />
     </>
   );

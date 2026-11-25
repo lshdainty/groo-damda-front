@@ -53,7 +53,7 @@ import {
 /*
  * 통계 구역 부품(I-08 29 ~ 42) — 폰 띠(band)와 데스크톱 카드(card)가 같은 내용을 같은 부품으로 그린다.
  * 띠 안은 구역이 제 좌우 24 를 갖고(band), 카드 안은 카드 본문(CardContent)이 24 를 갖는다.
- * 금액은 원까지 · 가리면 "••••". 눈금 글자만 줄여 쓴다(formatAxisWon).
+ * 금액은 원까지 · 가리면 점(HIDE_AMOUNTS_MASK). 눈금 글자만 줄여 쓴다(formatAxisWon).
  */
 
 export type Placement = "band" | "card";

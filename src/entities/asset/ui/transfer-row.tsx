@@ -106,7 +106,7 @@ export function TransferRow({
           {t("transferFeePrefix")}{" "}
           {/* 수수료도 금액이다 — 위 이체 금액은 가려지는데 여기만 그대로 남아
               있었다(2026-09-17 설계 조사). 같은 카드·같은 종류로 판정한다. */}
-          <MaskAmount card="ledger.txList" kind="transfer" mask="•••">
+          <MaskAmount card="ledger.txList" kind="transfer">
             {isForeignCurrency(fromCurrency)
               ? foreignText(fee, fromCurrency)
               : KRW(fee, { abs: true })}
@@ -166,7 +166,7 @@ export function TransferRow({
       <span className="flex flex-col items-end gap-x0_5">
         {amountEl}
         <span className="whitespace-nowrap text-t3 font-medium tabular-nums text-fg-neutral-subtle">
-          <MaskAmount card="ledger.txList" kind="transfer" mask="•••">
+          <MaskAmount card="ledger.txList" kind="transfer">
             {receivedText}
           </MaskAmount>
         </span>

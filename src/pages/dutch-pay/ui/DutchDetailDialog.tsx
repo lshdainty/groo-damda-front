@@ -13,6 +13,7 @@ import {
 import { List, ListHeader, ListItem } from "@/shared/ds/list";
 import { useWideSurface } from "@/shared/ds/overlay";
 import { useConfirmFail } from "@/shared/lib/confirm-fail";
+import { HIDE_AMOUNTS_MASK } from "@/shared/lib/groo/hide-amounts-core";
 import { ConfirmDialog } from "@/shared/ui/groo/dialogs";
 import type { DutchPay } from "@/entities/dutch-pay";
 import {
@@ -188,7 +189,7 @@ export function DutchDetailDialog({
                   const detail = (
                     <MaskedText
                       text={make(wonText(p.amount))}
-                      masked={make("••••")}
+                      masked={make(HIDE_AMOUNTS_MASK)}
                     />
                   );
                   return (
