@@ -41,6 +41,7 @@ export function EventFormDialogBody({ view }: { view: EventFormView }) {
   const {
     form,
     selectableCalendars,
+    calendarLocked,
     calendarsLoading,
     refetchCalendars,
     recurrence,
@@ -131,7 +132,13 @@ export function EventFormDialogBody({ view }: { view: EventFormView }) {
         />
       </Field>
 
-      <Field label={t("form.calendar")} showRequiredIndicator>
+      <Field
+        label={t("form.calendar")}
+        showRequiredIndicator
+        description={
+          calendarLocked ? t("form.calendarSharedLocked") : undefined
+        }
+      >
         {selectableCalendars.length > 0 ? (
           <Select
             value={
