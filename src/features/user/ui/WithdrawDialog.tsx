@@ -22,13 +22,23 @@ import { formatDateSmart, toLocalDateKey } from "@/shared/lib/date";
 import { BusyOverlay } from "@/shared/ui/groo/busy-overlay";
 // 배럴(`@/features/user`)이 이 파일을 다시 내보내므로 거기서 가져오면 순환이 된다 —
 // ESM 이 버티긴 해도 초기화 순서에 따라 undefined 가 잡힌다. 상대 경로로 간다.
-import { WITHDRAW_BLOCK_SUBSCRIPTION } from "../api/userApi";
+import {
+  WITHDRAW_BLOCK_SHARED_CALENDAR,
+  WITHDRAW_BLOCK_SUBSCRIPTION,
+  WITHDRAW_BLOCKED_SHARED_CALENDAR_CODE,
+} from "../api/userApi";
 import { useReauth } from "../model/useReauth";
 import {
   useWithdrawMutation,
   useWithdrawalCheck,
 } from "../model/useWithdrawal";
 import { ReauthFields } from "./ReauthFields";
+
+/** 서버 오류 코드 — 글이 아니라 코드로 가른다 */
+function errorCode(err: unknown): unknown {
+  return (err as { response?: { data?: { code?: unknown } } })?.response?.data
+    ?.code;
+}
 
 /**
  * 해지 흐름의 단계.
@@ -88,8 +98,14 @@ function ImpactList({
 export function WithdrawDialog({
   onClose,
   onWithdrawn,
+  onOpenCalendars,
 }: {
   onClose: () => void;
+  /**
+   * 캘린더 관리 · 공유로 간다 — 멤버가 남은 공유 캘린더 때문에 막혔을 때 소유자를 넘기러 가는 길.
+   * 창은 여기서 닫고 부른다. 주지 않으면 막힘 안내는 누르지 않는 상자다
+   */
+  onOpenCalendars?: () => void;
   /** 해지가 끝났다. 부르는 쪽이 로그아웃시키고 안내 화면으로 보낸다. */
   onWithdrawn: () => void;
 }) {
@@ -121,6 +137,13 @@ export function WithdrawDialog({
   const blocked = (check?.blocked?.length ?? 0) > 0;
   const blockedBySubscription =
     check?.blocked?.includes(WITHDRAW_BLOCK_SUBSCRIPTION) ?? false;
+  // 멤버가 남은 공유 캘린더의 소유자 — 넘기고 나가야 풀린다(사용자 결정 2026-11-24)
+  const blockedBySharedCalendar =
+    check?.blocked?.includes(WITHDRAW_BLOCK_SHARED_CALENDAR) ?? false;
+  // 수 칸이 없는 옛 서버 응답이면 1 로 읽는다(막혔다는 건 적어도 하나다)
+  const sharedCalendarTitle = t("withdraw.blockedSharedCalendar", {
+    count: check?.sharedCalendarsToTransfer ?? 1,
+  });
   // 서버가 시간대 없이 주는 `[UTC]` — 자르면 KST 에서 하루 이르게 보인다.
   // 구독 다이얼로그·설정 화면과 같은 값이라 같은 방식으로 읽어야 세 화면이
   // 다른 날짜를 말하지 않는다.
@@ -162,6 +185,13 @@ export function WithdrawDialog({
     try {
       await doWithdraw(token);
     } catch (e) {
+      // 점검과 해지 사이에 누가 캘린더에 들어왔다 — 점검을 다시 받아 막힘 안내(캘린더 관리로 가는 길)로 바꾼다
+      if (errorCode(e) === WITHDRAW_BLOCKED_SHARED_CALENDAR_CODE) {
+        setBusy(false);
+        setStep("impact");
+        void checkQ.refetch();
+        return;
+      }
       // 결과를 확인하지 못했으면(응답을 못 읽음 · 응답 전에 끊김) 실패라 하지 않는다 — 해지됐을 수 있다(앱 withdrawUnconfirmed 와 같은 자리, 글은 웹 전용 — 새로 고침)
       reauth.setError(sft(e, t("withdraw.failed"), "withdraw"));
       setBusy(false);
@@ -193,19 +223,45 @@ export function WithdrawDialog({
       />
     );
   } else if (blocked) {
+    // 사유마다 Callout 하나 — 구독 · 캘린더가 함께 막을 수 있다. 아는 사유가 없으면 "아직 해지할 수 없는 상태" 하나
     body = (
-      <Callout
-        tone="warning"
-        title={
-          blockedBySubscription
-            ? unblockDate
-              ? t("withdraw.blockedSubscriptionUntil", { date: unblockDate })
-              : t("withdraw.blockedSubscription")
-            : t("withdraw.blockedOther")
-        }
-      >
-        {t("withdraw.blockedHint")}
-      </Callout>
+      <div className="flex flex-col gap-x2">
+        {(blockedBySubscription || !blockedBySharedCalendar) && (
+          <Callout
+            tone="warning"
+            title={
+              blockedBySubscription
+                ? unblockDate
+                  ? t("withdraw.blockedSubscriptionUntil", {
+                      date: unblockDate,
+                    })
+                  : t("withdraw.blockedSubscription")
+                : t("withdraw.blockedOther")
+            }
+          >
+            {t("withdraw.blockedHint")}
+          </Callout>
+        )}
+        {blockedBySharedCalendar &&
+          (onOpenCalendars ? (
+            // 상자를 누르면 캘린더 관리로 — 소유자를 넘기러 가는 길(창을 닫고 간다)
+            <Callout
+              tone="warning"
+              interaction="actionable"
+              title={sharedCalendarTitle}
+              onClick={() => {
+                onClose();
+                onOpenCalendars();
+              }}
+            >
+              {t("withdraw.blockedSharedCalendarHint")}
+            </Callout>
+          ) : (
+            <Callout tone="warning" title={sharedCalendarTitle}>
+              {t("withdraw.blockedSharedCalendarHint")}
+            </Callout>
+          ))}
+      </div>
     );
   } else if (step === "impact") {
     body = (

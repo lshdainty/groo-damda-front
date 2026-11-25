@@ -64,6 +64,7 @@ export function AccountSection({
   onOpenHideAmounts,
   onOpenDevices,
   onOpenSubscription,
+  onOpenCalendars,
 }: {
   mobile: boolean;
   /** 보안 > 금액 가리기 — 카드 37장을 훑는 목록이라 자기 화면으로 보낸다. */
@@ -71,6 +72,8 @@ export function AccountSection({
   onOpenDevices: () => void;
   /** 구독·결제 > 구독 관리 — 페이지(`?section=subscription`)로 보낸다. */
   onOpenSubscription: () => void;
+  /** 해지가 멤버 남은 공유 캘린더로 막혔을 때 — 캘린더 관리 · 공유(`?section=calendar-share`)로 보낸다 */
+  onOpenCalendars?: () => void;
 }) {
   const { t } = useTranslation("settings");
   const { t: tu } = useTranslation("user");
@@ -320,6 +323,7 @@ export function AccountSection({
       {confirmWithdraw && (
         <WithdrawDialog
           onClose={() => setConfirmWithdraw(false)}
+          onOpenCalendars={onOpenCalendars}
           // 해지는 로그아웃의 예외다 — 담다만이 아니라 그루 계정 로그인까지 끝낸다(`scope: "grooAccount"`).
           // 해지한 사람을 로그인 화면으로 떨어뜨리지 않는다 — 안내 화면으로 보낸다.
           // 보던 자리도 적어 두지 않는다(`remember: false`) — 돌아갈 자리가 없다.

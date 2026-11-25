@@ -131,6 +131,33 @@ export const userCalendarApi = {
     return resp.data;
   },
 
+  /**
+   * 소유자 넘기기 — 받는 사람은 멤버 행 id(`CalendarMember.rowId`, 내보내기 · 권한 변경과 같은 id).
+   * 넘기면 바로 넘어가고(수락 없음) 나는 이 캘린더에서 빠진다. 받을 수 없는 멤버면 `CAL_020`.
+   */
+  transferOwnership: async (
+    id: number,
+    memberId: number,
+    opts?: SilentOpts,
+  ): Promise<void> => {
+    const resp: ApiResponse<void> = await apiClient.post(
+      `/v1/calendar/calendars/${id}/transfer-ownership`,
+      { memberId },
+      silentConfig(opts),
+    );
+    return resp.data;
+  },
+
+  /** 공유받은 캘린더에서 스스로 나가기 — 소유자는 `CAL_013`(넘기기로 나간다) */
+  leaveCalendar: async (id: number, opts?: SilentOpts): Promise<void> => {
+    const resp: ApiResponse<void> = await apiClient.post(
+      `/v1/calendar/calendars/${id}/leave`,
+      undefined,
+      silentConfig(opts),
+    );
+    return resp.data;
+  },
+
   changeMemberRole: async (
     id: number,
     memberId: number,

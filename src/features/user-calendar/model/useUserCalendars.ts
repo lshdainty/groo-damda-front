@@ -78,6 +78,7 @@ export const useDeleteUserCalendar = () => {
     mutationFn: (id: number) =>
       userCalendarApi.deleteCalendar(id, { silent: true }),
     // 서버가 이 캘린더의 일정을 기본 캘린더로 옮긴다 — 일정 캐시도 늙는다.
+    // 멤버가 남은 캘린더는 지우지 않는다(`CAL_019`) — 호출처가 넘기고 나가기로 안내한다
     onSuccess: () => invalidateFor(queryClient, "user-calendar-scope"),
   });
 };
@@ -147,5 +148,27 @@ export const useChangeCalendarMemberRole = (opts?: { silent?: boolean }) => {
       permission: CalendarRole;
     }) => userCalendarApi.changeMemberRole(id, memberId, permission, opts),
     onSuccess: () => invalidateFor(queryClient, "user-calendar"),
+  });
+};
+
+/** 소유자 넘기고 나가기 — 나는 이 캘린더에서 빠지므로 그 일정도 내 조회에서 사라진다(일정 캐시까지) */
+export const useTransferCalendarOwnership = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    // silent — 실패는 호출처가 확인창 뒤 스낵바(useConfirmFail)로 말한다
+    mutationFn: ({ id, memberId }: { id: number; memberId: number }) =>
+      userCalendarApi.transferOwnership(id, memberId, { silent: true }),
+    onSuccess: () => invalidateFor(queryClient, "user-calendar-scope"),
+  });
+};
+
+/** 공유받은 캘린더에서 나가기 — 그 캘린더의 일정이 내 조회에서 빠진다(일정 캐시까지) */
+export const useLeaveCalendar = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    // silent — 실패는 호출처가 확인창 뒤 스낵바(useConfirmFail)로 말한다
+    mutationFn: (id: number) =>
+      userCalendarApi.leaveCalendar(id, { silent: true }),
+    onSuccess: () => invalidateFor(queryClient, "user-calendar-scope"),
   });
 };

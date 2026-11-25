@@ -680,7 +680,22 @@ calendar,shareSection.joinDesc,공유받은 초대 코드를 넣으면 그 캘�
 calendar,shareSection.onlyMe,나만 사용,Only me
 calendar,shareSection.memberCount_one,멤버 {{count}}명,{{count}} member
 calendar,shareSection.memberCount_other,멤버 {{count}}명,{{count}} members
-calendar,shareSection.deleteMessage,"""{{name}}"" 캘린더를 삭제할까요? 일정은 기본 캘린더로 옮겨지고, 멤버는 이 캘린더를 더 볼 수 없어요. 삭제한 캘린더는 되돌릴 수 없어요.","Delete the ""{{name}}"" calendar? Events move to the default calendar and members can no longer see it. This action cannot be undone."
+calendar,shareSection.deleteMessage,"""{{name}}"" 캘린더를 삭제할까요? 일정은 기본 캘린더로 옮겨져요. 삭제한 캘린더는 되돌릴 수 없어요.","Delete the ""{{name}}"" calendar? Events move to the default calendar. This action cannot be undone."
+calendar,shareSection.deleteHasMembers,멤버가 있는 캘린더는 삭제할 수 없어요. 소유자를 넘기고 나가주세요.,You can't delete a calendar that has members. Transfer ownership and leave instead.
+calendar,shareSection.transferAndLeave,소유자 넘기고 나가기,Transfer ownership & leave
+calendar,shareSection.transferPickTitle,새 소유자 고르기,Choose a new owner
+calendar,shareSection.transferPickDesc,편집 가능한 멤버에게 넘길 수 있어요.,You can transfer to a member who can edit.
+calendar,shareSection.transferPickReadOnly,편집 가능한 멤버가 없어 읽기 전용 멤버에게 넘겨요. 넘기면 그 멤버가 소유자가 돼요.,"No member can edit, so you can transfer to a read-only member. They become the owner."
+calendar,shareSection.transferMessage,"{{name}} 님이 ""{{calendar}}"" 캘린더의 새 소유자가 되고 나는 이 캘린더에서 빠져요. 내가 쓴 일정은 캘린더에 남아요.","{{name}} becomes the new owner of ""{{calendar}}"" and you leave this calendar. Events you added stay in the calendar."
+calendar,shareSection.transferAction,넘기고 나가기,Transfer & leave
+calendar,shareSection.transferFailed,소유자를 넘기지 못했어요.,Couldn't transfer ownership.
+calendar,shareSection.transferTargetInvalid,이 멤버에게는 넘길 수 없어요. 멤버 목록을 다시 확인해주세요.,You can't transfer to this member. Please check the member list again.
+calendar,shareSection.leaveCalendar,캘린더 나가기,Leave calendar
+calendar,shareSection.leaveMessage,"""{{name}}"" 캘린더에서 나갈까요? 내가 쓴 일정은 캘린더에 남고 다시 들어오려면 초대 코드가 필요해요.","Leave the ""{{name}}"" calendar? Events you added stay in the calendar and you'll need an invite code to rejoin."
+calendar,shareSection.leaveAction,나가기,Leave
+calendar,shareSection.leaveFailed,캘린더에서 나가지 못했어요.,Couldn't leave the calendar.
+calendar,shareSection.toast.transferred,{{name}} 님에게 소유자를 넘겼어요.,Ownership transferred to {{name}}.
+calendar,shareSection.toast.left,캘린더에서 나갔어요.,You left the calendar.
 calendar,shareSection.deleteFailed,캘린더를 삭제하지 못했어요.,Couldn't delete the calendar.
 calendar,shareSection.namePlaceholder,캘린더 이름,Calendar name
 calendar,shareSection.saveChanges,변경 저장,Save Changes
@@ -858,8 +873,8 @@ user,passwordChangeSuccess,비밀번호를 바꿨어요.,Changed your password.
 user,passwordChangeError,비밀번호를 바꾸지 못했어요. 잠시 뒤 다시 시도해주세요.,Couldn't change your password. Please try again shortly.
 user,withdraw.title,그루 담다 이용 해지,Stop using 그루 담다
 user,withdraw.intro,이용을 해지하면 바로 로그인이 막히고 되돌릴 수 없어요.,Stopping 그루 담다 signs you out immediately and cannot be undone.
-user,impact.calendarsOwned_one,내가 만든 공유 캘린더 {{count}}개가 삭제되고 멤버도 볼 수 없어요,{{count}} shared calendar you created will be deleted — members lose access too
-user,impact.calendarsOwned_other,내가 만든 공유 캘린더 {{count}}개가 삭제되고 멤버도 볼 수 없어요,{{count}} shared calendars you created will be deleted — members lose access too
+user,impact.calendarsOwned_one,내가 만든 캘린더 {{count}}개가 삭제돼요,{{count}} calendar you created will be deleted
+user,impact.calendarsOwned_other,내가 만든 캘린더 {{count}}개가 삭제돼요,{{count}} calendars you created will be deleted
 user,impact.calendarMemberships_one,참여 중인 캘린더 {{count}}개에서 빠져요,You will be removed from {{count}} calendar you joined
 user,impact.calendarMemberships_other,참여 중인 캘린더 {{count}}개에서 빠져요,You will be removed from {{count}} calendars you joined
 user,impact.dutchPaysOwned_one,내가 만든 정산 {{count}}개가 삭제돼요,{{count}} settlement you created will be deleted
@@ -893,6 +908,9 @@ user,withdraw.blockedSubscription,구독이 남아 있어 아직 해지할 수 �
 user,withdraw.blockedSubscriptionUntil,구독이 {{date}}까지 남아 있어 아직 해지할 수 없어요.,"Your subscription runs until {{date}}, so you cannot stop using 그루 담다 yet."
 user,withdraw.blockedOther,아직 해지할 수 없는 상태예요.,Your account cannot be stopped right now.
 user,withdraw.blockedHint,구독을 먼저 해지하면 남은 기간이 끝난 뒤에 이용 해지를 할 수 있어요.,Cancel your subscription first — you can stop using 그루 담다 once the paid period ends.
+user,withdraw.blockedSharedCalendar_one,멤버가 있는 공유 캘린더 {{count}}개의 소유자를 먼저 넘겨주세요.,Transfer ownership of {{count}} shared calendar with members first.
+user,withdraw.blockedSharedCalendar_other,멤버가 있는 공유 캘린더 {{count}}개의 소유자를 먼저 넘겨주세요.,Transfer ownership of {{count}} shared calendars with members first.
+user,withdraw.blockedSharedCalendarHint,캘린더 관리에서 소유자를 넘기고 나가면 해지할 수 있어요.,Transfer ownership and leave in calendar settings — then you can stop using 그루 담다.
 user,withdraw.loadFailed,해지 정보를 불러오지 못했어요,Could not load your account details
 user,withdraw.loadFailedDesc,잠시 뒤 다시 시도해주세요.,Please try again shortly.
 user,withdraw.closing,해지하는 중,Closing your account

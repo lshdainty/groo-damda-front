@@ -224,6 +224,7 @@ export const SettingsPage = () => {
             onOpenHideAmounts={() => changeSection("hide-amounts")}
             onOpenDevices={() => changeSection("devices")}
             onOpenSubscription={() => changeSection("subscription")}
+            onOpenCalendars={() => changeSection("calendar-share")}
           />
         );
       case "hide-amounts":

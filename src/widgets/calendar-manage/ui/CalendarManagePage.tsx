@@ -5,6 +5,13 @@ import { Palette, Type } from "lucide-react";
 import { Button } from "@/shared/ds/button";
 import { Card } from "@/shared/ds/card";
 import { List, ListButtonItem } from "@/shared/ds/list";
+import {
+  ResponsiveMenu,
+  ResponsiveMenuContent,
+  ResponsiveMenuGroup,
+  ResponsiveMenuItem,
+  ResponsiveMenuTrigger,
+} from "@/shared/ds/menu";
 import { Skeleton } from "@/shared/ds/skeleton";
 import { useSnackbar } from "@/shared/ds/snackbar";
 import { useConfirmFail, useToggleFail } from "@/shared/lib/confirm-fail";
@@ -18,9 +25,11 @@ import {
   useCalendarMembers,
   useChangeCalendarMemberRole,
   useDeleteUserCalendar,
+  useLeaveCalendar,
   useRegenerateCalendarInviteCode,
   useStopCalendarSharing,
   useRemoveCalendarMember,
+  useTransferCalendarOwnership,
   useUpdateUserCalendar,
   useUserCalendars,
 } from "@/features/user-calendar";
@@ -30,14 +39,20 @@ import type {
   UserCalendar,
 } from "@/entities/user-calendar";
 import { CALENDAR_SHARE_HREF } from "../lib/manage-href";
+import {
+  calendarErrorCode,
+  transferCandidates,
+} from "../lib/transfer-candidates";
 import { CalendarMemberRow } from "./CalendarMemberRow";
 import { CalendarNameDialog } from "./CalendarNameDialog";
 import { ManageSection } from "./manage-list-parts";
 
 /**
  * 캘린더 관리 페이지(I-09b 21 ~ 31, 3-B) — 캘린더 하나 = 페이지. 설정 숨은 구역 `calendar-manage` + `?calendar={id}`.
- * 소유자: 목록 제목 "캘린더"(이름 · 색상 줄) → "초대 코드"(코드 + [복사][새로 만들기]) → "멤버 · n" → (기본 캘린더가 아니면) "캘린더 삭제".
- * 공유받은 캘린더: "멤버 · n" 만(나가기는 없는 기능이라 두지 않는다). 이름 · 색은 줄마다 그 자리에서 저장 — 한 번의 [저장] 은 없다.
+ * 소유자: 목록 제목 "캘린더"(이름 · 색상 줄) → "초대 코드"(코드 + [복사][새로 만들기]) → "멤버 · n" → 맨 아래 동작 하나.
+ *   다른 멤버가 있으면 [소유자 넘기고 나가기](공유 캘린더는 지우지 않는다 — 사용자 결정 2026-11-24, 기본 캘린더도 넘길 수 있다),
+ *   나 혼자면 (기본 캘린더가 아닐 때) [캘린더 삭제].
+ * 공유받은 캘린더: "멤버 · n" → [캘린더 나가기]. 이름 · 색은 줄마다 그 자리에서 저장 — 한 번의 [저장] 은 없다.
  * 폰은 흰 면 하나(목록 제목이 가른다), 데스크톱 · 태블릿은 카드 셋 + 카드 밖 [캘린더 삭제] 버튼. 제목(h1)은 캘린더 이름이다.
  * 목록에 없는 id(지운 · 내보내진 캘린더 · 틀린 주소)는 부모(관리·공유 목록)로 `replace` 한다 — 빈 페이지를 두지 않는다.
  */
@@ -140,6 +155,7 @@ function ManageBody({
   const toggleFail = useToggleFail();
   const { data: currentUser } = useCurrentUser();
   const membersQ = useCalendarMembers(calendar.rowId, { silent: true });
+  const calendarsQ = useUserCalendars({ silent: true });
   // 바로 나가는 셋(색 · 권한 · 코드 새로 만들기)은 서버 글을 내지 않는다 — 고정 한 문장 critical 스낵바(P4)
   const colorMut = useUpdateUserCalendar({ silent: true });
   const regenMut = useRegenerateCalendarInviteCode({ silent: true });
@@ -147,12 +163,18 @@ function ManageBody({
   const roleMut = useChangeCalendarMemberRole({ silent: true });
   const removeMut = useRemoveCalendarMember();
   const deleteMut = useDeleteUserCalendar();
+  const transferMut = useTransferCalendarOwnership();
+  const leaveMut = useLeaveCalendar();
 
   const [renaming, setRenaming] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState<CalendarMember | null>(
     null,
   );
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmTransfer, setConfirmTransfer] = useState<CalendarMember | null>(
+    null,
+  );
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   const isOwner = calendar.isOwner;
   const members = membersQ.data;
@@ -237,10 +259,40 @@ function ManageBody({
 
   // 지운 뒤 history 뒤로 — 앱 pop 과 같게(기록에 [목록, 목록] 이 남지 않는다). 기록이 없을 때(주소로 바로 들어옴)만 부모로 replace.
   // 다시 시도가 성공해도 같은 길을 지난다
-  const deleteCalendar = async () => {
-    await deleteMut.mutateAsync(calendar.rowId);
+  const leavePage = () => {
     if (hasPreviousEntry()) navigate(-1);
     else navigate(CALENDAR_SHARE_HREF, { replace: true });
+  };
+  const deleteCalendar = async () => {
+    await deleteMut.mutateAsync(calendar.rowId);
+    leavePage();
+  };
+
+  // 넘기면 나는 이 캘린더에서 빠진다 — 지우기와 같이 목록으로 돌아간다
+  const transferTo = async (member: CalendarMember) => {
+    await transferMut.mutateAsync({
+      id: calendar.rowId,
+      memberId: member.rowId,
+    });
+    snackbar.show({
+      message: t("shareSection.toast.transferred", { name: member.userName }),
+    });
+    leavePage();
+  };
+
+  const leaveCalendar = async () => {
+    await leaveMut.mutateAsync(calendar.rowId);
+    snackbar.show({ message: t("shareSection.toast.left") });
+    leavePage();
+  };
+
+  // 다시 해도 같은 답인 거절(그 사이 멤버가 들어옴 · 받을 수 없는 멤버) — [다시 시도] 없이 까닭 한 문장, 목록 · 멤버를 다시 받는다
+  const rejected = (error: unknown, code: string, message: string) => {
+    if (calendarErrorCode(error) !== code) return false;
+    snackbar.show({ message, tone: "critical" });
+    void calendarsQ.refetch();
+    void membersQ.refetch();
+    return true;
   };
 
   const calId = `${uid}-cal`;
@@ -411,38 +463,93 @@ function ManageBody({
     </>
   );
 
-  const canDelete = isOwner && !calendar.isDefault;
+  // 다른 멤버가 있는지는 목록의 memberCount 로 본다(멤버 목록을 받기 전에도 동작이 정해진다)
+  const hasOthers = calendar.memberCount > 1;
+  const canTransfer = isOwner && hasOthers;
+  const canDelete = isOwner && !hasOthers && !calendar.isDefault;
+  const canLeave = !isOwner;
+  const candidates = members ? transferCandidates(members) : null;
+
+  // 맨 아래 되돌릴 수 없는 동작 하나 — 폰은 빨간 글 줄, 데스크톱 · 태블릿은 카드 밖 ghost critical 버튼
+  // 넘기기 고르기는 멤버를 받기 전엔 막는다(고를 줄이 없다) — 여는 함수가 없는 동작이 그것이다
+  const dangerDisabled = (onClick?: () => void) =>
+    onClick == null && candidates == null;
+  const dangerRow = (label: string, onClick?: () => void) => (
+    <ListButtonItem
+      disabled={dangerDisabled(onClick)}
+      title={
+        <span className="text-fg-critical group-has-[[data-list-action]:active]/list-item:text-fg-critical-contrast group-has-[[data-list-action]:hover]/list-item:text-fg-critical-contrast">
+          {label}
+        </span>
+      }
+      onClick={onClick}
+    />
+  );
+  const dangerButton = (label: string, onClick?: () => void) => (
+    // 확인을 여는 버튼 — ghost + critical, 상자 여백 그대로(flush 는 빨강을 덮고, 음수 여백은 쓰지 않는다 — button.md)
+    <Button
+      variant="ghost"
+      ghostColor="critical"
+      size="small"
+      disabled={dangerDisabled(onClick)}
+      onClick={onClick}
+    >
+      {label}
+    </Button>
+  );
+  const danger = (label: string, onClick?: () => void) =>
+    mobile ? dangerRow(label, onClick) : dangerButton(label, onClick);
+
+  // 넘겨받을 멤버 고르기 — 폰 Menu Sheet · 1280 이상 Menu. 규칙에 맞지 않는 멤버는 보이되 막는다(transferCandidates)
+  const transferPicker = (
+    <ResponsiveMenu>
+      <ResponsiveMenuTrigger asChild>
+        {danger(t("shareSection.transferAndLeave"))}
+      </ResponsiveMenuTrigger>
+      <ResponsiveMenuContent
+        title={t("shareSection.transferPickTitle")}
+        description={
+          candidates?.readOnlyFallback
+            ? t("shareSection.transferPickReadOnly")
+            : t("shareSection.transferPickDesc")
+        }
+        layout="textOnly"
+        align="start"
+      >
+        <ResponsiveMenuGroup>
+          {candidates?.others.map((m) => (
+            <ResponsiveMenuItem
+              key={m.rowId}
+              label={m.userName}
+              description={t(`role.${m.permission}`)}
+              disabled={!candidates.eligible.has(m.rowId)}
+              onSelect={() => setConfirmTransfer(m)}
+            />
+          ))}
+        </ResponsiveMenuGroup>
+      </ResponsiveMenuContent>
+    </ResponsiveMenu>
+  );
+
+  const action = canTransfer
+    ? transferPicker
+    : canDelete
+      ? danger(t("deleteCalendar"), () => setConfirmDelete(true))
+      : canLeave
+        ? danger(t("shareSection.leaveCalendar"), () => setConfirmLeave(true))
+        : null;
 
   return (
     <>
       {!mobile && <ManagerHead title={calendar.calendarName} />}
       <div className={mobile ? "pb-x6" : "flex flex-col gap-x2"}>
         {sections}
-        {canDelete &&
+        {action &&
           (mobile ? (
             // 되돌릴 수 없는 동작을 멤버 줄과 떼어 놓는 흰 여백 8
-            <List className="mt-x2">
-              <ListButtonItem
-                title={
-                  <span className="text-fg-critical group-has-[[data-list-action]:active]/list-item:text-fg-critical-contrast group-has-[[data-list-action]:hover]/list-item:text-fg-critical-contrast">
-                    {t("deleteCalendar")}
-                  </span>
-                }
-                onClick={() => setConfirmDelete(true)}
-              />
-            </List>
+            <List className="mt-x2">{action}</List>
           ) : (
-            <div className="mt-x2">
-              {/* 확인을 여는 [삭제] — ghost + critical, 상자 여백 그대로(flush 는 빨강을 덮고, 음수 여백은 쓰지 않는다 — button.md) */}
-              <Button
-                variant="ghost"
-                ghostColor="critical"
-                size="small"
-                onClick={() => setConfirmDelete(true)}
-              >
-                {t("deleteCalendar")}
-              </Button>
-            </div>
+            <div className="mt-x2">{action}</div>
           ))}
       </div>
 
@@ -481,14 +588,65 @@ function ManageBody({
           })}
           confirmLabel={tc("delete")}
           onConfirm={deleteCalendar}
-          onError={(error) =>
+          onError={(error) => {
+            if (rejected(error, "CAL_019", t("shareSection.deleteHasMembers")))
+              return;
             confirmFail({
               error,
               message: t("shareSection.deleteFailed"),
               retry: deleteCalendar,
+            });
+          }}
+          onClose={() => setConfirmDelete(false)}
+        />
+      )}
+
+      {confirmTransfer && (
+        <AlertConfirm
+          title={t("shareSection.transferAndLeave")}
+          message={t("shareSection.transferMessage", {
+            name: confirmTransfer.userName,
+            calendar: calendar.calendarName,
+          })}
+          confirmLabel={t("shareSection.transferAction")}
+          onConfirm={() => transferTo(confirmTransfer)}
+          onError={(error) => {
+            if (
+              rejected(
+                error,
+                "CAL_020",
+                t("shareSection.transferTargetInvalid"),
+              )
+            )
+              return;
+            confirmFail({
+              error,
+              unconfirmedKind: "action",
+              message: t("shareSection.transferFailed"),
+              retry: () => transferTo(confirmTransfer),
+            });
+          }}
+          onClose={() => setConfirmTransfer(null)}
+        />
+      )}
+
+      {confirmLeave && (
+        <AlertConfirm
+          title={t("shareSection.leaveCalendar")}
+          message={t("shareSection.leaveMessage", {
+            name: calendar.calendarName,
+          })}
+          confirmLabel={t("shareSection.leaveAction")}
+          onConfirm={leaveCalendar}
+          onError={(error) =>
+            confirmFail({
+              error,
+              unconfirmedKind: "action",
+              message: t("shareSection.leaveFailed"),
+              retry: leaveCalendar,
             })
           }
-          onClose={() => setConfirmDelete(false)}
+          onClose={() => setConfirmLeave(false)}
         />
       )}
     </>

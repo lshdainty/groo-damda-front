@@ -141,7 +141,7 @@ describe("개수 — 영어는 1 이면 단수", () => {
       "Imported 1 transaction",
     );
     expect(t("user:impact.calendarsOwned", { count: 1 })).toBe(
-      "1 shared calendar you created will be deleted — members lose access too",
+      "1 calendar you created will be deleted",
     );
     const it = {
       maxOccurrences: 1,

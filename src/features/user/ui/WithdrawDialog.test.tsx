@@ -22,6 +22,9 @@ const state = vi.hoisted(() => ({
   onWithdrawnCalls: 0,
   verifiedCode: null as string | null,
   withdrawHang: false,
+  refetches: 0,
+  opened: 0,
+  closed: 0,
   isError: false,
 }));
 
@@ -38,7 +41,9 @@ vi.mock("../model/useWithdrawal", () => ({
     isLoading: state.check === null && !state.isError,
     isError: state.isError,
     isFetching: false,
-    refetch: () => {},
+    refetch: () => {
+      state.refetches += 1;
+    },
   }),
   useSendReauthEmailCodeMutation: () => ({
     mutate: (_v: unknown, o?: { onSuccess?: () => void }) => o?.onSuccess?.(),
@@ -71,7 +76,11 @@ vi.mock("../model/useWithdrawal", () => ({
 }));
 
 const { WithdrawDialog } = await import("./WithdrawDialog");
-const { WITHDRAW_BLOCK_SUBSCRIPTION } = await import("../api/userApi");
+const {
+  WITHDRAW_BLOCK_SUBSCRIPTION,
+  WITHDRAW_BLOCK_SHARED_CALENDAR,
+  WITHDRAW_BLOCKED_SHARED_CALENDAR_CODE,
+} = await import("../api/userApi");
 
 const CLEAR = {
   blocked: [],
@@ -101,14 +110,23 @@ function setWide(wide: boolean) {
   })) as unknown as typeof window.matchMedia;
 }
 
-function render() {
+function render(withCalendars = false) {
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
   act(() =>
     root.render(
       <WithdrawDialog
-        onClose={() => {}}
+        onClose={() => {
+          state.closed += 1;
+        }}
+        onOpenCalendars={
+          withCalendars
+            ? () => {
+                state.opened += 1;
+              }
+            : undefined
+        }
         onWithdrawn={() => {
           state.onWithdrawnCalls += 1;
         }}
@@ -167,6 +185,9 @@ beforeEach(() => {
   state.onWithdrawnCalls = 0;
   state.verifiedCode = null;
   state.withdrawHang = false;
+  state.refetches = 0;
+  state.opened = 0;
+  state.closed = 0;
   state.isError = false;
   setWide(false);
   const proto = window.HTMLElement.prototype as unknown as Record<
@@ -193,6 +214,12 @@ afterEach(() => {
 describe("막는 사유 코드", () => {
   it("서버가 보내는 문자열과 글자 그대로 같다", () => {
     expect(WITHDRAW_BLOCK_SUBSCRIPTION).toBe("SUBSCRIPTION_ACTIVE");
+  });
+
+  // groo-damda-back#449 `WithdrawalServiceImpl.blockers` · `DeskErrorCode.WITHDRAW_BLOCKED_SHARED_CALENDAR`
+  it("공유 캘린더 사유 · 해지 실행 거절 코드도 서버 글자 그대로다", () => {
+    expect(WITHDRAW_BLOCK_SHARED_CALENDAR).toBe("SHARED_CALENDAR_OWNED");
+    expect(WITHDRAW_BLOCKED_SHARED_CALENDAR_CODE).toBe("USER_022");
   });
 });
 
@@ -256,6 +283,66 @@ describe("구독이 막을 때", () => {
     const text = document.body.textContent ?? "";
     expect(text).toMatch(/blockedSubscriptionUntil\|(\d{4}년 )?10월 1일/);
     expect(text).not.toContain("2026-10-01");
+  });
+});
+
+// 멤버가 남은 공유 캘린더의 소유자는 넘기고 나서야 해지할 수 있다(사용자 결정 2026-11-24)
+describe("멤버가 남은 공유 캘린더가 막을 때", () => {
+  const SHARED = {
+    ...CLEAR,
+    blocked: ["SHARED_CALENDAR_OWNED"],
+    sharedCalendarsToTransfer: 2,
+  };
+
+  it("진행 버튼 없이 캘린더 사유만 말한다 — 구독 글은 없다", () => {
+    state.check = SHARED;
+    render();
+    expect(buttonNamed("withdraw.next")).toBeUndefined();
+    const text = document.body.textContent ?? "";
+    expect(text).toContain("withdraw.blockedSharedCalendar");
+    expect(text).toContain("withdraw.blockedSharedCalendarHint");
+    expect(text).not.toContain("withdraw.blockedSubscription");
+    expect(text).not.toContain("withdraw.blockedOther");
+  });
+
+  it("캘린더 관리로 가는 길이 있으면 상자를 눌러 창을 닫고 간다", () => {
+    state.check = SHARED;
+    render(true);
+    const box = document.body.querySelector(
+      'button[data-slot="callout"]',
+    ) as HTMLButtonElement;
+    expect(box).not.toBeNull();
+    act(() => {
+      box.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(state.closed).toBe(1);
+    expect(state.opened).toBe(1);
+  });
+
+  it("구독과 함께 막으면 사유마다 Callout 하나씩", () => {
+    state.check = {
+      ...SHARED,
+      blocked: ["SUBSCRIPTION_ACTIVE", "SHARED_CALENDAR_OWNED"],
+    };
+    render();
+    expect(document.body.querySelectorAll('[data-slot="callout"]').length).toBe(
+      2,
+    );
+  });
+
+  it("점검 뒤 해지가 USER_022 로 막히면 실패 글 대신 점검을 다시 받는다", async () => {
+    state.check = CLEAR;
+    state.withdrawError = {
+      response: { status: 409, data: { code: "USER_022" } },
+    };
+    render();
+    act(() => click("withdraw.next"));
+    await flushClickGuard();
+    const pw = document.getElementById("withdraw-password") as HTMLInputElement;
+    act(() => setValue(pw, "whatever"));
+    await act(async () => click("withdraw.confirm"));
+    expect(state.refetches).toBe(1);
+    expect(document.body.textContent).not.toContain("withdraw.failed");
   });
 });
 
