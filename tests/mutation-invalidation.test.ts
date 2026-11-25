@@ -436,6 +436,18 @@ const ROWS: Row[] = [
     change: "user-calendar-scope",
     call: () => calendars.useJoinCalendar(),
   },
+  {
+    file: CALENDARS,
+    hook: "useTransferCalendarOwnership",
+    change: "user-calendar-scope",
+    call: () => calendars.useTransferCalendarOwnership(),
+  },
+  {
+    file: CALENDARS,
+    hook: "useLeaveCalendar",
+    change: "user-calendar-scope",
+    call: () => calendars.useLeaveCalendar(),
+  },
 
   // 가계부의 밑바탕 — 예산·분류·프리셋. 금액이 안 움직이니 옆 도메인은 안 늙는다.
   {

@@ -681,7 +681,7 @@ calendar,shareSection.onlyMe,나만 사용,Only me
 calendar,shareSection.memberCount_one,멤버 {{count}}명,{{count}} member
 calendar,shareSection.memberCount_other,멤버 {{count}}명,{{count}} members
 calendar,shareSection.deleteMessage,"""{{name}}"" 캘린더를 삭제할까요? 일정은 기본 캘린더로 옮겨져요. 삭제한 캘린더는 되돌릴 수 없어요.","Delete the ""{{name}}"" calendar? Events move to the default calendar. This action cannot be undone."
-calendar,shareSection.deleteHasMembers,멤버가 있는 캘린더는 삭제할 수 없어요. 소유자를 넘기고 나가 주세요.,You can't delete a calendar that has members. Transfer ownership and leave instead.
+calendar,shareSection.deleteHasMembers,멤버가 있는 캘린더는 삭제할 수 없어요. 소유자를 넘기고 나가주세요.,You can't delete a calendar that has members. Transfer ownership and leave instead.
 calendar,shareSection.transferAndLeave,소유자 넘기고 나가기,Transfer ownership & leave
 calendar,shareSection.transferPickTitle,새 소유자 고르기,Choose a new owner
 calendar,shareSection.transferPickDesc,편집 가능한 멤버에게 넘길 수 있어요.,You can transfer to a member who can edit.
@@ -689,13 +689,13 @@ calendar,shareSection.transferPickReadOnly,편집 가능한 멤버가 없어 읽
 calendar,shareSection.transferMessage,"{{name}} 님이 ""{{calendar}}"" 캘린더의 새 소유자가 되고 나는 이 캘린더에서 빠져요. 내가 쓴 일정은 캘린더에 남아요.","{{name}} becomes the new owner of ""{{calendar}}"" and you leave this calendar. Events you added stay in the calendar."
 calendar,shareSection.transferAction,넘기고 나가기,Transfer & leave
 calendar,shareSection.transferFailed,소유자를 넘기지 못했어요.,Couldn't transfer ownership.
-calendar,shareSection.transferTargetInvalid,이 멤버에게는 넘길 수 없어요. 멤버 목록을 다시 확인해 주세요.,You can't transfer to this member. Please check the member list again.
+calendar,shareSection.transferTargetInvalid,이 멤버에게는 넘길 수 없어요. 멤버 목록을 다시 확인해주세요.,You can't transfer to this member. Please check the member list again.
 calendar,shareSection.leaveCalendar,캘린더 나가기,Leave calendar
 calendar,shareSection.leaveMessage,"""{{name}}"" 캘린더에서 나갈까요? 내가 쓴 일정은 캘린더에 남고 다시 들어오려면 초대 코드가 필요해요.","Leave the ""{{name}}"" calendar? Events you added stay in the calendar and you'll need an invite code to rejoin."
 calendar,shareSection.leaveAction,나가기,Leave
 calendar,shareSection.leaveFailed,캘린더에서 나가지 못했어요.,Couldn't leave the calendar.
-calendar,shareSection.toast.transferred,{{name}} 님에게 소유자를 넘겼어요,Ownership transferred to {{name}}
-calendar,shareSection.toast.left,캘린더에서 나갔어요,You left the calendar
+calendar,shareSection.toast.transferred,{{name}} 님에게 소유자를 넘겼어요.,Ownership transferred to {{name}}.
+calendar,shareSection.toast.left,캘린더에서 나갔어요.,You left the calendar.
 calendar,shareSection.deleteFailed,캘린더를 삭제하지 못했어요.,Couldn't delete the calendar.
 calendar,shareSection.namePlaceholder,캘린더 이름,Calendar name
 calendar,shareSection.saveChanges,변경 저장,Save Changes

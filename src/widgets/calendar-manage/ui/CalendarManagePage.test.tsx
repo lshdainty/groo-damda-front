@@ -386,8 +386,11 @@ describe("캘린더 관리 페이지", () => {
       b.textContent?.includes("shareSection.transferAndLeave"),
     ) as HTMLButtonElement;
     act(() => open.click());
+    // 화면의 멤버 행(권한 단추)에도 같은 이름이 있다 — 넘길 사람 메뉴 항목만 고른다
     const items = [
-      ...document.body.querySelectorAll("button, [role=menuitem]"),
+      ...document.body.querySelectorAll(
+        "[data-slot=menu-sheet-item], [role=menuitem]",
+      ),
     ].filter((b) => b.textContent?.includes("멤버 "));
     const editor = items.find((b) =>
       b.textContent?.includes("멤버 2"),
