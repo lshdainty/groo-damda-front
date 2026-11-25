@@ -41,6 +41,7 @@ import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { AmountInput } from "@/shared/ui/groo/amount-input";
 import { parseAmount } from "@/shared/lib/groo/amount";
 import { KRW } from "@/shared/lib/groo/format";
+import { HIDE_AMOUNTS_MASK } from "@/shared/lib/groo/hide-amounts-core";
 import {
   PARTICIPANT_NAME_MAX,
   computeShares,
@@ -364,7 +365,7 @@ export function DutchCreateDialog({
               <p className="m-0 text-t5 text-fg-neutral">
                 <MaskedText
                   text={summary(wonText)}
-                  masked={summary(() => "••••")}
+                  masked={summary(() => HIDE_AMOUNTS_MASK)}
                 />
               </p>
               <Field

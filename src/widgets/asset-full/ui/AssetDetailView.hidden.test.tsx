@@ -155,7 +155,7 @@ describe("자산 상세(페이지 본문) — 자산 하나에 붙은 숨김", (
     expect(text).toContain("1,200,000");
   });
 
-  it("자산만 Y 면 히어로 잔액이 ••••• 로 가려진다 — 카드 설정과 무관하다", () => {
+  it("자산만 Y 면 히어로 잔액이 •••• 로 가려진다 — 카드 설정과 무관하다", () => {
     const text = render({ ...account, isAmountHidden: "Y" });
     expect(text).not.toContain("1,200,000");
     expect(text).toContain("••••");

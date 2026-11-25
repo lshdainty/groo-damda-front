@@ -533,14 +533,14 @@ describe("투자 등락 가림(I-05 56)", () => {
     ).toBe(true);
   });
 
-  it("투자 카드를 가리면 줄은 두고 값만 '•••' 로 가린다", () => {
+  it("투자 카드를 가리면 줄은 두고 값만 '••••' 로 가린다", () => {
     act(() => setHiddenCardsLocal(["asset.investments"]));
     render();
     const d = Array.from(container.querySelectorAll("[data-slot=delta]"));
-    const invest = d.find((n) => n.textContent?.includes("•••"));
+    const invest = d.find((n) => n.textContent?.includes("••••"));
     expect(invest).toBeDefined();
     expect(invest!.querySelector("[data-slot=delta-value]")!.textContent).toBe(
-      "▲ •••",
+      "▲ ••••",
     );
     expect(text()).not.toContain("3.20%");
     expect(text()).not.toContain("16,000원");
@@ -555,7 +555,7 @@ describe("투자 등락 가림(I-05 56)", () => {
     });
     render();
     expect(text()).not.toContain("3.20%");
-    expect(text()).toContain("•••");
+    expect(text()).toContain("••••");
   });
 });
 

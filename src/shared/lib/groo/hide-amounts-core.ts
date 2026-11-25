@@ -18,7 +18,16 @@ import {
  * 가리는 단위는 카드다. 어떤 카드가 있는지는 hide-amounts-cards.ts 에 있다.
  */
 
-export const HIDE_AMOUNTS_MASK = "••••••";
+/**
+ * 가린 금액 자리의 점 — 담다 웹 · 앱 어디서나 **4개**다(2026-11-25 사용자 결정). 점 글자를 직접 쓰지 말고 이 상수를 쓴다.
+ */
+export const HIDE_AMOUNTS_MASK = "••••";
+
+/**
+ * 아주 좁은 칸만의 예외 — 가계부 달력 칸(한 칸에 지출 · 수입 두 줄, 폰 폭 7등분)은 4개가 칸을 넘친다.
+ * 다른 자리에 쓰지 않는다.
+ */
+export const HIDE_AMOUNTS_MASK_NARROW = "••";
 
 /**
  * 통화 접두 기호 — 마스킹 금액의 `<MaskAmount>` 안, 숫자(부호 뒤) 바로 앞에 삽입.

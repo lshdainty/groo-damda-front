@@ -31,7 +31,10 @@ import {
 } from "@/shared/lib/date";
 import { MINUS, toLocalIso } from "@/shared/lib/groo/format";
 import { monthDailyAverage } from "@/shared/lib/groo/daily-average";
-import { useHideAmounts } from "@/shared/lib/groo/hide-amounts-core";
+import {
+  HIDE_AMOUNTS_MASK,
+  useHideAmounts,
+} from "@/shared/lib/groo/hide-amounts-core";
 import { useOpenHideAmountsSettings } from "@/shared/lib/groo/hide-amounts-nav";
 import { MonthTitle } from "@/shared/ui/groo/month-title";
 import { PageHead } from "@/shared/ui/groo/page-head";
@@ -72,7 +75,7 @@ import {
   sixMonthsStart,
   useCurrentMonthKey,
 } from "./home-shared";
-import { MASK, useMasked, won, wonIn, wonOut } from "./home-money";
+import { useMasked, won, wonIn, wonOut } from "./home-money";
 import { loadFailed } from "@/shared/api";
 
 /**
@@ -560,7 +563,8 @@ function IncomeExpenseChart({
                     ...(off.has("income") ? [] : [d.income]),
                     ...(off.has("expense") ? [] : [d.expense]),
                   ]),
-                  (v, ticks) => (hidden ? MASK : formatAxisWon(v, ticks)),
+                  (v, ticks) =>
+                    hidden ? HIDE_AMOUNTS_MASK : formatAxisWon(v, ticks),
                   chartValueIntervals(CHART_H),
                 )}
               />

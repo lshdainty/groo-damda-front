@@ -30,6 +30,7 @@ import {
 import { MaskAmount, WonUnit } from "@/shared/lib/groo/hide-amounts";
 import {
   HIDE_AMOUNTS_MASK,
+  HIDE_AMOUNTS_MASK_NARROW,
   useHideAmounts,
   wonPre,
 } from "@/shared/lib/groo/hide-amounts-core";
@@ -711,7 +712,7 @@ export function ExpenseMobile({
                               <MaskAmount
                                 card={CALENDAR_CELL_CARDS}
                                 kind="expense"
-                                mask="••"
+                                mask={HIDE_AMOUNTS_MASK_NARROW}
                               >
                                 {MINUS}
                                 {KRW(data.out)}
@@ -723,7 +724,7 @@ export function ExpenseMobile({
                               <MaskAmount
                                 card={CALENDAR_CELL_CARDS}
                                 kind="income"
-                                mask="••"
+                                mask={HIDE_AMOUNTS_MASK_NARROW}
                               >
                                 +{KRW(data.inn)}
                               </MaskAmount>
