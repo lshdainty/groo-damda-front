@@ -3,6 +3,11 @@
  * 컴포넌트와 규칙은 table.tsx 머리 주석이다(컴포넌트 파일은 컴포넌트만 내보낸다 — 빠른 새로 고침).
  */
 
+// 넘김 줄(Table Pagination) 자리 — 좌우 24 만(위 12 는 넘김 줄이 갖는다). 표 상자(@container)의 보이는 폭(100cqw)에 왼쪽으로 붙어(sticky —
+// 기준은 table-frame) 열이 넘쳐 표를 가로로 밀어도 그대로 있다. 100% 가 아니라 100cqw 인 것은 frame 이 표 폭만큼 넓어서다 — 폭은 상자의
+// 보이는 폭을 따른다. 줄이 그보다 넓으면(큰 글자) 줄 폭(min-w-max)이라 표를 끝까지 밀 때 끝이 보인다(groo-design #272 사용자 결정 B)
+export const TABLE_PAGINATION_SLOT = "sticky left-0 w-[100cqw] min-w-max px-x6";
+
 // 모든 칸 — 아래 선 1px · 좌우 16(첫 칸 앞 · 끝 칸 뒤 24) · 14 / 20 · 세로 가운데.
 // 줄 높이를 칸 높이 그대로 41 · 45 · 72 로 두려고 선은 칸의 아래 테두리다(표가 border-separate)
 export const TABLE_CELL = [

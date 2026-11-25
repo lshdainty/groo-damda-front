@@ -16,6 +16,7 @@ import {
   TABLE_HEAD_CELL,
   TABLE_HEAD_STICKY,
   TABLE_HIT_44,
+  TABLE_PAGINATION_SLOT,
   TABLE_ROW,
   TABLE_ROW_HEADER_ACTION,
   TABLE_ROW_PRESSABLE,
@@ -32,7 +33,9 @@ import { useDsText } from "@/shared/ds/i18n";
  *
  *   Table               표 상자(가로 스크롤) + <table>. caption 필수(숨긴 표 이름 — 보이는 제목은 카드 머리) · rowHeight "text"(기본 45) ·
  *                       "rich"(72 — 썸네일 · 두 줄 칸이 하나라도 있으면 모든 줄) · stickyHeader(상자가 스스로 스크롤할 때 머리를 붙인다 —
- *                       높이는 className 의 max-h-*) · pagination(Table Pagination 자리 — 좌우 24 만이다. 표 아래 12 는 Table Pagination 이 갖는다(03-D 결정 5 B). 표와 같은 상자라 함께 가로로 밀린다)
+ *                       높이는 className 의 max-h-*) · pagination(Table Pagination 자리 — 좌우 24 만이다. 표 아래 12 는 Table Pagination 이 갖는다.
+ *                       표와 같은 상자 안이지만 상자의 보이는 폭에 붙어, 열이 넘쳐 표를 가로로 밀어도 그대로 있다. 줄이 보이는 폭보다
+ *                       넓으면(큰 글자) 줄 폭을 따르고, 그때는 표를 끝까지 밀 때 줄의 끝이 보인다 — groo-design #272 사용자 결정 B)
  *   TableHeader · TableBody · TableRow   <thead> · <tbody> · <tr>. 본문의 TableRow 에 onClick 을 주면 누르는 줄(호버 · 누름 바탕) —
  *                       줄 안의 체크 · ⋮ · 링크를 누른 것은 줄 누르기가 아니다. 키보드로는 첫 열 이름(TableRowHeader 의 href · onClick)으로 간다
  *   TableHead           머리 칸 <th scope="col">. align "start"(기본) · "end"(숫자 — 머리도 오른쪽). sort 를 주면 정렬할 수 있는 열 —
@@ -110,7 +113,7 @@ export interface TableProps extends Omit<
   rowHeight?: TableRowHeight;
   /** 상자가 스스로 세로로 스크롤할 때 머리를 붙인다 — 높이는 className 의 max-h-*. 페이지 스크롤에는 쓰지 않는다 */
   stickyHeader?: boolean;
-  /** 표 아래 12 의 넘김 줄(Table Pagination) — 표와 같은 가로 스크롤 상자 안 */
+  /** 표 아래 12 의 넘김 줄(Table Pagination) — 표 상자의 보이는 폭에 붙어 표를 가로로 밀어도 그대로 있다. 12 는 넘김 줄의 위 여백이다(자리는 좌우 24 만) */
   pagination?: React.ReactNode;
   /** <table> 의 className — className 은 표 상자(div)에 간다 */
   tableClassName?: string;
@@ -145,13 +148,13 @@ const Table = React.forwardRef<HTMLDivElement, TableProps>(
           data-slot="table"
           data-row-height={rowHeight}
           className={cn(
-            "relative w-full overflow-x-auto",
+            "@container relative w-full overflow-x-auto",
             stickyHeader && "overflow-y-auto",
             className,
           )}
           {...props}
         >
-          {/* 표와 넘김 줄이 같은 폭 — 상자보다 좁으면 상자 폭, 열이 넘치면 표의 최소 폭(그만큼 함께 가로로 밀린다) */}
+          {/* 표는 상자보다 좁으면 상자 폭, 열이 넘치면 표의 최소 폭(그만큼 가로로 밀린다) */}
           <div data-slot="table-frame" className="w-fit min-w-full">
             <table
               className={cn(
@@ -162,8 +165,13 @@ const Table = React.forwardRef<HTMLDivElement, TableProps>(
               <caption className="sr-only">{caption}</caption>
               {children}
             </table>
+            {/* 넘김 줄 — 폭은 상자의 보이는 폭(100cqw — 상자가 @container), 왼쪽에 붙어(sticky — 기준은 frame) 표를 밀어도 그대로다.
+                줄이 그보다 넓으면 줄 폭(min-w-max)이라 표를 끝까지 밀 때 줄의 끝이 보인다. JS 로 재지 않는다 */}
             {pagination != null && (
-              <div data-slot="table-pagination-slot" className="px-x6">
+              <div
+                data-slot="table-pagination-slot"
+                className={TABLE_PAGINATION_SLOT}
+              >
                 {pagination}
               </div>
             )}

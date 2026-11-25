@@ -156,10 +156,30 @@ describe("Table — 구조", () => {
     expect(one("[data-slot=table]").className).toContain("overflow-x-auto");
     const slot = one("[data-slot=table-pagination-slot]");
     expect(slot.className).toContain("px-x6");
-    // 위 12 를 자리와 Table Pagination 이 함께 갖지 않는다(24 가 되던 것 — 03-D 결정 5 B)
+    // 위 12 를 자리와 Table Pagination 이 함께 갖지 않는다(24 가 되던 것)
     expect(slot.className).not.toMatch(/\bp[ty]-/);
     expect(one("[data-slot=table-frame]").contains(slot)).toBe(true);
     expect(one("[data-slot=table-frame]").className).toContain("w-fit");
+  });
+
+  it("넘김 줄은 표 상자의 보이는 폭에 붙는다 — 상자가 @container, 자리는 sticky left-0 · 100cqw · 줄 폭보다 줄지 않음(groo-design #272 결정 B)", () => {
+    render(
+      <Table caption="x" pagination={<span id="pg">쪽</span>}>
+        <TableBody />
+      </Table>,
+    );
+    const classes = (sel: string) =>
+      one(sel).className.split(/\s+/).filter(Boolean);
+    // 100cqw 가 표 상자의 보이는 폭으로 풀리려면 상자가 크기 질의 컨테이너다
+    expect(classes("[data-slot=table]")).toContain("@container");
+    const slot = classes("[data-slot=table-pagination-slot]");
+    // 표를 밀어도 왼쪽에 붙어 있다(기준은 table-frame — 표 폭만큼 넓다)
+    expect(slot).toEqual(expect.arrayContaining(["sticky", "left-0"]));
+    // 폭은 frame 의 100%(= 표 폭)가 아니라 상자의 보이는 폭
+    expect(slot).toContain("w-[100cqw]");
+    expect(slot).not.toContain("w-full");
+    // 줄이 보이는 폭보다 넓으면(큰 글자) 줄 폭을 따른다 — 표를 끝까지 밀 때 끝이 보인다
+    expect(slot).toContain("min-w-max");
   });
 
   it("stickyHeader 면 상자가 세로로 스크롤하고 머리 칸이 카드 면 색으로 붙는다", () => {
