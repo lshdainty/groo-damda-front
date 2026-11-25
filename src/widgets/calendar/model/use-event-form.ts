@@ -149,9 +149,21 @@ export function useEventForm({
    * 안 그러면 그 일정을 여는 순간 목록에 없는 값이 선택돼 있다가, 캘린더 칸을 건드리지도
    * 않았는데 저장 때 다른 캘린더로 옮겨진다. 사용자가 안 건드린 값이 조용히 바뀌는 게 제일 나쁘다.
    */
-  const selectableCalendars = userCalendars.filter(
-    (c) => isCalendarShown(c) || c.rowId === event?.calendarRowId,
-  );
+  const eventCalendar = event
+    ? userCalendars.find((c) => c.rowId === event.calendarRowId)
+    : undefined;
+  /**
+   * 공유 중인 캘린더의 일정은 그 캘린더 안에서만 다룬다 — 다른 캘린더로 옮길 수 없다(소유자도).
+   * 권한은 그 캘린더 안의 권한이지 일정을 밖으로 빼는 권한이 아니다(2026-11-24 사용자 결정,
+   * 서버 `CALENDAR_EVENT_SHARED_MOVE_DENIED`). 그래서 고를 수 있는 캘린더는 그 하나뿐이다.
+   */
+  const calendarLocked = eventCalendar?.isShared === true;
+  const selectableCalendars =
+    calendarLocked && eventCalendar
+      ? [eventCalendar]
+      : userCalendars.filter(
+          (c) => isCalendarShown(c) || c.rowId === event?.calendarRowId,
+        );
 
   // 기본 선택도 **같은 목록에서** 고른다. 목록만 거르고 여기를 두면 기본 캘린더가 숨겨져 있을 때
   // 목록에 없는 값이 선택돼 있는 상태가 된다.
@@ -392,6 +404,8 @@ export function useEventForm({
     handleSubmit,
     onFormSubmit,
     selectableCalendars,
+    /** 공유 캘린더 일정이라 캘린더를 못 바꾼다 — 칸에 까닭 한 줄을 단다 */
+    calendarLocked,
     calendarsLoading,
     refetchCalendars,
     recurrence,
