@@ -55,12 +55,13 @@ describe("영어 문구의 돈 — won 0 · ₩ 앞", () => {
     expect(en("asset", "savingGoal.errAmountTooLarge")).toBe(
       "Target amount can be up to ₩10,000,000,000.",
     );
-    expect(en("dutchPay", "perPersonRest")).toContain("₩{{extra}} extra");
+    // 더치페이 나머지는 값에 ₩ 를 담아 넘긴다(wonText → "₩1") — 가리면 값째 점만 남게(단위도 함께 가림, groo-design 6027446)
+    expect(en("dutchPay", "perPersonRest")).toContain("· {{extra}} extra");
     expect(en("dutchPay", "peopleSummaryRest_one")).toContain(
-      "₩{{extra}} extra",
+      "· {{extra}} extra",
     );
     expect(en("dutchPay", "peopleSummaryRest_other")).toContain(
-      "₩{{extra}} extra",
+      "· {{extra}} extra",
     );
     expect(en("expense", "addTx.fxHint")).toBe(
       "{{original}} × {{rate}} = ₩{{krw}}",

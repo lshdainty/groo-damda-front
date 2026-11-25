@@ -40,7 +40,6 @@ import { Select, SelectItem } from "@/shared/ds/select";
 import { useScrollToError } from "@/shared/hooks/useScrollToError";
 import { AmountInput } from "@/shared/ui/groo/amount-input";
 import { parseAmount } from "@/shared/lib/groo/amount";
-import { KRW } from "@/shared/lib/groo/format";
 import { HIDE_AMOUNTS_MASK } from "@/shared/lib/groo/hide-amounts-core";
 import {
   PARTICIPANT_NAME_MAX,
@@ -202,7 +201,7 @@ export function DutchCreateDialog({
         v: {
           ...base,
           amount: money(info.amount),
-          extra: KRW(info.extra),
+          extra: money(info.extra),
           name: info.name,
         },
       };

@@ -53,19 +53,20 @@ export function PerPersonText({
 }) {
   const { t } = useTranslation("dutchPay");
   if (info.kind === "none") return null;
-  const make = (amount: string) =>
+  // 몫 · 남는 원 둘 다 금액이다 — 가리면 둘 다 점만(단위도 함께 가린다)
+  const make = (money: (n: number) => string) =>
     info.kind === "rest"
       ? t("perPersonRest", {
-          amount,
-          extra: KRW(info.extra),
+          amount: money(info.amount),
+          extra: money(info.extra),
           name: info.name,
         })
-      : t("perPersonText", { amount });
+      : t("perPersonText", { amount: money(info.amount) });
   return (
     <MaskedText
       card={card}
-      text={make(wonText(info.amount))}
-      masked={make(HIDE_AMOUNTS_MASK)}
+      text={make(wonText)}
+      masked={make(() => HIDE_AMOUNTS_MASK)}
     />
   );
 }

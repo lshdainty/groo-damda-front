@@ -492,7 +492,7 @@ asset,assetDetail.billingLoadError,청구 정보를 불러오지 못했어요,Co
 asset,assetDetail.paymentDue,결제 예정,Payment due
 asset,assetDetail.payNow,지금 결제,Pay now
 asset,assetDetail.cancelPayment,결제 취소,Cancel payment
-asset,assetDetail.cancelPaymentConfirm,{{date}}에 낸 {{amount}}원을 되돌려요. 통장 잔액과 카드 청구가 결제 전으로 돌아가요.,Reverts the {{amount}} paid on {{date}}. The account balance and card billing return to the state before payment.
+asset,assetDetail.cancelPaymentConfirm,{{date}}에 낸 {{amount}}을 되돌려요. 통장 잔액과 카드 청구가 결제 전으로 돌아가요.,Reverts the {{amount}} paid on {{date}}. The account balance and card billing return to the state before payment.
 asset,assetDetail.scheduledTag,예정,Upcoming
 asset,assetDetail.paidDone,결제 완료,Paid
 asset,assetDetail.installmentFallback,할부,Installment
@@ -2066,9 +2066,9 @@ constellation,detail.notMet,아직 만나지 못한 별자리예요,A constellat
 stats,trend.savingsInsight,월 평균 수입의 {{pct}}를 저축하고 있어요,You're saving {{pct}} of your average income
 stats,trend.savingsNoIncome,수입이 없어 저축률을 낼 수 없어요,"No income, so there's no savings rate to show"
 stats,compare.weekdayTitle,요일별 지출 비교,Spending by weekday
-stats,compare.weekdayInsightDown,{{dow}}요일 지출이 {{prev}}보다 {{amt}}원 줄었어요.,{{dow}} spending fell {{amt}} vs {{prev}}
+stats,compare.weekdayInsightDown,{{dow}}요일 지출이 {{prev}}보다 {{amt}} 줄었어요.,{{dow}} spending fell {{amt}} vs {{prev}}
 stats,compare.weekdayInsightSame,{{prev}}{{josa}} 비슷해요.,Similar to {{prev}}.
-stats,compare.weekdayInsightUp,{{dow}}요일 지출이 {{prev}}보다 {{amt}}원 늘었어요.,{{dow}} spending rose {{amt}} vs {{prev}}
+stats,compare.weekdayInsightUp,{{dow}}요일 지출이 {{prev}}보다 {{amt}} 늘었어요.,{{dow}} spending rose {{amt}} vs {{prev}}
 stats,compare.vsLastPrefix,{{prev}}보다,You spent
 stats,compare.dirLess,덜,less
 stats,compare.dirMore,더,more
@@ -3006,7 +3006,7 @@ dutchPay,createLabel,정산 만들기,Create settlement
 dutchPay,memberCount_one,{{count}}명,{{count}} person
 dutchPay,memberCount_other,{{count}}명,{{count}} people
 dutchPay,perPersonText,1인당 {{amount}},{{amount}} per person
-dutchPay,perPersonRest,1인당 {{amount}} · {{extra}}원은 {{name}},{{amount}} per person · ₩{{extra}} extra on {{name}}
+dutchPay,perPersonRest,1인당 {{amount}} · {{extra}}은 {{name}},{{amount}} per person · {{extra}} extra on {{name}}
 dutchPay,paidProgress,{{paid}}/{{total}}명 냈어요,{{paid}}/{{total}} paid
 dutchPay,allPaid,모두 냈어요,Everyone paid
 dutchPay,stepOf,{{step}} / {{total}}단계,Step {{step}} of {{total}}
@@ -3020,8 +3020,8 @@ dutchPay,totalRequired,총 금액을 입력해주세요.,Please enter the total 
 dutchPay,peopleNeeded,함께 정산할 사람을 한 명 이상 더해주세요.,Add at least one person to settle with.
 dutchPay,peopleSummary_one,{{count}}명 · 1인당 <b>{{amount}}</b>,{{count}} person · <b>{{amount}}</b> each
 dutchPay,peopleSummary_other,{{count}}명 · 1인당 <b>{{amount}}</b>,{{count}} people · <b>{{amount}}</b> each
-dutchPay,peopleSummaryRest_one,{{count}}명 · 1인당 <b>{{amount}}</b> · {{extra}}원은 {{name}},{{count}} person · <b>{{amount}}</b> each · ₩{{extra}} extra on {{name}}
-dutchPay,peopleSummaryRest_other,{{count}}명 · 1인당 <b>{{amount}}</b> · {{extra}}원은 {{name}},{{count}} people · <b>{{amount}}</b> each · ₩{{extra}} extra on {{name}}
+dutchPay,peopleSummaryRest_one,{{count}}명 · 1인당 <b>{{amount}}</b> · {{extra}}은 {{name}},{{count}} person · <b>{{amount}}</b> each · {{extra}} extra on {{name}}
+dutchPay,peopleSummaryRest_other,{{count}}명 · 1인당 <b>{{amount}}</b> · {{extra}}은 {{name}},{{count}} people · <b>{{amount}}</b> each · {{extra}} extra on {{name}}
 dutchPay,peopleOnly_one,{{count}}명,{{count}} person
 dutchPay,peopleOnly_other,{{count}}명,{{count}} people
 dutchPay,participantsLabel,참여자,Participants
