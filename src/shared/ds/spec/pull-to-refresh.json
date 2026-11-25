@@ -3,7 +3,7 @@
   "source": "specs/components/pull-to-refresh.yaml",
   "design": {
     "file": "DESIGN.desk.md",
-    "sha256": "7b3ba0bb826a"
+    "sha256": "d7063d55db82"
   },
   "slots": {
     "root": "스크롤 영역 — 맨 위에 있을 때 아래로 당기면 시작한다",
